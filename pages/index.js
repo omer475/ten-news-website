@@ -4,7 +4,7 @@ export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false); // Navigation menu state
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Refs to track timeouts and prevent memory leaks
   const transitionTimeoutRef = useRef(null);
@@ -184,14 +184,13 @@ export default function Home() {
           }
         ];
         
-        // Load sample stories
         setStories(sampleStories);
         setLoading(false);
-      } catch (err) {
-        console.error('Error loading news:', err);
+      } catch (error) {
+        console.error('Error loading news:', error);
         setLoading(false);
       }
-    }
+    };
 
     loadNewsData();
   }, []);

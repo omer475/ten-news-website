@@ -7,16 +7,12 @@ on:
 jobs:
   generate-news:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
           
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -31,8 +27,29 @@ jobs:
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
         run: |
-          # Run the news generator directly with option 1 (run once)
-          echo "1" | python news-generator.py
+          # Create a script to run news generation non-interactively
+          cat > run_news_generation.py << 'EOF'
+          import sys
+          import os
+          
+          # Add the current directory to Python path
+          sys.path.insert(0, os.getcwd())
+          
+          # Import and run the news generator
+          from news_generator import generate_daily_news
+          
+          if __name__ == "__main__":
+              print("🤖 Starting automated news generation...")
+              success = generate_daily_news()
+              if success:
+                  print("✅ News generation completed successfully!")
+                  sys.exit(0)
+              else:
+                  print("❌ News generation failed!")
+                  sys.exit(1)
+          EOF
+          
+          python run_news_generation.py
           
       - name: Commit and push generated news
         run: |
@@ -47,5 +64,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "🗞️ Daily news update $(date +'%Y-%m-%d %H:%M UTC')"
-            git push origin main
+            git push
           fi

@@ -1,14 +1,14 @@
 {
   "name": "ten-news-website",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "private": true,
+  "description": "AI-powered news website with daily content generation",
   "scripts": {
     "dev": "next dev",
-    "build": "next build", 
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup-news": "python setup-news-generator.py",
-    "generate-news": "python news-generator.py"
+    "export": "next build && next export"
   },
   "dependencies": {
     "next": "14.0.0",
@@ -18,5 +18,8 @@
   "devDependencies": {
     "eslint": "^8.0.0",
     "eslint-config-next": "14.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
