@@ -186,8 +186,8 @@ export default function Home() {
         
         setStories(sampleStories);
         setLoading(false);
-      } catch (err) {
-        console.error('Error loading news:', err);
+      } catch (error) {
+        console.error('Error loading news:', error);
         setLoading(false);
       }
     };
@@ -579,4 +579,3 @@ export default function Home() {
     </div>
   );
 }
-
