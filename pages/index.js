@@ -186,8 +186,8 @@ export default function Home() {
         
         setStories(sampleStories);
         setLoading(false);
-      } catch (error) {
-        console.error('Error loading news:', error);
+      } catch (err) {
+        console.error('Error loading news:', err);
         setLoading(false);
       }
     };
