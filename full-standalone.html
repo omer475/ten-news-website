@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ten News - Full Version</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      background: #ffffff;
+      color: #1d1d1f;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-ten {
+      color: #1d1d1f;
+    }
+
+    .header-center {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #86868b;
+    }
+
+    .header-center span {
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .header-center span:hover {
+      color: #1d1d1f;
+    }
+
+    .header-center span:after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #1d1d1f;
+      transform: scaleX(0);
+      transition: transform 0.2s;
+    }
+
+    .header-center span:hover:after {
+      transform: scaleX(1);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .time {
+      color: #86868b;
+    }
+
+    .subscribe-btn {
+      padding: 8px 20px;
+      background: #1d1d1f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .subscribe-btn:hover {
+      background: #000;
+      transform: scale(1.02);
+    }
+
+    .story-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 60px;
+      background: #fff;
+      transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    .story-content {
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .opening-container {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: calc(100vh - 140px);
+    }
+
+    .date-header {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: #86868b;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .main-headline {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 40px;
+      color: #1d1d1f;
+    }
+
+    .subheadline {
+      font-size: 22px;
+      line-height: 1.4;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    @keyframes topicRotate {
+      0%, 20%, 100% { 
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      2%, 18% { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .news-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .news-item {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 20px;
+      padding: 24px 0;
+      border-bottom: 1px solid #e5e5e7;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .news-item:hover {
+      padding-left: 8px;
+    }
+
+    .news-item:last-child {
+      border-bottom: none;
+    }
+
+    .news-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: #c7c7cc;
+    }
+
+    .news-content {
+      padding-top: 4px;
+    }
+
+    .news-category {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #86868b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .news-title {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      color: #1d1d1f;
+    }
+
+    .news-summary {
+      font-size: 17px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e5e7;
+    }
+
+    .news-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: #86868b;
+    }
+
+    .news-meta strong {
+      color: #666;
+      font-weight: 600;
+    }
+
+    .progress-indicator {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .progress-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #d2d2d7;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .progress-dot.active {
+      width: 6px;
+      height: 20px;
+      border-radius: 3px;
+      background: #1d1d1f;
+    }
+
+    .newsletter-container {
+      text-align: center;
+      padding: 60px 24px;
+      background: #000;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .newsletter-title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+
+    .newsletter-subtitle {
+      font-size: 18px;
+      color: #86868b;
+      margin-bottom: 40px;
+    }
+
+    .newsletter-form {
+      max-width: 440px;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .newsletter-input {
+      flex: 1;
+      padding: 16px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      background: #1c1c1e;
+      color: #fff;
+    }
+
+    .newsletter-input::placeholder {
+      color: #6e6e73;
+    }
+
+    .newsletter-button {
+      padding: 16px 32px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .newsletter-button:hover {
+      transform: scale(1.05);
+    }
+
+    .newsletter-info {
+      font-size: 13px;
+      color: #6e6e73;
+      margin-top: 24px;
+    }
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #86868b;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 500;
+      animation: bounce 2s infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    @media (max-width: 768px) {
+      .header-center {
+        display: none;
+      }
+      
+      .header-right .time {
+        display: none;
+      }
+      
+      .story-container {
+        padding: 70px 16px 60px;
+      }
+      
+      .news-item {
+        grid-template-columns: 40px 1fr;
+        gap: 16px;
+      }
+      
+      .news-number {
+        font-size: 24px;
+      }
+      
+      .news-title {
+        font-size: 24px;
+      }
+      
+      .main-headline {
+        font-size: 34px;
+        letter-spacing: -1px;
+        margin-bottom: 30px;
+        line-height: 1.15;
+      }
+      
+      .date-header {
+        font-size: 11px;
+        letter-spacing: 2px;
+        margin-bottom: 30px;
+      }
+      
+      .subheadline {
+        font-size: 18px;
+        margin-bottom: 30px;
+      }
+      
+      .news-info {
+        font-size: 11px !important;
+        gap: 16px !important;
+        margin-bottom: 40px !important;
+      }
+      
+      .rotating-topics {
+        min-width: 150px !important;
+      }
+      
+      .opening-container {
+        padding: 0 20px;
+        min-height: calc(100vh - 120px);
+      }
+      
+      .scroll-hint {
+        bottom: 30px;
+        font-size: 11px;
+      }
+      
+      .progress-indicator {
+        right: 12px;
+        gap: 6px;
+      }
+      
+      .progress-dot {
+        width: 5px;
+        height: 5px;
+      }
+      
+      .progress-dot.active {
+        width: 5px;
+        height: 18px;
+      }
+    }
+
+    /* Debug info */
+    .debug-panel {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      z-index: 9999;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="debug-panel">
+    Story: <span id="debug-story">0</span> | 
+    Events: <span id="debug-events">0</span> | 
+    Status: <span id="debug-status">Ready</span>
+  </div>
+
+  <div id="root"></div>
+
+  <script>
+    // Sample stories data
+    const sampleStories = [
+      {
+        type: 'opening',
+        date: 'THURSDAY, AUGUST 28, 2025',
+        headline: 'Typhoon chaos hits Asia\'s coastal millions'
+      },
+      {
+        type: 'news',
+        number: 1,
+        category: 'WORLD NEWS',
+        emoji: '🌀',
+        title: 'Typhoon Kajiki: Asia\'s Worst Storm in Decades',
+        summary: 'Vietnam evacuates 586,000 people as Category 5 typhoon approaches with unprecedented 180mph winds. China\'s resort city Sanya closes all businesses, halts public transport, and grounds flights. The storm threatens to cause $2.3 billion in damages across 12 provinces, marking the region\'s most severe weather crisis this decade.',
+        details: ['Wind speeds: 180mph', 'Economic impact: $2.3B', 'Areas affected: 12 provinces'],
+        source: 'Reuters',
+        url: 'https://reuters.com/typhoon'
+      },
+      {
+        type: 'news',
+        number: 2,
+        category: 'WORLD NEWS',
+        emoji: '🌾',
+        title: 'Brazil Farm Crisis Threatens Global Food Security',
+        summary: 'Agricultural bankruptcies surge 138% to 1,272 cases in 2024, devastating Brazil\'s farming sector. Soybean and corn exports plummet 23%, eliminating 45,000 jobs and triggering 8% global price increases. The crisis threatens worldwide food supply chains as Brazil, the world\'s largest agricultural exporter, faces its worst farming collapse in history.',
+        details: ['Export drop: 23%', 'Jobs lost: 45,000', 'Global price impact: +8%'],
+        source: 'Financial Times',
+        url: 'https://reuters.com/brazil'
+      },
+      {
+        type: 'news',
+        number: 3,
+        category: 'BUSINESS',
+        emoji: '☕',
+        title: 'Keurig-JDE Merger Creates Coffee Empire',
+        summary: 'Keurig Dr Pepper nears $18 billion acquisition of Dutch company JDE Peet\'s, creating the world\'s second-largest coffee conglomerate. The merged entity would control 27% of the global coffee market with combined revenues of $24 billion, operating over 50 premium brands across 100 countries in an unprecedented industry consolidation.',
+        details: ['Combined revenue: $24B', 'Brands: 50+', 'Market share: #2 globally'],
+        source: 'Bloomberg',
+        url: 'https://bloomberg.com/coffee'
+      },
+      {
+        type: 'news',
+        number: 4,
+        category: 'MARKETS',
+        emoji: '📈',
+        title: 'S&P 500 Hits 5,800 on AI Rally',
+        summary: 'The S&P 500 index surges 2.3% to record-breaking 5,800 points, driven by artificial intelligence stocks. Nvidia leads the tech sector rally with 35% year-to-date gains, pushing market valuations to 22.5 P/E ratio. Investors bet heavily on AI transformation despite concerns about stretched valuations and potential market corrections.',
+        details: ['YTD gain: 18%', 'Tech sector: +35%', 'P/E ratio: 22.5'],
+        source: 'CNBC',
+        url: 'https://cnbc.com/markets'
+      },
+      {
+        type: 'news',
+        number: 5,
+        category: 'TECH & AI',
+        emoji: '🤖',
+        title: 'UK\'s Bold AI Democracy Experiment',
+        summary: 'Britain considers revolutionary £2 billion deal with OpenAI to provide free ChatGPT Plus access to all 67 million citizens. Minister Peter Kyle champions unprecedented AI democratization initiative, costing £30 per citizen annually. The program includes enhanced privacy safeguards and aims to bridge the digital divide by Q1 2026 launch.',
+        details: ['Cost per citizen: £30/year', 'Launch date: Q1 2026', 'Privacy safeguards: Enhanced'],
+        source: 'BBC',
+        url: 'https://bbc.com/uk-ai'
+      },
+      {
+        type: 'news',
+        number: 6,
+        category: 'SCIENCE',
+        emoji: '🚀',
+        title: 'NASA Finds "Second Earth" 40 Light-Years Away',
+        summary: 'James Webb telescope detects water vapor and oxygen signatures on exoplanet K2-18b, located 40 light-years from Earth. The planet features Earth-like temperatures between 0-40°C, 21% oxygen atmosphere, and is 1.2 times Earth\'s size. Scientists call this the most promising candidate for extraterrestrial life discovered to date.',
+        details: ['Temperature: 0-40°C', 'Atmosphere: 21% oxygen', 'Size: 1.2x Earth'],
+        source: 'Nature',
+        url: 'https://nasa.gov/exoplanet'
+      },
+      {
+        type: 'news',
+        number: 7,
+        category: 'HEALTH',
+        emoji: '🧬',
+        title: 'Cancer Breakthrough: 90% Success Rate',
+        summary: 'Revolutionary CAR-T immunotherapy achieves 90% success rate in late-stage cancer trials involving 2,400 patients. The treatment reprograms patients\' immune cells to target tumors, offering hope for previously untreatable cases. FDA approval expected Q4 2025, though the $150,000 price tag raises accessibility concerns for this groundbreaking therapy.',
+        details: ['Patients treated: 2,400', 'FDA approval: Expected Q4', 'Cost: $150,000'],
+        source: 'Nature Medicine',
+        url: 'https://nature.com/cancer'
+      },
+      {
+        type: 'news',
+        number: 8,
+        category: 'CLIMATE',
+        emoji: '🌍',
+        title: 'Carbon Capture at 99% Efficiency',
+        summary: 'MIT engineers unveil atmospheric carbon removal system achieving unprecedented 99% efficiency, capable of extracting 1 billion tons of CO2 annually. The breakthrough technology costs just $50 per ton while using 40% less energy than existing methods. Commercial deployment scheduled for 2027 could revolutionize global climate change mitigation strategies.',
+        details: ['Cost: $50/ton', 'Energy use: -40%', 'Deployment: 2027'],
+        source: 'Science',
+        url: 'https://science.org/climate'
+      },
+      {
+        type: 'news',
+        number: 9,
+        category: 'SPORTS',
+        emoji: '⚽',
+        title: 'Paris Olympics Sets All-Time Attendance Record',
+        summary: 'Paris Olympics shatters records with 15 million spectators attending events across innovative urban venues throughout the city. The games generate €4.2 billion in revenue, attract 3.5 billion TV viewers worldwide, and deliver €11 billion economic impact to France, establishing new benchmarks for future Olympic host cities.',
+        details: ['Revenue: €4.2B', 'TV viewers: 3.5B', 'Economic impact: €11B'],
+        source: 'Olympics.com',
+        url: 'https://olympics.com/paris'
+      },
+      {
+        type: 'news',
+        number: 10,
+        category: 'ENTERTAINMENT',
+        emoji: '🎬',
+        title: 'Disney\'s $50B Streaming Gambit',
+        summary: 'Disney announces unprecedented $50 billion content investment to dominate the streaming wars against Netflix and Amazon. The entertainment giant plans 140 new shows and 60 films, targeting 300 million subscribers by 2027. This aggressive strategy represents the largest entertainment content investment in history, reshaping the global streaming landscape.',
+        details: ['New shows: 140', 'Films: 60', 'Subscriber target: 300M'],
+        source: 'Variety',
+        url: 'https://variety.com/disney'
+      },
+      {
+        type: 'newsletter',
+        content: 'Professional Newsletter Signup'
+      }
+    ];
+
+    let currentIndex = 0;
+    let isTransitioning = false;
+    let eventCount = 0;
+
+    function updateDebug() {
+      document.getElementById('debug-story').textContent = currentIndex;
+      document.getElementById('debug-events').textContent = eventCount;
+    }
+
+    function goToStory(index) {
+      if (index >= 0 && index < sampleStories.length && !isTransitioning) {
+        currentIndex = index;
+        updateDisplay();
+        updateDebug();
+      }
+    }
+
+    function nextStory() {
+      goToStory(currentIndex + 1);
+    }
+
+    function prevStory() {
+      goToStory(currentIndex - 1);
+    }
+
+    function updateDisplay() {
+      const containers = document.querySelectorAll('.story-container');
+      const dots = document.querySelectorAll('.progress-dot');
+      
+      containers.forEach((container, index) => {
+        if (index === currentIndex) {
+          container.style.transform = 'translateY(0) scale(1)';
+          container.style.opacity = '1';
+          container.style.zIndex = '10';
+          container.style.pointerEvents = 'auto';
+        } else if (index < currentIndex) {
+          container.style.transform = 'translateY(-100%) scale(0.9)';
+          container.style.opacity = '0';
+          container.style.zIndex = '1';
+          container.style.pointerEvents = 'none';
+        } else {
+          container.style.transform = 'translateY(100%) scale(0.95)';
+          container.style.opacity = '0';
+          container.style.zIndex = '1';
+          container.style.pointerEvents = 'none';
+        }
+      });
+
+      dots.forEach((dot, index) => {
+        if (index === currentIndex) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function handleWheel(e) {
+      eventCount++;
+      updateDebug();
+      document.getElementById('debug-status').textContent = `Wheel: ${e.deltaY}`;
+      
+      if (isTransitioning) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (Math.abs(e.deltaY) > 30) {
+        isTransitioning = true;
+        
+        if (e.deltaY > 0) {
+          nextStory();
+        } else {
+          prevStory();
+        }
+        
+        setTimeout(() => {
+          isTransitioning = false;
+          document.getElementById('debug-status').textContent = 'Ready';
+        }, 500);
+      }
+    }
+
+    function handleTouchStart(e) {
+      startY = e.touches[0].clientY;
+      document.getElementById('debug-status').textContent = 'Touch started';
+    }
+
+    function handleTouchEnd(e) {
+      if (isTransitioning) return;
+      
+      const endY = e.changedTouches[0].clientY;
+      const diff = startY - endY;
+      
+      document.getElementById('debug-status').textContent = `Touch diff: ${diff}`;
+      
+      if (Math.abs(diff) > 30) {
+        isTransitioning = true;
+        if (diff > 0) {
+          nextStory();
+        } else {
+          prevStory();
+        }
+        setTimeout(() => {
+          isTransitioning = false;
+          document.getElementById('debug-status').textContent = 'Ready';
+        }, 500);
+      }
+    }
+
+    function handleKeyDown(e) {
+      eventCount++;
+      updateDebug();
+      
+      if (isTransitioning) return;
+      
+      if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        isTransitioning = true;
+        nextStory();
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 500);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        isTransitioning = true;
+        prevStory();
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 500);
+      }
+    }
+
+    let startY = 0;
+
+    function renderApp() {
+      const currentTime = new Date().toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+
+      document.getElementById('root').innerHTML = `
+        <div style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+          <!-- Header -->
+          <header class="header">
+            <div class="logo">
+              <span class="logo-ten">TEN</span> NEWS
+            </div>
+            
+            <nav class="header-center">
+              <span>WORLD</span>
+              <span>BUSINESS</span>
+              <span>TECH</span>
+              <span>SCIENCE</span>
+              <span>SPORTS</span>
+            </nav>
+            
+            <div class="header-right">
+              <time class="time">${currentTime}</time>
+              <button class="subscribe-btn">SUBSCRIBE</button>
+            </div>
+          </header>
+
+          <!-- Stories -->
+          <main>
+            ${sampleStories.map((story, index) => `
+              <article class="story-container" style="
+                transform: ${index === currentIndex 
+                  ? 'translateY(0) scale(1)' 
+                  : index < currentIndex 
+                    ? 'translateY(-100%) scale(0.9)' 
+                    : 'translateY(100%) scale(0.95)'};
+                opacity: ${index === currentIndex ? 1 : 0};
+                z-index: ${index === currentIndex ? 10 : 1};
+                pointer-events: ${index === currentIndex ? 'auto' : 'none'};
+              ">
+                <div class="story-content">
+                  ${story.type === 'opening' ? `
+                    <div class="opening-container">
+                      <div class="date-header">${story.date}</div>
+                      <h1 class="main-headline">${story.headline}</h1>
+                      <div class="subheadline">
+                        <div style="display: inline-block;">
+                          <span style="font-weight: 600; color: #86868b;">Today: </span>
+                          <span class="rotating-topics" style="position: relative; display: inline-block; min-width: 200px; height: 26px; vertical-align: middle;">
+                            ${['Typhoon chaos in Asia', 'Brazil farm crisis', 'Cancer breakthrough', 'UK free AI access', 'Carbon capture success']
+                              .map((topic, i) => `
+                                <span style="
+                                  position: absolute;
+                                  left: 0;
+                                  white-space: nowrap;
+                                  opacity: 0;
+                                  animation: topicRotate 15s infinite;
+                                  animation-delay: ${i * 3}s;
+                                  color: #1d1d1f;
+                                  font-weight: 700;
+                                  transition: opacity 0.5s ease-in-out;
+                                ">${topic}</span>
+                              `).join('')}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="news-info" style="
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center;
+                        gap: 20px;
+                        margin-bottom: 50px;
+                        font-size: 13px;
+                        color: #86868b;
+                        font-weight: 500;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                      ">
+                        <span>10 Stories</span>
+                        <span style="color: #d2d2d7;">•</span>
+                        <span>2 Min Read</span>
+                      </div>
+                      <div class="scroll-hint">Scroll to continue ↓</div>
+                    </div>
+                  ` : story.type === 'news' ? `
+                    <div class="news-grid">
+                      ${story.number === 1 ? `
+                        <header style="
+                          text-align: center; 
+                          padding: 32px 0;
+                          border-bottom: 1px solid #e5e5e7;
+                          margin-bottom: 24px;
+                        ">
+                          <h2 style="
+                            font-size: 32px;
+                            font-weight: 800;
+                            letter-spacing: -0.5px;
+                            color: #1d1d1f;
+                          ">Today's Essential Reading</h2>
+                        </header>
+                      ` : ''}
+                      
+                      <div class="news-item" onclick="window.open('${story.url}', '_blank', 'noopener,noreferrer')">
+                        <div class="news-number">${story.number < 10 ? `0${story.number}` : story.number}</div>
+                        <div class="news-content">
+                          <div class="news-category">${story.category}</div>
+                          <h3 class="news-title">${story.title}</h3>
+                          <p class="news-summary">${story.summary}</p>
+                          <div class="news-meta">
+                            ${story.details ? story.details.map(detail => {
+                              const [label, value] = detail.split(':');
+                              return `<span><strong>${label}:</strong>${value}</span>`;
+                            }).join('') : ''}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ` : story.type === 'newsletter' ? `
+                    <div class="newsletter-container">
+                      <h2 class="newsletter-title">Stay Informed</h2>
+                      <p class="newsletter-subtitle">Get Ten News delivered to your inbox every morning</p>
+                      <div class="newsletter-form">
+                        <input type="email" placeholder="Enter your email" class="newsletter-input" required>
+                        <button type="submit" class="newsletter-button">Subscribe</button>
+                      </div>
+                      <p class="newsletter-info">Join 2.5M+ readers • No spam • Unsubscribe anytime</p>
+                    </div>
+                  ` : ''}
+                </div>
+              </article>
+            `).join('')}
+          </main>
+
+          <!-- Progress Indicator -->
+          <nav class="progress-indicator">
+            ${sampleStories.map((_, index) => `
+              <button class="progress-dot ${index === currentIndex ? 'active' : ''}" onclick="goToStory(${index})"></button>
+            `).join('')}
+          </nav>
+        </div>
+      `;
+    }
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+      renderApp();
+      updateDebug();
+      
+      // Add event listeners with capture and explicit options
+      document.addEventListener('wheel', handleWheel, { passive: false, capture: true });
+      document.addEventListener('touchstart', handleTouchStart, { passive: true });
+      document.addEventListener('touchend', handleTouchEnd, { passive: true });
+      document.addEventListener('keydown', handleKeyDown, { passive: false });
+      
+      // Update time every minute
+      setInterval(() => {
+        const timeElement = document.querySelector('.time');
+        if (timeElement) {
+          timeElement.textContent = new Date().toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+        }
+      }, 60000);
+
+      console.log('Ten News app loaded successfully!');
+      console.log('Try: scroll wheel, arrow keys, or click the dots on the right');
+    });
+
+    // Expose functions for testing
+    window.testNext = () => nextStory();
+    window.testPrev = () => prevStory();
+    window.testGoTo = (index) => goToStory(index);
+  </script>
+</body>
+</html>

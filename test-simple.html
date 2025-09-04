@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ten News - Test Version</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      background: #ffffff;
+      color: #1d1d1f;
+      overflow: hidden;
+      width: 100%;
+      height: 100vh;
+      touch-action: pan-y;
+    }
+
+    .debug-info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 9999;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .header-center {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #86868b;
+    }
+
+    .header-center span {
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .header-center span:hover {
+      color: #1d1d1f;
+    }
+
+    .subscribe-btn {
+      padding: 8px 20px;
+      background: #1d1d1f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .story-container {
+      position: absolute;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 60px;
+      background: #fff;
+      transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    .story-content {
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .opening-container {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: calc(100vh - 140px);
+    }
+
+    .date-header {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: #86868b;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .main-headline {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 40px;
+      color: #1d1d1f;
+    }
+
+    .subheadline {
+      font-size: 22px;
+      line-height: 1.4;
+      margin-bottom: 40px;
+    }
+
+    .news-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .news-item {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 20px;
+      padding: 24px 0;
+      border-bottom: 1px solid #e5e5e7;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .news-item:hover {
+      padding-left: 8px;
+    }
+
+    .news-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: #c7c7cc;
+    }
+
+    .news-content {
+      padding-top: 4px;
+    }
+
+    .news-category {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #86868b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .news-title {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      color: #1d1d1f;
+    }
+
+    .news-summary {
+      font-size: 17px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .progress-indicator {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d2d2d7;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .progress-dot.active {
+      width: 8px;
+      height: 24px;
+      border-radius: 4px;
+      background: #1d1d1f;
+    }
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #86868b;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 500;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    .newsletter-container {
+      text-align: center;
+      padding: 60px 24px;
+      background: #000;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .newsletter-title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+
+    .newsletter-form {
+      max-width: 440px;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .newsletter-input {
+      flex: 1;
+      padding: 16px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      background: #1c1c1e;
+      color: #fff;
+    }
+
+    .newsletter-button {
+      padding: 16px 32px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="debug-info" id="debug">
+    Current: <span id="current-story">0</span> | 
+    Scroll: <span id="scroll-count">0</span> | 
+    Touch: <span id="touch-status">Ready</span>
+  </div>
+
+  <div id="root"></div>
+
+  <script>
+    // Simple test data
+    const stories = [
+      {
+        type: 'opening',
+        date: 'THURSDAY, AUGUST 28, 2025',
+        headline: 'Typhoon chaos hits Asia\'s coastal millions'
+      },
+      {
+        type: 'news',
+        number: 1,
+        category: 'WORLD NEWS',
+        title: 'First News Story',
+        summary: 'This is the first news story content for testing scroll functionality.'
+      },
+      {
+        type: 'news',
+        number: 2,
+        category: 'TECH',
+        title: 'Second News Story',
+        summary: 'This is the second news story content for testing scroll functionality.'
+      },
+      {
+        type: 'newsletter',
+        content: 'Newsletter signup'
+      }
+    ];
+
+    let currentIndex = 0;
+    let isTransitioning = false;
+    let scrollCount = 0;
+
+    function updateDebug() {
+      document.getElementById('current-story').textContent = currentIndex;
+      document.getElementById('scroll-count').textContent = scrollCount;
+    }
+
+    function goToStory(index) {
+      console.log('Going to story:', index);
+      if (index >= 0 && index < stories.length && !isTransitioning) {
+        currentIndex = index;
+        updateDisplay();
+        updateDebug();
+      }
+    }
+
+    function nextStory() {
+      console.log('Next story from:', currentIndex);
+      goToStory(currentIndex + 1);
+    }
+
+    function prevStory() {
+      console.log('Previous story from:', currentIndex);
+      goToStory(currentIndex - 1);
+    }
+
+    function updateDisplay() {
+      const containers = document.querySelectorAll('.story-container');
+      const dots = document.querySelectorAll('.progress-dot');
+      
+      containers.forEach((container, index) => {
+        if (index === currentIndex) {
+          container.style.transform = 'translateY(0) scale(1)';
+          container.style.opacity = '1';
+          container.style.zIndex = '10';
+          container.style.pointerEvents = 'auto';
+        } else if (index < currentIndex) {
+          container.style.transform = 'translateY(-100%) scale(0.9)';
+          container.style.opacity = '0';
+          container.style.zIndex = '1';
+          container.style.pointerEvents = 'none';
+        } else {
+          container.style.transform = 'translateY(100%) scale(0.95)';
+          container.style.opacity = '0';
+          container.style.zIndex = '1';
+          container.style.pointerEvents = 'none';
+        }
+      });
+
+      dots.forEach((dot, index) => {
+        if (index === currentIndex) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    // Simplified wheel handler
+    function handleWheel(e) {
+      scrollCount++;
+      updateDebug();
+      
+      console.log('Wheel event:', e.deltaY, 'transitioning:', isTransitioning);
+      
+      if (isTransitioning) {
+        console.log('Blocked: transitioning');
+        return;
+      }
+      
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (Math.abs(e.deltaY) > 10) { // Lower threshold for testing
+        isTransitioning = true;
+        console.log('Triggering transition, deltaY:', e.deltaY);
+        
+        if (e.deltaY > 0) {
+          console.log('Scrolling down');
+          nextStory();
+        } else {
+          console.log('Scrolling up');
+          prevStory();
+        }
+        
+        setTimeout(() => {
+          isTransitioning = false;
+          console.log('Transition ended');
+        }, 800);
+      }
+    }
+
+    // Touch handlers
+    let startY = 0;
+
+    function handleTouchStart(e) {
+      startY = e.touches[0].clientY;
+      document.getElementById('touch-status').textContent = 'Started';
+      console.log('Touch start:', startY);
+    }
+
+    function handleTouchEnd(e) {
+      if (isTransitioning) return;
+      
+      const endY = e.changedTouches[0].clientY;
+      const diff = startY - endY;
+      
+      document.getElementById('touch-status').textContent = `Diff: ${diff}`;
+      console.log('Touch end, diff:', diff);
+      
+      if (Math.abs(diff) > 50) {
+        isTransitioning = true;
+        if (diff > 0) {
+          nextStory();
+        } else {
+          prevStory();
+        }
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 800);
+      }
+    }
+
+    // Keyboard handler
+    function handleKeyDown(e) {
+      console.log('Key pressed:', e.key);
+      
+      if (isTransitioning) return;
+      
+      if (e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        isTransitioning = true;
+        nextStory();
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 800);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        isTransitioning = true;
+        prevStory();
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 800);
+      }
+    }
+
+    function renderApp() {
+      document.getElementById('root').innerHTML = `
+        <div style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+          <!-- Header -->
+          <header class="header">
+            <div class="logo">
+              <span style="color: #1d1d1f;">TEN</span> NEWS
+            </div>
+            <nav class="header-center">
+              <span>WORLD</span>
+              <span>BUSINESS</span>
+              <span>TECH</span>
+            </nav>
+            <div>
+              <button class="subscribe-btn">SUBSCRIBE</button>
+            </div>
+          </header>
+
+          <!-- Stories -->
+          ${stories.map((story, index) => `
+            <div class="story-container" style="
+              transform: ${index === currentIndex 
+                ? 'translateY(0) scale(1)' 
+                : index < currentIndex 
+                  ? 'translateY(-100%) scale(0.9)' 
+                  : 'translateY(100%) scale(0.95)'};
+              opacity: ${index === currentIndex ? 1 : 0};
+              z-index: ${index === currentIndex ? 10 : 1};
+              pointer-events: ${index === currentIndex ? 'auto' : 'none'};
+            ">
+              <div class="story-content">
+                ${story.type === 'opening' ? `
+                  <div class="opening-container">
+                    <div class="date-header">${story.date}</div>
+                    <h1 class="main-headline">${story.headline}</h1>
+                    <div class="subheadline">
+                      <span style="font-weight: 600; color: #86868b;">Today: </span>
+                      <span style="color: #1d1d1f; font-weight: 700;">Test scroll functionality</span>
+                    </div>
+                    <div class="scroll-hint">Try scrolling ↓</div>
+                  </div>
+                ` : story.type === 'news' ? `
+                  <div class="news-grid">
+                    <div class="news-item">
+                      <div class="news-number">0${story.number}</div>
+                      <div class="news-content">
+                        <div class="news-category">${story.category}</div>
+                        <h3 class="news-title">${story.title}</h3>
+                        <p class="news-summary">${story.summary}</p>
+                      </div>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="newsletter-container">
+                    <h2 class="newsletter-title">Newsletter</h2>
+                    <div class="newsletter-form">
+                      <input type="email" placeholder="Enter email" class="newsletter-input">
+                      <button class="newsletter-button">Subscribe</button>
+                    </div>
+                  </div>
+                `}
+              </div>
+            </div>
+          `).join('')}
+
+          <!-- Progress Indicator -->
+          <div class="progress-indicator">
+            ${stories.map((_, index) => `
+              <div class="progress-dot ${index === currentIndex ? 'active' : ''}" onclick="goToStory(${index})"></div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, initializing...');
+      renderApp();
+      updateDebug();
+      
+      // Add event listeners with more aggressive options
+      document.addEventListener('wheel', handleWheel, { 
+        passive: false, 
+        capture: true 
+      });
+      
+      document.addEventListener('touchstart', handleTouchStart, { 
+        passive: true 
+      });
+      
+      document.addEventListener('touchend', handleTouchEnd, { 
+        passive: true 
+      });
+      
+      document.addEventListener('keydown', handleKeyDown, { 
+        passive: false 
+      });
+      
+      console.log('Event listeners added');
+      
+      // Test function
+      window.testNext = () => {
+        console.log('Manual test: next story');
+        nextStory();
+      };
+      
+      window.testPrev = () => {
+        console.log('Manual test: previous story');
+        prevStory();
+      };
+      
+      console.log('Try: testNext() or testPrev() in console, or use arrow keys');
+    });
+  </script>
+</body>
+</html>
