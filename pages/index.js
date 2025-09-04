@@ -190,7 +190,7 @@ export default function Home() {
         console.error('Error loading news:', err);
         setLoading(false);
       }
-    };
+    }
 
     loadNewsData();
   }, []);
@@ -578,5 +578,4 @@ export default function Home() {
       </nav>
     </div>
   );
-}
 }
