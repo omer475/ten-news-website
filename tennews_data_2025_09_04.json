@@ -3,27 +3,27 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "🏥",
-      "title": "French Hospitals Ordered to Prepare for Possible War by 2026",
-      "summary": "French health ministry has issued confidential instructions to hospitals nationwide to prepare for potential 'major military engagement' by March 2026, according to a leaked government letter, raising concerns about escalating European tensions.",
+      "emoji": "🏗️",
+      "title": "Afghanistan Earthquake: Humanitarian Agencies Launch Urgent Aid Appeal",
+      "summary": "International humanitarian organizations are requesting immediate assistance following a devastating earthquake in eastern Afghanistan on September 3rd. The disaster has caused significant structural damage and casualties, prompting a coordinated emergency response.",
       "details": [
-        "Timeline: March 2026 deadline",
-        "Document: Classified health directive",
-        "Scope: All French hospitals"
+        "Death toll rising hourly",
+        "Remote areas unreachable",
+        "Local resources overwhelmed"
       ],
       "category": "World News",
-      "source": "The Independent",
-      "url": "https://www.independent.co.uk/news/world/europe/france-hospitals-war-europe-letter-russia-ukraine-b2819143.html"
+      "source": "Euronews",
+      "url": "https://it.euronews.com/2025/09/04/afghanistan-agenzie-umanitarie-chiedono-urgentemente-aiuti-internazionali-dopo-il-terremot"
     },
     {
       "rank": 2,
       "emoji": "💰",
-      "title": "Global Bond Selloff Intensifies as Gold Hits Record High",
-      "summary": "Investors are rapidly selling government bonds worldwide while gold prices reach unprecedented levels, indicating growing concerns about global economic stability and geopolitical tensions.",
+      "title": "Global Bond Sell-off Intensifies as Gold Hits Record High",
+      "summary": "Investors are rapidly selling government bonds worldwide while gold prices reach unprecedented levels. This market shift reflects growing concerns about global economic stability and inflation risks.",
       "details": [
-        "Gold: New price record",
-        "Bonds: Multi-market selloff",
-        "Trend: Global investor shift"
+        "Gold exceeds $2,500/ounce",
+        "Bond yields spike dramatically",
+        "Asian markets most affected"
       ],
       "category": "Business",
       "source": "CNBC",
@@ -31,21 +31,21 @@
     },
     {
       "rank": 3,
-      "emoji": "🌏",
-      "title": "China Retaliates with Tariffs on US Fiber-Optic Companies",
-      "summary": "China has imposed anti-dumping tariffs on American fiber-optic manufacturers following its first anti-circumvention investigation, claiming US companies mislabeled products to avoid existing duties.",
+      "emoji": "⚖️",
+      "title": "Trump Appeals to Supreme Court Over Tariff Powers",
+      "summary": "Former President Trump has petitioned the Supreme Court to review his authority to impose broad tariffs under emergency powers law, following a federal appeals court ruling limiting presidential tariff capabilities.",
       "details": [
-        "Investigation: First of kind",
-        "Target: Optical fiber sector",
-        "Response: To US sanctions"
+        "Emergency powers challenged",
+        "Expedited review requested",
+        "Trade policy implications significant"
       ],
-      "category": "Business",
-      "source": "South China Morning Post",
-      "url": "https://www.scmp.com/economy/global-economy/article/3324303/china-targets-us-fibre-optic-firms-after-washington-sanctions-chemical-producer"
+      "category": "Politics",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/politics/supreme-court/trump-asks-supreme-court-endorse-power-impose-broad-tariffs-rcna228799"
     }
   ],
-  "dailyGreeting": "Good morning! Markets shake as global tensions rise.",
-  "readingTime": "0.5 minute read",
+  "dailyGreeting": "Good morning! Markets shake as gold soars to records.",
+  "readingTime": "1 minute read",
   "displayDate": "THURSDAY, SEPTEMBER 4, 2025",
   "historicalEvents": [
     {
@@ -65,6 +65,6 @@
       "description": "Google is officially incorporated as a company"
     }
   ],
-  "generatedAt": "2025-09-04T09:54:16.711816",
-  "generatedAtUK": "2025-09-04T10:54:16.711837+01:00"
+  "generatedAt": "2025-09-04T15:36:26.492875",
+  "generatedAtUK": "2025-09-04T16:36:26.492895+01:00"
 }
