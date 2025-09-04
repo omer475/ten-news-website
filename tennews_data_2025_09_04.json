@@ -1,0 +1,70 @@
+{
+  "digest_date": "September 04, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🏥",
+      "title": "French Hospitals Ordered to Prepare for Possible War by 2026",
+      "summary": "French health ministry has issued confidential instructions to hospitals nationwide to prepare for potential 'major military engagement' by March 2026, according to a leaked government letter, raising concerns about escalating European tensions.",
+      "details": [
+        "Timeline: March 2026 deadline",
+        "Document: Classified health directive",
+        "Scope: All French hospitals"
+      ],
+      "category": "World News",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/europe/france-hospitals-war-europe-letter-russia-ukraine-b2819143.html"
+    },
+    {
+      "rank": 2,
+      "emoji": "💰",
+      "title": "Global Bond Selloff Intensifies as Gold Hits Record High",
+      "summary": "Investors are rapidly selling government bonds worldwide while gold prices reach unprecedented levels, indicating growing concerns about global economic stability and geopolitical tensions.",
+      "details": [
+        "Gold: New price record",
+        "Bonds: Multi-market selloff",
+        "Trend: Global investor shift"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/04/investors-dump-bonds-gold-record-high.html"
+    },
+    {
+      "rank": 3,
+      "emoji": "🌏",
+      "title": "China Retaliates with Tariffs on US Fiber-Optic Companies",
+      "summary": "China has imposed anti-dumping tariffs on American fiber-optic manufacturers following its first anti-circumvention investigation, claiming US companies mislabeled products to avoid existing duties.",
+      "details": [
+        "Investigation: First of kind",
+        "Target: Optical fiber sector",
+        "Response: To US sanctions"
+      ],
+      "category": "Business",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/economy/global-economy/article/3324303/china-targets-us-fibre-optic-firms-after-washington-sanctions-chemical-producer"
+    }
+  ],
+  "dailyGreeting": "Good morning! Markets shake as global tensions rise.",
+  "readingTime": "0.5 minute read",
+  "displayDate": "THURSDAY, SEPTEMBER 4, 2025",
+  "historicalEvents": [
+    {
+      "year": "1781",
+      "description": "Spanish settlers establish Los Angeles, California"
+    },
+    {
+      "year": "1888",
+      "description": "George Eastman patents first Kodak roll-film camera"
+    },
+    {
+      "year": "1957",
+      "description": "Ford Motor Company introduces the Edsel car line"
+    },
+    {
+      "year": "1998",
+      "description": "Google is officially incorporated as a company"
+    }
+  ],
+  "generatedAt": "2025-09-04T09:54:16.711816",
+  "generatedAtUK": "2025-09-04T10:54:16.711837+01:00"
+}
