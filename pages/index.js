@@ -4,7 +4,7 @@ export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // Navigation menu state
   
   // Refs to track timeouts and prevent memory leaks
   const transitionTimeoutRef = useRef(null);
