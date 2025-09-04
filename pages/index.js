@@ -506,7 +506,7 @@ export default function Home() {
                               const value = detail.substring(colonIndex + 1).trim();
                               return (
                                 <span key={i}>
-                                  <strong>{label}:</strong>{value}
+                                  <strong>{label}:</strong> {value}
                                 </span>
                               );
                             } else {
