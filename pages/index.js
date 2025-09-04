@@ -184,6 +184,7 @@ export default function Home() {
           }
         ];
         
+        // Load sample stories
         setStories(sampleStories);
         setLoading(false);
       } catch (err) {
