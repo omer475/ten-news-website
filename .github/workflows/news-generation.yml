@@ -27,29 +27,8 @@ jobs:
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
         run: |
-          # Create a script to run news generation non-interactively
-          cat > run_news_generation.py << 'EOF'
-          import sys
-          import os
-          
-          # Add the current directory to Python path
-          sys.path.insert(0, os.getcwd())
-          
-          # Import and run the news generator
-          from news_generator import generate_daily_news
-          
-          if __name__ == "__main__":
-              print("🤖 Starting automated news generation...")
-              success = generate_daily_news()
-              if success:
-                  print("✅ News generation completed successfully!")
-                  sys.exit(0)
-              else:
-                  print("❌ News generation failed!")
-                  sys.exit(1)
-          EOF
-          
-          python run_news_generation.py
+          # Run the news generator directly with option 1 (run once)
+          echo "1" | python news-generator.py
           
       - name: Commit and push generated news
         run: |
