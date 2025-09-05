@@ -1,12 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "name": "ten-news-website",
-  "version": 2,
-  "framework": "nextjs",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
   "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "regions": ["iad1"],
   "functions": {
     "pages/api/**/*.js": {
@@ -15,62 +12,33 @@
   },
   "headers": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods", 
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options", 
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    },
-    {
-      "source": "/tennews_data_(.*).json",
+      "source": "/news-data/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=3600, s-maxage=7200"
+          "value": "public, max-age=300, s-maxage=300"
         }
       ]
-    }
-  ],
-  "redirects": [
+    },
     {
-      "source": "/news-generator.py",
-      "destination": "/",
-      "permanent": true
+      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2))",
+      "headers": [
+        {
+          "key": "Cache-Control", 
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
-      "source": "/data/(.*)",
-      "destination": "/tennews_data_$1.json"
+      "source": "/news-data/:path*",
+      "destination": "/:path*"
     }
   ],
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "env": [
+    "NODE_ENV"
+  ]
 }

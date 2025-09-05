@@ -1,55 +1,60 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Vercel optimized configuration
   experimental: {
     appDir: false
   },
   reactStrictMode: true,
   swcMinify: true,
   
-  // Vercel optimizations
-  compress: true,
-  poweredByHeader: false,
-  
   // Image optimization for Vercel
   images: {
     domains: [],
     formats: ['image/webp', 'image/avif'],
-    minimumCacheTTL: 60,
-    dangerouslyAllowSVG: false
   },
+  
+  // Output configuration for static export if needed
+  trailingSlash: false,
   
   // Environment variables
   env: {
-    SITE_NAME: 'Ten News',
-    SITE_DESCRIPTION: 'AI-powered daily news digest'
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
   
-  // Headers for security and performance
+  // Compression
+  compress: true,
+  
+  // PoweredByHeader
+  poweredByHeader: false,
+  
+  // Headers for security and caching
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: '/(.*)',
         headers: [
           {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            key: 'X-Frame-Options',
+            value: 'DENY'
           },
           {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
           }
         ]
-      }
-    ]
-  },
-  
-  // Redirects for SEO
-  async redirects() {
-    return [
+      },
       {
-        source: '/home',
-        destination: '/',
-        permanent: true
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=1, stale-while-revalidate=59'
+          }
+        ]
       }
     ]
   }
