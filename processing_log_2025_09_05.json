@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-09-05T08:49:21.255909",
+  "timestamp": "2025-09-05T11:38:10.377714",
   "date": "2025-09-05",
   "steps": {
     "1_previous_articles": {
@@ -11,10 +11,10 @@
       "description": "All articles fetched from GDELT API",
       "sample_titles": [
         "Trump Administration Asks SCOTUS to Reverse Appeals Court Ruling on Tariffs",
+        "UČENIK IZBO NASTAVNIKA U ŠKOLI : Policija hitno okružila zgradu , dramatične scene u Nemačkoj",
         "استطلاع : ثلثا الفرنسيين يؤيدون استقالة ماكرون",
         "Alligator Alcatraz  to stay open for now as panel pauses federal judge ruling",
-        "Администрация Трампа попросила Верховный суд отменить решение по пошлинам",
-        "Health First Invests in Innovative Mental Health Programs in Brevard County"
+        "ثلثا الفرنسيين يؤيدون استقالة ماكرون"
       ]
     },
     "3_filtering": {
@@ -25,27 +25,27 @@
       "final_unique": 31,
       "approved_domains": [
         "africanews.com",
-        "euronews.com",
         "allafrica.com",
         "koreaherald.com",
-        "riotimesonline.com",
-        "businessinsider.com",
+        "foxnews.com",
+        "lefigaro.fr",
         "investing.com",
         "fool.com",
         "foxbusiness.com",
-        "prnewswire.com"
+        "prnewswire.com",
+        "cnn.com"
       ],
       "rejected_domains": [
         "townhall.com",
+        "novosti.rs",
         "aljazeera.net",
         "local10.com",
+        "hespress.com",
         "ria.ru",
         "spacecoastdaily.com",
         "nieuwsblad.be",
         "borsaitaliana.it",
-        "theargus.co.uk",
-        "naslovi.net",
-        "kompas.com"
+        "theargus.co.uk"
       ],
       "description": "Domain filtering and deduplication"
     },
@@ -56,19 +56,19 @@
       "description": "AI successfully selected 10 articles",
       "selected_titles": [
         "Macron says 26 countries pledge troops as a reassurance force for Ukraine after ",
-        "New Stock Market Super Cycle Is Starting, How to Invest: Goldman Sachs",
+        "Death toll rises after deadly landslide levels Darfur village",
         "Africa: Why African Nations Are Looking to Unite On Climate and Conflict",
         "Palo Alto Networks CEO says the enterprise may not welcome agentic AI browsers",
         "As US tensions rise, Venezuelans keep calm and carry on – but whisper hopes of c",
-        "Are Myanmar upcoming elections a peace-building proces or a trap?",
-        "Death toll rises after deadly landslide levels Darfur village",
         "Trump pick for US Fed governor vows to uphold independence",
+        "Are Myanmar upcoming elections a peace-building proces or a trap?",
+        "US approves $32.5 million in assistance to Nigeria to help address hunger",
         "Dia and Arc maker The Browser Company is being acquired by Atlassian",
         "Rains swell Punjab rivers with Trimmu, Panjnad headworks in high flood situation"
       ]
     },
     "5_final_output": {
-      "final_articles_count": 3,
+      "final_articles_count": 10,
       "news_file": "tennews_data_2025_09_05.json",
       "greeting": "Good morning! Global unity takes center stage today.",
       "reading_time": "1 minute read",
@@ -80,7 +80,7 @@
     "eliminated_duplicates": 0,
     "eliminated_unapproved_sources": 769,
     "approved_for_ai_selection": 31,
-    "final_articles_generated": 3
+    "final_articles_generated": 10
   },
-  "completion_time": "2025-09-05T08:50:19.109005"
+  "completion_time": "2025-09-05T11:39:22.529367"
 }
