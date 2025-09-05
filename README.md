@@ -1,6 +1,8 @@
-# Ten News Website
+# 📰 Ten News Website
 
-A modern, responsive news website built with Next.js and React.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fomer475%2Ften-news-website)
+
+A modern, responsive AI-powered news website built with Next.js and automated content generation.
 
 ## Features
 
@@ -114,10 +116,49 @@ npm run dev
 └── next.config.js       # Next.js configuration
 ```
 
-## Deployment
+## 🚀 Deployment to Vercel
 
-Build for production:
+### Quick Deploy
+Click the deploy button above or:
+
+1. **Fork this repository**
+2. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect Next.js settings
+
+3. **Set Environment Variables** (Optional):
+   - Go to Project Settings → Environment Variables
+   - Add any custom configuration from `env.example`
+
+4. **Deploy**:
+   - Vercel will automatically build and deploy
+   - Get your live URL: `https://your-project.vercel.app`
+
+### Manual Deployment
 ```bash
-npm run build
-npm start
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Deploy to production
+vercel --prod
 ```
+
+### Build Configuration
+- **Framework**: Next.js (auto-detected)
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next` (auto-detected)
+- **Install Command**: `npm install`
+- **Node.js Version**: 18.x
+
+## 🔄 Automated News Generation
+
+The GitHub Actions workflow automatically:
+- Runs daily at 7 AM UTC
+- Generates fresh AI-curated news content
+- Updates the website with new data
+- No manual intervention required

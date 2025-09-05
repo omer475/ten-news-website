@@ -7,6 +7,8 @@ yarn-error.log*
 # Next.js
 .next/
 out/
+build/
+dist/
 
 # Environment variables
 .env
@@ -14,6 +16,11 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
+
+# Vercel
+.vercel
+.vercel.json
 
 # Python
 __pycache__/
@@ -47,6 +54,3 @@ Thumbs.db
 
 # Temporary files
 run_news_generation.py
-
-# Vercel
-.vercel
