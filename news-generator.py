@@ -385,23 +385,16 @@ def scrape_article_content(url):
 # ==================== ARTICLE REWRITING ====================
 def create_rewriting_prompt(articles_with_content):
     """Create prompt for rewriting articles"""
-    prompt = f"""Rewrite these articles for TEN NEWS daily digest.
+    prompt = f"""CRITICAL: You MUST rewrite ALL {len(articles_with_content)} articles provided. Return exactly {len(articles_with_content)} articles in your response.
 
-TITLE RULES:
-- 8-12 words, engaging headline
-- Add relevant emoji at start
-- Use B2 English (intermediate level)
+REWRITE RULES:
+- TITLE: 8-12 words, engaging headline (NO emoji in title field)
+- SUMMARY: EXACTLY 40-50 words, B2 English level
+- DETAILS: 3 pieces of NEW info NOT in summary, format "Label: Value"
+- EMOJI: Choose relevant emoji for each article
+- CATEGORY: World News/Business/Technology/Science/Climate/Health
 
-SUMMARY RULES:  
-- EXACTLY 40-50 words
-- B2 English with technical terms explained
-- Complete information despite length limit
-
-DETAILS RULES:
-- Extract 3 pieces of NEW info NOT in summary
-- Format: "Label: Value" 
-- Each under 5 words
-- Zero repetition from summary
+MANDATORY: Your JSON response must contain exactly {len(articles_with_content)} articles. Each article must have rank 1-{len(articles_with_content)}.
 
 Return ONLY this JSON:
 {{
@@ -420,7 +413,7 @@ Return ONLY this JSON:
   ]
 }}
 
-ARTICLES TO REWRITE:
+ARTICLES TO REWRITE (ALL {len(articles_with_content)} MUST BE INCLUDED):
 """
     
     for i, article in enumerate(articles_with_content, 1):
@@ -764,7 +757,27 @@ def generate_daily_news():
             print("❌ Failed to parse rewritten articles")
             return False
         
-        print(f"✅ Rewritten {len(articles_data['articles'])} articles")
+        # Validate we got exactly 10 articles
+        rewritten_count = len(articles_data['articles'])
+        if rewritten_count < 10:
+            print(f"⚠️ AI rewriting returned only {rewritten_count} articles, padding to 10")
+            # Pad with remaining articles from selected_articles
+            for i in range(rewritten_count, min(10, len(articles_with_content))):
+                fallback_article = articles_with_content[i]
+                articles_data['articles'].append({
+                    "rank": i + 1,
+                    "emoji": "📰",
+                    "title": clean_text_for_json(fallback_article.get('title', ''))[:60],
+                    "summary": clean_text_for_json(fallback_article.get('content', fallback_article.get('title', '')))[:200],
+                    "details": ["Source: " + fallback_article.get('source', 'Unknown'), "Category: World News", "Auto-generated summary"],
+                    "category": "World News",
+                    "source": fallback_article.get('source', 'Unknown'),
+                    "url": fallback_article.get('url', '')
+                })
+        
+        # Ensure exactly 10 articles
+        articles_data['articles'] = articles_data['articles'][:10]
+        print(f"✅ Final output: {len(articles_data['articles'])} articles")
         
         # Generate greeting and reading time
         daily_greeting, reading_time = generate_daily_greeting_and_reading_time(articles_data['articles'])
