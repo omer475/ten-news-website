@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Remove experimental.appDir as it's not needed in Next.js 14
   reactStrictMode: true,
   swcMinify: true,
   // Vercel-specific optimizations
