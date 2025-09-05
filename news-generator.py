@@ -271,16 +271,19 @@ PREVIOUS ARTICLES TO AVOID:
 Rule: Avoid selecting duplicates or minor updates of these stories.
 """
     
-    prompt = f"""Select exactly 10 most important global news stories from the provided list.
+    prompt = f"""You MUST select EXACTLY 10 most important global news stories from the provided list. If there are fewer than 10 suitable stories, select the best available ones and fill to reach exactly 10.
 
 {previous_context}
 
-SELECTION CRITERIA:
-1. Global Impact: Must affect or interest 100+ million people worldwide
-2. Breaking/Significant: Major developments, not routine updates  
-3. Shareability: "You need to know this" level stories
-4. Balance: Mix of politics, business, technology, science, climate, health
-5. Avoid: Personal stories, local news, minor updates, duplicates
+MANDATORY REQUIREMENTS:
+1. MUST return exactly 10 articles in the JSON response
+2. If fewer than 10 high-quality articles exist, include the best available ones to reach 10
+3. Global Impact: Prioritize stories affecting millions worldwide
+4. Breaking/Significant: Major developments over routine updates
+5. Balance: Mix categories (politics, business, technology, science, climate, health)
+6. Avoid: Personal stories, local news only, minor updates, duplicates
+
+CRITICAL: Your response must contain exactly 10 articles. No exceptions.
 
 Return ONLY this JSON structure:
 {{
@@ -615,10 +618,35 @@ def generate_daily_news():
         # AI selection
         selected_articles = select_top_articles_with_ai(unique_articles, previous_articles)
         if not selected_articles:
-            print("❌ AI selection failed")
-            return False
+            print("❌ AI selection failed, using fallback selection")
+            # Fallback: select first 10 articles manually
+            selected_articles = []
+            for i, article in enumerate(unique_articles[:15]):  # Try first 15 to ensure we get 10
+                selected_articles.append({
+                    "id": i,
+                    "title": article.get('title', ''),
+                    "url": article.get('url', ''),
+                    "category": "World News",
+                    "selection_reason": "Fallback selection"
+                })
+                if len(selected_articles) >= 10:
+                    break
         
         # Ensure exactly 10 articles
+        if len(selected_articles) < 10:
+            print(f"⚠️ Only {len(selected_articles)} articles available, padding with available articles")
+            # Add more articles if needed
+            for i, article in enumerate(unique_articles[len(selected_articles):]):
+                selected_articles.append({
+                    "id": len(selected_articles),
+                    "title": article.get('title', ''),
+                    "url": article.get('url', ''),
+                    "category": "World News", 
+                    "selection_reason": "Auto-selected to reach 10 articles"
+                })
+                if len(selected_articles) >= 10:
+                    break
+        
         selected_articles = selected_articles[:10]
         print(f"✅ Selected {len(selected_articles)} articles")
         
