@@ -5,11 +5,11 @@
       "rank": 1,
       "emoji": "🌍",
       "title": "26 Nations Unite to Protect Ukraine After War Ends",
-      "summary": "French President Macron announced that 26 allied countries have committed to deploying military forces in Ukraine post-conflict. This reassurance force will maintain presence on land, sea, and air to guarantee Ukraine's security against future threats.",
+      "summary": "French President Macron announced that 26 allied countries have committed to deploying military forces in Ukraine post-conflict. This 'reassurance force' will maintain presence on land, sea, and air to guarantee Ukraine's security against future threats.",
       "details": [
-        "Meeting held in Paris",
-        "Coalition of willing formed",
-        "Multi-domain security coverage planned"
+        "Location: Paris meeting",
+        "Initiative: Coalition of willing",
+        "Scope: Multi-domain protection force"
       ],
       "category": "World News",
       "source": "The Hindu",
@@ -19,11 +19,11 @@
       "rank": 2,
       "emoji": "📈",
       "title": "Goldman Sachs Predicts New 'Postmodern' Stock Market Super Cycle",
-      "summary": "Goldman Sachs strategists, led by Peter Oppenheimer, identify fourth major bull run since WWII, dubbed 'postmodern cycle'. This structural shift represents significant historical change in stock market dynamics.",
+      "summary": "Goldman Sachs strategists, led by Peter Oppenheimer, identify fourth major bull run since WWII, dubbed the 'postmodern cycle'. This structural shift represents a significant transformation in stock market dynamics.",
       "details": [
-        "New investment era begins",
-        "Historical pattern shift observed",
-        "Long-term growth predicted"
+        "Lead Analyst: Peter Oppenheimer",
+        "Era: Fourth post-WWII cycle",
+        "Type: Secular bull market"
       ],
       "category": "Business",
       "source": "Business Insider",
@@ -31,21 +31,21 @@
     },
     {
       "rank": 3,
-      "emoji": "🌡️",
-      "title": "African Nations Unite to Address Climate-Conflict Connection",
-      "summary": "African countries are preparing to adopt the Common African Position at the Africa Climate Summit, highlighting the growing recognition of climate change's role in regional conflicts and security challenges.",
+      "emoji": "🌍",
+      "title": "African Nations Unite on Climate and Security Policy",
+      "summary": "African countries are preparing to adopt the Common African Position, a groundbreaking policy document linking climate change and conflict. The initiative will be presented at the Africa Climate Summit, marking a significant shift in climate policy.",
       "details": [
-        "Policy document being finalized",
-        "UN summit focus shifts",
-        "Diplomatic consensus reached"
+        "Policy Type: Continental framework",
+        "Focus: Climate-security nexus",
+        "Status: Pre-adoption phase"
       ],
       "category": "Climate",
       "source": "AllAfrica",
       "url": "https://allafrica.com/stories/202509050001.html"
     }
   ],
-  "dailyGreeting": "Good morning! Global unity takes center stage today.",
-  "readingTime": "30 second read",
+  "dailyGreeting": "Good morning! Global unity shines in today's headlines.",
+  "readingTime": "0.5 minute read",
   "displayDate": "FRIDAY, SEPTEMBER 5, 2025",
   "historicalEvents": [
     {
@@ -62,9 +62,9 @@
     },
     {
       "year": "1972",
-      "description": "Munich Olympics massacre: Israeli athletes taken hostage"
+      "description": "Munich Olympics massacre: Israeli athletes taken hostage by terrorists"
     }
   ],
-  "generatedAt": "2025-09-05T08:24:43.960423",
-  "generatedAtUK": "2025-09-05T09:24:43.960443+01:00"
+  "generatedAt": "2025-09-05T08:40:37.418825",
+  "generatedAtUK": "2025-09-05T09:40:37.418844+01:00"
 }
