@@ -1,0 +1,23 @@
+# Python files (not needed for website)
+*.py
+__pycache__/
+
+# Git files
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Development files
+.env.local
+.DS_Store
+
+# News generator files (handled by GitHub Actions)
+news-generator.py
+setup-news-generator.py
+test-*.py
+
+# Processing logs (for debugging)
+processing_log_*.json
