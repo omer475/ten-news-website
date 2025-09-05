@@ -1,152 +1,123 @@
-# 🗞️ Ten News Website
+# Ten News Website
 
-A modern, AI-powered news website with automated content generation and beautiful UI.
+A modern, responsive news website built with Next.js and React.
 
-## 🌟 Features
+## Features
 
-- **AI-Curated News**: Daily automated news generation using GDELT API + Claude AI
-- **Smooth Navigation**: Scroll-based, touch, and keyboard controls
-- **Responsive Design**: Mobile-first approach with beautiful animations
-- **Real-time Content**: Fresh news every day at 7 AM UTC
-- **Performance Optimized**: Built for Vercel deployment with edge caching
+- Smooth scroll-based navigation
+- Touch and keyboard controls
+- Responsive design
+- Newsletter signup
+- Progress indicators
+- Accessibility features
 
-## 🚀 Quick Deploy to Vercel
+## Prerequisites
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/omer475/ten-news-website)
+First, you need to install Node.js and npm:
 
-### Manual Deployment Steps:
-
-1. **Connect to Vercel**:
-   - Go to [vercel.com](https://vercel.com)
-   - Sign in with GitHub
-   - Click "New Project"
-   - Import `omer475/ten-news-website`
-
-2. **Configure Environment Variables**:
-   - In Vercel dashboard: Settings → Environment Variables
-   - Add: `CLAUDE_API_KEY` = your Claude API key
-   - Add: `NODE_ENV` = production
-
-3. **Deploy**: Vercel will automatically build and deploy!
-
-## 🛠️ Local Development
-
-### Prerequisites
-- Node.js 18.17.0+ ([download here](https://nodejs.org/))
-- npm or yarn package manager
-
-### Setup
+1. **Install Node.js**: Download and install from [nodejs.org](https://nodejs.org/) (LTS version recommended)
+2. **Verify installation**: 
 ```bash
-# Clone the repository
-git clone https://github.com/omer475/ten-news-website.git
-cd ten-news-website
+node --version
+npm --version
+```
 
-# Install dependencies
+## Getting Started
+
+1. Install dependencies:
+```bash
 npm install
-
-# Run development server
-npm run dev
-
-# Open http://localhost:3000
 ```
 
-## 🤖 Automated News Generation
-
-### How It Works:
-1. **Daily at 7 AM UTC**: GitHub Actions runs `news-generator.py`
-2. **Fetches Global News**: From GDELT Project API
-3. **AI Curation**: Claude AI selects and rewrites top 10 stories
-4. **Auto-Deploy**: Fresh content pushed to repository
-5. **Website Updates**: Vercel automatically rebuilds with new content
-
-### Manual News Generation:
+2. Run the development server:
 ```bash
-# Install Python dependencies
-pip install requests beautifulsoup4 pytz schedule
-
-# Set your Claude API key in news-generator.py
-CLAUDE_API_KEY = "your-api-key-here"
-
-# Run generator
-python news-generator.py
+npm run dev
 ```
 
-## 📁 Project Structure
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-```
-ten-news-website/
-├── .github/workflows/       # GitHub Actions automation
-│   └── news-generation.yml  # Daily news generation
-├── pages/                   # Next.js pages
-│   ├── api/news.js         # News data API endpoint
-│   ├── _app.js             # App configuration
-│   └── index.js            # Main news page
-├── styles/
-│   └── globals.css         # Global styles
-├── news-generator.py       # AI news generator
-├── vercel.json            # Vercel deployment config
-├── next.config.js         # Next.js configuration
-└── package.json           # Dependencies
-```
-
-## ⚙️ Configuration
-
-### Vercel Settings
-- **Framework**: Next.js
-- **Build Command**: `npm run build`
-- **Output Directory**: `.next`
-- **Node.js Version**: 18.x
-
-### Environment Variables
-- `CLAUDE_API_KEY`: Your Anthropic Claude API key
-- `NODE_ENV`: production/development
-
-## 🌐 API Endpoints
-
-- `GET /api/news` - Returns today's news data with caching headers
-- Static files: `tennews_data_YYYY_MM_DD.json` - Generated news files
-
-## 🔧 Performance Features
-
-- **Edge Caching**: 5-minute cache for news data
-- **Image Optimization**: WebP/AVIF format support  
-- **Security Headers**: XSS protection, frame options, content sniffing
-- **Compression**: Gzip/Brotli compression enabled
-- **Static Assets**: Long-term caching for CSS/JS/images
-
-## 📱 Navigation
+## Navigation
 
 - **Scroll**: Mouse wheel or touchpad
-- **Touch**: Swipe up/down on mobile devices
-- **Keyboard**: Arrow keys, spacebar for navigation
-- **Progress Dots**: Click to jump to specific stories
+- **Touch**: Swipe up/down on mobile
+- **Keyboard**: Arrow keys, spacebar
+- **Progress dots**: Click to jump to specific stories
 
-## 🔒 Security
+## Integration with AI News Generation
 
-- Content Security Policy headers
-- XSS protection enabled
-- No sensitive data in client-side code
-- API keys stored as environment variables
+This website automatically loads AI-generated news content. The system includes:
 
-## 📊 Monitoring
+### **🤖 News Generator (Python)**
+- `news-generator.py` - AI-powered news aggregation and generation
+- Fetches global news from GDELT API
+- Uses Claude AI to select and rewrite top 10 stories
+- Generates daily greetings and historical events
+- Runs automatically at 7:00 AM UK time
 
-The website includes:
-- Performance monitoring via Vercel Analytics
-- Error tracking and logging
-- Automated uptime monitoring through GitHub Actions
+### **📊 Data Flow**
+1. **7:00 AM UK**: Generator creates `tennews_data_YYYY_MM_DD.json`
+2. **Website loads**: Automatically detects and loads today's data
+3. **Fallback**: Uses sample data if generated data not found
 
-## 🤝 Contributing
+### **🔗 URL Integration**
+- All news stories link directly to original sources
+- Click any news item to read the full article
+- URLs are preserved from original news sources
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### **📅 Historical Events**  
+- Replaces Wix historical events with local JSON storage
+- Shows 4 historical events for today's date
+- Rotates in the opening page animation
 
-## 📄 License
+### **⚙️ Setup Instructions**
 
-This project is private. All rights reserved.
+1. **Install Dependencies**:
+```bash
+python setup-news-generator.py
+```
 
----
+2. **Set API Key**:
+Edit `news-generator.py` and add your Claude API key:
+```python
+CLAUDE_API_KEY = "your-claude-api-key-here"
+```
 
-**Built with ❤️ using Next.js, Claude AI, and Vercel**
+3. **Run Generator**:
+```bash
+# Run once now
+python news-generator.py  # Choose option 1
+
+# Start daily scheduler  
+python news-generator.py  # Choose option 2
+```
+
+4. **Start Website**:
+```bash
+npm install
+npm run dev
+```
+
+### **📁 Generated Files**
+- `tennews_data_YYYY_MM_DD.json` - Main news data
+- `historical_events_YYYY_MM_DD.json` - Historical events
+- Files auto-expire after 7 days to save space
+
+## Project Structure
+
+```
+├── pages/
+│   ├── _app.js          # App wrapper with global CSS
+│   └── index.js         # Main news component
+├── styles/
+│   └── globals.css      # Global styles
+├── package.json         # Dependencies
+└── next.config.js       # Next.js configuration
+```
+
+## Deployment
+
+Build for production:
+```bash
+npm run build
+npm start
+```

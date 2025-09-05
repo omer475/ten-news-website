@@ -217,13 +217,17 @@ def extract_base_domain(url):
     except Exception:
         return None
 
-def deduplicate_articles(articles):
+def deduplicate_articles(articles, processing_log=None):
     """Remove duplicates and filter by approved domains"""
     print(f"\n🔄 Processing and filtering articles...")
     unique_articles = []
     seen_urls = set()
     approved_count = 0
     rejected_count = 0
+    duplicate_count = 0
+    
+    rejected_domains = []
+    approved_domains = []
     
     for article in articles:
         url = article.get('url', '').lower()
@@ -235,13 +239,36 @@ def deduplicate_articles(articles):
                 article['domain'] = base_domain
                 unique_articles.append(article)
                 approved_count += 1
+                if base_domain not in approved_domains:
+                    approved_domains.append(base_domain)
             else:
                 rejected_count += 1
+                if base_domain and base_domain not in rejected_domains:
+                    rejected_domains.append(base_domain)
+        else:
+            duplicate_count += 1
     
     print(f"- Total articles: {len(articles):,}")
+    print(f"- Duplicates removed: {duplicate_count:,}")
     print(f"- From approved sources: {approved_count:,}")
-    print(f"- Rejected: {rejected_count:,}")
+    print(f"- Rejected (unapproved sources): {rejected_count:,}")
     print(f"- Unique approved: {len(unique_articles):,}")
+    
+    # Log detailed statistics
+    if processing_log:
+        processing_log["steps"]["3_filtering"] = {
+            "total_input": len(articles),
+            "duplicates_removed": duplicate_count,
+            "approved_sources": approved_count,
+            "rejected_sources": rejected_count,
+            "final_unique": len(unique_articles),
+            "approved_domains": approved_domains[:10],  # Top 10 domains
+            "rejected_domains": rejected_domains[:10],  # Top 10 rejected
+            "description": "Domain filtering and deduplication"
+        }
+        processing_log["statistics"]["eliminated_duplicates"] = duplicate_count
+        processing_log["statistics"]["eliminated_unapproved_sources"] = rejected_count
+        processing_log["statistics"]["approved_for_ai_selection"] = len(unique_articles)
     
     return unique_articles
 
@@ -599,9 +626,21 @@ def generate_daily_news():
     print("🚀 TEN NEWS - Daily Digest Generator")
     print("=" * 50)
     
+    # Initialize processing log
+    processing_log = {
+        "timestamp": datetime.now().isoformat(),
+        "date": datetime.now().strftime('%Y-%m-%d'),
+        "steps": {},
+        "statistics": {}
+    }
+    
     try:
         # Load previous articles
         previous_articles = load_previous_articles()
+        processing_log["steps"]["1_previous_articles"] = {
+            "count": len(previous_articles),
+            "description": "Previous articles loaded for duplicate checking"
+        }
         
         # Fetch news
         articles = fetch_gdelt_news_last_24_hours()
@@ -609,14 +648,38 @@ def generate_daily_news():
             print("❌ No articles found")
             return False
         
+        processing_log["steps"]["2_gdelt_fetch"] = {
+            "total_articles": len(articles),
+            "description": "All articles fetched from GDELT API",
+            "sample_titles": [clean_text_for_json(a.get('title', ''))[:100] for a in articles[:5]]
+        }
+        processing_log["statistics"]["total_fetched_from_gdelt"] = len(articles)
+        
         # Filter and deduplicate  
-        unique_articles = deduplicate_articles(articles)
+        unique_articles = deduplicate_articles(articles, processing_log)
         if not unique_articles:
             print("❌ No approved articles found")
             return False
         
         # AI selection
         selected_articles = select_top_articles_with_ai(unique_articles, previous_articles)
+        
+        # Log AI selection results
+        if selected_articles:
+            processing_log["steps"]["4_ai_selection"] = {
+                "input_articles": len(unique_articles),
+                "selected_articles": len(selected_articles),
+                "ai_status": "successful",
+                "description": "AI successfully selected articles",
+                "selected_titles": [a.get('title', '')[:80] for a in selected_articles[:10]]
+            }
+        else:
+            processing_log["steps"]["4_ai_selection"] = {
+                "input_articles": len(unique_articles),
+                "selected_articles": 0,
+                "ai_status": "failed",
+                "description": "AI selection failed, using fallback"
+            }
         if not selected_articles:
             print("❌ AI selection failed, using fallback selection")
             # Fallback: select first 10 articles manually
@@ -718,7 +781,24 @@ def generate_daily_news():
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(articles_data, f, ensure_ascii=False, indent=2)
         
+        # Finalize processing log
+        processing_log["steps"]["5_final_output"] = {
+            "final_articles_count": len(articles_data['articles']),
+            "news_file": filename,
+            "greeting": daily_greeting,
+            "reading_time": reading_time,
+            "description": "Final news data generated and saved"
+        }
+        processing_log["statistics"]["final_articles_generated"] = len(articles_data['articles'])
+        processing_log["completion_time"] = datetime.now().isoformat()
+        
+        # Save detailed processing log
+        log_filename = f"processing_log_{today}.json"
+        with open(log_filename, 'w', encoding='utf-8') as f:
+            json.dump(processing_log, f, ensure_ascii=False, indent=2)
+        
         print(f"\n✅ SUCCESS! Saved: {filename}")
+        print(f"📊 Processing log: {log_filename}")
         print(f"📅 Date: {formatted_date}")
         print(f"👋 Greeting: {daily_greeting}")
         print(f"⏱️ Reading: {reading_time}")
