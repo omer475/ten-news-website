@@ -32,25 +32,25 @@
     {
       "rank": 3,
       "emoji": "🌍",
-      "title": "African Nations Unite on Climate and Security Policy",
-      "summary": "African countries are preparing to adopt the Common African Position, a groundbreaking policy document linking climate change and conflict. The initiative will be presented at the Africa Climate Summit, marking a significant shift in climate policy.",
+      "title": "African Nations Unite on Climate-Conflict Common Position",
+      "summary": "African nations are preparing to adopt the Common African Position, a groundbreaking policy document linking climate change and conflict. The initiative will be presented at the upcoming Africa Climate Summit.",
       "details": [
-        "Policy Type: Continental framework",
         "Focus: Climate-security nexus",
-        "Status: Pre-adoption phase"
+        "Scope: Continental agreement",
+        "Timing: Pre-climate summit release"
       ],
       "category": "Climate",
       "source": "AllAfrica",
       "url": "https://allafrica.com/stories/202509050001.html"
     }
   ],
-  "dailyGreeting": "Good morning! Global unity shines in today's headlines.",
-  "readingTime": "0.5 minute read",
+  "dailyGreeting": "Good morning! Global unity takes center stage today.",
+  "readingTime": "1 minute read",
   "displayDate": "FRIDAY, SEPTEMBER 5, 2025",
   "historicalEvents": [
     {
       "year": "1666",
-      "description": "Great Fire of London begins, destroying much of city"
+      "description": "Great Fire of London burns through city's heart"
     },
     {
       "year": "1774",
@@ -58,13 +58,13 @@
     },
     {
       "year": "1905",
-      "description": "Russia and Japan sign Treaty of Portsmouth, ending war"
+      "description": "Russia and Japan sign Treaty of Portsmouth"
     },
     {
       "year": "1972",
-      "description": "Munich Olympics massacre: Israeli athletes taken hostage by terrorists"
+      "description": "Munich Olympics massacre: Israeli athletes taken hostage"
     }
   ],
-  "generatedAt": "2025-09-05T08:40:37.418825",
-  "generatedAtUK": "2025-09-05T09:40:37.418844+01:00"
+  "generatedAt": "2025-09-05T08:50:19.108671",
+  "generatedAtUK": "2025-09-05T09:50:19.108688+01:00"
 }
