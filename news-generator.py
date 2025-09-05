@@ -665,24 +665,28 @@ def generate_daily_news():
         selected_articles = select_top_articles_with_ai(unique_articles, previous_articles)
         
         # Log AI selection results
-        if selected_articles:
+        if selected_articles and len(selected_articles) >= 10:
             processing_log["steps"]["4_ai_selection"] = {
                 "input_articles": len(unique_articles),
                 "selected_articles": len(selected_articles),
                 "ai_status": "successful",
-                "description": "AI successfully selected articles",
+                "description": "AI successfully selected 10 articles",
                 "selected_titles": [a.get('title', '')[:80] for a in selected_articles[:10]]
             }
         else:
             processing_log["steps"]["4_ai_selection"] = {
                 "input_articles": len(unique_articles),
-                "selected_articles": 0,
-                "ai_status": "failed",
-                "description": "AI selection failed, using fallback"
+                "selected_articles": len(selected_articles) if selected_articles else 0,
+                "ai_status": "partial_or_failed",
+                "description": f"AI returned {len(selected_articles) if selected_articles else 0} articles, need fallback"
             }
-        if not selected_articles:
-            print("❌ AI selection failed, using fallback selection")
-            # Fallback: select first 10 articles manually
+        
+        # Check if we need fallback (either no articles or less than 10)
+        if not selected_articles or len(selected_articles) < 10:
+            current_count = len(selected_articles) if selected_articles else 0
+            print(f"⚠️ AI returned only {current_count} articles, using fallback to get 10")
+            
+            # Start fresh with fallback selection
             selected_articles = []
             for i, article in enumerate(unique_articles[:15]):  # Try first 15 to ensure we get 10
                 selected_articles.append({
@@ -694,6 +698,11 @@ def generate_daily_news():
                 })
                 if len(selected_articles) >= 10:
                     break
+            
+            # Update processing log for fallback
+            processing_log["steps"]["4_ai_selection"]["ai_status"] = "failed_using_fallback"
+            processing_log["steps"]["4_ai_selection"]["selected_articles"] = len(selected_articles)
+            processing_log["steps"]["4_ai_selection"]["description"] = f"AI returned {current_count}, fallback generated {len(selected_articles)}"
         
         # Ensure exactly 10 articles
         if len(selected_articles) < 10:
@@ -804,8 +813,8 @@ def generate_daily_news():
         print(f"⏱️ Reading: {reading_time}")
         print(f"📰 Articles: {len(articles_data['articles'])}")
         
-        # Save historical events separately
-        save_historical_events(historical_events, formatted_date)
+        # Note: Historical events are already included in the main news file
+        # No need for separate historical events file
         
         return True
         

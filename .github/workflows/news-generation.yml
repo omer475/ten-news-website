@@ -56,8 +56,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           
-          # Add generated JSON files
-          git add tennews_data_*.json historical_events_*.json
+          # Add generated JSON files and processing logs
+          git add tennews_data_*.json processing_log_*.json
           
           # Check if there are changes to commit
           if git diff --staged --quiet; then

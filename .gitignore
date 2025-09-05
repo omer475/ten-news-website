@@ -45,8 +45,7 @@ Thumbs.db
 # tennews_data_*.json
 # historical_events_*.json
 
-# Processing logs (for debugging only, not needed in repo)
-processing_log_*.json
+# Processing logs will be committed to track the process
 
 # Temporary files
 run_news_generation.py
