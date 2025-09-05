@@ -1,0 +1,70 @@
+{
+  "digest_date": "September 05, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌍",
+      "title": "26 Nations Unite to Protect Ukraine After War Ends",
+      "summary": "French President Macron announced that 26 allied countries have committed to deploying military forces in Ukraine post-conflict. This reassurance force will maintain presence on land, sea, and air to guarantee Ukraine's security against future threats.",
+      "details": [
+        "Meeting held in Paris",
+        "Coalition of willing formed",
+        "Multi-domain security coverage planned"
+      ],
+      "category": "World News",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/international/macron-says-26-countries-pledge-troops-as-a-reassurance-force-for-ukraine-after-fighting-ends/article70013232.ece"
+    },
+    {
+      "rank": 2,
+      "emoji": "📈",
+      "title": "Goldman Sachs Predicts New 'Postmodern' Stock Market Super Cycle",
+      "summary": "Goldman Sachs strategists, led by Peter Oppenheimer, identify fourth major bull run since WWII, dubbed 'postmodern cycle'. This structural shift represents significant historical change in stock market dynamics.",
+      "details": [
+        "New investment era begins",
+        "Historical pattern shift observed",
+        "Long-term growth predicted"
+      ],
+      "category": "Business",
+      "source": "Business Insider",
+      "url": "https://www.businessinsider.com/stock-market-super-cycle-investing-strategy-analysis-investing-goldman-sachs-2025-9"
+    },
+    {
+      "rank": 3,
+      "emoji": "🌡️",
+      "title": "African Nations Unite to Address Climate-Conflict Connection",
+      "summary": "African countries are preparing to adopt the Common African Position at the Africa Climate Summit, highlighting the growing recognition of climate change's role in regional conflicts and security challenges.",
+      "details": [
+        "Policy document being finalized",
+        "UN summit focus shifts",
+        "Diplomatic consensus reached"
+      ],
+      "category": "Climate",
+      "source": "AllAfrica",
+      "url": "https://allafrica.com/stories/202509050001.html"
+    }
+  ],
+  "dailyGreeting": "Good morning! Global unity takes center stage today.",
+  "readingTime": "30 second read",
+  "displayDate": "FRIDAY, SEPTEMBER 5, 2025",
+  "historicalEvents": [
+    {
+      "year": "1666",
+      "description": "Great Fire of London begins, destroying much of city"
+    },
+    {
+      "year": "1774",
+      "description": "First Continental Congress assembles in Philadelphia"
+    },
+    {
+      "year": "1905",
+      "description": "Russia and Japan sign Treaty of Portsmouth, ending war"
+    },
+    {
+      "year": "1972",
+      "description": "Munich Olympics massacre: Israeli athletes taken hostage"
+    }
+  ],
+  "generatedAt": "2025-09-05T08:24:43.960423",
+  "generatedAtUK": "2025-09-05T09:24:43.960443+01:00"
+}
