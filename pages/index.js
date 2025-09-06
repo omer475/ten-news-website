@@ -646,22 +646,23 @@ export default function Home() {
         }
 
         .scroll-hint {
-          position: fixed;
-          bottom: 40px;
+          position: absolute;
+          bottom: 60px;
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
           color: #94a3b8;
           text-transform: uppercase;
-          letter-spacing: 1.5px;
-          font-weight: 500;
+          letter-spacing: 2px;
+          font-weight: 600;
           animation: gentleBounce 3s ease-in-out infinite;
-          opacity: 0.8;
+          opacity: 0.7;
+          z-index: 10;
         }
 
         @keyframes gentleBounce {
           0%, 100% { transform: translateX(-50%) translateY(0px); }
-          50% { transform: translateX(-50%) translateY(-4px); }
+          50% { transform: translateX(-50%) translateY(-8px); }
         }
 
         @media (max-width: 768px) {
@@ -724,9 +725,9 @@ export default function Home() {
           }
           
           .scroll-hint {
-            bottom: 30px;
+            bottom: 40px;
             font-size: 11px;
-            animation: gentleBounce 3s ease-in-out infinite;
+            letter-spacing: 1.5px;
           }
           
           .progress-indicator {
@@ -852,9 +853,7 @@ export default function Home() {
                       color: '#60a5fa'
                     }}>2 Min Read</span>
                   </div>
-                  {currentIndex === 0 && (
-                    <div className="scroll-hint">Scroll to continue ↓</div>
-                  )}
+                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
