@@ -337,30 +337,30 @@ export default function Home() {
           -webkit-text-fill-color: transparent;
         }
 
-        .header-center {
+        .header-nav {
           display: flex;
-          gap: 24px;
-          font-size: 13px;
+          gap: 16px;
+          font-size: 11px;
           font-weight: 600;
           letter-spacing: 0.5px;
           text-transform: uppercase;
           color: #86868b;
         }
 
-        .header-center span {
+        .header-nav span {
           cursor: pointer;
           transition: color 0.2s;
           position: relative;
         }
 
-        .header-center span:hover {
+        .header-nav span:hover {
           color: #1d1d1f;
         }
 
         .header-right {
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 16px;
           font-size: 13px;
           font-weight: 500;
         }
@@ -420,15 +420,15 @@ export default function Home() {
         }
 
         .main-headline {
-          font-size: 48px;
+          font-size: 64px;
           font-weight: 800;
           line-height: 1.05;
           letter-spacing: -2px;
-          margin-bottom: 24px;
+          margin-bottom: 32px;
         }
 
         .subheadline {
-          font-size: 18px;
+          font-size: 22px;
           color: #86868b;
           line-height: 1.6;
           margin-bottom: 48px;
@@ -498,24 +498,24 @@ export default function Home() {
         }
 
         .news-title {
-          font-size: 24px;
+          font-size: 32px;
           font-weight: 700;
           line-height: 1.2;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
           color: #1d1d1f;
         }
 
         .news-summary {
-          font-size: 15px;
+          font-size: 20px;
           color: #4a4a4a;
           line-height: 1.6;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
         }
 
         .news-meta {
           display: flex;
           gap: 16px;
-          font-size: 12px;
+          font-size: 16px;
           color: #86868b;
         }
 
@@ -627,7 +627,7 @@ export default function Home() {
         }
 
         @media (max-width: 768px) {
-          .header-center {
+          .header-nav {
             display: none;
           }
           
@@ -635,17 +635,33 @@ export default function Home() {
             display: none;
           }
           
+          .main-headline {
+            font-size: 48px;
+          }
+          
+          .subheadline {
+            font-size: 18px;
+          }
+          
           .news-item {
-            grid-template-columns: 40px 1fr;
+            grid-template-columns: 50px 1fr;
             gap: 16px;
           }
           
           .news-number {
-            font-size: 24px;
+            font-size: 32px;
           }
           
           .news-title {
-            font-size: 20px;
+            font-size: 28px;
+          }
+          
+          .news-summary {
+            font-size: 18px;
+          }
+          
+          .news-meta {
+            font-size: 14px;
           }
         }
       `}</style>
@@ -657,15 +673,16 @@ export default function Home() {
             <span className="logo-ten">TEN</span> NEWS
           </div>
           
-          <div className="header-center">
-            <span>WORLD</span>
-            <span>BUSINESS</span>
-            <span>TECH</span>
-            <span>SCIENCE</span>
-            <span>SPORTS</span>
-          </div>
+          <div style={{ flex: 1 }}></div>
           
           <div className="header-right">
+            <div className="header-nav">
+              <span>WORLD</span>
+              <span>BUSINESS</span>
+              <span>TECH</span>
+              <span>SCIENCE</span>
+              <span>SPORTS</span>
+            </div>
             <span className="time">{currentTime}</span>
             <button className="subscribe-btn">SUBSCRIBE</button>
           </div>
