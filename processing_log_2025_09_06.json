@@ -1,0 +1,86 @@
+{
+  "timestamp": "2025-09-06T07:25:32.479605",
+  "date": "2025-09-06",
+  "steps": {
+    "1_previous_articles": {
+      "count": 13,
+      "description": "Previous articles loaded for duplicate checking"
+    },
+    "2_gdelt_fetch": {
+      "total_articles": 800,
+      "description": "All articles fetched from GDELT API",
+      "sample_titles": [
+        "Andovi ajak massa tak pilih caleg DPR 2029 tidak pro tuntutan 17+8",
+        "UČENIK IZBO NASTAVNIKA U ŠKOLI : Policija hitno okružila zgradu , dramatične scene u Nemačkoj",
+        "Housing crisis protest to be held in Cork city on Saturday , October 4",
+        "Time Aнализа",
+        "MUH Emergency Department is  in crisi claims Mayo TD"
+      ]
+    },
+    "3_filtering": {
+      "total_input": 800,
+      "duplicates_removed": 0,
+      "approved_sources": 35,
+      "rejected_sources": 765,
+      "final_unique": 35,
+      "approved_domains": [
+        "abc.net.au",
+        "businessinsider.com",
+        "foxnews.com",
+        "welt.de",
+        "investing.com",
+        "cnbc.com",
+        "euronews.com",
+        "investors.com",
+        "fortune.com",
+        "npr.org"
+      ],
+      "rejected_domains": [
+        "antaranews.com",
+        "novosti.rs",
+        "independent.ie",
+        "time.mk",
+        "mayonews.ie",
+        "hespress.com",
+        "quicosenza.it",
+        "spacecoastdaily.com",
+        "wptv.com",
+        "theargus.co.uk"
+      ],
+      "description": "Domain filtering and deduplication"
+    },
+    "4_ai_selection": {
+      "input_articles": 35,
+      "selected_articles": 10,
+      "ai_status": "successful",
+      "description": "AI successfully selected 10 articles",
+      "selected_titles": [
+        "5 Major Takeaways From Tesla $1 Trillion Pay Package for Elon Musk",
+        "U.S. adds only 22,000 jobs in August: NPR",
+        "Apple sued by authors over use of books in AI training",
+        "WHO chief urges Israel to stop starvation catastrophe",
+        "Paramount new CEO tells employees to return to office full-time or quit ahead of",
+        "EU not living up to responsibilitie on Gaza war, says Belgian FM",
+        "Jumbo Interest Rate Cut Odds for Sept. Rise After Weak Jobs Report",
+        "Stock Market Week Ahead: OPEC, iPhone17 Launch And Communacopia",
+        "Why Impartial Government Reporting Is Vital",
+        "Search funds boom as young buyers snap up firms"
+      ]
+    },
+    "5_final_output": {
+      "final_articles_count": 10,
+      "news_file": "tennews_data_2025_09_06.json",
+      "greeting": "Good morning! Markets shake as Tesla makes historic move.",
+      "reading_time": "1 minute read",
+      "description": "Final news data generated and saved"
+    }
+  },
+  "statistics": {
+    "total_fetched_from_gdelt": 800,
+    "eliminated_duplicates": 0,
+    "eliminated_unapproved_sources": 765,
+    "approved_for_ai_selection": 35,
+    "final_articles_generated": 10
+  },
+  "completion_time": "2025-09-06T07:26:46.144559"
+}
