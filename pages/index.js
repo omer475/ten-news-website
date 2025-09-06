@@ -478,7 +478,6 @@ export default function Home() {
         }
 
         .news-item:hover {
-          padding-left: 12px;
           background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
 
@@ -759,7 +758,7 @@ export default function Home() {
           
           <div className="header-right">
             <span className="time">{currentTime}</span>
-            <button className="subscribe-btn">SUBSCRIBE</button>
+            <button className="subscribe-btn" onClick={() => goToStory(stories.length - 1)}>NEWSLETTER</button>
           </div>
         </div>
 
@@ -916,7 +915,7 @@ export default function Home() {
               ) : story.type === 'newsletter' ? (
                 <div className="newsletter-container">
                   <h2 className="newsletter-title">
-                    <span style={{ color: '#f97316' }}>Stay</span> Informed
+                    <span style={{ color: '#3b82f6' }}>Stay</span> Informed
                   </h2>
                   <p className="newsletter-subtitle">
                     Get Ten News delivered to your inbox every morning
