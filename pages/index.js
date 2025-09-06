@@ -322,41 +322,6 @@ export default function Home() {
           font-weight: 900;
         }
 
-        .header-center {
-          display: flex;
-          gap: 24px;
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          color: #64748b;
-        }
-
-        .header-center span {
-          cursor: pointer;
-          transition: color 0.2s;
-          position: relative;
-        }
-
-        .header-center span:hover {
-          color: #3b82f6;
-        }
-
-        .header-center span:after {
-          content: '';
-          position: absolute;
-          bottom: -20px;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: #60a5fa;
-          transform: scaleX(0);
-          transition: transform 0.2s;
-        }
-
-        .header-center span:hover:after {
-          transform: scaleX(1);
-        }
 
         .header-right {
           display: flex;
@@ -666,10 +631,6 @@ export default function Home() {
         }
 
         @media (max-width: 768px) {
-          .header-center {
-            display: none;
-          }
-          
           .header-right .time {
             display: none;
           }
@@ -725,7 +686,7 @@ export default function Home() {
           }
           
           .scroll-hint {
-            bottom: 80px;
+            bottom: 40px;
             font-size: 11px;
             letter-spacing: 1.5px;
           }
@@ -756,13 +717,7 @@ export default function Home() {
             <span className="logo-ten">TEN</span> NEWS
           </div>
           
-          <div className="header-center">
-            <span>WORLD</span>
-            <span>BUSINESS</span>
-            <span>TECH</span>
-            <span>SCIENCE</span>
-            <span>SPORTS</span>
-          </div>
+          <div style={{ flex: 1 }}></div>
           
           <div className="header-right">
             <span className="time">{currentTime}</span>
