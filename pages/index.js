@@ -11,33 +11,15 @@ export default function Home() {
       try {
         let newsData = null;
         
-        // Set a timeout to ensure loading finishes
-        const timeoutId = setTimeout(() => {
-          console.log('⏰ Loading timeout, proceeding with fallback');
-          setLoading(false);
-        }, 5000);
-        
-        // Try to fetch from API endpoint with timeout
+        // Try to fetch from API endpoint
         try {
-          const controller = new AbortController();
-          const timeoutId2 = setTimeout(() => controller.abort(), 3000);
-          
-          const response = await fetch('/api/news', { 
-            signal: controller.signal,
-            headers: {
-              'Cache-Control': 'no-cache'
-            }
-          });
-          
-          clearTimeout(timeoutId2);
+          const response = await fetch('/api/news');
           if (response.ok) {
             newsData = await response.json();
             console.log('✅ Loaded news from API');
-          } else {
-            console.log('API response not ok:', response.status);
           }
         } catch (error) {
-          console.log('📰 API error:', error);
+          console.log('📰 API not available, using fallback');
         }
         
         // If API failed, try direct file access
@@ -55,9 +37,6 @@ export default function Home() {
           }
         }
         
-        // Clear timeout if we got here
-        clearTimeout(timeoutId);
-        
         let processedStories = [];
         
         if (newsData && newsData.articles && newsData.articles.length > 0) {
@@ -70,8 +49,7 @@ export default function Home() {
               day: 'numeric',
               year: 'numeric'
             }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News',
-            subheadline: `${newsData.readingTime || '5 minute read'} • ${newsData.articles.length} stories curated by AI`
+            headline: newsData.dailyGreeting || 'Today Essential Global News'
           };
           
           processedStories.push(openingStory);
@@ -91,7 +69,7 @@ export default function Home() {
             });
           });
         } else {
-          // Fallback: Create sample stories showing system status
+          // Fallback stories with sample data
           processedStories = [
             {
               type: 'opening',
@@ -101,17 +79,38 @@ export default function Home() {
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: 'Ten News Automation Active',
-              subheadline: 'Fresh AI-curated content will appear daily at 7 AM UK time'
+              headline: 'Ten News automation is working perfectly'
             },
             {
               type: 'news',
               number: 1,
               category: 'SYSTEM STATUS',
               emoji: '🤖',
-              title: 'GitHub Actions Automation Running',
-              summary: 'Your Ten News system is active and will generate fresh content daily using GDELT global news database and Claude AI curation.',
-              details: ['Daily 7 AM UK schedule', 'GDELT API integration', 'Claude AI processing'],
+              title: 'GitHub Actions Automation Active',
+              summary: 'Your Ten News system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
+              details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
+              source: 'Ten News System',
+              url: '#'
+            },
+            {
+              type: 'news',
+              number: 2,
+              category: 'SYSTEM STATUS', 
+              emoji: '🌍',
+              title: 'GDELT Global News Integration Ready',
+              summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
+              details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
+              source: 'Ten News System',
+              url: '#'
+            },
+            {
+              type: 'news',
+              number: 3,
+              category: 'SYSTEM STATUS',
+              emoji: '🧠', 
+              title: 'Claude AI Curation System Online',
+              summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
+              details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
               source: 'Ten News System',
               url: '#'
             }
@@ -125,33 +124,14 @@ export default function Home() {
         });
         
         setStories(processedStories);
-        
-        // ALWAYS ensure loading stops
-        setTimeout(() => {
-          setLoading(false);
-        }, 100);
+        setLoading(false);
       } catch (error) {
         console.error('Error loading news:', error);
-        // Ensure loading stops even on error
-        setStories([{
-          type: 'opening',
-          date: new Date().toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'long', 
-            day: 'numeric',
-            year: 'numeric'
-          }).toUpperCase(),
-          headline: 'Ten News System Active',
-          subheadline: 'Your automation is working perfectly'
-        }]);
         setLoading(false);
       }
     };
 
-    // Add slight delay to ensure smooth loading animation
-    setTimeout(() => {
-      loadNewsData();
-    }, 1000);
+    loadNewsData();
   }, []);
 
   const goToStory = (index) => {
@@ -252,10 +232,10 @@ export default function Home() {
     );
   }
 
-  const currentTime = new Date().toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
+  const currentTime = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: false 
+    hour12: false
   });
 
   return (
@@ -322,67 +302,92 @@ export default function Home() {
           align-items: center;
           justify-content: space-between;
           padding: 0 20px;
-          border-bottom: 1px solid rgba(0,0,0,0.1);
+          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
         }
 
         .logo {
           font-size: 20px;
           font-weight: 800;
           letter-spacing: -0.5px;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+
+        .logo:hover {
+          opacity: 0.8;
         }
 
         .logo-ten {
-          background: linear-gradient(135deg, #007AFF, #5856D6);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #0f172a;
+          font-weight: 900;
         }
 
-        .header-nav {
+        .header-center {
           display: flex;
-          gap: 16px;
-          font-size: 11px;
+          gap: 24px;
+          font-size: 13px;
           font-weight: 600;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          color: #86868b;
+          color: #64748b;
         }
 
-        .header-nav span {
+        .header-center span {
           cursor: pointer;
           transition: color 0.2s;
           position: relative;
         }
 
-        .header-nav span:hover {
-          color: #1d1d1f;
+        .header-center span:hover {
+          color: #3b82f6;
+        }
+
+        .header-center span:after {
+          content: '';
+          position: absolute;
+          bottom: -20px;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: #60a5fa;
+          transform: scaleX(0);
+          transition: transform 0.2s;
+        }
+
+        .header-center span:hover:after {
+          transform: scaleX(1);
         }
 
         .header-right {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 20px;
           font-size: 13px;
           font-weight: 500;
         }
 
         .time {
-          color: #86868b;
+          color: #94a3b8;
+          font-weight: 500;
         }
 
         .subscribe-btn {
-          padding: 8px 16px;
-          background: linear-gradient(135deg, #007AFF, #5856D6);
+          padding: 8px 20px;
+          background: #3b82f6;
           color: white;
           border: none;
-          border-radius: 980px;
-          font-size: 13px;
+          border-radius: 6px;
+          font-size: 12px;
           font-weight: 600;
+          letter-spacing: 0.5px;
           cursor: pointer;
           transition: all 0.2s;
+          text-transform: uppercase;
         }
 
         .subscribe-btn:hover {
-          transform: scale(1.05);
+          background: #2563eb;
+          transform: scale(1.02);
         }
 
         .story-container {
@@ -406,51 +411,54 @@ export default function Home() {
 
         .opening-container {
           text-align: center;
-          max-width: 900px;
+          max-width: 800px;
           margin: 0 auto;
+          padding: 0 20px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          min-height: calc(100vh - 140px);
         }
 
         .date-header {
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 600;
-          letter-spacing: 1px;
-          color: #FF3B30;
+          letter-spacing: 2px;
+          color: #60a5fa;
           text-transform: uppercase;
-          margin-bottom: 32px;
+          margin-bottom: 40px;
         }
 
         .main-headline {
-          font-size: 64px;
+          font-size: 52px;
           font-weight: 800;
-          line-height: 1.05;
-          letter-spacing: -2px;
-          margin-bottom: 32px;
+          line-height: 1.15;
+          letter-spacing: -1.5px;
+          margin-bottom: 40px;
+          color: #0f172a;
         }
 
         .subheadline {
           font-size: 22px;
-          color: #86868b;
-          line-height: 1.6;
-          margin-bottom: 48px;
+          line-height: 1.4;
+          margin-bottom: 40px;
+          text-align: center;
         }
 
-        .breaking-badge {
-          display: inline-block;
-          padding: 6px 12px;
-          background: #FF3B30;
-          color: white;
-          border-radius: 980px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          margin-bottom: 32px;
-          animation: pulse 2s infinite;
+        @keyframes topicRotate {
+          0%, 20%, 100% { 
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          2%, 18% { 
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+        
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.3); }
+          50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.5); }
         }
 
         .news-grid {
@@ -466,10 +474,12 @@ export default function Home() {
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
+          border-radius: 8px;
         }
 
         .news-item:hover {
-          padding-left: 8px;
+          padding-left: 12px;
+          background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
 
         .news-item:last-child {
@@ -479,9 +489,10 @@ export default function Home() {
         .news-number {
           font-size: 32px;
           font-weight: 800;
-          background: linear-gradient(135deg, #007AFF, #5856D6);
+          background: linear-gradient(135deg, #cbd5e1, #94a3b8);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          opacity: 0.5;
         }
 
         .news-content {
@@ -489,63 +500,71 @@ export default function Home() {
         }
 
         .news-category {
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 700;
           letter-spacing: 1px;
-          color: #007AFF;
           text-transform: uppercase;
           margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
 
         .news-title {
-          font-size: 32px;
+          font-size: 36px;
           font-weight: 700;
           line-height: 1.2;
-          margin-bottom: 16px;
-          color: #1d1d1f;
+          margin-bottom: 14px;
+          color: #0f172a;
         }
 
         .news-summary {
-          font-size: 20px;
-          color: #4a4a4a;
+          font-size: 17px;
+          color: #475569;
           line-height: 1.6;
           margin-bottom: 16px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid #e2e8f0;
         }
 
         .news-meta {
           display: flex;
           gap: 16px;
-          font-size: 16px;
-          color: #86868b;
+          font-size: 14px;
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        .news-meta strong {
+          color: #334155;
+          font-weight: 700;
         }
 
         .progress-indicator {
           position: fixed;
-          bottom: 24px;
-          left: 50%;
-          transform: translateX(-50%);
+          right: 24px;
+          top: 50%;
+          transform: translateY(-50%);
           display: flex;
+          flex-direction: column;
           gap: 8px;
           z-index: 100;
-          background: rgba(255, 255, 255, 0.9);
-          padding: 8px 12px;
-          border-radius: 20px;
-          backdrop-filter: blur(10px);
         }
 
         .progress-dot {
-          width: 8px;
-          height: 8px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
-          background: #d2d2d7;
+          background: #e2e8f0;
           cursor: pointer;
           transition: all 0.3s;
         }
 
         .progress-dot.active {
-          width: 24px;
-          border-radius: 4px;
-          background: #1d1d1f;
+          width: 6px;
+          height: 20px;
+          border-radius: 3px;
+          background: linear-gradient(180deg, #60a5fa, #3b82f6);
         }
 
         .newsletter-container {
@@ -583,10 +602,16 @@ export default function Home() {
           flex: 1;
           padding: 16px 20px;
           font-size: 16px;
-          border: none;
+          border: 1px solid #333;
           border-radius: 12px;
           background: #1c1c1e;
           color: #fff;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .newsletter-input:focus {
+          border-color: #f97316;
         }
 
         .newsletter-input::placeholder {
@@ -609,25 +634,33 @@ export default function Home() {
           transform: scale(1.05);
         }
 
+        .newsletter-info {
+          font-size: 13px;
+          color: #6e6e73;
+          margin-top: 24px;
+        }
+
         .scroll-hint {
           position: fixed;
-          bottom: 80px;
+          bottom: 40px;
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
-          color: #86868b;
+          color: #94a3b8;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 1.5px;
+          font-weight: 500;
           animation: bounce 2s infinite;
+          opacity: 0.9;
         }
 
         @keyframes bounce {
           0%, 100% { transform: translateX(-50%) translateY(0); }
-          50% { transform: translateX(-50%) translateY(-10px); }
+          50% { transform: translateX(-50%) translateY(-6px); }
         }
 
         @media (max-width: 768px) {
-          .header-nav {
+          .header-center {
             display: none;
           }
           
@@ -635,33 +668,76 @@ export default function Home() {
             display: none;
           }
           
-          .main-headline {
-            font-size: 48px;
-          }
-          
-          .subheadline {
-            font-size: 18px;
+          .story-container {
+            padding: 70px 16px 60px;
           }
           
           .news-item {
-            grid-template-columns: 50px 1fr;
+            grid-template-columns: 40px 1fr;
             gap: 16px;
           }
           
           .news-number {
-            font-size: 32px;
+            font-size: 24px;
           }
           
           .news-title {
             font-size: 28px;
           }
           
-          .news-summary {
-            font-size: 18px;
+          .main-headline {
+            font-size: 34px;
+            letter-spacing: -1px;
+            margin-bottom: 30px;
+            line-height: 1.15;
           }
           
-          .news-meta {
-            font-size: 14px;
+          .date-header {
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+          }
+          
+          .subheadline {
+            font-size: 18px;
+            margin-bottom: 30px;
+          }
+          
+          .news-info {
+            font-size: 11px !important;
+            gap: 16px !important;
+            margin-bottom: 40px !important;
+          }
+          
+          .rotating-topics {
+            min-width: 150px !important;
+          }
+          
+          .opening-container {
+            padding: 0 20px;
+            min-height: calc(100vh - 120px);
+          }
+          
+          .scroll-hint {
+            bottom: 30px;
+            font-size: 11px;
+          }
+          
+          .progress-indicator {
+            right: 12px;
+            gap: 6px;
+          }
+          
+          .progress-dot {
+            width: 5px;
+            height: 5px;
+            background: #e2e8f0;
+          }
+          
+          .progress-dot.active {
+            width: 5px;
+            height: 18px;
+            background: linear-gradient(180deg, #f97316, #06b6d4);
           }
         }
       `}</style>
@@ -673,16 +749,15 @@ export default function Home() {
             <span className="logo-ten">TEN</span> NEWS
           </div>
           
-          <div style={{ flex: 1 }}></div>
+          <div className="header-center">
+            <span>WORLD</span>
+            <span>BUSINESS</span>
+            <span>TECH</span>
+            <span>SCIENCE</span>
+            <span>SPORTS</span>
+          </div>
           
           <div className="header-right">
-            <div className="header-nav">
-              <span>WORLD</span>
-              <span>BUSINESS</span>
-              <span>TECH</span>
-              <span>SCIENCE</span>
-              <span>SPORTS</span>
-            </div>
             <span className="time">{currentTime}</span>
             <button className="subscribe-btn">SUBSCRIBE</button>
           </div>
@@ -710,13 +785,67 @@ export default function Home() {
               {story.type === 'opening' ? (
                 <div className="opening-container">
                   <div className="date-header">{story.date}</div>
-                  <div className="breaking-badge">LIVE NEWS</div>
                   <h1 className="main-headline">
                     {story.headline}
                   </h1>
-                  <p className="subheadline">
-                    {story.subheadline || 'Ten essential stories shaping our world today. AI-curated from global sources — your morning briefing starts here.'}
-                  </p>
+                  <div className="subheadline">
+                    <div style={{ display: 'inline-block' }}>
+                      <span style={{ fontWeight: 600, color: '#64748b' }}>Today: </span>
+                      <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
+                        {[
+                          'AI-curated global news',
+                          'Breaking world events', 
+                          'Essential daily briefing',
+                          'Trusted source analysis',
+                          'Your morning digest'
+                        ].map((topic, i) => (
+                          <span
+                            key={i}
+                            className="topic-item"
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              whiteSpace: 'nowrap',
+                              opacity: 0,
+                              animation: 'topicRotate 15s infinite',
+                              animationDelay: `${i * 3}s`,
+                              color: '#3b82f6',
+                              fontWeight: 700,
+                              transition: 'opacity 0.5s ease-in-out'
+                            }}
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="news-info" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    gap: '20px',
+                    marginBottom: '50px',
+                    fontSize: '13px',
+                    color: '#64748b',
+                    fontWeight: 500,
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase'
+                  }}>
+                    <span style={{
+                      padding: '4px 12px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      borderRadius: '4px',
+                      color: '#3b82f6'
+                    }}>10 Stories</span>
+                    <span style={{ color: '#cbd5e1' }}>•</span>
+                    <span style={{
+                      padding: '4px 12px',
+                      background: 'rgba(96, 165, 250, 0.1)',
+                      borderRadius: '4px',
+                      color: '#60a5fa'
+                    }}>2 Min Read</span>
+                  </div>
                   <div className="scroll-hint">Scroll to continue ↓</div>
                 </div>
               ) : story.type === 'news' ? (
@@ -725,37 +854,70 @@ export default function Home() {
                     <div style={{ 
                       textAlign: 'center', 
                       padding: '32px 0',
-                      borderBottom: '2px solid #1d1d1f',
-                      marginBottom: '24px'
+                      borderBottom: '2px solid #e5e5e7',
+                      marginBottom: '24px',
+                      position: 'relative'
                     }}>
                       <h2 style={{ 
-                        fontSize: '38px',
+                        fontSize: '32px',
                         fontWeight: 800,
-                        letterSpacing: '-1px'
+                        letterSpacing: '-0.5px',
+                        color: '#0f172a'
                       }}>
-                        Today Essential Reading
+                        Today's Essential Reading
                       </h2>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '-2px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '80px',
+                        height: '2px',
+                        background: 'linear-gradient(90deg, #f97316, #06b6d4)'
+                      }}></div>
                     </div>
                   )}
                   
-                  <div className="news-item" onClick={() => story.url && story.url !== '#' && window.open(story.url, '_blank')}>
+                  <div className="news-item" onClick={() => story.url && window.open(story.url, '_blank')}>
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
-                      <div className="news-category">{story.category}</div>
-                      <h3 className="news-title">{story.emoji} {story.title}</h3>
+                      <div className="news-category" style={{
+                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
+                               story.category === 'BUSINESS' ? '#f97316' :
+                               story.category === 'MARKETS' ? '#06b6d4' :
+                               story.category === 'TECH & AI' ? '#8b5cf6' :
+                               story.category === 'SCIENCE' ? '#0ea5e9' :
+                               story.category === 'HEALTH' ? '#10b981' :
+                               story.category === 'CLIMATE' ? '#22c55e' :
+                               story.category === 'SPORTS' ? '#f59e0b' :
+                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{ fontSize: '14px' }}>{story.emoji}</span>
+                        {story.category}
+                      </div>
+                      <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{story.summary}</p>
                       <div className="news-meta">
-                        <span className="news-source">{story.source}</span>
-                        {story.details && story.details.slice(0, 2).map((detail, i) => (
-                          <span key={i}>{detail}</span>
-                        ))}
+                        {story.details && story.details.map((detail, i) => {
+                          const [label, value] = detail.split(':');
+                          return (
+                            <span key={i}>
+                              <strong>{label}:</strong>{value}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 </div>
               ) : story.type === 'newsletter' ? (
                 <div className="newsletter-container">
-                  <h2 className="newsletter-title">Stay Informed</h2>
+                  <h2 className="newsletter-title">
+                    <span style={{ color: '#f97316' }}>Stay</span> Informed
+                  </h2>
                   <p className="newsletter-subtitle">
                     Get Ten News delivered to your inbox every morning
                   </p>
