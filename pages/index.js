@@ -40,6 +40,21 @@ export default function Home() {
           console.log('📰 API error:', error);
         }
         
+        // If API failed, try direct file access
+        if (!newsData) {
+          try {
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}_${(today.getMonth() + 1).toString().padStart(2, '0')}_${today.getDate().toString().padStart(2, '0')}`;
+            const response = await fetch(`/tennews_data_${dateStr}.json`);
+            if (response.ok) {
+              newsData = await response.json();
+              console.log('✅ Loaded news from direct file');
+            }
+          } catch (error) {
+            console.log('📰 Direct file access failed:', error);
+          }
+        }
+        
         // Clear timeout if we got here
         clearTimeout(timeoutId);
         
@@ -110,7 +125,11 @@ export default function Home() {
         });
         
         setStories(processedStories);
-        setLoading(false);
+        
+        // ALWAYS ensure loading stops
+        setTimeout(() => {
+          setLoading(false);
+        }, 100);
       } catch (error) {
         console.error('Error loading news:', error);
         // Ensure loading stops even on error
