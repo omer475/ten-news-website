@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 05, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌍",
+      "title": "Twenty-Six Nations Unite to Form Post-War Security Force for Ukraine",
+      "summary": "French President Emmanuel Macron announces that 26 allied countries have committed to deploying military forces to ensure Ukraine's security after the Russian conflict ends, providing support across land, sea, and air.",
+      "details": [
+        "Coalition meeting held in Paris",
+        "Multi-domain security approach planned",
+        "Immediate post-conflict deployment strategy confirmed"
+      ],
+      "category": "World News",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/international/macron-says-26-countries-pledge-troops-as-a-reassurance-force-for-ukraine-after-fighting-ends/article70013232.ece"
+    },
+    {
+      "rank": 2,
+      "emoji": "💔",
+      "title": "Devastating Landslide Destroys Entire Village in Sudan's Darfur Region",
+      "summary": "A catastrophic landslide has completely destroyed the village of Tarrasin in Sudan's Darfur region, causing significant loss of life. Local communities gather to mourn as rescue efforts continue in the affected area.",
+      "details": [
+        "Multiple families displaced",
+        "Emergency response teams deployed",
+        "Regional government pledges support"
+      ],
+      "category": "World News",
+      "source": "African News",
+      "url": "https://www.africanews.com/2025/09/05/death-toll-rises-after-deadly-landslide-levels-darfur-village/"
+    },
+    {
+      "rank": 3,
+      "emoji": "🌱",
+      "title": "African Nations Form United Front on Climate Change Solutions",
+      "summary": "African countries are developing a Common African Position to address climate change and conflict, marking a significant shift in continental policy. The initiative will be presented at the upcoming Africa Climate Summit.",
+      "details": [
+        "Policy document focuses on peace and security",
+        "UN climate summit participation planned",
+        "Regional cooperation framework established"
+      ],
+      "category": "Climate",
+      "source": "AllAfrica",
+      "url": "https://allafrica.com/stories/202509050001.html"
+    },
+    {
+      "rank": 4,
+      "emoji": "🤖",
+      "title": "Enterprise Security Concerns Rise Over AI-Powered Web Browsers",
+      "summary": "Palo Alto Networks CEO Nikesh Arora warns that enterprises may reject AI-powered browsers within two years unless robust security controls are implemented, citing concerns about credentials and security risks.",
+      "details": [
+        "24-month adoption timeline predicted",
+        "Consumer acceptance differs from enterprise",
+        "Security credential requirements specified"
+      ],
+      "category": "Technology",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/04/palo-alto-networks-ceo-says-the-enterprise-may-not-welcome-agentic-ai-browsers.html"
+    },
+    {
+      "rank": 5,
+      "emoji": "🇻🇪",
+      "title": "Venezuelan Coastal Communities Navigate Rising US Military Tensions",
+      "summary": "Despite escalating tensions between the US and Venezuela, coastal communities like Chichiriviche de la Costa maintain their daily routines while quietly expressing hopes for positive political change.",
+      "details": [
+        "Early morning fishing continues unaffected",
+        "Two-hour drive from Caracas",
+        "Local economic activities persist"
+      ],
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/04/americas/venezuela-us-tensions-warships-intl-latam"
+    },
+    {
+      "rank": 6,
+      "emoji": "💰",
+      "title": "New Federal Reserve Governor Nominee Pledges Independent Decision Making",
+      "summary": "Stephen Miran, Trump's nominee for Federal Reserve governor, commits to maintaining the Fed's independence during Senate confirmation hearing, emphasizing objective economic policy decisions.",
+      "details": [
+        "Senate Banking Committee oversight",
+        "Economic policy expertise highlighted",
+        "Bipartisan support sought"
+      ],
+      "category": "Business",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/us-fed-governor-trump-pick-stephen-miran-vows-independence-5333101"
+    },
+    {
+      "rank": 7,
+      "emoji": "🗳️",
+      "title": "Myanmar Military Elections Face Scrutiny Over Peace Process Claims",
+      "summary": "Myanmar's upcoming elections, organized by the military government, spark debate over whether they represent genuine peace-building efforts or a strategic political maneuver to maintain control.",
+      "details": [
+        "International observer concerns raised",
+        "Opposition party participation uncertain",
+        "Regional diplomatic implications discussed"
+      ],
+      "category": "World News",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-05/myanmar-election-pathway-peace-trap/105733420"
+    },
+    {
+      "rank": 8,
+      "emoji": "🤝",
+      "title": "US Commits $32.5 Million Aid Package to Combat Nigerian Hunger",
+      "summary": "The United States approves significant humanitarian assistance to Nigeria, marking a strategic shift in foreign policy. The aid package aims to address growing food security challenges in the region.",
+      "details": [
+        "Food distribution network planned",
+        "Local partnership initiatives included",
+        "Long-term sustainability goals outlined"
+      ],
+      "category": "World News",
+      "source": "African News",
+      "url": "https://www.africanews.com/2025/09/04/us-approves-325-million-in-assistance-to-nigeria-to-help-address-hunger/"
+    },
+    {
+      "rank": 9,
+      "emoji": "💻",
+      "title": "Atlassian Acquires Arc Browser Creator for $610 Million Deal",
+      "summary": "The Browser Company, known for developing Arc and Dia browsers, is being acquired by Atlassian in a major tech industry deal worth $610 million, signaling significant market consolidation.",
+      "details": [
+        "Integration plans announced",
+        "Product development roadmap shared",
+        "Employee retention strategy outlined"
+      ],
+      "category": "Technology",
+      "source": "The Verge",
+      "url": "https://www.theverge.com/web/770947/browser-company-arc-dia-acquired-atlassian"
+    },
+    {
+      "rank": 10,
+      "emoji": "🌊",
+      "title": "Punjab Rivers Reach Critical Levels as Heavy Rains Continue",
+      "summary": "Severe flooding affects Punjab province as continuous rainfall causes rivers to swell, particularly at Trimmu and Panjnad headworks. Emergency services conduct rescue operations for affected communities.",
+      "details": [
+        "Livestock evacuation ongoing",
+        "Multiple districts affected",
+        "Weather monitoring systems activated"
+      ],
+      "category": "Climate",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614211/pakistan"
+    }
+  ],
+  "dailyGreeting": "Good morning! Global unity takes center stage today.",
+  "readingTime": "1 minute read",
+  "displayDate": "FRIDAY, SEPTEMBER 5, 2025",
+  "historicalEvents": [
+    {
+      "year": "1666",
+      "description": "Great Fire of London begins, destroying much of city"
+    },
+    {
+      "year": "1774",
+      "description": "First Continental Congress assembles in Philadelphia"
+    },
+    {
+      "year": "1905",
+      "description": "Russia and Japan sign Treaty of Portsmouth, ending war"
+    },
+    {
+      "year": "1972",
+      "description": "Munich Olympics massacre: Israeli athletes taken hostage"
+    }
+  ],
+  "generatedAt": "2025-09-05T11:39:22.528898",
+  "generatedAtUK": "2025-09-05T12:39:22.528914+01:00"
+}

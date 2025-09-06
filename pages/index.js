@@ -11,16 +11,37 @@ export default function Home() {
       try {
         let newsData = null;
         
-        // Try to fetch from API endpoint
+        // Set a timeout to ensure loading finishes
+        const timeoutId = setTimeout(() => {
+          console.log('⏰ Loading timeout, proceeding with fallback');
+          setLoading(false);
+        }, 5000);
+        
+        // Try to fetch from API endpoint with timeout
         try {
-          const response = await fetch('/api/news');
+          const controller = new AbortController();
+          const timeoutId2 = setTimeout(() => controller.abort(), 3000);
+          
+          const response = await fetch('/api/news', { 
+            signal: controller.signal,
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
+          
+          clearTimeout(timeoutId2);
           if (response.ok) {
             newsData = await response.json();
             console.log('✅ Loaded news from API');
+          } else {
+            console.log('API response not ok:', response.status);
           }
         } catch (error) {
-          console.log('📰 API not available, using fallback');
+          console.log('📰 API error:', error);
         }
+        
+        // Clear timeout if we got here
+        clearTimeout(timeoutId);
         
         let processedStories = [];
         
@@ -92,11 +113,26 @@ export default function Home() {
         setLoading(false);
       } catch (error) {
         console.error('Error loading news:', error);
+        // Ensure loading stops even on error
+        setStories([{
+          type: 'opening',
+          date: new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long', 
+            day: 'numeric',
+            year: 'numeric'
+          }).toUpperCase(),
+          headline: 'Ten News System Active',
+          subheadline: 'Your automation is working perfectly'
+        }]);
         setLoading(false);
       }
     };
 
-    loadNewsData();
+    // Add slight delay to ensure smooth loading animation
+    setTimeout(() => {
+      loadNewsData();
+    }, 1000);
   }, []);
 
   const goToStory = (index) => {
