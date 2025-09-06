@@ -387,7 +387,6 @@ export default function Home() {
 
         .subscribe-btn:hover {
           background: #2563eb;
-          transform: scale(1.02);
         }
 
         .story-container {
@@ -568,13 +567,18 @@ export default function Home() {
 
         .newsletter-container {
           text-align: center;
-          padding: 60px 24px;
+          padding: 60px 0;
           background: #000;
           color: #fff;
           height: 100vh;
+          width: 100vw;
           display: flex;
           flex-direction: column;
           justify-content: center;
+          margin: 0;
+          position: relative;
+          left: 50%;
+          transform: translateX(-50%);
         }
 
         .newsletter-title {
@@ -594,11 +598,12 @@ export default function Home() {
           max-width: 440px;
           margin: 0 auto;
           display: flex;
-          gap: 12px;
+          flex-direction: column;
+          gap: 16px;
         }
 
         .newsletter-input {
-          flex: 1;
+          width: 100%;
           padding: 16px 20px;
           font-size: 16px;
           border: 1px solid #333;
@@ -618,6 +623,7 @@ export default function Home() {
         }
 
         .newsletter-button {
+          width: 100%;
           padding: 16px 32px;
           background: #fff;
           color: #000;
@@ -626,11 +632,11 @@ export default function Home() {
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: background-color 0.2s;
         }
 
         .newsletter-button:hover {
-          transform: scale(1.05);
+          background: #f0f0f0;
         }
 
         .newsletter-info {
