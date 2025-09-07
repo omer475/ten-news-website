@@ -501,53 +501,48 @@ export default function Home() {
           border-bottom: 1px solid #e2e8f0;
         }
 
-        .news-details-container {
+        .news-meta {
           display: flex;
-          gap: 0;
-          margin-top: 20px;
-          border-radius: 8px;
-          overflow: hidden;
           background: #f8fafc;
+          border-radius: 12px;
+          padding: 20px;
+          margin-top: 20px;
+          border-left: 4px solid #3b82f6;
+          gap: 0;
         }
 
         .news-detail-item {
           flex: 1;
-          padding: 16px 20px;
           text-align: center;
-          position: relative;
-          background: #f8fafc;
-        }
-
-        .news-detail-item:first-child {
-          border-left: 4px solid var(--category-color);
-        }
-
-        .news-detail-item:not(:last-child) {
+          padding: 0 15px;
           border-right: 1px solid #e2e8f0;
+        }
+
+        .news-detail-item:last-child {
+          border-right: none;
         }
 
         .news-detail-label {
           font-size: 11px;
-          font-weight: 600;
+          color: #94a3b8;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: #64748b;
+          letter-spacing: 1px;
+          font-weight: 600;
           margin-bottom: 4px;
-          line-height: 1.2;
         }
 
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
           color: #1e293b;
-          line-height: 1.1;
+          line-height: 1.2;
         }
 
         .news-detail-subtitle {
           font-size: 12px;
           color: #64748b;
-          margin-top: 2px;
           font-weight: 500;
+          margin-top: 2px;
         }
 
         .progress-indicator {
@@ -762,12 +757,13 @@ export default function Home() {
             background: linear-gradient(180deg, #1f2937, #000000);
           }
           
-          .news-details-container {
-            margin-top: 16px;
+          .news-meta {
+            padding: 15px;
+            margin-top: 15px;
           }
           
           .news-detail-item {
-            padding: 12px 16px;
+            padding: 0 10px;
           }
           
           .news-detail-label {
@@ -776,6 +772,10 @@ export default function Home() {
           
           .news-detail-value {
             font-size: 16px;
+          }
+          
+          .news-detail-subtitle {
+            font-size: 11px;
           }
         }
       `}</style>
@@ -932,44 +932,37 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{story.summary}</p>
-                      {story.details && story.details.length > 0 && (
-                        <div 
-                          className="news-details-container"
-                          style={{
-                            '--category-color': story.category === 'WORLD NEWS' ? '#dc2626' :
-                                              story.category === 'BUSINESS' ? '#f97316' :
-                                              story.category === 'MARKETS' ? '#06b6d4' :
-                                              story.category === 'TECH & AI' ? '#8b5cf6' :
-                                              story.category === 'SCIENCE' ? '#0ea5e9' :
-                                              story.category === 'HEALTH' ? '#10b981' :
-                                              story.category === 'CLIMATE' ? '#22c55e' :
-                                              story.category === 'SPORTS' ? '#f59e0b' :
-                                              story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b'
-                          }}
-                        >
-                          {story.details.map((detail, i) => {
-                            const [label, value] = detail.split(':');
-                            const trimmedValue = value ? value.trim() : '';
-                            
-                            // Extract numbers and make them bold
-                            const formatValue = (text) => {
-                              if (!text) return '';
-                              // Match numbers, currency, percentages, years
-                              return text.replace(/(\$?[\d,]+\.?\d*[BMK]?%?|\d{4}(?:-year)?)/gi, '<strong>$1</strong>');
-                            };
-                            
-                            return (
-                              <div key={i} className="news-detail-item">
-                                <div className="news-detail-label">{label ? label.trim() : `Detail ${i + 1}`}</div>
-                                <div 
-                                  className="news-detail-value" 
-                                  dangerouslySetInnerHTML={{ __html: formatValue(trimmedValue) }}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                      <div className="news-meta" style={{
+                        borderLeftColor: 
+                          story.category === 'WORLD NEWS' ? '#dc2626' :
+                          story.category === 'BUSINESS' ? '#f97316' :
+                          story.category === 'MARKETS' ? '#06b6d4' :
+                          story.category === 'TECH & AI' ? '#8b5cf6' :
+                          story.category === 'SCIENCE' ? '#0ea5e9' :
+                          story.category === 'HEALTH' ? '#10b981' :
+                          story.category === 'CLIMATE' ? '#22c55e' :
+                          story.category === 'SPORTS' ? '#f59e0b' :
+                          story.category === 'ENTERTAINMENT' ? '#ec4899' : '#3b82f6'
+                      }}>
+                        {story.details && story.details.map((detail, i) => {
+                          const [label, value] = detail.split(':');
+                          const cleanLabel = label?.trim() || '';
+                          const cleanValue = value?.trim() || '';
+                          
+                          // Extract main number/value and subtitle
+                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                          
+                          return (
+                            <div key={i} className="news-detail-item">
+                              <div className="news-detail-label">{cleanLabel}</div>
+                              <div className="news-detail-value">{mainValue}</div>
+                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>

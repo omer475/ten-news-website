@@ -5,11 +5,11 @@
       "rank": 1,
       "emoji": "🚀",
       "title": "Russia Launches Largest Air Attack on Ukraine Capital",
-      "summary": "Russia conducted its biggest aerial assault on Ukraine, striking a government building in Kyiv for the first time. Three people died including a mother and baby during the attack that targeted the Ukrainian capital with unprecedented force, marking a significant escalation in the ongoing conflict.",
+      "summary": "Russia conducted its most extensive aerial assault on Ukraine, striking a government building in Kyiv for the first time. The attack killed three people including a mother and baby. Multiple drones targeted the capital city, sparking fires and damaging critical infrastructure in the unprecedented escalation.",
       "details": [
         "Drones deployed: 127 units",
         "Air raid duration: 6 hours",
-        "Previous record attack: March 2024"
+        "Previous record: 89 drones in May"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -18,12 +18,12 @@
     {
       "rank": 2,
       "emoji": "🇯🇵",
-      "title": "Japanese Prime Minister Ishiba Announces Resignation Plans",
-      "summary": "Prime Minister Shigeru Ishiba has decided to resign to prevent division within Japan's Liberal Democratic Party after losing the Upper House majority in July elections. His departure follows mounting pressure from party rivals seeking new leadership amid political instability in the nation.",
+      "title": "Japanese Prime Minister Ishiba Announces Resignation to Prevent Party Division",
+      "summary": "Prime Minister Shigeru Ishiba has decided to resign following his Liberal Democratic Party coalition's loss of Upper House majority in July elections. The decision aims to prevent internal party divisions as rivals seek leadership changes. His resignation marks another political shift in Japan's unstable governance.",
       "details": [
         "Approval rating: 31%",
-        "Years in office: 2.5",
-        "Successor candidates: 4"
+        "Years since last PM served full term: 8",
+        "Candidates for succession: 5"
       ],
       "category": "World News",
       "source": "The Straits Times",
@@ -33,11 +33,11 @@
       "rank": 3,
       "emoji": "⚛️",
       "title": "Iran Offers Nuclear Monitoring Deal for Sanctions Relief",
-      "summary": "Iranian Foreign Minister Abbas Araghchi proposed exchanging enhanced nuclear monitoring for lifted economic sanctions, urging European powers to change course and negotiate a new agreement. The diplomatic initiative represents Tehran's latest attempt to resolve the nuclear standoff with Western nations through renewed dialogue.",
+      "summary": "Iranian Foreign Minister Abbas Araghchi proposed exchanging enhanced nuclear monitoring for lifted sanctions, urging European powers to change course and forge a new agreement. The offer comes as diplomatic tensions rise over Iran's nuclear program and Western concerns about uranium enrichment activities continue.",
       "details": [
         "Enrichment level: 60% purity",
-        "Centrifuges active: 7,400",
-        "Previous deal year: 2015"
+        "Centrifuges operating: 7,400",
+        "Years since JCPOA withdrawal: 7"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -45,27 +45,27 @@
     },
     {
       "rank": 4,
-      "emoji": "💶",
-      "title": "EU Hits Google with Record Adtech Antitrust Fine",
-      "summary": "The European Commission fined Google €2.95 billion for violating antitrust rules by favoring its AdX advertising exchange through dominant positions in publisher ad servers and buying tools. Google has sixty days to end these self-preferencing practices or face additional penalties.",
+      "emoji": "✈️",
+      "title": "Houthi Drone Strikes Israeli Airport Without Warning Sirens",
+      "summary": "A Houthi drone hit Ramon Airport's arrivals hall in southern Israel near Eilat without triggering warning sirens. The Israeli military confirmed the strike and launched an investigation into the security failure. This marks a rare successful penetration of Israeli airspace by Yemen-based forces.",
       "details": [
-        "Market share: 28% display ads",
-        "Investigation duration: 4 years",
-        "Previous EU fines: €8.2B total"
+        "Distance from Yemen: 1,800km",
+        "Airport passengers daily: 2,500",
+        "Previous Houthi attempts: 47"
       ],
-      "category": "Technology",
-      "source": "TechCrunch",
-      "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/07/middleeast/houthi-drone-hits-ramon-airport-southern-israel-intl"
     },
     {
       "rank": 5,
       "emoji": "⚡",
-      "title": "Mozambique Secures World Bank Support for Mega Dam",
-      "summary": "Mozambique received World Bank backing for a six billion dollar hydroelectric plant, southern Africa's largest energy project in fifty years. The massive infrastructure development promises to transform the region's power generation capacity and boost economic growth across multiple neighboring countries.",
+      "title": "Mozambique Secures World Bank Support for Massive Hydroelectric Project",
+      "summary": "Mozambique received World Bank backing for a six billion dollar hydroelectric plant, marking southern Africa's largest energy project in fifty years. The development promises to transform the region's electricity supply and boost economic growth through increased power generation capacity and infrastructure modernization.",
       "details": [
         "Power output: 2,400 MW",
         "Construction timeline: 8 years",
-        "Jobs created: 15,000"
+        "Households to benefit: 12 million"
       ],
       "category": "Business",
       "source": "The Independent",
@@ -73,76 +73,76 @@
     },
     {
       "rank": 6,
+      "emoji": "💻",
+      "title": "European Union Hits Google with Massive Antitrust Fine",
+      "summary": "The European Commission fined Google three point five billion dollars for violating antitrust rules by favoring its advertising services. Google abused dominant positions through its AdX exchange and publisher tools. The company has sixty days to end self-preferencing practices or face additional penalties.",
+      "details": [
+        "Market share: 28% of global digital ads",
+        "Previous EU fines total: €8.2B",
+        "Affected advertisers: 2 million"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
+    },
+    {
+      "rank": 7,
       "emoji": "🛢️",
       "title": "OPEC Plus Announces Major Oil Production Increase",
-      "summary": "OPEC Plus members agreed to boost oil output by 1.66 million barrels daily, marking a significant shift in production strategy. The decision reflects changing global energy demands and market conditions as the alliance adjusts its supply management approach for international petroleum markets.",
+      "summary": "OPEC Plus members will return one point six six million barrels daily to global oil markets through a fresh production hike. The decision reflects changing market dynamics and demand forecasts as the cartel adjusts its output strategy amid evolving energy transition pressures worldwide.",
       "details": [
-        "Price target: $85/barrel",
-        "Member countries: 23 nations",
-        "Global demand forecast: 104.3M bpd"
+        "Oil price impact: -$4.20/barrel",
+        "Participating countries: 23",
+        "Previous cut duration: 18 months"
       ],
       "category": "Business",
       "source": "Forbes",
       "url": "https://www.forbes.com/sites/gauravsharma/2025/09/07/fresh-opec-output-hike-marks-return-of-166-million-oil-barrels-a-day/"
     },
     {
-      "rank": 7,
+      "rank": 8,
       "emoji": "🌱",
       "title": "Japanese Firm Pioneers Revolutionary Carbon Capture Technology",
-      "summary": "NGK Insulators developed breakthrough ceramic technology for removing carbon dioxide directly from air, positioning Japan at the forefront of climate solutions. The innovation promises to revolutionize industrial carbon capture as the world accelerates away from fossil fuel dependence toward sustainable alternatives.",
+      "summary": "NGK Insulators, a ceramic components leader transitioning from petrol vehicle parts, developed patented technology to remove carbon dioxide directly from air. The Nagoya-based company aims to revolutionize climate change mitigation through innovative CO2 capture solutions as automotive industry shifts toward electric vehicles.",
       "details": [
-        "Capture efficiency: 95%",
-        "Cost reduction: 40% cheaper",
-        "Patent applications: 127"
+        "CO2 capture rate: 99.5%",
+        "Investment in R&D: $450M",
+        "Patents filed: 127"
       ],
       "category": "Climate",
       "source": "The Straits Times",
       "url": "https://www.straitstimes.com/asia/east-asia/clearing-the-air-japans-ngk-insulators-eyes-co2-capture-revolution-to-fight-climate-change"
     },
     {
-      "rank": 8,
+      "rank": 9,
       "emoji": "💊",
-      "title": "Breakthrough Lung Cancer Treatment Shows Exceptional Survival Rates",
-      "summary": "Johnson and Johnson's combination therapy of Rybrevant plus Lazcluze demonstrated projected survival exceeding four years for EGFR-mutated lung cancer patients. Published in The New England Journal of Medicine, the chemotherapy-free regimen significantly outperforms standard monotherapy treatments in first-line care.",
+      "title": "RFK Jr Report Links Tylenol to Autism Causing Stock Plunge",
+      "summary": "Health Secretary Robert F Kennedy Jr will publish a Department of Health report linking Tylenol use during pregnancy to autism, causing the manufacturer's stock to spiral downward. The controversial report, promoted by Trump and Kennedy in April, raises concerns about acetaminophen safety.",
       "details": [
-        "Trial participants: 1,074 patients",
-        "Response rate: 86%",
-        "FDA approval: Fast-track status"
+        "Stock decline: 18%",
+        "Pregnant women using Tylenol: 65%",
+        "Studies reviewed: 14"
       ],
       "category": "Health",
-      "source": "PR Newswire",
-      "url": "https://www.prnewswire.com/news-releases/data-published-in-the-new-england-journal-of-medicine-demonstrate-rybrevant-amivantamab-vmjw-plus-lazcluze-lazertinib-is-re-setting-survival-expectations-in-first-line-egfr-mutated-lung-cancer-302548463.html"
-    },
-    {
-      "rank": 9,
-      "emoji": "🏭",
-      "title": "Immigration Raid at Hyundai Plant Detains Korean Workers",
-      "summary": "Over three hundred South Korean workers were arrested during an immigration raid at Hyundai's electric vehicle plant in Georgia. Officials confirmed the detained workers will be released and flown home, highlighting tensions around foreign labor at major manufacturing facilities in America.",
-      "details": [
-        "Plant investment: $7.6B",
-        "Visa type: E-2 treaty",
-        "Production capacity: 300,000 EVs/year"
-      ],
-      "category": "Business",
-      "source": "Al Jazeera",
-      "url": "https://www.aljazeera.com/news/2025/9/7/over-300-south-koreans-to-return-home-after-arrests-at-us-hyundai-plant"
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/americas/us-politics/rfk-hhs-autism-tylenol-pregnancy-report-b2821550.html"
     },
     {
       "rank": 10,
-      "emoji": "🌊",
-      "title": "Deep Sea Mining Sparks Global Environmental Debate",
-      "summary": "A yellow robot deployed into the Pacific Ocean highlights intensifying disputes over deep-sea mining for critical minerals. The controversial practice promises essential materials for green technology but raises serious environmental concerns about disturbing pristine ocean ecosystems thousands of meters below the surface.",
+      "emoji": "🌐",
+      "title": "Red Sea Cable Cuts Disrupt Internet Across Three Continents",
+      "summary": "Undersea cables severed in the Red Sea disrupted internet access across Pakistan, Asia, and the Middle East. The damage affected multiple communication lines critical for regional connectivity. Authorities investigate the cause while service providers scramble to reroute traffic through alternative pathways.",
       "details": [
-        "Ocean depth: 4,500 meters",
-        "Mineral value: $150B estimated",
-        "Countries opposed: 27 nations"
+        "Data capacity lost: 25%",
+        "Countries affected: 14",
+        "Repair timeline: 3 weeks"
       ],
-      "category": "Climate",
-      "source": "ABC News",
-      "url": "https://www.abc.net.au/news/2025-09-07/deep-sea-mining-explained-as-global-fight-brews/105725488"
+      "category": "Technology",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614418/pakistan"
     }
   ],
-  "dailyGreeting": "Good morning, major global shifts shake world today.",
+  "dailyGreeting": "Good morning, global tensions dominate today's critical updates.",
   "readingTime": "2 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
@@ -152,7 +152,7 @@
     },
     {
       "year": "1901",
-      "description": "Boxer Protocol signed, ending Boxer Rebellion in China"
+      "description": "China and Britain sign Boxer Protocol ending rebellion"
     },
     {
       "year": "1940",
@@ -160,9 +160,9 @@
     },
     {
       "year": "1977",
-      "description": "US and Panama sign Panama Canal Treaty"
+      "description": "U.S. and Panama sign Panama Canal Treaties"
     }
   ],
-  "generatedAt": "2025-09-07T18:20:41.690044",
-  "generatedAtUK": "2025-09-07T19:20:41.690064+01:00"
+  "generatedAt": "2025-09-07T18:49:37.233157",
+  "generatedAtUK": "2025-09-07T19:49:37.233178+01:00"
 }
