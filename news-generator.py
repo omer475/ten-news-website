@@ -441,7 +441,7 @@ def extract_base_domain(url):
     except Exception:
         return None
 
-def deduplicate_articles(articles, processing_log=None):
+def deduplicate_articles(articles):
     """Remove duplicates and filter by approved domains"""
     print(f"\n🔄 Processing and filtering articles...")
     unique_articles = []
@@ -477,22 +477,6 @@ def deduplicate_articles(articles, processing_log=None):
     print(f"- From approved sources: {approved_count:,}")
     print(f"- Rejected (unapproved sources): {rejected_count:,}")
     print(f"- Unique approved: {len(unique_articles):,}")
-    
-    # Log detailed statistics
-    if processing_log:
-        processing_log["steps"]["3_filtering"] = {
-            "total_input": len(articles),
-            "duplicates_removed": duplicate_count,
-            "approved_sources": approved_count,
-            "rejected_sources": rejected_count,
-            "final_unique": len(unique_articles),
-            "approved_domains": approved_domains[:10],  # Top 10 domains
-            "rejected_domains": rejected_domains[:10],  # Top 10 rejected
-            "description": "Domain filtering and deduplication"
-        }
-        processing_log["statistics"]["eliminated_duplicates"] = duplicate_count
-        processing_log["statistics"]["eliminated_unapproved_sources"] = rejected_count
-        processing_log["statistics"]["approved_for_ai_selection"] = len(unique_articles)
     
     return unique_articles
 
@@ -613,7 +597,7 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level
+- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level 
 - DETAILS: 3 pieces of NEW info NOT in summary, format "Label: Value"
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
@@ -858,21 +842,11 @@ def generate_daily_news():
     print("🚀 TEN NEWS - Daily Digest Generator")
     print("=" * 50)
     
-    # Initialize processing log
-    processing_log = {
-        "timestamp": datetime.now().isoformat(),
-        "date": datetime.now().strftime('%Y-%m-%d'),
-        "steps": {},
-        "statistics": {}
-    }
+    # Processing tracking removed - keeping only essential files
     
     try:
         # Load previous articles
         previous_articles = load_previous_articles()
-        processing_log["steps"]["1_previous_articles"] = {
-            "count": len(previous_articles),
-            "description": "Previous articles loaded for duplicate checking"
-        }
         
         # Fetch news
         articles = fetch_gdelt_news_last_24_hours()
@@ -880,38 +854,14 @@ def generate_daily_news():
             print("❌ No articles found")
             return False
         
-        processing_log["steps"]["2_gdelt_fetch"] = {
-            "total_articles": len(articles),
-            "description": "All articles fetched from GDELT API",
-            "sample_titles": [clean_text_for_json(a.get('title', ''))[:100] for a in articles[:5]]
-        }
-        processing_log["statistics"]["total_fetched_from_gdelt"] = len(articles)
-        
         # Filter and deduplicate  
-        unique_articles = deduplicate_articles(articles, processing_log)
+        unique_articles = deduplicate_articles(articles)
         if not unique_articles:
             print("❌ No approved articles found")
             return False
         
         # AI selection
         selected_articles = select_top_articles_with_ai(unique_articles, previous_articles)
-        
-        # Log AI selection results
-        if selected_articles and len(selected_articles) >= 10:
-            processing_log["steps"]["4_ai_selection"] = {
-                "input_articles": len(unique_articles),
-                "selected_articles": len(selected_articles),
-                "ai_status": "successful",
-                "description": "AI successfully selected 10 articles",
-                "selected_titles": [a.get('title', '')[:80] for a in selected_articles[:10]]
-            }
-        else:
-            processing_log["steps"]["4_ai_selection"] = {
-                "input_articles": len(unique_articles),
-                "selected_articles": len(selected_articles) if selected_articles else 0,
-                "ai_status": "partial_or_failed",
-                "description": f"AI returned {len(selected_articles) if selected_articles else 0} articles, need fallback"
-            }
         
         # Check if we need fallback (either no articles or less than 10)
         if not selected_articles or len(selected_articles) < 10:
@@ -931,10 +881,7 @@ def generate_daily_news():
                 if len(selected_articles) >= 10:
                     break
             
-            # Update processing log for fallback
-            processing_log["steps"]["4_ai_selection"]["ai_status"] = "failed_using_fallback"
-            processing_log["steps"]["4_ai_selection"]["selected_articles"] = len(selected_articles)
-            processing_log["steps"]["4_ai_selection"]["description"] = f"AI returned {current_count}, fallback generated {len(selected_articles)}"
+            # Fallback selection completed
         
         # Ensure exactly 10 articles
         if len(selected_articles) < 10:
@@ -1042,24 +989,7 @@ def generate_daily_news():
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(articles_data, f, ensure_ascii=False, indent=2)
         
-        # Finalize processing log
-        processing_log["steps"]["5_final_output"] = {
-            "final_articles_count": len(articles_data['articles']),
-            "news_file": filename,
-            "greeting": daily_greeting,
-            "reading_time": reading_time,
-            "description": "Final news data generated and saved"
-        }
-        processing_log["statistics"]["final_articles_generated"] = len(articles_data['articles'])
-        processing_log["completion_time"] = datetime.now().isoformat()
-        
-        # Save detailed processing log
-        log_filename = f"processing_log_{today}.json"
-        with open(log_filename, 'w', encoding='utf-8') as f:
-            json.dump(processing_log, f, ensure_ascii=False, indent=2)
-        
         print(f"\n✅ SUCCESS! Saved: {filename}")
-        print(f"📊 Processing log: {log_filename}")
         print(f"📅 Date: {formatted_date}")
         print(f"👋 Greeting: {daily_greeting}")
         print(f"⏱️ Reading: {reading_time}")
