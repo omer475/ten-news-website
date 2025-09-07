@@ -609,101 +609,169 @@ WORD COUNT ENFORCEMENT:
 - If over 50 words, trim unnecessary words
 - This is MANDATORY - summaries with wrong word count will be rejected
 
-## Details Section Instructions for AI - Final Version
+## Details Section Instructions for AI - Complete Format Guide
 
-### CORE FUNCTION
-The `details` array provides 3 supplementary data points that expand the story beyond what's in the summary. These must be completely different facts that add depth without redundancy.
+### CORE REQUIREMENTS
+Generate exactly 3 data points in the `details` array. Each must provide NEW information not mentioned in the summary.
 
-### MANDATORY PROCESS
+### FORMAT STRUCTURE
 
-#### Step 1: Extract Summary Content
-Before generating details, list EVERY piece of information in the summary:
-- All numbers mentioned
-- All dates/timeframes  
-- All locations
-- All people/organizations
-- All actions/events
-- All descriptive terms
-
-#### Step 2: Apply the Exclusion Rule
-**NEVER include in details:**
-- Any number that appears in summary (even in different format)
-- Any concept already covered (if summary mentions "bankruptcy", details can't mention "Chapter 11")
-- Any timeframe stated (if summary says "five months", details can't say "Recovery: 5 months")
-- Reformatted versions of summary facts
-
-#### Step 3: Generate Complementary Information
-Choose from these categories that WEREN'T covered in summary:
-
-**If summary has WHO and WHAT → Details should have:**
-- HOW MUCH (costs, quantities not mentioned)
-- WHEN (different timeframes, historical context)
-- WHERE ELSE (additional locations, reach)
-
-**If summary has MAIN NUMBERS → Details should have:**
-- SECONDARY NUMBERS (subcategories, breakdowns)
-- COMPARISON NUMBERS (previous values, rankings)
-- RELATED NUMBERS (indirect impacts, correlations)
-
-### CATEGORY MATRIX
-
-| Story Type | Avoid in Details | Include in Details |
-|------------|------------------|-------------------|
-| **Political** | Meeting participants, locations mentioned, main agreements | Security costs, previous meetings date, approval ratings |
-| **Economic** | Dollar amounts stated, percentages given, companies named | Job impacts, sector breakdowns, historical comparisons |
-| **Disaster** | Death toll, evacuation numbers, damage stated | Warning time given, rescue teams deployed, reconstruction cost |
-| **Technology** | User numbers, investment amounts, launch dates mentioned | Patent count, competitor position, development time |
-| **Conflict** | Casualties stated, duration mentioned, aid amounts | Weapons types, UN votes, refugee camps |
-
-### VALIDATION ALGORITHM
-
-For each potential detail, ask:
-1. Does this number/fact appear ANYWHERE in summary? → If yes, REJECT
-2. Does this relate to a concept in the summary? → If same concept, REJECT  
-3. Would this make sense without the summary? → If no context needed, PROCEED
-4. Does this add new understanding? → If yes, INCLUDE
-
-### EXAMPLES WITH REASONING
-
-**BAD Example - Spirit Airlines:**
+#### Basic Format
 ```
-Summary: "filed for Chapter 11 bankruptcy... second time in five months... operates 200 aircraft"
-Details: ["Bankruptcy: 2nd filing", "Recovery Time: 5 months", "Fleet Size: 200 aircraft"]
+"Label: Value"
 ```
-**Why it's wrong:** Every detail repeats summary information
 
-**GOOD Example - Spirit Airlines:**
+#### Length Guidelines
+
+**SHORT FORMAT** (for simple metrics):
+- `Stock drop: 91%`
+- `Debt owed: $3.3B`
+- `Countries: 47`
+
+**MEDIUM FORMAT** (with units/context):
+- `Market share: 28% of global`
+- `Aid blocked: 4,000 trucks daily`
+- `Previous fine: €8.2B total`
+
+**DESCRIPTIVE FORMAT** (when specificity matters):
+- `Advertisers affected: 2 million`
+- `Recovery timeline: 18-24 months`
+- `Competitor position: #3 globally`
+
+### LABEL RULES
+
+1. **Length**: 1-3 words maximum
+2. **Style**: Capitalize first word only
+3. **No colons in label**: The colon is the separator
+4. **Be specific**: "EU fines" not just "Fines"
+
+### VALUE RULES
+
+1. **Primary number first**: Start with the key metric
+2. **Context after**: Add clarifying text if needed
+3. **Keep concise**: Maximum 4-5 words after number
+4. **No full sentences**: Use fragments
+
+### GOOD vs BAD EXAMPLES
+
+**TOO LONG - BAD:**
 ```
-Summary: (same as above)
-Details: ["Debt owed: $3.3B", "Stock drop: 91%", "Passengers stranded: 45,000"]
+"Investigation duration spanning multiple jurisdictions: 3 years across 12 countries"
 ```
-**Why it works:** Adds financial depth, market impact, and human impact not in summary
 
-### FORMULA FOR SUCCESS
+**PROPERLY FORMATTED - GOOD:**
+```
+"Investigation duration: 3 years"
+"Jurisdictions involved: 12 countries"
+```
 
-Think of the summary as answering: **"What happened?"**
-Think of details as answering: **"What else should I know?"**
+**REDUNDANT - BAD:**
+```
+"Total number of affected advertisers: 2 million advertisers"
+```
 
-**Summary tells the story**
-**Details provide the context**
+**CLEAN - GOOD:**
+```
+"Advertisers affected: 2 million"
+```
 
-### FINAL CHECKLIST
+### HIERARCHY OF INFORMATION
 
-Before submitting details:
-- [ ] Zero repetition of summary numbers
-- [ ] Zero repetition of summary concepts  
-- [ ] Each detail could standalone as interesting
-- [ ] Together they paint a fuller picture
-- [ ] A reader gains 3 NEW facts
+#### Primary Details (Use First)
+- Hard numbers with brief context
+- `Revenue loss: $450M quarterly`
+- `Staff reduction: 12,000 jobs`
+- `Market share: 28% global`
 
-### IMPLEMENTATION RULE
+#### Secondary Details (Use if Primary Exhausted)  
+- Comparisons and rankings
+- `Industry rank: #2 worldwide`
+- `Growth rate: -23% YoY`
+- `Previous incident: 2019`
 
-If you cannot find 3 completely different facts that add value without repetition, generate:
-1. A historical comparison point
-2. A financial/human impact number
-3. A geographic/demographic scope metric
+#### Tertiary Details (Last Resort)
+- Projections and estimates
+- `Recovery estimate: Q3 2026`
+- `Analysts surveyed: 47`
+- `Confidence level: 78%`
 
-These universal categories ensure fresh information every time.
+### SPACE OPTIMIZATION
+
+**If detail seems too long, split concept:**
+
+Instead of:
+```
+"Government response: Emergency $2B aid package approved by 310-95 vote"
+```
+
+Use one of these:
+```
+"Emergency aid: $2B"
+"Senate vote: 310-95"  
+"Approval margin: 215 votes"
+```
+
+### CONTEXT ADDITIONS
+
+**When to add context after number:**
+- Percentages need scope: `28% of global`
+- Money needs timeframe: `$2B annually`
+- People need category: `45,000 civilians`
+- Comparisons need baseline: `3x previous record`
+
+**When NOT to add context:**
+- Obvious units: `Temperature: 45°C` (not "45°C hot")
+- Clear metrics: `Deaths: 142` (not "142 people")
+- Standard measures: `Distance: 500km` (not "500km far")
+
+### VALIDATION CHECKLIST
+
+For each detail:
+- [ ] Label is 1-3 words
+- [ ] Single colon separator
+- [ ] Value starts with number/metric
+- [ ] Context adds clarity, not redundancy
+- [ ] Total length under 6-7 words
+- [ ] No repetition from summary
+- [ ] Adds meaningful new information
+
+### ADAPTIVE EXAMPLES BY STORY TYPE
+
+**Tech/Business Story:**
+```
+details: [
+  "Market cap: $1.2T",
+  "Patent portfolio: 50,000+",
+  "R&D budget: 18% revenue"
+]
+```
+
+**Disaster/Crisis Story:**
+```
+details: [
+  "Warning time: 6 minutes",
+  "Shelters opened: 200",
+  "Aid workers: 5,000 deployed"
+]
+```
+
+**Political/Diplomatic Story:**
+```
+details: [
+  "Bilateral trade: $340B",
+  "Embassy staff: 1,200",
+  "Previous summit: 2018"
+]
+```
+
+### FINAL RULE
+
+If a detail needs more than 5-6 words after the colon, it's probably:
+1. Too complex (split it)
+2. Too vague (specify it)
+3. Wrong information type (replace it)
+
+The goal: Someone scanning details should instantly grasp 3 key supplementary facts without reading sentences.
 
 MANDATORY: Your JSON response must contain exactly {len(articles_with_content)} articles. Each article must have rank 1-{len(articles_with_content)}.
 

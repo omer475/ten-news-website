@@ -507,7 +507,6 @@ export default function Home() {
           border-radius: 12px;
           padding: 20px;
           margin-top: 20px;
-          border-left: 4px solid #3b82f6;
           gap: 0;
         }
 
@@ -532,8 +531,8 @@ export default function Home() {
         }
 
         .news-detail-value {
-          font-size: 20px;
-          font-weight: 800;
+          font-size: 22px;
+          font-weight: 900;
           color: #1e293b;
           line-height: 1.2;
         }
@@ -771,7 +770,7 @@ export default function Home() {
           }
           
           .news-detail-value {
-            font-size: 16px;
+            font-size: 18px;
           }
           
           .news-detail-subtitle {
@@ -932,18 +931,7 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{story.summary}</p>
-                      <div className="news-meta" style={{
-                        borderLeftColor: 
-                          story.category === 'WORLD NEWS' ? '#dc2626' :
-                          story.category === 'BUSINESS' ? '#f97316' :
-                          story.category === 'MARKETS' ? '#06b6d4' :
-                          story.category === 'TECH & AI' ? '#8b5cf6' :
-                          story.category === 'SCIENCE' ? '#0ea5e9' :
-                          story.category === 'HEALTH' ? '#10b981' :
-                          story.category === 'CLIMATE' ? '#22c55e' :
-                          story.category === 'SPORTS' ? '#f59e0b' :
-                          story.category === 'ENTERTAINMENT' ? '#ec4899' : '#3b82f6'
-                      }}>
+                      <div className="news-meta">
                         {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
