@@ -598,8 +598,8 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level 
-- DETAILS: 3 pieces of NEW info NOT in summary, format "Label: Value"
+- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level
+- DETAILS: CRITICAL - Follow the comprehensive Details Section Instructions below
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
 
@@ -608,6 +608,67 @@ WORD COUNT ENFORCEMENT:
 - Count words carefully - if under 40 words, add more detail
 - If over 50 words, trim unnecessary words
 - This is MANDATORY - summaries with wrong word count will be rejected
+
+## DETAILS SECTION INSTRUCTIONS - CRITICAL REQUIREMENTS
+
+### CORE FUNCTION
+The `details` array provides 3 supplementary data points that expand the story beyond what's in the summary. These must be completely different facts that add depth without redundancy.
+
+### MANDATORY PROCESS
+
+#### Step 1: Extract Summary Content
+Before generating details, identify EVERY piece of information in your summary:
+- All numbers mentioned (amounts, percentages, quantities)
+- All dates/timeframes (years, months, duration)
+- All locations (countries, cities, regions)
+- All people/organizations (names, titles, companies)
+- All actions/events (what happened, processes)
+- All descriptive terms (adjectives, categories)
+
+#### Step 2: Apply the Exclusion Rule - NEVER REPEAT
+**FORBIDDEN in details:**
+- Any number that appears in summary (even in different format)
+- Any concept already covered (if summary mentions "bankruptcy", details can't mention "Chapter 11")
+- Any timeframe stated (if summary says "five months", details can't say "Recovery: 5 months")
+- Reformatted versions of summary facts
+
+#### Step 3: Generate Complementary Information
+Choose from categories that WEREN'T covered in summary:
+
+**If summary has WHO and WHAT → Details should have:**
+- HOW MUCH (costs, quantities not mentioned)
+- WHEN (different timeframes, historical context)
+- WHERE ELSE (additional locations, reach)
+
+**If summary has MAIN NUMBERS → Details should have:**
+- SECONDARY NUMBERS (subcategories, breakdowns)
+- COMPARISON NUMBERS (previous values, rankings)
+- RELATED NUMBERS (indirect impacts, correlations)
+
+### VALIDATION ALGORITHM - Apply to Each Detail
+For each potential detail, ask:
+1. Does this number/fact appear ANYWHERE in summary? → If yes, REJECT
+2. Does this relate to a concept in the summary? → If same concept, REJECT  
+3. Would this make sense without the summary? → If no context needed, PROCEED
+4. Does this add new understanding? → If yes, INCLUDE
+
+### SUCCESS FORMULA
+- Summary tells the story: **"What happened?"**
+- Details provide the context: **"What else should I know?"**
+
+### IMPLEMENTATION RULE
+If you cannot find 3 completely different facts, generate:
+1. A historical comparison point
+2. A financial/human impact number  
+3. A geographic/demographic scope metric
+
+### FINAL CHECKLIST - MANDATORY
+Before submitting details:
+- [ ] Zero repetition of summary numbers
+- [ ] Zero repetition of summary concepts  
+- [ ] Each detail could standalone as interesting
+- [ ] Together they paint a fuller picture
+- [ ] A reader gains 3 NEW facts
 
 MANDATORY: Your JSON response must contain exactly {len(articles_with_content)} articles. Each article must have rank 1-{len(articles_with_content)}.
 
@@ -620,7 +681,7 @@ Return ONLY this JSON:
       "emoji": "🌍",
       "title": "Title without emoji",
       "summary": "EXACTLY 40-50 words - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
-      "details": ["New info 1", "New info 2", "New info 3"],
+      "details": ["Label: Value - completely NEW fact not in summary", "Label: Value - different category from summary", "Label: Value - adds context summary lacks"],
       "category": "World News/Business/Technology/Science/Climate/Health",
       "source": "Source name",
       "url": "Original URL"
@@ -642,12 +703,20 @@ Content: {content}
     
     prompt += f"""
 
-FINAL REMINDER: Each summary must be EXACTLY 40-50 words. Count carefully:
-- Too short (under 40): Add more relevant details
-- Too long (over 50): Remove unnecessary words
-- Perfect range (40-50): Proceed with confidence
+FINAL REMINDER: 
+1. SUMMARIES: Each must be EXACTLY 40-50 words. Count carefully:
+   - Too short (under 40): Add more relevant details
+   - Too long (over 50): Remove unnecessary words
+   - Perfect range (40-50): Proceed with confidence
 
-Return ONLY the JSON with all {len(articles_with_content)} articles, each with 40-50 word summaries."""
+2. DETAILS: Each must be COMPLETELY NEW information:
+   - Read your summary first
+   - Identify ALL facts mentioned
+   - Generate 3 details that add DIFFERENT information
+   - Use the validation algorithm for each detail
+   - NO repetition of summary content allowed
+
+Return ONLY the JSON with all {len(articles_with_content)} articles, each with 40-50 word summaries and 3 unique details."""
     
     return prompt
 
