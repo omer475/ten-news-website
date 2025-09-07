@@ -432,12 +432,14 @@ export default function Home() {
 
         .news-item {
           display: block;
-          padding: 24px 0;
+          padding: 24px 15px;
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
           border-radius: 8px;
           position: relative;
+          margin: 0 auto;
+          max-width: 950px;
         }
 
         .news-item:hover {
@@ -464,9 +466,11 @@ export default function Home() {
         .news-content {
           padding-top: 32px;
           padding-left: 0;
-          padding-right: 40px;
+          padding-right: 30px;
           padding-bottom: 0;
-          margin: 0 20px;
+          margin: 0 auto;
+          max-width: 900px;
+          text-align: left;
         }
 
         .news-category {
@@ -643,7 +647,17 @@ export default function Home() {
           }
           
           .story-container {
-            padding: 70px 16px 60px;
+            padding: 70px 12px 60px;
+          }
+          
+          .news-item {
+            padding: 20px 10px;
+            max-width: 100%;
+          }
+          
+          .news-content {
+            margin: 0 8px;
+            padding-right: 20px;
           }
           
           .news-number {
