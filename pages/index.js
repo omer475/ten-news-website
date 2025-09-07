@@ -464,6 +464,9 @@ export default function Home() {
         .news-content {
           padding-top: 32px;
           padding-left: 0;
+          padding-right: 40px;
+          padding-bottom: 0;
+          margin: 0 20px;
         }
 
         .news-category {
@@ -531,7 +534,7 @@ export default function Home() {
           width: 6px;
           height: 20px;
           border-radius: 3px;
-          background: linear-gradient(180deg, #60a5fa, #3b82f6);
+          background: linear-gradient(180deg, #1f2937, #000000);
         }
 
         .newsletter-container {
@@ -706,7 +709,7 @@ export default function Home() {
           .progress-dot.active {
             width: 5px;
             height: 18px;
-            background: linear-gradient(180deg, #f97316, #06b6d4);
+            background: linear-gradient(180deg, #1f2937, #000000);
           }
         }
       `}</style>
