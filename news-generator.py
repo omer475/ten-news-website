@@ -1,5 +1,11 @@
 # TEN NEWS - DAILY DIGEST GENERATOR
 # Optimized for Website Integration - No Wix Dependencies
+# ENHANCED VERSION: 40-Query Comprehensive News System
+# - 40 specialized search categories (upgraded from 8)
+# - Enhanced error handling and JSON parsing
+# - Increased article limit: 250 per query (upgraded from 100)
+# - Improved rate limiting: 2-second delays (upgraded from 1s)
+# - Detailed progress reporting with category labels
 
 import requests
 import json
@@ -75,6 +81,24 @@ def clean_text_for_json(text):
     
     return text
 
+def clean_json_response(content):
+    """Clean and fix common JSON issues in GDELT responses"""
+    # Remove any BOM or weird characters at start
+    if content.startswith('\ufeff'):
+        content = content[1:]
+    
+    # Fix common escape issues
+    content = content.replace('\\\\', '\\')
+    
+    # Try to find valid JSON boundaries
+    first_brace = content.find('{')
+    last_brace = content.rfind('}')
+    
+    if first_brace >= 0 and last_brace > first_brace:
+        content = content[first_brace:last_brace + 1]
+    
+    return content
+
 def get_formatted_date():
     """Get formatted date in UK timezone"""
     uk_tz = pytz.timezone('Europe/London')
@@ -122,9 +146,12 @@ def load_previous_articles():
 
 # ==================== GDELT NEWS FETCHING ====================
 def fetch_gdelt_news_last_24_hours():
-    """Fetch important news from GDELT"""
-    print(f"🌍 Fetching global news from GDELT...")
-    print("=" * 50)
+    """Fetch important news from GDELT using comprehensive 40-query system"""
+    print(f"🌍 Fetching global news from GDELT (approved sources only)...")
+    print(f"🔥 Using hybrid relevance sorting for importance-based ranking")
+    print(f"📰 Fetching up to 250 articles per query across 40 categories")
+    print(f"Time period: Last 24 hours")
+    print("=" * 70)
     
     all_articles = []
     url = "https://api.gdeltproject.org/api/v2/doc/doc"
@@ -133,26 +160,183 @@ def fetch_gdelt_news_last_24_hours():
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
     
-    # Focused search queries for better results
+    # Comprehensive search queries for maximum coverage - 40 specialized searches
     search_queries = [
-        "(breaking OR urgent OR crisis OR emergency OR unprecedented)",
-        "(billion OR trillion OR million OR record OR highest)",
-        "(market OR stocks OR economy OR Fed OR inflation)",
-        "(AI OR artificial intelligence OR technology OR breakthrough)",
-        "(climate OR disaster OR attack OR conflict OR war)",
-        "(announced OR launched OR revealed OR confirmed)",
-        "(CEO OR merger OR acquisition OR deal)",
-        "(election OR government OR diplomatic OR sanctions)"
+        # 1. GENERAL BREAKING NEWS
+        "(breaking OR urgent OR crisis OR emergency OR unprecedented OR historic OR exclusive OR BREAKING OR URGENT)",
+        
+        # 2. CASUALTIES/HUMAN IMPACT
+        "(killed OR died OR death OR casualties OR victims OR injured OR wounded OR fatalities OR toll)",
+        
+        # 3. SCALE/NUMBERS
+        "(billion OR trillion OR million OR record OR highest OR lowest OR surge OR plunge OR soar OR crash)",
+        
+        # 4. BUSINESS/FINANCE
+        "(market OR stocks OR earnings OR IPO OR merger OR acquisition OR bankrupt OR revenue OR profit OR loss)",
+        
+        # 5. ECONOMIC INDICATORS
+        "(Fed OR inflation OR recession OR GDP OR unemployment OR economy OR rates OR dollar OR euro OR yuan)",
+        
+        # 6. SCIENCE/TECHNOLOGY
+        "(AI OR artificial intelligence OR robot OR quantum OR breakthrough OR discovery OR innovation OR research OR study)",
+        
+        # 7. SPACE/MEDICAL/CLIMATE
+        "(SpaceX OR NASA OR vaccine OR cure OR climate OR cancer OR treatment OR therapy OR disease OR pandemic)",
+        
+        # 8. DATA/RANKINGS/STUDIES
+        "(index OR ranking OR study OR survey OR report OR statistics OR poll OR data OR analysis OR forecast)",
+        
+        # 9. CONFLICT/DISASTER
+        "(attack OR explosion OR collapse OR disaster OR conflict OR war OR battle OR strike OR protest OR riot)",
+        
+        # 10. MAJOR ANNOUNCEMENTS
+        "(announced OR launched OR revealed OR unveiled OR discovered OR confirmed OR admitted OR denied)",
+        
+        # 11. CORPORATE LEADERSHIP & EXECUTIVE CHANGES
+        "(CEO OR executive OR resign OR appointed OR fired OR promoted OR stepped down OR retirement OR succession)",
+        
+        # 12. MERGERS & ACQUISITIONS
+        "(merger OR acquisition OR buyout OR takeover OR deal OR purchase OR bid OR offer OR valuation)",
+        
+        # 13. ARTIFICIAL INTELLIGENCE & MACHINE LEARNING
+        "(ChatGPT OR GPT OR LLM OR neural network OR machine learning OR deep learning OR AGI OR OpenAI OR Anthropic)",
+        
+        # 14. CRYPTOCURRENCY & BLOCKCHAIN
+        "(bitcoin OR cryptocurrency OR blockchain OR ethereum OR crypto OR NFT OR DeFi OR mining OR wallet)",
+        
+        # 15. CLIMATE CHANGE & ENVIRONMENTAL
+        "(climate change OR global warming OR carbon OR emissions OR renewable energy OR solar OR wind OR net zero)",
+        
+        # 16. MEDICAL BREAKTHROUGHS & HEALTH
+        "(FDA approval OR medical breakthrough OR clinical trial OR drug OR medicine OR treatment OR cure OR therapy)",
+        
+        # 17. STARTUP & VENTURE CAPITAL
+        "(startup OR funding OR venture capital OR unicorn OR Series A OR Series B OR IPO OR valuation OR investment)",
+        
+        # 18. GEOPOLITICAL TENSIONS & SANCTIONS
+        "(sanctions OR tensions OR diplomatic OR embassy OR relations OR summit OR treaty OR agreement OR talks)",
+        
+        # 19. ENERGY & OIL MARKETS
+        "(oil OR gas OR OPEC OR energy OR pipeline OR renewable OR nuclear OR coal OR electricity OR power)",
+        
+        # 20. CENTRAL BANK & MONETARY POLICY
+        "(central bank OR interest rate OR monetary policy OR Federal Reserve OR ECB OR BOE OR BOJ OR stimulus)",
+        
+        # 21. SUPPLY CHAIN & LOGISTICS
+        "(supply chain OR shipping OR logistics OR shortage OR disruption OR container OR port OR delivery)",
+        
+        # 22. CYBERSECURITY & DATA BREACHES
+        "(cyber attack OR hack OR data breach OR ransomware OR security OR vulnerability OR password OR encryption)",
+        
+        # 23. SPACE EXPLORATION & SATELLITES
+        "(space station OR satellite OR Mars OR moon OR astronaut OR rocket OR launch OR orbit OR mission)",
+        
+        # 24. EDUCATION & UNIVERSITY RANKINGS
+        "(university OR education OR scholarship OR research grant OR Nobel OR academic OR school OR student)",
+        
+        # 25. SPORTS BUSINESS & MAJOR EVENTS
+        "(Olympics OR World Cup OR championship OR transfer OR contract OR stadium OR league OR tournament)",
+        
+        # 26. RETAIL & E-COMMERCE
+        "(Amazon OR retail OR e-commerce OR sales OR shopping OR consumer OR store OR online OR delivery)",
+        
+        # 27. AUTOMOTIVE & ELECTRIC VEHICLES
+        "(Tesla OR electric vehicle OR autonomous OR car OR automotive OR EV OR battery OR charging OR factory)",
+        
+        # 28. REAL ESTATE & HOUSING MARKETS
+        "(real estate OR housing OR mortgage OR property OR construction OR rent OR prices OR development)",
+        
+        # 29. REGULATORY & COMPLIANCE
+        "(regulation OR compliance OR fine OR lawsuit OR antitrust OR investigation OR probe OR penalty OR ruling)",
+        
+        # 30. DEMOGRAPHIC & POPULATION TRENDS
+        "(population OR demographic OR migration OR census OR aging OR birth rate OR immigration OR refugee)",
+        
+        # 31. MAJOR TECH COMPANIES
+        "(Apple OR Google OR Microsoft OR Meta OR Facebook OR Twitter OR X OR TikTok OR Instagram)",
+        
+        # 32. WORLD LEADERS
+        "(Biden OR Putin OR Xi Jinping OR Trump OR Zelensky OR Modi OR Macron OR Netanyahu)",
+        
+        # 33. MAJOR BANKS
+        "(JPMorgan OR Bank of America OR Wells Fargo OR Citigroup OR Goldman Sachs OR Morgan Stanley)",
+        
+        # 34. AVIATION
+        "(Boeing OR Airbus OR airline OR flight OR aviation OR crash OR safety OR pilot)",
+        
+        # 35. ENTERTAINMENT
+        "(Netflix OR Disney OR Hollywood OR movie OR film OR streaming OR box office OR Oscar)",
+        
+        # 36. FOOD & AGRICULTURE
+        "(food OR agriculture OR farming OR crop OR harvest OR famine OR hunger OR prices)",
+        
+        # 37. INSURANCE & DISASTER
+        "(insurance OR hurricane OR earthquake OR flood OR wildfire OR tornado OR damage OR claims)",
+        
+        # 38. PHARMA
+        "(Pfizer OR Moderna OR Johnson OR vaccine OR drug OR pharmaceutical OR FDA OR clinical)",
+        
+        # 39. SOCIAL MEDIA
+        "(viral OR trending OR social media OR influencer OR platform OR content OR creator)",
+        
+        # 40. ELECTIONS
+        "(election OR vote OR poll OR campaign OR candidate OR primary OR ballot OR democracy)"
     ]
     
+    print("\n🔍 Searching for important news across 40 specialized categories...")
+    
     for idx, query in enumerate(search_queries, 1):
-        print(f"🔍 Search {idx}/8: {query[:30]}...")
+        query_labels = {
+            1: "General Breaking News",
+            2: "Human Impact/Casualties",
+            3: "Major Scale Stories",
+            4: "Business/Finance News",
+            5: "Economic Indicators",
+            6: "Science/Technology",
+            7: "Space/Medical/Climate",
+            8: "Data Rankings/Studies",
+            9: "Conflicts/Disasters",
+            10: "Major Announcements",
+            11: "Corporate Leadership",
+            12: "Mergers & Acquisitions",
+            13: "AI & Machine Learning",
+            14: "Cryptocurrency/Blockchain",
+            15: "Climate Change/Environment",
+            16: "Medical Breakthroughs",
+            17: "Startup/Venture Capital",
+            18: "Geopolitical Tensions",
+            19: "Energy/Oil Markets",
+            20: "Central Bank Policy",
+            21: "Supply Chain/Logistics",
+            22: "Cybersecurity/Breaches",
+            23: "Space Exploration",
+            24: "Education/Rankings",
+            25: "Sports Business",
+            26: "Retail/E-commerce",
+            27: "Automotive/EVs",
+            28: "Real Estate/Housing",
+            29: "Regulatory/Compliance",
+            30: "Demographics/Population",
+            31: "Major Tech Companies",
+            32: "World Leaders",
+            33: "Major Banks",
+            34: "Aviation",
+            35: "Entertainment",
+            36: "Food & Agriculture",
+            37: "Insurance & Disaster",
+            38: "Pharma",
+            39: "Social Media",
+            40: "Elections"
+        }
+        
+        label = query_labels.get(idx, f"Search {idx}")
+        print(f"\n📋 {label}: {query[:40]}...")
         
         params = {
             "query": query,
             "mode": "ArtList", 
             "format": "json",
-            "maxrecords": "100",
+            "maxrecords": "250",
             "timespan": "1d",
             "sort": "hybridrel"
         }
@@ -163,31 +347,71 @@ def fetch_gdelt_news_last_24_hours():
             if response.status_code == 200:
                 content = response.text
                 
-                if not content.startswith('<!DOCTYPE') and not content.startswith('<html'):
+                # Check if we got HTML error
+                if content.startswith('<!DOCTYPE') or content.startswith('<html'):
+                    print(f"   ❌ Got HTML response, skipping...")
+                    continue
+                
+                try:
+                    # Clean the response before parsing
+                    cleaned_content = clean_json_response(content)
+                    data = json.loads(cleaned_content)
+                    articles = data.get('articles', [])
+                    
+                    # Process articles
+                    valid_count = 0
+                    for article in articles:
+                        if article.get('title') and article.get('url'):
+                            # Clean the title for JSON safety
+                            article['title'] = clean_text_for_json(article.get('title', ''))
+                            all_articles.append(article)
+                            valid_count += 1
+                    
+                    print(f"   ✓ Found {valid_count} articles")
+                    
+                except json.JSONDecodeError as e:
+                    print(f"   ❌ Failed to parse JSON response: {str(e)[:100]}")
+                    # Try alternative parsing
                     try:
-                        data = json.loads(content)
-                        articles = data.get('articles', [])
+                        # Sometimes GDELT returns invalid JSON, try to extract articles manually
+                        import re
+                        url_pattern = r'"url"\s*:\s*"([^"]+)"'
+                        title_pattern = r'"title"\s*:\s*"([^"]+)"'
                         
-                        valid_count = 0
-                        for article in articles:
-                            if article.get('title') and article.get('url'):
-                                article['title'] = clean_text_for_json(article.get('title', ''))
-                                all_articles.append(article)
-                                valid_count += 1
+                        urls = re.findall(url_pattern, content)
+                        titles = re.findall(title_pattern, content)
                         
-                        print(f"   ✓ Found {valid_count} articles")
-                        
-                    except json.JSONDecodeError:
-                        print(f"   ❌ Failed to parse JSON")
-                else:
-                    print(f"   ❌ Got HTML response")
+                        if urls and titles:
+                            valid_count = 0
+                            for url, title in zip(urls[:250], titles[:250]):
+                                if url and title:
+                                    all_articles.append({
+                                        'url': url,
+                                        'title': clean_text_for_json(title)
+                                    })
+                                    valid_count += 1
+                            print(f"   ✓ Recovered {valid_count} articles using fallback parsing")
+                        else:
+                            print(f"   ❌ Could not recover articles from response")
+                    except Exception as e2:
+                        print(f"   ❌ Fallback parsing also failed: {str(e2)[:50]}")
+                    
+            elif response.status_code == 429:
+                print(f"   ⚠️ Rate limited, waiting 2 seconds...")
+                time.sleep(2)
+                
             else:
                 print(f"   ❌ Error {response.status_code}")
                 
-            time.sleep(1)
+            # Delay between requests to prevent rate limiting
+            time.sleep(2)  # Increased from 1 to 2 seconds for enhanced stability
             
+        except requests.exceptions.Timeout:
+            print(f"   ❌ Request timed out")
+        except requests.exceptions.RequestException as e:
+            print(f"   ❌ Request error: {str(e)[:100]}")
         except Exception as e:
-            print(f"   ❌ Error: {str(e)[:50]}")
+            print(f"   ❌ Unexpected error: {str(e)[:100]}")
     
     return all_articles
 
