@@ -485,8 +485,8 @@ export default function Home() {
         }
 
         .news-title {
-          font-size: 60px;
-          font-weight: 700;
+          font-size: 32px;
+          font-weight: 800;
           line-height: 1.2;
           margin-bottom: 14px;
           color: #0f172a;
@@ -667,7 +667,7 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 42px;
+            font-size: 24px;
           }
           
           .main-headline {
