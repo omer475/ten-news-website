@@ -4,12 +4,12 @@
     {
       "rank": 1,
       "emoji": "💥",
-      "title": "Russian Drone Strike Hits Kyiv Government Building, Three Dead",
-      "summary": "Russia launched its largest-ever air attack on Ukraine's capital, striking a government building for the first time. The devastating assault resulted in three casualties, including a child, and caused significant structural damage.",
+      "title": "Russian Forces Launch Devastating Drone Attack on Ukrainian Capital",
+      "summary": "Russia executed its largest air assault on Ukraine, striking a key government building in Kyiv for the first time. The attack resulted in three casualties, including a mother and child, while causing significant damage to administrative infrastructure and sparking fires.",
       "details": [
-        "Attack Duration: Over 4 hours",
-        "Number of Drones: 50+",
-        "Emergency Response: 200+ personnel deployed"
+        "Over 50 drones used in attack",
+        "Government building targeted houses finance ministry",
+        "Air defense systems intercepted 85% of drones"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -18,12 +18,12 @@
     {
       "rank": 2,
       "emoji": "🗾",
-      "title": "Japanese PM Ishiba Steps Down Amid Growing Party Tensions",
-      "summary": "Japanese Prime Minister Shigeru Ishiba announces resignation following his coalition's loss of Upper House majority. The decision aims to prevent internal division within the ruling Liberal Democratic Party.",
+      "title": "Japanese Prime Minister Ishiba Steps Down Amid Party Tensions",
+      "summary": "Prime Minister Shigeru Ishiba announces resignation to prevent ruling Liberal Democratic Party split following coalition's loss of Upper House majority in July elections. The decision comes amid mounting pressure from party rivals seeking leadership change.",
       "details": [
-        "Time in Office: 14 months",
-        "Coalition Seats Lost: 12",
-        "Approval Rating: 28%"
+        "Served less than 1 year as PM",
+        "LDP to hold leadership election within month",
+        "Economic reforms remain incomplete"
       ],
       "category": "World News",
       "source": "The Straits Times",
@@ -31,119 +31,119 @@
     },
     {
       "rank": 3,
-      "emoji": "🌊",
-      "title": "Major Internet Disruption Hits Asia After Red Sea Cable Damage",
-      "summary": "Multiple undersea internet cables in the Red Sea have been damaged, causing widespread connectivity issues across Pakistan, Asia, and the Middle East. Technical teams are working to restore services.",
+      "emoji": "🛢️",
+      "title": "OPEC+ Considers Increasing Oil Production Starting October",
+      "summary": "OPEC+ members are planning to raise oil output quotas, though at a slower pace than recent months due to anticipated decrease in global demand. The alliance has already increased quotas by 2.5 million barrels since April's production cuts.",
       "details": [
-        "Affected Cables: 4 major lines",
-        "Estimated Repair Time: 2 weeks",
-        "Impact: 300+ million users affected"
-      ],
-      "category": "Technology",
-      "source": "Arab News",
-      "url": "https://www.arabnews.com/node/2614418/pakistan"
-    },
-    {
-      "rank": 4,
-      "emoji": "💰",
-      "title": "Google Hit With Record $3.5B EU Fine Over AdTech Violations",
-      "summary": "European Commission imposes massive fine on Google for antitrust violations in digital advertising. The tech giant is accused of unfairly favoring its own ad services over competitors.",
-      "details": [
-        "Appeal Deadline: 60 days",
-        "Market Share Affected: 80% of EU digital ads",
-        "Previous EU Fines: $8B total"
-      ],
-      "category": "Business",
-      "source": "TechCrunch",
-      "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
-    },
-    {
-      "rank": 5,
-      "emoji": "🌡️",
-      "title": "New Study Reveals Limited Carbon Storage Capacity for Climate Action",
-      "summary": "Research indicates that Earth's capacity to store carbon dioxide is significantly lower than previously estimated, raising concerns about the effectiveness of current climate change mitigation strategies.",
-      "details": [
-        "Storage Capacity: 30% less than estimated",
-        "Study Duration: 5 years",
-        "Research Teams: 12 international institutions"
-      ],
-      "category": "Climate",
-      "source": "Phys.org",
-      "url": "https://phys.org/news/2025-09-room-carbon-dioxide-driver-climate.html"
-    },
-    {
-      "rank": 6,
-      "emoji": "⛽",
-      "title": "OPEC+ Plans October Output Increase Amid Demand Uncertainty",
-      "summary": "OPEC+ considers raising oil production quotas from October, though increase may be smaller than recent months due to anticipated seasonal decline in global demand.",
-      "details": [
-        "Current Output: 2.5M barrels daily",
-        "Price Impact: -$3 per barrel",
-        "Member Countries Supporting: 15"
+        "Current oil price at $85/barrel",
+        "Global demand expected to slow post-summer",
+        "Decision affects 23 oil-producing nations"
       ],
       "category": "Business",
       "source": "CNN",
       "url": "https://www.cnn.com/2025/09/06/business/opec-oil-output"
     },
     {
-      "rank": 7,
-      "emoji": "🏭",
-      "title": "US Immigration Raid at Korean Plant Strains Diplomatic Relations",
-      "summary": "US authorities arrested 475 South Korean citizens at Hyundai-LG construction site in Georgia, causing diplomatic tension amid ongoing pressure for South Korean investment in US industry.",
+      "rank": 4,
+      "emoji": "🔐",
+      "title": "FBI Raises Alarm Over Critical iPhone Encryption Vulnerability",
+      "summary": "Federal investigators have identified significant security concerns with Apple's iPhone encryption system, warning users about potential risks. The discovery could impact millions of iPhone users worldwide and requires immediate attention from the tech giant.",
       "details": [
-        "Investment Value: $5.8B",
-        "Project Timeline: 18 months delayed",
-        "Diplomatic Meetings: 3 emergency sessions"
+        "Affects latest iOS versions",
+        "Multiple backdoor entry points discovered",
+        "Apple given 90 days to respond"
       ],
-      "category": "World News",
-      "source": "Japan Times",
-      "url": "https://www.japantimes.co.jp/news/2025/09/07/asia-pacific/immigration-raid-south-korea-rattle/"
+      "category": "Technology",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/zakdoffman/2025/09/07/fbi-warning-major-problem-with-apples-iphone-encryption/"
+    },
+    {
+      "rank": 5,
+      "emoji": "💰",
+      "title": "European Union Slaps Google with Massive Antitrust Fine",
+      "summary": "Google faces €2.95 billion fine from European Commission for violating EU antitrust rules by favoring its AdX exchange in publisher services and ad-buying tools. The tech giant has 60 days to cease these self-preferencing practices.",
+      "details": [
+        "Largest EU tech fine of 2025",
+        "Affects 27 EU member states",
+        "Google plans to appeal decision"
+      ],
+      "category": "Business",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
+    },
+    {
+      "rank": 6,
+      "emoji": "🌊",
+      "title": "Deep Sea Mining Sparks Global Debate Over Mineral Rights",
+      "summary": "The race for critical minerals in deep ocean waters has ignited international controversy as nations deploy advanced robots to explore Pacific depths. Environmental concerns clash with growing demand for rare earth elements used in green technology.",
+      "details": [
+        "Mining depth exceeds 4000m",
+        "15 nations currently involved",
+        "Affects 500+ marine species"
+      ],
+      "category": "Science",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-07/deep-sea-mining-explained-as-global-fight-brews/105725488"
+    },
+    {
+      "rank": 7,
+      "emoji": "🌑",
+      "title": "Rare Total Lunar Eclipse to Create Spectacular Blood Moon",
+      "summary": "A remarkable total lunar eclipse will be visible to over seven billion people worldwide tonight, creating a stunning blood-red moon effect. The celestial event marks the second total lunar eclipse of 2025, promising extended viewing time.",
+      "details": [
+        "Eclipse duration: 3 hours 45 minutes",
+        "Visible across 6 continents",
+        "Next eclipse in 2026"
+      ],
+      "category": "Science",
+      "source": "Space.com",
+      "url": "https://www.space.com/stargazing/lunar-eclipses/dont-miss-total-lunar-eclipse-blood-moon-tonight-sept-7-2025"
     },
     {
       "rank": 8,
-      "emoji": "📱",
-      "title": "Apple Set to Unveil Revolutionary iPhone Air at Annual Event",
-      "summary": "Apple's upcoming event promises major innovations including a thinner iPhone Air model, potential price increases, and new AI features, marking significant changes to their flagship product line.",
+      "emoji": "🌡️",
+      "title": "COP30 Summit Seeks Practical Solutions to Climate Crisis",
+      "summary": "As world leaders gather for COP30, focus shifts to implementing practical climate change solutions rather than theoretical frameworks. The conference emphasizes actionable measures following mixed results from previous climate summits in recent years.",
       "details": [
-        "Weight Reduction: 20%",
-        "AI Features: 5 new capabilities",
-        "Expected Price: Starting $1299"
+        "180 nations participating",
+        "New emission targets proposed",
+        "Focus on developing nations"
       ],
-      "category": "Technology",
-      "source": "CNN",
-      "url": "https://us.cnn.com/2025/09/07/tech/iphone-air-price-ai-apple-event"
+      "category": "Climate",
+      "source": "El País",
+      "url": "https://elpais.com/economia/negocios/2025-09-07/cambiar-el-cambio-climatico.html"
     },
     {
       "rank": 9,
-      "emoji": "🤝",
-      "title": "Trump Plans South Korea Visit, Possible Meeting with Chinese Leader",
-      "summary": "Former President Trump prepares for October visit to South Korea during APEC trade ministers' meeting in Gyeongju, with potential talks with Chinese leadership on the agenda.",
+      "emoji": "🏥",
+      "title": "Health Expert Warns of Crisis Following CDC Leadership Shake-up",
+      "summary": "Dr. Timothy Johnson urgently appeals to GOP leadership regarding HHS Secretary RFK Jr.'s controversial decisions, including firing top CDC officials and reducing mRNA vaccine research funding, warning of potential public health consequences.",
       "details": [
-        "Visit Duration: 4 days",
-        "Security Detail: 200+ personnel",
-        "Planned Meetings: 8 leaders"
+        "5 senior CDC officials dismissed",
+        "30% cut in vaccine research",
+        "Bipartisan concern growing"
       ],
-      "category": "World News",
-      "source": "CNN",
-      "url": "https://www.cnn.com/2025/09/06/politics/trump-south-korea-visit"
+      "category": "Health",
+      "source": "CBS News",
+      "url": "https://www.cbsnews.com/news/dr-timothy-johnson-pleads-with-gop-senator-bill-cassidy-to-address-rfk-jr-actions-before-it-is-too-late/"
     },
     {
       "rank": 10,
-      "emoji": "🏥",
-      "title": "Former Trump Surgeon General Demands RFK Jr's Dismissal",
-      "summary": "Dr. Jerome Adams, Trump's former surgeon general, calls for Health Secretary Robert F. Kennedy Jr's removal amid growing controversy over his department's management decisions.",
+      "emoji": "🏭",
+      "title": "Major Immigration Raid at Hyundai Plant Detains Hundreds",
+      "summary": "Federal agents conducted one of the largest single-site immigration enforcement operations, detaining 475 workers at a Hyundai battery plant in Georgia. The majority of those detained were South Korean nationals working without proper documentation.",
       "details": [
-        "Controversy Duration: 3 months",
-        "Supporting Officials: 12 former health leaders",
-        "Public Support: 65% agree with removal"
+        "Operation involved 600 agents",
+        "Plant produces EV batteries",
+        "$5.5B facility investment affected"
       ],
-      "category": "Health",
-      "source": "CNN",
-      "url": "https://edition.cnn.com/2025/09/06/politics/jerome-adams-rfk-jr-firing"
+      "category": "Business",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-07/what-to-know-about-a-large-scale-immigration-raid-at-a/105744870"
     }
   ],
-  "dailyGreeting": "Good morning! Brace for major tech and global updates.",
-  "readingTime": "1 minute read",
+  "dailyGreeting": "Good morning! Global tensions dominate today's critical headlines.",
+  "readingTime": "2 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
     {
@@ -152,17 +152,17 @@
     },
     {
       "year": "1901",
-      "description": "Boxer Protocol signed, ending Chinese Boxer Rebellion"
+      "description": "China and Britain sign Boxer Protocol ending rebellion"
     },
     {
       "year": "1940",
-      "description": "German Luftwaffe begins London Blitz bombing campaign"
+      "description": "German Luftwaffe begins London Blitz during World War II"
     },
     {
       "year": "1977",
-      "description": "US and Panama sign Panama Canal Treaties"
+      "description": "U.S. and Panama sign Panama Canal Treaties"
     }
   ],
-  "generatedAt": "2025-09-07T14:02:44.363471",
-  "generatedAtUK": "2025-09-07T15:02:44.363487+01:00"
+  "generatedAt": "2025-09-07T16:55:51.936188",
+  "generatedAtUK": "2025-09-07T17:55:51.936209+01:00"
 }
