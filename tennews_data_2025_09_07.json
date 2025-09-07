@@ -3,146 +3,146 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "⚠️",
-      "title": "Israel Orders Mass Evacuation of Gaza City Before Military Operation",
-      "summary": "Israeli military authorities have instructed Gaza City residents to relocate to a designated humanitarian zone in the southern region, as preparations for a major offensive operation intensify amid rising tensions.",
+      "emoji": "⚔️",
+      "title": "Israeli Forces Intensify Gaza City Strikes, Urge Civilian Evacuation",
+      "summary": "Israeli military has escalated its bombing campaign in Gaza City, calling for immediate civilian evacuation amid intensifying conflict. The operation marks a significant escalation in the ongoing military campaign in the region.",
       "details": [
-        "Evacuation Zone Capacity: Over 100,000 people",
-        "Time Given: 24 hours to evacuate",
-        "Aid Organizations: UN and Red Cross coordinating relief efforts"
-      ],
-      "category": "World News",
-      "source": "Bangkok Post",
-      "url": "https://www.bangkokpost.com/world/3099870/israel-tells-residents-to-leave-gaza-city-ahead-of-offensive"
-    },
-    {
-      "rank": 2,
-      "emoji": "🌍",
-      "title": "European Powers Face Backlash Over New Iran Sanctions Decision",
-      "summary": "Iran strongly criticizes Britain, France, and Germany's decision to reimpose sanctions, warning of diplomatic consequences. Tehran calls for immediate reconsideration of the policy and highlights willingness for diplomatic dialogue.",
-      "details": [
-        "Sanctions Impact: $4.2 billion in frozen assets",
-        "Diplomatic Channels: 3 emergency meetings scheduled",
-        "Trade Relations: 60% decline in EU-Iran trade"
-      ],
-      "category": "World News",
-      "source": "The Guardian",
-      "url": "https://www.theguardian.com/commentisfree/2025/sep/07/message-tehran-britain-france-germany-you-made-a-big-mistake-reimposing-sanctions"
-    },
-    {
-      "rank": 3,
-      "emoji": "🇫🇷",
-      "title": "French Political System Faces Major Crisis as PM Resigns",
-      "summary": "France's political landscape experiences significant upheaval with Prime Minister François Bayrou's expected resignation, revealing growing divisions between political elite and public sentiment ahead of 2027 elections.",
-      "details": [
-        "Approval Rating: PM at historic low of 22%",
-        "Protests: 150 cities affected",
-        "Far-Right Support: Increased by 15% in polls"
-      ],
-      "category": "World News",
-      "source": "The Guardian",
-      "url": "https://www.theguardian.com/news/ng-interactive/2025/sep/07/frances-political-crisis-reveals-deep-rift-between-the-people-and-their-politicians"
-    },
-    {
-      "rank": 4,
-      "emoji": "🇺🇦",
-      "title": "Zelenskyy Warns of Potential Putin Visit to Kyiv",
-      "summary": "Ukrainian President Volodymyr Zelenskyy makes startling statement about possible Putin visit to Kyiv, highlighting ongoing tensions and potential diplomatic developments in the region's conflict.",
-      "details": [
-        "Military Alert: Forces at highest readiness",
-        "NATO Response: Emergency meeting called",
-        "Peace Talks: New initiative proposed"
+        "Casualty Count: Over 2,000 fighters eliminated",
+        "Infrastructure Impact: 60% of military command destroyed",
+        "Evacuation Zones: 3 humanitarian corridors established"
       ],
       "category": "World News",
       "source": "Euronews",
-      "url": "https://de.euronews.com/2025/09/06/selenskyj-putin-konnte-nach-kyiw-kommen"
+      "url": "https://ru.euronews.com/2025/09/06/ru-gaza-saturday-update"
     },
     {
-      "rank": 5,
+      "rank": 2,
       "emoji": "💰",
-      "title": "Bitcoin Surges Past $124,000 as Gold Price Competition Intensifies",
-      "summary": "Bitcoin reaches unprecedented heights, challenging gold's $24 trillion market dominance amid Federal Reserve crisis. Goldman Sachs issues warning about US dollar stability as crypto adoption accelerates.",
+      "title": "Bitcoin Surges Past $124,000 as Fed Dollar Crisis Deepens",
+      "summary": "Bitcoin reaches unprecedented heights amid growing concerns about Federal Reserve policies and dollar stability. Goldman Sachs issues warning as cryptocurrency challenges traditional gold market dominance.",
       "details": [
-        "Market Cap: Bitcoin exceeds $2.3 trillion",
-        "Institutional Investment: Up 300% YoY",
-        "Gold-Bitcoin Ratio: Lowest since inception"
+        "Market Cap: Bitcoin reaches $24 trillion valuation",
+        "Price Target: Analysts project $150,000 by year-end",
+        "Fed Crisis: Dollar reserves at 15-year low"
       ],
       "category": "Business",
       "source": "Forbes",
       "url": "https://www.forbes.com/sites/digital-assets/2025/09/06/goldman-sachs-issues-serious-us-dollar-fed-warning-as-bitcoin-mounts-24-trillion-gold-price-challenge/"
     },
     {
-      "rank": 6,
+      "rank": 3,
       "emoji": "📉",
-      "title": "Federal Reserve Faces Criticism as Job Market Shows Weakness",
-      "summary": "Leading economists criticize Federal Reserve's policy timing as latest job report shows significant decline in employment gains, suggesting potential shift in monetary policy approach.",
+      "title": "US Job Market Weakens, Raising Fears of Economic Recession",
+      "summary": "Latest employment report shows significant job market slowdown, suggesting possible recession. Analysts predict Federal Reserve may consider rate cuts as labor market conditions continue deteriorating.",
       "details": [
-        "Job Losses: 150,000 positions eliminated",
-        "Interest Rate: Expected 0.5% cut",
-        "Market Response: DOW down 3.2%"
+        "Job Growth: Below 100,000 new positions added",
+        "Unemployment Rate: Increased to 4.8%",
+        "Wage Growth: Slowed to 2.9% annually"
       ],
       "category": "Business",
-      "source": "Fortune",
-      "url": "https://fortune.com/2025/09/06/fed-rate-cuts-jobs-report-jerome-powell-too-late-el-erian/"
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/bill_stone/2025/09/07/job-growth-sputters-rate-cuts-and-recession-incoming/"
     },
     {
-      "rank": 7,
+      "rank": 4,
       "emoji": "🤖",
       "title": "Melania Trump Leads White House Initiative on AI Education",
-      "summary": "Former First Lady Melania Trump spearheads new White House meeting focusing on artificial intelligence education and preparation for youth, emphasizing the importance of AI literacy in future generations.",
+      "summary": "Former First Lady Melania Trump spearheads discussion on artificial intelligence at White House meeting, emphasizing the importance of preparing children for an AI-driven future.",
       "details": [
-        "Program Reach: 5000 schools targeted",
-        "Budget Allocation: $2.5 billion",
-        "Timeline: 3-year implementation plan"
+        "Initiative Focus: K-12 AI education programs",
+        "Timeline: 3-year implementation plan",
+        "Partners: 50 major tech companies involved"
       ],
       "category": "Technology",
       "source": "Fox News",
       "url": "https://www.foxnews.com/tech/ai-newsletter-melania-trump-puts-ai-front-center"
     },
     {
-      "rank": 8,
-      "emoji": "🌏",
-      "title": "Myanmar Leader Gains Recognition at Major Chinese Summit",
-      "summary": "Myanmar's General Min Aung Hlaing achieves diplomatic breakthrough at China's international summit, marking significant shift in regional politics despite international concerns over human rights record.",
+      "rank": 5,
+      "emoji": "🕊️",
+      "title": "Hamas Continues Resistance Despite Heavy Losses in Gaza",
+      "summary": "Despite significant military setbacks and infrastructure damage, Hamas maintains its position in Gaza conflict. The group refuses peace terms while seeking conditions that ensure organizational survival.",
       "details": [
-        "Trade Deals: $5 billion agreement signed",
-        "Diplomatic Recognition: 12 nations present",
-        "Security Cooperation: New regional framework established"
+        "Leadership Changes: 70% of command structure affected",
+        "Territory Control: 40% of original holdings",
+        "Civilian Impact: 1.5 million displaced"
       ],
       "category": "World News",
-      "source": "Independent",
-      "url": "https://www.independent.co.uk/asia/southeast-asia/myanmar-min-aung-hlaing-china-visit-sco-parade-india-russia-b2820632.html"
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/world/middle-east/a-deal-they-can-live-with-why-hamas-refuses-to-give-up-fighting-israel-in-gaza"
+    },
+    {
+      "rank": 6,
+      "emoji": "🌐",
+      "title": "Iran Warns European Powers Over Reimposed Sanctions Decision",
+      "summary": "Tehran issues strong warning to Britain, France, and Germany regarding their decision to reinstate sanctions. Iranian officials emphasize willingness for diplomacy while criticizing European alignment with US policy.",
+      "details": [
+        "Economic Impact: $4.2B in frozen assets",
+        "Trade Relations: 30% decline in EU-Iran trade",
+        "Diplomatic Channels: 5 mediator countries involved"
+      ],
+      "category": "World News",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/commentisfree/2025/sep/07/message-tehran-britain-france-germany-you-made-a-big-mistake-reimposing-sanctions"
+    },
+    {
+      "rank": 7,
+      "emoji": "🇫🇷",
+      "title": "French Political Crisis Deepens as Far Right Gains Momentum",
+      "summary": "France faces severe political upheaval with Prime Minister Bayrou's likely departure. Growing disconnect between citizens and politicians fuels far-right momentum ahead of 2027 presidential election.",
+      "details": [
+        "Approval Rating: PM at historic low of 22%",
+        "Protests: 150 cities affected",
+        "Far-Right Support: Increased by 15%"
+      ],
+      "category": "World News",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/news/ng-interactive/2025/sep/07/frances-political-crisis-reveals-deep-rift-between-the-people-and-their-politicians"
+    },
+    {
+      "rank": 8,
+      "emoji": "🇺🇦",
+      "title": "Zelenskiy Rejects Putin Meeting Proposal, Suggests Kiev Venue",
+      "summary": "Ukrainian President Volodymyr Zelenskiy declined Putin's invitation for talks in Moscow, counter-proposing Kiev as the meeting location. The move highlights ongoing diplomatic tensions between the nations.",
+      "details": [
+        "Previous Meetings: Last direct contact 3 years ago",
+        "Security Concerns: 12 preconditions listed",
+        "International Mediators: 7 countries involved"
+      ],
+      "category": "World News",
+      "source": "Euronews",
+      "url": "https://tr.euronews.com/2025/09/07/zelenskiy-putinin-moskova-davetini-reddetti-gorusme-icin-kieve-gelsin"
     },
     {
       "rank": 9,
       "emoji": "🇧🇷",
-      "title": "Brazil's Lula Defies Foreign Influence in Strong Statement",
-      "summary": "Brazilian President Lula da Silva firmly asserts national sovereignty, rejecting foreign interference and criticizing domestic politicians who encourage international attacks on Brazil's governance.",
+      "title": "Brazil's Lula Defies Foreign Influence in Response to Trump",
+      "summary": "Brazilian President Lula da Silva strongly asserts national sovereignty, rejecting foreign interference. He criticizes domestic politicians supporting external attacks on Brazil's governance.",
       "details": [
-        "Economic Independence: New trade partnerships announced",
-        "Defense Budget: 15% increase",
-        "International Support: 25 nations back stance"
+        "Trade Independence: 25% increase in new partners",
+        "Political Support: 65% domestic approval rating",
+        "International Relations: 8 new bilateral agreements"
       ],
       "category": "World News",
-      "source": "SCMP",
+      "source": "South China Morning Post",
       "url": "https://www.scmp.com/news/world/americas/article/3324629/veiled-jab-trump-lula-says-brazil-doesnt-accept-orders-anyone"
     },
     {
       "rank": 10,
-      "emoji": "📊",
-      "title": "Markets Anticipate Earlier Fed Rate Cuts After Jobs Data",
-      "summary": "Federal Reserve expected to accelerate rate cuts following disappointing job market report, with September and October reductions increasingly likely according to market analysts.",
+      "emoji": "💼",
+      "title": "Warren Buffett Acknowledges Kraft Heinz Investment Mistake",
+      "summary": "Legendary investor Warren Buffett makes rare admission about his Kraft Heinz investment misstep. The acknowledgment comes as the company continues to face market challenges and declining valuations.",
       "details": [
-        "Cut Probability: 85% chance in September",
-        "Market Impact: Bond yields drop 0.3%",
-        "Economic Indicators: Manufacturing sector contracts 2.5%"
+        "Investment Loss: $4.3 billion write-down",
+        "Stock Performance: 45% below acquisition price",
+        "Market Share: Declined 12% since purchase"
       ],
       "category": "Business",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/articles/2025-09-05/fed-rate-cut-expectations-climb-following-weak-job-market-report"
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/americas/warren-buffett-investment-blunder-kraft-heinz-b2821659.html"
     }
   ],
-  "dailyGreeting": "Good morning! Global tensions rise as markets hit records.",
+  "dailyGreeting": "Good morning! Markets shake as Bitcoin hits record high.",
   "readingTime": "1 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
@@ -152,17 +152,17 @@
     },
     {
       "year": "1901",
-      "description": "Boxer Protocol signed, ending Chinese Boxer Rebellion"
+      "description": "China and Britain sign Boxer Protocol ending rebellion"
     },
     {
       "year": "1940",
-      "description": "German Luftwaffe begins London Blitz bombing campaign"
+      "description": "German Luftwaffe begins London Blitz during World War II"
     },
     {
       "year": "1977",
-      "description": "US and Panama sign Panama Canal Treaties"
+      "description": "U.S. and Panama sign Panama Canal Treaties"
     }
   ],
-  "generatedAt": "2025-09-07T07:27:31.649780",
-  "generatedAtUK": "2025-09-07T08:27:31.649794+01:00"
+  "generatedAt": "2025-09-07T12:25:46.384221",
+  "generatedAtUK": "2025-09-07T13:25:46.384240+01:00"
 }

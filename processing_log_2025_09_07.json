@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-09-07T07:26:20.041335",
+  "timestamp": "2025-09-07T12:24:31.494077",
   "date": "2025-09-07",
   "steps": {
     "1_previous_articles": {
@@ -11,66 +11,66 @@
       "description": "All articles fetched from GDELT API",
       "sample_titles": [
         "Д - р Десислава Кателиева : Това състояние лесно може да се сбърка с вирусен хепатит или жлъчна криз",
-        "Bilawal Declares Punjab Agriculture in State of Emergency",
-        "Oko 37 . 000 radnika u Hrvatskoj s pravom na beneficirani staž",
-        "Gotovo 37 . 000 radnika u Hrvatskoj ima beneficirani staž . Je li vrijeme da taj status dobiju i dje",
-        "37 tisuća radnika u Hrvatskoj ima pravo na beneficirani staž"
+        "২৫ ঘন্টা পরে অনশন সহ সব আন্দোলন স্থগিত করেছে বরিশাল বিশ্ববিদ্যালয়ের শিক্ষার্থীরা",
+        "وزارة الصحة بالقضارف تدفع بقافلة صحية للاستجابة الطارئة لفيضان نهر الرهد",
+        "Д - р Десислава Кателиева : Това състояние лесно може да се сбърка с вирусен хепатит или жлъчна криз",
+        "Д - р Десислава Кателиева : Това състояние лесно може да се сбърка с вирусен хепатит или жлъчна криз"
       ]
     },
     "3_filtering": {
       "total_input": 800,
       "duplicates_removed": 1,
-      "approved_sources": 25,
-      "rejected_sources": 774,
-      "final_unique": 25,
+      "approved_sources": 28,
+      "rejected_sources": 771,
+      "final_unique": 28,
       "approved_domains": [
-        "elpais.com",
+        "euronews.com",
+        "koreaherald.com",
         "fool.com",
         "forbes.com",
         "cnbc.com",
         "fortune.com",
-        "investing.com",
+        "businessinsider.com",
         "investors.com",
-        "bloomberg.com",
         "foxnews.com",
-        "bangkokpost.com"
+        "corriere.it"
       ],
       "rejected_domains": [
         "focus-news.net",
-        "paktribune.com",
-        "24sata.hr",
-        "glasistre.hr",
-        "index.hr",
-        "poslovni.hr",
-        "glas-slavonije.hr",
+        "dailyinqilab.com",
+        "alnilin.com",
         "burgas24.bg",
         "varna24.bg",
-        "bbc.co.uk"
+        "bbc.co.uk",
+        "dnevnik.hr",
+        "biznews.com",
+        "vetogate.com",
+        "mediaindonesia.com"
       ],
       "description": "Domain filtering and deduplication"
     },
     "4_ai_selection": {
-      "input_articles": 25,
+      "input_articles": 28,
       "selected_articles": 10,
       "ai_status": "successful",
       "description": "AI successfully selected 10 articles",
       "selected_titles": [
-        "Bangkok Post - Israel tells residents to leave Gaza City ahead of offensive",
-        "A message from Tehran for Britain, France and Germany: You made a big mistake re",
-        "France political crisis reveals deep rift between the people and their politicia",
-        "Selenskyj: Putin könnte nach Kyiw kommen",
-        "Serious U.S. Dollar Fed Warning Issued As Bitcoin Mounts $24 Trillion Gold Price",
-        "The Fed got it wrong and is late again, top economist says, as job gains collaps",
+        "ЦАХАЛ усиливает бомбардировки города Газа и призывает жителей к эвакуации",
+        "Serious U . S . Dollar Fed Warning Issued As Bitcoin Mounts $24 Trillion Gold Pr",
+        "Job Growth Sputters : Rate Cuts And Recession Incoming ?",
         "Melania Trump puts AI front and center at White House meeting",
-        "Never mind Xi, Kim or Putin, this outcast leader was the real winner on China gr",
-        "In veiled jab at Trump, Lula says Brazil doesnt accept order from anyone",
-        "Fed Rate-Cut Expectations Climb Following Weak Job Market Report"
+        "A deal they can live with : Why Hamas refuses to give up fighting Israel in Gaza",
+        "A message from Tehran for Britain , France and Germany : You made a big mistake ",
+        "France political crisis reveals deep rift between the people and their politicia",
+        "Zelenskiy , Putinin Moskova davetini reddetti : Görüşme için Kieve gelsin",
+        "In veiled jab at Trump , Lula says Brazil doesnt accept order from anyone",
+        "Warren Buffett offers rare comment on one of his few investment blunders"
       ]
     },
     "5_final_output": {
       "final_articles_count": 10,
       "news_file": "tennews_data_2025_09_07.json",
-      "greeting": "Good morning! Global tensions rise as markets hit records.",
+      "greeting": "Good morning! Markets shake as Bitcoin hits record high.",
       "reading_time": "1 minute read",
       "description": "Final news data generated and saved"
     }
@@ -78,9 +78,9 @@
   "statistics": {
     "total_fetched_from_gdelt": 800,
     "eliminated_duplicates": 1,
-    "eliminated_unapproved_sources": 774,
-    "approved_for_ai_selection": 25,
+    "eliminated_unapproved_sources": 771,
+    "approved_for_ai_selection": 28,
     "final_articles_generated": 10
   },
-  "completion_time": "2025-09-07T07:27:31.650190"
+  "completion_time": "2025-09-07T12:25:46.384719"
 }
