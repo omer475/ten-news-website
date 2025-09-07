@@ -431,14 +431,13 @@ export default function Home() {
         }
 
         .news-item {
-          display: grid;
-          grid-template-columns: 60px 1fr;
-          gap: 20px;
+          display: block;
           padding: 24px 0;
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
           border-radius: 8px;
+          position: relative;
         }
 
         .news-item:hover {
@@ -450,16 +449,21 @@ export default function Home() {
         }
 
         .news-number {
-          font-size: 32px;
+          position: absolute;
+          top: 0;
+          left: 0;
+          font-size: 24px;
           font-weight: 800;
           background: linear-gradient(135deg, #cbd5e1, #94a3b8);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          opacity: 0.5;
+          opacity: 0.6;
+          z-index: 1;
         }
 
         .news-content {
-          padding-top: 4px;
+          padding-top: 32px;
+          padding-left: 0;
         }
 
         .news-category {
@@ -639,13 +643,10 @@ export default function Home() {
             padding: 70px 16px 60px;
           }
           
-          .news-item {
-            grid-template-columns: 40px 1fr;
-            gap: 16px;
-          }
-          
           .news-number {
-            font-size: 24px;
+            font-size: 20px;
+            top: 0;
+            left: 0;
           }
           
           .news-title {
