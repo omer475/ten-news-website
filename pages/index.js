@@ -144,6 +144,18 @@ export default function Home() {
   const nextStory = () => goToStory(currentIndex + 1);
   const prevStory = () => goToStory(currentIndex - 1);
 
+  const getCategoryClass = (category) => {
+    if (!category) return '';
+    const categoryLower = category.toLowerCase();
+    if (categoryLower.includes('world') || categoryLower.includes('news')) return 'category-world-news';
+    if (categoryLower.includes('business') || categoryLower.includes('finance') || categoryLower.includes('market')) return 'category-business';
+    if (categoryLower.includes('technology') || categoryLower.includes('tech') || categoryLower.includes('ai')) return 'category-technology';
+    if (categoryLower.includes('science') || categoryLower.includes('research')) return 'category-science';
+    if (categoryLower.includes('climate') || categoryLower.includes('environment')) return 'category-climate';
+    if (categoryLower.includes('health') || categoryLower.includes('medical')) return 'category-health';
+    return 'category-world-news'; // default
+  };
+
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
@@ -501,17 +513,72 @@ export default function Home() {
           border-bottom: 1px solid #e2e8f0;
         }
 
-        .news-meta {
+        .news-details {
           display: flex;
-          gap: 16px;
-          font-size: 14px;
-          color: #64748b;
-          font-weight: 600;
+          gap: 32px;
+          margin-top: 20px;
+          padding: 20px 0;
+          border-left: 4px solid var(--category-color, #64748b);
+          padding-left: 24px;
+          background: rgba(248, 250, 252, 0.5);
+          border-radius: 0 8px 8px 0;
         }
 
-        .news-meta strong {
-          color: #334155;
-          font-weight: 700;
+        .news-detail-item {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+          flex: 1;
+        }
+
+        .news-detail-label {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: #94a3b8;
+          margin-bottom: 4px;
+        }
+
+        .news-detail-value {
+          font-size: 24px;
+          font-weight: 800;
+          color: #0f172a;
+          line-height: 1.2;
+          margin-bottom: 2px;
+        }
+
+        .news-detail-description {
+          font-size: 13px;
+          color: #64748b;
+          font-weight: 500;
+          line-height: 1.3;
+        }
+
+        /* Category-specific colors for left border */
+        .category-world-news {
+          --category-color: #dc2626;
+        }
+
+        .category-business {
+          --category-color: #f97316;
+        }
+
+        .category-technology {
+          --category-color: #8b5cf6;
+        }
+
+        .category-science {
+          --category-color: #0ea5e9;
+        }
+
+        .category-climate {
+          --category-color: #22c55e;
+        }
+
+        .category-health {
+          --category-color: #10b981;
         }
 
         .progress-indicator {
@@ -725,6 +792,34 @@ export default function Home() {
             height: 18px;
             background: linear-gradient(180deg, #1f2937, #000000);
           }
+
+          .news-details {
+            gap: 20px;
+            padding: 16px 0;
+            padding-left: 16px;
+            flex-direction: column;
+          }
+
+          .news-detail-item {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .news-detail-label {
+            font-size: 10px;
+            min-width: 80px;
+          }
+
+          .news-detail-value {
+            font-size: 20px;
+            min-width: 60px;
+          }
+
+          .news-detail-description {
+            font-size: 12px;
+            flex: 1;
+          }
         }
       `}</style>
       
@@ -880,13 +975,23 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{story.summary}</p>
-                      <div className="news-meta">
+                      <div className={`news-details ${getCategoryClass(story.category)}`}>
                         {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
+                          const trimmedLabel = label?.trim() || '';
+                          const trimmedValue = value?.trim() || '';
+                          
+                          // Extract the bold number/value and description
+                          const valueMatch = trimmedValue.match(/^([^a-zA-Z]*(?:\$?[\d.,]+[BMK]?(?:\s*(?:billion|million|thousand|year|month|day|week|hour|minute|second|%|percent)s?)?))(.*)$/i);
+                          const boldPart = valueMatch ? valueMatch[1].trim() : trimmedValue.split(' ')[0];
+                          const descriptionPart = valueMatch ? valueMatch[2].trim() : trimmedValue.substring(boldPart.length).trim();
+                          
                           return (
-                            <span key={i}>
-                              <strong>{label}:</strong>{value}
-                            </span>
+                            <div key={i} className="news-detail-item">
+                              <div className="news-detail-label">{trimmedLabel.toUpperCase()}</div>
+                              <div className="news-detail-value">{boldPart}</div>
+                              <div className="news-detail-description">{descriptionPart}</div>
+                            </div>
                           );
                         })}
                       </div>
