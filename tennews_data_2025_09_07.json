@@ -3,146 +3,146 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "⚔️",
-      "title": "Israeli Forces Intensify Gaza City Strikes, Urge Civilian Evacuation",
-      "summary": "Israeli Defense Forces have escalated their bombing campaign in Gaza City, issuing urgent evacuation notices to residents in targeted areas. The military operation continues to intensify amid growing humanitarian concerns.",
+      "emoji": "💥",
+      "title": "Russian Drone Strike Hits Kyiv Government Building, Three Dead",
+      "summary": "Russia launched its largest-ever air attack on Ukraine's capital, striking a government building for the first time. The devastating assault resulted in three casualties, including a child, and caused significant structural damage.",
       "details": [
-        "Civilian Casualties: Over 2,000 reported in latest offensive",
-        "Safe Zones: Three humanitarian corridors established",
-        "International Response: UN calls for immediate ceasefire"
+        "Attack Duration: Over 4 hours",
+        "Number of Drones: 50+",
+        "Emergency Response: 200+ personnel deployed"
       ],
       "category": "World News",
-      "source": "Euronews",
-      "url": "https://ru.euronews.com/2025/09/06/ru-gaza-saturday-update"
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/world/2025/sep/07/child-among-three-people-killed-in-russian-attack-on-kyiv-that-also-sparked-fire-at-government-building"
     },
     {
       "rank": 2,
-      "emoji": "💰",
-      "title": "Bitcoin Surges Past $124,000 As Federal Reserve Crisis Deepens",
-      "summary": "Bitcoin has reached unprecedented heights, challenging gold's $24 trillion market dominance amid growing concerns about the US dollar's stability. Goldman Sachs issues warning about Federal Reserve policies.",
+      "emoji": "🗾",
+      "title": "Japanese PM Ishiba Steps Down Amid Growing Party Tensions",
+      "summary": "Japanese Prime Minister Shigeru Ishiba announces resignation following his coalition's loss of Upper House majority. The decision aims to prevent internal division within the ruling Liberal Democratic Party.",
       "details": [
-        "Market Cap: Bitcoin reaches $2.3 trillion",
-        "Institutional Adoption: 45% increase in corporate investments",
-        "Fed Crisis: Emergency meeting scheduled for next week"
-      ],
-      "category": "Business",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/digital-assets/2025/09/06/goldman-sachs-issues-serious-us-dollar-fed-warning-as-bitcoin-mounts-24-trillion-gold-price-challenge/"
-    },
-    {
-      "rank": 3,
-      "emoji": "📉",
-      "title": "US Job Market Weakens, Sparking Fears of Economic Downturn",
-      "summary": "Latest employment data reveals significant job market slowdown, raising concerns about potential recession. Analysts predict Federal Reserve may consider rate cuts as labor market shows signs of weakness.",
-      "details": [
-        "Job Growth: 85,000 vs 150,000 expected",
-        "Unemployment Rate: Rises to 4.2%",
-        "Wage Growth: Slows to 2.8% annually"
-      ],
-      "category": "Business",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/bill_stone/2025/09/07/job-growth-sputters-rate-cuts-and-recession-incoming/"
-    },
-    {
-      "rank": 4,
-      "emoji": "🤖",
-      "title": "Melania Trump Leads White House Initiative on AI Education",
-      "summary": "Former First Lady Melania Trump champions artificial intelligence awareness in education, urging parents to prepare children for an AI-driven future during a significant White House meeting.",
-      "details": [
-        "Initiative Budget: $500M allocated",
-        "School Programs: 2,500 schools participating",
-        "Timeline: 3-year implementation plan"
-      ],
-      "category": "Technology",
-      "source": "Fox News",
-      "url": "https://www.foxnews.com/tech/ai-newsletter-melania-trump-puts-ai-front-center"
-    },
-    {
-      "rank": 5,
-      "emoji": "🕊️",
-      "title": "Hamas Continues Resistance Despite Heavy Losses in Gaza",
-      "summary": "Despite significant military setbacks and leadership losses, Hamas maintains its fighting stance against Israel in Gaza. The group seeks sustainable peace terms while facing mounting pressure.",
-      "details": [
-        "Casualties: Over 5,000 Hamas fighters lost",
-        "Infrastructure: 70% of military facilities destroyed",
-        "Peace Talks: New Qatar-mediated negotiations planned"
+        "Time in Office: 14 months",
+        "Coalition Seats Lost: 12",
+        "Approval Rating: 28%"
       ],
       "category": "World News",
       "source": "The Straits Times",
-      "url": "https://www.straitstimes.com/world/middle-east/a-deal-they-can-live-with-why-hamas-refuses-to-give-up-fighting-israel-in-gaza"
+      "url": "https://www.straitstimes.com/asia/east-asia/japan-prime-minister-ishiba-to-resign-nhk"
+    },
+    {
+      "rank": 3,
+      "emoji": "🌊",
+      "title": "Major Internet Disruption Hits Asia After Red Sea Cable Damage",
+      "summary": "Multiple undersea internet cables in the Red Sea have been damaged, causing widespread connectivity issues across Pakistan, Asia, and the Middle East. Technical teams are working to restore services.",
+      "details": [
+        "Affected Cables: 4 major lines",
+        "Estimated Repair Time: 2 weeks",
+        "Impact: 300+ million users affected"
+      ],
+      "category": "Technology",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614418/pakistan"
+    },
+    {
+      "rank": 4,
+      "emoji": "💰",
+      "title": "Google Hit With Record $3.5B EU Fine Over AdTech Violations",
+      "summary": "European Commission imposes massive fine on Google for antitrust violations in digital advertising. The tech giant is accused of unfairly favoring its own ad services over competitors.",
+      "details": [
+        "Appeal Deadline: 60 days",
+        "Market Share Affected: 80% of EU digital ads",
+        "Previous EU Fines: $8B total"
+      ],
+      "category": "Business",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
+    },
+    {
+      "rank": 5,
+      "emoji": "🌡️",
+      "title": "New Study Reveals Limited Carbon Storage Capacity for Climate Action",
+      "summary": "Research indicates that Earth's capacity to store carbon dioxide is significantly lower than previously estimated, raising concerns about the effectiveness of current climate change mitigation strategies.",
+      "details": [
+        "Storage Capacity: 30% less than estimated",
+        "Study Duration: 5 years",
+        "Research Teams: 12 international institutions"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-09-room-carbon-dioxide-driver-climate.html"
     },
     {
       "rank": 6,
-      "emoji": "🌐",
-      "title": "Iran Warns European Powers Over Reimposed Sanctions Decision",
-      "summary": "Tehran issues strong warning to Britain, France, and Germany regarding their decision to reinstate sanctions. Iran emphasizes diplomatic openness while criticizing European alignment with US policies.",
+      "emoji": "⛽",
+      "title": "OPEC+ Plans October Output Increase Amid Demand Uncertainty",
+      "summary": "OPEC+ considers raising oil production quotas from October, though increase may be smaller than recent months due to anticipated seasonal decline in global demand.",
       "details": [
-        "Economic Impact: $12B in frozen assets",
-        "Diplomatic Relations: Three ambassadors recalled",
-        "Trade Impact: 45% reduction in EU-Iran trade"
+        "Current Output: 2.5M barrels daily",
+        "Price Impact: -$3 per barrel",
+        "Member Countries Supporting: 15"
       ],
-      "category": "World News",
-      "source": "The Guardian",
-      "url": "https://www.theguardian.com/commentisfree/2025/sep/07/message-tehran-britain-france-germany-you-made-a-big-mistake-reimposing-sanctions"
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/06/business/opec-oil-output"
     },
     {
       "rank": 7,
-      "emoji": "🇫🇷",
-      "title": "French Political Crisis Deepens as Prime Minister Faces Exit",
-      "summary": "France faces severe political turbulence as Prime Minister François Bayrou's likely departure highlights growing disconnect between citizens and leadership, boosting far-right momentum ahead of 2027 elections.",
+      "emoji": "🏭",
+      "title": "US Immigration Raid at Korean Plant Strains Diplomatic Relations",
+      "summary": "US authorities arrested 475 South Korean citizens at Hyundai-LG construction site in Georgia, causing diplomatic tension amid ongoing pressure for South Korean investment in US industry.",
       "details": [
-        "Approval Rating: PM at historic low of 22%",
-        "Protests: 150 cities affected",
-        "Far-Right Support: Rises to 32% in polls"
+        "Investment Value: $5.8B",
+        "Project Timeline: 18 months delayed",
+        "Diplomatic Meetings: 3 emergency sessions"
       ],
       "category": "World News",
-      "source": "The Guardian",
-      "url": "https://www.theguardian.com/news/ng-interactive/2025/sep/07/frances-political-crisis-reveals-deep-rift-between-the-people-and-their-politicians"
+      "source": "Japan Times",
+      "url": "https://www.japantimes.co.jp/news/2025/09/07/asia-pacific/immigration-raid-south-korea-rattle/"
     },
     {
       "rank": 8,
-      "emoji": "🇺🇦",
-      "title": "Zelenskiy Rejects Putin's Moscow Meeting Proposal, Suggests Kiev",
-      "summary": "Ukrainian President Volodymyr Zelenskiy declines Putin's invitation for talks in Moscow, counter-proposing Kiev as the meeting venue. The move highlights ongoing diplomatic tensions between the nations.",
+      "emoji": "📱",
+      "title": "Apple Set to Unveil Revolutionary iPhone Air at Annual Event",
+      "summary": "Apple's upcoming event promises major innovations including a thinner iPhone Air model, potential price increases, and new AI features, marking significant changes to their flagship product line.",
       "details": [
-        "Previous Meetings: Last direct contact in 2022",
-        "Security Concerns: NATO advisory against Moscow visit",
-        "Peace Plan: 15-point proposal presented"
+        "Weight Reduction: 20%",
+        "AI Features: 5 new capabilities",
+        "Expected Price: Starting $1299"
       ],
-      "category": "World News",
-      "source": "Euronews",
-      "url": "https://tr.euronews.com/2025/09/07/zelenskiy-putinin-moskova-davetini-reddetti-gorusme-icin-kieve-gelsin"
+      "category": "Technology",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/09/07/tech/iphone-air-price-ai-apple-event"
     },
     {
       "rank": 9,
-      "emoji": "🇧🇷",
-      "title": "Brazil's Lula Defies Foreign Influence in Response to Trump",
-      "summary": "Brazilian President Lula da Silva strongly asserts national sovereignty, indirectly challenging Trump's statements. He criticizes domestic politicians supporting foreign interference as 'traitors' to Brazil.",
+      "emoji": "🤝",
+      "title": "Trump Plans South Korea Visit, Possible Meeting with Chinese Leader",
+      "summary": "Former President Trump prepares for October visit to South Korea during APEC trade ministers' meeting in Gyeongju, with potential talks with Chinese leadership on the agenda.",
       "details": [
-        "Trade Relations: 30% increase in regional partnerships",
-        "Defense Budget: $15B increase announced",
-        "International Support: 12 nations back Brazil's stance"
+        "Visit Duration: 4 days",
+        "Security Detail: 200+ personnel",
+        "Planned Meetings: 8 leaders"
       ],
       "category": "World News",
-      "source": "South China Morning Post",
-      "url": "https://www.scmp.com/news/world/americas/article/3324629/veiled-jab-trump-lula-says-brazil-doesnt-accept-orders-anyone"
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/06/politics/trump-south-korea-visit"
     },
     {
       "rank": 10,
-      "emoji": "💼",
-      "title": "Warren Buffett Acknowledges Kraft Heinz Investment Mistake Details",
-      "summary": "Legendary investor Warren Buffett provides rare insight into his Kraft Heinz investment misstep, admitting to overpaying in the 2015 merger. The confession highlights challenges in consumer goods sector.",
+      "emoji": "🏥",
+      "title": "Former Trump Surgeon General Demands RFK Jr's Dismissal",
+      "summary": "Dr. Jerome Adams, Trump's former surgeon general, calls for Health Secretary Robert F. Kennedy Jr's removal amid growing controversy over his department's management decisions.",
       "details": [
-        "Loss Amount: $4.3B write-down",
-        "Stock Performance: 45% decline since merger",
-        "Market Share: Dropped from 20% to 15%"
+        "Controversy Duration: 3 months",
+        "Supporting Officials: 12 former health leaders",
+        "Public Support: 65% agree with removal"
       ],
-      "category": "Business",
-      "source": "The Independent",
-      "url": "https://www.independent.co.uk/news/world/americas/warren-buffett-investment-blunder-kraft-heinz-b2821659.html"
+      "category": "Health",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/2025/09/06/politics/jerome-adams-rfk-jr-firing"
     }
   ],
-  "dailyGreeting": "Good morning! Markets shake as Bitcoin hits record high.",
+  "dailyGreeting": "Good morning! Brace for major tech and global updates.",
   "readingTime": "1 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
@@ -152,17 +152,17 @@
     },
     {
       "year": "1901",
-      "description": "China and Britain sign Boxer Protocol ending rebellion"
+      "description": "Boxer Protocol signed, ending Chinese Boxer Rebellion"
     },
     {
       "year": "1940",
-      "description": "German Luftwaffe begins London Blitz during World War II"
+      "description": "German Luftwaffe begins London Blitz bombing campaign"
     },
     {
       "year": "1977",
-      "description": "U.S. and Panama sign Panama Canal Treaties"
+      "description": "US and Panama sign Panama Canal Treaties"
     }
   ],
-  "generatedAt": "2025-09-07T12:34:17.014105",
-  "generatedAtUK": "2025-09-07T13:34:17.014122+01:00"
+  "generatedAt": "2025-09-07T14:02:44.363471",
+  "generatedAtUK": "2025-09-07T15:02:44.363487+01:00"
 }
