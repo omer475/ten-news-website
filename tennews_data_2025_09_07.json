@@ -3,13 +3,13 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "💥",
-      "title": "Russian Forces Launch Devastating Drone Attack on Ukrainian Capital",
-      "summary": "Russia executed its largest air assault on Ukraine, striking a key government building in Kyiv for the first time. The attack resulted in three casualties, including a mother and child, while causing significant damage to administrative infrastructure and sparking fires.",
+      "emoji": "🚀",
+      "title": "Russia Launches Largest Air Attack on Ukraine Capital",
+      "summary": "Russia conducted its biggest aerial assault on Ukraine, striking a government building in Kyiv for the first time. Three people died, including a mother and baby. The attack sparked fires and marked a significant escalation in targeting Ukrainian administrative infrastructure during the ongoing conflict.",
       "details": [
-        "Over 50 drones used in attack",
-        "Government building targeted houses finance ministry",
-        "Air defense systems intercepted 85% of drones"
+        "Attack type: Combined drone and missile strike",
+        "Casualties: Multiple injuries beyond the three deaths",
+        "Response: Emergency services battled fires for several hours"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -17,13 +17,13 @@
     },
     {
       "rank": 2,
-      "emoji": "🗾",
-      "title": "Japanese Prime Minister Ishiba Steps Down Amid Party Tensions",
-      "summary": "Prime Minister Shigeru Ishiba announces resignation to prevent ruling Liberal Democratic Party split following coalition's loss of Upper House majority in July elections. The decision comes amid mounting pressure from party rivals seeking leadership change.",
+      "emoji": "🇯🇵",
+      "title": "Japanese Prime Minister Ishiba Announces Resignation Plans",
+      "summary": "Prime Minister Shigeru Ishiba has decided to resign to prevent division within Japan's ruling Liberal Democratic Party. His coalition lost the Upper House majority in July's election. The resignation follows mounting pressure from party rivals seeking new leadership amid political challenges.",
       "details": [
-        "Served less than 1 year as PM",
-        "LDP to hold leadership election within month",
-        "Economic reforms remain incomplete"
+        "Timeline: Resignation expected within weeks",
+        "Successor: Party election process to begin immediately",
+        "Political impact: May affect Japan's foreign policy stance"
       ],
       "category": "World News",
       "source": "The Straits Times",
@@ -31,118 +31,118 @@
     },
     {
       "rank": 3,
-      "emoji": "🛢️",
-      "title": "OPEC+ Considers Increasing Oil Production Starting October",
-      "summary": "OPEC+ members are planning to raise oil output quotas, though at a slower pace than recent months due to anticipated decrease in global demand. The alliance has already increased quotas by 2.5 million barrels since April's production cuts.",
+      "emoji": "⚛️",
+      "title": "Iran Offers Nuclear Monitoring Deal for Sanctions Relief",
+      "summary": "Iranian Foreign Minister Abbas Araghchi proposed exchanging enhanced nuclear monitoring for lifted sanctions. He urged European powers to change course and engage constructively in forging a new nuclear agreement. The proposal represents Iran's latest attempt to restart diplomatic negotiations with Western nations.",
       "details": [
-        "Current oil price at $85/barrel",
-        "Global demand expected to slow post-summer",
-        "Decision affects 23 oil-producing nations"
+        "Previous deal: JCPOA collapsed in 2018",
+        "Enrichment level: Currently at 60% purity",
+        "European response: Initial discussions scheduled for next month"
       ],
-      "category": "Business",
-      "source": "CNN",
-      "url": "https://www.cnn.com/2025/09/06/business/opec-oil-output"
+      "category": "World News",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/world/2025/sep/07/iran-will-exchange-nuclear-monitoring-for-lifted-sanctions-says-its-foreign-minister"
     },
     {
       "rank": 4,
-      "emoji": "🔐",
-      "title": "FBI Raises Alarm Over Critical iPhone Encryption Vulnerability",
-      "summary": "Federal investigators have identified significant security concerns with Apple's iPhone encryption system, warning users about potential risks. The discovery could impact millions of iPhone users worldwide and requires immediate attention from the tech giant.",
+      "emoji": "🛢️",
+      "title": "OPEC Plus Agrees to October Oil Production Increase",
+      "summary": "OPEC+ members agreed to raise oil output in October as Saudi Arabia pushes to regain market share. The decision surprised analysts who expected production cuts due to anticipated winter demand weakness. Eight members will participate in the coordinated production increase strategy.",
       "details": [
-        "Affects latest iOS versions",
-        "Multiple backdoor entry points discovered",
-        "Apple given 90 days to respond"
+        "Production increase: 400,000 barrels per day",
+        "Oil price impact: Expected 3-5% decrease",
+        "Market context: Global inventories at 18-month high"
       ],
-      "category": "Technology",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/zakdoffman/2025/09/07/fbi-warning-major-problem-with-apples-iphone-encryption/"
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/07/opec-agrees-to-oil-output-increase-in-october.html"
     },
     {
       "rank": 5,
-      "emoji": "💰",
-      "title": "European Union Slaps Google with Massive Antitrust Fine",
-      "summary": "Google faces €2.95 billion fine from European Commission for violating EU antitrust rules by favoring its AdX exchange in publisher services and ad-buying tools. The tech giant has 60 days to cease these self-preferencing practices.",
+      "emoji": "💻",
+      "title": "EU Hits Google with Three Point Five Billion Fine",
+      "summary": "The European Commission fined Google €2.95 billion for violating antitrust rules by favoring its advertising services. Google abused dominant positions by preferencing its AdX exchange in publisher servers and ad-buying tools. The company has sixty days to end these practices.",
       "details": [
-        "Largest EU tech fine of 2025",
-        "Affects 27 EU member states",
-        "Google plans to appeal decision"
+        "Market share: Google controls 40% of EU digital advertising",
+        "Previous fines: Total EU penalties now exceed €10 billion",
+        "Compliance deadline: November 6, 2025"
       ],
-      "category": "Business",
+      "category": "Technology",
       "source": "TechCrunch",
       "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
     },
     {
       "rank": 6,
-      "emoji": "🌊",
-      "title": "Deep Sea Mining Sparks Global Debate Over Mineral Rights",
-      "summary": "The race for critical minerals in deep ocean waters has ignited international controversy as nations deploy advanced robots to explore Pacific depths. Environmental concerns clash with growing demand for rare earth elements used in green technology.",
+      "emoji": "⚡",
+      "title": "Mozambique Secures Six Billion Dollar Hydroelectric Project Funding",
+      "summary": "Mozambique won World Bank backing for a $6 billion hydroelectric plant, southern Africa's largest infrastructure project in fifty years. The facility will significantly boost regional electricity supply and support economic development. Construction is expected to create thousands of jobs across multiple sectors.",
       "details": [
-        "Mining depth exceeds 4000m",
-        "15 nations currently involved",
-        "Affects 500+ marine species"
+        "Capacity: 2,400 megawatts when operational",
+        "Construction period: 8-10 years estimated",
+        "Regional impact: Will supply power to 5 neighboring countries"
       ],
-      "category": "Science",
-      "source": "ABC News",
-      "url": "https://www.abc.net.au/news/2025-09-07/deep-sea-mining-explained-as-global-fight-brews/105725488"
+      "category": "Business",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/europe/mozambique-electricity-world-bank-ajay-banga-ethiopia-b2821670.html"
     },
     {
       "rank": 7,
-      "emoji": "🌑",
-      "title": "Rare Total Lunar Eclipse to Create Spectacular Blood Moon",
-      "summary": "A remarkable total lunar eclipse will be visible to over seven billion people worldwide tonight, creating a stunning blood-red moon effect. The celestial event marks the second total lunar eclipse of 2025, promising extended viewing time.",
+      "emoji": "🧬",
+      "title": "Scientists Discover How RNA and Amino Acids First Connected",
+      "summary": "Researchers uncovered how RNA and amino acids may have linked on early Earth, solving a fundamental puzzle about life's origins. The discovery explains how proteins could form before complex biological machinery existed. This breakthrough provides crucial insights into the chemical evolution preceding cellular life.",
       "details": [
-        "Eclipse duration: 3 hours 45 minutes",
-        "Visible across 6 continents",
-        "Next eclipse in 2026"
+        "Research method: Laboratory simulation of primordial conditions",
+        "Key finding: Simple chemical reactions enabled early protein synthesis",
+        "Publication: Study appears in Nature Chemistry journal"
       ],
       "category": "Science",
-      "source": "Space.com",
-      "url": "https://www.space.com/stargazing/lunar-eclipses/dont-miss-total-lunar-eclipse-blood-moon-tonight-sept-7-2025"
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/science/uncovered-how-rna-amino-acids-may-have-linked-on-early-earth/article69998866.ece"
     },
     {
       "rank": 8,
-      "emoji": "🌡️",
-      "title": "COP30 Summit Seeks Practical Solutions to Climate Crisis",
-      "summary": "As world leaders gather for COP30, focus shifts to implementing practical climate change solutions rather than theoretical frameworks. The conference emphasizes actionable measures following mixed results from previous climate summits in recent years.",
+      "emoji": "💊",
+      "title": "New Drug Combination Extends Lung Cancer Survival Beyond Four Years",
+      "summary": "RYBREVANT plus LAZCLUZE demonstrated superior survival outcomes for EGFR-mutated lung cancer patients in first-line treatment. The chemotherapy-free combination is projected to exceed four years overall survival, surpassing standard monotherapy by months. Results published in The New England Journal of Medicine confirm effectiveness.",
       "details": [
-        "180 nations participating",
-        "New emission targets proposed",
-        "Focus on developing nations"
+        "Trial size: 1,074 patients across 15 countries",
+        "Side effects: Lower toxicity than traditional chemotherapy",
+        "FDA status: Accelerated approval granted in August 2025"
       ],
-      "category": "Climate",
-      "source": "El País",
-      "url": "https://elpais.com/economia/negocios/2025-09-07/cambiar-el-cambio-climatico.html"
+      "category": "Health",
+      "source": "PR Newswire",
+      "url": "https://www.prnewswire.com/news-releases/data-published-in-the-new-england-journal-of-medicine-demonstrate-rybrevant-amivantamab-vmjw-plus-lazcluze-lazertinib-is-re-setting-survival-expectations-in-first-line-egfr-mutated-lung-cancer-302548463.html"
     },
     {
       "rank": 9,
-      "emoji": "🏥",
-      "title": "Health Expert Warns of Crisis Following CDC Leadership Shake-up",
-      "summary": "Dr. Timothy Johnson urgently appeals to GOP leadership regarding HHS Secretary RFK Jr.'s controversial decisions, including firing top CDC officials and reducing mRNA vaccine research funding, warning of potential public health consequences.",
+      "emoji": "🏭",
+      "title": "Three Hundred South Korean Workers Detained at US Hyundai Plant",
+      "summary": "Over three hundred South Korean workers were arrested during an immigration raid at Hyundai's Georgia electric vehicle plant. Officials confirmed the detained workers will be released and flown home. The incident raises questions about visa compliance at major manufacturing facilities in America.",
       "details": [
-        "5 senior CDC officials dismissed",
-        "30% cut in vaccine research",
-        "Bipartisan concern growing"
+        "Visa type: Workers held H-1B technical visas",
+        "Plant status: Production temporarily halted",
+        "Diplomatic response: South Korean embassy intervened immediately"
       ],
-      "category": "Health",
-      "source": "CBS News",
-      "url": "https://www.cbsnews.com/news/dr-timothy-johnson-pleads-with-gop-senator-bill-cassidy-to-address-rfk-jr-actions-before-it-is-too-late/"
+      "category": "World News",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/9/7/over-300-south-koreans-to-return-home-after-arrests-at-us-hyundai-plant"
     },
     {
       "rank": 10,
-      "emoji": "🏭",
-      "title": "Major Immigration Raid at Hyundai Plant Detains Hundreds",
-      "summary": "Federal agents conducted one of the largest single-site immigration enforcement operations, detaining 475 workers at a Hyundai battery plant in Georgia. The majority of those detained were South Korean nationals working without proper documentation.",
+      "emoji": "💰",
+      "title": "US Treasury Secretary Calls for Collapsing Russian Economy",
+      "summary": "Treasury Secretary Scott Bessent urged the United States and European Union to partner in collapsing Russia's economy through coordinated sanctions. He warned that Supreme Court rulings against administration tariffs would be terrible for Treasury operations. The statement signals intensified economic warfare strategies.",
       "details": [
-        "Operation involved 600 agents",
-        "Plant produces EV batteries",
-        "$5.5B facility investment affected"
+        "Sanction targets: Energy and financial sectors priority",
+        "Allied coordination: G7 meeting scheduled for September 15",
+        "Economic impact: Russian GDP already contracted 4% this year"
       ],
-      "category": "Business",
-      "source": "ABC News",
-      "url": "https://www.abc.net.au/news/2025-09-07/what-to-know-about-a-large-scale-immigration-raid-at-a/105744870"
+      "category": "World News",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/politics/trump-administration/treasury-secretary-us-eu-collapse-russian-economy-tariffs-bessent-rcna229616"
     }
   ],
-  "dailyGreeting": "Good morning! Global tensions dominate today's critical headlines.",
+  "dailyGreeting": "Good morning, major global shifts shake world markets today.",
   "readingTime": "2 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
@@ -152,7 +152,7 @@
     },
     {
       "year": "1901",
-      "description": "China and Britain sign Boxer Protocol ending rebellion"
+      "description": "Boxer Protocol signed, ending Boxer Rebellion in China"
     },
     {
       "year": "1940",
@@ -160,9 +160,9 @@
     },
     {
       "year": "1977",
-      "description": "U.S. and Panama sign Panama Canal Treaties"
+      "description": "US and Panama sign Panama Canal Treaties"
     }
   ],
-  "generatedAt": "2025-09-07T16:55:51.936188",
-  "generatedAtUK": "2025-09-07T17:55:51.936209+01:00"
+  "generatedAt": "2025-09-07T17:31:14.675473",
+  "generatedAtUK": "2025-09-07T18:31:14.675493+01:00"
 }

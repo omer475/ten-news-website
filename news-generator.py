@@ -598,7 +598,7 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level
+- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level 
 - DETAILS: CRITICAL - Follow the comprehensive Details Section Instructions below
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
@@ -609,7 +609,7 @@ WORD COUNT ENFORCEMENT:
 - If over 50 words, trim unnecessary words
 - This is MANDATORY - summaries with wrong word count will be rejected
 
-## DETAILS SECTION INSTRUCTIONS - CRITICAL REQUIREMENTS
+## Details Section Instructions for AI - Final Version
 
 ### CORE FUNCTION
 The `details` array provides 3 supplementary data points that expand the story beyond what's in the summary. These must be completely different facts that add depth without redundancy.
@@ -617,23 +617,23 @@ The `details` array provides 3 supplementary data points that expand the story b
 ### MANDATORY PROCESS
 
 #### Step 1: Extract Summary Content
-Before generating details, identify EVERY piece of information in your summary:
-- All numbers mentioned (amounts, percentages, quantities)
-- All dates/timeframes (years, months, duration)
-- All locations (countries, cities, regions)
-- All people/organizations (names, titles, companies)
-- All actions/events (what happened, processes)
-- All descriptive terms (adjectives, categories)
+Before generating details, list EVERY piece of information in the summary:
+- All numbers mentioned
+- All dates/timeframes  
+- All locations
+- All people/organizations
+- All actions/events
+- All descriptive terms
 
-#### Step 2: Apply the Exclusion Rule - NEVER REPEAT
-**FORBIDDEN in details:**
+#### Step 2: Apply the Exclusion Rule
+**NEVER include in details:**
 - Any number that appears in summary (even in different format)
 - Any concept already covered (if summary mentions "bankruptcy", details can't mention "Chapter 11")
 - Any timeframe stated (if summary says "five months", details can't say "Recovery: 5 months")
 - Reformatted versions of summary facts
 
 #### Step 3: Generate Complementary Information
-Choose from categories that WEREN'T covered in summary:
+Choose from these categories that WEREN'T covered in summary:
 
 **If summary has WHO and WHAT → Details should have:**
 - HOW MUCH (costs, quantities not mentioned)
@@ -645,30 +645,65 @@ Choose from categories that WEREN'T covered in summary:
 - COMPARISON NUMBERS (previous values, rankings)
 - RELATED NUMBERS (indirect impacts, correlations)
 
-### VALIDATION ALGORITHM - Apply to Each Detail
+### CATEGORY MATRIX
+
+| Story Type | Avoid in Details | Include in Details |
+|------------|------------------|-------------------|
+| **Political** | Meeting participants, locations mentioned, main agreements | Security costs, previous meetings date, approval ratings |
+| **Economic** | Dollar amounts stated, percentages given, companies named | Job impacts, sector breakdowns, historical comparisons |
+| **Disaster** | Death toll, evacuation numbers, damage stated | Warning time given, rescue teams deployed, reconstruction cost |
+| **Technology** | User numbers, investment amounts, launch dates mentioned | Patent count, competitor position, development time |
+| **Conflict** | Casualties stated, duration mentioned, aid amounts | Weapons types, UN votes, refugee camps |
+
+### VALIDATION ALGORITHM
+
 For each potential detail, ask:
 1. Does this number/fact appear ANYWHERE in summary? → If yes, REJECT
 2. Does this relate to a concept in the summary? → If same concept, REJECT  
 3. Would this make sense without the summary? → If no context needed, PROCEED
 4. Does this add new understanding? → If yes, INCLUDE
 
-### SUCCESS FORMULA
-- Summary tells the story: **"What happened?"**
-- Details provide the context: **"What else should I know?"**
+### EXAMPLES WITH REASONING
 
-### IMPLEMENTATION RULE
-If you cannot find 3 completely different facts, generate:
-1. A historical comparison point
-2. A financial/human impact number  
-3. A geographic/demographic scope metric
+**BAD Example - Spirit Airlines:**
+```
+Summary: "filed for Chapter 11 bankruptcy... second time in five months... operates 200 aircraft"
+Details: ["Bankruptcy: 2nd filing", "Recovery Time: 5 months", "Fleet Size: 200 aircraft"]
+```
+**Why it's wrong:** Every detail repeats summary information
 
-### FINAL CHECKLIST - MANDATORY
+**GOOD Example - Spirit Airlines:**
+```
+Summary: (same as above)
+Details: ["Debt owed: $3.3B", "Stock drop: 91%", "Passengers stranded: 45,000"]
+```
+**Why it works:** Adds financial depth, market impact, and human impact not in summary
+
+### FORMULA FOR SUCCESS
+
+Think of the summary as answering: **"What happened?"**
+Think of details as answering: **"What else should I know?"**
+
+**Summary tells the story**
+**Details provide the context**
+
+### FINAL CHECKLIST
+
 Before submitting details:
 - [ ] Zero repetition of summary numbers
 - [ ] Zero repetition of summary concepts  
 - [ ] Each detail could standalone as interesting
 - [ ] Together they paint a fuller picture
 - [ ] A reader gains 3 NEW facts
+
+### IMPLEMENTATION RULE
+
+If you cannot find 3 completely different facts that add value without repetition, generate:
+1. A historical comparison point
+2. A financial/human impact number
+3. A geographic/demographic scope metric
+
+These universal categories ensure fresh information every time.
 
 MANDATORY: Your JSON response must contain exactly {len(articles_with_content)} articles. Each article must have rank 1-{len(articles_with_content)}.
 
