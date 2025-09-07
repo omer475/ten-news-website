@@ -2,7 +2,7 @@
 # Optimized for Website Integration - No Wix Dependencies
 # ENHANCED VERSION: 40-Query Comprehensive News System + Claude Opus 4.1
 # - 40 specialized search categories (upgraded from 8)
-# - Claude Opus 4.1 (latest) for superior article writing quality
+# - Claude Opus 4.1 for superior article writing (upgraded from Sonnet 3.5)
 # - Enhanced error handling and JSON parsing
 # - Increased article limit: 250 per query (upgraded from 100)
 # - Improved rate limiting: 2-second delays (upgraded from 1s)
@@ -23,8 +23,8 @@ import schedule
 CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', 'your-api-key-here')
 
 # Claude Models - Updated to latest Opus 4.1
-CLAUDE_MODEL = "claude-opus-4-1-20250805"
-CLAUDE_SONNET_MODEL = "claude-3-5-sonnet-20241022"  # Keep Sonnet for specific tasks
+CLAUDE_MODEL = "claude-opus-4-1-20250805"  # Latest Opus version for article writing
+CLAUDE_SONNET_MODEL = "claude-3-5-sonnet-20241022"  # Keep Sonnet for other tasks
 
 # ==================== APPROVED NEWS SOURCES ====================
 ALLOWED_DOMAINS = [
