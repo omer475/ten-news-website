@@ -505,7 +505,7 @@ export default function Home() {
           display: flex;
           background: #f8fafc;
           border-radius: 12px;
-          padding: 20px;
+          padding: 16px 20px;
           margin-top: 20px;
           gap: 0;
         }
@@ -757,7 +757,7 @@ export default function Home() {
           }
           
           .news-meta {
-            padding: 15px;
+            padding: 12px 15px;
             margin-top: 15px;
           }
           
