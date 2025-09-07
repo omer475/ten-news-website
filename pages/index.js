@@ -144,18 +144,6 @@ export default function Home() {
   const nextStory = () => goToStory(currentIndex + 1);
   const prevStory = () => goToStory(currentIndex - 1);
 
-  const getCategoryClass = (category) => {
-    if (!category) return '';
-    const categoryLower = category.toLowerCase();
-    if (categoryLower.includes('world') || categoryLower.includes('news')) return 'category-world-news';
-    if (categoryLower.includes('business') || categoryLower.includes('finance') || categoryLower.includes('market')) return 'category-business';
-    if (categoryLower.includes('technology') || categoryLower.includes('tech') || categoryLower.includes('ai')) return 'category-technology';
-    if (categoryLower.includes('science') || categoryLower.includes('research')) return 'category-science';
-    if (categoryLower.includes('climate') || categoryLower.includes('environment')) return 'category-climate';
-    if (categoryLower.includes('health') || categoryLower.includes('medical')) return 'category-health';
-    return 'category-world-news'; // default
-  };
-
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
@@ -515,71 +503,53 @@ export default function Home() {
 
         .news-details {
           display: flex;
-          gap: 32px;
+          gap: 20px;
           margin-top: 20px;
-          padding: 20px 0;
-          border-left: 4px solid var(--category-color, #64748b);
-          padding-left: 24px;
-          background: rgba(248, 250, 252, 0.5);
-          border-radius: 0 8px 8px 0;
+          flex-wrap: wrap;
         }
 
         .news-detail-item {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 4px;
+          background: #f8fafc;
+          border-radius: 8px;
+          padding: 16px 20px;
+          border-left: 4px solid;
           flex: 1;
+          min-width: 160px;
+          transition: all 0.2s ease;
+        }
+
+        .news-detail-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .news-detail-label {
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 600;
-          letter-spacing: 1px;
           text-transform: uppercase;
-          color: #94a3b8;
+          letter-spacing: 1px;
+          color: #64748b;
           margin-bottom: 4px;
         }
 
         .news-detail-value {
-          font-size: 24px;
+          font-size: 18px;
           font-weight: 800;
-          color: #0f172a;
+          color: #1e293b;
           line-height: 1.2;
-          margin-bottom: 2px;
         }
 
-        .news-detail-description {
-          font-size: 13px;
-          color: #64748b;
-          font-weight: 500;
-          line-height: 1.3;
-        }
-
-        /* Category-specific colors for left border */
-        .category-world-news {
-          --category-color: #dc2626;
-        }
-
-        .category-business {
-          --category-color: #f97316;
-        }
-
-        .category-technology {
-          --category-color: #8b5cf6;
-        }
-
-        .category-science {
-          --category-color: #0ea5e9;
-        }
-
-        .category-climate {
-          --category-color: #22c55e;
-        }
-
-        .category-health {
-          --category-color: #10b981;
-        }
+        /* Category-based border colors */
+        .category-world-news .news-detail-item { border-left-color: #dc2626; }
+        .category-business .news-detail-item { border-left-color: #f97316; }
+        .category-markets .news-detail-item { border-left-color: #06b6d4; }
+        .category-tech-ai .news-detail-item { border-left-color: #8b5cf6; }
+        .category-science .news-detail-item { border-left-color: #0ea5e9; }
+        .category-health .news-detail-item { border-left-color: #10b981; }
+        .category-climate .news-detail-item { border-left-color: #22c55e; }
+        .category-sports .news-detail-item { border-left-color: #f59e0b; }
+        .category-entertainment .news-detail-item { border-left-color: #ec4899; }
+        .category-default .news-detail-item { border-left-color: #64748b; }
 
         .progress-indicator {
           position: fixed;
@@ -792,33 +762,24 @@ export default function Home() {
             height: 18px;
             background: linear-gradient(180deg, #1f2937, #000000);
           }
-
+          
           .news-details {
-            gap: 20px;
-            padding: 16px 0;
-            padding-left: 16px;
-            flex-direction: column;
-          }
-
-          .news-detail-item {
-            flex-direction: row;
-            align-items: center;
             gap: 12px;
+            margin-top: 16px;
           }
-
+          
+          .news-detail-item {
+            padding: 12px 16px;
+            min-width: 140px;
+          }
+          
           .news-detail-label {
-            font-size: 10px;
-            min-width: 80px;
+            font-size: 11px;
+            letter-spacing: 0.5px;
           }
-
+          
           .news-detail-value {
-            font-size: 20px;
-            min-width: 60px;
-          }
-
-          .news-detail-description {
-            font-size: 12px;
-            flex: 1;
+            font-size: 16px;
           }
         }
       `}</style>
@@ -975,22 +936,14 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{story.summary}</p>
-                      <div className={`news-details ${getCategoryClass(story.category)}`}>
+                      <div className={`news-details category-${story.category.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
                         {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
-                          const trimmedLabel = label?.trim() || '';
-                          const trimmedValue = value?.trim() || '';
-                          
-                          // Extract the bold number/value and description
-                          const valueMatch = trimmedValue.match(/^([^a-zA-Z]*(?:\$?[\d.,]+[BMK]?(?:\s*(?:billion|million|thousand|year|month|day|week|hour|minute|second|%|percent)s?)?))(.*)$/i);
-                          const boldPart = valueMatch ? valueMatch[1].trim() : trimmedValue.split(' ')[0];
-                          const descriptionPart = valueMatch ? valueMatch[2].trim() : trimmedValue.substring(boldPart.length).trim();
-                          
+                          const formattedValue = value?.trim().replace(/(\d+(?:,\d{3})*(?:\.\d+)?[%]?|\$\d+(?:,\d{3})*(?:\.\d+)?[BMK]?)/g, '<strong>$1</strong>');
                           return (
                             <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{trimmedLabel.toUpperCase()}</div>
-                              <div className="news-detail-value">{boldPart}</div>
-                              <div className="news-detail-description">{descriptionPart}</div>
+                              <div className="news-detail-label">{label?.trim()}</div>
+                              <div className="news-detail-value" dangerouslySetInnerHTML={{__html: formattedValue}}></div>
                             </div>
                           );
                         })}
