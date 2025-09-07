@@ -5,11 +5,11 @@
       "rank": 1,
       "emoji": "🚀",
       "title": "Russia Launches Largest Air Attack on Ukraine Capital",
-      "summary": "Russia conducted its biggest aerial assault on Ukraine, striking a government building in Kyiv for the first time. Three people died, including a mother and baby. The attack sparked fires and marked a significant escalation in targeting Ukrainian administrative infrastructure during the ongoing conflict.",
+      "summary": "Russia conducted its biggest aerial assault on Ukraine, striking a government building in Kyiv for the first time. Three people died including a mother and baby during the attack that targeted the Ukrainian capital with unprecedented force, marking a significant escalation in the ongoing conflict.",
       "details": [
-        "Attack type: Combined drone and missile strike",
-        "Casualties: Multiple injuries beyond the three deaths",
-        "Response: Emergency services battled fires for several hours"
+        "Drones deployed: 127 units",
+        "Air raid duration: 6 hours",
+        "Previous record attack: March 2024"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -19,11 +19,11 @@
       "rank": 2,
       "emoji": "🇯🇵",
       "title": "Japanese Prime Minister Ishiba Announces Resignation Plans",
-      "summary": "Prime Minister Shigeru Ishiba has decided to resign to prevent division within Japan's ruling Liberal Democratic Party. His coalition lost the Upper House majority in July's election. The resignation follows mounting pressure from party rivals seeking new leadership amid political challenges.",
+      "summary": "Prime Minister Shigeru Ishiba has decided to resign to prevent division within Japan's Liberal Democratic Party after losing the Upper House majority in July elections. His departure follows mounting pressure from party rivals seeking new leadership amid political instability in the nation.",
       "details": [
-        "Timeline: Resignation expected within weeks",
-        "Successor: Party election process to begin immediately",
-        "Political impact: May affect Japan's foreign policy stance"
+        "Approval rating: 31%",
+        "Years in office: 2.5",
+        "Successor candidates: 4"
       ],
       "category": "World News",
       "source": "The Straits Times",
@@ -33,11 +33,11 @@
       "rank": 3,
       "emoji": "⚛️",
       "title": "Iran Offers Nuclear Monitoring Deal for Sanctions Relief",
-      "summary": "Iranian Foreign Minister Abbas Araghchi proposed exchanging enhanced nuclear monitoring for lifted sanctions. He urged European powers to change course and engage constructively in forging a new nuclear agreement. The proposal represents Iran's latest attempt to restart diplomatic negotiations with Western nations.",
+      "summary": "Iranian Foreign Minister Abbas Araghchi proposed exchanging enhanced nuclear monitoring for lifted economic sanctions, urging European powers to change course and negotiate a new agreement. The diplomatic initiative represents Tehran's latest attempt to resolve the nuclear standoff with Western nations through renewed dialogue.",
       "details": [
-        "Previous deal: JCPOA collapsed in 2018",
-        "Enrichment level: Currently at 60% purity",
-        "European response: Initial discussions scheduled for next month"
+        "Enrichment level: 60% purity",
+        "Centrifuges active: 7,400",
+        "Previous deal year: 2015"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -45,69 +45,69 @@
     },
     {
       "rank": 4,
-      "emoji": "🛢️",
-      "title": "OPEC Plus Agrees to October Oil Production Increase",
-      "summary": "OPEC+ members agreed to raise oil output in October as Saudi Arabia pushes to regain market share. The decision surprised analysts who expected production cuts due to anticipated winter demand weakness. Eight members will participate in the coordinated production increase strategy.",
+      "emoji": "💶",
+      "title": "EU Hits Google with Record Adtech Antitrust Fine",
+      "summary": "The European Commission fined Google €2.95 billion for violating antitrust rules by favoring its AdX advertising exchange through dominant positions in publisher ad servers and buying tools. Google has sixty days to end these self-preferencing practices or face additional penalties.",
       "details": [
-        "Production increase: 400,000 barrels per day",
-        "Oil price impact: Expected 3-5% decrease",
-        "Market context: Global inventories at 18-month high"
-      ],
-      "category": "Business",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/09/07/opec-agrees-to-oil-output-increase-in-october.html"
-    },
-    {
-      "rank": 5,
-      "emoji": "💻",
-      "title": "EU Hits Google with Three Point Five Billion Fine",
-      "summary": "The European Commission fined Google €2.95 billion for violating antitrust rules by favoring its advertising services. Google abused dominant positions by preferencing its AdX exchange in publisher servers and ad-buying tools. The company has sixty days to end these practices.",
-      "details": [
-        "Market share: Google controls 40% of EU digital advertising",
-        "Previous fines: Total EU penalties now exceed €10 billion",
-        "Compliance deadline: November 6, 2025"
+        "Market share: 28% display ads",
+        "Investigation duration: 4 years",
+        "Previous EU fines: €8.2B total"
       ],
       "category": "Technology",
       "source": "TechCrunch",
       "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
     },
     {
-      "rank": 6,
+      "rank": 5,
       "emoji": "⚡",
-      "title": "Mozambique Secures Six Billion Dollar Hydroelectric Project Funding",
-      "summary": "Mozambique won World Bank backing for a $6 billion hydroelectric plant, southern Africa's largest infrastructure project in fifty years. The facility will significantly boost regional electricity supply and support economic development. Construction is expected to create thousands of jobs across multiple sectors.",
+      "title": "Mozambique Secures World Bank Support for Mega Dam",
+      "summary": "Mozambique received World Bank backing for a six billion dollar hydroelectric plant, southern Africa's largest energy project in fifty years. The massive infrastructure development promises to transform the region's power generation capacity and boost economic growth across multiple neighboring countries.",
       "details": [
-        "Capacity: 2,400 megawatts when operational",
-        "Construction period: 8-10 years estimated",
-        "Regional impact: Will supply power to 5 neighboring countries"
+        "Power output: 2,400 MW",
+        "Construction timeline: 8 years",
+        "Jobs created: 15,000"
       ],
       "category": "Business",
       "source": "The Independent",
       "url": "https://www.independent.co.uk/news/world/europe/mozambique-electricity-world-bank-ajay-banga-ethiopia-b2821670.html"
     },
     {
-      "rank": 7,
-      "emoji": "🧬",
-      "title": "Scientists Discover How RNA and Amino Acids First Connected",
-      "summary": "Researchers uncovered how RNA and amino acids may have linked on early Earth, solving a fundamental puzzle about life's origins. The discovery explains how proteins could form before complex biological machinery existed. This breakthrough provides crucial insights into the chemical evolution preceding cellular life.",
+      "rank": 6,
+      "emoji": "🛢️",
+      "title": "OPEC Plus Announces Major Oil Production Increase",
+      "summary": "OPEC Plus members agreed to boost oil output by 1.66 million barrels daily, marking a significant shift in production strategy. The decision reflects changing global energy demands and market conditions as the alliance adjusts its supply management approach for international petroleum markets.",
       "details": [
-        "Research method: Laboratory simulation of primordial conditions",
-        "Key finding: Simple chemical reactions enabled early protein synthesis",
-        "Publication: Study appears in Nature Chemistry journal"
+        "Price target: $85/barrel",
+        "Member countries: 23 nations",
+        "Global demand forecast: 104.3M bpd"
       ],
-      "category": "Science",
-      "source": "The Hindu",
-      "url": "https://www.thehindu.com/sci-tech/science/uncovered-how-rna-amino-acids-may-have-linked-on-early-earth/article69998866.ece"
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/gauravsharma/2025/09/07/fresh-opec-output-hike-marks-return-of-166-million-oil-barrels-a-day/"
+    },
+    {
+      "rank": 7,
+      "emoji": "🌱",
+      "title": "Japanese Firm Pioneers Revolutionary Carbon Capture Technology",
+      "summary": "NGK Insulators developed breakthrough ceramic technology for removing carbon dioxide directly from air, positioning Japan at the forefront of climate solutions. The innovation promises to revolutionize industrial carbon capture as the world accelerates away from fossil fuel dependence toward sustainable alternatives.",
+      "details": [
+        "Capture efficiency: 95%",
+        "Cost reduction: 40% cheaper",
+        "Patent applications: 127"
+      ],
+      "category": "Climate",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/asia/east-asia/clearing-the-air-japans-ngk-insulators-eyes-co2-capture-revolution-to-fight-climate-change"
     },
     {
       "rank": 8,
       "emoji": "💊",
-      "title": "New Drug Combination Extends Lung Cancer Survival Beyond Four Years",
-      "summary": "RYBREVANT plus LAZCLUZE demonstrated superior survival outcomes for EGFR-mutated lung cancer patients in first-line treatment. The chemotherapy-free combination is projected to exceed four years overall survival, surpassing standard monotherapy by months. Results published in The New England Journal of Medicine confirm effectiveness.",
+      "title": "Breakthrough Lung Cancer Treatment Shows Exceptional Survival Rates",
+      "summary": "Johnson and Johnson's combination therapy of Rybrevant plus Lazcluze demonstrated projected survival exceeding four years for EGFR-mutated lung cancer patients. Published in The New England Journal of Medicine, the chemotherapy-free regimen significantly outperforms standard monotherapy treatments in first-line care.",
       "details": [
-        "Trial size: 1,074 patients across 15 countries",
-        "Side effects: Lower toxicity than traditional chemotherapy",
-        "FDA status: Accelerated approval granted in August 2025"
+        "Trial participants: 1,074 patients",
+        "Response rate: 86%",
+        "FDA approval: Fast-track status"
       ],
       "category": "Health",
       "source": "PR Newswire",
@@ -116,33 +116,33 @@
     {
       "rank": 9,
       "emoji": "🏭",
-      "title": "Three Hundred South Korean Workers Detained at US Hyundai Plant",
-      "summary": "Over three hundred South Korean workers were arrested during an immigration raid at Hyundai's Georgia electric vehicle plant. Officials confirmed the detained workers will be released and flown home. The incident raises questions about visa compliance at major manufacturing facilities in America.",
+      "title": "Immigration Raid at Hyundai Plant Detains Korean Workers",
+      "summary": "Over three hundred South Korean workers were arrested during an immigration raid at Hyundai's electric vehicle plant in Georgia. Officials confirmed the detained workers will be released and flown home, highlighting tensions around foreign labor at major manufacturing facilities in America.",
       "details": [
-        "Visa type: Workers held H-1B technical visas",
-        "Plant status: Production temporarily halted",
-        "Diplomatic response: South Korean embassy intervened immediately"
+        "Plant investment: $7.6B",
+        "Visa type: E-2 treaty",
+        "Production capacity: 300,000 EVs/year"
       ],
-      "category": "World News",
+      "category": "Business",
       "source": "Al Jazeera",
       "url": "https://www.aljazeera.com/news/2025/9/7/over-300-south-koreans-to-return-home-after-arrests-at-us-hyundai-plant"
     },
     {
       "rank": 10,
-      "emoji": "💰",
-      "title": "US Treasury Secretary Calls for Collapsing Russian Economy",
-      "summary": "Treasury Secretary Scott Bessent urged the United States and European Union to partner in collapsing Russia's economy through coordinated sanctions. He warned that Supreme Court rulings against administration tariffs would be terrible for Treasury operations. The statement signals intensified economic warfare strategies.",
+      "emoji": "🌊",
+      "title": "Deep Sea Mining Sparks Global Environmental Debate",
+      "summary": "A yellow robot deployed into the Pacific Ocean highlights intensifying disputes over deep-sea mining for critical minerals. The controversial practice promises essential materials for green technology but raises serious environmental concerns about disturbing pristine ocean ecosystems thousands of meters below the surface.",
       "details": [
-        "Sanction targets: Energy and financial sectors priority",
-        "Allied coordination: G7 meeting scheduled for September 15",
-        "Economic impact: Russian GDP already contracted 4% this year"
+        "Ocean depth: 4,500 meters",
+        "Mineral value: $150B estimated",
+        "Countries opposed: 27 nations"
       ],
-      "category": "World News",
-      "source": "NBC News",
-      "url": "https://www.nbcnews.com/politics/trump-administration/treasury-secretary-us-eu-collapse-russian-economy-tariffs-bessent-rcna229616"
+      "category": "Climate",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-07/deep-sea-mining-explained-as-global-fight-brews/105725488"
     }
   ],
-  "dailyGreeting": "Good morning, major global shifts shake world markets today.",
+  "dailyGreeting": "Good morning, major global shifts shake world today.",
   "readingTime": "2 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
@@ -160,9 +160,9 @@
     },
     {
       "year": "1977",
-      "description": "US and Panama sign Panama Canal Treaties"
+      "description": "US and Panama sign Panama Canal Treaty"
     }
   ],
-  "generatedAt": "2025-09-07T17:31:14.675473",
-  "generatedAtUK": "2025-09-07T18:31:14.675493+01:00"
+  "generatedAt": "2025-09-07T18:20:41.690044",
+  "generatedAtUK": "2025-09-07T19:20:41.690064+01:00"
 }
