@@ -501,55 +501,54 @@ export default function Home() {
           border-bottom: 1px solid #e2e8f0;
         }
 
-        .news-details {
+        .news-details-container {
           display: flex;
-          gap: 20px;
+          gap: 0;
           margin-top: 20px;
-          flex-wrap: wrap;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #f8fafc;
         }
 
         .news-detail-item {
-          background: #f8fafc;
-          border-radius: 8px;
-          padding: 16px 20px;
-          border-left: 4px solid;
           flex: 1;
-          min-width: 160px;
-          transition: all 0.2s ease;
+          padding: 16px 20px;
+          text-align: center;
+          position: relative;
+          background: #f8fafc;
         }
 
-        .news-detail-item:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .news-detail-item:first-child {
+          border-left: 4px solid var(--category-color);
+        }
+
+        .news-detail-item:not(:last-child) {
+          border-right: 1px solid #e2e8f0;
         }
 
         .news-detail-label {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
           color: #64748b;
           margin-bottom: 4px;
-        }
-
-        .news-detail-value {
-          font-size: 18px;
-          font-weight: 800;
-          color: #1e293b;
           line-height: 1.2;
         }
 
-        /* Category-based border colors */
-        .category-world-news .news-detail-item { border-left-color: #dc2626; }
-        .category-business .news-detail-item { border-left-color: #f97316; }
-        .category-markets .news-detail-item { border-left-color: #06b6d4; }
-        .category-tech-ai .news-detail-item { border-left-color: #8b5cf6; }
-        .category-science .news-detail-item { border-left-color: #0ea5e9; }
-        .category-health .news-detail-item { border-left-color: #10b981; }
-        .category-climate .news-detail-item { border-left-color: #22c55e; }
-        .category-sports .news-detail-item { border-left-color: #f59e0b; }
-        .category-entertainment .news-detail-item { border-left-color: #ec4899; }
-        .category-default .news-detail-item { border-left-color: #64748b; }
+        .news-detail-value {
+          font-size: 20px;
+          font-weight: 800;
+          color: #1e293b;
+          line-height: 1.1;
+        }
+
+        .news-detail-subtitle {
+          font-size: 12px;
+          color: #64748b;
+          margin-top: 2px;
+          font-weight: 500;
+        }
 
         .progress-indicator {
           position: fixed;
@@ -763,19 +762,16 @@ export default function Home() {
             background: linear-gradient(180deg, #1f2937, #000000);
           }
           
-          .news-details {
-            gap: 12px;
+          .news-details-container {
             margin-top: 16px;
           }
           
           .news-detail-item {
             padding: 12px 16px;
-            min-width: 140px;
           }
           
           .news-detail-label {
-            font-size: 11px;
-            letter-spacing: 0.5px;
+            font-size: 10px;
           }
           
           .news-detail-value {
@@ -936,18 +932,44 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{story.summary}</p>
-                      <div className={`news-details category-${story.category.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}>
-                        {story.details && story.details.map((detail, i) => {
-                          const [label, value] = detail.split(':');
-                          const formattedValue = value?.trim().replace(/(\d+(?:,\d{3})*(?:\.\d+)?[%]?|\$\d+(?:,\d{3})*(?:\.\d+)?[BMK]?)/g, '<strong>$1</strong>');
-                          return (
-                            <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{label?.trim()}</div>
-                              <div className="news-detail-value" dangerouslySetInnerHTML={{__html: formattedValue}}></div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      {story.details && story.details.length > 0 && (
+                        <div 
+                          className="news-details-container"
+                          style={{
+                            '--category-color': story.category === 'WORLD NEWS' ? '#dc2626' :
+                                              story.category === 'BUSINESS' ? '#f97316' :
+                                              story.category === 'MARKETS' ? '#06b6d4' :
+                                              story.category === 'TECH & AI' ? '#8b5cf6' :
+                                              story.category === 'SCIENCE' ? '#0ea5e9' :
+                                              story.category === 'HEALTH' ? '#10b981' :
+                                              story.category === 'CLIMATE' ? '#22c55e' :
+                                              story.category === 'SPORTS' ? '#f59e0b' :
+                                              story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b'
+                          }}
+                        >
+                          {story.details.map((detail, i) => {
+                            const [label, value] = detail.split(':');
+                            const trimmedValue = value ? value.trim() : '';
+                            
+                            // Extract numbers and make them bold
+                            const formatValue = (text) => {
+                              if (!text) return '';
+                              // Match numbers, currency, percentages, years
+                              return text.replace(/(\$?[\d,]+\.?\d*[BMK]?%?|\d{4}(?:-year)?)/gi, '<strong>$1</strong>');
+                            };
+                            
+                            return (
+                              <div key={i} className="news-detail-item">
+                                <div className="news-detail-label">{label ? label.trim() : `Detail ${i + 1}`}</div>
+                                <div 
+                                  className="news-detail-value" 
+                                  dangerouslySetInnerHTML={{ __html: formatValue(trimmedValue) }}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
