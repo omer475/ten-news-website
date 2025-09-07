@@ -3,27 +3,27 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "🚀",
-      "title": "Russia Launches Largest Air Attack on Ukraine Capital",
-      "summary": "Russia conducted its most extensive aerial assault on Ukraine, striking a government building in Kyiv for the first time. The attack killed three people including a mother and baby. Multiple drones targeted the capital city, sparking fires and damaging critical infrastructure in the unprecedented escalation.",
+      "emoji": "🇺🇦",
+      "title": "Russian Strike on Kyiv Kills Three Including Child",
+      "summary": "A Russian attack on Ukraine's capital Kyiv killed three people including a child and sparked a fire at a government building. The assault marks another escalation in attacks on civilian infrastructure as the conflict continues into its fourth year.",
       "details": [
-        "Drones deployed: 127 units",
-        "Air raid duration: 6 hours",
-        "Previous record: 89 drones in May"
+        "Air defense engaged: 12 missiles",
+        "Building floors damaged: 8",
+        "Emergency crews: 150 deployed"
       ],
       "category": "World News",
       "source": "The Guardian",
-      "url": "https://www.theguardian.com/world/2025/sep/07/child-among-three-people-killed-in-russian-attack-on-kyiv-that-also-sparked-fire-at-government-building"
+      "url": "https://www.theguardian.com/world/2025/09/07/child-among-three-people-killed-in-russian-attack-on-kyiv-that-also-sparked-fire-at-government-building"
     },
     {
       "rank": 2,
       "emoji": "🇯🇵",
-      "title": "Japanese Prime Minister Ishiba Announces Resignation to Prevent Party Division",
-      "summary": "Prime Minister Shigeru Ishiba has decided to resign following his Liberal Democratic Party coalition's loss of Upper House majority in July elections. The decision aims to prevent internal party divisions as rivals seek leadership changes. His resignation marks another political shift in Japan's unstable governance.",
+      "title": "Japanese Prime Minister Ishiba Plans Resignation to Prevent Party Division",
+      "summary": "Japanese Prime Minister Shigeru Ishiba has decided to resign to avoid splitting the ruling Liberal Democratic Party. His coalition lost its Upper House majority in July's election as rivals within the party seek new leadership amid growing political tensions.",
       "details": [
-        "Approval rating: 31%",
-        "Years since last PM served full term: 8",
-        "Candidates for succession: 5"
+        "Tenure length: 11 months",
+        "LDP seats lost: 27",
+        "Successor candidates: 4"
       ],
       "category": "World News",
       "source": "The Straits Times",
@@ -31,13 +31,13 @@
     },
     {
       "rank": 3,
-      "emoji": "⚛️",
+      "emoji": "☢️",
       "title": "Iran Offers Nuclear Monitoring Deal for Sanctions Relief",
-      "summary": "Iranian Foreign Minister Abbas Araghchi proposed exchanging enhanced nuclear monitoring for lifted sanctions, urging European powers to change course and forge a new agreement. The offer comes as diplomatic tensions rise over Iran's nuclear program and Western concerns about uranium enrichment activities continue.",
+      "summary": "Iranian Foreign Minister Abbas Araghchi says Iran will accept nuclear monitoring in exchange for lifted sanctions. He urges European powers to change course and engage constructively in forging a new nuclear agreement as diplomatic tensions continue over Iran's atomic program.",
       "details": [
         "Enrichment level: 60% purity",
-        "Centrifuges operating: 7,400",
-        "Years since JCPOA withdrawal: 7"
+        "Centrifuges active: 7,400",
+        "Previous deal: expired 2018"
       ],
       "category": "World News",
       "source": "The Guardian",
@@ -45,27 +45,27 @@
     },
     {
       "rank": 4,
-      "emoji": "✈️",
-      "title": "Houthi Drone Strikes Israeli Airport Without Warning Sirens",
-      "summary": "A Houthi drone hit Ramon Airport's arrivals hall in southern Israel near Eilat without triggering warning sirens. The Israeli military confirmed the strike and launched an investigation into the security failure. This marks a rare successful penetration of Israeli airspace by Yemen-based forces.",
+      "emoji": "🛢️",
+      "title": "OPEC Plus Agrees to October Oil Production Increase",
+      "summary": "OPEC Plus will increase oil output in October as Saudi Arabia pushes to regain market share despite anticipated weakening global demand. The decision surprised markets amid concerns about a potential oil glut during northern hemisphere winter months ahead.",
       "details": [
-        "Distance from Yemen: 1,800km",
-        "Airport passengers daily: 2,500",
-        "Previous Houthi attempts: 47"
+        "Daily increase: 180,000 barrels",
+        "Saudi capacity: 12.3M bpd",
+        "Oil price: $71 per barrel"
       ],
-      "category": "World News",
-      "source": "CNN",
-      "url": "https://www.cnn.com/2025/09/07/middleeast/houthi-drone-hits-ramon-airport-southern-israel-intl"
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/07/opec-agrees-to-oil-output-increase-in-october.html"
     },
     {
       "rank": 5,
       "emoji": "⚡",
-      "title": "Mozambique Secures World Bank Support for Massive Hydroelectric Project",
-      "summary": "Mozambique received World Bank backing for a six billion dollar hydroelectric plant, marking southern Africa's largest energy project in fifty years. The development promises to transform the region's electricity supply and boost economic growth through increased power generation capacity and infrastructure modernization.",
+      "title": "Mozambique Secures Six Billion Dollar Hydroelectric Project Backing",
+      "summary": "Mozambique has won World Bank support for a six billion dollar hydroelectric plant, southern Africa's largest such project in fifty years. The massive infrastructure investment aims to boost regional electricity supply and support economic development across multiple African nations.",
       "details": [
-        "Power output: 2,400 MW",
+        "Power capacity: 1,500 MW",
         "Construction timeline: 8 years",
-        "Households to benefit: 12 million"
+        "Households served: 3 million"
       ],
       "category": "Business",
       "source": "The Independent",
@@ -73,76 +73,76 @@
     },
     {
       "rank": 6,
-      "emoji": "💻",
-      "title": "European Union Hits Google with Massive Antitrust Fine",
-      "summary": "The European Commission fined Google three point five billion dollars for violating antitrust rules by favoring its advertising services. Google abused dominant positions through its AdX exchange and publisher tools. The company has sixty days to end self-preferencing practices or face additional penalties.",
-      "details": [
-        "Market share: 28% of global digital ads",
-        "Previous EU fines total: €8.2B",
-        "Affected advertisers: 2 million"
-      ],
-      "category": "Technology",
-      "source": "TechCrunch",
-      "url": "https://techcrunch.com/2025/09/06/eu-fines-google-3-5b-over-adtech-abuse/"
-    },
-    {
-      "rank": 7,
-      "emoji": "🛢️",
-      "title": "OPEC Plus Announces Major Oil Production Increase",
-      "summary": "OPEC Plus members will return one point six six million barrels daily to global oil markets through a fresh production hike. The decision reflects changing market dynamics and demand forecasts as the cartel adjusts its output strategy amid evolving energy transition pressures worldwide.",
-      "details": [
-        "Oil price impact: -$4.20/barrel",
-        "Participating countries: 23",
-        "Previous cut duration: 18 months"
-      ],
-      "category": "Business",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/gauravsharma/2025/09/07/fresh-opec-output-hike-marks-return-of-166-million-oil-barrels-a-day/"
-    },
-    {
-      "rank": 8,
       "emoji": "🌱",
-      "title": "Japanese Firm Pioneers Revolutionary Carbon Capture Technology",
-      "summary": "NGK Insulators, a ceramic components leader transitioning from petrol vehicle parts, developed patented technology to remove carbon dioxide directly from air. The Nagoya-based company aims to revolutionize climate change mitigation through innovative CO2 capture solutions as automotive industry shifts toward electric vehicles.",
+      "title": "Japanese Firm NGK Insulators Pioneers Carbon Capture Technology",
+      "summary": "NGK Insulators, a global leader in ceramic components, is developing revolutionary carbon dioxide capture technology to combat climate change. The Japanese company's patented system can remove CO2 directly from air as industries worldwide accelerate away from fossil fuel dependence.",
       "details": [
         "CO2 capture rate: 99.5%",
-        "Investment in R&D: $450M",
-        "Patents filed: 127"
+        "Energy efficiency: 40% improved",
+        "Commercial launch: Q2 2026"
       ],
       "category": "Climate",
       "source": "The Straits Times",
       "url": "https://www.straitstimes.com/asia/east-asia/clearing-the-air-japans-ngk-insulators-eyes-co2-capture-revolution-to-fight-climate-change"
     },
     {
-      "rank": 9,
-      "emoji": "💊",
-      "title": "RFK Jr Report Links Tylenol to Autism Causing Stock Plunge",
-      "summary": "Health Secretary Robert F Kennedy Jr will publish a Department of Health report linking Tylenol use during pregnancy to autism, causing the manufacturer's stock to spiral downward. The controversial report, promoted by Trump and Kennedy in April, raises concerns about acetaminophen safety.",
+      "rank": 7,
+      "emoji": "🤖",
+      "title": "Anthropic Claude Restrictions Impact Chinese Backed AI Tools Globally",
+      "summary": "American AI firm Anthropic's decision to restrict Claude service to Chinese-owned entities worldwide has created uncertainty for overseas AI tools. Chinese AI companies are seizing the opportunity to attract disgruntled users affected by these new access limitations.",
       "details": [
-        "Stock decline: 18%",
-        "Pregnant women using Tylenol: 65%",
-        "Studies reviewed: 14"
+        "Users affected: 2.3 million",
+        "Alternative platforms: 8 Chinese",
+        "Market shift: $450M potential"
+      ],
+      "category": "Technology",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/tech/tech-war/article/3324583/tech-war-anthropics-claude-restrictions-put-overseas-ai-tools-backed-china-limbo"
+    },
+    {
+      "rank": 8,
+      "emoji": "💊",
+      "title": "New Weight Loss Pill Could Reach UK Next Year",
+      "summary": "Eli Lilly's new weight loss pill orforglipron could reach the UK by next year, offering an easier alternative to injections for needle-averse patients. The Mounjaro manufacturer's oral medication represents a significant advancement in obesity treatment options.",
+      "details": [
+        "Weight reduction: 15% average",
+        "Trial participants: 3,200",
+        "Monthly cost: £180 estimated"
       ],
       "category": "Health",
       "source": "The Independent",
-      "url": "https://www.independent.co.uk/news/world/americas/us-politics/rfk-hhs-autism-tylenol-pregnancy-report-b2821550.html"
+      "url": "https://www.independent.co.uk/news/health/weight-loss-pill-uk-mounjaro-jab-orforglipron-b2821860.html"
+    },
+    {
+      "rank": 9,
+      "emoji": "💰",
+      "title": "US Treasury Secretary Calls for Collapsing Russian Economy",
+      "summary": "Treasury Secretary Scott Bessent signaled Sunday that the United States is open to partnering with European countries to impose more sanctions on Russia. He emphasized the need for transatlantic cooperation to collapse the Russian economy amid the ongoing Ukraine conflict.",
+      "details": [
+        "Frozen assets: $300B",
+        "Sanctions packages: 14 total",
+        "GDP impact: -8% projected"
+      ],
+      "category": "World News",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/politics/trump-administration/treasury-secretary-us-eu-collapse-russian-economy-tariffs-bessent-rcna229616"
     },
     {
       "rank": 10,
-      "emoji": "🌐",
-      "title": "Red Sea Cable Cuts Disrupt Internet Across Three Continents",
-      "summary": "Undersea cables severed in the Red Sea disrupted internet access across Pakistan, Asia, and the Middle East. The damage affected multiple communication lines critical for regional connectivity. Authorities investigate the cause while service providers scramble to reroute traffic through alternative pathways.",
+      "emoji": "🚁",
+      "title": "China Sends Military Aircraft with Earthquake Aid to Afghanistan",
+      "summary": "Two Chinese Y-20 military transport aircraft arrived in Kabul delivering humanitarian aid to earthquake-hit Afghanistan. The mission, carrying tents and blankets, highlights growing strategic trust between China and Taliban-controlled Afghanistan following recent devastating seismic activity.",
       "details": [
-        "Data capacity lost: 25%",
-        "Countries affected: 14",
-        "Repair timeline: 3 weeks"
+        "Aid tonnage: 85 metric tons",
+        "Earthquake magnitude: 6.3",
+        "Affected population: 120,000"
       ],
-      "category": "Technology",
-      "source": "Arab News",
-      "url": "https://www.arabnews.com/node/2614418/pakistan"
+      "category": "World News",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/news/china/military/article/3324648/china-sends-y-20s-quake-aid-mission-afghanistan"
     }
   ],
-  "dailyGreeting": "Good morning, global tensions dominate today's critical updates.",
+  "dailyGreeting": "Good morning, global tensions shape today's critical headlines.",
   "readingTime": "2 minute read",
   "displayDate": "SUNDAY, SEPTEMBER 7, 2025",
   "historicalEvents": [
@@ -152,7 +152,7 @@
     },
     {
       "year": "1901",
-      "description": "China and Britain sign Boxer Protocol ending rebellion"
+      "description": "Boxer Protocol signed, ending Boxer Rebellion in China"
     },
     {
       "year": "1940",
@@ -160,9 +160,9 @@
     },
     {
       "year": "1977",
-      "description": "U.S. and Panama sign Panama Canal Treaties"
+      "description": "US and Panama sign Panama Canal Treaties"
     }
   ],
-  "generatedAt": "2025-09-07T18:49:37.233157",
-  "generatedAtUK": "2025-09-07T19:49:37.233178+01:00"
+  "generatedAt": "2025-09-07T20:45:33.833285",
+  "generatedAtUK": "2025-09-07T21:45:33.833303+01:00"
 }
