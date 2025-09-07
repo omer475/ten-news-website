@@ -1,0 +1,86 @@
+{
+  "timestamp": "2025-09-07T07:26:20.041335",
+  "date": "2025-09-07",
+  "steps": {
+    "1_previous_articles": {
+      "count": 23,
+      "description": "Previous articles loaded for duplicate checking"
+    },
+    "2_gdelt_fetch": {
+      "total_articles": 800,
+      "description": "All articles fetched from GDELT API",
+      "sample_titles": [
+        "Д - р Десислава Кателиева : Това състояние лесно може да се сбърка с вирусен хепатит или жлъчна криз",
+        "Bilawal Declares Punjab Agriculture in State of Emergency",
+        "Oko 37 . 000 radnika u Hrvatskoj s pravom na beneficirani staž",
+        "Gotovo 37 . 000 radnika u Hrvatskoj ima beneficirani staž . Je li vrijeme da taj status dobiju i dje",
+        "37 tisuća radnika u Hrvatskoj ima pravo na beneficirani staž"
+      ]
+    },
+    "3_filtering": {
+      "total_input": 800,
+      "duplicates_removed": 1,
+      "approved_sources": 25,
+      "rejected_sources": 774,
+      "final_unique": 25,
+      "approved_domains": [
+        "elpais.com",
+        "fool.com",
+        "forbes.com",
+        "cnbc.com",
+        "fortune.com",
+        "investing.com",
+        "investors.com",
+        "bloomberg.com",
+        "foxnews.com",
+        "bangkokpost.com"
+      ],
+      "rejected_domains": [
+        "focus-news.net",
+        "paktribune.com",
+        "24sata.hr",
+        "glasistre.hr",
+        "index.hr",
+        "poslovni.hr",
+        "glas-slavonije.hr",
+        "burgas24.bg",
+        "varna24.bg",
+        "bbc.co.uk"
+      ],
+      "description": "Domain filtering and deduplication"
+    },
+    "4_ai_selection": {
+      "input_articles": 25,
+      "selected_articles": 10,
+      "ai_status": "successful",
+      "description": "AI successfully selected 10 articles",
+      "selected_titles": [
+        "Bangkok Post - Israel tells residents to leave Gaza City ahead of offensive",
+        "A message from Tehran for Britain, France and Germany: You made a big mistake re",
+        "France political crisis reveals deep rift between the people and their politicia",
+        "Selenskyj: Putin könnte nach Kyiw kommen",
+        "Serious U.S. Dollar Fed Warning Issued As Bitcoin Mounts $24 Trillion Gold Price",
+        "The Fed got it wrong and is late again, top economist says, as job gains collaps",
+        "Melania Trump puts AI front and center at White House meeting",
+        "Never mind Xi, Kim or Putin, this outcast leader was the real winner on China gr",
+        "In veiled jab at Trump, Lula says Brazil doesnt accept order from anyone",
+        "Fed Rate-Cut Expectations Climb Following Weak Job Market Report"
+      ]
+    },
+    "5_final_output": {
+      "final_articles_count": 10,
+      "news_file": "tennews_data_2025_09_07.json",
+      "greeting": "Good morning! Global tensions rise as markets hit records.",
+      "reading_time": "1 minute read",
+      "description": "Final news data generated and saved"
+    }
+  },
+  "statistics": {
+    "total_fetched_from_gdelt": 800,
+    "eliminated_duplicates": 1,
+    "eliminated_unapproved_sources": 774,
+    "approved_for_ai_selection": 25,
+    "final_articles_generated": 10
+  },
+  "completion_time": "2025-09-07T07:27:31.650190"
+}
