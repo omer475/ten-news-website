@@ -613,10 +613,16 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: EXACTLY 40-50 words, B2 English level
+- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level
 - DETAILS: 3 pieces of NEW info NOT in summary, format "Label: Value"
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
+
+WORD COUNT ENFORCEMENT:
+- Every summary MUST contain between 40-50 words (inclusive)
+- Count words carefully - if under 40 words, add more detail
+- If over 50 words, trim unnecessary words
+- This is MANDATORY - summaries with wrong word count will be rejected
 
 MANDATORY: Your JSON response must contain exactly {len(articles_with_content)} articles. Each article must have rank 1-{len(articles_with_content)}.
 
@@ -628,7 +634,7 @@ Return ONLY this JSON:
       "rank": 1,
       "emoji": "🌍",
       "title": "Title without emoji",
-      "summary": "40-50 word summary", 
+      "summary": "EXACTLY 40-50 words - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
       "details": ["New info 1", "New info 2", "New info 3"],
       "category": "World News/Business/Technology/Science/Climate/Health",
       "source": "Source name",
@@ -648,6 +654,15 @@ Title: {clean_text_for_json(article['title'])}
 URL: {article['url']}
 Content: {content}
 ---"""
+    
+    prompt += f"""
+
+FINAL REMINDER: Each summary must be EXACTLY 40-50 words. Count carefully:
+- Too short (under 40): Add more relevant details
+- Too long (over 50): Remove unnecessary words
+- Perfect range (40-50): Proceed with confidence
+
+Return ONLY the JSON with all {len(articles_with_content)} articles, each with 40-50 word summaries."""
     
     return prompt
 
