@@ -515,9 +515,10 @@ export default function Home() {
           text-align: center;
           padding: 0 15px;
           border-right: 1px solid #e2e8f0;
-          display: grid;
-          grid-template-rows: 16px auto 16px;
-          align-items: center;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          min-height: 60px;
         }
 
         .news-detail-item:last-child {
@@ -530,10 +531,7 @@ export default function Home() {
           text-transform: uppercase;
           letter-spacing: 1px;
           font-weight: 600;
-          line-height: 16px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          margin-bottom: 4px;
         }
 
         .news-detail-value {
@@ -548,10 +546,7 @@ export default function Home() {
           font-size: 12px;
           color: #64748b;
           font-weight: 500;
-          line-height: 16px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          margin-top: 2px;
         }
 
         .progress-indicator {
