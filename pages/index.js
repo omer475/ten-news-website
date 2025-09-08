@@ -909,7 +909,7 @@ export default function Home() {
                       position: 'relative'
                     }}>
                       <h2 style={{ 
-                        fontSize: '32px',
+                        fontSize: '28px',
                         fontWeight: 800,
                         letterSpacing: '-0.5px',
                         color: '#0f172a'
