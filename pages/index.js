@@ -512,7 +512,7 @@ export default function Home() {
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid #dc2626;
+          border: 1px solid #1e3a8a;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
@@ -771,7 +771,7 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: 1px solid #dc2626;
+            border: 1px solid #1e3a8a;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
           }
           
