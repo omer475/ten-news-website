@@ -512,7 +512,7 @@ export default function Home() {
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid #1e3a8a;
+          border: 1px solid #e5e7eb;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
@@ -771,7 +771,7 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: 1px solid #1e3a8a;
+            border: 1px solid #e5e7eb;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
           }
           
@@ -850,7 +850,7 @@ export default function Home() {
                             'ENTERTAINMENT': '#ec4899'
                           };
                           const color = categoryColors[story.category] || '#3b82f6';
-                          const shortTitle = story.title.split(' ').slice(0, 3).join(' ');
+                          const shortTitle = story.title.length > 25 ? story.title.substring(0, 25) + '...' : story.title;
                           
                           return (
                             <span
