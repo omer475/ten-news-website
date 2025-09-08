@@ -505,7 +505,7 @@ export default function Home() {
           display: flex;
           background: #f8fafc;
           border-radius: 12px;
-          padding: 16px 20px;
+          padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
         }
@@ -518,7 +518,7 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           justify-content: center;
-          min-height: 60px;
+          min-height: 45px;
         }
 
         .news-detail-item:last-child {
@@ -531,7 +531,7 @@ export default function Home() {
           text-transform: uppercase;
           letter-spacing: 1px;
           font-weight: 600;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
         }
 
         .news-detail-value {
@@ -539,14 +539,14 @@ export default function Home() {
           font-weight: 900;
           color: #1e293b;
           line-height: 1.2;
-          margin: 2px 0;
+          margin: 1px 0;
         }
 
         .news-detail-subtitle {
           font-size: 12px;
           color: #64748b;
           font-weight: 500;
-          margin-top: 2px;
+          margin-top: 1px;
         }
 
         .progress-indicator {
@@ -762,7 +762,7 @@ export default function Home() {
           }
           
           .news-meta {
-            padding: 12px 15px;
+            padding: 10px 15px;
             margin-top: 15px;
           }
           
