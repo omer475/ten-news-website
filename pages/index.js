@@ -507,11 +507,13 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: #f8fafc;
+          background: #e2e8f0;
           border-radius: 12px;
           padding: 10px 20px;
           margin-top: 20px;
           gap: 0;
+          border: 1px solid #cbd5e1;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .news-detail-item {
@@ -531,25 +533,26 @@ export default function Home() {
 
         .news-detail-label {
           font-size: 10px;
-          color: #94a3b8;
+          color: #475569;
           text-transform: uppercase;
           letter-spacing: 1px;
-          font-weight: 600;
+          font-weight: 700;
           margin-bottom: 1px;
         }
 
         .news-detail-value {
           font-size: 20px;
           font-weight: 900;
-          color: #1e293b;
+          color: #0f172a;
           line-height: 1.2;
           margin: 0;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: #64748b;
-          font-weight: 500;
+          color: #334155;
+          font-weight: 600;
           margin-top: 0;
         }
 
@@ -768,6 +771,9 @@ export default function Home() {
           .news-meta {
             padding: 8px 15px;
             margin-top: 15px;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
           
           .news-detail-item {
