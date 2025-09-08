@@ -49,8 +49,7 @@ export default function Home() {
               day: 'numeric',
               year: 'numeric'
             }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News',
-            historicalEvents: newsData.historicalEvents || []
+            headline: newsData.dailyGreeting || 'Today Essential Global News'
           };
           
           processedStories.push(openingStory);
@@ -508,24 +507,43 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: #ffffff;
-          border-radius: 16px;
-          padding: 12px 20px;
-          margin-top: 20px;
+          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+          border-radius: 20px;
+          padding: 16px 24px;
+          margin-top: 24px;
           gap: 0;
-          border: 1px solid #e5e7eb;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+          backdrop-filter: blur(10px);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .news-meta::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
         }
 
         .news-detail-item {
           flex: 1;
           text-align: center;
-          padding: 0 15px;
-          border-right: 1px solid #e2e8f0;
+          padding: 0 20px;
+          border-right: 1px solid rgba(226, 232, 240, 0.5);
           display: flex;
           flex-direction: column;
           justify-content: center;
-          min-height: 38px;
+          min-height: 45px;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+
+        .news-detail-item:hover {
+          transform: translateY(-2px);
         }
 
         .news-detail-item:last-child {
@@ -534,26 +552,32 @@ export default function Home() {
 
         .news-detail-label {
           font-size: 10px;
-          color: #6b7280;
+          color: #9ca3af;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 1.2px;
           font-weight: 600;
-          margin-bottom: 1px;
+          margin-bottom: 3px;
+          opacity: 0.8;
         }
 
         .news-detail-value {
-          font-size: 20px;
+          font-size: 22px;
           font-weight: 800;
-          color: #111827;
-          line-height: 1.2;
-          margin: 0;
+          color: #0f172a;
+          line-height: 1.1;
+          margin: 2px 0;
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
           color: #6b7280;
           font-weight: 500;
-          margin-top: 0;
+          margin-top: 2px;
+          opacity: 0.9;
         }
 
         .progress-indicator {
@@ -683,51 +707,6 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
-        .historical-events {
-          margin-top: 40px;
-          padding: 20px;
-          background: #f8fafc;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-        }
-
-        .historical-events-title {
-          font-size: 14px;
-          font-weight: 700;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 16px;
-          text-align: center;
-        }
-
-        .historical-events-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 12px;
-        }
-
-        .historical-event {
-          padding: 12px;
-          background: #ffffff;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-          text-align: left;
-        }
-
-        .historical-event-year {
-          font-size: 12px;
-          font-weight: 700;
-          color: #dc2626;
-          margin-bottom: 4px;
-        }
-
-        .historical-event-text {
-          font-size: 13px;
-          color: #374151;
-          line-height: 1.4;
-        }
-
         @media (max-width: 768px) {
           .header-right .time {
             display: none;
@@ -814,15 +793,17 @@ export default function Home() {
           }
           
           .news-meta {
-            padding: 10px 15px;
-            margin-top: 15px;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 12px 18px;
+            margin-top: 18px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(10px);
           }
           
           .news-detail-item {
-            padding: 0 10px;
+            padding: 0 15px;
+            min-height: 40px;
           }
           
           .news-detail-label {
@@ -835,28 +816,6 @@ export default function Home() {
           
           .news-detail-subtitle {
             font-size: 10px;
-          }
-          
-          .historical-events {
-            margin-top: 30px;
-            padding: 15px;
-          }
-          
-          .historical-events-grid {
-            grid-template-columns: 1fr;
-            gap: 10px;
-          }
-          
-          .historical-event {
-            padding: 10px;
-          }
-          
-          .historical-event-year {
-            font-size: 11px;
-          }
-          
-          .historical-event-text {
-            font-size: 12px;
           }
         }
       `}</style>
@@ -969,21 +928,6 @@ export default function Home() {
                       color: '#60a5fa'
                     }}>2 Min Read</span>
                   </div>
-                  
-                  {story.historicalEvents && story.historicalEvents.length > 0 && (
-                    <div className="historical-events">
-                      <div className="historical-events-title">This Day in History</div>
-                      <div className="historical-events-grid">
-                        {story.historicalEvents.map((event, index) => (
-                          <div key={index} className="historical-event">
-                            <div className="historical-event-year">{event.year}</div>
-                            <div className="historical-event-text">{event.event}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
                   <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
               ) : story.type === 'news' ? (
