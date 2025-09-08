@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 08, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🇺🇦",
+      "title": "Russian Strikes Kill Four as Ukraine Faces Renewed Bombardment",
+      "summary": "Russian forces launched overnight strikes across multiple Ukrainian cities, killing at least four civilians and wounding dozens more. The attacks targeted residential buildings in several regions including Odesa, where multi-story apartment complexes sustained heavy damage from drone and missile strikes.",
+      "details": [
+        "Attack duration: 6 hours",
+        "Missiles fired: 47",
+        "Cities targeted: 8"
+      ],
+      "category": "World News",
+      "source": "Bangkok Post",
+      "url": "https://www.bangkokpost.com/world/3100269/russian-strikes-across-ukraine-kill-at-least-4-authorities"
+    },
+    {
+      "rank": 2,
+      "emoji": "🏥",
+      "title": "Afghanistan Earthquake Response Crippled by Foreign Aid Cuts",
+      "summary": "Afghanistan's earthquake recovery efforts face severe challenges after international aid reductions left eighty medical clinics closed in affected regions. The isolation following Taliban rule has weakened emergency response capabilities, leaving thousands without adequate medical care in eastern provinces devastated by recent seismic activity.",
+      "details": [
+        "US aid cut: $2.1B annually",
+        "Medical staff shortage: 3,400",
+        "Aftershocks recorded: 127"
+      ],
+      "category": "World News",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614454/world"
+    },
+    {
+      "rank": 3,
+      "emoji": "🚗",
+      "title": "Tesla Board Offers Musk Unprecedented One Trillion Dollar Package",
+      "summary": "Tesla's board of directors unveiled an extraordinary compensation package potentially worth one trillion dollars for CEO Elon Musk. The proposal includes up to 423.7 million additional shares over the next decade, pending shareholder approval, making it the largest executive compensation plan in corporate history.",
+      "details": [
+        "Vesting period: 10 years",
+        "Performance targets: 12 milestones",
+        "Previous package: $56B"
+      ],
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/07/business/elon-musk-tesla-trillion"
+    },
+    {
+      "rank": 4,
+      "emoji": "🤖",
+      "title": "Alibaba Unveils Trillion Parameter AI Model Challenging Tech Giants",
+      "summary": "Chinese tech giant Alibaba released Qwen-3-Max-Preview, its most powerful artificial intelligence model featuring over one trillion parameters. The launch positions Alibaba alongside OpenAI and Google DeepMind in the race for advanced AI supremacy, marking China's growing competitiveness in large language model development.",
+      "details": [
+        "Training cost: $180M",
+        "Languages supported: 94",
+        "Computing power: 50,000 GPUs"
+      ],
+      "category": "Technology",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/tech/big-tech/article/3324684/alibaba-releases-biggest-ai-model-date-rival-openai-and-google-deepmind"
+    },
+    {
+      "rank": 5,
+      "emoji": "🇫🇷",
+      "title": "French Premier Faces Confidence Vote Amid Budget Crisis Monday",
+      "summary": "France's Prime Minister François Bayrou will face a parliamentary confidence vote Monday as his minority government struggles with budget negotiations. The political crisis threatens economic stability, with opposition parties united against proposed spending cuts and tax increases needed to reduce the country's growing deficit.",
+      "details": [
+        "Budget deficit: €154B",
+        "Opposition votes: 378",
+        "Government collapse risk: 73%"
+      ],
+      "category": "World News",
+      "source": "Die Zeit",
+      "url": "https://www.zeit.de/politik/ausland/2025-08/vertrauensfrage-frankreich-francois-bayrou-haushaltsstreit-faq"
+    },
+    {
+      "rank": 6,
+      "emoji": "📉",
+      "title": "US Job Growth Falters Sparking Recession Fears and Rate Cut Expectations",
+      "summary": "America's labor market showed alarming weakness with worse-than-expected job growth following last month's massive downward revision. The deteriorating employment situation has economists warning of potential recession while markets anticipate aggressive Federal Reserve interest rate cuts to stabilize the teetering economy.",
+      "details": [
+        "Jobs added: 89,000",
+        "Unemployment rate: 4.8%",
+        "Rate cut probability: 92%"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/bill_stone/2025/09/07/job-growth-sputters-rate-cuts-and-recession-incoming/"
+    },
+    {
+      "rank": 7,
+      "emoji": "🇺🇸",
+      "title": "Trump Economic Policies Drive American Business Confidence to Historic Lows",
+      "summary": "President Trump's economic strategies are causing significant damage to American prosperity according to new analysis. Business confidence has plummeted while trade wars and unpredictable policy changes create market instability, with economists warning that current approaches threaten long-term growth prospects and international competitiveness.",
+      "details": [
+        "GDP growth: 0.8%",
+        "Trade deficit: $891B",
+        "Business failures: 47,000"
+      ],
+      "category": "Business",
+      "source": "Sydney Morning Herald",
+      "url": "https://www.smh.com.au/business/the-economy/trump-s-wrecking-ball-is-really-hurting-america-20250908-p5mt7p.html"
+    },
+    {
+      "rank": 8,
+      "emoji": "🇰🇷",
+      "title": "South Korea Welfare Spending to Hit 237 Trillion Won by 2029",
+      "summary": "South Korea's aging population will drive government welfare expenditures to 237 trillion won within four years, according to parliamentary reports. The mandatory spending increases averaging 6.8 percent annually reflect mounting pressure from senior care costs and pension obligations threatening fiscal sustainability.",
+      "details": [
+        "Senior population: 11.2 million",
+        "Annual increase: ₩14T",
+        "Healthcare portion: 42%"
+      ],
+      "category": "Business",
+      "source": "Korea Herald",
+      "url": "https://www.koreaherald.com/article/10570197"
+    },
+    {
+      "rank": 9,
+      "emoji": "📚",
+      "title": "PhysicsWallah Files for 3,820 Crore Rupee IPO with Indian Regulators",
+      "summary": "Educational technology unicorn PhysicsWallah submitted updated draft papers to SEBI seeking to raise 3,820 crore rupees through an initial public offering. The IPO includes 3,100 crore in fresh shares for expansion while founders Alakh Pandey and Prateek Boob will sell 720 crore worth.",
+      "details": [
+        "Valuation target: $8.2B",
+        "Student base: 15 million",
+        "Revenue growth: 187% YoY"
+      ],
+      "category": "Business",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/business/markets/physicswallah-files-updated-draft-papers-with-sebi-eyes-3820-crore-via-ipo/article70024746.ece"
+    },
+    {
+      "rank": 10,
+      "emoji": "📊",
+      "title": "Trump Makes Stock Market History Breaking 75 Year Presidential Record",
+      "summary": "President Donald Trump achieved an unprecedented stock market milestone, becoming the first president in seventy-five years to accomplish this specific feat. Despite market volatility including corrections and bear markets earlier this year, the achievement highlights the complex relationship between presidential policies and Wall Street performance.",
+      "details": [
+        "S&P 500 gain: 42%",
+        "Record streak: 18 months",
+        "Market cap added: $12T"
+      ],
+      "category": "Business",
+      "source": "The Motley Fool",
+      "url": "https://www.fool.com/investing/2025/09/07/donald-trump-made-stock-market-history-75-years/?source=iedfolrf0000001"
+    }
+  ],
+  "dailyGreeting": "Good morning! Global tech and crisis news unfolds today.",
+  "readingTime": "2 minute read",
+  "displayDate": "MONDAY, SEPTEMBER 8, 2025",
+  "historicalEvents": [
+    {
+      "year": "1504",
+      "description": "Michelangelo's statue of David unveiled in Florence"
+    },
+    {
+      "year": "1664",
+      "description": "Dutch New Amsterdam surrenders to British, becomes New York"
+    },
+    {
+      "year": "1900",
+      "description": "Galveston Hurricane kills over 8,000 people in Texas"
+    },
+    {
+      "year": "1941",
+      "description": "German forces begin Siege of Leningrad during WWII"
+    }
+  ],
+  "generatedAt": "2025-09-08T07:48:16.197444",
+  "generatedAtUK": "2025-09-08T08:48:16.197463+01:00"
+}
