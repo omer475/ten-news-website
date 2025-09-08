@@ -965,11 +965,24 @@ export default function Home() {
                           const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
                           const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
+
+                          // Match color to category
+                          const categoryColor = (
+                            story.category === 'WORLD NEWS' ? '#dc2626' :
+                            story.category === 'BUSINESS' ? '#f97316' :
+                            story.category === 'MARKETS' ? '#06b6d4' :
+                            story.category === 'TECH & AI' ? '#8b5cf6' :
+                            story.category === 'SCIENCE' ? '#0ea5e9' :
+                            story.category === 'HEALTH' ? '#10b981' :
+                            story.category === 'CLIMATE' ? '#22c55e' :
+                            story.category === 'SPORTS' ? '#f59e0b' :
+                            story.category === 'ENTERTAINMENT' ? '#ec4899' : '#111827'
+                          );
                           
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{mainValue}</div>
+                              <div className="news-detail-value" style={{ color: categoryColor }}>{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
