@@ -442,6 +442,10 @@ export default function Home() {
           max-width: 950px;
         }
 
+        .news-item.first-news {
+          margin-top: -10px;
+        }
+
         .news-item:hover {
           background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
@@ -924,7 +928,7 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <div className="news-item" onClick={() => story.url && window.open(story.url, '_blank')}>
+                  <div className={`news-item ${story.number === 1 ? 'first-news' : ''}`} onClick={() => story.url && window.open(story.url, '_blank')}>
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
