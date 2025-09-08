@@ -388,7 +388,7 @@ export default function Home() {
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 2px;
-          color: #60a5fa;
+          color: #dc2626;
           text-transform: uppercase;
           margin-bottom: 40px;
         }
@@ -515,6 +515,9 @@ export default function Home() {
           text-align: center;
           padding: 0 15px;
           border-right: 1px solid #e2e8f0;
+          display: grid;
+          grid-template-rows: 16px auto 16px;
+          align-items: center;
         }
 
         .news-detail-item:last-child {
@@ -527,7 +530,10 @@ export default function Home() {
           text-transform: uppercase;
           letter-spacing: 1px;
           font-weight: 600;
-          margin-bottom: 4px;
+          line-height: 16px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .news-detail-value {
@@ -535,13 +541,17 @@ export default function Home() {
           font-weight: 900;
           color: #1e293b;
           line-height: 1.2;
+          margin: 2px 0;
         }
 
         .news-detail-subtitle {
           font-size: 12px;
           color: #64748b;
           font-weight: 500;
-          margin-top: 2px;
+          line-height: 16px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .progress-indicator {
@@ -823,31 +833,41 @@ export default function Home() {
                     <div style={{ display: 'inline-block' }}>
                       <span style={{ fontWeight: 600, color: '#64748b' }}>Today: </span>
                       <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
-                        {[
-                          'AI-curated global news',
-                          'Breaking world events', 
-                          'Essential daily briefing',
-                          'Trusted source analysis',
-                          'Your morning digest'
-                        ].map((topic, i) => (
-                          <span
-                            key={i}
-                            className="topic-item"
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              whiteSpace: 'nowrap',
-                              opacity: 0,
-                              animation: 'topicRotate 15s infinite',
-                              animationDelay: `${i * 3}s`,
-                              color: '#3b82f6',
-                              fontWeight: 700,
-                              transition: 'opacity 0.5s ease-in-out'
-                            }}
-                          >
-                            {topic}
-                          </span>
-                        ))}
+                        {stories.filter(s => s.type === 'news').slice(0, 5).map((story, i) => {
+                          const categoryColors = {
+                            'WORLD NEWS': '#dc2626',
+                            'BUSINESS': '#f97316',
+                            'MARKETS': '#06b6d4',
+                            'TECH & AI': '#8b5cf6',
+                            'SCIENCE': '#0ea5e9',
+                            'HEALTH': '#10b981',
+                            'CLIMATE': '#22c55e',
+                            'SPORTS': '#f59e0b',
+                            'ENTERTAINMENT': '#ec4899'
+                          };
+                          const color = categoryColors[story.category] || '#3b82f6';
+                          const shortTitle = story.title.length > 30 ? story.title.substring(0, 30) + '...' : story.title;
+                          
+                          return (
+                            <span
+                              key={i}
+                              className="topic-item"
+                              style={{
+                                position: 'absolute',
+                                left: 0,
+                                whiteSpace: 'nowrap',
+                                opacity: 0,
+                                animation: 'topicRotate 15s infinite',
+                                animationDelay: `${i * 3}s`,
+                                color: color,
+                                fontWeight: 700,
+                                transition: 'opacity 0.5s ease-in-out'
+                              }}
+                            >
+                              {shortTitle}
+                            </span>
+                          );
+                        })}
                       </span>
                     </div>
                   </div>
