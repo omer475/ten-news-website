@@ -49,7 +49,8 @@ export default function Home() {
               day: 'numeric',
               year: 'numeric'
             }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News'
+            headline: newsData.dailyGreeting || 'Today Essential Global News',
+            historicalEvents: newsData.historicalEvents || []
           };
           
           processedStories.push(openingStory);
@@ -682,6 +683,51 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
+        .historical-events {
+          margin-top: 40px;
+          padding: 20px;
+          background: #f8fafc;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .historical-events-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 16px;
+          text-align: center;
+        }
+
+        .historical-events-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 12px;
+        }
+
+        .historical-event {
+          padding: 12px;
+          background: #ffffff;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          text-align: left;
+        }
+
+        .historical-event-year {
+          font-size: 12px;
+          font-weight: 700;
+          color: #dc2626;
+          margin-bottom: 4px;
+        }
+
+        .historical-event-text {
+          font-size: 13px;
+          color: #374151;
+          line-height: 1.4;
+        }
+
         @media (max-width: 768px) {
           .header-right .time {
             display: none;
@@ -789,6 +835,28 @@ export default function Home() {
           
           .news-detail-subtitle {
             font-size: 10px;
+          }
+          
+          .historical-events {
+            margin-top: 30px;
+            padding: 15px;
+          }
+          
+          .historical-events-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          
+          .historical-event {
+            padding: 10px;
+          }
+          
+          .historical-event-year {
+            font-size: 11px;
+          }
+          
+          .historical-event-text {
+            font-size: 12px;
           }
         }
       `}</style>
@@ -901,6 +969,21 @@ export default function Home() {
                       color: '#60a5fa'
                     }}>2 Min Read</span>
                   </div>
+                  
+                  {story.historicalEvents && story.historicalEvents.length > 0 && (
+                    <div className="historical-events">
+                      <div className="historical-events-title">This Day in History</div>
+                      <div className="historical-events-grid">
+                        {story.historicalEvents.map((event, index) => (
+                          <div key={index} className="historical-event">
+                            <div className="historical-event-year">{event.year}</div>
+                            <div className="historical-event-text">{event.event}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
               ) : story.type === 'news' ? (
@@ -965,24 +1048,11 @@ export default function Home() {
                           const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
                           const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
-
-                          // Match color to category
-                          const categoryColor = (
-                            story.category === 'WORLD NEWS' ? '#dc2626' :
-                            story.category === 'BUSINESS' ? '#f97316' :
-                            story.category === 'MARKETS' ? '#06b6d4' :
-                            story.category === 'TECH & AI' ? '#8b5cf6' :
-                            story.category === 'SCIENCE' ? '#0ea5e9' :
-                            story.category === 'HEALTH' ? '#10b981' :
-                            story.category === 'CLIMATE' ? '#22c55e' :
-                            story.category === 'SPORTS' ? '#f59e0b' :
-                            story.category === 'ENTERTAINMENT' ? '#ec4899' : '#111827'
-                          );
                           
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: categoryColor }}>{mainValue}</div>
+                              <div className="news-detail-value">{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
