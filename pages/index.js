@@ -443,7 +443,7 @@ export default function Home() {
         }
 
         .news-item.first-news {
-          margin-top: -15px;
+          margin-top: -25px;
         }
 
         .news-item:hover {
