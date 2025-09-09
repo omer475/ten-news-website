@@ -249,15 +249,15 @@ export default function Home() {
     hour12: false
   });
 
-  // Function to get greeting color based on time
-  const getGreetingColor = () => {
+  // Function to get greeting gradient based on time
+  const getGreetingGradient = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
-      return '#fbbf24'; // Yellow for morning (5 AM - 12 PM)
+      return 'linear-gradient(90deg, #1e3a8a 0%, #fbbf24 100%)'; // Dark navy to yellow for morning
     } else if (hour >= 12 && hour < 18) {
-      return '#f97316'; // Orange for afternoon/evening (12 PM - 6 PM)
+      return 'linear-gradient(90deg, #1e3a8a 0%, #f97316 100%)'; // Dark navy to orange for evening
     } else {
-      return '#3b82f6'; // Blue for night (6 PM - 5 AM)
+      return 'linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%)'; // Dark navy to light blue for night
     }
   };
 
@@ -273,10 +273,10 @@ export default function Home() {
     }
   };
 
-  // Function to render greeting with colored first part
+  // Function to render greeting with gradient first part
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
-    const color = getGreetingColor();
+    const gradient = getGreetingGradient();
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -301,7 +301,12 @@ export default function Home() {
       const restOfText = headline.substring(foundGreeting.length);
       return (
         <>
-          <span style={{ color: color }}>{correctGreeting}</span>
+          <span style={{ 
+            background: gradient,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>{correctGreeting}</span>
           {restOfText}
         </>
       );
