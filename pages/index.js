@@ -275,10 +275,10 @@ export default function Home() {
 
   // Function to render greeting with colored first part
   const renderGreeting = (headline) => {
-    const greeting = getGreetingText();
+    const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const color = getGreetingColor();
     
-    // Check for various greeting patterns
+    // Check for various greeting patterns that AI might write
     const greetingPatterns = [
       'good morning',
       'good evening', 
@@ -297,10 +297,11 @@ export default function Home() {
     }
     
     if (foundGreeting) {
+      // Replace AI's greeting with the correct time-based greeting
       const restOfText = headline.substring(foundGreeting.length);
       return (
         <>
-          <span style={{ color: color }}>{foundGreeting}</span>
+          <span style={{ color: color }}>{correctGreeting}</span>
           {restOfText}
         </>
       );
