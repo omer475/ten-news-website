@@ -507,52 +507,47 @@ PREVIOUS ARTICLES TO AVOID:
 Rule: Avoid selecting duplicates or minor updates of these stories.
 """
     
-    prompt = f"""You MUST select EXACTLY 10 most important global news stories from the provided list. If there are fewer than 10 suitable stories, select the best available ones and fill to reach exactly 10.
-
-{previous_context}
-
-MANDATORY REQUIREMENTS:
-1. MUST return exactly 10 articles in the JSON response
-2. If fewer than 10 high-quality articles exist, include the best available ones to reach 10
-3. Global Impact: Prioritize stories affecting millions worldwide
-4. Breaking/Significant: Major developments over routine updates
-5. Balance: Mix categories (politics, business, technology, science, climate, health)
-6. Avoid: Personal stories, local news only, minor updates, duplicates
-
-INTEREST/ENGAGEMENT PRIORITY (CRITICAL):
-- Strongly favor stories that have high public interest and viral potential
-- Examples of HIGH-INTEREST items:
-  • Well-known public figures or celebrities with major developments (e.g., inheritance, transfers, resignations)
-  • Corporate leadership scandals, firings, affairs, whistleblowing, major lawsuits
-  • Record-breaking numbers, shocking outcomes, dramatic turnarounds
-  • Cultural moments people talk about globally (sports stars, mega-brands, entertainment)
-- Examples to DE-PRIORITIZE unless record-setting or scandalous:
-  • Routine policy statements, small local incidents, minor corporate updates
-  • Standard earnings releases without big surprises
-  • Incremental product updates without broad impact
-
-SELECTION HEURISTIC:
-- Aim for at least 3-5 high-interest/viral stories if available among reputable sources
-- Remaining picks should still be globally relevant and newsworthy
-- Prefer clear, punchy headlines that spark curiosity
-
-CRITICAL: Your response must contain exactly 10 articles. No exceptions.
-
-Return ONLY this JSON structure:
-{
-  "selected_articles": [
-    {
-      "id": 0,
-      "title": "exact title",
-      "url": "exact url", 
-      "category": "World News/Business/Technology/Science/Climate/Health",
-      "selection_reason": "Why this is interesting/viral + globally relevant"
-    }
-  ]
-}
-
-ARTICLES TO EVALUATE:
-{json.dumps(formatted_articles, indent=2)}"""
+    prompt = (
+        "You MUST select EXACTLY 10 most important global news stories from the provided list. If there are fewer than 10 suitable stories, select the best available ones and fill to reach exactly 10.\n\n"
+        f"{previous_context}\n\n"
+        "MANDATORY REQUIREMENTS:\n"
+        "1. MUST return exactly 10 articles in the JSON response\n"
+        "2. If fewer than 10 high-quality articles exist, include the best available ones to reach 10\n"
+        "3. Global Impact: Prioritize stories affecting millions worldwide\n"
+        "4. Breaking/Significant: Major developments over routine updates\n"
+        "5. Balance: Mix categories (politics, business, technology, science, climate, health)\n"
+        "6. Avoid: Personal stories, local news only, minor updates, duplicates\n\n"
+        "INTEREST/ENGAGEMENT PRIORITY (CRITICAL):\n"
+        "- Strongly favor stories that have high public interest and viral potential\n"
+        "- Examples of HIGH-INTEREST items:\n"
+        "  • Well-known public figures or celebrities with major developments (e.g., inheritance, transfers, resignations)\n"
+        "  • Corporate leadership scandals, firings, affairs, whistleblowing, major lawsuits\n"
+        "  • Record-breaking numbers, shocking outcomes, dramatic turnarounds\n"
+        "  • Cultural moments people talk about globally (sports stars, mega-brands, entertainment)\n"
+        "- Examples to DE-PRIORITIZE unless record-setting or scandalous:\n"
+        "  • Routine policy statements, small local incidents, minor corporate updates\n"
+        "  • Standard earnings releases without big surprises\n"
+        "  • Incremental product updates without broad impact\n\n"
+        "SELECTION HEURISTIC:\n"
+        "- Aim for at least 3-5 high-interest/viral stories if available among reputable sources\n"
+        "- Remaining picks should still be globally relevant and newsworthy\n"
+        "- Prefer clear, punchy headlines that spark curiosity\n\n"
+        "CRITICAL: Your response must contain exactly 10 articles. No exceptions.\n\n"
+        "Return ONLY this JSON structure:\n"
+        "{\n"
+        "  \"selected_articles\": [\n"
+        "    {\n"
+        "      \"id\": 0,\n"
+        "      \"title\": \"exact title\",\n"
+        "      \"url\": \"exact url\", \n"
+        "      \"category\": \"World News/Business/Technology/Science/Climate/Health\",\n"
+        "      \"selection_reason\": \"Why this is interesting/viral + globally relevant\"\n"
+        "    }\n"
+        "  ]\n"
+        "}\n\n"
+        "ARTICLES TO EVALUATE:\n"
+        f"{json.dumps(formatted_articles, indent=2)}"
+    )
     
     response = call_claude_api(prompt, "Selecting top articles")
     
