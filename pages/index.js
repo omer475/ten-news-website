@@ -850,7 +850,7 @@ export default function Home() {
                             'ENTERTAINMENT': '#ec4899'
                           };
                           const color = categoryColors[story.category] || '#3b82f6';
-                          const shortTitle = story.title.length > 25 ? story.title.substring(0, 25) + '...' : story.title;
+                          const shortTitle = story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title;
                           
                           return (
                             <span
