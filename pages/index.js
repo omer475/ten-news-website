@@ -504,7 +504,7 @@ export default function Home() {
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 14px;
-          color: #1e3a8a;
+          color: #0f0b30;
         }
 
         .news-summary {
