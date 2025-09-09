@@ -519,20 +519,37 @@ MANDATORY REQUIREMENTS:
 5. Balance: Mix categories (politics, business, technology, science, climate, health)
 6. Avoid: Personal stories, local news only, minor updates, duplicates
 
+INTEREST/ENGAGEMENT PRIORITY (CRITICAL):
+- Strongly favor stories that have high public interest and viral potential
+- Examples of HIGH-INTEREST items:
+  • Well-known public figures or celebrities with major developments (e.g., inheritance, transfers, resignations)
+  • Corporate leadership scandals, firings, affairs, whistleblowing, major lawsuits
+  • Record-breaking numbers, shocking outcomes, dramatic turnarounds
+  • Cultural moments people talk about globally (sports stars, mega-brands, entertainment)
+- Examples to DE-PRIORITIZE unless record-setting or scandalous:
+  • Routine policy statements, small local incidents, minor corporate updates
+  • Standard earnings releases without big surprises
+  • Incremental product updates without broad impact
+
+SELECTION HEURISTIC:
+- Aim for at least 3-5 high-interest/viral stories if available among reputable sources
+- Remaining picks should still be globally relevant and newsworthy
+- Prefer clear, punchy headlines that spark curiosity
+
 CRITICAL: Your response must contain exactly 10 articles. No exceptions.
 
 Return ONLY this JSON structure:
-{{
+{
   "selected_articles": [
-    {{
+    {
       "id": 0,
       "title": "exact title",
       "url": "exact url", 
       "category": "World News/Business/Technology/Science/Climate/Health",
-      "selection_reason": "Brief reason for selection"
-    }}
+      "selection_reason": "Why this is interesting/viral + globally relevant"
+    }
   ]
-}}
+}
 
 ARTICLES TO EVALUATE:
 {json.dumps(formatted_articles, indent=2)}"""
