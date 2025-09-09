@@ -504,12 +504,12 @@ export default function Home() {
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 14px;
-          color: #0f172a;
+          color: #1e3a8a;
         }
 
         .news-summary {
           font-size: 17px;
-          color: #475569;
+          color: #000000;
           line-height: 1.6;
           margin-bottom: 16px;
           padding-bottom: 16px;
