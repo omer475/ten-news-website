@@ -503,7 +503,7 @@ export default function Home() {
           font-size: 32px;
           font-weight: 800;
           line-height: 1.2;
-          margin-bottom: 14px;
+          margin-bottom: 28px;
           color: #0f0b30;
         }
 
