@@ -569,7 +569,7 @@ export default function Home() {
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 28px;
-          color: #0adeff;
+          color: #000000;
         }
 
         .news-summary {
