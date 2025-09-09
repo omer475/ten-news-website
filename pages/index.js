@@ -329,7 +329,7 @@ export default function Home() {
         }
 
         .logo-ten {
-          color: #2C4D9C;
+          color: #0f172a;
           font-weight: 900;
         }
 
@@ -348,11 +348,11 @@ export default function Home() {
         }
 
         .subscribe-btn {
-          padding: 12px 20px;
-          background: #FF6F3C;
+          padding: 8px 20px;
+          background: #3b82f6;
           color: white;
           border: none;
-          border-radius: 10px;
+          border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.5px;
@@ -362,7 +362,7 @@ export default function Home() {
         }
 
         .subscribe-btn:hover {
-          background: #e55a2b;
+          background: #2563eb;
         }
 
         .story-container {
@@ -399,18 +399,18 @@ export default function Home() {
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 2px;
-          color: #2C4D9C;
+          color: #dc2626;
           text-transform: uppercase;
           margin-bottom: 40px;
         }
 
         .main-headline {
-          font-size: 32px;
+          font-size: 52px;
           font-weight: 800;
-          line-height: 1.25;
+          line-height: 1.15;
           letter-spacing: -1.5px;
           margin-bottom: 40px;
-          color: #2C4D9C;
+          color: #0f172a;
         }
 
         .subheadline {
@@ -444,15 +444,13 @@ export default function Home() {
         .news-item {
           display: block;
           padding: 24px 15px;
-          border: 1px solid #E0E0E0;
+          border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
           border-radius: 8px;
           position: relative;
           margin: 0 auto;
           max-width: 950px;
-          background: #FFFFFF;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .news-item.first-news {
@@ -460,7 +458,7 @@ export default function Home() {
         }
 
         .news-item:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
 
         .news-item:last-child {
@@ -502,20 +500,20 @@ export default function Home() {
         }
 
         .news-title {
-          font-size: 26px;
+          font-size: 32px;
           font-weight: 800;
-          line-height: 1.35;
+          line-height: 1.2;
           margin-bottom: 14px;
-          color: #2C4D9C;
+          color: #0f172a;
         }
 
         .news-summary {
-          font-size: 18px;
-          color: #111111;
-          line-height: 1.65;
+          font-size: 17px;
+          color: #475569;
+          line-height: 1.6;
           margin-bottom: 16px;
           padding-bottom: 16px;
-          border-bottom: 1px solid #E0E0E0;
+          border-bottom: 1px solid #e2e8f0;
         }
 
         .news-meta {
@@ -556,14 +554,14 @@ export default function Home() {
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: #111111;
+          color: #111827;
           line-height: 1.2;
           margin: 0;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: #555555;
+          color: #6b7280;
           font-weight: 500;
           margin-top: 0;
         }
@@ -580,26 +578,26 @@ export default function Home() {
         }
 
         .progress-dot {
-          width: 7px;
-          height: 7px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
-          background: #CCCCCC;
+          background: #e2e8f0;
           cursor: pointer;
           transition: all 0.3s;
         }
 
         .progress-dot.active {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #2C4D9C;
+          width: 6px;
+          height: 20px;
+          border-radius: 3px;
+          background: linear-gradient(180deg, #1f2937, #000000);
         }
 
         .newsletter-container {
           text-align: center;
-          padding: 40px;
-          background: #2C4D9C;
-          color: #FFFFFF;
+          padding: 60px 0;
+          background: #000;
+          color: #fff;
           height: 100vh;
           width: 100vw;
           display: flex;
@@ -609,21 +607,18 @@ export default function Home() {
           position: relative;
           left: 50%;
           transform: translateX(-50%);
-          border-radius: 12px;
-          box-shadow: 0 10px 14px rgba(0, 0, 0, 0.15);
         }
 
         .newsletter-title {
-          font-size: 30px;
+          font-size: 42px;
           font-weight: 800;
           letter-spacing: -1.5px;
           margin-bottom: 16px;
-          color: #FFFFFF;
         }
 
         .newsletter-subtitle {
           font-size: 18px;
-          color: rgba(255, 255, 255, 0.9);
+          color: #86868b;
           margin-bottom: 40px;
         }
 
@@ -639,43 +634,42 @@ export default function Home() {
           width: 100%;
           padding: 16px 20px;
           font-size: 16px;
-          border: 1px solid #E0E0E0;
+          border: 1px solid #333;
           border-radius: 12px;
-          background: #FFFFFF;
-          color: #111111;
+          background: #1c1c1e;
+          color: #fff;
           outline: none;
           transition: border-color 0.2s;
         }
 
         .newsletter-input:focus {
-          border-color: #2C4D9C;
+          border-color: #f97316;
         }
 
         .newsletter-input::placeholder {
-          color: #555555;
+          color: #6e6e73;
         }
 
         .newsletter-button {
           width: 100%;
           padding: 16px 32px;
-          background: #FF6F3C;
-          color: #FFFFFF;
+          background: #fff;
+          color: #000;
           border: none;
           border-radius: 12px;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
           transition: background-color 0.2s;
-          min-height: 44px;
         }
 
         .newsletter-button:hover {
-          background: #e55a2b;
+          background: #f0f0f0;
         }
 
         .newsletter-info {
           font-size: 13px;
-          color: rgba(255, 255, 255, 0.8);
+          color: #6e6e73;
           margin-top: 24px;
         }
 
@@ -725,14 +719,14 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 22px;
+            font-size: 24px;
           }
           
           .main-headline {
-            font-size: 28px;
+            font-size: 34px;
             letter-spacing: -1px;
             margin-bottom: 30px;
-            line-height: 1.25;
+            line-height: 1.15;
           }
           
           .date-header {
@@ -773,15 +767,15 @@ export default function Home() {
           }
           
           .progress-dot {
-            width: 6px;
-            height: 6px;
-            background: #CCCCCC;
+            width: 5px;
+            height: 5px;
+            background: #e2e8f0;
           }
           
           .progress-dot.active {
-            width: 9px;
-            height: 9px;
-            background: #2C4D9C;
+            width: 5px;
+            height: 18px;
+            background: linear-gradient(180deg, #1f2937, #000000);
           }
           
           .news-meta {
@@ -856,15 +850,15 @@ export default function Home() {
                       <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
                         {stories.filter(s => s.type === 'news').slice(0, 5).map((story, i) => {
                           const categoryColors = {
-                            'WORLD NEWS': '#2C4D9C',
-                            'BUSINESS': '#2ECC71',
-                            'MARKETS': '#2ECC71',
-                            'TECH & AI': '#008080',
-                            'SCIENCE': '#008080',
-                            'HEALTH': '#27AE60',
-                            'CLIMATE': '#27AE60',
-                            'SPORTS': '#9B59B6',
-                            'ENTERTAINMENT': '#9B59B6'
+                            'WORLD NEWS': '#dc2626',
+                            'BUSINESS': '#f97316',
+                            'MARKETS': '#06b6d4',
+                            'TECH & AI': '#8b5cf6',
+                            'SCIENCE': '#0ea5e9',
+                            'HEALTH': '#10b981',
+                            'CLIMATE': '#22c55e',
+                            'SPORTS': '#f59e0b',
+                            'ENTERTAINMENT': '#ec4899'
                           };
                           const color = categoryColors[story.category] || '#3b82f6';
                           const shortTitle = story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title;
@@ -954,15 +948,15 @@ export default function Home() {
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
-                        color: story.category === 'WORLD NEWS' ? '#2C4D9C' :
-                               story.category === 'BUSINESS' ? '#2ECC71' :
-                               story.category === 'MARKETS' ? '#2ECC71' :
-                               story.category === 'TECH & AI' ? '#008080' :
-                               story.category === 'SCIENCE' ? '#008080' :
-                               story.category === 'HEALTH' ? '#27AE60' :
-                               story.category === 'CLIMATE' ? '#27AE60' :
-                               story.category === 'SPORTS' ? '#9B59B6' :
-                               story.category === 'ENTERTAINMENT' ? '#9B59B6' : '#555555',
+                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
+                               story.category === 'BUSINESS' ? '#f97316' :
+                               story.category === 'MARKETS' ? '#06b6d4' :
+                               story.category === 'TECH & AI' ? '#8b5cf6' :
+                               story.category === 'SCIENCE' ? '#0ea5e9' :
+                               story.category === 'HEALTH' ? '#10b981' :
+                               story.category === 'CLIMATE' ? '#22c55e' :
+                               story.category === 'SPORTS' ? '#f59e0b' :
+                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px'
