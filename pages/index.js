@@ -719,7 +719,7 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 36px;
+            font-size: 30px;
           }
           
           .main-headline {
