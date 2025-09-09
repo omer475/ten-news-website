@@ -49,8 +49,7 @@ export default function Home() {
               day: 'numeric',
               year: 'numeric'
             }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News',
-            greetingColor: newsData.greetingColor || '#fbbf24'
+            headline: newsData.dailyGreeting || 'Today Essential Global News'
           };
           
           processedStories.push(openingStory);
@@ -80,8 +79,7 @@ export default function Home() {
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: 'Ten News automation is working perfectly',
-              greetingColor: '#fbbf24'
+              headline: 'Ten News automation is working perfectly'
             },
             {
               type: 'news',
@@ -250,6 +248,47 @@ export default function Home() {
     minute: '2-digit',
     hour12: false
   });
+
+  // Function to get greeting color based on time
+  const getGreetingColor = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return '#fbbf24'; // Yellow for morning (5 AM - 12 PM)
+    } else if (hour >= 12 && hour < 18) {
+      return '#f97316'; // Orange for afternoon/evening (12 PM - 6 PM)
+    } else {
+      return '#3b82f6'; // Blue for night (6 PM - 5 AM)
+    }
+  };
+
+  // Function to get greeting text based on time
+  const getGreetingText = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'Good morning';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Good evening';
+    } else {
+      return 'Good night';
+    }
+  };
+
+  // Function to render greeting with colored first part
+  const renderGreeting = (headline) => {
+    const greeting = getGreetingText();
+    const color = getGreetingColor();
+    
+    if (headline.toLowerCase().startsWith(greeting.toLowerCase())) {
+      const restOfText = headline.substring(greeting.length);
+      return (
+        <>
+          <span style={{ color: color }}>{greeting}</span>
+          {restOfText}
+        </>
+      );
+    }
+    return headline;
+  };
 
   return (
     <>
@@ -843,8 +882,8 @@ export default function Home() {
               {story.type === 'opening' ? (
                 <div className="opening-container">
                   <div className="date-header">{story.date}</div>
-                  <h1 className="main-headline" style={{ color: story.greetingColor }}>
-                    {story.headline}
+                  <h1 className="main-headline">
+                    {renderGreeting(story.headline)}
                   </h1>
                   <div className="subheadline">
                     <div style={{ display: 'inline-block' }}>
