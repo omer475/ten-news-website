@@ -278,11 +278,29 @@ export default function Home() {
     const greeting = getGreetingText();
     const color = getGreetingColor();
     
-    if (headline.toLowerCase().startsWith(greeting.toLowerCase())) {
-      const restOfText = headline.substring(greeting.length);
+    // Check for various greeting patterns
+    const greetingPatterns = [
+      'good morning',
+      'good evening', 
+      'good night',
+      'good afternoon'
+    ];
+    
+    const lowerHeadline = headline.toLowerCase();
+    let foundGreeting = null;
+    
+    for (const pattern of greetingPatterns) {
+      if (lowerHeadline.startsWith(pattern)) {
+        foundGreeting = pattern;
+        break;
+      }
+    }
+    
+    if (foundGreeting) {
+      const restOfText = headline.substring(foundGreeting.length);
       return (
         <>
-          <span style={{ color: color }}>{greeting}</span>
+          <span style={{ color: color }}>{foundGreeting}</span>
           {restOfText}
         </>
       );
