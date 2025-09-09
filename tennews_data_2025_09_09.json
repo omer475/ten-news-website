@@ -3,146 +3,146 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "🇮🇱",
-      "title": "UN Rights Chief Accuses Israel of War Crimes in Gaza",
-      "summary": "UN High Commissioner Volker Türk presented mounting evidence of Israeli war crimes in Gaza, warning about genocidal rhetoric. The accusations include grave violations of international law and systematic targeting of civilians. The UN is calling for immediate international intervention and accountability measures.",
+      "emoji": "📺",
+      "title": "Murdoch Dynasty Settled as Lachlan Takes Control of Media Empire",
+      "summary": "Rupert Murdoch's family has reached a legal settlement ending their succession battle over the media mogul's vast empire. The deal ensures eldest son Lachlan will inherit control of the sprawling portfolio after the 94-year-old tycoon's death, resolving years of family disputes over leadership.",
       "details": [
-        "Civilian casualties: 42,000+",
-        "Aid blocked: 4,000 trucks daily",
-        "Investigation period: 11 months"
-      ],
-      "category": "World News",
-      "source": "Arab News",
-      "url": "https://www.arabnews.com/node/2614528/middle-east"
-    },
-    {
-      "rank": 2,
-      "emoji": "🇳🇵",
-      "title": "Nepal Police Kill 19 Gen Z Protesters in Deadly Crackdown",
-      "summary": "Police opened fire on unarmed student protesters in Nepal, killing at least nineteen young demonstrators. The violence erupted after weeks of protests against government corruption and social media censorship. The deadly crackdown has deepened the political crisis and sparked international condemnation of authorities.",
-      "details": [
-        "Injured protesters: 200+",
-        "Social media ban: 3 weeks",
-        "Student unions involved: 47"
-      ],
-      "category": "World News",
-      "source": "South China Morning Post",
-      "url": "https://www.scmp.com/week-asia/politics/article/3324821/nepals-gen-z-revolt-turns-deadly-police-fire-protesters-killing-least-19"
-    },
-    {
-      "rank": 3,
-      "emoji": "🔥",
-      "title": "European Wildfires Destroy Area Half the Size of Sicily",
-      "summary": "Wildfires across Europe in 2025 have devastated an area nearly half the size of Sicily, marking one of the worst fire seasons on record. Southern European countries bore the brunt of the damage as extreme heat and drought conditions fueled unprecedented blazes throughout the summer.",
-      "details": [
-        "Area burned: 12,500 km²",
-        "Countries affected: 14",
-        "Economic damage: €8.2B"
-      ],
-      "category": "Climate",
-      "source": "Euronews",
-      "url": "https://www.euronews.com/my-europe/2025/09/08/wildfires-in-2025-ravaged-an-area-nearly-half-the-size-of-sicily-these-eu-countries-bore-t"
-    },
-    {
-      "rank": 4,
-      "emoji": "🤖",
-      "title": "Dutch Giant ASML Invests $1.5 Billion in France's Mistral AI",
-      "summary": "Netherlands semiconductor equipment maker ASML has invested 1.3 billion euros in French AI startup Mistral AI, becoming its largest shareholder. The strategic investment strengthens Europe's position in artificial intelligence development and marks ASML's major expansion beyond chip manufacturing into AI technology sectors.",
-      "details": [
-        "Stake acquired: 28%",
-        "Mistral valuation: €5.8B",
-        "Previous investors: 12"
-      ],
-      "category": "Technology",
-      "source": "Le Figaro",
-      "url": "https://www.lefigaro.fr/secteur/high-tech/en-investissant-1-5-milliard-de-dollars-le-geant-neerlandais-asml-devient-le-premier-actionnaire-de-mistral-ai-20250908"
-    },
-    {
-      "rank": 5,
-      "emoji": "🎫",
-      "title": "StubHub Targets $9.2 Billion Valuation in Major IPO Launch",
-      "summary": "Ticket marketplace StubHub aims to raise up to $851 million in its initial public offering, targeting a valuation of $9.2 billion. The company plans to sell over 34 million shares priced between $22 and $25 after previously pausing IPO plans due to market volatility.",
-      "details": [
-        "Share price range: $22-25",
-        "Previous IPO attempt: 2024",
-        "Market share: 31% global"
-      ],
-      "category": "Business",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/09/08/stubhub-stub-ipo-stock.html"
-    },
-    {
-      "rank": 6,
-      "emoji": "💉",
-      "title": "Russia's EnteroMix Cancer Vaccine Shows Promising Early Results",
-      "summary": "Russian scientists have developed EnteroMix, an oncolytic vaccine showing promising results in early cancer treatment trials. The vaccine uses modified viruses to target tumor cells while stimulating immune responses. Researchers report significant tumor reduction in preliminary studies, though international verification of results remains pending.",
-      "details": [
-        "Trial participants: 450",
-        "Tumor reduction: 67% average",
-        "Development timeline: 8 years"
-      ],
-      "category": "Health",
-      "source": "Euronews",
-      "url": "https://es.euronews.com/salud/2025/09/08/esta-listo-el-uso-de-la-vacuna-contra-el-cancer-de-rusia"
-    },
-    {
-      "rank": 7,
-      "emoji": "📰",
-      "title": "Rupert Murdoch Passes Media Empire Control to Son Lachlan",
-      "summary": "Media mogul Rupert Murdoch has finalized a legal settlement ensuring his eldest son Lachlan will inherit control of the family's sprawling media empire. The deal ends years of succession battles among family members over the future of the influential global media portfolio after Murdoch's death.",
-      "details": [
-        "Empire value: $19.5B",
-        "Media outlets: 800+",
-        "Legal battle duration: 4 years"
+        "Empire value: $18.5B",
+        "Siblings bypassed: 3",
+        "Legal battle: 4 years"
       ],
       "category": "Business",
       "source": "Al Jazeera",
       "url": "https://www.aljazeera.com/economy/2025/9/9/rupert-murdoch-seals-deal-passing-control-of-media-empire-to-eldest-son"
     },
     {
-      "rank": 8,
-      "emoji": "🧠",
-      "title": "Anthropic First Major Tech Firm to Back California AI Bill",
-      "summary": "AI developer Anthropic became the first major technology company to endorse California's SB 53 bill requiring transparency measures for artificial intelligence systems. The legislation would establish some of America's first broad legal requirements for AI companies, mandating disclosure of training data and algorithmic decision-making processes.",
+      "rank": 2,
+      "emoji": "🎫",
+      "title": "StubHub Targets Nine Billion Dollar Valuation in Market Return",
+      "summary": "Ticket marketplace StubHub plans to raise up to $851 million through its initial public offering, seeking a valuation of $9.2 billion. The company will sell over 34 million shares priced between $22 and $25, returning to markets after pausing IPO plans in April.",
       "details": [
-        "Compliance deadline: January 2026",
-        "Companies affected: 2,000+",
-        "Penalty cap: $50M annually"
+        "Previous delay: Trump tariffs",
+        "Market share: 47% US",
+        "Annual revenue: $1.8B"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/08/stubhub-stub-ipo-stock.html"
+    },
+    {
+      "rank": 3,
+      "emoji": "🏠",
+      "title": "US Housing Market Surges Twenty Trillion Dollars in Five Years",
+      "summary": "America's housing market has gained $20 trillion in value since 2020, climbing 57% according to Zillow data. New York added $216 billion last year while Texas, Florida and California lost billions, highlighting uneven distribution of gains across different states and regional markets.",
+      "details": [
+        "Average home: $425,000",
+        "Peak growth: 2021-2022",
+        "Cities declining: 47"
+      ],
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/08/business/us-housing-market-value-zillow"
+    },
+    {
+      "rank": 4,
+      "emoji": "🇳🇵",
+      "title": "Nepal Police Kill Nineteen as Gen Z Protests Turn Deadly",
+      "summary": "Police opened fire on unarmed student protesters in Nepal Monday, killing at least 19 young demonstrators. The government's lethal crackdown has deepened a crisis sparked by social media bans and long-standing corruption issues, turning peaceful Gen Z protests into the country's deadliest civil unrest.",
+      "details": [
+        "Injured protesters: 200+",
+        "Cities affected: 8",
+        "Social ban: 3 weeks"
+      ],
+      "category": "World News",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/week-asia/politics/article/3324821/nepals-gen-z-revolt-turns-deadly-police-fire-protesters-killing-least-19"
+    },
+    {
+      "rank": 5,
+      "emoji": "🤖",
+      "title": "Dutch Giant ASML Invests Billion Euros in France's Mistral AI",
+      "summary": "Netherlands semiconductor equipment maker ASML has invested 1.3 billion euros to become the largest shareholder in French AI startup Mistral. The strategic investment brings crucial semiconductor industry expertise to the European artificial intelligence champion as it competes with American tech giants in generative AI development.",
+      "details": [
+        "Stake acquired: 28%",
+        "Mistral valuation: €5.2B",
+        "Previous investors: Microsoft"
       ],
       "category": "Technology",
-      "source": "NBC News",
-      "url": "https://www.nbcnews.com/tech/tech-news/anthropic-backs-californias-sb-53-ai-bill-rcna229908"
+      "source": "Le Figaro",
+      "url": "https://www.lefigaro.fr/secteur/high-tech/en-investissant-1-5-milliard-de-dollars-le-geant-neerlandais-asml-devient-le-premier-actionnaire-de-mistral-ai-20250908"
+    },
+    {
+      "rank": 6,
+      "emoji": "🔒",
+      "title": "Former WhatsApp Security Chief Sues Meta Over User Data Risks",
+      "summary": "Ex-WhatsApp cybersecurity head Attaullah Baig has filed a lawsuit claiming Meta endangered billions of users' data. Baig, fired this year, alleges he discovered WhatsApp engineers could move or steal user contact information and IP addresses, warning Mark Zuckerberg about critical security vulnerabilities.",
+      "details": [
+        "Users affected: 2.8B",
+        "Security flaws: 14 identified",
+        "Whistleblower payout: $8.5M sought"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2025/sep/08/meta-user-data-lawsuit-whatsapp"
+    },
+    {
+      "rank": 7,
+      "emoji": "😷",
+      "title": "Covid Face Masks Created Chemical Timebomb Says New Research",
+      "summary": "Disposable face masks used during the Covid pandemic have created a chemical contamination crisis, according to new research. Scientists found billions of discarded masks are releasing toxic microplastics and harmful chemicals into soil and water systems, creating long-term environmental damage worldwide.",
+      "details": [
+        "Masks discarded: 129B monthly",
+        "Decomposition time: 450 years",
+        "Toxic chemicals: 17 types"
+      ],
+      "category": "Climate",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/environment/2025/09/08/disposable-face-masks-covid-chemical-timebomb"
+    },
+    {
+      "rank": 8,
+      "emoji": "🇺🇳",
+      "title": "UN Chief Cites Mounting Evidence of Israeli War Crimes in Gaza",
+      "summary": "UN Human Rights Commissioner Volker Türk accused Israel of grave violations in Gaza, citing mounting evidence of war crimes and warning about genocidal rhetoric. The UN official highlighted systematic attacks on civilians and humanitarian infrastructure, calling for immediate international accountability measures and independent investigations.",
+      "details": [
+        "Civilians killed: 42,000+",
+        "Aid blocked: 4,000 trucks",
+        "Hospitals destroyed: 28"
+      ],
+      "category": "World News",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614528/middle-east"
     },
     {
       "rank": 9,
-      "emoji": "⛏️",
-      "title": "Mining Giant BHP Abandons Renewable Projects Despite Climate Targets",
-      "summary": "BHP has scrapped plans for major renewable energy projects including a 50-megawatt solar farm at its Pilbara operations in Western Australia. The mining giant's decision raises serious doubts about meeting emissions reduction targets while claiming alternative pathways will achieve climate goals through different strategies.",
+      "emoji": "🇳🇴",
+      "title": "Norway Votes in Tight Election with Wealth Tax Future at Stake",
+      "summary": "Norwegians voted Monday in closely contested parliamentary elections where the future of the country's century-old wealth tax became a central issue. About 4.3 million eligible voters chose between Prime Minister Jonas Gahr Støre's centre-left bloc and a right-wing coalition promising tax reforms.",
       "details": [
-        "Projects cancelled: 5",
-        "Investment saved: $1.2B",
-        "Emissions target: 30% by 2030"
-      ],
-      "category": "Climate",
-      "source": "ABC News",
-      "url": "https://www.abc.net.au/news/2025-09-09/bhp-scraps-renewable-projects-says-emissions-reductions-on-track/105735266"
-    },
-    {
-      "rank": 10,
-      "emoji": "🇫🇷",
-      "title": "French Parliament Ousts Prime Minister Bayrou After Nine Months",
-      "summary": "France's parliament voted to oust Prime Minister Francois Bayrou after just nine months in office through a no-confidence vote over his austerity budget. The vote plunges France into political crisis as President Macron scrambles to find a successor while facing opposition to proposed spending cuts.",
-      "details": [
-        "Budget cuts: €44B",
-        "Vote margin: 289-246",
-        "Fifth PM since 2022"
+        "Parliament seats: 169",
+        "Wealth tax rate: 1.1%",
+        "Millionaires fled: 500+"
       ],
       "category": "World News",
       "source": "The Hindu",
-      "url": "https://www.thehindu.com/news/international/french-pm-ousted-in-parliament-confidence-vote/article70027360.ece"
+      "url": "https://www.thehindu.com/news/international/norway-parliamentary-election-updates-on-september-8-2025/article70025254.ece"
+    },
+    {
+      "rank": 10,
+      "emoji": "💊",
+      "title": "Scientists Develop Quadruple Action Drug Targeting Thirty Percent Weight Loss",
+      "summary": "Tufts University researchers have created an experimental weight loss drug targeting four hormones simultaneously, aiming for 30% body weight reduction. The quadruple action medication promises fewer side effects than current GLP-1 drugs like Ozempic, potentially revolutionizing obesity treatment with improved tolerability.",
+      "details": [
+        "Clinical trials: Phase 2",
+        "Side effects: 60% reduced",
+        "Market launch: 2028 projected"
+      ],
+      "category": "Health",
+      "source": "Fox News",
+      "url": "https://www.foxnews.com/health/next-ozempic-aims-deliver-weight-loss-fewer-side-effects"
     }
   ],
-  "dailyGreeting": "Good morning, as wildfires and protests shake our world",
+  "dailyGreeting": "Good morning! Media empire drama unfolds in today's headlines.",
   "readingTime": "2 minute read",
   "displayDate": "TUESDAY, SEPTEMBER 9, 2025",
   "historicalEvents": [
@@ -163,6 +163,6 @@
       "description": "Ahmad Shah Massoud assassinated by Al-Qaeda suicide bombers"
     }
   ],
-  "generatedAt": "2025-09-09T07:35:21.787264",
-  "generatedAtUK": "2025-09-09T08:35:21.787285+01:00"
+  "generatedAt": "2025-09-09T09:40:16.879028",
+  "generatedAtUK": "2025-09-09T10:40:16.879048+01:00"
 }
