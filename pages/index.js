@@ -500,7 +500,7 @@ export default function Home() {
         }
 
         .news-title {
-          font-size: 32px;
+          font-size: 64px;
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 28px;
@@ -719,7 +719,7 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 24px;
+            font-size: 48px;
           }
           
           .main-headline {
