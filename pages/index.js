@@ -980,7 +980,6 @@ export default function Home() {
                     <div style={{ 
                       textAlign: 'center', 
                       padding: '32px 0',
-                      borderBottom: '2px solid #e5e5e7',
                       marginBottom: '24px',
                       position: 'relative'
                     }}>
