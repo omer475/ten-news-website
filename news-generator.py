@@ -795,7 +795,7 @@ Return ONLY this JSON:
       "rank": 1,
       "emoji": "🌍",
       "title": "Title without emoji",
-      "summary": "EXACTLY 40-50 words - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
+      "summary": "EXACTLY 40-50 words with **bold** markup for important words, names, places, numbers - count each word carefully to ensure you hit the target range", 
       "details": ["Label: Value - completely NEW fact not in summary", "Label: Value - different category from summary", "Label: Value - adds context summary lacks"],
       "category": "World News/Business/Technology/Science/Climate/Health",
       "source": "Source name",
@@ -803,6 +803,12 @@ Return ONLY this JSON:
     }}
   ]
 }}
+
+CRITICAL JSON FORMATTING:
+- Use **bold** markup in summaries exactly as shown above
+- Ensure all JSON strings are properly quoted
+- Do not break JSON structure with unescaped quotes
+- Test that your JSON is valid before submitting
 
 ARTICLES TO REWRITE (ALL {len(articles_with_content)} MUST BE INCLUDED):
 """
@@ -1005,6 +1011,7 @@ def parse_json_with_fallback(response_text):
     if response_text.endswith('```'):
         response_text = response_text[:-3]
     response_text = response_text.strip()
+    
     
     try:
         return json.loads(response_text)
