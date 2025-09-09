@@ -664,7 +664,7 @@ export default function Home() {
 
         .scroll-hint {
           position: absolute;
-          bottom: 140px;
+          bottom: 160px;
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -745,7 +745,7 @@ export default function Home() {
           }
           
           .scroll-hint {
-            bottom: 80px;
+            bottom: 100px;
             font-size: 11px;
             letter-spacing: 1.5px;
           }
