@@ -980,8 +980,8 @@ export default function Home() {
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{renderBoldText(mainValue)}</div>
-                              {subtitle && <div className="news-detail-subtitle">{renderBoldText(subtitle)}</div>}
+                              <div className="news-detail-value">{mainValue}</div>
+                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
                         })}

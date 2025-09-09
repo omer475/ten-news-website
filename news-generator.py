@@ -610,28 +610,16 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level 
+- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level. Make important words, names, places, and numbers BOLD using **bold** markup 
 - DETAILS: CRITICAL - Follow the comprehensive Details Section Instructions below
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
-- BOLD FORMATTING: Use **text** to bold important words, names, places, numbers, and key facts
 
 WORD COUNT ENFORCEMENT:
 - Every summary MUST contain between 40-50 words (inclusive)
 - Count words carefully - if under 40 words, add more detail
 - If over 50 words, trim unnecessary words
 - This is MANDATORY - summaries with wrong word count will be rejected
-
-BOLD FORMATTING REQUIREMENTS:
-- ALWAYS bold these elements using **text** format:
-  • All numbers, percentages, dollar amounts (e.g., **$2.5B**, **45%**, **1,200**)
-  • Person names, company names, country names (e.g., **Elon Musk**, **Apple**, **China**)
-  • Important places, cities, countries (e.g., **New York**, **Tokyo**, **Europe**)
-  • Key technical terms, products, technologies (e.g., **ChatGPT**, **iPhone 15**, **Tesla**)
-  • Critical dates, timeframes (e.g., **2024**, **next month**, **by December**)
-  • Major events, milestones (e.g., **IPO**, **merger**, **election**)
-- Apply bold formatting to BOTH summaries AND details
-- Use **bold** format consistently throughout
 
 ## Details Section Instructions for AI - Complete Format Guide
 
@@ -807,8 +795,8 @@ Return ONLY this JSON:
       "rank": 1,
       "emoji": "🌍",
       "title": "Title without emoji",
-      "summary": "EXACTLY 40-50 words with **bold** formatting for **numbers**, **names**, **places** - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
-      "details": ["Label: **Value** - completely NEW fact not in summary", "Label: **Value** - different category from summary", "Label: **Value** - adds context summary lacks"],
+      "summary": "EXACTLY 40-50 words - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
+      "details": ["Label: Value - completely NEW fact not in summary", "Label: Value - different category from summary", "Label: Value - adds context summary lacks"],
       "category": "World News/Business/Technology/Science/Climate/Health",
       "source": "Source name",
       "url": "Original URL"
@@ -843,15 +831,7 @@ FINAL REMINDER:
    - Use the validation algorithm for each detail
    - NO repetition of summary content allowed
 
-3. BOLD FORMATTING: Apply **bold** to ALL important elements:
-   - Numbers, percentages, dollar amounts
-   - Person names, company names, country names
-   - Important places, cities, countries
-   - Key technical terms, products, technologies
-   - Critical dates, timeframes
-   - Major events, milestones
-
-Return ONLY the JSON with all {len(articles_with_content)} articles, each with 40-50 word summaries and 3 unique details, all with proper **bold** formatting."""
+Return ONLY the JSON with all {len(articles_with_content)} articles, each with 40-50 word summaries and 3 unique details."""
     
     return prompt
 
