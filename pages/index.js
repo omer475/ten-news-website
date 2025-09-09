@@ -984,14 +984,6 @@ export default function Home() {
                       marginBottom: '24px',
                       position: 'relative'
                     }}>
-                      <h2 style={{ 
-                        fontSize: '28px',
-                        fontWeight: 800,
-                        letterSpacing: '-0.5px',
-                        color: '#0f172a'
-                      }}>
-                        Today's Essential Reading
-                      </h2>
                       <div style={{
                         position: 'absolute',
                         bottom: '-2px',
