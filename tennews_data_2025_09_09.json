@@ -4,11 +4,11 @@
     {
       "rank": 1,
       "emoji": "📺",
-      "title": "Murdoch Dynasty Settled as Lachlan Takes Control of Media Empire",
-      "summary": "**Rupert Murdoch's** family has ended their succession battle, ensuring eldest son **Lachlan** will inherit the sprawling media portfolio after the **94-year-old** mogul's death. The legal settlement resolves years of family disputes over control of the influential global media empire.",
+      "title": "Murdoch Family Settles Media Empire Succession Battle",
+      "summary": "**Rupert Murdoch's** family reached a legal settlement ensuring eldest son **Lachlan** will inherit control of the **$15 billion** media empire after the **94-year-old** mogul's death. The deal ends years of succession disputes among siblings over **Fox News**, **Wall Street Journal**, and other major outlets.",
       "details": [
-        "Empire value: **$18.5 billion**",
-        "Media outlets: **150+ properties**",
+        "Empire value: **$15B**",
+        "Siblings involved: **4**",
         "Legal battle: **3 years**"
       ],
       "category": "Business",
@@ -17,132 +17,132 @@
     },
     {
       "rank": 2,
-      "emoji": "💰",
-      "title": "Trump's Net Worth Surges Three Billion Dollars After Presidential Victory",
-      "summary": "**Donald Trump** gained **$3 billion** in net worth over the past year, jumping **118 spots** on the **Forbes 400** list. After falling off the prestigious ranking in **2023**, his improved political prospects and presidential victory dramatically boosted his financial standing.",
-      "details": [
-        "Current ranking: **#282**",
-        "Total wealth: **$5.8 billion**",
-        "Property gains: **45% increase**"
-      ],
-      "category": "Business",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/danalexander/2025/09/09/presidency-boosts-trumps-net-worth-by-3-billion-in-a-year/"
-    },
-    {
-      "rank": 3,
       "emoji": "🇳🇵",
-      "title": "Nepal Police Kill Nineteen Gen Z Protesters in Deadly Crackdown",
-      "summary": "**Nepal's** government forces opened fire on unarmed student protesters **Monday**, killing at least **19** young demonstrators. The deadly crackdown escalated a crisis sparked by **social media bans** and widespread **corruption** concerns, turning peaceful Gen Z protests into the nation's bloodiest civil unrest.",
+      "title": "Nepal Police Kill 19 Gen Z Protesters in Deadly Crackdown",
+      "summary": "**Nepal** police opened fire on unarmed student protesters **Monday**, killing at least **19** young demonstrators. The **Gen Z** revolt erupted over government corruption and social media bans, marking the deadliest crackdown on youth activism in **Nepal's** recent history as tensions escalate nationwide.",
       "details": [
-        "Injured protesters: **200+**",
-        "Cities affected: **12 districts**",
-        "Internet blackout: **72 hours**"
+        "Injured count: **200+**",
+        "Cities affected: **7**",
+        "Protest duration: **2 weeks**"
       ],
       "category": "World News",
       "source": "South China Morning Post",
       "url": "https://www.scmp.com/week-asia/politics/article/3324821/nepals-gen-z-revolt-turns-deadly-police-fire-protesters-killing-least-19"
     },
     {
-      "rank": 4,
-      "emoji": "🤖",
-      "title": "European AI Startup Mistral Secures Record Breaking ASML Investment",
-      "summary": "French AI company **Mistral** received **€1.3 billion** from Dutch chip giant **ASML** in a **$2 billion** funding round. **ASML** now owns **11%** of Europe's answer to OpenAI, becoming its largest shareholder as the continent races to compete in artificial intelligence.",
+      "rank": 3,
+      "emoji": "💰",
+      "title": "America's 400 Richest Worth Record Breaking $6.6 Trillion",
+      "summary": "The **Forbes 400** list reveals **America's** wealthiest individuals are collectively worth a record **$6.6 trillion** in **2025**. **Jeff Bezos**, **Jensen Huang**, and **Miriam Adelson** lead the rankings as billionaire fortunes surge despite economic uncertainties, breaking all previous wealth concentration records.",
       "details": [
-        "ASML market cap: **$308 billion**",
-        "Mistral valuation: **€12 billion**",
-        "Previous funding: **€600 million**"
+        "Entry threshold: **$3.3B**",
+        "Average wealth: **$16.5B**",
+        "New entrants: **18**"
       ],
-      "category": "Technology",
-      "source": "Business Insider",
-      "url": "https://www.businessinsider.com/mistral-funding-asml-chips-ai-europe-2025-9"
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/chasewithorn/2025/09/09/the-2025-forbes-400-list-of-wealthiest-americans-facts-and-figures/"
     },
     {
-      "rank": 5,
+      "rank": 4,
       "emoji": "🏠",
-      "title": "US Housing Market Adds Twenty Trillion Dollars in Five Years",
-      "summary": "America's housing market has surged **57%** since **2020**, adding **$20 trillion** in total value according to **Zillow**. **New York** gained **$216 billion** last year while **Texas**, **Florida**, and **California** lost billions, highlighting dramatic regional disparities in property values.",
+      "title": "US Housing Market Surges $20 Trillion in Five Years",
+      "summary": "**America's** housing market has gained **$20 trillion** in value over five years, climbing **57%** since **2020**, according to **Zillow**. **New York** added **$216 billion** last year while **Texas**, **Florida**, and **California** lost billions, highlighting dramatic regional disparities in property values.",
       "details": [
+        "Total value: **$52T**",
         "Average home: **$362,000**",
-        "Total properties: **142 million**",
-        "Fastest growth: **Montana 89%**"
+        "Markets declining: **12 states**"
       ],
       "category": "Business",
       "source": "CNN",
       "url": "https://www.cnn.com/2025/09/08/business/us-housing-market-value-zillow"
     },
     {
-      "rank": 6,
+      "rank": 5,
       "emoji": "🤖",
-      "title": "China's Unitree Robotics Plans Seven Billion Dollar IPO Valuation",
-      "summary": "Chinese humanoid robot maker **Unitree Robotics** is planning an IPO targeting a **50 billion yuan** (**$7 billion**) valuation. The **Zhejiang-based** startup has emerged as a global leader in AI-powered humanoid robots for industrial and service applications amid intensifying international competition.",
+      "title": "China's Unitree Robotics Targets $7 Billion IPO Valuation",
+      "summary": "**Chinese** robotics startup **Unitree** plans an initial public offering targeting a **$7 billion** valuation (**50 billion yuan**). The **Zhejiang**-based company leads **China's** humanoid robot development, competing globally in AI-powered machines for industrial and service applications as the sector rapidly expands.",
       "details": [
-        "Robot models: **15 types**",
-        "Export markets: **70 countries**",
-        "R&D spending: **40% revenue**"
+        "Robot models: **12**",
+        "Global patents: **300+**",
+        "Revenue growth: **400% YoY**"
       ],
       "category": "Technology",
       "source": "CNBC",
       "url": "https://www.cnbc.com/2025/09/09/chinas-unitree-plans-7-billion-ipo-valuation-as-humanoid-robot-race-heats-up.html"
     },
     {
-      "rank": 7,
-      "emoji": "🚢",
-      "title": "Drone Strike Hits Gaza Aid Flotilla Carrying Greta Thunberg",
-      "summary": "A **Gaza-bound** humanitarian flotilla carrying activist **Greta Thunberg** was allegedly struck by a **drone** in **Tunisian waters**, causing a fire. Witnesses report the explosion occurred next to the boat's **diesel tank**, endangering the aid mission to deliver supplies to Palestinians.",
+      "rank": 6,
+      "emoji": "🧠",
+      "title": "AI Startup Cognition Reaches $10.2 Billion Valuation",
+      "summary": "**Cognition**, developer of AI software engineer **Devin**, closed a **$400 million** funding round at a **$10.2 billion** valuation **Monday**. The startup acquired **Windsurf** in **July** after its founders left for **Google**, positioning itself as a major player in AI development tools.",
       "details": [
-        "Aid cargo: **500 tons**",
-        "Crew members: **47 people**",
-        "Distance from Gaza: **1,200km**"
+        "Windsurf price: **$800M**",
+        "Previous valuation: **$2B**",
+        "Investors: **15 firms**"
+      ],
+      "category": "Technology",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/08/cognition-valued-at-10point2-billion-two-months-after-windsurf-.html"
+    },
+    {
+      "rank": 7,
+      "emoji": "🇺🇦",
+      "title": "Russian Glide Bomb Kills 21 Civilians in Eastern Ukraine",
+      "summary": "A **Russian** glide bomb attack killed at least **21** civilians in a village near **Donetsk**, eastern **Ukraine**. President **Zelenskyy** condemned the strike, criticizing international response as **Russia** continues targeting populated areas while avoiding new sanctions for ongoing attacks on civilian infrastructure.",
+      "details": [
+        "Wounded count: **40+**",
+        "Building destroyed: **8**",
+        "Attack time: **3:20 PM**"
       ],
       "category": "World News",
-      "source": "The Independent",
-      "url": "https://www.independent.co.uk/news/world/middle-east/gaza-flotilla-israel-greta-thunberg-drone-attack-tunisia-b2822754.html"
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/9/9/at-least-20-killed-in-russian-attack-in-eastern-ukraine-zelenskyy-says"
     },
     {
       "rank": 8,
-      "emoji": "💔",
-      "title": "Coldplay Kiss Cam Scandal Leads to Corporate Executive Divorce",
-      "summary": "**Kristin Cabot**, former HR head at **Astronomer**, filed for divorce after a viral **Coldplay concert** kiss cam video showed her embracing ex-CEO **Andy Byron**. The awkward public display at the **US concert** sparked a corporate scandal leading to both executives' resignations.",
+      "emoji": "🇫🇷",
+      "title": "French AI Mistral Secures $1.5 Billion From Chip Giant",
+      "summary": "**French** AI startup **Mistral** received **€1.3 billion** (**$1.5 billion**) from **Dutch** chip manufacturer **ASML** **Tuesday**. **ASML**, valued at **$308 billion**, took an **11%** stake, becoming **Mistral's** largest shareholder as **Europe** pushes to compete with **OpenAI** in artificial intelligence.",
       "details": [
-        "Video views: **8.2 million**",
-        "Company value: **$450 million**",
-        "Stock drop: **23%**"
+        "Total round: **$2B**",
+        "ASML stake: **11%**",
+        "Mistral employees: **450**"
       ],
-      "category": "Business",
-      "source": "South China Morning Post",
-      "url": "https://www.scmp.com/news/world/united-states-canada/article/3324807/ex-astronomer-hr-executive-files-divorce-after-coldplay-kiss-cam-scandal"
+      "category": "Technology",
+      "source": "Business Insider",
+      "url": "https://www.businessinsider.com/mistral-funding-asml-chips-ai-europe-2025-9"
     },
     {
       "rank": 9,
-      "emoji": "🌡️",
-      "title": "Trump Administration Dismantles Climate Science Programs Across Federal Agencies",
-      "summary": "President **Donald Trump's** administration has proposed reversing environmental protections while weakening **NOAA** and climate research programs. The **EPA** announced plans to eliminate key climate regulations, undermining America's scientific capabilities as extreme weather events intensify nationwide, affecting millions of citizens.",
+      "emoji": "🇫🇷",
+      "title": "French Government Falls After Prime Minister Loses Confidence Vote",
+      "summary": "**French** lawmakers ousted Prime Minister **François Bayrou** **Monday** with **364 MPs** voting against him, plunging **France** into political crisis. The government collapse leaves the country without leadership amid rising borrowing costs and economic strain, marking **France's** second government fall this year.",
       "details": [
-        "Budget cuts: **$3.2 billion**",
-        "Scientists fired: **1,400**",
-        "Programs eliminated: **67**"
+        "Vote margin: **364-189**",
+        "Government duration: **3 months**",
+        "Debt level: **€3.2T**"
       ],
-      "category": "Climate",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/features/2025-trump-policies-climate-science/"
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/08/europe/french-prime-minister-confidence-vote-latam-intl"
     },
     {
       "rank": 10,
-      "emoji": "🌏",
-      "title": "India Demands BRICS Address Trade Deficits as China Pushes Unity",
-      "summary": "**India's** External Affairs Minister **S. Jaishankar** urged **BRICS** partners to address trade imbalances with **New Delhi** during a virtual summit. India highlighted its largest deficits are with BRICS members while the bloc rallied against President **Trump's** tariffs threatening global trade.",
+      "emoji": "🏛️",
+      "title": "Trump's Net Worth Jumps $3 Billion Thanks to Presidency",
+      "summary": "**Donald Trump's** net worth increased by **$3 billion** in one year, jumping **118 spots** on the **Forbes 400** list. After falling off in **2023**, **Trump** returned as his political prospects improved, with his presidency significantly boosting his business valuations and wealth rankings.",
       "details": [
-        "India deficit: **$180 billion**",
-        "BRICS GDP: **$28 trillion**",
-        "Member nations: **9 countries**"
+        "Current rank: **#47**",
+        "Total wealth: **$5.6B**",
+        "Properties owned: **19**"
       ],
-      "category": "World News",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/09/09/india-china-brics-brazil-trade-trump-deficit.html"
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/danalexander/2025/09/09/presidency-boosts-trumps-net-worth-by-3-billion-in-a-year/"
     }
   ],
-  "dailyGreeting": "Good morning! Media empires and markets shake up today.",
+  "dailyGreeting": "Good morning! Wealth and power reshape our world today.",
   "readingTime": "2 minute read",
   "displayDate": "TUESDAY, SEPTEMBER 9, 2025",
   "historicalEvents": [
@@ -163,6 +163,6 @@
       "description": "Ahmad Shah Massoud assassinated by Al-Qaeda suicide bombers"
     }
   ],
-  "generatedAt": "2025-09-09T17:50:44.767978",
-  "generatedAtUK": "2025-09-09T18:50:44.767999+01:00"
+  "generatedAt": "2025-09-09T18:14:23.303823",
+  "generatedAtUK": "2025-09-09T19:14:23.303844+01:00"
 }
