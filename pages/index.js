@@ -265,11 +265,11 @@ export default function Home() {
   const getGreetingText = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
-      return 'Good morning';
+      return 'Goood morning';
     } else if (hour >= 12 && hour < 18) {
-      return 'Good evening';
+      return 'Goood evening';
     } else {
-      return 'Good night';
+      return 'Goood night';
     }
   };
 
