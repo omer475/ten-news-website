@@ -614,12 +614,21 @@ REWRITE RULES:
 - DETAILS: CRITICAL - Follow the comprehensive Details Section Instructions below
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
+- BOLD TEXT: Identify and mark important words for emphasis using **bold** markup
 
 WORD COUNT ENFORCEMENT:
 - Every summary MUST contain between 40-50 words (inclusive)
 - Count words carefully - if under 40 words, add more detail
 - If over 50 words, trim unnecessary words
 - This is MANDATORY - summaries with wrong word count will be rejected
+
+BOLD TEXT MARKUP RULES:
+- Use **text** to mark important words, names, places, numbers, and statistics
+- Examples: **$2.5 billion**, **Tesla**, **New York**, **45%**, **President Biden**
+- Be selective - only bold truly important information
+- Do NOT bold common words like "the", "and", "is", "was"
+- Focus on: proper nouns, numbers, percentages, key statistics, company names, people names, locations
+- Apply to both SUMMARY and DETAILS sections
 
 ## Details Section Instructions for AI - Complete Format Guide
 
@@ -795,8 +804,8 @@ Return ONLY this JSON:
       "rank": 1,
       "emoji": "🌍",
       "title": "Title without emoji",
-      "summary": "EXACTLY 40-50 words - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
-      "details": ["Label: Value - completely NEW fact not in summary", "Label: Value - different category from summary", "Label: Value - adds context summary lacks"],
+      "summary": "EXACTLY 40-50 words with **bold** important words like **$2.5B**, **Tesla**, **New York** - write complete sentences with proper detail, count each word carefully to ensure you hit the target range", 
+      "details": ["Label: **Value** - completely NEW fact not in summary", "Label: **Value** - different category from summary", "Label: **Value** - adds context summary lacks"],
       "category": "World News/Business/Technology/Science/Climate/Health",
       "source": "Source name",
       "url": "Original URL"

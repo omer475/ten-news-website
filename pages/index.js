@@ -144,6 +144,17 @@ export default function Home() {
   const nextStory = () => goToStory(currentIndex + 1);
   const prevStory = () => goToStory(currentIndex - 1);
 
+  // Function to render text with bold markup
+  const renderBoldText = (text) => {
+    if (!text) return '';
+    return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
@@ -318,7 +329,7 @@ export default function Home() {
         }
 
         .logo-ten {
-          color: #0f172a;
+          color: #2C4D9C;
           font-weight: 900;
         }
 
@@ -337,11 +348,11 @@ export default function Home() {
         }
 
         .subscribe-btn {
-          padding: 8px 20px;
-          background: #3b82f6;
+          padding: 12px 20px;
+          background: #FF6F3C;
           color: white;
           border: none;
-          border-radius: 6px;
+          border-radius: 10px;
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.5px;
@@ -351,7 +362,7 @@ export default function Home() {
         }
 
         .subscribe-btn:hover {
-          background: #2563eb;
+          background: #e55a2b;
         }
 
         .story-container {
@@ -388,18 +399,18 @@ export default function Home() {
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 2px;
-          color: #dc2626;
+          color: #2C4D9C;
           text-transform: uppercase;
           margin-bottom: 40px;
         }
 
         .main-headline {
-          font-size: 52px;
+          font-size: 32px;
           font-weight: 800;
-          line-height: 1.15;
+          line-height: 1.25;
           letter-spacing: -1.5px;
           margin-bottom: 40px;
-          color: #0f172a;
+          color: #2C4D9C;
         }
 
         .subheadline {
@@ -433,13 +444,15 @@ export default function Home() {
         .news-item {
           display: block;
           padding: 24px 15px;
-          border-bottom: 1px solid #e5e5e7;
+          border: 1px solid #E0E0E0;
           cursor: pointer;
           transition: all 0.2s;
           border-radius: 8px;
           position: relative;
           margin: 0 auto;
           max-width: 950px;
+          background: #FFFFFF;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .news-item.first-news {
@@ -447,7 +460,7 @@ export default function Home() {
         }
 
         .news-item:hover {
-          background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .news-item:last-child {
@@ -489,20 +502,20 @@ export default function Home() {
         }
 
         .news-title {
-          font-size: 32px;
+          font-size: 26px;
           font-weight: 800;
-          line-height: 1.2;
+          line-height: 1.35;
           margin-bottom: 14px;
-          color: #0f172a;
+          color: #2C4D9C;
         }
 
         .news-summary {
-          font-size: 17px;
-          color: #475569;
-          line-height: 1.6;
+          font-size: 18px;
+          color: #111111;
+          line-height: 1.65;
           margin-bottom: 16px;
           padding-bottom: 16px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #E0E0E0;
         }
 
         .news-meta {
@@ -543,14 +556,14 @@ export default function Home() {
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: #111827;
+          color: #111111;
           line-height: 1.2;
           margin: 0;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: #6b7280;
+          color: #555555;
           font-weight: 500;
           margin-top: 0;
         }
@@ -567,26 +580,26 @@ export default function Home() {
         }
 
         .progress-dot {
-          width: 6px;
-          height: 6px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background: #e2e8f0;
+          background: #CCCCCC;
           cursor: pointer;
           transition: all 0.3s;
         }
 
         .progress-dot.active {
-          width: 6px;
-          height: 20px;
-          border-radius: 3px;
-          background: linear-gradient(180deg, #1f2937, #000000);
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #2C4D9C;
         }
 
         .newsletter-container {
           text-align: center;
-          padding: 60px 0;
-          background: #000;
-          color: #fff;
+          padding: 40px;
+          background: #2C4D9C;
+          color: #FFFFFF;
           height: 100vh;
           width: 100vw;
           display: flex;
@@ -596,18 +609,21 @@ export default function Home() {
           position: relative;
           left: 50%;
           transform: translateX(-50%);
+          border-radius: 12px;
+          box-shadow: 0 10px 14px rgba(0, 0, 0, 0.15);
         }
 
         .newsletter-title {
-          font-size: 42px;
+          font-size: 30px;
           font-weight: 800;
           letter-spacing: -1.5px;
           margin-bottom: 16px;
+          color: #FFFFFF;
         }
 
         .newsletter-subtitle {
           font-size: 18px;
-          color: #86868b;
+          color: rgba(255, 255, 255, 0.9);
           margin-bottom: 40px;
         }
 
@@ -623,42 +639,43 @@ export default function Home() {
           width: 100%;
           padding: 16px 20px;
           font-size: 16px;
-          border: 1px solid #333;
+          border: 1px solid #E0E0E0;
           border-radius: 12px;
-          background: #1c1c1e;
-          color: #fff;
+          background: #FFFFFF;
+          color: #111111;
           outline: none;
           transition: border-color 0.2s;
         }
 
         .newsletter-input:focus {
-          border-color: #f97316;
+          border-color: #2C4D9C;
         }
 
         .newsletter-input::placeholder {
-          color: #6e6e73;
+          color: #555555;
         }
 
         .newsletter-button {
           width: 100%;
           padding: 16px 32px;
-          background: #fff;
-          color: #000;
+          background: #FF6F3C;
+          color: #FFFFFF;
           border: none;
           border-radius: 12px;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
           transition: background-color 0.2s;
+          min-height: 44px;
         }
 
         .newsletter-button:hover {
-          background: #f0f0f0;
+          background: #e55a2b;
         }
 
         .newsletter-info {
           font-size: 13px;
-          color: #6e6e73;
+          color: rgba(255, 255, 255, 0.8);
           margin-top: 24px;
         }
 
@@ -708,14 +725,14 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 24px;
+            font-size: 22px;
           }
           
           .main-headline {
-            font-size: 34px;
+            font-size: 28px;
             letter-spacing: -1px;
             margin-bottom: 30px;
-            line-height: 1.15;
+            line-height: 1.25;
           }
           
           .date-header {
@@ -756,15 +773,15 @@ export default function Home() {
           }
           
           .progress-dot {
-            width: 5px;
-            height: 5px;
-            background: #e2e8f0;
+            width: 6px;
+            height: 6px;
+            background: #CCCCCC;
           }
           
           .progress-dot.active {
-            width: 5px;
-            height: 18px;
-            background: linear-gradient(180deg, #1f2937, #000000);
+            width: 9px;
+            height: 9px;
+            background: #2C4D9C;
           }
           
           .news-meta {
@@ -839,15 +856,15 @@ export default function Home() {
                       <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
                         {stories.filter(s => s.type === 'news').slice(0, 5).map((story, i) => {
                           const categoryColors = {
-                            'WORLD NEWS': '#dc2626',
-                            'BUSINESS': '#f97316',
-                            'MARKETS': '#06b6d4',
-                            'TECH & AI': '#8b5cf6',
-                            'SCIENCE': '#0ea5e9',
-                            'HEALTH': '#10b981',
-                            'CLIMATE': '#22c55e',
-                            'SPORTS': '#f59e0b',
-                            'ENTERTAINMENT': '#ec4899'
+                            'WORLD NEWS': '#2C4D9C',
+                            'BUSINESS': '#2ECC71',
+                            'MARKETS': '#2ECC71',
+                            'TECH & AI': '#008080',
+                            'SCIENCE': '#008080',
+                            'HEALTH': '#27AE60',
+                            'CLIMATE': '#27AE60',
+                            'SPORTS': '#9B59B6',
+                            'ENTERTAINMENT': '#9B59B6'
                           };
                           const color = categoryColors[story.category] || '#3b82f6';
                           const shortTitle = story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title;
@@ -937,15 +954,15 @@ export default function Home() {
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
-                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
-                               story.category === 'BUSINESS' ? '#f97316' :
-                               story.category === 'MARKETS' ? '#06b6d4' :
-                               story.category === 'TECH & AI' ? '#8b5cf6' :
-                               story.category === 'SCIENCE' ? '#0ea5e9' :
-                               story.category === 'HEALTH' ? '#10b981' :
-                               story.category === 'CLIMATE' ? '#22c55e' :
-                               story.category === 'SPORTS' ? '#f59e0b' :
-                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b',
+                        color: story.category === 'WORLD NEWS' ? '#2C4D9C' :
+                               story.category === 'BUSINESS' ? '#2ECC71' :
+                               story.category === 'MARKETS' ? '#2ECC71' :
+                               story.category === 'TECH & AI' ? '#008080' :
+                               story.category === 'SCIENCE' ? '#008080' :
+                               story.category === 'HEALTH' ? '#27AE60' :
+                               story.category === 'CLIMATE' ? '#27AE60' :
+                               story.category === 'SPORTS' ? '#9B59B6' :
+                               story.category === 'ENTERTAINMENT' ? '#9B59B6' : '#555555',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px'
@@ -954,7 +971,7 @@ export default function Home() {
                         {story.category}
                       </div>
                       <h3 className="news-title">{story.title}</h3>
-                      <p className="news-summary">{story.summary}</p>
+                      <p className="news-summary">{renderBoldText(story.summary)}</p>
                       <div className="news-meta">
                         {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
@@ -969,8 +986,8 @@ export default function Home() {
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                              <div className="news-detail-value">{renderBoldText(mainValue)}</div>
+                              {subtitle && <div className="news-detail-subtitle">{renderBoldText(subtitle)}</div>}
                             </div>
                           );
                         })}
