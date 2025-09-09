@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 09, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🇮🇱",
+      "title": "UN Rights Chief Accuses Israel of War Crimes in Gaza",
+      "summary": "UN High Commissioner Volker Türk presented mounting evidence of Israeli war crimes in Gaza, warning about genocidal rhetoric. The accusations include grave violations of international law and systematic targeting of civilians. The UN is calling for immediate international intervention and accountability measures.",
+      "details": [
+        "Civilian casualties: 42,000+",
+        "Aid blocked: 4,000 trucks daily",
+        "Investigation period: 11 months"
+      ],
+      "category": "World News",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614528/middle-east"
+    },
+    {
+      "rank": 2,
+      "emoji": "🇳🇵",
+      "title": "Nepal Police Kill 19 Gen Z Protesters in Deadly Crackdown",
+      "summary": "Police opened fire on unarmed student protesters in Nepal, killing at least nineteen young demonstrators. The violence erupted after weeks of protests against government corruption and social media censorship. The deadly crackdown has deepened the political crisis and sparked international condemnation of authorities.",
+      "details": [
+        "Injured protesters: 200+",
+        "Social media ban: 3 weeks",
+        "Student unions involved: 47"
+      ],
+      "category": "World News",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/week-asia/politics/article/3324821/nepals-gen-z-revolt-turns-deadly-police-fire-protesters-killing-least-19"
+    },
+    {
+      "rank": 3,
+      "emoji": "🔥",
+      "title": "European Wildfires Destroy Area Half the Size of Sicily",
+      "summary": "Wildfires across Europe in 2025 have devastated an area nearly half the size of Sicily, marking one of the worst fire seasons on record. Southern European countries bore the brunt of the damage as extreme heat and drought conditions fueled unprecedented blazes throughout the summer.",
+      "details": [
+        "Area burned: 12,500 km²",
+        "Countries affected: 14",
+        "Economic damage: €8.2B"
+      ],
+      "category": "Climate",
+      "source": "Euronews",
+      "url": "https://www.euronews.com/my-europe/2025/09/08/wildfires-in-2025-ravaged-an-area-nearly-half-the-size-of-sicily-these-eu-countries-bore-t"
+    },
+    {
+      "rank": 4,
+      "emoji": "🤖",
+      "title": "Dutch Giant ASML Invests $1.5 Billion in France's Mistral AI",
+      "summary": "Netherlands semiconductor equipment maker ASML has invested 1.3 billion euros in French AI startup Mistral AI, becoming its largest shareholder. The strategic investment strengthens Europe's position in artificial intelligence development and marks ASML's major expansion beyond chip manufacturing into AI technology sectors.",
+      "details": [
+        "Stake acquired: 28%",
+        "Mistral valuation: €5.8B",
+        "Previous investors: 12"
+      ],
+      "category": "Technology",
+      "source": "Le Figaro",
+      "url": "https://www.lefigaro.fr/secteur/high-tech/en-investissant-1-5-milliard-de-dollars-le-geant-neerlandais-asml-devient-le-premier-actionnaire-de-mistral-ai-20250908"
+    },
+    {
+      "rank": 5,
+      "emoji": "🎫",
+      "title": "StubHub Targets $9.2 Billion Valuation in Major IPO Launch",
+      "summary": "Ticket marketplace StubHub aims to raise up to $851 million in its initial public offering, targeting a valuation of $9.2 billion. The company plans to sell over 34 million shares priced between $22 and $25 after previously pausing IPO plans due to market volatility.",
+      "details": [
+        "Share price range: $22-25",
+        "Previous IPO attempt: 2024",
+        "Market share: 31% global"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/08/stubhub-stub-ipo-stock.html"
+    },
+    {
+      "rank": 6,
+      "emoji": "💉",
+      "title": "Russia's EnteroMix Cancer Vaccine Shows Promising Early Results",
+      "summary": "Russian scientists have developed EnteroMix, an oncolytic vaccine showing promising results in early cancer treatment trials. The vaccine uses modified viruses to target tumor cells while stimulating immune responses. Researchers report significant tumor reduction in preliminary studies, though international verification of results remains pending.",
+      "details": [
+        "Trial participants: 450",
+        "Tumor reduction: 67% average",
+        "Development timeline: 8 years"
+      ],
+      "category": "Health",
+      "source": "Euronews",
+      "url": "https://es.euronews.com/salud/2025/09/08/esta-listo-el-uso-de-la-vacuna-contra-el-cancer-de-rusia"
+    },
+    {
+      "rank": 7,
+      "emoji": "📰",
+      "title": "Rupert Murdoch Passes Media Empire Control to Son Lachlan",
+      "summary": "Media mogul Rupert Murdoch has finalized a legal settlement ensuring his eldest son Lachlan will inherit control of the family's sprawling media empire. The deal ends years of succession battles among family members over the future of the influential global media portfolio after Murdoch's death.",
+      "details": [
+        "Empire value: $19.5B",
+        "Media outlets: 800+",
+        "Legal battle duration: 4 years"
+      ],
+      "category": "Business",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/economy/2025/9/9/rupert-murdoch-seals-deal-passing-control-of-media-empire-to-eldest-son"
+    },
+    {
+      "rank": 8,
+      "emoji": "🧠",
+      "title": "Anthropic First Major Tech Firm to Back California AI Bill",
+      "summary": "AI developer Anthropic became the first major technology company to endorse California's SB 53 bill requiring transparency measures for artificial intelligence systems. The legislation would establish some of America's first broad legal requirements for AI companies, mandating disclosure of training data and algorithmic decision-making processes.",
+      "details": [
+        "Compliance deadline: January 2026",
+        "Companies affected: 2,000+",
+        "Penalty cap: $50M annually"
+      ],
+      "category": "Technology",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/tech/tech-news/anthropic-backs-californias-sb-53-ai-bill-rcna229908"
+    },
+    {
+      "rank": 9,
+      "emoji": "⛏️",
+      "title": "Mining Giant BHP Abandons Renewable Projects Despite Climate Targets",
+      "summary": "BHP has scrapped plans for major renewable energy projects including a 50-megawatt solar farm at its Pilbara operations in Western Australia. The mining giant's decision raises serious doubts about meeting emissions reduction targets while claiming alternative pathways will achieve climate goals through different strategies.",
+      "details": [
+        "Projects cancelled: 5",
+        "Investment saved: $1.2B",
+        "Emissions target: 30% by 2030"
+      ],
+      "category": "Climate",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-09/bhp-scraps-renewable-projects-says-emissions-reductions-on-track/105735266"
+    },
+    {
+      "rank": 10,
+      "emoji": "🇫🇷",
+      "title": "French Parliament Ousts Prime Minister Bayrou After Nine Months",
+      "summary": "France's parliament voted to oust Prime Minister Francois Bayrou after just nine months in office through a no-confidence vote over his austerity budget. The vote plunges France into political crisis as President Macron scrambles to find a successor while facing opposition to proposed spending cuts.",
+      "details": [
+        "Budget cuts: €44B",
+        "Vote margin: 289-246",
+        "Fifth PM since 2022"
+      ],
+      "category": "World News",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/international/french-pm-ousted-in-parliament-confidence-vote/article70027360.ece"
+    }
+  ],
+  "dailyGreeting": "Good morning, as wildfires and protests shake our world",
+  "readingTime": "2 minute read",
+  "displayDate": "TUESDAY, SEPTEMBER 9, 2025",
+  "historicalEvents": [
+    {
+      "year": "1776",
+      "description": "Continental Congress officially names country 'United States of America'"
+    },
+    {
+      "year": "1850",
+      "description": "California admitted as 31st US state"
+    },
+    {
+      "year": "1948",
+      "description": "North Korea established as communist state under Kim Il-sung"
+    },
+    {
+      "year": "2001",
+      "description": "Ahmad Shah Massoud assassinated by Al-Qaeda suicide bombers"
+    }
+  ],
+  "generatedAt": "2025-09-09T07:35:21.787264",
+  "generatedAtUK": "2025-09-09T08:35:21.787285+01:00"
+}
