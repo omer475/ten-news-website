@@ -574,7 +574,7 @@ export default function Home() {
 
         .news-summary {
           font-size: 17px;
-          color: #4a4a4a;
+          color: #000000;
           line-height: 1.6;
           margin-bottom: 16px;
           padding-bottom: 16px;
