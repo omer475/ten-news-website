@@ -49,7 +49,8 @@ export default function Home() {
               day: 'numeric',
               year: 'numeric'
             }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News'
+            headline: newsData.dailyGreeting || 'Today Essential Global News',
+            greetingColor: newsData.greetingColor || '#fbbf24'
           };
           
           processedStories.push(openingStory);
@@ -79,7 +80,8 @@ export default function Home() {
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: 'Ten News automation is working perfectly'
+              headline: 'Ten News automation is working perfectly',
+              greetingColor: '#fbbf24'
             },
             {
               type: 'news',
@@ -841,7 +843,7 @@ export default function Home() {
               {story.type === 'opening' ? (
                 <div className="opening-container">
                   <div className="date-header">{story.date}</div>
-                  <h1 className="main-headline">
+                  <h1 className="main-headline" style={{ color: story.greetingColor }}>
                     {story.headline}
                   </h1>
                   <div className="subheadline">
