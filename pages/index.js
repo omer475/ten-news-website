@@ -253,7 +253,7 @@ export default function Home() {
   const getGreetingGradient = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) {
-      return 'linear-gradient(90deg, #1e3a8a 0%, #fbbf24 100%)'; // Dark navy to yellow for morning
+      return 'linear-gradient(90deg, #f97316 0%, #fbbf24 100%)'; // Orange to yellow for morning
     } else if (hour >= 12 && hour < 18) {
       return 'linear-gradient(90deg, #1e3a8a 0%, #f97316 100%)'; // Dark navy to orange for evening
     } else {
@@ -277,6 +277,7 @@ export default function Home() {
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
+    const restGradient = 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%)';
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -307,7 +308,12 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</span>
-          {restOfText}
+          <span style={{
+            background: restGradient,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>{restOfText}</span>
         </>
       );
     }
