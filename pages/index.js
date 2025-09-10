@@ -297,7 +297,6 @@ export default function Home() {
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
-    const restGradient = getHeadlineRestGradient();
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -328,12 +327,7 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</span>
-          <span style={{
-            background: restGradient,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>{restOfText}</span>
+          <span style={{ color: '#dc2626' }}>{restOfText}</span>
         </>
       );
     }
@@ -931,7 +925,7 @@ export default function Home() {
           >
             <div className="story-content">
               {story.type === 'opening' ? (
-                <div className="opening-container" style={{ background: getOpeningBackground(), WebkitBackgroundClip: 'text', color: 'transparent', backgroundClip: 'text' }}>
+                <div className="opening-container">
                   <div className="date-header">{story.date}</div>
                   <h1 className="main-headline">
                     {renderGreeting(story.headline)}
