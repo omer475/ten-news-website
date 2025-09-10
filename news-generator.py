@@ -850,25 +850,10 @@ def generate_daily_greeting_and_reading_time(articles):
     total_words = sum(len(article.get('summary', '').split()) for article in articles)
     titles = [article.get('title', '') for article in articles[:5]]
     
-    # Determine time-based greeting and color
-    hour = uk_time.hour
-    if 5 <= hour < 12:
-        time_greeting = "Good morning"
-        greeting_color = "#fbbf24"  # Yellow
-    elif 12 <= hour < 18:
-        time_greeting = "Good afternoon"
-        greeting_color = "#f97316"  # Orange
-    elif 18 <= hour < 22:
-        time_greeting = "Good evening"
-        greeting_color = "#f97316"  # Orange
-    else:
-        time_greeting = "Good night"
-        greeting_color = "#3b82f6"  # Blue
-
     prompt = f"""Create a daily greeting for news readers. Today is {uk_time.strftime('%B %d, %Y')}.
 
 REQUIREMENTS:
-1. Start with "{time_greeting}," or special day greeting if appropriate
+1. Start with "Good morning," or special day greeting if appropriate
 2. Maximum 10 words total including greeting
 3. Make it engaging about today's news or special day
 4. Use B2 English
@@ -880,8 +865,7 @@ Calculate reading time for {total_words} words (200-250 WPM average).
 Return ONLY this JSON:
 {{
   "greeting": "Complete greeting under 10 words",
-  "reading_time": "X minute read",
-  "greeting_color": "{greeting_color}"
+  "reading_time": "X minute read"
 }}"""
     
     response = call_claude_api_with_model(prompt, "Generating greeting", CLAUDE_SONNET_MODEL)
@@ -890,12 +874,12 @@ Return ONLY this JSON:
         try:
             parsed = parse_json_with_fallback(response)
             if parsed:
-                return parsed.get('greeting', f'{time_greeting}, today brings important global updates'), parsed.get('reading_time', '3 minute read'), parsed.get('greeting_color', greeting_color)
+                return parsed.get('greeting', 'Good morning, today brings important global updates'), parsed.get('reading_time', '3 minute read')
         except Exception:
             pass
     
     estimated_minutes = max(1, round(total_words / 225))
-    return f"{time_greeting}, today brings important global updates", f"{estimated_minutes} minute read", greeting_color
+    return "Good morning, today brings important global updates", f"{estimated_minutes} minute read"
 
 # ==================== HISTORICAL EVENTS ====================
 def generate_historical_events():
@@ -1174,7 +1158,7 @@ def generate_daily_news():
         print(f"✅ Final output: {len(articles_data['articles'])} articles")
         
         # Generate greeting and reading time
-        daily_greeting, reading_time, greeting_color = generate_daily_greeting_and_reading_time(articles_data['articles'])
+        daily_greeting, reading_time = generate_daily_greeting_and_reading_time(articles_data['articles'])
         formatted_date = get_formatted_date()
         
         # Generate historical events
@@ -1183,7 +1167,6 @@ def generate_daily_news():
         # Add metadata
         articles_data.update({
             'dailyGreeting': daily_greeting,
-            'greetingColor': greeting_color,
             'readingTime': reading_time,
             'displayDate': formatted_date,
             'historicalEvents': historical_events,
