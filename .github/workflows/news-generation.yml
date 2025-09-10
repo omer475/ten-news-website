@@ -34,13 +34,16 @@ jobs:
           import subprocess
           import datetime
           import pytz
+          import os
           
-          # Timezone-aware guard: run ONLY at exactly 07:00 Europe/London
-          tz = pytz.timezone('Europe/London')
-          now = datetime.datetime.now(tz)
-          if not (now.hour == 7 and now.minute == 0):
-              print(f'⏭ Skipping run at {now.strftime('%Y-%m-%d %H:%M %Z')}; waiting for 07:00 Europe/London')
-              sys.exit(0)
+          # Timezone-aware guard: run ONLY at exactly 07:00 Europe/London,
+          # but ALWAYS run when triggered manually (workflow_dispatch)
+          if os.getenv('GITHUB_EVENT_NAME') != 'workflow_dispatch':
+              tz = pytz.timezone('Europe/London')
+              now = datetime.datetime.now(tz)
+              if not (now.hour == 7 and now.minute == 0):
+                  print('⏭ Skipping run at {} ; waiting for 07:00 Europe/London'.format(now.strftime('%Y-%m-%d %H:%M %Z')))
+                  sys.exit(0)
 
           print('🤖 Starting automated news generation...')
           
