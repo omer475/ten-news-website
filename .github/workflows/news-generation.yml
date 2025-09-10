@@ -1,7 +1,7 @@
 name: Generate Daily News
 on:
   schedule:
-    - cron: '0 7 * * *'  # 7 AM UTC daily (8 AM UK during DST, 7 AM UK during standard time)
+    - cron: '*/1 * * * *'  # Run every minute; guarded to execute only at 07:00 Europe/London
   workflow_dispatch:  # Manual trigger for testing
 
 jobs:
@@ -32,7 +32,16 @@ jobs:
           python -c "
           import sys
           import subprocess
+          import datetime
+          import pytz
           
+          # Timezone-aware guard: run ONLY at exactly 07:00 Europe/London
+          tz = pytz.timezone('Europe/London')
+          now = datetime.datetime.now(tz)
+          if not (now.hour == 7 and now.minute == 0):
+              print(f'⏭ Skipping run at {now.strftime('%Y-%m-%d %H:%M %Z')}; waiting for 07:00 Europe/London')
+              sys.exit(0)
+
           print('🤖 Starting automated news generation...')
           
           # Run the news generator directly
