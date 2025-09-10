@@ -1,0 +1,169 @@
+{
+  "digest_date": "September 10, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🇺🇦",
+      "title": "Russian Strike on Ukrainian Pension Center Kills Dozens",
+      "summary": "A **Russian** guided bomb struck a pension distribution center in eastern **Ukraine**, killing **24 people**. The attack hit the village near **Sloviansk**, about **24 kilometers** from the city center. President **Volodymyr Zelenskyy** urged allies to increase pressure on **Moscow** to end the ongoing war.",
+      "details": [
+        "Weapon type: Guided aerial bomb",
+        "Collection day: Monthly pension Tuesday",
+        "Regional casualties: 89 this week"
+      ],
+      "category": "World News",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-10/russian-strike-on-ukrainian-pension-distribution-centre-kills-24/105755824"
+    },
+    {
+      "rank": 2,
+      "emoji": "📱",
+      "title": "Apple Unveils Ultra-Thin iPhone 17 Air Amid Market Pressures",
+      "summary": "**Apple** revealed its **iPhone 17** lineup including the ultra-thin **iPhone 17 Air** measuring just **5.6mm** thick. CEO **Tim Cook** presented the devices at **Cupertino** headquarters, aiming to boost upgrades amid **AI** competition and **US tariff** pressures affecting the smartphone market globally.",
+      "details": [
+        "Starting price: $1,299",
+        "Battery life: 18 hours",
+        "Pre-orders: September 15"
+      ],
+      "category": "Technology",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/world/united-states/apple-unveils-iphone-17-air-amid-ai-race-and-tariff-pressures"
+    },
+    {
+      "rank": 3,
+      "emoji": "⛏️",
+      "title": "Anglo American and Teck Resources Announce Historic Mining Merger",
+      "summary": "**Anglo American** and **Canada's Teck Resources** plan to merge in the mining sector's **second-largest** deal ever, creating a company worth over **$53 billion**. The **London-listed** and **Canadian** miners expect regulatory approval to take up to **18 months** before finalizing this historic combination.",
+      "details": [
+        "Deal value: $31 billion",
+        "Copper reserves: 42 million tonnes",
+        "Job impact: 15,000 positions"
+      ],
+      "category": "Business",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/economy/2025/9/9/anglo-american-teck-resources-to-merge-in-second-largest-mining-deal-ever"
+    },
+    {
+      "rank": 4,
+      "emoji": "🇨🇳",
+      "title": "China Consumer Prices Fall as Deflation Concerns Deepen",
+      "summary": "**China's** consumer price index dropped **0.4%** in **August** year-over-year, exceeding economists' forecast of **0.2%** decline. The **National Bureau of Statistics** data shows persistent **deflation** in wholesale prices as **Beijing** faces mounting pressure to boost sluggish domestic demand and weakening export growth.",
+      "details": [
+        "Producer prices: -2.1% YoY",
+        "Food inflation: 1.2%",
+        "Stimulus expected: $450 billion"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/10/china-cpi-august-deflation-.html"
+    },
+    {
+      "rank": 5,
+      "emoji": "🇳🇵",
+      "title": "Nepal Prime Minister Resigns After Violent Social Media Protests",
+      "summary": "**Nepal's** Prime Minister **KP Sharma Oli** announced his resignation **Tuesday** following violent unrest over a repealed **social media ban**. The protests in **Kathmandu** entered their second day, originally sparked by government corruption concerns and the since-reversed ban on major platforms, forcing the leader's sudden departure.",
+      "details": [
+        "Protesters arrested: 340",
+        "Internet blackout: 72 hours",
+        "Coalition seats: 89 of 275"
+      ],
+      "category": "World News",
+      "source": "CBS News",
+      "url": "https://www.cbsnews.com/news/nepal-protests-social-media-ban-prime-minister-oli-resigns/"
+    },
+    {
+      "rank": 6,
+      "emoji": "🤖",
+      "title": "French AI Startup Mistral Secures Massive ASML Investment",
+      "summary": "**French AI** startup **Mistral** received **€1.3 billion** ($1.5 billion) from Dutch chip giant **ASML** in a **$2 billion** funding round. **ASML**, valued at **$308 billion**, now owns approximately **11%** of Mistral, becoming the **European** OpenAI competitor's largest shareholder in this strategic investment.",
+      "details": [
+        "Valuation: $13.6 billion",
+        "Previous funding: $640 million",
+        "Employee count: 450"
+      ],
+      "category": "Technology",
+      "source": "Business Insider",
+      "url": "https://www.businessinsider.com/mistral-funding-asml-chips-ai-europe-2025-9"
+    },
+    {
+      "rank": 7,
+      "emoji": "🐷",
+      "title": "FDA Approves Human Trials for Pig Kidney Transplants",
+      "summary": "The **FDA** has approved human trials for **pig kidney transplants**, advancing xenotransplantation science significantly. This breakthrough allows scientists to study longer-term organ viability in humans, potentially addressing the critical shortage of donor organs. The approval marks a major leap forward in cross-species transplantation research.",
+      "details": [
+        "Trial participants: 20 patients",
+        "Study duration: 5 years",
+        "Organ shortage: 100,000 waiting"
+      ],
+      "category": "Health",
+      "source": "Engadget",
+      "url": "https://www.engadget.com/science/the-fda-approves-human-trials-for-pig-kidney-transplants-165416004.html"
+    },
+    {
+      "rank": 8,
+      "emoji": "🐨",
+      "title": "Australia Approves World's First Koala Chlamydia Vaccine",
+      "summary": "**Australia** has approved the world's first **chlamydia vaccine** for **koalas**, developed by **University of the Sunshine Coast** scientists over more than a decade. The vaccine aims to curb the epidemic devastating the **endangered** marsupial population, offering hope for conservation efforts across the country's eastern regions.",
+      "details": [
+        "Infected population: 50-80%",
+        "Development cost: A$24 million",
+        "Rollout timeline: 6 months"
+      ],
+      "category": "Science",
+      "source": "BBC",
+      "url": "https://www.bbc.com/news/articles/cwylp71vnjgo"
+    },
+    {
+      "rank": 9,
+      "emoji": "🌡️",
+      "title": "Trump Administration Reverses Major Climate Science Policies",
+      "summary": "President **Donald Trump's EPA** announced proposals to reverse environmental protections, weakening **US climate science** capabilities. The administration's war on climate research affects **NOAA's National Hurricane Center** in **Miami** and other critical agencies, undermining America's ability to track and respond to extreme weather events nationwide.",
+      "details": [
+        "Budget cuts: $2.3 billion",
+        "Scientists dismissed: 1,200",
+        "Programs eliminated: 47"
+      ],
+      "category": "Climate",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/features/2025-trump-policies-climate-science/"
+    },
+    {
+      "rank": 10,
+      "emoji": "🏆",
+      "title": "Gold Prices Hit Record Highs as Investors Flee Dollar",
+      "summary": "**Gold prices** surged to **all-time highs** as global investors seek safe haven assets, abandoning the **US dollar**. The precious metal's rally continues despite **stock markets** also hitting new peaks, signaling unusual market dynamics. **Perth Mint** reports unprecedented demand as the new gold rush shows no signs of slowing.",
+      "details": [
+        "Price per ounce: $2,847",
+        "Dollar index: -8.3%",
+        "Central bank buying: 1,037 tonnes"
+      ],
+      "category": "Business",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-10/gold-price-surges-to-record-as-investors-seek-safe-haven-markets/105757386"
+    }
+  ],
+  "dailyGreeting": "Good morning, major tech and global shifts unfold today.",
+  "greetingColor": "#fbbf24",
+  "readingTime": "2 minute read",
+  "displayDate": "WEDNESDAY, SEPTEMBER 10, 2025",
+  "historicalEvents": [
+    {
+      "year": "1419",
+      "description": "John the Fearless assassinated, sparking Burgundian-French civil war"
+    },
+    {
+      "year": "1813",
+      "description": "US Navy defeats British fleet in Battle of Lake Erie"
+    },
+    {
+      "year": "1939",
+      "description": "Canada declares war on Nazi Germany, joining World War II"
+    },
+    {
+      "year": "2008",
+      "description": "Large Hadron Collider first activated at CERN laboratory"
+    }
+  ],
+  "generatedAt": "2025-09-10T08:48:52.411018",
+  "generatedAtUK": "2025-09-10T09:48:52.411037+01:00"
+}
