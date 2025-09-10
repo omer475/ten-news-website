@@ -249,16 +249,36 @@ export default function Home() {
     hour12: false
   });
 
-  // Function to get greeting gradient based on time
-  const getGreetingGradient = () => {
+  // Time-of-day helper
+  const getTimeOfDay = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
-      return 'linear-gradient(90deg, #f97316 0%, #fbbf24 100%)'; // Orange to yellow for morning
-    } else if (hour >= 12 && hour < 18) {
-      return 'linear-gradient(90deg, #1e3a8a 0%, #f97316 100%)'; // Dark navy to orange for evening
-    } else {
-      return 'linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%)'; // Dark navy to light blue for night
-    }
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    return 'evening';
+  };
+
+  // Greeting gradient by time
+  const getGreetingGradient = () => {
+    const t = getTimeOfDay();
+    if (t === 'morning') return 'linear-gradient(90deg, #f97316 0%, #fbbf24 100%)'; // Orange → Yellow
+    if (t === 'afternoon') return 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)'; // Blue → Cyan
+    return 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)'; // Indigo → Purple
+  };
+
+  // Headline (rest) gradient by time
+  const getHeadlineRestGradient = () => {
+    const t = getTimeOfDay();
+    if (t === 'morning') return 'linear-gradient(90deg, #7c3aed 0%, #ec4899 100%)'; // Deep Purple → Hot Pink
+    if (t === 'afternoon') return 'linear-gradient(90deg, #dc2626 0%, #f97316 100%)'; // Red → Orange
+    return 'linear-gradient(90deg, #f59e0b 0%, #f87171 100%)'; // Gold → Coral
+  };
+
+  // Opening background gradient by time
+  const getOpeningBackground = () => {
+    const t = getTimeOfDay();
+    if (t === 'morning') return 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)';
+    if (t === 'afternoon') return 'linear-gradient(135deg, #dc2626 0%, #f97316 100%)';
+    return 'linear-gradient(135deg, #f59e0b 0%, #f87171 100%)';
   };
 
   // Function to get greeting text based on time
@@ -277,7 +297,7 @@ export default function Home() {
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
-    const restGradient = 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%)';
+    const restGradient = getHeadlineRestGradient();
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -911,7 +931,7 @@ export default function Home() {
           >
             <div className="story-content">
               {story.type === 'opening' ? (
-                <div className="opening-container">
+                <div className="opening-container" style={{ background: getOpeningBackground(), WebkitBackgroundClip: 'text', color: 'transparent', backgroundClip: 'text' }}>
                   <div className="date-header">{story.date}</div>
                   <h1 className="main-headline">
                     {renderGreeting(story.headline)}
