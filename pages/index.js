@@ -476,10 +476,10 @@ export default function Home() {
         }
 
         .main-headline {
-          font-size: 52px;
-          font-weight: 800;
-          line-height: 1.15;
-          letter-spacing: -1.5px;
+          font-size: 60px; /* ~15% larger */
+          font-weight: 900; /* extra bold */
+          line-height: 1.12; /* compact */
+          letter-spacing: -1px; /* tighter */
           margin-bottom: 40px;
           color: #0f172a;
         }
@@ -794,10 +794,11 @@ export default function Home() {
           }
           
           .main-headline {
-            font-size: 34px;
+            font-size: 38px; /* ~12% larger */
+            font-weight: 900;
             letter-spacing: -1px;
             margin-bottom: 30px;
-            line-height: 1.15;
+            line-height: 1.12;
           }
           
           .date-header {
