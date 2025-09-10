@@ -149,7 +149,7 @@ export default function Home() {
     if (!text) return '';
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index}>{part.slice(2, -2)}</strong>;
+        return <strong key={index} style={{ color: '#000000' }}>{part.slice(2, -2)}</strong>;
       }
       return part;
     });
