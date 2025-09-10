@@ -297,6 +297,7 @@ export default function Home() {
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
+    const restGradient = getHeadlineRestGradient();
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -327,7 +328,7 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</span>
-          <span style={{ color: '#dc2626' }}>{restOfText}</span>
+          <span style={{ color: '#0f172a' }}>{restOfText}</span>
         </>
       );
     }
