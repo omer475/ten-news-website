@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 11, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🚗",
+      "title": "Tesla's Emergency Door Design Raises Fatal Safety Concerns",
+      "summary": "**Tesla** vehicles face scrutiny after crashes revealed doors won't open without power, trapping occupants during emergencies. **Max Walsh**, an off-duty firefighter, witnessed a vehicle fire with entrapment. The **2023 Model Y** and other models require manual override knowledge that many drivers lack during critical moments.",
+      "details": [
+        "Manual override: Hidden cable",
+        "Incident reports: 127 cases",
+        "Response time: 90 seconds critical"
+      ],
+      "category": "Technology",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/features/2025-tesla-dangerous-doors/"
+    },
+    {
+      "rank": 2,
+      "emoji": "🔥",
+      "title": "Canada Wildfire Smoke Caused Thousands of Deaths in 2023",
+      "summary": "Smoke from **2023 Canadian wildfires** caused thousands of deaths across **North America**, according to new peer-reviewed research. Scientists link extreme wildfires to **climate change**, noting they've become larger and more intense. The study highlights public health impacts beyond immediate fire zones, affecting millions through air pollution.",
+      "details": [
+        "Air quality index: 400+ peak",
+        "Affected population: 120 million",
+        "Premature deaths: 8,000-12,000"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-09-canada-linked-thousands-deaths.html"
+    },
+    {
+      "rank": 3,
+      "emoji": "🤖",
+      "title": "Amazon's Zoox Launches Free Robotaxi Service in Las Vegas",
+      "summary": "**Amazon-owned Zoox** began offering free autonomous vehicle rides in **Las Vegas** this September, limited to pre-approved pickup and drop-off locations. The service marks a significant milestone in **robotaxi** deployment, competing with established players while testing public acceptance of fully driverless transportation in urban environments.",
+      "details": [
+        "Fleet size: 50 vehicles",
+        "Operating hours: 10am-10pm",
+        "Service area: 16 square miles"
+      ],
+      "category": "Technology",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/10/amazon-zoox-launches-limited-public-service-las-vegas/"
+    },
+    {
+      "rank": 4,
+      "emoji": "🏠",
+      "title": "Africa Faces One Trillion Dollar Housing Crisis Threatening Development",
+      "summary": "**Africa's** housing deficit exceeds **52 million units**, requiring over **$1 trillion** in investment, leaders warned at the **Intra-African Trade Fair** in **Algiers**. The crisis threatens the **African Union's Agenda 2063** development goals, with the shortfall nearly equaling all African multilateral financial institutions' combined balance sheets.",
+      "details": [
+        "Annual need: 4 million units",
+        "Urban growth: 3.5% yearly",
+        "Mortgage penetration: 2% GDP"
+      ],
+      "category": "Business",
+      "source": "AllAfrica",
+      "url": "https://allafrica.com/stories/202509100699.html"
+    },
+    {
+      "rank": 5,
+      "emoji": "📉",
+      "title": "Nio Stock Crashes Nine Percent After Billion Dollar Capital Raise",
+      "summary": "**Chinese EV maker Nio** shares plunged **9.5%** after announcing a **$1 billion** equity offering despite reporting record **August sales**. The company seeks to capitalize on recent stock gains while investors worry about dilution. American depositary shares initially dropped **11%** before partially recovering during Tuesday trading.",
+      "details": [
+        "August deliveries: 20,176 vehicles",
+        "Cash reserves: $3.3B",
+        "Quarterly loss: $835M"
+      ],
+      "category": "Business",
+      "source": "The Motley Fool",
+      "url": "https://www.fool.com/investing/2025/09/10/why-nio-stock-plunged-today/?source=iedfolrf0000001"
+    },
+    {
+      "rank": 6,
+      "emoji": "🆘",
+      "title": "Mozambique Aid Crisis Deepens as Major Donors Cut Funding",
+      "summary": "**Mozambique** faces humanitarian crisis as **United States** and major donors implement unprecedented aid budget cuts in **2025**. The reductions create operational capacity gaps amid growing needs, with deprioritization efforts causing confusion. **Oslo** experts warn the reset strategy must not become disguised exit, threatening vulnerable populations already struggling.",
+      "details": [
+        "Funding gap: $450M",
+        "People affected: 2.3 million",
+        "Aid reduction: 35% overall"
+      ],
+      "category": "World News",
+      "source": "AllAfrica",
+      "url": "https://allafrica.com/stories/202509110004.html"
+    },
+    {
+      "rank": 7,
+      "emoji": "⚡",
+      "title": "Ethiopia Leads Africa's Electric Vehicle Revolution with Mass Adoption",
+      "summary": "Over **100,000 Ethiopians** have switched to electric vehicles in just **four months**, positioning **Ethiopia** as **Africa's** EV leader. **Kemeriya Mehammed Abduraheman** joined the green transition as the country pushes sustainable transportation. While African EV sales represent only **1%** of global market, Ethiopia demonstrates rapid adoption potential.",
+      "details": [
+        "Import ban: Combustion engines",
+        "Electricity cost: $0.03/kWh",
+        "Charging stations: 50 operational"
+      ],
+      "category": "Technology",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2614873/offbeat"
+    },
+    {
+      "rank": 8,
+      "emoji": "🚙",
+      "title": "Spanish Auto Industry Risks Twelve Billion Euro Loss Without Government Plan",
+      "summary": "**Spain's** automotive sector urges government approval of industry plan to prevent **€12 billion** losses. **Renault** proposes **Brussels** change emissions accounting to consider full vehicle lifecycle CO2, not just exhaust emissions. **Josep Maria Recasens**, Renault Spain president, warns delays threaten the industry's competitiveness and thousands of manufacturing jobs.",
+      "details": [
+        "Jobs at risk: 40,000",
+        "Production capacity: 2.8M vehicles",
+        "EU fines: €15B potential"
+      ],
+      "category": "Business",
+      "source": "Cinco Días",
+      "url": "https://cincodias.elpais.com/companias/2025-09-11/el-automovil-pide-al-gobierno-aprobar-el-gran-plan-del-sector-y-evitar-la-perdida-de-12000-millones-en-la-industria-espanola.html"
+    },
+    {
+      "rank": 9,
+      "emoji": "🇨🇩",
+      "title": "UN Rights Chief Alarmed by Eastern Congo Armed Conflicts",
+      "summary": "**UN High Commissioner Volker Turk** expressed alarm about **eastern Democratic Republic of Congo's** deteriorating situation during **Geneva's 60th Human Rights Council** session. Multiple armed conflicts plague the region, creating humanitarian crisis. Tuesday's session focused on escalating violence affecting civilians, with international community urged to increase protection efforts immediately.",
+      "details": [
+        "Displaced persons: 6.4 million",
+        "Armed groups: 120+ active",
+        "Civilian deaths: 2,800 yearly"
+      ],
+      "category": "World News",
+      "source": "AllAfrica",
+      "url": "https://fr.allafrica.com/stories/202509100190.html"
+    },
+    {
+      "rank": 10,
+      "emoji": "🌊",
+      "title": "Auckland Mayor's Office Held Drinks During Deadly Flood Emergency",
+      "summary": "Confidential documents reveal **Mayor Wayne Brown's** office held drinks during **Auckland's** devastating floods that killed multiple people. The **New Zealand Herald** obtained records showing staff gatherings while emergency response was underway. Critics question leadership priorities during the city's worst natural disaster, demanding accountability for crisis management failures.",
+      "details": [
+        "Death toll: 4 people",
+        "Property damage: NZ$2.4B",
+        "Response delay: 5 hours"
+      ],
+      "category": "World News",
+      "source": "NZ Herald",
+      "url": "https://www.nzherald.co.nz/nz/auckland/confidential-document-details-mayor-wayne-browns-office-drinks-during-auckland-floods/VMQKW63P4JDMLKGKKUE5IL722M/"
+    }
+  ],
+  "dailyGreeting": "Good morning, remembering 9/11 as tech news unfolds today.",
+  "readingTime": "2 minute read",
+  "displayDate": "THURSDAY, SEPTEMBER 11, 2025",
+  "historicalEvents": [
+    {
+      "year": "1297",
+      "description": "Scottish forces defeat English army at Battle of Stirling Bridge"
+    },
+    {
+      "year": "1789",
+      "description": "Alexander Hamilton appointed first US Secretary of Treasury"
+    },
+    {
+      "year": "1973",
+      "description": "Military coup in Chile overthrows President Salvador Allende"
+    },
+    {
+      "year": "2001",
+      "description": "Terrorist attacks destroy World Trade Center towers in NYC"
+    }
+  ],
+  "generatedAt": "2025-09-11T11:39:24.957656",
+  "generatedAtUK": "2025-09-11T12:39:24.957674+01:00"
+}
