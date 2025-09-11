@@ -15,6 +15,7 @@ jobs:
       TARGET_MINUTE: '00'          # TEMP test target minute (TRT)
       WINDOW_MINUTES: '5'          # Allow small queue delay window
       RUN_ALWAYS: '1'              # TEMP: bypass time window for testing
+      TEST_MARKER: '1'             # TEMP: create a marker file to confirm runs
     
     steps:
       - name: Checkout repository
@@ -22,6 +23,26 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # fetch full history to allow rebase before push
+
+      - name: Write test marker (for debugging triggers)
+        run: |
+          if [ "${TEST_MARKER}" = "1" ]; then
+            TS=$(date -u +"%Y%m%dT%H%M%SZ")
+            echo "Run at ${TS}" > test_trigger_${TS}.txt
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action Bot"
+            git fetch origin main
+            git pull --rebase origin main || true
+            git add test_trigger_*.txt
+            if git diff --staged --quiet; then
+              echo "No marker changes to commit"
+            else
+              git commit -m "CI test marker ${TS}"
+              git push origin HEAD:main
+            fi
+          else
+            echo "TEST_MARKER disabled; skipping marker file."
+          fi
           
       - name: Setup Python
         uses: actions/setup-python@v4
