@@ -36,15 +36,24 @@ jobs:
           import datetime
           import pytz
           import os
+          from pathlib import Path
           
-          # Timezone-aware guard: run ONLY at exactly 07:00 Europe/London,
-          # but ALWAYS run when triggered manually (workflow_dispatch)
-          if os.getenv('GITHUB_EVENT_NAME') != 'workflow_dispatch':
-              tz = pytz.timezone('Europe/London')
-              now = datetime.datetime.now(tz)
-              if not (now.hour == 7 and now.minute == 0):
-                  print('⏭ Skipping run at {} ; waiting for 07:00 Europe/London'.format(now.strftime('%Y-%m-%d %H:%M %Z')))
+          # Timezone-aware guard: run ONLY around 07:00 Europe/London (0-4 min window)
+          # ALWAYS run when triggered manually (workflow_dispatch)
+          event = os.getenv('GITHUB_EVENT_NAME')
+          tz = pytz.timezone('Europe/London')
+          now = datetime.datetime.now(tz)
+          print('📅 Current time (Europe/London):', now.strftime('%Y-%m-%d %H:%M %Z'))
+          if event != 'workflow_dispatch':
+              if not (now.hour == 7 and 0 <= now.minute < 5):
+                  print('⏭ Skipping scheduled run outside 07:00-07:04 window (Europe/London).')
                   sys.exit(0)
+
+          # Run once per day safeguard: skip if today's file exists
+          today_name = now.strftime('tennews_data_%Y_%m_%d.json')
+          if Path(today_name).exists():
+              print('⏭ Skipping: {} already exists. Run has likely completed today.'.format(today_name))
+              sys.exit(0)
 
           print('🤖 Starting automated news generation...')
           
