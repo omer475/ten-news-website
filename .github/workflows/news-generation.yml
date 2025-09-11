@@ -11,8 +11,8 @@ jobs:
       contents: write
     env:
       TARGET_TZ: Europe/Istanbul   # TEMP for testing; switch back to Europe/London after test
-      TARGET_HOUR: '13'            # TEMP test target hour (TRT)
-      TARGET_MINUTE: '40'          # TEMP test target minute (TRT)
+      TARGET_HOUR: '14'            # TEMP test target hour (TRT)
+      TARGET_MINUTE: '00'          # TEMP test target minute (TRT)
       WINDOW_MINUTES: '5'          # Allow small queue delay window
     
     steps:
@@ -53,7 +53,7 @@ jobs:
 
           tz = pytz.timezone(target_tz)
           now = datetime.datetime.now(tz)
-          print('📅 Current time (Europe/London):', now.strftime('%Y-%m-%d %H:%M %Z'))
+          print('📅 Current time ({}):'.format(target_tz), now.strftime('%Y-%m-%d %H:%M %Z'))
           if event != 'workflow_dispatch':
               in_window = (now.hour == target_hour and target_minute <= now.minute < target_minute + window_minutes)
               if not in_window:
@@ -66,9 +66,10 @@ jobs:
 
           # Run once per day safeguard: skip if today's file exists
           today_name = now.strftime('tennews_data_%Y_%m_%d.json')
-          if Path(today_name).exists():
-              print('⏭ Skipping: {} already exists. Run has likely completed today.'.format(today_name))
-              sys.exit(0)
+          if event != 'workflow_dispatch':
+              if Path(today_name).exists():
+                  print('⏭ Skipping: {} already exists. Run has likely completed today.'.format(today_name))
+                  sys.exit(0)
 
           print('🤖 Starting automated news generation...')
           
