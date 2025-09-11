@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      TARGET_TZ: Europe/Istanbul   # TEMP for testing; switch back to Europe/London after test
+      TARGET_HOUR: '13'            # TEMP test target hour (TRT)
+      TARGET_MINUTE: '40'          # TEMP test target minute (TRT)
+      WINDOW_MINUTES: '5'          # Allow small queue delay window
     
     steps:
       - name: Checkout repository
@@ -41,12 +46,22 @@ jobs:
           # Timezone-aware guard: run ONLY around 07:00 Europe/London (0-4 min window)
           # ALWAYS run when triggered manually (workflow_dispatch)
           event = os.getenv('GITHUB_EVENT_NAME')
-          tz = pytz.timezone('Europe/London')
+          target_tz = os.getenv('TARGET_TZ', 'Europe/London')
+          target_hour = int(os.getenv('TARGET_HOUR', '7'))
+          target_minute = int(os.getenv('TARGET_MINUTE', '0'))
+          window_minutes = int(os.getenv('WINDOW_MINUTES', '5'))
+
+          tz = pytz.timezone(target_tz)
           now = datetime.datetime.now(tz)
           print('📅 Current time (Europe/London):', now.strftime('%Y-%m-%d %H:%M %Z'))
           if event != 'workflow_dispatch':
-              if not (now.hour == 7 and 0 <= now.minute < 5):
-                  print('⏭ Skipping scheduled run outside 07:00-07:04 window (Europe/London).')
+              in_window = (now.hour == target_hour and target_minute <= now.minute < target_minute + window_minutes)
+              if not in_window:
+                  print('⏭ Skipping scheduled run outside {:02d}:{:02d}-{:02d}:{:02d} window ({})'.format(
+                      target_hour, target_minute,
+                      target_hour, (target_minute + window_minutes - 1),
+                      target_tz
+                  ))
                   sys.exit(0)
 
           # Run once per day safeguard: skip if today's file exists
