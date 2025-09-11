@@ -14,6 +14,7 @@ jobs:
       TARGET_HOUR: '14'            # TEMP test target hour (TRT)
       TARGET_MINUTE: '00'          # TEMP test target minute (TRT)
       WINDOW_MINUTES: '5'          # Allow small queue delay window
+      RUN_ALWAYS: '1'              # TEMP: bypass time window for testing
     
     steps:
       - name: Checkout repository
@@ -50,11 +51,12 @@ jobs:
           target_hour = int(os.getenv('TARGET_HOUR', '7'))
           target_minute = int(os.getenv('TARGET_MINUTE', '0'))
           window_minutes = int(os.getenv('WINDOW_MINUTES', '5'))
+          run_always = os.getenv('RUN_ALWAYS', '0') == '1'
 
           tz = pytz.timezone(target_tz)
           now = datetime.datetime.now(tz)
           print('📅 Current time ({}):'.format(target_tz), now.strftime('%Y-%m-%d %H:%M %Z'))
-          if event != 'workflow_dispatch':
+          if event != 'workflow_dispatch' and not run_always:
               in_window = (now.hour == target_hour and target_minute <= now.minute < target_minute + window_minutes)
               if not in_window:
                   print('⏭ Skipping scheduled run outside {:02d}:{:02d}-{:02d}:{:02d} window ({})'.format(
