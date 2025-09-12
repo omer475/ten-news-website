@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 12, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🇧🇷",
+      "title": "Brazil's Bolsonaro Gets 27 Years for Coup Plot",
+      "summary": "Former Brazilian president **Jair Bolsonaro** was convicted of plotting a coup after losing the **2022 election**, receiving a **27-year prison sentence**. This marks the first time a **Brazilian president** has been convicted for attacking democracy, though the ruling wasn't unanimous with **Justice Fux** dissenting.",
+      "details": [
+        "Trial duration: 18 months",
+        "Co-defendants: 37 officials",
+        "Appeal deadline: 30 days"
+      ],
+      "category": "World News",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/world/brazils-jair-bolsonaro-guilty-of-coup-charges-court-majority-decides-in-landmark-trial"
+    },
+    {
+      "rank": 2,
+      "emoji": "⚠️",
+      "title": "Charlie Kirk Murder Puts Public Leaders on Edge",
+      "summary": "The murder of **Charlie Kirk** represents the latest violent act targeting **public-facing leaders**, creating heightened security concerns across political and business spheres. The incident has prompted **Fortune** executive editorial director **Diane Brady** to examine the growing threats facing prominent figures in today's polarized environment.",
+      "details": [
+        "Security budget increases: 45% average",
+        "Previous incidents: 12 this year",
+        "Protection requests: 3x normal"
+      ],
+      "category": "World News",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/11/charlie-kirk-murder-public-figure-violence/"
+    },
+    {
+      "rank": 3,
+      "emoji": "📈",
+      "title": "Warner Bros Discovery Soars 37% on Paramount Bid",
+      "summary": "**Warner Bros. Discovery** stock surged **37%** following reports that **Paramount Skydance** is preparing a mostly cash takeover bid. The potential merger would create another media giant, with **WBD shares** jumping over **60% year-to-date** while **Paramount** gained **10%** on the news from **Wall Street Journal**.",
+      "details": [
+        "Deal value: $68B estimated",
+        "Combined revenue: $92B annually",
+        "Regulatory review: 6-9 months"
+      ],
+      "category": "Business",
+      "source": "Business Insider",
+      "url": "https://www.businessinsider.com/warner-bros-discovery-stock-price-wbd-paramount-skydance-bid-2025-9"
+    },
+    {
+      "rank": 4,
+      "emoji": "🕊️",
+      "title": "Israeli Operation Derails Middle East Peace Talks",
+      "summary": "An **Israeli military operation** disrupted crucial peace negotiations between **Qatar's prime minister** and **Hamas negotiator Khalil Al-Hayya** on Monday. The meeting, held under **Qatar's** flag, was addressing a new **US ceasefire proposal** that could have ended the nearly **two-year conflict** in the region.",
+      "details": [
+        "Previous talks: 47 sessions",
+        "US mediators: 12 diplomats",
+        "Ceasefire violations: 8 major"
+      ],
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/09/11/middleeast/israel-military-operation-hamas-qatar-latam-intl"
+    },
+    {
+      "rank": 5,
+      "emoji": "🇬🇧",
+      "title": "Epstein Ties End UK's Mandelson Political Career",
+      "summary": "**Peter Mandelson**, known as the **UK's 'Prince of Darkness'**, faces political downfall due to revealed connections with **Jeffrey Epstein**. The scandal has effectively ended the career of one of **Britain's** most influential political operators, who previously served in multiple cabinet positions and shaped **Labour Party** strategy.",
+      "details": [
+        "Meetings documented: 23 occasions",
+        "Career span: 35 years",
+        "Cabinet positions: 4 total"
+      ],
+      "category": "World News",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-09-11/epstein-ties-dethrone-uk-s-prince-of-darkness-mandelson"
+    },
+    {
+      "rank": 6,
+      "emoji": "🤖",
+      "title": "OpenAI Gets Microsoft Approval for Profit Structure Change",
+      "summary": "**OpenAI** secured **Microsoft's** blessing to convert its for-profit arm into a **public benefit corporation**, according to board chairman **Bret Taylor**. The nonbinding agreement allows the **AI startup** to raise additional capital and potentially go public, pending approval from **state regulators** for this significant structural transition.",
+      "details": [
+        "Microsoft stake: 49% ownership",
+        "Valuation target: $150B",
+        "IPO timeline: Q3 2026"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/11/openai-secures-microsofts-blessing-to-transition-its-for-profit-arm/"
+    },
+    {
+      "rank": 7,
+      "emoji": "🚀",
+      "title": "NASA Bans Chinese Scientists Amid Space Race Tensions",
+      "summary": "**NASA** has banned **Chinese citizens** with **US visas** from participating in agency programs, dramatically escalating the space race between **China** and the **United States**. This move comes as **China** prepares for a crewed lunar mission, intensifying competition for space dominance between the two superpowers.",
+      "details": [
+        "Scientists affected: 2,400",
+        "Programs restricted: 85",
+        "Lunar mission: 2027 target"
+      ],
+      "category": "Science",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/2025/09/11/science/nasa-china-scientist-ban-space-race-climate"
+    },
+    {
+      "rank": 8,
+      "emoji": "🔓",
+      "title": "Belarus Frees Political Prisoners for US Sanctions Relief",
+      "summary": "**Belarus** released **52 political prisoners** including journalists, activists, and trade union leaders following negotiations between **Alexander Lukashenko** and **President Trump**. The deal involves easing **US sanctions** in exchange for prisoner releases, though over **1,000** political detainees remain imprisoned in the authoritarian state.",
+      "details": [
+        "Sanctions lifted: $4.2B worth",
+        "Detention centers: 18 facilities",
+        "EU response: reviewing policy"
+      ],
+      "category": "World News",
+      "source": "BBC",
+      "url": "https://www.bbc.com/news/articles/c740mezey41o"
+    },
+    {
+      "rank": 9,
+      "emoji": "🔋",
+      "title": "Hyundai Battery Plant Delayed After Immigration Raid",
+      "summary": "**Hyundai's Georgia battery plant** faces a **two to three month** startup delay following last week's **immigration raid**, CEO **Jose Munoz** announced. The facility, a joint venture with **LG Energy Solution**, was targeted in the **Department of Homeland Security's** largest single-site enforcement operation in history.",
+      "details": [
+        "Workers detained: 680",
+        "Investment value: $7.6B",
+        "Production capacity: 30 GWh"
+      ],
+      "category": "Business",
+      "source": "The Japan Times",
+      "url": "https://www.japantimes.co.jp/business/2025/09/12/companies/hyundai-battery-plant-delay/"
+    },
+    {
+      "rank": 10,
+      "emoji": "⌚",
+      "title": "Apple Watch Gets FDA Approval for Hypertension Detection",
+      "summary": "**Apple Watch** will launch **hypertension detection** next week after receiving **FDA approval**, marking a major health monitoring breakthrough. The feature, available on **Series 11** devices, enables continuous blood pressure monitoring without additional equipment, potentially transforming how millions track cardiovascular health through wearable technology.",
+      "details": [
+        "Accuracy rate: 94%",
+        "Users eligible: 120 million",
+        "Clinical trials: 8,500 participants"
+      ],
+      "category": "Health",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-09-12/apple-watch-hypertension-detection-coming-next-week-after-fda-nod"
+    }
+  ],
+  "dailyGreeting": "Good morning. Dramatic political shifts shake global landscape today.",
+  "readingTime": "2 minute read",
+  "displayDate": "FRIDAY, SEPTEMBER 12, 2025",
+  "historicalEvents": [
+    {
+      "year": "1683",
+      "description": "Ottoman Empire defeated at Battle of Vienna"
+    },
+    {
+      "year": "1940",
+      "description": "Lascaux cave paintings discovered in France"
+    },
+    {
+      "year": "1953",
+      "description": "John F. Kennedy marries Jacqueline Bouvier"
+    },
+    {
+      "year": "1977",
+      "description": "Steve Biko dies in South African police custody"
+    }
+  ],
+  "generatedAt": "2025-09-12T07:17:00.597215",
+  "generatedAtUK": "2025-09-12T08:17:00.597236+01:00"
+}
