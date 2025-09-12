@@ -1,7 +1,7 @@
 name: Generate Daily News
 on:
   schedule:
-    - cron: '*/1 * * * *'  # Run every minute; guarded to execute only at 07:00 Europe/London
+    - cron: '*/5 * * * *'  # Run every 5 minutes; guarded to execute only at 07:00 Europe/London
   workflow_dispatch:  # Manual trigger for testing
 
 jobs:
@@ -56,15 +56,18 @@ jobs:
           tz = pytz.timezone(target_tz)
           now = datetime.datetime.now(tz)
           print('📅 Current time ({}):'.format(target_tz), now.strftime('%Y-%m-%d %H:%M %Z'))
+          print('🎯 Target window: {:02d}:{:02d}-{:02d}:{:02d} ({})'.format(
+              target_hour, target_minute,
+              target_hour, (target_minute + window_minutes - 1),
+              target_tz
+          ))
           if event != 'workflow_dispatch' and not run_always:
               in_window = (now.hour == target_hour and target_minute <= now.minute < target_minute + window_minutes)
               if not in_window:
-                  print('⏭ Skipping scheduled run outside {:02d}:{:02d}-{:02d}:{:02d} window ({})'.format(
-                      target_hour, target_minute,
-                      target_hour, (target_minute + window_minutes - 1),
-                      target_tz
-                  ))
+                  print('⏭ Skipping scheduled run outside target window')
                   sys.exit(0)
+              else:
+                  print('✅ In target window - proceeding with news generation')
 
           # Run once per day safeguard: skip if today's file exists
           today_name = now.strftime('tennews_data_%Y_%m_%d.json')
