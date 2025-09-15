@@ -841,6 +841,59 @@ Return ONLY the JSON with all {len(articles_with_content)} articles, each with 4
     
     return prompt
 
+# ==================== REWRITING FALLBACKS ====================
+def rewrite_articles_with_fallbacks(articles_with_content):
+    """Rewrite articles with robust fallbacks: retry Opus → fallback Sonnet → per-article Sonnet."""
+    # 1) Try Opus with retries is already inside call_claude_api_with_model
+    prompt = create_rewriting_prompt(articles_with_content)
+    response = call_claude_api_with_model(prompt, "Rewriting articles", CLAUDE_MODEL)
+    if response:
+        parsed = parse_json_with_fallback(response)
+        if parsed and 'articles' in parsed and len(parsed['articles']) > 0:
+            return parsed
+
+    # 2) Fallback to Sonnet model (often more available)
+    print("⚠️ Opus failed to return valid content, falling back to Sonnet...")
+    response = call_claude_api_with_model(prompt, "Rewriting articles (fallback Sonnet)", CLAUDE_SONNET_MODEL)
+    if response:
+        parsed = parse_json_with_fallback(response)
+        if parsed and 'articles' in parsed and len(parsed['articles']) > 0:
+            return parsed
+
+    # 3) Last resort: rewrite per-article using Sonnet and assemble
+    print("⚠️ Sonnet batch failed. Trying per-article rewriting and assembling results...")
+    assembled = {"digest_date": datetime.now().strftime('%B %d, %Y'), "articles": []}
+    for index, art in enumerate(articles_with_content, start=1):
+        single_prompt = create_rewriting_prompt([art])
+        resp = call_claude_api_with_model(single_prompt, f"Rewriting article {index} (single)", CLAUDE_SONNET_MODEL)
+        parsed = parse_json_with_fallback(resp) if resp else None
+        if parsed and 'articles' in parsed and len(parsed['articles']) == 1:
+            article_obj = parsed['articles'][0]
+            # Ensure rank continuity
+            article_obj['rank'] = index
+            assembled['articles'].append(article_obj)
+        else:
+            # Final fallback: generate minimal structure from source content
+            fallback_article = {
+                "rank": index,
+                "emoji": "📰",
+                "title": clean_text_for_json(art.get('title', 'News update'))[:80],
+                "summary": clean_text_for_json(art.get('content', art.get('title', ''))[:450])[:450],
+                "details": [
+                    f"Source: {art.get('source', 'Unknown')}",
+                    "Category: World News",
+                    "Method: Fallback"
+                ],
+                "category": "World News",
+                "source": art.get('source', 'Unknown'),
+                "url": art.get('url', '')
+            }
+            assembled['articles'].append(fallback_article)
+        if len(assembled['articles']) >= 10:
+            break
+    assembled['articles'] = assembled['articles'][:10]
+    return assembled if len(assembled['articles']) > 0 else None
+
 # ==================== DAILY GREETING GENERATION ====================
 def generate_daily_greeting_and_reading_time(articles):
     """Generate daily greeting and reading time"""
@@ -1121,18 +1174,11 @@ def generate_daily_news():
             article_data['source'] = source
             articles_with_content.append(article_data)
         
-        # Rewrite articles
+        # Rewrite articles with robust fallbacks
         print("\n✍️ Rewriting articles...")
-        rewriting_prompt = create_rewriting_prompt(articles_with_content)
-        final_response = call_claude_api(rewriting_prompt, "Rewriting articles")
-        
-        if not final_response:
-            print("❌ Failed to rewrite articles")
-            return False
-        
-        articles_data = parse_json_with_fallback(final_response)
+        articles_data = rewrite_articles_with_fallbacks(articles_with_content)
         if not articles_data or 'articles' not in articles_data:
-            print("❌ Failed to parse rewritten articles")
+            print("❌ Failed to rewrite articles after fallbacks")
             return False
         
         # Validate we got exactly 10 articles
