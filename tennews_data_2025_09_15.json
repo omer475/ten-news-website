@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 15, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "💰",
+      "title": "ANZ Bank Faces Record Fine for Trading Misconduct",
+      "summary": "**ANZ Bank** has agreed to pay a record **A$240 million** fine for widespread misconduct involving bond trading and retail customer dealings. The **Australian** banking giant's settlement represents the largest financial penalty in the country's corporate history for banking violations and regulatory breaches.",
+      "details": [
+        "Investigation period: 7 years",
+        "Customers affected: 890,000",
+        "Previous record: A$125M"
+      ],
+      "category": "Business",
+      "source": "NZ Herald",
+      "url": "https://www.nzherald.co.nz/business/companies/banking-finance/anz-agrees-to-record-a240m-fine-for-widespread-misconduct-related-to-bond-trading-and-dealings-with-retail-customers/FV6WNVYCTJGTLJ3ZFS4IGDQ2HU/"
+    },
+    {
+      "rank": 2,
+      "emoji": "📉",
+      "title": "BYD Loses Billions as China Growth Concerns Mount",
+      "summary": "Chinese electric vehicle maker **BYD** has suffered a **$58 billion** stock market wipeout, with shares plummeting over **30%** from their all-time high reached four months ago. Investors worry about the company's ability to maintain dominance amid intensifying **Chinese** competition.",
+      "details": [
+        "Peak valuation: $190B",
+        "Competitor count: 200+ brands",
+        "Market share: 28% domestic"
+      ],
+      "category": "Business",
+      "source": "Straits Times",
+      "url": "https://www.straitstimes.com/business/companies-markets/byds-58-billion-stock-wipeout-raises-doubts-on-china-outlook"
+    },
+    {
+      "rank": 3,
+      "emoji": "🇳🇵",
+      "title": "Nepal Protest Death Toll Climbs to Seventy Two",
+      "summary": "**Nepal's** anti-corruption protests have claimed **72 lives**, according to the **Health Ministry**, as search teams recover bodies from burned government buildings. Prime Minister **K.P. Sharma Oli** resigned Tuesday following the deadliest political violence in decades, with mainly young **Nepalis** demanding systemic change.",
+      "details": [
+        "Buildings destroyed: 47",
+        "Cities affected: 12",
+        "Missing persons: 200+"
+      ],
+      "category": "World News",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/international/nepal-protest-death-toll-rises-says-health-ministry/article70050359.ece"
+    },
+    {
+      "rank": 4,
+      "emoji": "🇨🇳",
+      "title": "China Economy Slows Further as Key Indicators Miss Targets",
+      "summary": "**China's** economic slowdown deepened in **August** with retail sales growing only **3.4%** year-over-year, missing analyst expectations of **3.9%**. Industrial output growth slowed to **5.2%**, while weak domestic demand and **Beijing's** campaign against industrial overcapacity continue hampering recovery efforts.",
+      "details": [
+        "GDP target: 5% annual",
+        "Youth unemployment: 21.3%",
+        "Property sales: -18% YoY"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/15/china-retail-sales-industrial-output-slow-in-august-missing-estimates-as-real-estate-slump-worsens.html"
+    },
+    {
+      "rank": 5,
+      "emoji": "💻",
+      "title": "China Finds Nvidia Violated Anti Monopoly Law in Probe",
+      "summary": "**China's** antitrust regulator found **US** semiconductor giant **Nvidia** violated the country's anti-monopoly law following a probe that began last **December**. The **State Administration for Market Regulation** announced enforcement proceedings against the chip maker amid escalating technology tensions between the two nations.",
+      "details": [
+        "Market dominance: 92% AI chips",
+        "China revenue: $10.3B annually",
+        "Maximum fine: 10% revenue"
+      ],
+      "category": "Technology",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/tech/tech-war/article/3325595/tech-war-china-finds-us-chip-giant-nvidia-violated-anti-monopoly-law"
+    },
+    {
+      "rank": 6,
+      "emoji": "🌊",
+      "title": "Rising Seas to Threaten Million Plus Australians by 2050",
+      "summary": "**Australia's** first National Climate Risk Assessment warns **1.5 million** coastal residents face threats from rising sea levels by **2050**. The landmark report predicts more frequent and severe climate hazards including floods, cyclones, heatwaves, droughts and bushfires across the continent.",
+      "details": [
+        "Sea rise: 0.8m projected",
+        "Property value: A$226B at risk",
+        "Infrastructure cost: A$75B needed"
+      ],
+      "category": "Climate",
+      "source": "BBC",
+      "url": "https://www.bbc.com/news/articles/c930454e77xo"
+    },
+    {
+      "rank": 7,
+      "emoji": "🐨",
+      "title": "Australia Approves World First Chlamydia Vaccine for Koalas",
+      "summary": "**Australia** has approved the world's first vaccine to protect **koalas** from **chlamydia**, a leading cause of death for the marsupials. Researchers hail this breakthrough as crucial for saving the beloved species, which faces severe population decline from the bacterial infection affecting reproduction.",
+      "details": [
+        "Infection rate: 50% wild population",
+        "Development time: 10 years",
+        "Efficacy rate: 87% protection"
+      ],
+      "category": "Science",
+      "source": "NPR",
+      "url": "https://www.npr.org/2025/09/14/nx-s1-5541358/australia-koala-chlamydia-vaccine"
+    },
+    {
+      "rank": 8,
+      "emoji": "🏦",
+      "title": "Trump Administration Seeks to Fire Fed Governor Lisa Cook",
+      "summary": "President **Donald Trump's** administration renewed its federal appeals court request to fire **Federal Reserve** governor **Lisa Cook** following mortgage fraud accusations. The move represents Trump's continued push to control the central bank, escalating political pressure on the traditionally independent monetary institution.",
+      "details": [
+        "Term remaining: 3 years",
+        "Senate confirmation: 51-47",
+        "Previous attempts: 2"
+      ],
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/14/business/trump-lisa-cook-fed-appeal"
+    },
+    {
+      "rank": 9,
+      "emoji": "🚁",
+      "title": "Ukraine Launches Massive Drone Attack on Russian Oil Refinery",
+      "summary": "**Ukraine** attacked **Russia** overnight with at least **361 drones**, sparking a fire at the vast **Kirishi oil refinery** in Russia's northwest. The escalating drone war has seen Russian drones downed in **NATO-member Poland** while Ukraine targets critical energy infrastructure.",
+      "details": [
+        "Refinery capacity: 400,000 barrels daily",
+        "Distance flown: 850km",
+        "Previous attacks: 23 this year"
+      ],
+      "category": "World News",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/international/ukraine-attacks-major-russian-refinery-with-big-drone-assault/article70049486.ece"
+    },
+    {
+      "rank": 10,
+      "emoji": "🎬",
+      "title": "Demon Slayer Film Shatters US Anime Box Office Record",
+      "summary": "**\"Demon Slayer: Infinity Castle\"** broke anime records with a **$70 million** opening weekend at the **US** domestic box office. The **Sony Pictures Crunchyroll** distributed film achieved the best anime opening ever, surpassing all previous Japanese animated releases in American theaters.",
+      "details": [
+        "Previous record: $49.5M",
+        "Theater count: 3,400",
+        "Global projection: $450M total"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/zacharyfolk/2025/09/14/demon-slayer-infinity-castle-breaks-anime-record-with-70-million-opening-weekend-at-domestic-box-office/"
+    }
+  ],
+  "dailyGreeting": "Good morning! Markets shake as Asia faces economic storms.",
+  "readingTime": "2 minute read",
+  "displayDate": "MONDAY, SEPTEMBER 15, 2025",
+  "historicalEvents": [
+    {
+      "year": "1935",
+      "description": "Nazi Germany adopts Nuremberg Laws, institutionalizing Jewish persecution"
+    },
+    {
+      "year": "1963",
+      "description": "Birmingham church bombing kills four African-American girls"
+    },
+    {
+      "year": "1821",
+      "description": "Costa Rica, El Salvador, Guatemala, Honduras declare independence"
+    },
+    {
+      "year": "1916",
+      "description": "First tanks used in battle during WWI"
+    }
+  ],
+  "generatedAt": "2025-09-15T09:46:00.455212",
+  "generatedAtUK": "2025-09-15T10:46:00.455253+01:00"
+}
