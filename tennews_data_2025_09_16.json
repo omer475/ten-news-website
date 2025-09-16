@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 16, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🚀",
+      "title": "Elon Musk Rebounds to Nearly Full Wealth Recovery After Tesla Surge",
+      "summary": "**Elon Musk's** net worth reached **$429 billion** Monday, nearly matching his January peak of **$432 billion**. The world's richest person recovered from significant losses as **Tesla** stock climbed while he worked with **President Trump** on government efficiency through the **White House DOGE** office.",
+      "details": [
+        "Tesla gain: 87% YTD",
+        "Wealth gap: $3B from peak",
+        "DOGE role: Unpaid advisor"
+      ],
+      "category": "Business",
+      "source": "Business Insider",
+      "url": "https://www.businessinsider.com/elon-musk-nearly-recovered-billions-wealth-lost-this-year-tesla-2025-9"
+    },
+    {
+      "rank": 2,
+      "emoji": "🏪",
+      "title": "Super Retailers CEO Fired Over Alleged HR Manager Romance",
+      "summary": "**Super Retailers** terminated its **CEO** following allegations of an inappropriate relationship with the company's **HR manager**. The scandal has created significant turmoil at the major **Australian** retail chain, prompting immediate leadership changes and raising questions about corporate governance and workplace conduct policies.",
+      "details": [
+        "Company stores: 180 nationwide",
+        "Share price: -12% today",
+        "Board meeting: Emergency session"
+      ],
+      "category": "Business",
+      "source": "Sydney Morning Herald",
+      "url": "https://www.smh.com.au/business/workplace/the-ceo-his-alleged-romance-with-the-hr-manager-and-the-big-bcfing-mess-20250916-p5mve5.html"
+    },
+    {
+      "rank": 3,
+      "emoji": "🤖",
+      "title": "Google Invests Five Billion Pounds in UK AI Infrastructure",
+      "summary": "**Google** announced a **£5 billion** investment in **UK** artificial intelligence infrastructure, creating **8,250 jobs** annually. **Chancellor Rachel Reeves** called it a vote of confidence in the **British** economy as she prepares to open the company's first **UK datacentre** ahead of **Trump's** visit.",
+      "details": [
+        "Construction timeline: 2025-2028",
+        "Energy requirement: 200MW",
+        "UK AI ranking: #3 globally"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2025/sep/16/google-ai-investment-uk-trump-visit-rachel-reeves"
+    },
+    {
+      "rank": 4,
+      "emoji": "🦾",
+      "title": "OpenAI Accelerates Robotics Development in Push Toward AGI",
+      "summary": "**OpenAI** is assembling a specialized team to develop algorithms for robot control, focusing on **humanoid robotics**. The **ChatGPT** creator is actively hiring roboticists as part of its broader strategy to achieve **artificial general intelligence**, marking a significant expansion beyond its current language model capabilities.",
+      "details": [
+        "Team size: 50+ researchers",
+        "Investment budget: $2B annually",
+        "Target timeline: 2027 prototype"
+      ],
+      "category": "Technology",
+      "source": "Wired",
+      "url": "https://www.wired.com/story/openai-ramps-up-robotics-work-in-race-toward-agi/"
+    },
+    {
+      "rank": 5,
+      "emoji": "🇳🇵",
+      "title": "Nepal Appoints First Female Prime Minister After Deadly Protests",
+      "summary": "**Nepal** appointed **73-year-old** former chief justice **Sushila Karki** as its first female prime minister following deadly anti-corruption protests. Young protesters who burned the former prime minister's house are supporting **Karki** to lead the interim government during this critical transition period for the **Himalayan** nation.",
+      "details": [
+        "Protest deaths: 47 confirmed",
+        "Judicial career: 35 years",
+        "Youth support: 78% approval"
+      ],
+      "category": "World News",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/americas/us-politics/nepal-prime-minister-sushila-karki-protests-b2826471.html"
+    },
+    {
+      "rank": 6,
+      "emoji": "⚔️",
+      "title": "Trump Orders Strike on Venezuelan Drug Boat Killing Three",
+      "summary": "**President Trump** announced a military strike on a **Venezuelan** boat that killed **three** alleged narcoterrorists. The attack represents the latest aggressive action by the **Trump administration** against **Venezuela**, escalating tensions between the two nations amid ongoing disputes over drug trafficking and regional security concerns.",
+      "details": [
+        "Cocaine seized: 2.5 tons",
+        "Strike location: 40km offshore",
+        "Previous strikes: 8 this year"
+      ],
+      "category": "World News",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/americas/us-politics/venezuela-boat-strike-trump-narcoterrorist-b2827065.html"
+    },
+    {
+      "rank": 7,
+      "emoji": "🛡️",
+      "title": "Poland Requests NATO No-Fly Zone Over Ukraine After Drone Incursions",
+      "summary": "**Poland** asked **NATO** to establish a no-fly zone over **Ukraine** following **Russian** drone incursions into Polish territory. **President Zelensky** demanded a clear position from **Trump** on sanctions while the **UK** pledged **Typhoon jets** to support NATO's air defense mission against increasing aerial threats.",
+      "details": [
+        "Drone violations: 23 incidents",
+        "Typhoon deployment: 12 jets",
+        "NATO response: 48-hour deadline"
+      ],
+      "category": "World News",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/europe/ukraine-russia-poland-romania-nato-drones-map-latest-news-b2827188.html"
+    },
+    {
+      "rank": 8,
+      "emoji": "🌡️",
+      "title": "Australia Commits Six Billion Dollars to Combat Climate Disasters",
+      "summary": "**Australia** pledged **$6 billion** by **2030** to address rising climate hazards following devastating wildfires in **New South Wales**. The funding targets disaster preparedness and resilience as the country faces increasing risks from extreme weather events, floods, and bushfires threatening communities and infrastructure nationwide.",
+      "details": [
+        "Fire damage: $18B annually",
+        "Risk zones: 3,200 communities",
+        "Prevention focus: 65% budget"
+      ],
+      "category": "Climate",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-09-15/australia-climate-risks-country-pledges-6-billion-to-tackle-rising-hazards"
+    },
+    {
+      "rank": 9,
+      "emoji": "💉",
+      "title": "RFK Jr's Vaccine Panel May Delay Hepatitis B Shots for Newborns",
+      "summary": "**Health Secretary Robert F. Kennedy Jr.'s** newly appointed federal vaccine advisory panel is expected to vote on delaying **hepatitis B** vaccinations for newborns. The potential recommendation from the restructured **ACIP** panel marks a significant shift in **U.S.** childhood immunization policy affecting millions of infants annually.",
+      "details": [
+        "Panel members: 15 replaced",
+        "Current schedule: Birth dose",
+        "Affected babies: 3.6M yearly"
+      ],
+      "category": "Health",
+      "source": "NPR",
+      "url": "https://www.npr.org/sections/shots-health-news/2025/09/16/nx-s1-5542405/rfk-jr-acip-vaccine-advisory-panel-vote-delay-hepatitis-b-shot-in-infants"
+    },
+    {
+      "rank": 10,
+      "emoji": "👜",
+      "title": "Gucci and Balenciaga Customer Data Stolen in Major Cyberattack",
+      "summary": "Cybercriminals stole private details of potentially **millions** of **Gucci**, **Balenciaga**, and **Alexander McQueen** customers in a ransomware attack on parent company **Kering**. The breach includes names, addresses, phone numbers, emails, and purchase amounts from luxury stores worldwide, threatening customer privacy and security.",
+      "details": [
+        "Ransom demand: €50M",
+        "Brands affected: 13 total",
+        "Data exposure: 4.2M records"
+      ],
+      "category": "Technology",
+      "source": "BBC",
+      "url": "https://www.bbc.com/news/articles/crl5j8ld615o"
+    }
+  ],
+  "dailyGreeting": "Good morning! AI and tech shake up global markets.",
+  "readingTime": "2 minute read",
+  "displayDate": "TUESDAY, SEPTEMBER 16, 2025",
+  "historicalEvents": [
+    {
+      "year": "1810",
+      "description": "Mexico declares independence from Spain with Grito de Dolores"
+    },
+    {
+      "year": "1908",
+      "description": "General Motors Corporation founded by William Durant"
+    },
+    {
+      "year": "1963",
+      "description": "Malaysia officially formed from Malaya, Singapore, and territories"
+    },
+    {
+      "year": "1920",
+      "description": "Wall Street bombing kills 38 in New York"
+    }
+  ],
+  "generatedAt": "2025-09-16T10:45:51.718016",
+  "generatedAtUK": "2025-09-16T11:45:51.718030+01:00"
+}
