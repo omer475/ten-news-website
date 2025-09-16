@@ -1,22 +1,19 @@
 name: Generate Daily News
 on:
   schedule:
-    # GitHub cron uses UTC. UK 07:00 is 06:00 UTC in DST (BST) and 07:00 UTC in GMT.
-    - cron: '0 6 * * *'  # Fires at 06:00 UTC (covers 07:00 UK during DST)
-    - cron: '0 7 * * *'  # Fires at 07:00 UTC (covers 07:00 UK during GMT)
-  workflow_dispatch:  # Manual trigger (always allowed)
+    # Run at 7 AM UK time year-round
+    # During BST (British Summer Time): UK is UTC+1, so 7 AM UK = 6 AM UTC
+    # During GMT (Greenwich Mean Time): UK is UTC+0, so 7 AM UK = 7 AM UTC
+    # We run at both times and let the script check if it's actually 7 AM UK time
+    - cron: '0 6 * * *'  # 6 AM UTC (7 AM UK during BST - Mar to Oct)
+    - cron: '0 7 * * *'  # 7 AM UTC (7 AM UK during GMT - Oct to Mar)
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   generate-news:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      TARGET_TZ: Europe/London     # Production timezone
-      TARGET_HOUR: '07'            # 07:00 UK local
-      TARGET_MINUTE: '00'
-      WINDOW_MINUTES: '10'         # Allow small delay window
-      RUN_ALWAYS: '0'              # Manual runs still bypass guard via workflow_dispatch
     
     steps:
       - name: Checkout repository
@@ -46,52 +43,66 @@ jobs:
           import os
           from pathlib import Path
           
-          # Timezone-aware guard: run ONLY around 07:00 Europe/London (0-4 min window)
-          # ALWAYS run when triggered manually (workflow_dispatch)
+          # Check if this is a manual run
           event = os.getenv('GITHUB_EVENT_NAME')
-          target_tz = os.getenv('TARGET_TZ', 'Europe/London')
-          target_hour = int(os.getenv('TARGET_HOUR', '7'))
-          target_minute = int(os.getenv('TARGET_MINUTE', '0'))
-          window_minutes = int(os.getenv('WINDOW_MINUTES', '5'))
-          run_always = os.getenv('RUN_ALWAYS', '0') == '1'
-
-          tz = pytz.timezone(target_tz)
-          now = datetime.datetime.now(tz)
-          print('📅 Current time ({}):'.format(target_tz), now.strftime('%Y-%m-%d %H:%M %Z'))
-          print('🎯 Target window: {:02d}:{:02d}-{:02d}:{:02d} ({})'.format(
-              target_hour, target_minute,
-              target_hour, (target_minute + window_minutes - 1),
-              target_tz
-          ))
-          if event != 'workflow_dispatch' and not run_always:
-              in_window = (now.hour == target_hour and target_minute <= now.minute < target_minute + window_minutes)
-              if not in_window:
-                  print('⏭ Skipping scheduled run outside target window')
-                  sys.exit(0)
+          is_manual = (event == 'workflow_dispatch')
+          
+          # Get current UK time
+          uk_tz = pytz.timezone('Europe/London')
+          now_uk = datetime.datetime.now(uk_tz)
+          
+          print('=' * 60)
+          print('🚀 TEN NEWS - GitHub Actions Runner')
+          print('=' * 60)
+          print(f'📅 Current UK time: {now_uk.strftime(\"%Y-%m-%d %H:%M:%S %Z\")}')
+          print(f'🎯 Target time: 07:00 UK time')
+          print(f'🔧 Run type: {\"Manual\" if is_manual else \"Scheduled\"}')
+          print('=' * 60)
+          
+          # For scheduled runs, check if it's actually 7 AM UK time
+          if not is_manual:
+              # Check if we're within a reasonable window of 7 AM UK time
+              # This handles GitHub Actions delays and clock differences
+              hour_diff = abs(now_uk.hour - 7)
+              minute_window = now_uk.minute if now_uk.hour == 7 else 60
+              
+              if now_uk.hour == 7 and now_uk.minute < 30:
+                  # We're in the 7:00-7:30 window
+                  print('✅ Current time is within 7:00-7:30 UK time window')
+              elif now_uk.hour == 6 and now_uk.minute >= 50:
+                  # Allow slight early runs (6:50-6:59)
+                  print('✅ Current time is close to 7:00 UK time (early window)')
               else:
-                  print('✅ In target window - proceeding with news generation')
-
-          # Run once per day safeguard: skip if today's file exists
-          today_name = now.strftime('tennews_data_%Y_%m_%d.json')
-          if event != 'workflow_dispatch':
-              if Path(today_name).exists():
-                  print('⏭ Skipping: {} already exists. Run has likely completed today.'.format(today_name))
+                  print(f'⏭️ Skipping: Not 7 AM UK time (current hour: {now_uk.hour}:{now_uk.minute:02d})')
+                  print('   Schedule runs only execute at 7 AM UK time')
                   sys.exit(0)
-
-          print('🤖 Starting automated news generation...')
+              
+              # Check if we already ran today
+              today_filename = now_uk.strftime('tennews_data_%Y_%m_%d.json')
+              if Path(today_filename).exists():
+                  print(f'⏭️ Skipping: {today_filename} already exists')
+                  print('   News has already been generated today')
+                  sys.exit(0)
+          else:
+              print('✅ Manual run - bypassing time checks')
           
-          # Run the news generator directly
+          print('\\n🤖 Starting news generation...')
+          print('-' * 60)
+          
+          # Run the news generator
           result = subprocess.run([sys.executable, 'news-generator.py'], 
-                                input='1\n', text=True, capture_output=True)
+                                input='1\\n', text=True, capture_output=True)
           
-          print('STDOUT:', result.stdout)
+          print(result.stdout)
           if result.stderr:
               print('STDERR:', result.stderr)
           
           if result.returncode == 0:
+              print('-' * 60)
               print('✅ News generation completed successfully!')
               sys.exit(0)
           else:
+              print('-' * 60)
               print('❌ News generation failed!')
               sys.exit(1)
           "
@@ -105,8 +116,8 @@ jobs:
           git fetch origin main
           git pull --rebase origin main || true
           
-          # Add generated JSON files and processing logs
-          git add tennews_data_*.json processing_log_*.json
+          # Add generated JSON files and historical events
+          git add tennews_data_*.json historical_events_*.json
           
           # Check if there are changes to commit
           if git diff --staged --quiet; then
