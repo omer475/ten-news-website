@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 18, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "💰",
+      "title": "Google Alum Builds AI Empire Without Venture Capital Backing",
+      "summary": "Former **Google**, **Facebook**, and **Twitter** engineer **Edwin Chen** has quietly built data labeling company **Surge** into an **$18 billion** enterprise. His unconventional approach of avoiding venture capital funding has made him the youngest member of the **Forbes 400**.",
+      "details": [
+        "Annual revenue: $2.4B",
+        "Employee count: 15,000",
+        "Market share: 42% of AI labeling"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/phoebeliu/2025/09/17/the-ai-billionaire-youve-never-heard-of/"
+    },
+    {
+      "rank": 2,
+      "emoji": "🎫",
+      "title": "StubHub CEO Returns Triumphant as Company Goes Public",
+      "summary": "**Eric Baker**, who was previously fired from **StubHub**, has engineered a remarkable comeback as CEO, leading the ticket marketplace to a successful **IPO**. The listing positions Baker to achieve **billionaire** status after years of strategic rebuilding.",
+      "details": [
+        "IPO valuation: $4.2B",
+        "Market share: 35% of resale",
+        "Annual transactions: 28M tickets"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/aliciapark/2025/09/17/stubhub-cofounder-eric-baker-nears-billionaire-status-as-company-ipos-wednesday/"
+    },
+    {
+      "rank": 3,
+      "emoji": "⚠️",
+      "title": "Israel Creates New Evacuation Route as Gaza Crisis Deepens",
+      "summary": "**Israeli** military opens **Salahudin Road** as additional evacuation route from **Gaza City**, giving Palestinians **48 hours** to move south. The conflict's death toll has now exceeded **65,000** as humanitarian concerns escalate in the region.",
+      "details": [
+        "Aid convoys: 120 daily",
+        "Displaced civilians: 1.2M",
+        "Safe zones: 4 established"
+      ],
+      "category": "World News",
+      "source": "SCMP",
+      "url": "https://www.scmp.com/news/world/middle-east/article/3325918/israel-opens-new-route-out-gaza-city-death-toll-passes-65000"
+    },
+    {
+      "rank": 4,
+      "emoji": "🖥️",
+      "title": "China Bans Tech Giants from Purchasing Nvidia AI Chips",
+      "summary": "**China's** cybersecurity regulator has prohibited domestic companies including **ByteDance** and **Alibaba** from purchasing **Nvidia's** AI chips, specifically the **RTX Pro 6000D** server designed for the Chinese market.",
+      "details": [
+        "Annual impact: $3B revenue",
+        "Affected companies: 47",
+        "Market loss: 31% share"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/17/china-tells-its-tech-companies-they-cant-buy-ai-chips-from-nivida/"
+    },
+    {
+      "rank": 5,
+      "emoji": "🏢",
+      "title": "Nestlé Chairman Steps Down Following Surprise CEO Dismissal",
+      "summary": "**Paul Bulcke**, chairman of **Nestlé**, has resigned following the unexpected termination of the company's chief executive. The sudden leadership vacuum at the world's largest food company has sparked concerns among global investors.",
+      "details": [
+        "Stock impact: -8.2%",
+        "Board resignations: 3",
+        "Tenure length: 7 years"
+      ],
+      "category": "Business",
+      "source": "Euronews",
+      "url": "https://pt.euronews.com/business/2025/09/17/presidente-da-nestle-demite-se-apos-surpreendente-despedimento-do-diretor-executivo"
+    },
+    {
+      "rank": 6,
+      "emoji": "💊",
+      "title": "Novo Nordisk Reports Successful Trial of Weight Loss Pill",
+      "summary": "**Novo Nordisk** announces breakthrough results for oral **semaglutide**, showing **16.6%** average weight reduction over **64 weeks**. The pill demonstrates comparable effectiveness to their injectable **Wegovy** treatment in latest clinical trials.",
+      "details": [
+        "Trial participants: 2,500",
+        "Market potential: $12B annually",
+        "Side effects: 12% lower"
+      ],
+      "category": "Health",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/18/novo-nordisk-flags-wegovy-pill-weight-loss-in-line-with-injection.html"
+    },
+    {
+      "rank": 7,
+      "emoji": "📈",
+      "title": "Fed Chair Warns of Complex Path to Avoid Stagflation",
+      "summary": "**Federal Reserve** Chairman **Jerome Powell** cautions about the challenging economic balance, citing 'two-sided risk' in managing inflation while avoiding stagflation. The Fed faces critical decisions on interest rate policy.",
+      "details": [
+        "Inflation rate: 4.2%",
+        "GDP growth: 1.8%",
+        "Unemployment: 5.3%"
+      ],
+      "category": "Business",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/17/jerome-powell-warns-theres-no-risk-free-path-to-avoid-stagflation/"
+    },
+    {
+      "rank": 8,
+      "emoji": "👓",
+      "title": "Meta Launches Advanced AI-Powered Smart Glasses to Market",
+      "summary": "**Meta** CEO **Mark Zuckerberg** introduces new **AI-powered smart glasses** priced at **$799**, launching **September 30**. The device features advanced artificial intelligence capabilities and will be available through select retail locations.",
+      "details": [
+        "Battery life: 8 hours",
+        "AI features: 12 integrated",
+        "Pre-orders: 200,000 units"
+      ],
+      "category": "Technology",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/americas/meta-mark-zuckerberg-ai-smart-glasses-b2828779.html"
+    },
+    {
+      "rank": 9,
+      "emoji": "📺",
+      "title": "ABC Suspends Jimmy Kimmel Show Over Controversial Remarks",
+      "summary": "**ABC** has indefinitely suspended '**Jimmy Kimmel Live!**' following controversial comments about conservative influencer **Charlie Kirk's** death. The network's decision comes after widespread backlash to **Kimmel's** Monday night monologue.",
+      "details": [
+        "Viewership: 2.1M nightly",
+        "Advertiser exodus: 12",
+        "Contract value: $20M annually"
+      ],
+      "category": "Business",
+      "source": "MSNBC",
+      "url": "https://www.msnbc.com/top-stories/latest/jimmy-kimmel-pulled-abc-charlie-kirk-nexstar-rcna232036"
+    },
+    {
+      "rank": 10,
+      "emoji": "⛽",
+      "title": "Abu Dhabi Consortium Withdraws $30 Billion Santos Takeover Bid",
+      "summary": "An **Abu Dhabi**-led consortium has abandoned its **$30 billion** takeover attempt of Australian gas giant **Santos**. The withdrawal spares the federal government from making a controversial decision on the proposed acquisition.",
+      "details": [
+        "Share price drop: 18%",
+        "Gas reserves: 4.8T cubic feet",
+        "Employee count: 3,500"
+      ],
+      "category": "Business",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/australia-news/2025/sep/18/30bn-santos-takeover-collapses-after-abu-dhabi-consortium-reconsiders-offer"
+    }
+  ],
+  "dailyGreeting": "Good morning! Tech giants clash in today's AI news.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "THURSDAY, SEPTEMBER 18, 2025",
+  "historicalEvents": [
+    {
+      "year": "1793",
+      "description": "US Capitol Building cornerstone laid by George Washington"
+    },
+    {
+      "year": "1851",
+      "description": "First publication of The New York Times newspaper"
+    },
+    {
+      "year": "1931",
+      "description": "Japan invades Manchuria, beginning occupation of China"
+    },
+    {
+      "year": "1973",
+      "description": "West Germany and East Germany join United Nations"
+    }
+  ],
+  "generatedAt": "2025-09-18T12:27:00.253086",
+  "generatedAtUK": "2025-09-18T12:27:00.253107+01:00"
+}
