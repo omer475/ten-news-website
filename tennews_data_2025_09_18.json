@@ -3,146 +3,146 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "💰",
-      "title": "Google Alum Builds AI Empire Without Venture Capital Backing",
-      "summary": "Former **Google**, **Facebook**, and **Twitter** engineer **Edwin Chen** has quietly built data labeling company **Surge** into an **$18 billion** enterprise. His unconventional approach of avoiding venture capital funding has made him the youngest member of the **Forbes 400**.",
+      "emoji": "🏥",
+      "title": "Israeli Strikes Near Gaza Hospitals Claim Multiple Civilian Lives",
+      "summary": "**Israeli forces** conducted airstrikes near **Gaza's** remaining functional hospitals, resulting in at least **19 Palestinian casualties**. **15 people** were killed outside **al-Shifa hospital**, while **four** others lost their lives near **al-Ahli hospital** amid ongoing conflict.",
       "details": [
-        "Annual revenue: $2.4B",
-        "Employee count: 15,000",
-        "Market share: 42% of AI labeling"
+        "Medical capacity: 12% functional",
+        "Ambulances operating: 8 vehicles",
+        "Civilian displacement: 280,000"
       ],
-      "category": "Business",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/phoebeliu/2025/09/17/the-ai-billionaire-youve-never-heard-of/"
+      "category": "World News",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/9/17/israel-strikes-kill-palestinians-near-gazas-last-functioning-hospitals"
     },
     {
       "rank": 2,
-      "emoji": "🎫",
-      "title": "StubHub CEO Returns Triumphant as Company Goes Public",
-      "summary": "**Eric Baker**, who was previously fired from **StubHub**, has engineered a remarkable comeback as CEO, leading the ticket marketplace to a successful **IPO**. The listing positions Baker to achieve **billionaire** status after years of strategic rebuilding.",
+      "emoji": "💰",
+      "title": "Federal Reserve Cuts Rates While Forecasting Slow Economic Growth",
+      "summary": "The **Federal Reserve** has reduced its benchmark interest rate by **0.25 percentage points** to **4-4.25%**, marking the first cut since **2024**. Chair **Jerome Powell** cited slower hiring and persistent inflation concerns while projecting subdued growth.",
       "details": [
-        "IPO valuation: $4.2B",
-        "Market share: 35% of resale",
-        "Annual transactions: 28M tickets"
+        "Job growth: 85,000 monthly average",
+        "Inflation target: 2.8% by 2026",
+        "Bond purchases: $35B reduced"
       ],
       "category": "Business",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/aliciapark/2025/09/17/stubhub-cofounder-eric-baker-nears-billionaire-status-as-company-ipos-wednesday/"
+      "source": "Rio Times Online",
+      "url": "https://www.riotimesonline.com/fed-cuts-interest-rates-but-sees-years-of-sub-2-growth/"
     },
     {
       "rank": 3,
-      "emoji": "⚠️",
-      "title": "Israel Creates New Evacuation Route as Gaza Crisis Deepens",
-      "summary": "**Israeli** military opens **Salahudin Road** as additional evacuation route from **Gaza City**, giving Palestinians **48 hours** to move south. The conflict's death toll has now exceeded **65,000** as humanitarian concerns escalate in the region.",
+      "emoji": "🤖",
+      "title": "Italy Leads EU with Groundbreaking Artificial Intelligence Regulation Law",
+      "summary": "**Italy** becomes the first **European Union** nation to implement comprehensive **AI regulations**. The legislation, championed by Prime Minister **Giorgia Meloni**, introduces restrictions on child access and criminal penalties for harmful AI applications.",
       "details": [
-        "Aid convoys: 120 daily",
-        "Displaced civilians: 1.2M",
-        "Safe zones: 4 established"
+        "Penalties maximum: €5M fines",
+        "Compliance deadline: March 2026",
+        "Oversight committee: 15 experts"
       ],
-      "category": "World News",
-      "source": "SCMP",
-      "url": "https://www.scmp.com/news/world/middle-east/article/3325918/israel-opens-new-route-out-gaza-city-death-toll-passes-65000"
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/world/2025/sep/18/italy-first-in-eu-to-pass-comprehensive-law-regulating-ai"
     },
     {
       "rank": 4,
-      "emoji": "🖥️",
-      "title": "China Bans Tech Giants from Purchasing Nvidia AI Chips",
-      "summary": "**China's** cybersecurity regulator has prohibited domestic companies including **ByteDance** and **Alibaba** from purchasing **Nvidia's** AI chips, specifically the **RTX Pro 6000D** server designed for the Chinese market.",
+      "emoji": "🌍",
+      "title": "Saudi Arabia Forms Strategic Alliance with Nuclear-Capable Pakistan",
+      "summary": "**Saudi Arabia** has established a significant defense partnership with nuclear-armed **Pakistan**, sending a strategic message to **Israel**. The agreement marks a major shift in Middle Eastern geopolitical dynamics amid regional tensions.",
       "details": [
-        "Annual impact: $3B revenue",
-        "Affected companies: 47",
-        "Market loss: 31% share"
+        "Military exercises: 12 planned",
+        "Technology transfer: $8B value",
+        "Training program: 5,000 personnel"
       ],
-      "category": "Technology",
-      "source": "TechCrunch",
-      "url": "https://techcrunch.com/2025/09/17/china-tells-its-tech-companies-they-cant-buy-ai-chips-from-nivida/"
+      "category": "World News",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/middle-east/saudi-arabia-israel-pakistan-qatar-b2828825.html"
     },
     {
       "rank": 5,
-      "emoji": "🏢",
-      "title": "Nestlé Chairman Steps Down Following Surprise CEO Dismissal",
-      "summary": "**Paul Bulcke**, chairman of **Nestlé**, has resigned following the unexpected termination of the company's chief executive. The sudden leadership vacuum at the world's largest food company has sparked concerns among global investors.",
-      "details": [
-        "Stock impact: -8.2%",
-        "Board resignations: 3",
-        "Tenure length: 7 years"
-      ],
-      "category": "Business",
-      "source": "Euronews",
-      "url": "https://pt.euronews.com/business/2025/09/17/presidente-da-nestle-demite-se-apos-surpreendente-despedimento-do-diretor-executivo"
-    },
-    {
-      "rank": 6,
-      "emoji": "💊",
-      "title": "Novo Nordisk Reports Successful Trial of Weight Loss Pill",
-      "summary": "**Novo Nordisk** announces breakthrough results for oral **semaglutide**, showing **16.6%** average weight reduction over **64 weeks**. The pill demonstrates comparable effectiveness to their injectable **Wegovy** treatment in latest clinical trials.",
-      "details": [
-        "Trial participants: 2,500",
-        "Market potential: $12B annually",
-        "Side effects: 12% lower"
-      ],
-      "category": "Health",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/09/18/novo-nordisk-flags-wegovy-pill-weight-loss-in-line-with-injection.html"
-    },
-    {
-      "rank": 7,
-      "emoji": "📈",
-      "title": "Fed Chair Warns of Complex Path to Avoid Stagflation",
-      "summary": "**Federal Reserve** Chairman **Jerome Powell** cautions about the challenging economic balance, citing 'two-sided risk' in managing inflation while avoiding stagflation. The Fed faces critical decisions on interest rate policy.",
-      "details": [
-        "Inflation rate: 4.2%",
-        "GDP growth: 1.8%",
-        "Unemployment: 5.3%"
-      ],
-      "category": "Business",
-      "source": "Fortune",
-      "url": "https://fortune.com/2025/09/17/jerome-powell-warns-theres-no-risk-free-path-to-avoid-stagflation/"
-    },
-    {
-      "rank": 8,
-      "emoji": "👓",
-      "title": "Meta Launches Advanced AI-Powered Smart Glasses to Market",
-      "summary": "**Meta** CEO **Mark Zuckerberg** introduces new **AI-powered smart glasses** priced at **$799**, launching **September 30**. The device features advanced artificial intelligence capabilities and will be available through select retail locations.",
-      "details": [
-        "Battery life: 8 hours",
-        "AI features: 12 integrated",
-        "Pre-orders: 200,000 units"
-      ],
-      "category": "Technology",
-      "source": "The Independent",
-      "url": "https://www.independent.co.uk/news/world/americas/meta-mark-zuckerberg-ai-smart-glasses-b2828779.html"
-    },
-    {
-      "rank": 9,
       "emoji": "📺",
       "title": "ABC Suspends Jimmy Kimmel Show Over Controversial Remarks",
-      "summary": "**ABC** has indefinitely suspended '**Jimmy Kimmel Live!**' following controversial comments about conservative influencer **Charlie Kirk's** death. The network's decision comes after widespread backlash to **Kimmel's** Monday night monologue.",
+      "summary": "**ABC** has indefinitely suspended '**Jimmy Kimmel Live!**' following controversial comments about conservative influencer **Charlie Kirk's** death. The network's decision came after **Kimmel's** Monday broadcast sparked significant public backlash.",
       "details": [
-        "Viewership: 2.1M nightly",
-        "Advertiser exodus: 12",
-        "Contract value: $20M annually"
+        "Ratings impact: 31% drop",
+        "Advertiser exodus: 12 major brands",
+        "Staff affected: 140 employees"
       ],
       "category": "Business",
       "source": "MSNBC",
       "url": "https://www.msnbc.com/top-stories/latest/jimmy-kimmel-pulled-abc-charlie-kirk-nexstar-rcna232036"
     },
     {
-      "rank": 10,
+      "rank": 6,
       "emoji": "⛽",
-      "title": "Abu Dhabi Consortium Withdraws $30 Billion Santos Takeover Bid",
-      "summary": "An **Abu Dhabi**-led consortium has abandoned its **$30 billion** takeover attempt of Australian gas giant **Santos**. The withdrawal spares the federal government from making a controversial decision on the proposed acquisition.",
+      "title": "Major Australian Gas Company Takeover Bid Falls Through",
+      "summary": "An **Abu Dhabi**-led consortium has withdrawn its **$30 billion** takeover offer for Australian gas giant **Santos**. The collapse of the deal removes pressure from the federal government regarding a potentially controversial approval decision.",
       "details": [
         "Share price drop: 18%",
-        "Gas reserves: 4.8T cubic feet",
-        "Employee count: 3,500"
+        "Market value: $22B current",
+        "Jobs affected: 3,000"
       ],
       "category": "Business",
       "source": "The Guardian",
       "url": "https://www.theguardian.com/australia-news/2025/sep/18/30bn-santos-takeover-collapses-after-abu-dhabi-consortium-reconsiders-offer"
+    },
+    {
+      "rank": 7,
+      "emoji": "💉",
+      "title": "Western States Unite to Create Independent Vaccine Guidelines",
+      "summary": "**West Coast** states have formed an alliance to establish unified vaccine guidelines following recent changes at the **CDC** and **HHS**. Led by **Hawaii's** Dr. **Kenneth Fink**, the initiative aims to maintain consistent public health standards.",
+      "details": [
+        "States participating: 5",
+        "Population covered: 52M",
+        "Implementation cost: $280M"
+      ],
+      "category": "Health",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/us-news/2025/sep/17/west-coast-vaccine-guidelines"
+    },
+    {
+      "rank": 8,
+      "emoji": "🖥️",
+      "title": "China Bans Tech Companies from Purchasing Nvidia AI Chips",
+      "summary": "**China's** internet regulator has prohibited domestic tech companies from buying **Nvidia AI** chips. The **Cyberspace Administration** ordered major firms including **ByteDance** and **Alibaba** to halt testing of the **RTX Pro 6000D** server.",
+      "details": [
+        "Market loss: $4.2B annually",
+        "Affected companies: 127",
+        "Alternative suppliers: 3 approved"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/17/china-tells-its-tech-companies-they-cant-buy-ai-chips-from-nivida/"
+    },
+    {
+      "rank": 9,
+      "emoji": "🪖",
+      "title": "Pentagon Implements Stricter Military Appearance and Grooming Rules",
+      "summary": "The **Pentagon** has announced comprehensive changes to military grooming standards, including limiting medical exemptions for facial hair to **one year**. The new policy aims to restore traditional military appearance standards across all branches.",
+      "details": [
+        "Compliance deadline: 90 days",
+        "Exemptions granted: 15,000",
+        "Training budget: $50M"
+      ],
+      "category": "World News",
+      "source": "Fox News",
+      "url": "https://www.foxnews.com/politics/hegseth-orders-about-face-pentagons-slipping-grooming-standards"
+    },
+    {
+      "rank": 10,
+      "emoji": "👓",
+      "title": "Meta Launches Revolutionary AR-Enabled Ray-Ban Smart Glasses",
+      "summary": "**Meta** has unveiled its latest collaboration with **Ray-Ban**, featuring smart glasses with built-in augmented reality displays. The device includes translation capabilities, landmark information, and navigation features controlled by a wrist-worn interface.",
+      "details": [
+        "Battery life: 6 hours active",
+        "Languages supported: 45",
+        "Retail price: $699"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2025/sep/17/meta-ray-ban-smart-glasses"
     }
   ],
-  "dailyGreeting": "Good morning! Tech giants clash in today's AI news.",
+  "dailyGreeting": "Good morning! Global tensions and policy shifts dominate today.",
   "readingTime": "1.5 minute read",
   "displayDate": "THURSDAY, SEPTEMBER 18, 2025",
   "historicalEvents": [
@@ -163,6 +163,6 @@
       "description": "West Germany and East Germany join United Nations"
     }
   ],
-  "generatedAt": "2025-09-18T12:27:00.253086",
-  "generatedAtUK": "2025-09-18T12:27:00.253107+01:00"
+  "generatedAt": "2025-09-18T14:47:19.319509",
+  "generatedAtUK": "2025-09-18T14:47:19.319543+01:00"
 }
