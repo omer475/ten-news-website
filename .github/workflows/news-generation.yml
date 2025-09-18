@@ -1,19 +1,19 @@
 name: Generate Daily News
 on:
   schedule:
-    # Run at 7 AM UK time year-round
-    # During BST (British Summer Time): UK is UTC+1, so 7 AM UK = 6 AM UTC
-    # During GMT (Greenwich Mean Time): UK is UTC+0, so 7 AM UK = 7 AM UTC
-    # We run at both times and let the script check if it's actually 7 AM UK time
-    - cron: '0 6 * * *'  # 6 AM UTC (7 AM UK during BST - Mar to Oct)
-    - cron: '0 7 * * *'  # 7 AM UTC (7 AM UK during GMT - Oct to Mar)
-  workflow_dispatch:  # Manual trigger
+    # Run every 15 minutes during hours that could be 7 AM UK time (handles DST)
+    # The job will check if it's actually 7 AM UK time before proceeding
+    - cron: '*/15 6 * * *'  # Every 15 min at 6 AM UTC (7 AM UK during BST)
+    - cron: '*/15 7 * * *'  # Every 15 min at 7 AM UTC (7 AM UK during GMT)
+  workflow_dispatch:  # Manual trigger (always allowed)
 
 jobs:
   generate-news:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      TZ: Europe/London  # Set timezone for the entire job
     
     steps:
       - name: Checkout repository
@@ -35,77 +35,31 @@ jobs:
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
         run: |
-          python -c "
-          import sys
-          import subprocess
-          import datetime
-          import pytz
-          import os
-          from pathlib import Path
+          # For scheduled runs, check if we're within 7 AM UK time window
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            # Get current UK time
+            CURRENT_UK_HOUR=$(TZ=Europe/London date +%H)
+            CURRENT_UK_MIN=$(TZ=Europe/London date +%M)
+            
+            echo "📅 Current UK time: $(TZ=Europe/London date '+%Y-%m-%d %H:%M %Z')"
+            echo "🎯 Target time: 07:00 UK time"
+            
+            # Check if we're in the 7 AM hour (7:00-7:59)
+            if [ "$CURRENT_UK_HOUR" -ne "7" ]; then
+              echo "⏭ Not in the 7 AM hour. Current hour: $CURRENT_UK_HOUR. Skipping scheduled run."
+              exit 0
+            fi
+            
+            # Check if today's file already exists
+            TODAY_FILE="tennews_data_$(date +%Y_%m_%d).json"
+            if [ -f "$TODAY_FILE" ]; then
+              echo "⏭ $TODAY_FILE already exists. News generation completed today."
+              exit 0
+            fi
+          fi
           
-          # Check if this is a manual run
-          event = os.getenv('GITHUB_EVENT_NAME')
-          is_manual = (event == 'workflow_dispatch')
-          
-          # Get current UK time
-          uk_tz = pytz.timezone('Europe/London')
-          now_uk = datetime.datetime.now(uk_tz)
-          
-          print('=' * 60)
-          print('🚀 TEN NEWS - GitHub Actions Runner')
-          print('=' * 60)
-          print(f'📅 Current UK time: {now_uk.strftime(\"%Y-%m-%d %H:%M:%S %Z\")}')
-          print(f'🎯 Target time: 07:00 UK time')
-          print(f'🔧 Run type: {\"Manual\" if is_manual else \"Scheduled\"}')
-          print('=' * 60)
-          
-          # For scheduled runs, check if it's actually 7 AM UK time
-          if not is_manual:
-              # Check if we're within a reasonable window of 7 AM UK time
-              # This handles GitHub Actions delays and clock differences
-              hour_diff = abs(now_uk.hour - 7)
-              minute_window = now_uk.minute if now_uk.hour == 7 else 60
-              
-              if now_uk.hour == 7 and now_uk.minute < 30:
-                  # We're in the 7:00-7:30 window
-                  print('✅ Current time is within 7:00-7:30 UK time window')
-              elif now_uk.hour == 6 and now_uk.minute >= 50:
-                  # Allow slight early runs (6:50-6:59)
-                  print('✅ Current time is close to 7:00 UK time (early window)')
-              else:
-                  print(f'⏭️ Skipping: Not 7 AM UK time (current hour: {now_uk.hour}:{now_uk.minute:02d})')
-                  print('   Schedule runs only execute at 7 AM UK time')
-                  sys.exit(0)
-              
-              # Check if we already ran today
-              today_filename = now_uk.strftime('tennews_data_%Y_%m_%d.json')
-              if Path(today_filename).exists():
-                  print(f'⏭️ Skipping: {today_filename} already exists')
-                  print('   News has already been generated today')
-                  sys.exit(0)
-          else:
-              print('✅ Manual run - bypassing time checks')
-          
-          print('\\n🤖 Starting news generation...')
-          print('-' * 60)
-          
-          # Run the news generator
-          result = subprocess.run([sys.executable, 'news-generator.py'], 
-                                input='1\\n', text=True, capture_output=True)
-          
-          print(result.stdout)
-          if result.stderr:
-              print('STDERR:', result.stderr)
-          
-          if result.returncode == 0:
-              print('-' * 60)
-              print('✅ News generation completed successfully!')
-              sys.exit(0)
-          else:
-              print('-' * 60)
-              print('❌ News generation failed!')
-              sys.exit(1)
-          "
+          echo "🤖 Starting news generation..."
+          python news-generator.py <<< "1"
           
       - name: Commit and push generated news
         run: |
@@ -116,7 +70,7 @@ jobs:
           git fetch origin main
           git pull --rebase origin main || true
           
-          # Add generated JSON files and historical events
+          # Add generated JSON files (no more processing logs)
           git add tennews_data_*.json historical_events_*.json
           
           # Check if there are changes to commit
