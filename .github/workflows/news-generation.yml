@@ -1,10 +1,12 @@
 name: Generate Daily News
 on:
   schedule:
-    # Run every 15 minutes during hours that could be 7 AM UK time (handles DST)
-    # The job will check if it's actually 7 AM UK time before proceeding
-    - cron: '*/15 6 * * *'  # Every 15 min at 6 AM UTC (7 AM UK during BST)
-    - cron: '*/15 7 * * *'  # Every 15 min at 7 AM UTC (7 AM UK during GMT)
+    # Run at specific times that should be close to 7 AM UK time
+    # Multiple entries to handle both GMT and BST periods
+    - cron: '0 6 * * *'   # 6:00 AM UTC (7:00 AM UK during BST - Mar to Oct)
+    - cron: '5 6 * * *'   # 6:05 AM UTC (7:05 AM UK during BST) - backup for delays
+    - cron: '0 7 * * *'   # 7:00 AM UTC (7:00 AM UK during GMT - Oct to Mar)
+    - cron: '5 7 * * *'   # 7:05 AM UTC (7:05 AM UK during GMT) - backup for delays
   workflow_dispatch:  # Manual trigger (always allowed)
 
 jobs:
