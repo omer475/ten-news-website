@@ -507,47 +507,115 @@ PREVIOUS ARTICLES TO AVOID:
 Rule: Avoid selecting duplicates or minor updates of these stories.
 """
     
-    prompt = (
-        "You MUST select EXACTLY 10 most important global news stories from the provided list. If there are fewer than 10 suitable stories, select the best available ones and fill to reach exactly 10.\n\n"
-        f"{previous_context}\n\n"
-        "MANDATORY REQUIREMENTS:\n"
-        "1. MUST return exactly 10 articles in the JSON response\n"
-        "2. If fewer than 10 high-quality articles exist, include the best available ones to reach 10\n"
-        "3. Global Impact: Prioritize stories affecting millions worldwide\n"
-        "4. Breaking/Significant: Major developments over routine updates\n"
-        "5. Balance: Mix categories (politics, business, technology, science, climate, health)\n"
-        "6. Avoid: Personal stories, local news only, minor updates, duplicates\n\n"
-        "INTEREST/ENGAGEMENT PRIORITY (CRITICAL):\n"
-        "- Strongly favor stories that have high public interest and viral potential\n"
-        "- Examples of HIGH-INTEREST items:\n"
-        "  • Well-known public figures or celebrities with major developments (e.g., inheritance, transfers, resignations)\n"
-        "  • Corporate leadership scandals, firings, affairs, whistleblowing, major lawsuits\n"
-        "  • Record-breaking numbers, shocking outcomes, dramatic turnarounds\n"
-        "  • Cultural moments people talk about globally (sports stars, mega-brands, entertainment)\n"
-        "- Examples to DE-PRIORITIZE unless record-setting or scandalous:\n"
-        "  • Routine policy statements, small local incidents, minor corporate updates\n"
-        "  • Standard earnings releases without big surprises\n"
-        "  • Incremental product updates without broad impact\n\n"
-        "SELECTION HEURISTIC:\n"
-        "- Aim for at least 3-5 high-interest/viral stories if available among reputable sources\n"
-        "- Remaining picks should still be globally relevant and newsworthy\n"
-        "- Prefer clear, punchy headlines that spark curiosity\n\n"
-        "CRITICAL: Your response must contain exactly 10 articles. No exceptions.\n\n"
-        "Return ONLY this JSON structure:\n"
-        "{\n"
-        "  \"selected_articles\": [\n"
-        "    {\n"
-        "      \"id\": 0,\n"
-        "      \"title\": \"exact title\",\n"
-        "      \"url\": \"exact url\", \n"
-        "      \"category\": \"World News/Business/Technology/Science/Climate/Health\",\n"
-        "      \"selection_reason\": \"Why this is interesting/viral + globally relevant\"\n"
-        "    }\n"
-        "  ]\n"
-        "}\n\n"
-        "ARTICLES TO EVALUATE:\n"
-        f"{json.dumps(formatted_articles, indent=2)}"
-    )
+    prompt = f"""You are an expert news curator responsible for selecting EXACTLY 10 most important and engaging global news stories from the provided list.
+
+{previous_context}
+
+## CORE MANDATE
+Return EXACTLY 10 articles in JSON format. This is non-negotiable. If fewer than 10 ideal stories exist, include the best available to reach exactly 10.
+
+## SELECTION FRAMEWORK
+
+### TIER 1 - CRITICAL IMPACT (Positions 1-3)
+Must meet AT LEAST TWO criteria:
+- Affects 10+ million people directly OR has global systemic impact
+- Breaking news with immediate consequences requiring public awareness
+- Historic/unprecedented events that will be referenced for years
+- Major threats to public safety, security, or economic stability
+- Government decisions fundamentally changing citizens' lives
+
+### TIER 2 - HIGH IMPORTANCE (Positions 4-6)
+Must meet AT LEAST TWO criteria:
+- Affects 1-10 million people OR significant sector/industry
+- Major corporate/institutional developments with ripple effects
+- Scientific/medical breakthroughs with practical applications
+- Significant geopolitical shifts or diplomatic developments
+- Economic indicators/events affecting markets or employment
+- Cultural phenomena with measurable societal impact
+
+### TIER 3 - NOTABLE & ENGAGING (Positions 7-10)
+Must meet AT LEAST ONE criteria:
+- High viral/discussion potential while maintaining relevance
+- Updates on major ongoing stories people are following
+- Emerging trends that signal future changes
+- Human interest with broader implications or lessons
+- Regional stories with potential global precedent
+
+## ENGAGEMENT OPTIMIZATION RULES
+
+### MUST INCLUDE (if available from credible sources):
+- **Power & Scandal**: Leadership crises, corruption exposés, whistleblower revelations
+- **Records & Extremes**: First-ever, largest, smallest, most expensive, unprecedented outcomes
+- **Celebrity Impact**: Major figures making significant moves (not gossip - think business decisions, political involvement, major initiatives)
+- **David vs Goliath**: Underdog victories, shocking upsets, unexpected reversals
+- **Money Moves**: Billion-dollar deals, market crashes/surges, wealth transfers
+- **Cultural Moments**: Events everyone will discuss (major sports finals, Oscar surprises, viral phenomena with substance)
+
+### MUST EXCLUDE:
+- Purely local stories without wider implications
+- Minor corporate earnings unless dramatically unexpected
+- Incremental policy updates or routine announcements
+- Personal drama without societal relevance
+- Speculation or rumors without confirmation
+- Stories older than 48 hours unless major new development
+
+## DIVERSITY REQUIREMENTS
+
+Your 10 selections MUST include:
+- **Geographic Distribution**: Maximum 4 stories from any single country
+- **Topic Balance**: No more than 3 stories from same category
+- **Perspective Range**: Include both institutional and human-impact angles
+- **Temporal Mix**: At least 6 breaking/today's news, maximum 4 developing stories
+
+### SUGGESTED DISTRIBUTION:
+- 2-3 Politics/Governance stories
+- 2-3 Economy/Business stories  
+- 1-2 Technology/Science stories
+- 1-2 Health/Climate/Environment stories
+- 1-2 Society/Culture/Human Interest stories
+- 1 Wildcard (Sports/Entertainment IF globally significant)
+
+## QUALITY VERIFICATION
+
+Before including ANY story, verify:
+- ✓ Source is established, credible news organization
+- ✓ Information is factual, not speculation
+- ✓ Headline accurately represents content
+- ✓ Story has clear "why this matters" angle
+- ✓ No duplicate coverage of same event
+
+## RANKING METHODOLOGY
+
+1. **Impact Score (40%)**: How many affected + how severely
+2. **Urgency Score (30%)**: Breaking news > Developing > Follow-up
+3. **Engagement Score (20%)**: Viral potential + discussion value
+4. **Diversity Score (10%)**: Balances overall selection
+
+## OUTPUT REQUIREMENTS
+
+Return ONLY this JSON structure with EXACTLY 10 articles:
+{{
+  "selection_metadata": {{
+    "total_articles_reviewed": {len(formatted_articles)},
+    "selection_timestamp": "{datetime.now().isoformat()}",
+    "top_themes": ["theme1", "theme2", "theme3"]
+  }},
+  "selected_articles": [
+    {{
+      "id": 1,
+      "title": "[exact original title]",
+      "url": "[exact URL]",
+      "category": "Politics|Business|Technology|Science|Health|Climate|Society|Culture|Sports",
+      "impact_tier": "Critical|High|Notable",
+      "selection_reason": "[One sentence: specific impact + why readers care]",
+      "engagement_factors": ["breaking", "scandal", "record", "viral", "affects_millions"],
+      "estimated_reach": "global|continental|national|sectoral"
+    }}
+  ]
+}}
+
+## ARTICLES TO EVALUATE:
+{json.dumps(formatted_articles, indent=2)}"""
     
     response = call_claude_api(prompt, "Selecting top articles")
     
@@ -557,6 +625,24 @@ Rule: Avoid selecting duplicates or minor updates of these stories.
             if parsed and 'selected_articles' in parsed:
                 selected = parsed['selected_articles']
                 print(f"✅ AI selected {len(selected)} articles")
+                
+                # Show selection metadata if available
+                if 'selection_metadata' in parsed:
+                    metadata = parsed['selection_metadata']
+                    print(f"📊 Reviewed {metadata.get('total_articles_reviewed', 'unknown')} articles")
+                    if 'top_themes' in metadata:
+                        print(f"🏷️ Top themes: {', '.join(metadata['top_themes'])}")
+                
+                # Show tier distribution
+                tier_counts = {}
+                for article in selected:
+                    tier = article.get('impact_tier', 'Unknown')
+                    tier_counts[tier] = tier_counts.get(tier, 0) + 1
+                
+                if tier_counts:
+                    tier_summary = [f"{tier}: {count}" for tier, count in tier_counts.items()]
+                    print(f"🎯 Impact distribution: {', '.join(tier_summary)}")
+                
                 return selected
         except Exception as e:
             print(f"⚠️ Error parsing selection: {str(e)}")
