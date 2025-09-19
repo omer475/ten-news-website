@@ -150,17 +150,17 @@ export default function Home() {
     
     const getCategoryBoldStyle = (category) => {
       const styles = {
-        'WORLD NEWS': { background: 'rgba(255, 237, 213, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: 'rgba(255, 237, 213, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: 'rgba(207, 250, 254, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: 'rgba(224, 231, 255, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: 'rgba(186, 230, 253, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'HEALTH': { background: 'rgba(204, 251, 241, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: 'rgba(220, 252, 231, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SPORTS': { background: 'rgba(254, 240, 138, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: 'rgba(252, 231, 243, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
+        'WORLD NEWS': { background: '#fef2f2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'TECH & AI': { background: '#eef2ff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SCIENCE': { background: '#e0f2fe', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'HEALTH': { background: '#ecfdf5', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'CLIMATE': { background: '#f0fdf4', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SPORTS': { background: '#fffbeb', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'ENTERTAINMENT': { background: '#fdf2f8', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
       };
-      return styles[category] || { background: 'rgba(241, 245, 249, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
+      return styles[category] || { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
     };
     
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
