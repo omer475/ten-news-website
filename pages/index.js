@@ -155,6 +155,59 @@ export default function Home() {
     });
   };
 
+  // Animated number counter function
+  const animateNumber = (element, finalValue) => {
+    const numericValue = parseFloat(finalValue.replace(/[^0-9.-]/g, ''));
+    const unit = finalValue.replace(/[0-9.-]/g, '');
+    const hasDecimals = finalValue.includes('.');
+    const decimals = hasDecimals ? (finalValue.split('.')[1].match(/\d+/) || [''])[0].length : 0;
+    
+    if (isNaN(numericValue)) {
+      element.textContent = finalValue;
+      return;
+    }
+    
+    let current = 0;
+    const increment = numericValue / 30; // 30 steps for smooth animation
+    const duration = 900; // 900ms total
+    const stepTime = duration / 30; // ~30ms per step
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= numericValue) {
+        current = numericValue;
+        clearInterval(timer);
+      }
+      
+      const displayValue = hasDecimals ? current.toFixed(decimals) : Math.floor(current);
+      element.textContent = displayValue + unit;
+    }, stepTime);
+  };
+
+  useEffect(() => {
+    // Set up Intersection Observer for animated numbers
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.dataset.animated) {
+          entry.target.dataset.animated = 'true';
+          
+          // Find all number elements in this details section
+          const numberElements = entry.target.querySelectorAll('.news-detail-value');
+          numberElements.forEach(element => {
+            const originalValue = element.textContent;
+            animateNumber(element, originalValue);
+          });
+        }
+      });
+    }, { threshold: 0.5 });
+
+    // Observe all news-meta containers
+    const detailsContainers = document.querySelectorAll('.news-meta');
+    detailsContainers.forEach(container => observer.observe(container));
+
+    return () => observer.disconnect();
+  }, [stories]);
+
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
@@ -655,6 +708,7 @@ export default function Home() {
           color: #111827;
           line-height: 1.2;
           margin: 0;
+          font-variant-numeric: tabular-nums;
         }
 
         .news-detail-subtitle {
