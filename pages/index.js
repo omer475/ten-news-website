@@ -579,42 +579,22 @@ export default function Home() {
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          border-radius: 16px;
+          border-radius: 6px;
           font-size: 11px;
           font-weight: 700;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
           text-transform: uppercase;
-          color: white;
           margin-bottom: 10px;
-          position: relative;
-          overflow: hidden;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
           cursor: pointer;
         }
 
-        .news-category::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
-          transition: left 0.6s ease;
-        }
-
-        .news-category:hover::before {
-          left: 100%;
+        .news-category:hover {
+          transform: scale(1.05);
         }
 
         .news-category-icon {
-          font-size: 16px;
-          animation: iconPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes iconPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+          font-size: 12px;
         }
 
         .news-title {
@@ -1058,26 +1038,25 @@ export default function Home() {
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
-                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' :
-                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
-                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' :
-                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' :
-                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' :
-                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
-                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
-                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' : 
-                                   'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-                        boxShadow: story.category === 'WORLD NEWS' ? '0 4px 15px rgba(220, 38, 38, 0.3)' :
-                                  story.category === 'BUSINESS' ? '0 4px 15px rgba(249, 115, 22, 0.3)' :
-                                  story.category === 'MARKETS' ? '0 4px 15px rgba(6, 182, 212, 0.3)' :
-                                  story.category === 'TECH & AI' ? '0 4px 15px rgba(139, 92, 246, 0.3)' :
-                                  story.category === 'SCIENCE' ? '0 4px 15px rgba(14, 165, 233, 0.3)' :
-                                  story.category === 'HEALTH' ? '0 4px 15px rgba(16, 185, 129, 0.3)' :
-                                  story.category === 'CLIMATE' ? '0 4px 15px rgba(34, 197, 94, 0.3)' :
-                                  story.category === 'SPORTS' ? '0 4px 15px rgba(245, 158, 11, 0.3)' :
-                                  story.category === 'ENTERTAINMENT' ? '0 4px 15px rgba(236, 72, 153, 0.3)' : 
-                                  '0 4px 15px rgba(100, 116, 139, 0.3)'
+                        background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
+                                   story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
+                                   story.category === 'MARKETS' ? 'rgba(6, 182, 212, 0.1)' :
+                                   story.category === 'TECH & AI' ? 'rgba(102, 126, 234, 0.1)' :
+                                   story.category === 'SCIENCE' ? 'rgba(14, 165, 233, 0.1)' :
+                                   story.category === 'HEALTH' ? 'rgba(0, 210, 160, 0.1)' :
+                                   story.category === 'CLIMATE' ? 'rgba(34, 197, 94, 0.1)' :
+                                   story.category === 'SPORTS' ? 'rgba(245, 158, 11, 0.1)' :
+                                   story.category === 'ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.1)' : 
+                                   'rgba(100, 116, 139, 0.1)',
+                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
+                               story.category === 'BUSINESS' ? '#FF6B35' :
+                               story.category === 'MARKETS' ? '#06b6d4' :
+                               story.category === 'TECH & AI' ? '#667EEA' :
+                               story.category === 'SCIENCE' ? '#0ea5e9' :
+                               story.category === 'HEALTH' ? '#00D2A0' :
+                               story.category === 'CLIMATE' ? '#22c55e' :
+                               story.category === 'SPORTS' ? '#f59e0b' :
+                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b'
                       }}>
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
