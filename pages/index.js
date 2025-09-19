@@ -155,59 +155,6 @@ export default function Home() {
     });
   };
 
-  // Animated number counter function
-  const animateNumber = (element, finalValue) => {
-    const numericValue = parseFloat(finalValue.replace(/[^0-9.-]/g, ''));
-    const unit = finalValue.replace(/[0-9.-]/g, '');
-    const hasDecimals = finalValue.includes('.');
-    const decimals = hasDecimals ? (finalValue.split('.')[1].match(/\d+/) || [''])[0].length : 0;
-    
-    if (isNaN(numericValue)) {
-      element.textContent = finalValue;
-      return;
-    }
-    
-    let current = 0;
-    const increment = numericValue / 30; // 30 steps for smooth animation
-    const duration = 900; // 900ms total
-    const stepTime = duration / 30; // ~30ms per step
-    
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= numericValue) {
-        current = numericValue;
-        clearInterval(timer);
-      }
-      
-      const displayValue = hasDecimals ? current.toFixed(decimals) : Math.floor(current);
-      element.textContent = displayValue + unit;
-    }, stepTime);
-  };
-
-  useEffect(() => {
-    // Set up Intersection Observer for animated numbers
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && !entry.target.dataset.animated) {
-          entry.target.dataset.animated = 'true';
-          
-          // Find all number elements in this details section
-          const numberElements = entry.target.querySelectorAll('.news-detail-value');
-          numberElements.forEach(element => {
-            const originalValue = element.textContent;
-            animateNumber(element, originalValue);
-          });
-        }
-      });
-    }, { threshold: 0.5 });
-
-    // Observe all news-meta containers
-    const detailsContainers = document.querySelectorAll('.news-meta');
-    detailsContainers.forEach(container => observer.observe(container));
-
-    return () => observer.disconnect();
-  }, [stories]);
-
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
@@ -655,7 +602,10 @@ export default function Home() {
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 28px;
-          color: #212121;
+          background: linear-gradient(135deg, #212121 0%, #000000 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .news-summary {
@@ -708,7 +658,6 @@ export default function Home() {
           color: #111827;
           line-height: 1.2;
           margin: 0;
-          font-variant-numeric: tabular-nums;
         }
 
         .news-detail-subtitle {
@@ -1115,7 +1064,21 @@ export default function Home() {
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
                       </div>
-                      <h3 className="news-title">{story.title}</h3>
+                      <h3 className="news-title" style={{
+                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' :
+                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #FF6B35 0%, #ea580c 100%)' :
+                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' :
+                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #4f46e5 100%)' :
+                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' :
+                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #00D2A0 0%, #059669 100%)' :
+                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
+                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' : 
+                                   'linear-gradient(135deg, #64748b 0%, #475569 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      }}>{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary)}</p>
                       <div className="news-meta">
                         {story.details && story.details.map((detail, i) => {
