@@ -577,15 +577,15 @@ export default function Home() {
         .news-category {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-size: 13px;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 16px;
+          font-size: 11px;
           font-weight: 700;
           letter-spacing: 1px;
           text-transform: uppercase;
           color: white;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
           position: relative;
           overflow: hidden;
           transition: all 0.3s ease;
@@ -608,7 +608,7 @@ export default function Home() {
         }
 
         .news-category-icon {
-          font-size: 20px;
+          font-size: 16px;
           animation: iconPulse 2s ease-in-out infinite;
         }
 
