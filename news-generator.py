@@ -568,12 +568,13 @@ Your 10 selections MUST include:
 - **Temporal Mix**: At least 6 breaking/today's news, maximum 4 developing stories
 
 ### SUGGESTED DISTRIBUTION:
-- 2-3 Politics/Governance stories
-- 2-3 Economy/Business stories  
-- 1-2 Technology/Science stories
-- 1-2 Health/Climate/Environment stories
-- 1-2 Society/Culture/Human Interest stories
-- 1 Wildcard (Sports/Entertainment IF globally significant)
+- 2-3 Politics & Government / World Affairs stories
+- 2-3 Economy & Business stories  
+- 1-2 Science & Technology stories
+- 1-2 Health / Environment & Climate stories
+- 1-2 Society & Culture / Human Interest stories
+- 1 Crime & Law / Arts & Entertainment / Sports (IF globally significant)
+- 1 Data & Reports (IF major study/ranking)
 
 ## QUALITY VERIFICATION
 
@@ -605,7 +606,7 @@ Return ONLY this JSON structure with EXACTLY 10 articles:
       "id": 1,
       "title": "[exact original title]",
       "url": "[exact URL]",
-      "category": "Politics|Business|Technology|Science|Health|Climate|Society|Culture|Sports",
+      "category": "Politics & Government|Economy & Business|Society & Culture|Health|Environment & Climate|Science & Technology|Crime & Law|World Affairs|Sports|Arts & Entertainment|Human Interest|Data & Reports",
       "impact_tier": "Critical|High|Notable",
       "selection_reason": "[One sentence: specific impact + why readers care]",
       "engagement_factors": ["breaking", "scandal", "record", "viral", "affects_millions"],

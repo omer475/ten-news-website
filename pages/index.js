@@ -150,15 +150,18 @@ export default function Home() {
     
     const getCategoryBoldStyle = (category) => {
       const styles = {
-        'WORLD NEWS': { background: 'rgba(254, 202, 202, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: 'rgba(255, 237, 213, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: 'rgba(207, 250, 254, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: 'rgba(224, 231, 255, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: 'rgba(186, 230, 253, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'POLITICS & GOVERNMENT': { background: 'rgba(254, 202, 202, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'ECONOMY & BUSINESS': { background: 'rgba(255, 237, 213, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SOCIETY & CULTURE': { background: 'rgba(237, 233, 254, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'HEALTH': { background: 'rgba(204, 251, 241, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: 'rgba(220, 252, 231, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'ENVIRONMENT & CLIMATE': { background: 'rgba(220, 252, 231, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SCIENCE & TECHNOLOGY': { background: 'rgba(186, 230, 253, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'CRIME & LAW': { background: 'rgba(254, 226, 226, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'WORLD AFFAIRS': { background: 'rgba(207, 250, 254, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'SPORTS': { background: 'rgba(254, 240, 138, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: 'rgba(252, 231, 243, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
+        'ARTS & ENTERTAINMENT': { background: 'rgba(252, 231, 243, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'HUMAN INTEREST': { background: 'rgba(236, 252, 203, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'DATA & REPORTS': { background: 'rgba(241, 245, 249, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
       };
       return styles[category] || { background: 'rgba(241, 245, 249, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
     };
@@ -968,15 +971,18 @@ export default function Home() {
                       <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
                         {stories.filter(s => s.type === 'news').slice(0, 5).map((story, i) => {
                           const categoryColors = {
-                            'WORLD NEWS': '#dc2626',
-                            'BUSINESS': '#f97316',
-                            'MARKETS': '#06b6d4',
-                            'TECH & AI': '#8b5cf6',
-                            'SCIENCE': '#0ea5e9',
+                            'POLITICS & GOVERNMENT': '#dc2626',
+                            'ECONOMY & BUSINESS': '#f97316',
+                            'SOCIETY & CULTURE': '#8b5cf6',
                             'HEALTH': '#10b981',
-                            'CLIMATE': '#22c55e',
+                            'ENVIRONMENT & CLIMATE': '#22c55e',
+                            'SCIENCE & TECHNOLOGY': '#0ea5e9',
+                            'CRIME & LAW': '#ef4444',
+                            'WORLD AFFAIRS': '#06b6d4',
                             'SPORTS': '#f59e0b',
-                            'ENTERTAINMENT': '#ec4899'
+                            'ARTS & ENTERTAINMENT': '#ec4899',
+                            'HUMAN INTEREST': '#84cc16',
+                            'DATA & REPORTS': '#64748b'
                           };
                           const color = categoryColors[story.category] || '#3b82f6';
                           const shortTitle = story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title;
@@ -1057,39 +1063,48 @@ export default function Home() {
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
-                        background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
-                                   story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
-                                   story.category === 'MARKETS' ? 'rgba(6, 182, 212, 0.1)' :
-                                   story.category === 'TECH & AI' ? 'rgba(102, 126, 234, 0.1)' :
-                                   story.category === 'SCIENCE' ? 'rgba(14, 165, 233, 0.1)' :
+                        background: story.category === 'POLITICS & GOVERNMENT' ? 'rgba(220, 38, 38, 0.1)' :
+                                   story.category === 'ECONOMY & BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
+                                   story.category === 'SOCIETY & CULTURE' ? 'rgba(139, 92, 246, 0.1)' :
                                    story.category === 'HEALTH' ? 'rgba(0, 210, 160, 0.1)' :
-                                   story.category === 'CLIMATE' ? 'rgba(34, 197, 94, 0.1)' :
+                                   story.category === 'ENVIRONMENT & CLIMATE' ? 'rgba(34, 197, 94, 0.1)' :
+                                   story.category === 'SCIENCE & TECHNOLOGY' ? 'rgba(14, 165, 233, 0.1)' :
+                                   story.category === 'CRIME & LAW' ? 'rgba(239, 68, 68, 0.1)' :
+                                   story.category === 'WORLD AFFAIRS' ? 'rgba(6, 182, 212, 0.1)' :
                                    story.category === 'SPORTS' ? 'rgba(245, 158, 11, 0.1)' :
-                                   story.category === 'ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.1)' : 
+                                   story.category === 'ARTS & ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.1)' :
+                                   story.category === 'HUMAN INTEREST' ? 'rgba(132, 204, 22, 0.1)' :
+                                   story.category === 'DATA & REPORTS' ? 'rgba(100, 116, 139, 0.1)' :
                                    'rgba(100, 116, 139, 0.1)',
-                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
-                               story.category === 'BUSINESS' ? '#FF6B35' :
-                               story.category === 'MARKETS' ? '#06b6d4' :
-                               story.category === 'TECH & AI' ? '#667EEA' :
-                               story.category === 'SCIENCE' ? '#0ea5e9' :
+                        color: story.category === 'POLITICS & GOVERNMENT' ? '#dc2626' :
+                               story.category === 'ECONOMY & BUSINESS' ? '#FF6B35' :
+                               story.category === 'SOCIETY & CULTURE' ? '#8b5cf6' :
                                story.category === 'HEALTH' ? '#00D2A0' :
-                               story.category === 'CLIMATE' ? '#22c55e' :
+                               story.category === 'ENVIRONMENT & CLIMATE' ? '#22c55e' :
+                               story.category === 'SCIENCE & TECHNOLOGY' ? '#0ea5e9' :
+                               story.category === 'CRIME & LAW' ? '#ef4444' :
+                               story.category === 'WORLD AFFAIRS' ? '#06b6d4' :
                                story.category === 'SPORTS' ? '#f59e0b' :
-                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b'
+                               story.category === 'ARTS & ENTERTAINMENT' ? '#ec4899' :
+                               story.category === 'HUMAN INTEREST' ? '#84cc16' :
+                               story.category === 'DATA & REPORTS' ? '#64748b' : '#64748b'
                       }}>
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
                       </div>
                       <h3 className="news-title" style={{
-                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #450a0a 100%)' :
-                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #FF6B35 0%, #7c2d12 100%)' :
-                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #164e63 100%)' :
-                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #312e81 100%)' :
-                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0c4a6e 100%)' :
+                        background: story.category === 'POLITICS & GOVERNMENT' ? 'linear-gradient(135deg, #dc2626 0%, #450a0a 100%)' :
+                                   story.category === 'ECONOMY & BUSINESS' ? 'linear-gradient(135deg, #FF6B35 0%, #7c2d12 100%)' :
+                                   story.category === 'SOCIETY & CULTURE' ? 'linear-gradient(135deg, #8b5cf6 0%, #312e81 100%)' :
                                    story.category === 'HEALTH' ? 'linear-gradient(135deg, #00D2A0 0%, #064e3b 100%)' :
-                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #14532d 100%)' :
+                                   story.category === 'ENVIRONMENT & CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #14532d 100%)' :
+                                   story.category === 'SCIENCE & TECHNOLOGY' ? 'linear-gradient(135deg, #0ea5e9 0%, #0c4a6e 100%)' :
+                                   story.category === 'CRIME & LAW' ? 'linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%)' :
+                                   story.category === 'WORLD AFFAIRS' ? 'linear-gradient(135deg, #06b6d4 0%, #164e63 100%)' :
                                    story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #92400e 100%)' :
-                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #831843 100%)' : 
+                                   story.category === 'ARTS & ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #831843 100%)' :
+                                   story.category === 'HUMAN INTEREST' ? 'linear-gradient(135deg, #84cc16 0%, #365314 100%)' :
+                                   story.category === 'DATA & REPORTS' ? 'linear-gradient(135deg, #64748b 0%, #1e293b 100%)' :
                                    'linear-gradient(135deg, #64748b 0%, #1e293b 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
