@@ -150,7 +150,7 @@ export default function Home() {
     
     const getCategoryBoldStyle = (category) => {
       const styles = {
-        'WORLD NEWS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'WORLD NEWS': { background: '#fee2e2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'TECH & AI': { background: '#eef2ff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
@@ -1081,16 +1081,16 @@ export default function Home() {
                         {story.category}
                       </div>
                       <h3 className="news-title" style={{
-                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #991b1b 0%, #450a0a 100%)' :
-                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #ea580c 0%, #7c2d12 100%)' :
-                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #0891b2 0%, #164e63 100%)' :
-                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #4f46e5 0%, #312e81 100%)' :
-                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0284c7 0%, #0c4a6e 100%)' :
-                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #059669 0%, #064e3b 100%)' :
-                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #16a34a 0%, #14532d 100%)' :
-                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #d97706 0%, #92400e 100%)' :
-                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #db2777 0%, #831843 100%)' : 
-                                   'linear-gradient(135deg, #475569 0%, #1e293b 100%)',
+                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' :
+                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
+                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' :
+                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #4f46e5 100%)' :
+                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' :
+                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
+                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
+                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' : 
+                                   'linear-gradient(135deg, #64748b 0%, #475569 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text'
