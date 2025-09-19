@@ -618,10 +618,7 @@ export default function Home() {
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 28px;
-          background: linear-gradient(135deg, #212121 0%, #000000 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: #000000;
         }
 
         .news-summary {
@@ -1080,21 +1077,7 @@ export default function Home() {
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
                       </div>
-                      <h3 className="news-title" style={{
-                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' :
-                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
-                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' :
-                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #4f46e5 100%)' :
-                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' :
-                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' :
-                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
-                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' : 
-                                   'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text'
-                      }}>{story.title}</h3>
+                      <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       <div className="news-meta">
                         {story.details && story.details.map((detail, i) => {
