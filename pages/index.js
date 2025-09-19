@@ -150,7 +150,7 @@ export default function Home() {
     
     const getCategoryBoldStyle = (category) => {
       const styles = {
-        'WORLD NEWS': { background: '#fef2f2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'WORLD NEWS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'TECH & AI': { background: '#eef2ff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
