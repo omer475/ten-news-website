@@ -150,17 +150,17 @@ export default function Home() {
     
     const getCategoryBoldStyle = (category) => {
       const styles = {
-        'WORLD NEWS': { background: 'rgba(220, 38, 38, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: 'rgba(255, 107, 53, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: 'rgba(6, 182, 212, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: 'rgba(102, 126, 234, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: 'rgba(14, 165, 233, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'HEALTH': { background: 'rgba(0, 210, 160, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: 'rgba(34, 197, 94, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SPORTS': { background: 'rgba(245, 158, 11, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: 'rgba(236, 72, 153, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
+        'WORLD NEWS': { background: 'rgba(254, 202, 202, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'BUSINESS': { background: 'rgba(255, 237, 213, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'MARKETS': { background: 'rgba(207, 250, 254, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'TECH & AI': { background: 'rgba(224, 231, 255, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SCIENCE': { background: 'rgba(186, 230, 253, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'HEALTH': { background: 'rgba(204, 251, 241, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'CLIMATE': { background: 'rgba(220, 252, 231, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SPORTS': { background: 'rgba(254, 240, 138, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'ENTERTAINMENT': { background: 'rgba(252, 231, 243, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
       };
-      return styles[category] || { background: 'rgba(100, 116, 139, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
+      return styles[category] || { background: 'rgba(241, 245, 249, 0.8)', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
     };
     
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {

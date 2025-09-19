@@ -696,7 +696,7 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level. Make ONLY 3-5 most important words, names, places, and numbers BOLD using **bold** markup (not too many bold words) 
+- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level. Make ONLY 2-4 most important words, names, places, or numbers BOLD using **bold** markup (not more than 4 bold words per summary) 
 - DETAILS: CRITICAL - Follow the comprehensive Details Section Instructions below
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
@@ -881,7 +881,7 @@ Return ONLY this JSON:
       "rank": 1,
       "emoji": "🌍",
       "title": "Title without emoji",
-      "summary": "EXACTLY 40-50 words with **bold** markup for ONLY 3-5 most important words, names, places, numbers - count each word carefully to ensure you hit the target range", 
+      "summary": "EXACTLY 40-50 words with **bold** markup for important words, names, places, numbers - count each word carefully to ensure you hit the target range", 
       "details": ["Label: Value - completely NEW fact not in summary", "Label: Value - different category from summary", "Label: Value - adds context summary lacks"],
       "category": "World News/Business/Technology/Science/Climate/Health",
       "source": "Source name",
