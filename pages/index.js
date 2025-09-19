@@ -144,12 +144,28 @@ export default function Home() {
   const nextStory = () => goToStory(currentIndex + 1);
   const prevStory = () => goToStory(currentIndex - 1);
 
-  // Function to render text with bold markup
-  const renderBoldText = (text) => {
+  // Function to render text with bold markup and category-colored containers
+  const renderBoldText = (text, category) => {
     if (!text) return '';
+    
+    const getCategoryBoldStyle = (category) => {
+      const styles = {
+        'WORLD NEWS': { background: 'rgba(220, 38, 38, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'BUSINESS': { background: 'rgba(255, 107, 53, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'MARKETS': { background: 'rgba(6, 182, 212, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'TECH & AI': { background: 'rgba(102, 126, 234, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SCIENCE': { background: 'rgba(14, 165, 233, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'HEALTH': { background: 'rgba(0, 210, 160, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'CLIMATE': { background: 'rgba(34, 197, 94, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'SPORTS': { background: 'rgba(245, 158, 11, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
+        'ENTERTAINMENT': { background: 'rgba(236, 72, 153, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
+      };
+      return styles[category] || { background: 'rgba(100, 116, 139, 0.15)', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
+    };
+    
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} style={{ color: '#000000' }}>{part.slice(2, -2)}</strong>;
+        return <strong key={index} style={getCategoryBoldStyle(category)}>{part.slice(2, -2)}</strong>;
       }
       return part;
     });
@@ -1065,21 +1081,21 @@ export default function Home() {
                         {story.category}
                       </div>
                       <h3 className="news-title" style={{
-                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' :
-                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #FF6B35 0%, #ea580c 100%)' :
-                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' :
-                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #4f46e5 100%)' :
-                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' :
-                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #00D2A0 0%, #059669 100%)' :
-                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
-                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' : 
-                                   'linear-gradient(135deg, #64748b 0%, #475569 100%)',
+                        background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #450a0a 100%)' :
+                                   story.category === 'BUSINESS' ? 'linear-gradient(135deg, #FF6B35 0%, #7c2d12 100%)' :
+                                   story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #164e63 100%)' :
+                                   story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #312e81 100%)' :
+                                   story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #0c4a6e 100%)' :
+                                   story.category === 'HEALTH' ? 'linear-gradient(135deg, #00D2A0 0%, #064e3b 100%)' :
+                                   story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #14532d 100%)' :
+                                   story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #92400e 100%)' :
+                                   story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #831843 100%)' : 
+                                   'linear-gradient(135deg, #64748b 0%, #1e293b 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text'
                       }}>{story.title}</h3>
-                      <p className="news-summary">{renderBoldText(story.summary)}</p>
+                      <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       <div className="news-meta">
                         {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
