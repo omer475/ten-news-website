@@ -144,6 +144,39 @@ export default function Home() {
   const nextStory = () => goToStory(currentIndex + 1);
   const prevStory = () => goToStory(currentIndex - 1);
 
+  // Newsletter signup handler
+  const handleNewsletterSignup = async () => {
+    const emailInput = document.getElementById('newsletter-email');
+    const email = emailInput?.value?.trim();
+    
+    if (!email || !email.includes('@')) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('✅ Successfully subscribed! Check your email for confirmation.');
+        emailInput.value = '';
+      } else {
+        alert(data.message || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Newsletter signup error:', error);
+      alert('Failed to subscribe. Please try again.');
+    }
+  };
+
   // Function to render text with bold markup and category-colored containers
   const renderBoldText = (text, category) => {
     if (!text) return '';
@@ -1115,8 +1148,9 @@ export default function Home() {
                       type="email" 
                       placeholder="Enter your email" 
                       className="newsletter-input"
+                      id="newsletter-email"
                     />
-                    <button className="newsletter-button">
+                    <button className="newsletter-button" onClick={handleNewsletterSignup}>
                       Subscribe
                     </button>
                   </div>
