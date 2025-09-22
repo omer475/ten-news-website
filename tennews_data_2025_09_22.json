@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 22, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🇵🇸",
+      "title": "Britain Recognizes Palestinian Statehood in Historic Sunday Announcement",
+      "summary": "The **UK** officially recognized the **State of Palestine** on Sunday, fulfilling Prime Minister **Keir Starmer's** July promise. Palestinian envoy **Husam Zomlot** called it a historic moment as staff at the Palestinian mission erupted in celebration following the landmark diplomatic decision.",
+      "details": [
+        "Countries recognizing: 146 total",
+        "UK Muslims: 3.9 million",
+        "Previous attempt: 2014 vote"
+      ],
+      "category": "World News",
+      "source": "Al-Monitor",
+      "url": "https://www.al-monitor.com/originals/2025/09/cheers-hugs-palestinian-mission-uk-recognises-statehood"
+    },
+    {
+      "rank": 2,
+      "emoji": "📵",
+      "title": "Optus Network Failure Blocks Emergency Calls, Causes Multiple Deaths",
+      "summary": "A **13-hour** Optus network outage prevented Australians from reaching **triple-0** emergency services, resulting in multiple **deaths**. The telecommunications company's offshore call center ignored **five** public warnings about the critical failure, undermining trust in Australia's emergency response infrastructure.",
+      "details": [
+        "Customers affected: 10.2 million",
+        "Previous outage: November 2023",
+        "Compensation offered: $0"
+      ],
+      "category": "Technology",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-22/optus-triple-0-failure-analysis/105800592"
+    },
+    {
+      "rank": 3,
+      "emoji": "💴",
+      "title": "Foreign Investors Dump Chinese Bonds to Five-Year Low",
+      "summary": "Global funds reduced **Chinese sovereign bond** holdings in **August** to the lowest level since **2021**, marking a third consecutive monthly decline. Overseas investors are shifting capital from debt to **equities**, increasing pressure on China's bond market amid economic uncertainty.",
+      "details": [
+        "Holdings dropped: $47B total",
+        "Peak holdings: March 2022",
+        "Yield spread: 180 basis points"
+      ],
+      "category": "Business",
+      "source": "South China Morning Post",
+      "url": "https://www.scmp.com/business/markets/article/3326348/global-funds-slash-holdings-chinese-bonds-lowest-levels-2021"
+    },
+    {
+      "rank": 4,
+      "emoji": "🤝",
+      "title": "Kim Jong-un Signals Openness to Nuclear Talks with Trump",
+      "summary": "North Korean leader **Kim Jong-un** expressed willingness to resume **nuclear negotiations** with the **United States**, citing fond memories of his previous meetings with **Donald Trump**. The statement comes as South Korea's **Lee Jae Myung** pushes for renewed diplomatic engagement.",
+      "details": [
+        "Last summit: June 2019",
+        "Nuclear warheads: 50 estimated",
+        "Missile tests: 42 this year"
+      ],
+      "category": "World News",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/world/2025/sep/22/kim-jong-un-nuclear-talks-fond-memories-donald-trump-meeting"
+    },
+    {
+      "rank": 5,
+      "emoji": "🎓",
+      "title": "Gen Z Faces Job Crisis as College Graduates Flood Market",
+      "summary": "The percentage of Americans with **bachelor's degrees** reached **37.5%** in 2025, up from **25.6%** in 2000, creating unprecedented competition for **entry-level** positions. Gen Z graduates face rising **unemployment** as AI automation and oversupply reshape the job market fundamentally.",
+      "details": [
+        "Student debt: $1.75 trillion",
+        "Underemployment rate: 41%",
+        "Average applications: 156 per job"
+      ],
+      "category": "Business",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/21/gen-z-job-crisis-unemployment-rate-recent-college-graduates-ai-entry-level-jobs/"
+    },
+    {
+      "rank": 6,
+      "emoji": "🏛️",
+      "title": "Taliban Firmly Rejects Trump's Bid to Retake Bagram Base",
+      "summary": "The **Taliban** government rejected President **Donald Trump's** proposal to re-establish U.S. presence at **Bagram Air Base** in **Afghanistan**. Trump claimed America is currently negotiating with Afghan authorities about the strategic facility, abandoned during the **2021** withdrawal.",
+      "details": [
+        "Base capacity: 10,000 troops",
+        "Distance to Kabul: 40km",
+        "Construction cost: $96 million"
+      ],
+      "category": "World News",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/world/afghanistan/taliban-reject-trumps-bid-retake-bagram-air-base-afghanistan-rcna232708"
+    },
+    {
+      "rank": 7,
+      "emoji": "✈️",
+      "title": "Major European Airports Face Continued Disruption After Cyber Attack",
+      "summary": "**Heathrow**, **Brussels Zaventem**, and **Berlin** airports experienced ongoing delays following a coordinated **cyber-attack** on Saturday. Zaventem requested airlines cancel **50%** of Monday departures while most Heathrow flights are expected to operate with significant delays affecting thousands.",
+      "details": [
+        "Passengers stranded: 85,000",
+        "Airlines affected: 47",
+        "Recovery timeline: 72 hours"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/business/2025/sep/21/delays-continue-at-heathrow-brussels-and-berlin-airports-after-alleged-cyber-attack"
+    },
+    {
+      "rank": 8,
+      "emoji": "🏦",
+      "title": "China Holds Lending Rates Steady Despite Fed Rate Cut",
+      "summary": "China's central bank kept benchmark **lending rates** unchanged for the **fourth consecutive month**, maintaining the one-year rate at **3.0%** and five-year at **3.5%**. The decision came despite the **Federal Reserve's** recent interest rate reduction last week.",
+      "details": [
+        "Last cut: May 2025",
+        "Fed reduction: 50 basis points",
+        "GDP growth: 4.8% target"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/22/china-leaves-benchmark-lending-rates-lpr-loan-interest-unchanged-despite-fed-rate-cut.html"
+    },
+    {
+      "rank": 9,
+      "emoji": "💊",
+      "title": "AusperBio Secures $63 Million for Hepatitis B Cure Research",
+      "summary": "Clinical-stage biotechnology company **AusperBio** raised **$63 million** in Series B2 financing to advance functional cure therapies for **chronic hepatitis B**. The funding will accelerate development of targeted **oligonucleotide** treatments for the disease affecting millions worldwide.",
+      "details": [
+        "Global patients: 296 million",
+        "Trial phase: 2b",
+        "Previous funding: $87 million"
+      ],
+      "category": "Health",
+      "source": "PR Newswire",
+      "url": "https://www.prnewswire.com/news-releases/ausperbio-raises-63-million-in-series-b2-financing-to-accelerate-functional-cure-therapies-for-chronic-hepatitis-b-302562432.html"
+    },
+    {
+      "rank": 10,
+      "emoji": "🦄",
+      "title": "UK Fintech Tide Reaches Unicorn Status with TPG Investment",
+      "summary": "British fintech **Tide** achieved a **$1.5 billion** valuation after securing **$120 million** from **TPG**. The company serves **1.6 million** small businesses globally, with over half based in **India**, its largest and fastest-growing market for financial services.",
+      "details": [
+        "Founded: 2017",
+        "Employee count: 1,800",
+        "Revenue growth: 3x annually"
+      ],
+      "category": "Business",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/21/powered-by-indias-small-businesses-uk-fintech-tide-becomes-a-tpg-backed-unicorn/"
+    }
+  ],
+  "dailyGreeting": "Good morning! Historic Palestine news leads today's major stories.",
+  "readingTime": "2 minute read",
+  "displayDate": "MONDAY, SEPTEMBER 22, 2025",
+  "historicalEvents": [
+    {
+      "year": "1862",
+      "description": "Lincoln issues preliminary Emancipation Proclamation, freeing Confederate slaves"
+    },
+    {
+      "year": "1980",
+      "description": "Iran-Iraq War begins with Iraqi invasion"
+    },
+    {
+      "year": "1776",
+      "description": "Nathan Hale executed by British as American spy"
+    },
+    {
+      "year": "1888",
+      "description": "First publication of National Geographic magazine"
+    }
+  ],
+  "generatedAt": "2025-09-22T08:05:06.441680",
+  "generatedAtUK": "2025-09-22T08:05:06.441696+01:00"
+}
