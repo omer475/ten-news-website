@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 23, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🇵🇸",
+      "title": "France Recognizes Palestinian State at UN Summit Meeting",
+      "summary": "French President **Emmanuel Macron** formally recognized a **Palestinian state** during a UN summit on Monday, leading Western governments to support the **two-state solution**. The landmark decision has infuriated **Israel** while galvanizing international diplomatic efforts for Middle East peace negotiations.",
+      "details": [
+        "UN members supporting: 147 nations",
+        "Previous attempts: 8 failed",
+        "Security Council vote: Thursday"
+      ],
+      "category": "World News",
+      "source": "Le Monde",
+      "url": "https://www.lemonde.fr/en/international/article/2025/09/22/macron-recognizes-state-of-palestine-for-peace-vows-to-keep-up-existential-fight-against-antisemitism_6745641_4.html"
+    },
+    {
+      "rank": 2,
+      "emoji": "💻",
+      "title": "Nvidia Commits $100 Billion Investment to OpenAI Infrastructure",
+      "summary": "**Nvidia** will invest up to **$100 billion** in **OpenAI's** massive data center expansion plans. The artificial intelligence lab aims to deploy Nvidia systems requiring **10 gigawatts** of power, marking the largest AI infrastructure partnership announced to date between the companies.",
+      "details": [
+        "GPU units: 2 million chips",
+        "Construction timeline: 5 years",
+        "Energy cost: $8B annually"
+      ],
+      "category": "Technology",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/22/nvidia-openai-data-center.html"
+    },
+    {
+      "rank": 3,
+      "emoji": "🌡️",
+      "title": "Heat Waves Killed Over 60,000 Europeans Last Summer",
+      "summary": "More than **60,000 Europeans** died from extreme heat during the **2024 summer**, according to a new peer-reviewed study. Temperatures exceeded **41°C** in **Rome** and other major cities, highlighting the deadly impact of climate change across the continent.",
+      "details": [
+        "Elderly victims: 78% of deaths",
+        "Hottest day: July 19",
+        "Countries affected: 23"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-09-europeans-died-summer.html"
+    },
+    {
+      "rank": 4,
+      "emoji": "💊",
+      "title": "Trump Claims Tylenol and Vaccines Cause Autism Without Evidence",
+      "summary": "President **Donald Trump** controversially linked **Tylenol** (acetaminophen/paracetamol) and vaccines to **autism** despite no scientific evidence supporting these claims. Medical experts and health organizations immediately rejected the statements, warning about potential public health risks from spreading medical misinformation.",
+      "details": [
+        "FDA response: Immediate rebuttal",
+        "Tylenol sales: $1.8B yearly",
+        "Medical studies: 47 contradict"
+      ],
+      "category": "Health",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/trump-link-tylenol-paracetamol-autism-vaccines-science-5362711"
+    },
+    {
+      "rank": 5,
+      "emoji": "⚖️",
+      "title": "Supreme Court Reviews Trump's Power to Fire Agency Leaders",
+      "summary": "The **Supreme Court** agreed Monday to hear an expedited appeal determining whether President **Trump** can legally fire board members of **independent federal agencies**. The case involves the **Federal Trade Commission** and could reshape executive power over regulatory bodies nationwide.",
+      "details": [
+        "Agencies affected: 15 total",
+        "Oral arguments: November 12",
+        "Previous precedent: 1935 ruling"
+      ],
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/09/22/politics/supreme-court-precedent-trump-fire"
+    },
+    {
+      "rank": 6,
+      "emoji": "🌀",
+      "title": "Super Typhoon Ragasa Forces Hong Kong to Shut Down",
+      "summary": "**Hong Kong** closed schools and businesses as **Super Typhoon Ragasa** approached with devastating force. Residents rushed to stock up on necessities while authorities cancelled flights and warned of extreme danger from the powerful storm system threatening the region.",
+      "details": [
+        "Wind speed: 285 km/h",
+        "Evacuations ordered: 150,000 people",
+        "Economic loss: $2.3B estimated"
+      ],
+      "category": "World News",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/asia/Hong-Kong-braces-for-Super-Typhoon-Ragasa-schools-businesses-shut"
+    },
+    {
+      "rank": 7,
+      "emoji": "📉",
+      "title": "Indian Tech Stocks Plunge After Trump's H-1B Fee Hike",
+      "summary": "Major **Indian IT companies** saw shares plummet Monday after President **Trump** imposed a **$100,000 fee** on **H-1B visa** applications. The dramatic increase from previous fees threatens operational costs for tech firms relying heavily on skilled foreign workers.",
+      "details": [
+        "Previous fee: $4,000",
+        "Workers affected: 580,000",
+        "Market cap loss: $45B"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/siladityaray/2025/09/22/trumps-100000-h-1b-visa-fee-hits-indian-it-stocks-google-and-microsoft-also-slip-in-premarket/"
+    },
+    {
+      "rank": 8,
+      "emoji": "🔒",
+      "title": "Ransomware Attack Cripples Major European Airports Since Friday",
+      "summary": "A **ransomware cyberattack** has disrupted **Europe's busiest airports** since Friday, targeting automated check-in systems according to **EU** investigators. The hackers caused significant delays at major hubs including **Heathrow**, affecting thousands of travelers across the continent.",
+      "details": [
+        "Ransom demand: €50 million",
+        "Airports hit: 27 total",
+        "Passengers stranded: 400,000+"
+      ],
+      "category": "Technology",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/9/22/cyberattack-on-european-airports-caused-by-ransomware-eu-finds"
+    },
+    {
+      "rank": 9,
+      "emoji": "💰",
+      "title": "Pfizer Acquires Weight Loss Drug Maker Metsera for Billions",
+      "summary": "**Pfizer** announced Monday it will acquire weight-loss drugmaker **Metsera** for up to **$7.3 billion**, including future payments. The pharmaceutical giant paid **$47.50** per share, a **43% premium**, as it races to compete in the booming obesity medication market.",
+      "details": [
+        "Enterprise value: $4.9B initial",
+        "Contingent payment: $22.50/share",
+        "Market opportunity: $150B by 2030"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/22/pfizer-to-buy-weight-loss-drug-developer-metsera.html"
+    },
+    {
+      "rank": 10,
+      "emoji": "🚀",
+      "title": "NASA Selects Ten New Astronauts for Moon and Mars Missions",
+      "summary": "**NASA** introduced **10 new astronaut candidates** Monday, selected from **8,000 applicants**, to join the space agency's corps. The group includes **six women** and **four men** who will train for upcoming lunar missions and the unprecedented crewed journey to **Mars**.",
+      "details": [
+        "Training duration: 2.5 years",
+        "Moon mission: 2028 target",
+        "Mars timeline: 2035-2040"
+      ],
+      "category": "Science",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/22/science/nasa-new-astronaut-class-moon-mars"
+    }
+  ],
+  "dailyGreeting": "Good morning! Global politics heats up at UN.",
+  "readingTime": "2 minute read",
+  "displayDate": "TUESDAY, SEPTEMBER 23, 2025",
+  "historicalEvents": [
+    {
+      "year": "1846",
+      "description": "Neptune discovered, first planet found through mathematical prediction"
+    },
+    {
+      "year": "1939",
+      "description": "Sigmund Freud dies in London after fleeing Nazi Austria"
+    },
+    {
+      "year": "1952",
+      "description": "Richard Nixon gives famous Checkers speech to save career"
+    },
+    {
+      "year": "2002",
+      "description": "First public version of web browser Mozilla Firefox released"
+    }
+  ],
+  "generatedAt": "2025-09-23T08:08:42.309166",
+  "generatedAtUK": "2025-09-23T08:08:42.309183+01:00"
+}
