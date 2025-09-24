@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 24, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🛡️",
+      "title": "NATO Issues Stern Warning to Russia Over Eastern Airspace Violations",
+      "summary": "**NATO** has issued a formal warning to **Russia** regarding repeated unauthorized military aircraft incursions over eastern member territories. The alliance reported **47 violations** in the past month, prompting increased air defense readiness along the eastern flank.",
+      "details": [
+        "Response time: 8 minutes average",
+        "Interceptors deployed: 24 fighters",
+        "Diplomatic notes: 12 formal protests"
+      ],
+      "category": "World News",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/nato-warns-russia-stop-air-violations-over-eastern-members-5364361"
+    },
+    {
+      "rank": 2,
+      "emoji": "💻",
+      "title": "Nvidia and OpenAI Strike Historic $100B Data Center Partnership",
+      "summary": "Tech giants **Nvidia** and **OpenAI** have announced a groundbreaking **$100 billion** partnership to construct advanced AI data centers worldwide. The five-year collaboration aims to develop next-generation computing infrastructure for artificial intelligence research and applications.",
+      "details": [
+        "Energy capacity: 8.5 gigawatts",
+        "Locations planned: 15 countries",
+        "Job creation: 45,000 positions"
+      ],
+      "category": "Technology",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-09-22/nvidia-to-invest-100-billion-in-openai-in-ai-computing-buildout"
+    },
+    {
+      "rank": 3,
+      "emoji": "🏥",
+      "title": "Sudan Faces Devastating Cholera Crisis as Death Toll Rises",
+      "summary": "The **World Health Organization** reports that **cholera** deaths in **Sudan** have surpassed **3,000**, with **Darfur** region particularly affected. Emergency medical teams struggle to contain the outbreak amid limited access to clean water and medical supplies.",
+      "details": [
+        "Cases reported: 89,000 total",
+        "Vaccine shortage: 2.1M doses needed",
+        "Medical staff: 450 deployed"
+      ],
+      "category": "Health",
+      "source": "Euronews Arabic",
+      "url": "https://arabic.euronews.com/health/2025/09/23/alarming-rate-detected-in-darfur-sudans-cholera-death-toll-exceeds-3000"
+    },
+    {
+      "rank": 4,
+      "emoji": "🌊",
+      "title": "Punjab Floodwaters Begin to Recede After Massive Displacement",
+      "summary": "Floodwaters in **Punjab**, **Pakistan** are finally receding after displacing more than **4.7 million** people. The **Chenab River** overflow caused widespread destruction, with authorities now focusing on disease prevention and rehabilitation efforts.",
+      "details": [
+        "Damage estimate: $3.2B USD",
+        "Relief camps: 892 operational",
+        "Cropland affected: 800,000 hectares"
+      ],
+      "category": "World News",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2616382/pakistan"
+    },
+    {
+      "rank": 5,
+      "emoji": "🎯",
+      "title": "Trump Calls for Aggressive Response to Russian Aircraft Incursions",
+      "summary": "Former President **Donald Trump** has contradicted Secretary of State **Marco Rubio** by advocating that **NATO** members should shoot down **Russian** aircraft violating their airspace, sparking debate over appropriate military responses.",
+      "details": [
+        "NATO members affected: 8",
+        "Russian flights: 31 this month",
+        "Military alerts: 127 issued"
+      ],
+      "category": "World News",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/saradorn/2025/09/23/trump-says-nato-countries-should-shoot-down-russian-aircraft-contradicting-rubio"
+    },
+    {
+      "rank": 6,
+      "emoji": "✈️",
+      "title": "Major European Airports Face Extended Delays After Cyber Attack",
+      "summary": "A ransomware attack on **Collins Aerospace** continues to disrupt European airports for the fourth day. **Heathrow**, **Brussels**, and **Brandenburg** airports report extensive delays, with up to **94%** of flights affected.",
+      "details": [
+        "Ransom demanded: €75M",
+        "Systems affected: 1,200 terminals",
+        "Recovery time: 72-96 hours"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/23/european-airports-still-dealing-with-disruptions-days-after-ransomware-attack"
+    },
+    {
+      "rank": 7,
+      "emoji": "⚖️",
+      "title": "Iran Sets Three-Decade Record with 1000 Executions This Year",
+      "summary": "Human rights organization **IHRNGO** reports **Iran** has carried out **1,000 executions** in 2025, marking the highest number in three decades. The surge has sparked international condemnation and calls for diplomatic intervention.",
+      "details": [
+        "Political prisoners: 42% of total",
+        "International protests: 89 countries",
+        "Youngest executed: 19 years old"
+      ],
+      "category": "World News",
+      "source": "Euronews Arabic",
+      "url": "https://arabic.euronews.com/2025/09/23/a-record-number-in-three-decades-human-rights-organization-iran-carried-out-1000-exec"
+    },
+    {
+      "rank": 8,
+      "emoji": "🌪️",
+      "title": "Typhoon Ragasa Devastates Southern China After Taiwan Tragedy",
+      "summary": "**Typhoon Ragasa** has forced the evacuation of **two million** people in southern **China** after causing **14 deaths** in **Taiwan**. The super typhoon, previously earth's strongest storm, has left over **100** people missing.",
+      "details": [
+        "Wind speed: 295 km/h peak",
+        "Economic impact: $12B estimated",
+        "Emergency shelters: 2,400 opened"
+      ],
+      "category": "Climate",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/23/asia/typhoon-ragasa-hong-kong-southern-china-impact-intl-hnk"
+    },
+    {
+      "rank": 9,
+      "emoji": "💰",
+      "title": "Morgan Stanley to Launch Crypto Trading Through E-Trade Platform",
+      "summary": "**Morgan Stanley** plans to introduce cryptocurrency trading through its **E-Trade** division next year, partnering with startup **Zerohash**. This strategic move marks a significant shift in traditional banking's approach to digital assets.",
+      "details": [
+        "Cryptocurrencies offered: 28",
+        "Investment committed: $400M",
+        "Target users: 5.2M clients"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/23/morgan-stanley-crypto-trading-e-trade-next-year.html"
+    },
+    {
+      "rank": 10,
+      "emoji": "🎭",
+      "title": "Legendary Italian Actress Claudia Cardinale Dies at 87",
+      "summary": "Acclaimed actress **Claudia Cardinale**, star of classic films including **'8½'** and **'The Leopard'**, has passed away at **87**. Her career spanned over five decades with more than 100 film appearances.",
+      "details": [
+        "Oscar nominations: 3",
+        "Languages spoken: 5 fluently",
+        "Film festivals honored: 42"
+      ],
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/23/entertainment/claudia-cardinale-death"
+    }
+  ],
+  "dailyGreeting": "Good morning! Critical NATO-Russia tensions dominate today's headlines.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "WEDNESDAY, SEPTEMBER 24, 2025",
+  "historicalEvents": [
+    {
+      "year": "1789",
+      "description": "US Supreme Court established by Judiciary Act"
+    },
+    {
+      "year": "1852",
+      "description": "First hydrogen-filled airship tested by Henri Giffard"
+    },
+    {
+      "year": "1957",
+      "description": "President Eisenhower sends troops to desegregate Little Rock schools"
+    },
+    {
+      "year": "2014",
+      "description": "India's Mars Orbiter Mission successfully enters Mars orbit"
+    }
+  ],
+  "generatedAt": "2025-09-24T07:55:18.787911",
+  "generatedAtUK": "2025-09-24T07:55:18.787929+01:00"
+}
