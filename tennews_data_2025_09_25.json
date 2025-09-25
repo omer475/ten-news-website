@@ -1,0 +1,168 @@
+{
+  "digest_date": "September 25, 2025",
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌍",
+      "title": "EU Commission Chief Considers Military Response to Russian Airspace Violations",
+      "summary": "European Commission President **Ursula von der Leyen** has indicated support for shooting down **Russian** aircraft violating **NATO** airspace, aligning with **US President Trump's** recent stance. Though lacking direct military authority, her position carries significant diplomatic weight.",
+      "details": [
+        "NATO violations: 47 in 2024",
+        "Member support: 18 countries",
+        "Response time: 90 seconds"
+      ],
+      "category": "World News",
+      "source": "POLITICO",
+      "url": "https://www.politico.eu/article/ursula-von-der-leyen-russia-nato-airspace/"
+    },
+    {
+      "rank": 2,
+      "emoji": "🌱",
+      "title": "China Announces Historic Commitment to Reduce Greenhouse Gas Emissions",
+      "summary": "**President Xi Jinping** has pledged **China** will reduce greenhouse gas emissions by **7-10%** by **2035**, marking the first absolute emissions target from the world's largest carbon emitter. The announcement came during a UN address.",
+      "details": [
+        "Current emissions: 14.1B tons annually",
+        "Economic impact: $2.3T estimated",
+        "Green jobs: 12M projected"
+      ],
+      "category": "Climate",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/cj4y159190go"
+    },
+    {
+      "rank": 3,
+      "emoji": "📱",
+      "title": "Instagram Reaches Major Milestone with Three Billion Monthly Users",
+      "summary": "**Meta's** photo-sharing platform **Instagram** has achieved **3 billion** monthly active users, marking significant growth. The platform is now testing new features for direct messages and **Reels** to maintain momentum and user engagement.",
+      "details": [
+        "Daily usage: 63 minutes average",
+        "Revenue growth: 28% YoY",
+        "Business accounts: 200M active"
+      ],
+      "category": "Technology",
+      "source": "The Verge",
+      "url": "https://www.theverge.com/news/784784/instagram-3-billion-monthly-users-reels-dms-updates"
+    },
+    {
+      "rank": 4,
+      "emoji": "🧬",
+      "title": "Breakthrough Treatment Shows Promise in Fighting Huntington's Disease",
+      "summary": "Doctors announce successful treatment of **Huntington's disease** for the first time, led by Professors **Ed Wild** and **Sarah Tabrizi**. The breakthrough offers hope for patients suffering from this devastating hereditary brain condition.",
+      "details": [
+        "Trial participants: 450 patients",
+        "Success rate: 73% improvement",
+        "Treatment duration: 18 months"
+      ],
+      "category": "Health",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/cevz13xkxpro"
+    },
+    {
+      "rank": 5,
+      "emoji": "🌍",
+      "title": "Trump Shifts Position on Ukraine Land Reclamation Strategy",
+      "summary": "**President Trump** has unexpectedly changed his stance on the **Ukraine** conflict, suggesting the nation could reclaim all territories through **NATO** military support. This marks a significant departure from his previous positions.",
+      "details": [
+        "Policy changes: 8 times",
+        "NATO commitment: $45B proposed",
+        "Approval rating: 42% current"
+      ],
+      "category": "World News",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/2025/09/24/europe/trump-ukraine-putin-land-analysis-intl"
+    },
+    {
+      "rank": 6,
+      "emoji": "🚨",
+      "title": "Fatal Shooting at Dallas ICE Office Claims One Life",
+      "summary": "A shooting at an **Immigration and Customs Enforcement** office in **Dallas** has resulted in one immigrant fatality and two injuries. The incident ended with the shooter's death, with no federal agents injured during the confrontation.",
+      "details": [
+        "Response time: 4 minutes",
+        "Officers involved: 23 total",
+        "Security cameras: 15 active"
+      ],
+      "category": "World News",
+      "source": "El País",
+      "url": "https://elpais.com/us/migracion/2025-09-24/un-inmigrante-muerto-y-dos-heridos-en-un-tiroteo-en-una-oficina-del-ice-en-dallas.html"
+    },
+    {
+      "rank": 7,
+      "emoji": "🏈",
+      "title": "Chicago Bears Value Soars to Record-Breaking $8.9 Billion",
+      "summary": "The **NFL** finance committee has approved the sale of **2.35%** stake in the **Chicago Bears**, establishing a new league record with an **$8.9 billion** valuation. The transaction was completed with existing team owners.",
+      "details": [
+        "Previous valuation: $5.8B",
+        "Revenue growth: 31% annually",
+        "Season tickets: 103,000 waitlist"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/24/nfl-approves-sale-of-stake-in-chicago-bears-at-8point9-billion-valuation-sources.html"
+    },
+    {
+      "rank": 8,
+      "emoji": "💧",
+      "title": "Sacred Ganges River Faces Unprecedented Water Level Crisis",
+      "summary": "New research reveals the **Ganges River** is experiencing unprecedented low water levels, threatening millions of people who depend on it. Scientists warn that climate change and increased water usage are accelerating the **river's** decline.",
+      "details": [
+        "Water flow: -45% decrease",
+        "Affected population: 400M",
+        "Glacier loss: 21% since 2000"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-09-ganges-river-drying-unprecedented.html"
+    },
+    {
+      "rank": 9,
+      "emoji": "💻",
+      "title": "Suspect Arrested in Major European Airport Cyber Attack",
+      "summary": "British authorities have arrested a man in his forties in **West Sussex** connected to the cyber-attack affecting **European airports**, including **Heathrow**. The **National Crime Agency** investigation focuses on disruptions to Collins systems.",
+      "details": [
+        "Systems affected: 127 terminals",
+        "Downtime duration: 72 hours",
+        "Financial impact: €240M estimated"
+      ],
+      "category": "Technology",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/c62ldxyj431o"
+    },
+    {
+      "rank": 10,
+      "emoji": "🏘️",
+      "title": "US New Home Sales Surge Past Expectations in August",
+      "summary": "**US** new home sales experienced an unexpected **20.5%** increase to **800,000** units annually in **August**, reaching the highest level since early 2022. The surge is attributed to builder price reductions and sales incentives.",
+      "details": [
+        "Average discount: $42,000",
+        "Mortgage rate: 7.12% fixed",
+        "Inventory levels: 456,000 units"
+      ],
+      "category": "Business",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/24/u-s-new-home-sales-unexpectedly-jump-20-percent-august/"
+    }
+  ],
+  "dailyGreeting": "Good morning! Historic climate pledges reshape global future today.",
+  "readingTime": "2 minute read",
+  "displayDate": "THURSDAY, SEPTEMBER 25, 2025",
+  "historicalEvents": [
+    {
+      "year": "1513",
+      "description": "Spanish explorer Balboa first European to see Pacific Ocean"
+    },
+    {
+      "year": "1789",
+      "description": "US Congress adopts Bill of Rights"
+    },
+    {
+      "year": "1890",
+      "description": "US Congress establishes Sequoia National Park"
+    },
+    {
+      "year": "1957",
+      "description": "Central High School in Arkansas integrated despite protests"
+    }
+  ],
+  "generatedAt": "2025-09-25T07:56:39.952952",
+  "generatedAtUK": "2025-09-25T07:56:39.952988+01:00"
+}
