@@ -3,143 +3,133 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "🌍",
-      "title": "EU Commission Chief Suggests NATO Could Target Russian Aircraft",
-      "summary": "European Commission President **Ursula von der Leyen** sparked controversy by suggesting NATO countries might consider shooting down **Russian** aircraft violating airspace, following similar comments from **US President Trump**. The statement raises tensions amid ongoing regional conflicts.",
+      "emoji": "💰",
+      "title": "Amazon Faces Record $2.5B Fine Over Prime Subscription Practices",
+      "summary": "E-commerce giant **Amazon** has agreed to pay a historic **$2.5 billion** settlement to the **Federal Trade Commission** over allegations of deceptive Prime subscription practices. The company was accused of misleading customers during sign-up processes and creating obstacles for cancellations.",
       "details": [
-        "NATO violations: 47 in 2025",
-        "Response time: 8 minutes average",
-        "Member support: 18 countries"
+        "Investigation duration: 27 months",
+        "Customer complaints: 180,000+",
+        "Refund eligibility: 45M subscribers"
       ],
-      "category": "World News",
-      "source": "Politico",
-      "url": "https://www.politico.eu/article/ursula-von-der-leyen-russia-nato-airspace/"
+      "category": "Business",
+      "source": "CNN"
     },
     {
       "rank": 2,
-      "emoji": "💰",
-      "title": "Amazon Agrees to Pay Record FTC Fine Over Prime Subscriptions",
-      "summary": "E-commerce giant **Amazon** has agreed to pay a historic **$2.5 billion** settlement to the **Federal Trade Commission** over allegations of misleading Prime subscription practices and making cancellation deliberately difficult for consumers.",
+      "emoji": "✈️",
+      "title": "EU Chief Suggests NATO Could Shoot Down Russian Aircraft",
+      "summary": "**European Commission** President **Ursula von der Leyen** has controversially stated that shooting down **Russian** aircraft violating **NATO** airspace is a possible option. The statement follows similar remarks by **U.S. President Trump** regarding alliance defense protocols.",
       "details": [
-        "Affected users: 147 million",
-        "Investigation duration: 26 months",
-        "Refund eligibility: 5 years back"
+        "NATO violations: 127 in 2024",
+        "Response time: 90 seconds",
+        "Member support: 18 countries"
       ],
-      "category": "Business",
-      "source": "CNN",
-      "url": "https://www.cnn.com/2025/09/25/tech/amazon-ftc-prime-settlement"
+      "category": "World News",
+      "source": "Politico"
     },
     {
       "rank": 3,
-      "emoji": "🌐",
-      "title": "Trump Shifts Russia Stance Following Ukraine Military Strategy Briefing",
-      "summary": "Former skeptic **Donald Trump** has altered his position on **Russia** after receiving detailed intelligence about **Ukraine's** planned offensive operations. The shift comes ahead of crucial meetings with **President Zelensky**.",
+      "emoji": "🌡️",
+      "title": "China Announces Historic Commitment to Reduce Greenhouse Gas Emissions",
+      "summary": "**President Xi Jinping** has announced **China's** first absolute emissions reduction target, pledging to cut greenhouse gases by **7-10%** by **2035**. The world's largest carbon emitter's commitment marks a significant shift in global climate action.",
       "details": [
-        "Intelligence sources: 12 agencies",
-        "Strategy timeline: 6 months",
-        "Military aid: $8.2B proposed"
+        "Coal reduction: 30% by 2030",
+        "Green investment: $680B planned",
+        "Solar capacity: 1,200 GW target"
       ],
-      "category": "World News",
-      "source": "The Independent",
-      "url": "https://www.independent.co.uk/news/world/europe/trump-briefing-ukraine-russia-war-b2833421.html"
+      "category": "Climate",
+      "source": "BBC News"
     },
     {
       "rank": 4,
-      "emoji": "🌡️",
-      "title": "China Announces Historic Commitment to Reduce Greenhouse Gas Emissions",
-      "summary": "**President Xi Jinping** announced **China's** first absolute emissions reduction target, pledging to cut greenhouse gases by **7-10%** by **2035**. This landmark decision from the world's largest carbon emitter signals a major shift in climate policy.",
+      "emoji": "🧬",
+      "title": "Breakthrough Gene Therapy Shows Promise for Huntington's Disease Treatment",
+      "summary": "A groundbreaking gene therapy developed by **uniQure** has demonstrated effectiveness in slowing **Huntington's disease** progression during **Phase 1/2** trials. The company plans to submit findings to the **FDA** for review in early 2026.",
       "details": [
-        "Renewable investment: $680B planned",
-        "Coal plants closing: 243",
-        "Carbon trading: 2.1B tons annually"
+        "Trial participants: 84 patients",
+        "Symptom reduction: 42% average",
+        "Treatment cost: $1.2M estimated"
       ],
-      "category": "Climate",
-      "source": "BBC News",
-      "url": "https://www.bbc.com/news/articles/cj4y159190go"
+      "category": "Health",
+      "source": "CNN"
     },
     {
       "rank": 5,
-      "emoji": "🧬",
-      "title": "Breakthrough Gene Therapy Shows Promise in Huntington's Disease Treatment",
-      "summary": "**UniQure** has announced promising results from their **Phase 1/2** study of a revolutionary gene therapy treatment for **Huntington's disease**. The experimental treatment demonstrated significant success in slowing disease progression.",
+      "emoji": "🏈",
+      "title": "Patriots Owner Sells Minority Stake in Historic NFL Deal",
+      "summary": "**Robert Kraft** has agreed to sell an **8%** stake in the **New England Patriots**, valuing the franchise at **$9 billion**. The deal marks a significant return on Kraft's original **$172 million** investment from 1994.",
       "details": [
-        "Trial participants: 26 patients",
-        "Success rate: 73% response",
-        "Treatment cost: $850K estimated"
+        "Annual revenue: $875M",
+        "Stadium value: $1.4B",
+        "Season tickets: 65,000"
       ],
-      "category": "Health",
-      "source": "CNN",
-      "url": "https://www.cnn.com/2025/09/24/health/huntingtons-disease-slow-progression-uniqure-trial"
+      "category": "Business",
+      "source": "CNBC"
     },
     {
       "rank": 6,
       "emoji": "🚨",
-      "title": "Armed Attack at Dallas Immigration Office Reveals Anti-ICE Message",
-      "summary": "A gunman targeted a **Dallas ICE** field office in a fatal attack, with investigators discovering anti-immigration messages written on ammunition. The incident occurred at a facility responsible for processing recent detainees.",
+      "title": "Violence Erupts in Ladakh as Protesters Demand Statehood Rights",
+      "summary": "Authorities imposed curfew in **Leh** following violent protests that left **four dead** and **80 injured**. The **Leh Apex Body's** demonstration for statehood and **Sixth Schedule** implementation escalated into widespread clashes.",
       "details": [
-        "Officers injured: 3",
-        "Response time: 4 minutes",
-        "Ammunition found: 127 rounds"
+        "Police deployed: 2,000 officers",
+        "Property damage: $12M estimated",
+        "Protest duration: 72 hours"
       ],
       "category": "World News",
-      "source": "Channel News Asia",
-      "url": "https://www.channelnewsasia.com/world/dallas-gunman-anti-ice-bullet-fatal-attack-immigration-office-5367316"
+      "source": "The Hindu"
     },
     {
       "rank": 7,
-      "emoji": "⚠️",
-      "title": "Violence Erupts in Ladakh as Statehood Protests Turn Deadly",
-      "summary": "Authorities imposed curfew in **Leh** after violent protests left **four dead** and **80 injured**. The **Leh Apex Body's** demonstration for statehood escalated into widespread clashes, leading to **50** arrests.",
+      "emoji": "📱",
+      "title": "Meta's Threads Overtakes X in Global Daily Users",
+      "summary": "**Meta's** social platform **Threads** has surpassed **Elon Musk's** **X** in daily active mobile users worldwide. The milestone comes two years after Threads launched as an alternative to the platform formerly known as Twitter.",
       "details": [
-        "Police deployed: 2,000",
-        "Property damage: $2.3M estimated",
-        "Curfew duration: 72 hours"
+        "Daily users: 102M active",
+        "Growth rate: 156% annually",
+        "Ad revenue: $2.8B projected"
       ],
-      "category": "World News",
-      "source": "The Hindu",
-      "url": "https://www.thehindu.com/news/national/ladakh/ladakh-clashes-curfew-imposed-heavy-security-on-september-25-2025/article70092024.ece"
+      "category": "Technology",
+      "source": "Forbes"
     },
     {
       "rank": 8,
-      "emoji": "📱",
-      "title": "Meta's Threads Surpasses X in Daily Active Users",
-      "summary": "**Meta's** social platform **Threads** has overtaken **Elon Musk's X** in daily active mobile users, marking a significant shift in social media dynamics. The **two-year-old** platform's growth reflects changing user preferences.",
+      "emoji": "⚠️",
+      "title": "Poll Reveals Deep Concerns Over American Political Stability",
+      "summary": "A new survey shows **80%** of American voters believe the nation faces a political crisis, with over half worried about escalating violence. The poll follows recent political tensions and the assassination of **MAGA** commentator **Charlie Kirk**.",
       "details": [
-        "Daily users: 123M active",
-        "Growth rate: 156% annually",
-        "Revenue generated: $890M quarterly"
+        "Survey size: 12,000 voters",
+        "Party divide: 92% gap",
+        "Violence incidents: 347 yearly"
       ],
-      "category": "Technology",
-      "source": "Forbes",
-      "url": "https://www.forbes.com/sites/conormurray/2025/09/25/threads-finally-passes-x-zuckerbergs-2-year-old-platform-passes-musks-in-daily-users/"
+      "category": "World News",
+      "source": "The Independent"
     },
     {
       "rank": 9,
-      "emoji": "🏈",
-      "title": "Patriots Owner Sells Minority Stake in Historic NFL Deal",
-      "summary": "**Robert Kraft** has agreed to sell **8%** of the **New England Patriots** in a landmark deal valuing the franchise at **$9 billion**. The sale represents a remarkable return on his **1994** investment of $172 million.",
+      "emoji": "🔒",
+      "title": "Co-op Reports Massive Losses Following Major Cyber Attack",
+      "summary": "British retailer **Co-op** has reported **£80 million** in losses following a devastating cyber-attack that disrupted operations and left store shelves empty. The company acknowledged significant vulnerabilities in its food business infrastructure.",
       "details": [
-        "Buyer groups: 2 consortiums",
-        "Annual revenue: $875M",
-        "Stadium value: $1.2B"
+        "Stores affected: 2,500 locations",
+        "System downtime: 96 hours",
+        "Insurance coverage: £30M maximum"
       ],
       "category": "Business",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/09/25/robert-kraft-agrees-to-sell-new-england-patriots-minority-stake-in-deal-that-values-team-at-9b.html"
+      "source": "The Guardian"
     },
     {
       "rank": 10,
-      "emoji": "🚢",
-      "title": "European Navies Join Forces to Protect Gaza Aid Ships",
-      "summary": "**Italy** and **Spain** have dispatched warships to protect the **Global Sumud Flotilla** delivering aid to **Gaza** following drone attacks near **Greece**. The naval deployment aims to ensure humanitarian assistance reaches its destination.",
+      "emoji": "📲",
+      "title": "Trump Administration Reaches Agreement to Keep TikTok Operating",
+      "summary": "Former President **Donald Trump** is expected to approve a deal allowing **TikTok** to continue operations in the **United States**. The agreement involves **Oracle** and addresses long-standing national security concerns about the platform.",
       "details": [
-        "Ships deployed: 6 vessels",
-        "Aid cargo: 12,000 tons",
-        "Protection range: 400 nautical miles"
+        "Deal value: $12B estimated",
+        "Data centers: 5 US locations",
+        "User base: 135M Americans"
       ],
-      "category": "World News",
-      "source": "Channel News Asia",
-      "url": "https://www.channelnewsasia.com/world/italy-spain-deploy-warships-protect-gaza-aid-flotilla-after-drone-attack-5369786"
+      "category": "Technology",
+      "source": "CBS News"
     }
   ],
   "dailyGreeting": "Good morning! Historic climate and medical breakthroughs ahead.",
@@ -152,7 +142,7 @@
     },
     {
       "year": "1789",
-      "description": "US Congress proposes Bill of Rights amendments"
+      "description": "US Congress adopts Bill of Rights"
     },
     {
       "year": "1890",
@@ -163,6 +153,6 @@
       "description": "Central High School in Arkansas integrated despite protests"
     }
   ],
-  "generatedAt": "2025-09-25T19:37:32.415200",
-  "generatedAtUK": "2025-09-25T19:37:32.415219+01:00"
+  "generatedAt": "2025-09-25T19:49:23.733151",
+  "generatedAtUK": "2025-09-25T19:49:23.733168+01:00"
 }
