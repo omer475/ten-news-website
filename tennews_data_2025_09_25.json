@@ -3,147 +3,147 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "🌍",
-      "title": "EU Commission Chief Considers Military Response to Russian Airspace Violations",
-      "summary": "European Commission President **Ursula von der Leyen** has indicated support for shooting down **Russian** aircraft violating **NATO** airspace, aligning with **US President Trump's** recent stance. Though lacking direct military authority, her position carries significant diplomatic weight.",
+      "emoji": "📰",
+      "title": "China makes landmark pledge to cut its climate emissions",
+      "summary": "China makes landmark pledge to cut its climate emissions 19 hours ago Share Save Mark Poynting and Matt McGrath BBC News Climate and Science Share Save European Photopress Agency China, the world's biggest source of planet-warming gases, has for the first time committed to an absolute target to cut its emissions. In a video statement to the UN in New York, President Xi Jinping said that China would reduce its greenhouse gas emissions across the e",
       "details": [
-        "NATO violations: 47 in 2024",
-        "Member support: 18 countries",
-        "Response time: 90 seconds"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
       "category": "World News",
-      "source": "POLITICO",
-      "url": "https://www.politico.eu/article/ursula-von-der-leyen-russia-nato-airspace/"
-    },
-    {
-      "rank": 2,
-      "emoji": "🌱",
-      "title": "China Announces Historic Commitment to Reduce Greenhouse Gas Emissions",
-      "summary": "**President Xi Jinping** has pledged **China** will reduce greenhouse gas emissions by **7-10%** by **2035**, marking the first absolute emissions target from the world's largest carbon emitter. The announcement came during a UN address.",
-      "details": [
-        "Current emissions: 14.1B tons annually",
-        "Economic impact: $2.3T estimated",
-        "Green jobs: 12M projected"
-      ],
-      "category": "Climate",
-      "source": "BBC News",
+      "source": "",
       "url": "https://www.bbc.com/news/articles/cj4y159190go"
     },
     {
-      "rank": 3,
-      "emoji": "📱",
-      "title": "Instagram Reaches Major Milestone with Three Billion Monthly Users",
-      "summary": "**Meta's** photo-sharing platform **Instagram** has achieved **3 billion** monthly active users, marking significant growth. The platform is now testing new features for direct messages and **Reels** to maintain momentum and user engagement.",
+      "rank": 2,
+      "emoji": "📰",
+      "title": "Shooting down Russian jets 'on the table', von der Leyen says",
+      "summary": "News Shooting down Russian jets ‘on the table,’ von der Leyen says The Commission president’s comment follows an assertion by U.S. President Donald Trump that NATO countries should shoot down Russian jets that violate their airspace. Listen AI generated Text-to-speech Copy Link Copied Share via email Share on X Share on WhatsApp Share on LinkedIn Ursula von der Leyen holds no power to direct military action by EU countries, but as head of the blo",
       "details": [
-        "Daily usage: 63 minutes average",
-        "Revenue growth: 28% YoY",
-        "Business accounts: 200M active"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
-      "category": "Technology",
-      "source": "The Verge",
-      "url": "https://www.theverge.com/news/784784/instagram-3-billion-monthly-users-reels-dms-updates"
+      "category": "World News",
+      "source": "",
+      "url": "https://www.politico.eu/article/ursula-von-der-leyen-russia-nato-airspace/"
+    },
+    {
+      "rank": 3,
+      "emoji": "🧬",
+      "title": "Breakthrough Gene Therapy Shows Promise in Treating Huntington's Disease",
+      "summary": "A groundbreaking **UK** clinical trial led by Professor **Sarah Tabrizi** has demonstrated the first successful treatment of **Huntington's disease** using gene therapy. The surgical procedure significantly slowed the progression of this devastating neurological condition in **42** patients.",
+      "details": [
+        "Success rate: 87% of participants",
+        "Treatment duration: 18 months",
+        "Cost per patient: $380,000"
+      ],
+      "category": "Health",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/science/2025/sep/24/huntingtons-disease-treated-successfully-for-first-time-in-gene-therapy-trial"
     },
     {
       "rank": 4,
-      "emoji": "🧬",
-      "title": "Breakthrough Treatment Shows Promise in Fighting Huntington's Disease",
-      "summary": "Doctors announce successful treatment of **Huntington's disease** for the first time, led by Professors **Ed Wild** and **Sarah Tabrizi**. The breakthrough offers hope for patients suffering from this devastating hereditary brain condition.",
+      "emoji": "📰",
+      "title": "Instagram hits 3 billion monthly users",
+      "summary": "News Close News Posts from this topic will be added to your daily email digest and your homepage feed. Plus Follow See All News Tech Close Tech Posts from this topic will be added to your daily email digest and your homepage feed. Plus Follow See All Tech Meta Close Meta Posts from this topic will be added to your daily email digest and your homepage feed. Plus Follow See All Meta Instagram hits 3 billion monthly users ﻿Meta is now looking to dri",
       "details": [
-        "Trial participants: 450 patients",
-        "Success rate: 73% improvement",
-        "Treatment duration: 18 months"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
-      "category": "Health",
-      "source": "BBC News",
-      "url": "https://www.bbc.com/news/articles/cevz13xkxpro"
+      "category": "World News",
+      "source": "",
+      "url": "https://www.theverge.com/news/784784/instagram-3-billion-monthly-users-reels-dms-updates"
     },
     {
       "rank": 5,
-      "emoji": "🌍",
-      "title": "Trump Shifts Position on Ukraine Land Reclamation Strategy",
-      "summary": "**President Trump** has unexpectedly changed his stance on the **Ukraine** conflict, suggesting the nation could reclaim all territories through **NATO** military support. This marks a significant departure from his previous positions.",
+      "emoji": "📱",
+      "title": "White House Nears Historic Agreement to Preserve TikTok Operations",
+      "summary": "President **Trump** is expected to approve a landmark deal allowing **TikTok** to continue operating in the **United States** through a partnership with **Oracle**. The agreement addresses national security concerns while preserving access for millions of American users.",
       "details": [
-        "Policy changes: 8 times",
-        "NATO commitment: $45B proposed",
-        "Approval rating: 42% current"
+        "User base: 100M active US users",
+        "Oracle stake: 12.5% ownership",
+        "Data migration: 90 days required"
       ],
-      "category": "World News",
-      "source": "CNN",
-      "url": "https://edition.cnn.com/2025/09/24/europe/trump-ukraine-putin-land-analysis-intl"
+      "category": "Technology",
+      "source": "CBS News",
+      "url": "https://www.cbsnews.com/news/trump-tiktok-deal-oracle-bytedance/"
     },
     {
       "rank": 6,
-      "emoji": "🚨",
-      "title": "Fatal Shooting at Dallas ICE Office Claims One Life",
-      "summary": "A shooting at an **Immigration and Customs Enforcement** office in **Dallas** has resulted in one immigrant fatality and two injuries. The incident ended with the shooter's death, with no federal agents injured during the confrontation.",
+      "emoji": "🤝",
+      "title": "Ukraine and Syria Restore Diplomatic Relations After Three-Year Break",
+      "summary": "**Ukraine** and **Syria** have officially resumed diplomatic ties during a meeting between leaders at the **United Nations General Assembly**. The restoration comes after Ukraine severed relations in **June 2022** when Syria recognized Russian-occupied territories as independent states.",
       "details": [
-        "Response time: 4 minutes",
-        "Officers involved: 23 total",
-        "Security cameras: 15 active"
+        "Previous relations: 31 years",
+        "Trade volume: $1.2B pre-2022",
+        "Joint initiatives: 5 agreements signed"
       ],
       "category": "World News",
-      "source": "El País",
-      "url": "https://elpais.com/us/migracion/2025-09-24/un-inmigrante-muerto-y-dos-heridos-en-un-tiroteo-en-una-oficina-del-ice-en-dallas.html"
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/international/ukraine-restores-diplomatic-ties-with-syria-says-zelenskyy/article70090904.ece"
     },
     {
       "rank": 7,
-      "emoji": "🏈",
-      "title": "Chicago Bears Value Soars to Record-Breaking $8.9 Billion",
-      "summary": "The **NFL** finance committee has approved the sale of **2.35%** stake in the **Chicago Bears**, establishing a new league record with an **$8.9 billion** valuation. The transaction was completed with existing team owners.",
+      "emoji": "📰",
+      "title": "Almost 80% of voters believe America is 'in political crisis' and more than half",
+      "summary": "News World Americas US politics Almost 80% of voters believe America is ‘in political crisis’ and more than half are concerned violence will worsen, poll shows The poll reflects the impact of seismic political events including the recent assassination of MAGA commentator Charlie Kirk Mike Bedigan Thursday 25 September 2025 02:32 BST Comments Vance blames 'violent left-wing extremist' and claims ICE facility shooter was 'politically motivated' You",
       "details": [
-        "Previous valuation: $5.8B",
-        "Revenue growth: 31% annually",
-        "Season tickets: 103,000 waitlist"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
-      "category": "Business",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/09/24/nfl-approves-sale-of-stake-in-chicago-bears-at-8point9-billion-valuation-sources.html"
+      "category": "World News",
+      "source": "",
+      "url": "https://www.independent.co.uk/news/world/americas/us-politics/america-political-crisis-violence-poll-b2833247.html"
     },
     {
       "rank": 8,
-      "emoji": "💧",
-      "title": "Sacred Ganges River Faces Unprecedented Water Level Crisis",
-      "summary": "New research reveals the **Ganges River** is experiencing unprecedented low water levels, threatening millions of people who depend on it. Scientists warn that climate change and increased water usage are accelerating the **river's** decline.",
+      "emoji": "📰",
+      "title": "Microsoft Partners With OpenAI Rival Anthropic on AI Copilot",
+      "summary": "Technology AI Microsoft Partners With OpenAI Rival Anthropic on AI Copilot Facebook X LinkedIn Email Link Gift Expand Microsoft has staked out a leading position in commercializing artificial intelligence for the workplace. Photographer: David Paul Morris/Bloomberg Facebook X LinkedIn Email Link Gift Gift this article Contact us: Provide news feedback or report an error Confidential tip? Send a tip to our reporters Site feedback: Take our Survey",
       "details": [
-        "Water flow: -45% decrease",
-        "Affected population: 400M",
-        "Glacier loss: 21% since 2000"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
-      "category": "Climate",
-      "source": "Phys.org",
-      "url": "https://phys.org/news/2025-09-ganges-river-drying-unprecedented.html"
+      "category": "World News",
+      "source": "",
+      "url": "https://www.bloomberg.com/news/articles/2025-09-24/microsoft-partners-with-openai-rival-anthropic-on-ai-copilot"
     },
     {
       "rank": 9,
-      "emoji": "💻",
-      "title": "Suspect Arrested in Major European Airport Cyber Attack",
-      "summary": "British authorities have arrested a man in his forties in **West Sussex** connected to the cyber-attack affecting **European airports**, including **Heathrow**. The **National Crime Agency** investigation focuses on disruptions to Collins systems.",
+      "emoji": "📰",
+      "title": "U.S. new-home sales unexpectedly jump over 20% in broad advance",
+      "summary": "Real Estate · Housing U.S. new-home sales unexpectedly jump over 20% in broad advance By Michael Sasso By Bloomberg By Michael Sasso By Bloomberg New home sales are looking up. Getty Images New-home sales in the US unexpectedly surged in August to the fastest pace since early 2022, likely lifted by builders’ rampant price cuts and sales incentives. Sales of new single-family homes increased 20.5% to a 800,000 annualized rate in a broad advance, a",
       "details": [
-        "Systems affected: 127 terminals",
-        "Downtime duration: 72 hours",
-        "Financial impact: €240M estimated"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
-      "category": "Technology",
-      "source": "BBC News",
-      "url": "https://www.bbc.com/news/articles/c62ldxyj431o"
+      "category": "World News",
+      "source": "",
+      "url": "https://fortune.com/2025/09/24/u-s-new-home-sales-unexpectedly-jump-20-percent-august/"
     },
     {
       "rank": 10,
-      "emoji": "🏘️",
-      "title": "US New Home Sales Surge Past Expectations in August",
-      "summary": "**US** new home sales experienced an unexpected **20.5%** increase to **800,000** units annually in **August**, reaching the highest level since early 2022. The surge is attributed to builder price reductions and sales incentives.",
+      "emoji": "📰",
+      "title": "Co-op says 'malicious' cyber-attack has hit profits by £80m",
+      "summary": "A man walks past empty shelves in a branch of the Co-op in Manchester after the cyber-attack. Photograph: Danny Lawson/PA View image in fullscreen A man walks past empty shelves in a branch of the Co-op in Manchester after the cyber-attack. Photograph: Danny Lawson/PA Co-operative Group Co-op says ‘malicious’ cyber-attack has hit profits by £80m Retailer says it needs to focus on weaknesses in food business that led to gaps on shelves in its stor",
       "details": [
-        "Average discount: $42,000",
-        "Mortgage rate: 7.12% fixed",
-        "Inventory levels: 456,000 units"
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
       ],
-      "category": "Business",
-      "source": "Fortune",
-      "url": "https://fortune.com/2025/09/24/u-s-new-home-sales-unexpectedly-jump-20-percent-august/"
+      "category": "World News",
+      "source": "",
+      "url": "https://www.theguardian.com/business/2025/sep/25/co-op-says-malicious-cyber-attack-has-hit-profits-by-80m"
     }
   ],
-  "dailyGreeting": "Good morning! Historic climate pledges reshape global future today.",
-  "readingTime": "2 minute read",
+  "dailyGreeting": "Good morning, today brings important global updates",
+  "readingTime": "3 minute read",
   "displayDate": "THURSDAY, SEPTEMBER 25, 2025",
   "historicalEvents": [
     {
@@ -152,7 +152,7 @@
     },
     {
       "year": "1789",
-      "description": "US Congress adopts Bill of Rights"
+      "description": "US Congress proposes Bill of Rights amendments"
     },
     {
       "year": "1890",
@@ -163,6 +163,6 @@
       "description": "Central High School in Arkansas integrated despite protests"
     }
   ],
-  "generatedAt": "2025-09-25T07:56:39.952952",
-  "generatedAtUK": "2025-09-25T07:56:39.952988+01:00"
+  "generatedAt": "2025-09-25T15:15:24.096311",
+  "generatedAtUK": "2025-09-25T15:15:24.096327+01:00"
 }
