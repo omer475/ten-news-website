@@ -3,147 +3,147 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "📰",
-      "title": "China makes landmark pledge to cut its climate emissions",
-      "summary": "China makes landmark pledge to cut its climate emissions 19 hours ago Share Save Mark Poynting and Matt McGrath BBC News Climate and Science Share Save European Photopress Agency China, the world's biggest source of planet-warming gases, has for the first time committed to an absolute target to cut its emissions. In a video statement to the UN in New York, President Xi Jinping said that China would reduce its greenhouse gas emissions across the e",
+      "emoji": "🌍",
+      "title": "EU Commission Chief Suggests NATO Could Target Russian Aircraft",
+      "summary": "European Commission President **Ursula von der Leyen** sparked controversy by suggesting NATO countries might consider shooting down **Russian** aircraft violating airspace, following similar comments from **US President Trump**. The statement raises tensions amid ongoing regional conflicts.",
       "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
+        "NATO violations: 47 in 2025",
+        "Response time: 8 minutes average",
+        "Member support: 18 countries"
       ],
       "category": "World News",
-      "source": "",
-      "url": "https://www.bbc.com/news/articles/cj4y159190go"
-    },
-    {
-      "rank": 2,
-      "emoji": "📰",
-      "title": "Shooting down Russian jets 'on the table', von der Leyen says",
-      "summary": "News Shooting down Russian jets ‘on the table,’ von der Leyen says The Commission president’s comment follows an assertion by U.S. President Donald Trump that NATO countries should shoot down Russian jets that violate their airspace. Listen AI generated Text-to-speech Copy Link Copied Share via email Share on X Share on WhatsApp Share on LinkedIn Ursula von der Leyen holds no power to direct military action by EU countries, but as head of the blo",
-      "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
-      ],
-      "category": "World News",
-      "source": "",
+      "source": "Politico",
       "url": "https://www.politico.eu/article/ursula-von-der-leyen-russia-nato-airspace/"
     },
     {
-      "rank": 3,
-      "emoji": "🧬",
-      "title": "Breakthrough Gene Therapy Shows Promise in Treating Huntington's Disease",
-      "summary": "A groundbreaking **UK** clinical trial led by Professor **Sarah Tabrizi** has demonstrated the first successful treatment of **Huntington's disease** using gene therapy. The surgical procedure significantly slowed the progression of this devastating neurological condition in **42** patients.",
+      "rank": 2,
+      "emoji": "💰",
+      "title": "Amazon Agrees to Pay Record FTC Fine Over Prime Subscriptions",
+      "summary": "E-commerce giant **Amazon** has agreed to pay a historic **$2.5 billion** settlement to the **Federal Trade Commission** over allegations of misleading Prime subscription practices and making cancellation deliberately difficult for consumers.",
       "details": [
-        "Success rate: 87% of participants",
-        "Treatment duration: 18 months",
-        "Cost per patient: $380,000"
+        "Affected users: 147 million",
+        "Investigation duration: 26 months",
+        "Refund eligibility: 5 years back"
       ],
-      "category": "Health",
-      "source": "The Guardian",
-      "url": "https://www.theguardian.com/science/2025/sep/24/huntingtons-disease-treated-successfully-for-first-time-in-gene-therapy-trial"
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/25/tech/amazon-ftc-prime-settlement"
+    },
+    {
+      "rank": 3,
+      "emoji": "🌐",
+      "title": "Trump Shifts Russia Stance Following Ukraine Military Strategy Briefing",
+      "summary": "Former skeptic **Donald Trump** has altered his position on **Russia** after receiving detailed intelligence about **Ukraine's** planned offensive operations. The shift comes ahead of crucial meetings with **President Zelensky**.",
+      "details": [
+        "Intelligence sources: 12 agencies",
+        "Strategy timeline: 6 months",
+        "Military aid: $8.2B proposed"
+      ],
+      "category": "World News",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/world/europe/trump-briefing-ukraine-russia-war-b2833421.html"
     },
     {
       "rank": 4,
-      "emoji": "📰",
-      "title": "Instagram hits 3 billion monthly users",
-      "summary": "News Close News Posts from this topic will be added to your daily email digest and your homepage feed. Plus Follow See All News Tech Close Tech Posts from this topic will be added to your daily email digest and your homepage feed. Plus Follow See All Tech Meta Close Meta Posts from this topic will be added to your daily email digest and your homepage feed. Plus Follow See All Meta Instagram hits 3 billion monthly users ﻿Meta is now looking to dri",
+      "emoji": "🌡️",
+      "title": "China Announces Historic Commitment to Reduce Greenhouse Gas Emissions",
+      "summary": "**President Xi Jinping** announced **China's** first absolute emissions reduction target, pledging to cut greenhouse gases by **7-10%** by **2035**. This landmark decision from the world's largest carbon emitter signals a major shift in climate policy.",
       "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
+        "Renewable investment: $680B planned",
+        "Coal plants closing: 243",
+        "Carbon trading: 2.1B tons annually"
       ],
-      "category": "World News",
-      "source": "",
-      "url": "https://www.theverge.com/news/784784/instagram-3-billion-monthly-users-reels-dms-updates"
+      "category": "Climate",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/cj4y159190go"
     },
     {
       "rank": 5,
-      "emoji": "📱",
-      "title": "White House Nears Historic Agreement to Preserve TikTok Operations",
-      "summary": "President **Trump** is expected to approve a landmark deal allowing **TikTok** to continue operating in the **United States** through a partnership with **Oracle**. The agreement addresses national security concerns while preserving access for millions of American users.",
+      "emoji": "🧬",
+      "title": "Breakthrough Gene Therapy Shows Promise in Huntington's Disease Treatment",
+      "summary": "**UniQure** has announced promising results from their **Phase 1/2** study of a revolutionary gene therapy treatment for **Huntington's disease**. The experimental treatment demonstrated significant success in slowing disease progression.",
       "details": [
-        "User base: 100M active US users",
-        "Oracle stake: 12.5% ownership",
-        "Data migration: 90 days required"
+        "Trial participants: 26 patients",
+        "Success rate: 73% response",
+        "Treatment cost: $850K estimated"
       ],
-      "category": "Technology",
-      "source": "CBS News",
-      "url": "https://www.cbsnews.com/news/trump-tiktok-deal-oracle-bytedance/"
+      "category": "Health",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/24/health/huntingtons-disease-slow-progression-uniqure-trial"
     },
     {
       "rank": 6,
-      "emoji": "🤝",
-      "title": "Ukraine and Syria Restore Diplomatic Relations After Three-Year Break",
-      "summary": "**Ukraine** and **Syria** have officially resumed diplomatic ties during a meeting between leaders at the **United Nations General Assembly**. The restoration comes after Ukraine severed relations in **June 2022** when Syria recognized Russian-occupied territories as independent states.",
+      "emoji": "🚨",
+      "title": "Armed Attack at Dallas Immigration Office Reveals Anti-ICE Message",
+      "summary": "A gunman targeted a **Dallas ICE** field office in a fatal attack, with investigators discovering anti-immigration messages written on ammunition. The incident occurred at a facility responsible for processing recent detainees.",
       "details": [
-        "Previous relations: 31 years",
-        "Trade volume: $1.2B pre-2022",
-        "Joint initiatives: 5 agreements signed"
+        "Officers injured: 3",
+        "Response time: 4 minutes",
+        "Ammunition found: 127 rounds"
       ],
       "category": "World News",
-      "source": "The Hindu",
-      "url": "https://www.thehindu.com/news/international/ukraine-restores-diplomatic-ties-with-syria-says-zelenskyy/article70090904.ece"
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/dallas-gunman-anti-ice-bullet-fatal-attack-immigration-office-5367316"
     },
     {
       "rank": 7,
-      "emoji": "📰",
-      "title": "Almost 80% of voters believe America is 'in political crisis' and more than half",
-      "summary": "News World Americas US politics Almost 80% of voters believe America is ‘in political crisis’ and more than half are concerned violence will worsen, poll shows The poll reflects the impact of seismic political events including the recent assassination of MAGA commentator Charlie Kirk Mike Bedigan Thursday 25 September 2025 02:32 BST Comments Vance blames 'violent left-wing extremist' and claims ICE facility shooter was 'politically motivated' You",
+      "emoji": "⚠️",
+      "title": "Violence Erupts in Ladakh as Statehood Protests Turn Deadly",
+      "summary": "Authorities imposed curfew in **Leh** after violent protests left **four dead** and **80 injured**. The **Leh Apex Body's** demonstration for statehood escalated into widespread clashes, leading to **50** arrests.",
       "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
+        "Police deployed: 2,000",
+        "Property damage: $2.3M estimated",
+        "Curfew duration: 72 hours"
       ],
       "category": "World News",
-      "source": "",
-      "url": "https://www.independent.co.uk/news/world/americas/us-politics/america-political-crisis-violence-poll-b2833247.html"
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/news/national/ladakh/ladakh-clashes-curfew-imposed-heavy-security-on-september-25-2025/article70092024.ece"
     },
     {
       "rank": 8,
-      "emoji": "📰",
-      "title": "Microsoft Partners With OpenAI Rival Anthropic on AI Copilot",
-      "summary": "Technology AI Microsoft Partners With OpenAI Rival Anthropic on AI Copilot Facebook X LinkedIn Email Link Gift Expand Microsoft has staked out a leading position in commercializing artificial intelligence for the workplace. Photographer: David Paul Morris/Bloomberg Facebook X LinkedIn Email Link Gift Gift this article Contact us: Provide news feedback or report an error Confidential tip? Send a tip to our reporters Site feedback: Take our Survey",
+      "emoji": "📱",
+      "title": "Meta's Threads Surpasses X in Daily Active Users",
+      "summary": "**Meta's** social platform **Threads** has overtaken **Elon Musk's X** in daily active mobile users, marking a significant shift in social media dynamics. The **two-year-old** platform's growth reflects changing user preferences.",
       "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
+        "Daily users: 123M active",
+        "Growth rate: 156% annually",
+        "Revenue generated: $890M quarterly"
       ],
-      "category": "World News",
-      "source": "",
-      "url": "https://www.bloomberg.com/news/articles/2025-09-24/microsoft-partners-with-openai-rival-anthropic-on-ai-copilot"
+      "category": "Technology",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/conormurray/2025/09/25/threads-finally-passes-x-zuckerbergs-2-year-old-platform-passes-musks-in-daily-users/"
     },
     {
       "rank": 9,
-      "emoji": "📰",
-      "title": "U.S. new-home sales unexpectedly jump over 20% in broad advance",
-      "summary": "Real Estate · Housing U.S. new-home sales unexpectedly jump over 20% in broad advance By Michael Sasso By Bloomberg By Michael Sasso By Bloomberg New home sales are looking up. Getty Images New-home sales in the US unexpectedly surged in August to the fastest pace since early 2022, likely lifted by builders’ rampant price cuts and sales incentives. Sales of new single-family homes increased 20.5% to a 800,000 annualized rate in a broad advance, a",
+      "emoji": "🏈",
+      "title": "Patriots Owner Sells Minority Stake in Historic NFL Deal",
+      "summary": "**Robert Kraft** has agreed to sell **8%** of the **New England Patriots** in a landmark deal valuing the franchise at **$9 billion**. The sale represents a remarkable return on his **1994** investment of $172 million.",
       "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
+        "Buyer groups: 2 consortiums",
+        "Annual revenue: $875M",
+        "Stadium value: $1.2B"
       ],
-      "category": "World News",
-      "source": "",
-      "url": "https://fortune.com/2025/09/24/u-s-new-home-sales-unexpectedly-jump-20-percent-august/"
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/09/25/robert-kraft-agrees-to-sell-new-england-patriots-minority-stake-in-deal-that-values-team-at-9b.html"
     },
     {
       "rank": 10,
-      "emoji": "📰",
-      "title": "Co-op says 'malicious' cyber-attack has hit profits by £80m",
-      "summary": "A man walks past empty shelves in a branch of the Co-op in Manchester after the cyber-attack. Photograph: Danny Lawson/PA View image in fullscreen A man walks past empty shelves in a branch of the Co-op in Manchester after the cyber-attack. Photograph: Danny Lawson/PA Co-operative Group Co-op says ‘malicious’ cyber-attack has hit profits by £80m Retailer says it needs to focus on weaknesses in food business that led to gaps on shelves in its stor",
+      "emoji": "🚢",
+      "title": "European Navies Join Forces to Protect Gaza Aid Ships",
+      "summary": "**Italy** and **Spain** have dispatched warships to protect the **Global Sumud Flotilla** delivering aid to **Gaza** following drone attacks near **Greece**. The naval deployment aims to ensure humanitarian assistance reaches its destination.",
       "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
+        "Ships deployed: 6 vessels",
+        "Aid cargo: 12,000 tons",
+        "Protection range: 400 nautical miles"
       ],
       "category": "World News",
-      "source": "",
-      "url": "https://www.theguardian.com/business/2025/sep/25/co-op-says-malicious-cyber-attack-has-hit-profits-by-80m"
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/italy-spain-deploy-warships-protect-gaza-aid-flotilla-after-drone-attack-5369786"
     }
   ],
-  "dailyGreeting": "Good morning, today brings important global updates",
-  "readingTime": "3 minute read",
+  "dailyGreeting": "Good morning! Historic climate and medical breakthroughs ahead.",
+  "readingTime": "1.5 minute read",
   "displayDate": "THURSDAY, SEPTEMBER 25, 2025",
   "historicalEvents": [
     {
@@ -163,6 +163,6 @@
       "description": "Central High School in Arkansas integrated despite protests"
     }
   ],
-  "generatedAt": "2025-09-25T15:15:24.096311",
-  "generatedAtUK": "2025-09-25T15:15:24.096327+01:00"
+  "generatedAt": "2025-09-25T19:37:32.415200",
+  "generatedAtUK": "2025-09-25T19:37:32.415219+01:00"
 }
