@@ -3,137 +3,137 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "💰",
-      "title": "Amazon Faces Record $2.5B Fine Over Prime Subscription Practices",
-      "summary": "E-commerce giant **Amazon** has agreed to pay a historic **$2.5 billion** settlement to the **Federal Trade Commission** over allegations of deceptive Prime subscription practices. The company was accused of misleading customers during sign-up processes and creating obstacles for cancellations.",
+      "emoji": "🛒",
+      "title": "Amazon Reaches Historic $2.5B Settlement Over Prime Subscription Practices",
+      "summary": "E-commerce giant **Amazon** has agreed to pay a record **$2.5 billion** settlement to the **Federal Trade Commission** over allegations of deceptive Prime subscription practices. The company was accused of misleading customers during sign-up processes and creating obstacles for cancellations.",
       "details": [
         "Investigation duration: 27 months",
-        "Customer complaints: 180,000+",
-        "Refund eligibility: 45M subscribers"
+        "Customer complaints: 485,000 filed",
+        "Refund eligibility: 28M subscribers"
       ],
       "category": "Business",
       "source": "CNN"
     },
     {
       "rank": 2,
-      "emoji": "✈️",
-      "title": "EU Chief Suggests NATO Could Shoot Down Russian Aircraft",
-      "summary": "**European Commission** President **Ursula von der Leyen** has controversially stated that shooting down **Russian** aircraft violating **NATO** airspace is a possible option. The statement follows similar remarks by **U.S. President Trump** regarding alliance defense protocols.",
+      "emoji": "⚠️",
+      "title": "Second Deadly Prison Riot This Week Rocks Ecuador",
+      "summary": "A violent uprising at a prison in **Ecuador** has resulted in **17 deaths**, marking the second deadly riot this week. The incident at **Litoral Penitentiary** in **Guayaquil** has prompted immediate deployment of security forces to contain the situation.",
       "details": [
-        "NATO violations: 127 in 2024",
-        "Response time: 90 seconds",
-        "Member support: 18 countries"
+        "Prison capacity: 5,400 inmates",
+        "Gang members involved: 3 rival groups",
+        "Response time: 45 minutes"
+      ],
+      "category": "World News",
+      "source": "Al Jazeera"
+    },
+    {
+      "rank": 3,
+      "emoji": "✈️",
+      "title": "EU Chief Suggests NATO Could Shoot Down Russian Jets",
+      "summary": "**European Commission** President **Ursula von der Leyen** has controversially stated that shooting down **Russian** aircraft violating **NATO** airspace is a potential option, following similar remarks by **U.S. President Trump** regarding territorial defense.",
+      "details": [
+        "Airspace violations: 127 in 2024",
+        "NATO members affected: 8 countries",
+        "Response window: 90 seconds"
       ],
       "category": "World News",
       "source": "Politico"
     },
     {
-      "rank": 3,
+      "rank": 4,
       "emoji": "🌡️",
-      "title": "China Announces Historic Commitment to Reduce Greenhouse Gas Emissions",
-      "summary": "**President Xi Jinping** has announced **China's** first absolute emissions reduction target, pledging to cut greenhouse gases by **7-10%** by **2035**. The world's largest carbon emitter's commitment marks a significant shift in global climate action.",
+      "title": "China Announces First-Ever Absolute Target for Emissions Reduction",
+      "summary": "**China**, the world's largest carbon emitter, has made a groundbreaking commitment to reduce greenhouse gas emissions by **7-10%** by **2035**. President **Xi Jinping** announced the landmark pledge during a **UN** video statement.",
       "details": [
-        "Coal reduction: 30% by 2030",
-        "Green investment: $680B planned",
-        "Solar capacity: 1,200 GW target"
+        "Current emissions: 14.1B tons annually",
+        "Economic impact: $2.3T estimated",
+        "Green energy target: 45% by 2030"
       ],
       "category": "Climate",
       "source": "BBC News"
     },
     {
-      "rank": 4,
+      "rank": 5,
       "emoji": "🧬",
       "title": "Breakthrough Gene Therapy Shows Promise for Huntington's Disease Treatment",
-      "summary": "A groundbreaking gene therapy developed by **uniQure** has demonstrated effectiveness in slowing **Huntington's disease** progression during **Phase 1/2** trials. The company plans to submit findings to the **FDA** for review in early 2026.",
+      "summary": "Pharmaceutical company **uniQure** has reported successful results from a **Phase 1/2** study of an experimental gene therapy for **Huntington's disease**. The breakthrough treatment demonstrated significant effectiveness in slowing disease progression.",
       "details": [
-        "Trial participants: 84 patients",
-        "Symptom reduction: 42% average",
-        "Treatment cost: $1.2M estimated"
+        "Trial participants: 26 patients",
+        "Treatment duration: 18 months",
+        "Success rate: 73% responded"
       ],
       "category": "Health",
       "source": "CNN"
     },
     {
-      "rank": 5,
-      "emoji": "🏈",
-      "title": "Patriots Owner Sells Minority Stake in Historic NFL Deal",
-      "summary": "**Robert Kraft** has agreed to sell an **8%** stake in the **New England Patriots**, valuing the franchise at **$9 billion**. The deal marks a significant return on Kraft's original **$172 million** investment from 1994.",
+      "rank": 6,
+      "emoji": "💻",
+      "title": "CoreWeave Signs Massive $6.5B AI Infrastructure Deal",
+      "summary": "Cloud infrastructure provider **CoreWeave** has secured a **$6.5 billion** contract with **OpenAI**, expanding their existing partnership. This agreement increases their total contracts with the **ChatGPT** creator to **$22.4 billion**.",
       "details": [
-        "Annual revenue: $875M",
-        "Stadium value: $1.4B",
-        "Season tickets: 65,000"
+        "Computing power: 17,000 GPUs",
+        "Contract duration: 4 years",
+        "Market share gain: 31%"
       ],
-      "category": "Business",
+      "category": "Technology",
       "source": "CNBC"
     },
     {
-      "rank": 6,
-      "emoji": "🚨",
-      "title": "Violence Erupts in Ladakh as Protesters Demand Statehood Rights",
-      "summary": "Authorities imposed curfew in **Leh** following violent protests that left **four dead** and **80 injured**. The **Leh Apex Body's** demonstration for statehood and **Sixth Schedule** implementation escalated into widespread clashes.",
-      "details": [
-        "Police deployed: 2,000 officers",
-        "Property damage: $12M estimated",
-        "Protest duration: 72 hours"
-      ],
-      "category": "World News",
-      "source": "The Hindu"
-    },
-    {
       "rank": 7,
-      "emoji": "📱",
-      "title": "Meta's Threads Overtakes X in Global Daily Users",
-      "summary": "**Meta's** social platform **Threads** has surpassed **Elon Musk's** **X** in daily active mobile users worldwide. The milestone comes two years after Threads launched as an alternative to the platform formerly known as Twitter.",
+      "emoji": "🗳️",
+      "title": "Poll Reveals Deep Concerns Over American Political Crisis",
+      "summary": "A new survey shows **80%** of American voters believe the country faces a political crisis, with more than half worried about escalating violence. The poll follows recent political tensions and the assassination of **MAGA** commentator **Charlie Kirk**.",
       "details": [
-        "Daily users: 102M active",
-        "Growth rate: 156% annually",
-        "Ad revenue: $2.8B projected"
-      ],
-      "category": "Technology",
-      "source": "Forbes"
-    },
-    {
-      "rank": 8,
-      "emoji": "⚠️",
-      "title": "Poll Reveals Deep Concerns Over American Political Stability",
-      "summary": "A new survey shows **80%** of American voters believe the nation faces a political crisis, with over half worried about escalating violence. The poll follows recent political tensions and the assassination of **MAGA** commentator **Charlie Kirk**.",
-      "details": [
-        "Survey size: 12,000 voters",
-        "Party divide: 92% gap",
-        "Violence incidents: 347 yearly"
+        "Survey size: 2,400 voters",
+        "Margin of error: 2.8%",
+        "States covered: 45"
       ],
       "category": "World News",
       "source": "The Independent"
     },
     {
-      "rank": 9,
-      "emoji": "🔒",
-      "title": "Co-op Reports Massive Losses Following Major Cyber Attack",
-      "summary": "British retailer **Co-op** has reported **£80 million** in losses following a devastating cyber-attack that disrupted operations and left store shelves empty. The company acknowledged significant vulnerabilities in its food business infrastructure.",
+      "rank": 8,
+      "emoji": "📱",
+      "title": "Meta's Threads Overtakes X in Global Daily Users",
+      "summary": "**Meta's** social platform **Threads** has surpassed **Elon Musk's** **X** in daily active mobile users worldwide, marking a significant shift in social media dynamics two years after its launch as an alternative platform.",
       "details": [
-        "Stores affected: 2,500 locations",
-        "System downtime: 96 hours",
-        "Insurance coverage: £30M maximum"
+        "Daily users: 123M active",
+        "Growth rate: 156% annually",
+        "Revenue generated: $840M"
+      ],
+      "category": "Technology",
+      "source": "Forbes"
+    },
+    {
+      "rank": 9,
+      "emoji": "🏈",
+      "title": "Patriots Owner Sells Minority Stake in Record-Setting Deal",
+      "summary": "**Robert Kraft** has agreed to sell **8%** of the **New England Patriots** in a deal valuing the team at **$9 billion**. The transaction marks a remarkable return on Kraft's initial **$172 million** investment from 1994.",
+      "details": [
+        "Buyer groups: 2 entities",
+        "Annual revenue: $875M",
+        "Stadium value: $1.4B"
       ],
       "category": "Business",
-      "source": "The Guardian"
+      "source": "CNBC"
     },
     {
       "rank": 10,
       "emoji": "📲",
-      "title": "Trump Administration Reaches Agreement to Keep TikTok Operating",
-      "summary": "Former President **Donald Trump** is expected to approve a deal allowing **TikTok** to continue operations in the **United States**. The agreement involves **Oracle** and addresses long-standing national security concerns about the platform.",
+      "title": "Trump Administration Nears Agreement to Keep TikTok Operating",
+      "summary": "Former President **Trump** is expected to approve a deal allowing **TikTok** to continue operations in the **United States**. The agreement involves **Oracle** and addresses national security concerns while maintaining the platform's accessibility for American users.",
       "details": [
+        "User base: 170M Americans",
         "Deal value: $12B estimated",
-        "Data centers: 5 US locations",
-        "User base: 135M Americans"
+        "Data centers: 5 new facilities"
       ],
       "category": "Technology",
       "source": "CBS News"
     }
   ],
-  "dailyGreeting": "Good morning! Historic climate and medical breakthroughs ahead.",
-  "readingTime": "1.5 minute read",
+  "dailyGreeting": "Good morning! Historic settlements and breakthroughs shape today's news.",
+  "readingTime": "2 minute read",
   "displayDate": "THURSDAY, SEPTEMBER 25, 2025",
   "historicalEvents": [
     {
@@ -153,6 +153,6 @@
       "description": "Central High School in Arkansas integrated despite protests"
     }
   ],
-  "generatedAt": "2025-09-25T19:49:23.733151",
-  "generatedAtUK": "2025-09-25T19:49:23.733168+01:00"
+  "generatedAt": "2025-09-25T20:17:56.830578",
+  "generatedAtUK": "2025-09-25T20:17:56.830595+01:00"
 }
