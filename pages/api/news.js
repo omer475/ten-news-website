@@ -23,7 +23,10 @@ export default function handler(req, res) {
     // Check if today's file exists
     if (fs.existsSync(newsFilePath)) {
       const newsData = JSON.parse(fs.readFileSync(newsFilePath, 'utf8'));
+      console.log(`✅ Serving real news data from: ${newsFileName}`);
       return res.status(200).json(newsData);
+    } else {
+      console.log(`⚠️ Today's file not found: ${newsFileName}`);
     }
     
     // If today's file doesn't exist, find the most recent one
@@ -37,7 +40,10 @@ export default function handler(req, res) {
       const latestNewsFile = newsFiles[0];
       const latestNewsPath = path.join(process.cwd(), latestNewsFile);
       const newsData = JSON.parse(fs.readFileSync(latestNewsPath, 'utf8'));
+      console.log(`✅ Serving recent news data from: ${latestNewsFile}`);
       return res.status(200).json(newsData);
+    } else {
+      console.log('⚠️ No news data files found, using sample data');
     }
     
     // No news files found - return sample data

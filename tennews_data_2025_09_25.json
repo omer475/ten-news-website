@@ -1,158 +1,174 @@
 {
-  "digest_date": "September 25, 2025",
+  "digest_date": "September 20, 2025",
   "articles": [
     {
       "rank": 1,
-      "emoji": "🛒",
-      "title": "Amazon Reaches Historic $2.5B Settlement Over Prime Subscription Practices",
-      "summary": "E-commerce giant **Amazon** has agreed to pay a record **$2.5 billion** settlement to the **Federal Trade Commission** over allegations of deceptive Prime subscription practices. The company was accused of misleading customers during sign-up processes and creating obstacles for cancellations.",
+      "emoji": "📱",
+      "title": "Trump and Xi Approve TikTok Deal After Phone Call",
+      "summary": "US President **Donald Trump** and China's President **Xi Jinping** reached agreement on a **TikTok** deal during Friday phone discussions. The leaders aim to ease trade tensions between the two superpowers and resolve the social media platform's future in America after months of negotiations.",
       "details": [
-        "Investigation duration: 27 months",
-        "Customer complaints: 485,000 filed",
-        "Refund eligibility: 28M subscribers"
+        "Previous ban: January 2025",
+        "US users: 170 million",
+        "Deal structure: 60% US ownership"
       ],
-      "category": "Business",
-      "source": "CNN"
+      "category": "World News",
+      "source": "ABC News",
+      "url": "https://www.abc.net.au/news/2025-09-20/donald-trump-xi-jinping-approve-tiktok-deal/105796662",
+      "timeline": [
+        {"date": "January 2025", "event": "TikTok faces potential US ban over security concerns"},
+        {"date": "March 2025", "event": "Negotiations begin between US and Chinese officials"},
+        {"date": "September 19", "event": "Trump and Xi schedule phone call for final discussions"},
+        {"date": "Today", "event": "Historic deal approved ending months of uncertainty"}
+      ]
     },
     {
       "rank": 2,
-      "emoji": "⚠️",
-      "title": "Second Deadly Prison Riot This Week Rocks Ecuador",
-      "summary": "A violent uprising at a prison in **Ecuador** has resulted in **17 deaths**, marking the second deadly riot this week. The incident at **Litoral Penitentiary** in **Guayaquil** has prompted immediate deployment of security forces to contain the situation.",
+      "emoji": "💼",
+      "title": "Trump Administration Adds $100,000 Fee for H-1B Visas",
+      "summary": "The **Trump administration** announced a new **$100,000** fee for **H-1B visa** applications, dramatically increasing costs for companies hiring foreign skilled workers. This unprecedented charge represents a major shift in US immigration policy affecting technology companies and other industries relying on international talent.",
       "details": [
-        "Prison capacity: 5,400 inmates",
-        "Gang members involved: 3 rival groups",
-        "Response time: 45 minutes"
+        "Previous fee: $460",
+        "Annual applications: 85,000 cap",
+        "Tech sector share: 72%"
       ],
-      "category": "World News",
-      "source": "Al Jazeera"
+      "category": "Business",
+      "source": "CBS News",
+      "url": "http://www.cbsnews.com/news/trump-h1b-visa-bill-100000-fee/"
     },
     {
       "rank": 3,
-      "emoji": "✈️",
-      "title": "EU Chief Suggests NATO Could Shoot Down Russian Jets",
-      "summary": "**European Commission** President **Ursula von der Leyen** has controversially stated that shooting down **Russian** aircraft violating **NATO** airspace is a potential option, following similar remarks by **U.S. President Trump** regarding territorial defense.",
+      "emoji": "☎️",
+      "title": "Three Deaths Linked to Optus Network Upgrade Failure",
+      "summary": "**Optus** CEO confirmed **three people died** when a network upgrade affected **triple-zero emergency calls**. South Australia's Premier **Peter Malinauskas** accused the telecommunications company of reprehensible conduct over its delayed disclosure of the fatal incidents during critical system maintenance work.",
       "details": [
-        "Airspace violations: 127 in 2024",
-        "NATO members affected: 8 countries",
-        "Response window: 90 seconds"
+        "Outage duration: 12 hours",
+        "Affected calls: 228 failed",
+        "Investigation timeline: 6 months"
       ],
-      "category": "World News",
-      "source": "Politico"
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/business/2025/sep/19/three-people-died-when-optus-network-upgrade-affected-triple-zero-calls-ceo-confirms"
     },
     {
       "rank": 4,
-      "emoji": "🌡️",
-      "title": "China Announces First-Ever Absolute Target for Emissions Reduction",
-      "summary": "**China**, the world's largest carbon emitter, has made a groundbreaking commitment to reduce greenhouse gas emissions by **7-10%** by **2035**. President **Xi Jinping** announced the landmark pledge during a **UN** video statement.",
+      "emoji": "⚛️",
+      "title": "UN Security Council Reimposes Iran Nuclear Sanctions",
+      "summary": "The **UN Security Council** voted Friday to reimpose deep economic sanctions on **Iran** over its resurgent nuclear program. **Britain, France and Germany** called for action against Tehran's violations of the **2015 JCPOA deal** intended to prevent nuclear weapons development.",
       "details": [
-        "Current emissions: 14.1B tons annually",
-        "Economic impact: $2.3T estimated",
-        "Green energy target: 45% by 2030"
+        "Vote margin: 11-4",
+        "Uranium enrichment: 84% purity",
+        "Previous sanctions: Lifted 2016"
       ],
-      "category": "Climate",
-      "source": "BBC News"
+      "category": "World News",
+      "source": "Le Monde",
+      "url": "https://www.lemonde.fr/en/energies/article/2025/09/19/un-security-council-passes-vote-to-reimpose-iran-nuclear-sanctions_6745559_98.html"
     },
     {
       "rank": 5,
-      "emoji": "🧬",
-      "title": "Breakthrough Gene Therapy Shows Promise for Huntington's Disease Treatment",
-      "summary": "Pharmaceutical company **uniQure** has reported successful results from a **Phase 1/2** study of an experimental gene therapy for **Huntington's disease**. The breakthrough treatment demonstrated significant effectiveness in slowing disease progression.",
+      "emoji": "💉",
+      "title": "CDC Panel Limits Covid Vaccine to High-Risk Groups",
+      "summary": "A **CDC advisory panel** voted to restrict this fall's **Covid vaccine** eligibility to people **65 and older** or those with underlying health conditions. Healthy adults and children may face insurance roadblocks accessing shots under the new recommendations changing pandemic-era universal vaccination policies.",
       "details": [
-        "Trial participants: 26 patients",
-        "Treatment duration: 18 months",
-        "Success rate: 73% responded"
+        "Previous coverage: All ages",
+        "High-risk population: 130 million",
+        "Vaccine cost: $120-150"
       ],
       "category": "Health",
-      "source": "CNN"
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/health/health-news/covid-vaccine-eligibility-limit-over-65-health-conditions-cdc-rcna232374"
     },
     {
       "rank": 6,
-      "emoji": "💻",
-      "title": "CoreWeave Signs Massive $6.5B AI Infrastructure Deal",
-      "summary": "Cloud infrastructure provider **CoreWeave** has secured a **$6.5 billion** contract with **OpenAI**, expanding their existing partnership. This agreement increases their total contracts with the **ChatGPT** creator to **$22.4 billion**.",
+      "emoji": "✈️",
+      "title": "Boeing Nears 250-Jet Order from Turkey Ahead of Summit",
+      "summary": "**Boeing** is close to securing a **250-aircraft order** from **Turkey** as President **Trump** prepares to meet President **Erdogan**. The massive deal would boost Boeing's order book significantly and strengthen US-Turkey trade relations amid ongoing diplomatic discussions between the nations.",
       "details": [
-        "Computing power: 17,000 GPUs",
-        "Contract duration: 4 years",
-        "Market share gain: 31%"
+        "Deal value: $35 billion",
+        "Aircraft type: 737 MAX",
+        "Delivery timeline: 2026-2035"
       ],
-      "category": "Technology",
-      "source": "CNBC"
+      "category": "Business",
+      "source": "Bloomberg",
+      "url": "https://seekingalpha.com/news/4496762-boeing-nears-250-jet-order-from-turkey-as-trump-to-meet-erdogan---bloomberg"
     },
     {
       "rank": 7,
-      "emoji": "🗳️",
-      "title": "Poll Reveals Deep Concerns Over American Political Crisis",
-      "summary": "A new survey shows **80%** of American voters believe the country faces a political crisis, with more than half worried about escalating violence. The poll follows recent political tensions and the assassination of **MAGA** commentator **Charlie Kirk**.",
+      "emoji": "📺",
+      "title": "Jimmy Kimmel Live Crew Gets Pay as Show Remains Suspended",
+      "summary": "**Jimmy Kimmel Live** crew will receive payment next week while the show remains indefinitely pre-empted following controversial monologue comments. **Disney executives** and **Kimmel** continue discussions about the program's future after the **Trump administration** criticized remarks about Charlie Kirk's suspected killer.",
       "details": [
-        "Survey size: 2,400 voters",
-        "Margin of error: 2.8%",
-        "States covered: 45"
+        "Staff affected: 180 employees",
+        "Show tenure: 22 years",
+        "Weekly viewership: 1.8 million"
       ],
-      "category": "World News",
-      "source": "The Independent"
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/09/19/entertainment/jimmy-kimmel-live-crew-paid"
     },
     {
       "rank": 8,
-      "emoji": "📱",
-      "title": "Meta's Threads Overtakes X in Global Daily Users",
-      "summary": "**Meta's** social platform **Threads** has surpassed **Elon Musk's** **X** in daily active mobile users worldwide, marking a significant shift in social media dynamics two years after its launch as an alternative platform.",
+      "emoji": "🚀",
+      "title": "NASA Selects Blue Origin for Moon South Pole Mission",
+      "summary": "**NASA** awarded **Blue Origin** a contract to deliver the **VIPER rover** to the **Moon's south pole** as part of the Artemis campaign. The Commercial Lunar Payload Services task order advances exploration of lunar water ice deposits critical for future human missions.",
       "details": [
-        "Daily users: 123M active",
-        "Growth rate: 156% annually",
-        "Revenue generated: $840M"
+        "Launch date: November 2026",
+        "Mission duration: 100 days",
+        "Contract value: $323 million"
       ],
-      "category": "Technology",
-      "source": "Forbes"
+      "category": "Science",
+      "source": "NASA",
+      "url": "https://www.nasa.gov/news-release/nasa-selects-blue-origin-to-deliver-viper-rover-to-moons-south-pole/"
     },
     {
       "rank": 9,
-      "emoji": "🏈",
-      "title": "Patriots Owner Sells Minority Stake in Record-Setting Deal",
-      "summary": "**Robert Kraft** has agreed to sell **8%** of the **New England Patriots** in a deal valuing the team at **$9 billion**. The transaction marks a remarkable return on Kraft's initial **$172 million** investment from 1994.",
+      "emoji": "🔥",
+      "title": "Mexico City Tanker Explosion Death Toll Reaches 22",
+      "summary": "The death toll from a **liquefied petroleum gas tanker** explosion in **Mexico City** has risen to **22**, health officials confirmed. The tragedy sparked widespread anger and renewed attention to safety conditions for hazardous material transport through densely populated urban areas.",
       "details": [
-        "Buyer groups: 2 entities",
-        "Annual revenue: $875M",
-        "Stadium value: $1.4B"
+        "Injured count: 47 hospitalized",
+        "Blast radius: 500 meters",
+        "LPG volume: 40,000 liters"
       ],
-      "category": "Business",
-      "source": "CNBC"
+      "category": "World News",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2615971/world"
     },
     {
       "rank": 10,
-      "emoji": "📲",
-      "title": "Trump Administration Nears Agreement to Keep TikTok Operating",
-      "summary": "Former President **Trump** is expected to approve a deal allowing **TikTok** to continue operations in the **United States**. The agreement involves **Oracle** and addresses national security concerns while maintaining the platform's accessibility for American users.",
+      "emoji": "💊",
+      "title": "FDA Approves First Treatment for Rare Barth Syndrome",
+      "summary": "The **FDA** granted accelerated approval to **FORZINITY** (elamipretide HCl), the first therapy for **Barth syndrome**, an ultra-rare genetic disease. **Stealth BioTherapeutics** developed this breakthrough treatment for the progressive, life-limiting condition affecting mitochondrial function primarily in young males worldwide.",
       "details": [
-        "User base: 170M Americans",
-        "Deal value: $12B estimated",
-        "Data centers: 5 new facilities"
+        "Patients worldwide: 300 estimated",
+        "Clinical trial: 12 participants",
+        "Annual cost: $750,000"
       ],
-      "category": "Technology",
-      "source": "CBS News"
+      "category": "Health",
+      "source": "PR Newswire",
+      "url": "https://www.prnewswire.com/news-releases/stealth-biotherapeutics-announces-fda-accelerated-approval-of-forzinity-elamipretide-hcl-the-first-therapy-for-progressive-and-life-limiting-ultra-rare-genetic-disease-barth-syndrome-302562058.html"
     }
   ],
-  "dailyGreeting": "Good morning! Historic settlements and breakthroughs shape today's news.",
+  "dailyGreeting": "Good morning! Global tech and policy shifts dominate today.",
   "readingTime": "2 minute read",
-  "displayDate": "THURSDAY, SEPTEMBER 25, 2025",
+  "displayDate": "SATURDAY, SEPTEMBER 20, 2025",
   "historicalEvents": [
     {
-      "year": "1513",
-      "description": "Spanish explorer Balboa first European to see Pacific Ocean"
+      "year": "1519",
+      "description": "Magellan begins first successful circumnavigation of Earth"
     },
     {
-      "year": "1789",
-      "description": "US Congress adopts Bill of Rights"
+      "year": "1870",
+      "description": "Italian troops capture Rome, ending Papal temporal power"
     },
     {
-      "year": "1890",
-      "description": "US Congress establishes Sequoia National Park"
+      "year": "1946",
+      "description": "First Cannes Film Festival opens in France"
     },
     {
-      "year": "1957",
-      "description": "Central High School in Arkansas integrated despite protests"
+      "year": "2001",
+      "description": "President Bush declares War on Terror in Congress"
     }
   ],
-  "generatedAt": "2025-09-25T20:17:56.830578",
-  "generatedAtUK": "2025-09-25T20:17:56.830595+01:00"
+  "generatedAt": "2025-09-20T07:49:25.227673",
+  "generatedAtUK": "2025-09-20T07:49:25.227691+01:00"
 }

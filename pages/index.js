@@ -5,6 +5,7 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showTimeline, setShowTimeline] = useState({});
 
   useEffect(() => {
     const loadNewsData = async () => {
@@ -143,6 +144,14 @@ export default function Home() {
 
   const nextStory = () => goToStory(currentIndex + 1);
   const prevStory = () => goToStory(currentIndex - 1);
+
+  // Timeline toggle function
+  const toggleTimeline = (storyIndex) => {
+    setShowTimeline(prev => ({
+      ...prev,
+      [storyIndex]: !prev[storyIndex]
+    }));
+  };
 
   // Newsletter signup handler
   const handleNewsletterSignup = async () => {
@@ -840,6 +849,159 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
+        /* Timeline Styles */
+        .timeline-section {
+          margin-top: 24px;
+          padding-top: 24px;
+          border-top: 1px solid #e2e8f0;
+          transform: translateX(100%);
+          opacity: 0;
+          transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .timeline-section.visible {
+          transform: translateX(0);
+          opacity: 1;
+        }
+
+        .timeline-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #94a3b8;
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .timeline-label::before {
+          content: '📅';
+          font-size: 12px;
+        }
+
+        .timeline {
+          position: relative;
+          padding-left: 20px;
+        }
+
+        .timeline::before {
+          content: '';
+          position: absolute;
+          left: 6px;
+          top: 8px;
+          bottom: 8px;
+          width: 2px;
+          background: linear-gradient(180deg, #3b82f6, #e2e8f0);
+        }
+
+        .timeline-item {
+          position: relative;
+          margin-bottom: 20px;
+          padding-left: 20px;
+          opacity: 0;
+          animation: timelineSlideIn 0.5s ease forwards;
+        }
+
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes timelineSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .timeline-item::before {
+          content: '';
+          position: absolute;
+          left: -14px;
+          top: 6px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: white;
+          border: 2px solid #3b82f6;
+          z-index: 1;
+        }
+
+        .timeline-item:last-child::before {
+          background: #3b82f6;
+        }
+
+        .timeline-date {
+          font-size: 11px;
+          font-weight: 600;
+          color: #3b82f6;
+          margin-bottom: 4px;
+        }
+
+        .timeline-event {
+          font-size: 14px;
+          color: #1e293b;
+          line-height: 1.4;
+        }
+
+        .swipe-indicator {
+          position: absolute;
+          bottom: -8px;
+          right: 12px;
+          font-size: 9px;
+          color: #cbd5e1;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          opacity: 0.6;
+        }
+
+        .swipe-indicator::before {
+          content: '←';
+          font-size: 12px;
+        }
+
+        .swipe-indicator::after {
+          content: '→';
+          font-size: 12px;
+        }
+
+        .news-meta {
+          position: relative;
+        }
+
+        .news-meta::after {
+          content: '← TIMELINE →';
+          position: absolute;
+          bottom: -16px;
+          right: 4px;
+          font-size: 11px;
+          color: #ff4444;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          opacity: 1;
+          background: rgba(255, 68, 68, 0.1);
+          padding: 2px 6px;
+          border-radius: 4px;
+          animation: swipeHint 1s ease-in-out infinite;
+        }
+
+        @keyframes swipeHint {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 0.4; }
+        }
+
         @media (max-width: 768px) {
           .header-right .time {
             display: none;
@@ -957,6 +1119,15 @@ export default function Home() {
         <div className="header">
           <div className="logo">
             <span className="logo-ten">TEN</span> NEWS
+            <span style={{
+              background: '#ff4444',
+              color: 'white',
+              padding: '4px 8px',
+              marginLeft: '12px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              fontWeight: '700'
+            }}>TIMELINE TEST</span>
           </div>
           
           <div style={{ flex: 1 }}></div>
@@ -1083,7 +1254,14 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <div className={`news-item ${story.number === 1 ? 'first-news' : ''}`} onClick={() => story.url && window.open(story.url, '_blank')}>
+                  <div className={`news-item ${story.number === 1 ? 'first-news' : ''}`} onClick={() => {
+                    console.log('Clicked story URL:', story.url);
+                    if (story.url && story.url !== '#') {
+                      window.open(story.url, '_blank');
+                    } else {
+                      console.log('No valid URL found for this story');
+                    }
+                  }}>
                     <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
@@ -1112,7 +1290,59 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
-                      <div className="news-meta">
+                      <div 
+                        className="news-meta" 
+                        style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Double-clicked details box for story', index);
+                          toggleTimeline(index);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation(); // Prevent story navigation
+                          const touch = e.touches[0];
+                          const startX = touch.clientX;
+                          const startTime = Date.now();
+                          let moved = false;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            moved = true;
+                          };
+                          
+                          const handleTouchEnd = (endEvent) => {
+                            const endX = endEvent.changedTouches[0].clientX;
+                            const endTime = Date.now();
+                            const diff = startX - endX;
+                            const duration = endTime - startTime;
+                            
+                            console.log('Touch details:', { diff, duration, moved, startX, endX });
+                            
+                            // Check if it's a swipe (moved enough distance in short time)
+                            if (moved && Math.abs(diff) > 40 && duration < 500) {
+                              console.log('Swipe detected on details box!');
+                              if (diff > 0) {
+                                // Swiped left - show timeline
+                                console.log('Showing timeline for story', index);
+                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                              } else {
+                                // Swiped right - hide timeline  
+                                console.log('Hiding timeline for story', index);
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                              }
+                            } else if (!moved && duration < 300) {
+                              // Single tap - toggle timeline
+                              console.log('Tap detected - toggling timeline for story', index);
+                              toggleTimeline(index);
+                            }
+                            
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          document.addEventListener('touchmove', handleTouchMove);
+                          document.addEventListener('touchend', handleTouchEnd);
+                        }}
+                      >
                         {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
@@ -1131,7 +1361,72 @@ export default function Home() {
                             </div>
                           );
                         })}
+                        
+                        {/* Timeline Toggle Arrows */}
+                        <div style={{
+                          position: 'absolute',
+                          left: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          fontSize: '20px',
+                          color: '#3b82f6',
+                          cursor: 'pointer',
+                          opacity: '0.7',
+                          zIndex: '10'
+                        }} onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Left arrow clicked for story', index);
+                          setShowTimeline(prev => ({ ...prev, [index]: true }));
+                        }}>←</div>
+                        
+                        <div style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          fontSize: '20px',
+                          color: '#3b82f6',
+                          cursor: 'pointer',
+                          opacity: '0.7',
+                          zIndex: '10'
+                        }} onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Right arrow clicked for story', index);
+                          setShowTimeline(prev => ({ ...prev, [index]: false }));
+                        }}>→</div>
+                        
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '-18px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '10px',
+                          color: '#ff4444',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          background: 'rgba(255, 68, 68, 0.1)',
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          animation: 'swipeHint 1s ease-in-out infinite'
+                        }}>
+                          CLICK FOR TIMELINE
+                        </div>
                       </div>
+                      
+                      {story.timeline && (
+                        <div className={`timeline-section ${showTimeline[index] ? 'visible' : ''}`}>
+                          <div className="timeline-label">📅 TIMELINE & WHAT HAPPENED NEXT</div>
+                          <div className="timeline">
+                            {story.timeline.map((event, idx) => (
+                              <div key={idx} className="timeline-item">
+                                <div className="timeline-date">{event.date}</div>
+                                <div className="timeline-event">{event.event}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
