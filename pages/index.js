@@ -5,7 +5,7 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showTimeline, setShowTimeline] = useState({});
+  const [showTimeline, setShowTimeline] = useState({ 4: true }); // Show timeline for test story initially
 
   useEffect(() => {
     const loadNewsData = async () => {
@@ -118,6 +118,25 @@ export default function Home() {
           ];
         }
         
+        // Add test timeline story before newsletter
+        processedStories.push({
+          type: 'news',
+          number: processedStories.filter(s => s.type === 'news').length + 1,
+          category: 'TIMELINE TEST',
+          emoji: '📅',
+          title: 'Timeline Feature Test Story',
+          summary: 'This is a **test story** to demonstrate the **timeline feature**. You should see **blue arrows** on the details box below. Click the **left arrow** to show the timeline and **right arrow** to hide it.',
+          details: ['Test: Timeline feature', 'Arrows: Click to toggle', 'Status: Working'],
+          source: 'Ten News',
+          url: '#',
+          timeline: [
+            {"date": "Step 1", "event": "Timeline feature was requested by user"},
+            {"date": "Step 2", "event": "Code was written and CSS styles added"},
+            {"date": "Step 3", "event": "Blue arrows were added to details box"},
+            {"date": "Now", "event": "Timeline test story created for demonstration"}
+          ]
+        });
+
         // Add newsletter signup at the end
         processedStories.push({
           type: 'newsletter',
