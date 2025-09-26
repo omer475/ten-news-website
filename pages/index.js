@@ -754,14 +754,15 @@ export default function Home() {
           flex: 1;
           text-align: center;
           padding: 0 15px;
+          border-right: 1px solid #e2e8f0;
           display: flex;
           flex-direction: column;
           justify-content: center;
           min-height: 38px;
         }
 
-        .news-detail-item:not(:last-child) {
-          border-right: 1px solid #e2e8f0;
+        .news-detail-item:last-child {
+          border-right: none;
         }
 
         .news-detail-label {
