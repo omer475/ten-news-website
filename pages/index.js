@@ -1385,11 +1385,11 @@ export default function Home() {
                              }}>
                                <div style={{
                                  position: 'relative',
-                                 paddingLeft: '16px'
+                                 paddingLeft: '24px'
                                }}>
                                  <div style={{
                                    position: 'absolute',
-                                   left: '6px',
+                                   left: '8px',
                                    top: '8px',
                                    bottom: '8px',
                                    width: '2px',
@@ -1403,7 +1403,7 @@ export default function Home() {
                                    }}>
                                      <div style={{
                                        position: 'absolute',
-                                       left: '-1px',
+                                       left: '-13px',
                                        top: '4px',
                                        width: '10px',
                                        height: '10px',
