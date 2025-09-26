@@ -56,35 +56,35 @@ export default function Home() {
           
           processedStories.push(openingStory);
           
-          // Convert news generator articles to website format
-          newsData.articles.forEach((article, index) => {
-            const storyData = {
-              type: 'news',
-              number: article.rank || (index + 1),
-              category: (article.category || 'WORLD NEWS').toUpperCase(),
-              emoji: article.emoji || '📰',
-              title: article.title || 'News Story',
-              summary: article.summary || 'News summary will appear here.',
-              details: article.details || [],
-              source: article.source || 'Ten News',
-              url: article.url || '#'
-            };
-            
-            // Add timeline data (from generator or create fallback)
-            if (article.timeline) {
-              storyData.timeline = article.timeline;
-            } else {
-              // Create fallback timeline for all stories
-              storyData.timeline = [
-                {"date": "Background", "event": "Story develops from earlier events"},
-                {"date": "Recently", "event": "Key developments begin to unfold"},
-                {"date": "Yesterday", "event": "Situation reaches critical point"},
-                {"date": "Today", "event": "Current developments make headlines"}
-              ];
-            }
-            
-            processedStories.push(storyData);
-          });
+            // Convert news generator articles to website format
+            newsData.articles.forEach((article, index) => {
+              const storyData = {
+                type: 'news',
+                number: article.rank || (index + 1),
+                category: (article.category || 'WORLD NEWS').toUpperCase(),
+                emoji: article.emoji || '📰',
+                title: article.title || 'News Story',
+                summary: article.summary || 'News summary will appear here.',
+                details: article.details || [],
+                source: article.source || 'Ten News',
+                url: article.url || '#'
+              };
+              
+              // Add timeline data (from generator or create fallback)
+              if (article.timeline) {
+                storyData.timeline = article.timeline;
+              } else {
+                // Create fallback timeline for all stories
+                storyData.timeline = [
+                  {"date": "Background", "event": "Story develops from earlier events"},
+                  {"date": "Recently", "event": "Key developments begin to unfold"},
+                  {"date": "Yesterday", "event": "Situation reaches critical point"},
+                  {"date": "Today", "event": "Current developments make headlines"}
+                ];
+              }
+              
+              processedStories.push(storyData);
+            });
         } else {
           // Fallback stories with sample data
           processedStories = [
