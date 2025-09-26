@@ -1130,6 +1130,12 @@ export default function Home() {
           .news-detail-subtitle {
             font-size: 10px;
           }
+          
+          /* Hide arrows on mobile - use swipe only */
+          .news-meta > div[style*="position: absolute"][style*="left: 8px"],
+          .news-meta > div[style*="position: absolute"][style*="right: 8px"] {
+            display: none !important;
+          }
         }
       `}</style>
       
@@ -1320,19 +1326,32 @@ export default function Home() {
                         onTouchStart={(e) => {
                           e.stopPropagation(); // Prevent story navigation
                           const startX = e.touches[0].clientX;
+                          const startY = e.touches[0].clientY;
+                          let hasMoved = false;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            hasMoved = true;
+                          };
                           
                           const handleTouchEnd = (endEvent) => {
                             const endX = endEvent.changedTouches[0].clientX;
-                            const diff = startX - endX;
+                            const endY = endEvent.changedTouches[0].clientY;
+                            const diffX = startX - endX;
+                            const diffY = startY - endY;
                             
-                            // Any significant swipe toggles view
-                            if (Math.abs(diff) > 30) {
-                              console.log('Swipe detected - toggling timeline for story', index);
+                            // Only respond to horizontal swipes (not vertical)
+                            if (hasMoved && Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+                              console.log('Horizontal swipe detected on details box for story', index);
+                              console.log('Swipe distance:', diffX);
                               toggleTimeline(index);
                             }
+                            
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          document.addEventListener('touchend', handleTouchEnd, { once: true });
+                          document.addEventListener('touchmove', handleTouchMove, { passive: true });
+                          document.addEventListener('touchend', handleTouchEnd);
                         }}
                       >
                         {!showTimeline[index] ? (
