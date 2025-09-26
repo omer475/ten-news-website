@@ -1504,7 +1504,7 @@ export default function Home() {
                             <div style={{
                               display: 'flex',
                               width: '100%',
-                              height: '90px', // Optimal height for timeline
+                              height: '110px', // Optimal timeline height
                               overflow: 'hidden',
                               position: 'relative'
                             }}>
