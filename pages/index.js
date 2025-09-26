@@ -1499,18 +1499,23 @@ export default function Home() {
                             );
                           })
                         ) : (
-                          // Show Timeline Only
+                          // Show Timeline Only - Compact with internal scrolling
                           story.timeline && (
                             <div style={{
                               display: 'flex',
                               width: '100%',
-                              padding: '0',
+                              height: '60px', // Even more compact
+                              overflow: 'hidden',
                               position: 'relative'
                             }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
-                                width: '100%'
+                                width: '100%',
+                                height: '100%',
+                                overflowY: 'auto', // Internal scrolling
+                                overflowX: 'hidden',
+                                paddingRight: '10px'
                               }}>
                                 <div style={{
                                   position: 'absolute',
@@ -1518,38 +1523,58 @@ export default function Home() {
                                   top: '8px',
                                   bottom: '8px',
                                   width: '2px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
+                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)',
+                                  zIndex: '0'
                                 }}></div>
                                 {story.timeline.map((event, idx) => (
                                   <div key={idx} style={{
                                     position: 'relative',
-                                    marginBottom: '8px',
-                                    paddingLeft: '20px'
+                                    marginBottom: '10px',
+                                    paddingLeft: '20px',
+                                    minHeight: '35px'
                                   }}>
                                     <div style={{
                                       position: 'absolute',
                                       left: '-14px',
-                                      top: '4px',
+                                      top: '6px',
                                       width: '10px',
                                       height: '10px',
                                       borderRadius: '50%',
                                       background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
                                       border: '2px solid #3b82f6',
-                                      zIndex: '1'
+                                      zIndex: '2'
                                     }}></div>
                                     <div style={{
                                       fontSize: '10px',
                                       fontWeight: '600',
                                       color: '#3b82f6',
-                                      marginBottom: '2px'
+                                      marginBottom: '3px'
                                     }}>{event.date}</div>
                                     <div style={{
                                       fontSize: '12px',
                                       color: '#1e293b',
-                                      lineHeight: '1.2'
+                                      lineHeight: '1.3'
                                     }}>{event.event}</div>
                                   </div>
                                 ))}
+                                
+                                {/* Scroll hint at bottom */}
+                                {story.timeline.length > 3 && (
+                                  <div style={{
+                                    position: 'sticky',
+                                    bottom: '0',
+                                    textAlign: 'center',
+                                    fontSize: '9px',
+                                    color: '#94a3b8',
+                                    background: 'linear-gradient(transparent, #ffffff)',
+                                    padding: '8px 0 4px',
+                                    fontWeight: '500',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                  }}>
+                                    ↓ SCROLL FOR MORE ↓
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )
