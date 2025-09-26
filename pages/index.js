@@ -1323,37 +1323,63 @@ export default function Home() {
                           minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
-                          e.stopPropagation(); // Prevent story navigation
+                          // CRITICAL: Completely stop event from bubbling up
+                          e.stopPropagation();
+                          e.preventDefault();
+                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
+                          let isHorizontalSwipe = false;
                           
                           const handleTouchMove = (moveEvent) => {
-                            hasMoved = true;
-                            // Prevent default to stop any page scrolling during swipe
+                            // CRITICAL: Stop all event propagation
+                            moveEvent.stopPropagation();
                             moveEvent.preventDefault();
+                            
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
+                            
+                            if (diffX > 10 || diffY > 10) {
+                              hasMoved = true;
+                            }
+                            
+                            // Determine if this is a horizontal swipe early
+                            if (diffX > 20 && diffX > diffY) {
+                              isHorizontalSwipe = true;
+                            }
                           };
                           
                           const handleTouchEnd = (endEvent) => {
+                            // CRITICAL: Stop all event propagation
+                            endEvent.stopPropagation();
+                            endEvent.preventDefault();
+                            
                             const endX = endEvent.changedTouches[0].clientX;
                             const endY = endEvent.changedTouches[0].clientY;
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only respond to horizontal swipes, ignore vertical
-                            if (hasMoved && Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
-                              console.log('Horizontal swipe detected - toggling timeline for story', index);
-                              e.preventDefault();
-                              e.stopPropagation();
+                            // Only toggle timeline if it was a clear horizontal swipe
+                            if (hasMoved && isHorizontalSwipe && Math.abs(diffX) > 40) {
+                              console.log('Timeline swipe detected - toggling for story', index);
+                              toggleTimeline(index);
+                            } else if (!hasMoved) {
+                              // Single tap also toggles
+                              console.log('Timeline tap detected - toggling for story', index);
                               toggleTimeline(index);
                             }
                             
+                            // Clean up listeners
                             document.removeEventListener('touchmove', handleTouchMove);
                             document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                          document.addEventListener('touchend', handleTouchEnd);
+                          // CRITICAL: Use capture phase to intercept before main story handler
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
                         }}
                       >
                         {!showTimeline[index] ? (
