@@ -1504,7 +1504,7 @@ export default function Home() {
                             <div style={{
                               display: 'flex',
                               width: '100%',
-                              height: '75px', // Optimal compact height
+                              height: '80px', // Fixed smaller height
                               overflow: 'hidden',
                               position: 'relative'
                             }}>
