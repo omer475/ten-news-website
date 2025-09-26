@@ -5,7 +5,8 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showTimeline, setShowTimeline] = useState({ 4: true }); // Show timeline for test story initially
+  const [showTimeline, setShowTimeline] = useState({});
+  const [autoRotateTimers, setAutoRotateTimers] = useState({});
 
   useEffect(() => {
     const loadNewsData = async () => {
@@ -166,11 +167,77 @@ export default function Home() {
 
   // Timeline toggle function
   const toggleTimeline = (storyIndex) => {
+    // Stop auto-rotation when user manually interacts
+    stopAutoRotation(storyIndex);
+    
     setShowTimeline(prev => ({
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
+    
+    // Restart auto-rotation after 8 seconds of inactivity
+    setTimeout(() => {
+      startAutoRotation(storyIndex);
+    }, 8000);
   };
+
+  // Start auto-rotation for a story
+  const startAutoRotation = (storyIndex) => {
+    // Clear any existing timer
+    if (autoRotateTimers[storyIndex]) {
+      clearInterval(autoRotateTimers[storyIndex]);
+    }
+    
+    // Start new timer
+    const timerId = setInterval(() => {
+      setShowTimeline(prev => ({
+        ...prev,
+        [storyIndex]: !prev[storyIndex]
+      }));
+    }, 4000); // Every 4 seconds
+    
+    setAutoRotateTimers(prev => ({
+      ...prev,
+      [storyIndex]: timerId
+    }));
+  };
+
+  // Stop auto-rotation for a story
+  const stopAutoRotation = (storyIndex) => {
+    if (autoRotateTimers[storyIndex]) {
+      clearInterval(autoRotateTimers[storyIndex]);
+      setAutoRotateTimers(prev => {
+        const newTimers = { ...prev };
+        delete newTimers[storyIndex];
+        return newTimers;
+      });
+    }
+  };
+
+  // Auto-rotate when story becomes visible
+  useEffect(() => {
+    // Start auto-rotation for current story if it has timeline
+    const currentStory = stories[currentIndex];
+    if (currentStory && currentStory.timeline && currentStory.type === 'news') {
+      startAutoRotation(currentIndex);
+    }
+    
+    // Stop auto-rotation for all other stories
+    Object.keys(autoRotateTimers).forEach(storyIndex => {
+      if (parseInt(storyIndex) !== currentIndex) {
+        stopAutoRotation(parseInt(storyIndex));
+      }
+    });
+  }, [currentIndex, stories]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(autoRotateTimers).forEach(timerId => {
+        clearInterval(timerId);
+      });
+    };
+  }, []);
 
   // Newsletter signup handler
   const handleNewsletterSignup = async () => {
@@ -1293,6 +1360,43 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
+                      
+                      {/* Timeline/Details Indicator Dots */}
+                      {story.timeline && (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          marginBottom: '12px'
+                        }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: !showTimeline[index] ? '#3b82f6' : '#e5e7eb',
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer'
+                          }} onClick={(e) => {
+                            e.stopPropagation();
+                            if (showTimeline[index]) {
+                              toggleTimeline(index);
+                            }
+                          }}></div>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: showTimeline[index] ? '#3b82f6' : '#e5e7eb',
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer'
+                          }} onClick={(e) => {
+                            e.stopPropagation();
+                            if (!showTimeline[index]) {
+                              toggleTimeline(index);
+                            }
+                          }}></div>
+                        </div>
+                      )}
                       <div 
                         className="news-meta" 
                         style={{ 
