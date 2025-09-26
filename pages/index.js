@@ -1439,20 +1439,12 @@ export default function Home() {
                           minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
-                          // CRITICAL: Completely stop event from bubbling up
-                          e.stopPropagation();
-                          e.preventDefault();
-                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
-                          let isHorizontalSwipe = false;
+                          let swipeDirection = null;
                           
                           const handleTouchMove = (moveEvent) => {
-                            // CRITICAL: Stop all event propagation
-                            moveEvent.stopPropagation();
-                            moveEvent.preventDefault();
-                            
                             const currentX = moveEvent.touches[0].clientX;
                             const currentY = moveEvent.touches[0].clientY;
                             const diffX = Math.abs(startX - currentX);
@@ -1460,42 +1452,49 @@ export default function Home() {
                             
                             if (diffX > 10 || diffY > 10) {
                               hasMoved = true;
-                            }
-                            
-                            // Determine if this is a horizontal swipe early (easier detection)
-                            if (diffX > 15 && diffX > diffY) {
-                              isHorizontalSwipe = true;
+                              
+                              // Determine swipe direction
+                              if (diffX > diffY && diffX > 20) {
+                                swipeDirection = 'horizontal';
+                                // ONLY prevent default for horizontal swipes
+                                moveEvent.preventDefault();
+                                moveEvent.stopPropagation();
+                              } else if (diffY > diffX && diffY > 20) {
+                                swipeDirection = 'vertical';
+                                // Let vertical swipes pass through for story navigation
+                              }
                             }
                           };
                           
                           const handleTouchEnd = (endEvent) => {
-                            // CRITICAL: Stop all event propagation
-                            endEvent.stopPropagation();
-                            endEvent.preventDefault();
-                            
                             const endX = endEvent.changedTouches[0].clientX;
                             const endY = endEvent.changedTouches[0].clientY;
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only toggle timeline if it was a clear horizontal swipe (easier threshold)
-                            if (hasMoved && isHorizontalSwipe && Math.abs(diffX) > 25) {
-                              console.log('Timeline swipe detected - toggling for story', index);
+                            // Only handle horizontal swipes for timeline
+                            if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
+                              console.log('Horizontal timeline swipe detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
                               toggleTimeline(index);
                             } else if (!hasMoved) {
-                              // Single tap also toggles
-                              console.log('Timeline tap detected - toggling for story', index);
+                              // Single tap toggles timeline
+                              console.log('Timeline tap detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
                               toggleTimeline(index);
                             }
+                            // If it's vertical swipe, let it pass through for story navigation
                             
                             // Clean up listeners
                             document.removeEventListener('touchmove', handleTouchMove);
                             document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          // CRITICAL: Use capture phase to intercept before main story handler
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+                          // Use normal event listeners, let vertical swipes pass through
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
                         {!showTimeline[index] ? (
