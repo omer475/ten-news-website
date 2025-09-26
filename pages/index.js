@@ -58,7 +58,7 @@ export default function Home() {
           
           // Convert news generator articles to website format
           newsData.articles.forEach((article, index) => {
-            processedStories.push({
+            const storyData = {
               type: 'news',
               number: article.rank || (index + 1),
               category: (article.category || 'WORLD NEWS').toUpperCase(),
@@ -68,7 +68,22 @@ export default function Home() {
               details: article.details || [],
               source: article.source || 'Ten News',
               url: article.url || '#'
-            });
+            };
+            
+            // Add timeline data (from generator or create fallback)
+            if (article.timeline) {
+              storyData.timeline = article.timeline;
+            } else {
+              // Create fallback timeline for all stories
+              storyData.timeline = [
+                {"date": "Background", "event": "Story develops from earlier events"},
+                {"date": "Recently", "event": "Key developments begin to unfold"},
+                {"date": "Yesterday", "event": "Situation reaches critical point"},
+                {"date": "Today", "event": "Current developments make headlines"}
+              ];
+            }
+            
+            processedStories.push(storyData);
           });
         } else {
           // Fallback stories with sample data
@@ -92,7 +107,13 @@ export default function Home() {
               summary: 'Your Ten News system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
               details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
               source: 'Ten News System',
-              url: '#'
+              url: '#',
+              timeline: [
+                {"date": "Setup", "event": "GitHub Actions workflow configured"},
+                {"date": "Integration", "event": "GDELT API and Claude AI connected"},
+                {"date": "Testing", "event": "Automation tested and verified"},
+                {"date": "Live", "event": "Daily news generation now active"}
+              ]
             },
             {
               type: 'news',
@@ -103,7 +124,13 @@ export default function Home() {
               summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
               details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
               source: 'Ten News System',
-              url: '#'
+              url: '#',
+              timeline: [
+                {"date": "Research", "event": "GDELT database identified as news source"},
+                {"date": "Development", "event": "API integration and filtering built"},
+                {"date": "Testing", "event": "Source verification and quality checks"},
+                {"date": "Active", "event": "Real-time global news processing online"}
+              ]
             },
             {
               type: 'news',
@@ -114,11 +141,36 @@ export default function Home() {
               summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
               details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
               source: 'Ten News System',
-              url: '#'
+              url: '#',
+              timeline: [
+                {"date": "Planning", "event": "AI curation system designed"},
+                {"date": "Implementation", "event": "Claude API integration completed"},
+                {"date": "Optimization", "event": "Story selection algorithms refined"},
+                {"date": "Production", "event": "AI curation now processing daily news"}
+              ]
             }
           ];
         }
         
+        // Add test timeline story before newsletter
+        processedStories.push({
+          type: 'news',
+          number: processedStories.filter(s => s.type === 'news').length + 1,
+          category: 'TIMELINE TEST',
+          emoji: '📅',
+          title: 'Timeline Feature Test Story',
+          summary: 'This is a **test story** to demonstrate the **timeline feature**. You should see **blue arrows** on the details box below. Click the **left arrow** to show the timeline and **right arrow** to hide it.',
+          details: ['Test: Timeline feature', 'Arrows: Click to toggle', 'Status: Working'],
+          source: 'Ten News',
+          url: '#',
+          timeline: [
+            {"date": "Step 1", "event": "Timeline feature was requested by user"},
+            {"date": "Step 2", "event": "Code was written and CSS styles added"},
+            {"date": "Step 3", "event": "Blue arrows were added to details box"},
+            {"date": "Now", "event": "Timeline test story created for demonstration"}
+          ]
+        });
+
         // Add newsletter signup at the end
         processedStories.push({
           type: 'newsletter',
@@ -1170,6 +1222,15 @@ export default function Home() {
         <div className="header">
           <div className="logo">
             <span className="logo-ten">TEN</span> NEWS
+            <span style={{
+              background: '#ff4444',
+              color: 'white',
+              padding: '4px 8px',
+              marginLeft: '12px',
+              borderRadius: '4px',
+              fontSize: '10px',
+              fontWeight: '700'
+            }}>TIMELINE TEST</span>
           </div>
           
           <div style={{ flex: 1 }}></div>
@@ -1378,12 +1439,20 @@ export default function Home() {
                           minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
+                          // CRITICAL: Completely stop event from bubbling up
+                          e.stopPropagation();
+                          e.preventDefault();
+                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
                           let isHorizontalSwipe = false;
                           
                           const handleTouchMove = (moveEvent) => {
+                            // CRITICAL: Stop all event propagation
+                            moveEvent.stopPropagation();
+                            moveEvent.preventDefault();
+                            
                             const currentX = moveEvent.touches[0].clientX;
                             const currentY = moveEvent.touches[0].clientY;
                             const diffX = Math.abs(startX - currentX);
@@ -1393,43 +1462,40 @@ export default function Home() {
                               hasMoved = true;
                             }
                             
-                            // Determine if this is a horizontal swipe early
+                            // Determine if this is a horizontal swipe early (easier detection)
                             if (diffX > 15 && diffX > diffY) {
                               isHorizontalSwipe = true;
-                              // Only prevent events for horizontal swipes on this element
-                              moveEvent.stopPropagation();
-                              moveEvent.preventDefault();
                             }
                           };
                           
                           const handleTouchEnd = (endEvent) => {
+                            // CRITICAL: Stop all event propagation
+                            endEvent.stopPropagation();
+                            endEvent.preventDefault();
+                            
                             const endX = endEvent.changedTouches[0].clientX;
                             const endY = endEvent.changedTouches[0].clientY;
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only handle horizontal swipes, let vertical ones through
+                            // Only toggle timeline if it was a clear horizontal swipe (easier threshold)
                             if (hasMoved && isHorizontalSwipe && Math.abs(diffX) > 25) {
-                              // This is a timeline swipe - handle it and stop propagation
-                              endEvent.stopPropagation();
-                              endEvent.preventDefault();
                               console.log('Timeline swipe detected - toggling for story', index);
                               toggleTimeline(index);
                             } else if (!hasMoved) {
-                              // Single tap also toggles, but don't prevent other events
+                              // Single tap also toggles
                               console.log('Timeline tap detected - toggling for story', index);
                               toggleTimeline(index);
                             }
-                            // If it's not a horizontal swipe, don't prevent default - let story navigation work
                             
-                            // Always clean up listeners
+                            // Clean up listeners
                             document.removeEventListener('touchmove', handleTouchMove);
                             document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          // Use normal event listeners, not capture
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                          // CRITICAL: Use capture phase to intercept before main story handler
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
                         }}
                       >
                         {!showTimeline[index] ? (
