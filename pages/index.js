@@ -1529,46 +1529,36 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        {/* Content Container - Switch between Details and Timeline */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '0',
-                          left: '0',
-                          right: '0',
-                          background: '#ffffff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '16px',
-                          padding: '12px 20px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                          zIndex: '10',
-                          minHeight: '90px',
-                          transition: 'all 0.3s ease'
-                        }}>
-                          {!showTimeline[index] ? (
-                            // Show Details Only
-                            <div style={{ display: 'flex', gap: '0', width: '100%', height: '100%' }}>
-                              {story.details && story.details.map((detail, i) => {
-                                const [label, value] = detail.split(':');
-                                const cleanLabel = label?.trim() || '';
-                                const cleanValue = value?.trim() || '';
-                                
-                                // Extract main number/value and subtitle
-                                const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                                const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                                const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                                
-                                return (
-                                  <div key={i} className="news-detail-item">
-                                    <div className="news-detail-label">{cleanLabel}</div>
-                                    <div className="news-detail-value">{mainValue}</div>
-                                    {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            // Show Timeline Only
-                            story.timeline && (
+                        {/* Content - Either Details OR Timeline (never both visible) */}
+                        {!showTimeline[index] ? (
+                          // Show Details Only
+                          story.details && story.details.map((detail, i) => {
+                            const [label, value] = detail.split(':');
+                            const cleanLabel = label?.trim() || '';
+                            const cleanValue = value?.trim() || '';
+                            
+                            // Extract main number/value and subtitle
+                            const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                            const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                            const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                            
+                            return (
+                              <div key={i} className="news-detail-item">
+                                <div className="news-detail-label">{cleanLabel}</div>
+                                <div className="news-detail-value">{mainValue}</div>
+                                {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          // Show Timeline Only
+                          story.timeline && (
+                            <div style={{
+                              display: 'flex',
+                              width: '100%',
+                              padding: '0',
+                              position: 'relative'
+                            }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
@@ -1613,9 +1603,9 @@ export default function Home() {
                                   </div>
                                 ))}
                               </div>
-                            )
-                          )}
-                        </div>
+                            </div>
+                          )
+                        )}
                         
                         {/* Toggle Arrows - Hidden on mobile */}
                         <div className="timeline-arrow" style={{
