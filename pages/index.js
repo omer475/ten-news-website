@@ -74,12 +74,12 @@ export default function Home() {
               if (article.timeline) {
                 storyData.timeline = article.timeline;
               } else {
-                // Create fallback timeline for all stories
+                // Create fallback timeline for all stories (8 words max)
                 storyData.timeline = [
-                  {"date": "Background", "event": "Story develops from earlier events"},
-                  {"date": "Recently", "event": "Key developments begin to unfold"},
-                  {"date": "Yesterday", "event": "Situation reaches critical point"},
-                  {"date": "Today", "event": "Current developments make headlines"}
+                  {"date": "Background", "event": "Initial situation develops gradually"},
+                  {"date": "Recently", "event": "Key events begin to unfold"},
+                  {"date": "Yesterday", "event": "Situation reaches critical turning point"},
+                  {"date": "Today", "event": "Major developments break into headlines"}
                 ];
               }
               
@@ -200,18 +200,10 @@ export default function Home() {
 
   // Timeline toggle function
   const toggleTimeline = (storyIndex) => {
-    // Stop auto-rotation when user manually interacts
-    stopAutoRotation(storyIndex);
-    
     setShowTimeline(prev => ({
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
-    
-    // Restart auto-rotation after 8 seconds of inactivity
-    setTimeout(() => {
-      startAutoRotation(storyIndex);
-    }, 8000);
   };
 
   // Start auto-rotation for a story
@@ -635,7 +627,7 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 80px 24px 60px;
+          padding: 60px 24px 60px;
           background: #fff;
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
@@ -1111,7 +1103,7 @@ export default function Home() {
           }
           
           .story-container {
-            padding: 70px 12px 60px;
+            padding: 50px 12px 60px;
           }
           
           .news-item {
@@ -1411,8 +1403,9 @@ export default function Home() {
                             cursor: 'pointer'
                           }} onClick={(e) => {
                             e.stopPropagation();
+                            stopAutoRotation(index);
                             if (showTimeline[index]) {
-                              toggleTimeline(index);
+                              setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }
                           }}></div>
                           <div style={{
@@ -1424,8 +1417,9 @@ export default function Home() {
                             cursor: 'pointer'
                           }} onClick={(e) => {
                             e.stopPropagation();
+                            stopAutoRotation(index);
                             if (!showTimeline[index]) {
-                              toggleTimeline(index);
+                              setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }
                           }}></div>
                         </div>
@@ -1474,15 +1468,18 @@ export default function Home() {
                             
                             // Only handle horizontal swipes for timeline
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              console.log('Horizontal timeline swipe detected for story', index);
+                              console.log('Manual horizontal swipe - stopping auto-rotation for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
+                              // Stop auto-rotation permanently when user manually swipes
+                              stopAutoRotation(index);
                               toggleTimeline(index);
                             } else if (!hasMoved) {
-                              // Single tap toggles timeline
-                              console.log('Timeline tap detected for story', index);
+                              // Single tap toggles timeline and stops auto-rotation
+                              console.log('Manual tap - stopping auto-rotation for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
+                              stopAutoRotation(index);
                               toggleTimeline(index);
                             }
                             // If it's vertical swipe, let it pass through for story navigation

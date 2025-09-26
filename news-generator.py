@@ -1040,7 +1040,7 @@ TIMELINE REQUIREMENTS:
 1. Create exactly 4 timeline events
 2. Start with background/earlier events 
 3. End with "Today" or "Latest" for current development
-4. Keep each event under 15 words
+4. Keep each event MAXIMUM 8 words (count carefully!)
 5. Focus on key developments that led to this story
 
 TIMELINE FORMAT:
