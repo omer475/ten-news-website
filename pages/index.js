@@ -1318,11 +1318,9 @@ export default function Home() {
                         className="news-meta" 
                         style={{ 
                           position: 'relative', 
-                          overflow: 'hidden', 
+                          overflow: 'visible', 
                           cursor: 'pointer',
-                          height: '90px', // Fixed height instead of minHeight
-                          display: 'flex',
-                          alignItems: 'center'
+                          minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
                           // CRITICAL: Completely stop event from bubbling up
@@ -1334,23 +1332,54 @@ export default function Home() {
                           let hasMoved = false;
                           let isHorizontalSwipe = false;
                           
+                          const handleTouchMove = (moveEvent) => {
+                            // CRITICAL: Stop all event propagation
+                            moveEvent.stopPropagation();
+                            moveEvent.preventDefault();
+                            
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
+                            
+                            if (diffX > 10 || diffY > 10) {
+                              hasMoved = true;
+                            }
+                            
+                            // Determine if this is a horizontal swipe early (easier detection)
+                            if (diffX > 15 && diffX > diffY) {
+                              isHorizontalSwipe = true;
+                            }
+                          };
+                          
                           const handleTouchEnd = (endEvent) => {
                             // CRITICAL: Stop all event propagation
                             endEvent.stopPropagation();
                             endEvent.preventDefault();
                             
                             const endX = endEvent.changedTouches[0].clientX;
-                            const diffX = Math.abs(startX - endX);
+                            const endY = endEvent.changedTouches[0].clientY;
+                            const diffX = startX - endX;
+                            const diffY = startY - endY;
                             
-                            // Require a very deliberate swipe (120px - much less sensitive)
-                            if (diffX > 120) {
-                              console.log('Strong horizontal swipe detected - toggling timeline');
+                            // Only toggle timeline if it was a clear horizontal swipe (easier threshold)
+                            if (hasMoved && isHorizontalSwipe && Math.abs(diffX) > 25) {
+                              console.log('Timeline swipe detected - toggling for story', index);
+                              toggleTimeline(index);
+                            } else if (!hasMoved) {
+                              // Single tap also toggles
+                              console.log('Timeline tap detected - toggling for story', index);
                               toggleTimeline(index);
                             }
+                            
+                            // Clean up listeners
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          // Simpler approach - just handle touchend
-                          document.addEventListener('touchend', handleTouchEnd, { once: true });
+                          // CRITICAL: Use capture phase to intercept before main story handler
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
                         }}
                       >
                         {!showTimeline[index] ? (
@@ -1373,66 +1402,67 @@ export default function Home() {
                               </div>
                             );
                           })
-                        ) : (
-                          // Show Timeline - Same height as details
-                          story.timeline && (
-                             <div style={{
-                               display: 'flex',
-                               gap: '8px',
-                               padding: '12px 20px',
-                               width: '100%',
-                               height: '100%',
-                               alignItems: 'center',
-                               justifyContent: 'space-between'
-                             }}>
-                               {story.timeline.map((event, idx) => (
-                                 <div key={idx} style={{
-                                   flex: '1',
-                                   display: 'flex',
-                                   flexDirection: 'column',
-                                   alignItems: 'center',
-                                   textAlign: 'center',
-                                   position: 'relative'
-                                 }}>
-                                   <div style={{
-                                     width: '8px',
-                                     height: '8px',
-                                     borderRadius: '50%',
-                                     background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
-                                     border: '2px solid #3b82f6',
-                                     marginBottom: '4px'
-                                   }}></div>
-                                   <div style={{
-                                     fontSize: '9px',
-                                     fontWeight: '600',
-                                     color: '#3b82f6',
-                                     textTransform: 'uppercase',
-                                     letterSpacing: '0.5px',
-                                     marginBottom: '2px'
-                                   }}>{event.date}</div>
-                                   <div style={{
-                                     fontSize: '11px',
-                                     color: '#111827',
-                                     lineHeight: '1.1',
-                                     fontWeight: '600'
-                                   }}>{event.event.length > 25 ? event.event.substring(0, 25) + '...' : event.event}</div>
-                                   
-                                   {/* Connecting line to next dot */}
-                                   {idx < story.timeline.length - 1 && (
-                                     <div style={{
-                                       position: 'absolute',
-                                       top: '4px',
-                                       left: '100%',
-                                       width: '8px',
-                                       height: '2px',
-                                       background: '#e2e8f0',
-                                       zIndex: '0'
-                                     }}></div>
-                                   )}
-                                 </div>
-                               ))}
+                        ) : null}
+                        
+                        {/* Timeline Overlay - Same starting position, extends downward */}
+                        {showTimeline[index] && story.timeline && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            right: '0',
+                            background: '#ffffff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '16px',
+                            padding: '12px 20px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                            zIndex: '20',
+                            minHeight: '90px'
+                          }}>
+                            <div style={{
+                              position: 'relative',
+                              paddingLeft: '20px'
+                            }}>
+                              <div style={{
+                                position: 'absolute',
+                                left: '6px',
+                                top: '8px',
+                                bottom: '8px',
+                                width: '2px',
+                                background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
+                              }}></div>
+                              {story.timeline.map((event, idx) => (
+                                <div key={idx} style={{
+                                  position: 'relative',
+                                  marginBottom: '8px',
+                                  paddingLeft: '20px'
+                                }}>
+                                  <div style={{
+                                    position: 'absolute',
+                                    left: '-14px',
+                                    top: '4px',
+                                    width: '10px',
+                                    height: '10px',
+                                    borderRadius: '50%',
+                                    background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
+                                    border: '2px solid #3b82f6',
+                                    zIndex: '1'
+                                  }}></div>
+                                  <div style={{
+                                    fontSize: '10px',
+                                    fontWeight: '600',
+                                    color: '#3b82f6',
+                                    marginBottom: '2px'
+                                  }}>{event.date}</div>
+                                  <div style={{
+                                    fontSize: '12px',
+                                    color: '#1e293b',
+                                    lineHeight: '1.2'
+                                  }}>{event.event}</div>
+                                </div>
+                              ))}
                             </div>
-                          )
+                          </div>
                         )}
                         
                         {/* Toggle Arrows - Hidden on mobile */}
