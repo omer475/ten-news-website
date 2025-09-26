@@ -999,27 +999,6 @@ export default function Home() {
           position: relative;
         }
 
-        .news-meta::after {
-          content: '← TIMELINE →';
-          position: absolute;
-          bottom: -16px;
-          right: 4px;
-          font-size: 11px;
-          color: #ff4444;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          opacity: 1;
-          background: rgba(255, 68, 68, 0.1);
-          padding: 2px 6px;
-          border-radius: 4px;
-          animation: swipeHint 1s ease-in-out infinite;
-        }
-
-        @keyframes swipeHint {
-          0%, 100% { opacity: 0.8; }
-          50% { opacity: 0.4; }
-        }
 
         @media (max-width: 768px) {
           .header-right .time {
@@ -1498,23 +1477,6 @@ export default function Home() {
                           toggleTimeline(index);
                         }}>→</div>
                         
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '-18px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          fontSize: '10px',
-                          color: showTimeline[index] ? '#22c55e' : '#ff4444',
-                          fontWeight: '700',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          background: showTimeline[index] ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 68, 68, 0.1)',
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                          animation: 'swipeHint 1s ease-in-out infinite'
-                        }}>
-                          {showTimeline[index] ? 'SWIPE FOR DETAILS' : 'SWIPE FOR TIMELINE'}
-                        </div>
                       </div>
                     </div>
                   </div>
