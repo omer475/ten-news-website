@@ -1356,44 +1356,127 @@ export default function Home() {
                             );
                           })
                         ) : (
-                          // Show Timeline - Compact horizontal design
+                          // Show Timeline - Compact 2-row design
                           story.timeline && (
                             <div style={{
                               display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
+                              flexDirection: 'column',
                               padding: '12px 20px',
                               width: '100%',
-                              height: '100%'
+                              height: '100%',
+                              justifyContent: 'center',
+                              gap: '8px'
                             }}>
-                              {story.timeline.slice(0, 3).map((event, idx) => (
-                                <div key={idx} style={{
-                                  flex: '1',
-                                  textAlign: 'center',
-                                  padding: '0 8px',
-                                  borderRight: idx < 2 ? '1px solid #e2e8f0' : 'none',
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  justifyContent: 'center',
-                                  minHeight: '38px'
-                                }}>
-                                  <div style={{
-                                    fontSize: '10px',
-                                    color: '#6b7280',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '1px',
-                                    fontWeight: '600',
-                                    marginBottom: '1px'
-                                  }}>{event.date}</div>
-                                  <div style={{
-                                    fontSize: '11px',
-                                    fontWeight: '600',
-                                    color: '#111827',
-                                    lineHeight: '1.2',
-                                    margin: '0'
-                                  }}>{event.event.substring(0, 30)}{event.event.length > 30 ? '...' : ''}</div>
-                                </div>
-                              ))}
+                              {/* First Row - Events 1 & 2 */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                position: 'relative',
+                                gap: '20px'
+                              }}>
+                                {story.timeline.slice(0, 2).map((event, idx) => (
+                                  <div key={idx} style={{
+                                    flex: '1',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    position: 'relative'
+                                  }}>
+                                    <div style={{
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      background: '#3b82f6',
+                                      flexShrink: '0'
+                                    }}></div>
+                                    <div>
+                                      <div style={{
+                                        fontSize: '9px',
+                                        fontWeight: '600',
+                                        color: '#3b82f6',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                      }}>{event.date}</div>
+                                      <div style={{
+                                        fontSize: '11px',
+                                        color: '#111827',
+                                        fontWeight: '600'
+                                      }}>{event.event.substring(0, 25)}{event.event.length > 25 ? '...' : ''}</div>
+                                    </div>
+                                    {idx === 0 && (
+                                      <div style={{
+                                        position: 'absolute',
+                                        right: '-10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        width: '20px',
+                                        height: '2px',
+                                        background: '#3b82f6'
+                                      }}></div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              {/* Vertical Connector */}
+                              <div style={{
+                                width: '2px',
+                                height: '8px',
+                                background: '#3b82f6',
+                                margin: '0 auto'
+                              }}></div>
+                              
+                              {/* Second Row - Events 3 & 4 */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                position: 'relative',
+                                gap: '20px'
+                              }}>
+                                {story.timeline.slice(2, 4).map((event, idx) => (
+                                  <div key={idx + 2} style={{
+                                    flex: '1',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    position: 'relative'
+                                  }}>
+                                    <div style={{
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      background: idx === 1 ? '#3b82f6' : 'white',
+                                      border: '2px solid #3b82f6',
+                                      flexShrink: '0'
+                                    }}></div>
+                                    <div>
+                                      <div style={{
+                                        fontSize: '9px',
+                                        fontWeight: '600',
+                                        color: '#3b82f6',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                      }}>{event.date}</div>
+                                      <div style={{
+                                        fontSize: '11px',
+                                        color: '#111827',
+                                        fontWeight: '600'
+                                      }}>{event.event.substring(0, 25)}{event.event.length > 25 ? '...' : ''}</div>
+                                    </div>
+                                    {idx === 0 && (
+                                      <div style={{
+                                        position: 'absolute',
+                                        right: '-10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        width: '20px',
+                                        height: '2px',
+                                        background: '#3b82f6'
+                                      }}></div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )
                         )}
