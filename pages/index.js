@@ -6,7 +6,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
-  const [autoRotateTimers, setAutoRotateTimers] = useState({});
 
   useEffect(() => {
     const loadNewsData = async () => {
@@ -200,74 +199,11 @@ export default function Home() {
 
   // Timeline toggle function
   const toggleTimeline = (storyIndex) => {
-    // Stop auto-rotation permanently when user manually interacts
-    stopAutoRotation(storyIndex);
-    
     setShowTimeline(prev => ({
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
-    
-    // DO NOT restart auto-rotation - user has taken control
   };
-
-  // Start auto-rotation for a story
-  const startAutoRotation = (storyIndex) => {
-    // Clear any existing timer
-    if (autoRotateTimers[storyIndex]) {
-      clearInterval(autoRotateTimers[storyIndex]);
-    }
-    
-    // Start new timer
-    const timerId = setInterval(() => {
-      setShowTimeline(prev => ({
-        ...prev,
-        [storyIndex]: !prev[storyIndex]
-      }));
-    }, 4000); // Every 4 seconds
-    
-    setAutoRotateTimers(prev => ({
-      ...prev,
-      [storyIndex]: timerId
-    }));
-  };
-
-  // Stop auto-rotation for a story
-  const stopAutoRotation = (storyIndex) => {
-    if (autoRotateTimers[storyIndex]) {
-      clearInterval(autoRotateTimers[storyIndex]);
-      setAutoRotateTimers(prev => {
-        const newTimers = { ...prev };
-        delete newTimers[storyIndex];
-        return newTimers;
-      });
-    }
-  };
-
-  // Auto-rotate when story becomes visible
-  useEffect(() => {
-    // Start auto-rotation for current story if it has timeline
-    const currentStory = stories[currentIndex];
-    if (currentStory && currentStory.timeline && currentStory.type === 'news') {
-      startAutoRotation(currentIndex);
-    }
-    
-    // Stop auto-rotation for all other stories
-    Object.keys(autoRotateTimers).forEach(storyIndex => {
-      if (parseInt(storyIndex) !== currentIndex) {
-        stopAutoRotation(parseInt(storyIndex));
-      }
-    });
-  }, [currentIndex, stories]);
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(autoRotateTimers).forEach(timerId => {
-        clearInterval(timerId);
-      });
-    };
-  }, []);
 
   // Newsletter signup handler
   const handleNewsletterSignup = async () => {
@@ -714,7 +650,7 @@ export default function Home() {
         }
 
         .news-item.first-news {
-          margin-top: -25px;
+          margin-top: -40px;
         }
 
         .news-item:hover {
@@ -739,7 +675,7 @@ export default function Home() {
         }
 
         .news-content {
-          padding-top: 32px;
+          padding-top: 0px;
           padding-left: 0;
           padding-right: 30px;
           padding-bottom: 0;
@@ -1367,7 +1303,6 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    <div className="news-number">{story.number < 10 ? `0${story.number}` : story.number}</div>
                     <div className="news-content">
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
@@ -1428,8 +1363,7 @@ export default function Home() {
                               background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
                               borderRadius: '2px',
                               width: !showTimeline[index] ? '100%' : '0%',
-                              transition: 'width 0.3s ease',
-                              animation: !showTimeline[index] && autoRotateTimers[index] ? 'progressFill 4s linear infinite' : 'none'
+                              transition: 'width 0.3s ease'
                             }}></div>
                           </div>
                           
@@ -1456,8 +1390,7 @@ export default function Home() {
                               background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
                               borderRadius: '2px',
                               width: showTimeline[index] ? '100%' : '0%',
-                              transition: 'width 0.3s ease',
-                              animation: showTimeline[index] && autoRotateTimers[index] ? 'progressFill 4s linear infinite' : 'none'
+                              transition: 'width 0.3s ease'
                             }}></div>
                           </div>
                         </div>
@@ -1482,16 +1415,16 @@ export default function Home() {
                             const diffX = Math.abs(startX - currentX);
                             const diffY = Math.abs(startY - currentY);
                             
-                            if (diffX > 10 || diffY > 10) {
+                            if (diffX > 15 || diffY > 15) {
                               hasMoved = true;
                               
-                              // Determine swipe direction
-                              if (diffX > diffY && diffX > 20) {
+                              // Determine swipe direction - be more strict
+                              if (diffX > diffY && diffX > 30) {
                                 swipeDirection = 'horizontal';
-                                // ONLY prevent default for horizontal swipes
+                                // ONLY prevent default for clear horizontal swipes
                                 moveEvent.preventDefault();
                                 moveEvent.stopPropagation();
-                              } else if (diffY > diffX && diffY > 20) {
+                              } else if (diffY > diffX && diffY > 30) {
                                 swipeDirection = 'vertical';
                                 // Let vertical swipes pass through for story navigation
                               }
