@@ -1261,31 +1261,59 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <div className="news-info" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    gap: '20px',
+                  {/* Historical Events - "ON THIS DAY" */}
+                  <div style={{
                     marginBottom: '50px',
-                    fontSize: '13px',
-                    color: '#64748b',
-                    fontWeight: 500,
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase'
+                    textAlign: 'center'
                   }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      background: 'rgba(59, 130, 246, 0.1)',
-                      borderRadius: '4px',
-                      color: '#3b82f6'
-                    }}>10 Stories</span>
-                    <span style={{ color: '#cbd5e1' }}>•</span>
-                    <span style={{
-                      padding: '4px 12px',
-                      background: 'rgba(96, 165, 250, 0.1)',
-                      borderRadius: '4px',
-                      color: '#60a5fa'
-                    }}>2 Min Read</span>
+                    <div style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      letterSpacing: '2px',
+                      color: '#94a3b8',
+                      textTransform: 'uppercase',
+                      marginBottom: '24px'
+                    }}>
+                      — ON THIS DAY —
+                    </div>
+                    
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '40px',
+                      flexWrap: 'wrap',
+                      maxWidth: '800px',
+                      margin: '0 auto'
+                    }}>
+                      {(newsData?.historicalEvents || [
+                        {"year": "1945", "description": "UN Charter signed in San Francisco"},
+                        {"year": "1963", "description": "JFK delivers 'Ich bin ein Berliner'"},
+                        {"year": "1977", "description": "Elvis performs his final concert"}
+                      ]).map((event, i) => (
+                        <div key={i} style={{
+                          textAlign: 'center',
+                          minWidth: '150px'
+                        }}>
+                          <div style={{
+                            fontSize: '32px',
+                            fontWeight: '800',
+                            color: '#1e293b',
+                            marginBottom: '8px',
+                            letterSpacing: '-0.5px'
+                          }}>
+                            {event.year}
+                          </div>
+                          <div style={{
+                            fontSize: '14px',
+                            color: '#64748b',
+                            lineHeight: '1.3',
+                            fontWeight: '500'
+                          }}>
+                            {event.description}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
