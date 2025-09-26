@@ -965,6 +965,11 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
+        @keyframes progressFill {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+
         /* Timeline Styles */
         .timeline-section {
           margin-top: 24px;
@@ -1391,40 +1396,70 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Timeline/Details Indicator Dots */}
+                      {/* Instagram Stories Style Progress Bar */}
                       {story.timeline && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'center',
-                          gap: '8px',
-                          marginBottom: '12px'
+                          gap: '4px',
+                          marginBottom: '16px',
+                          padding: '0 20px'
                         }}>
+                          {/* Details Progress Segment */}
                           <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: !showTimeline[index] ? '#3b82f6' : '#e5e7eb',
-                            transition: 'all 0.3s ease',
+                            flex: '1',
+                            height: '3px',
+                            borderRadius: '2px',
+                            background: '#e5e7eb',
+                            position: 'relative',
+                            overflow: 'hidden',
                             cursor: 'pointer'
                           }} onClick={(e) => {
                             e.stopPropagation();
                             if (showTimeline[index]) {
                               toggleTimeline(index);
                             }
-                          }}></div>
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '0',
+                              left: '0',
+                              height: '100%',
+                              background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
+                              borderRadius: '2px',
+                              width: !showTimeline[index] ? '100%' : '0%',
+                              transition: 'width 0.3s ease',
+                              animation: !showTimeline[index] && autoRotateTimers[index] ? 'progressFill 4s linear infinite' : 'none'
+                            }}></div>
+                          </div>
+                          
+                          {/* Timeline Progress Segment */}
                           <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: showTimeline[index] ? '#3b82f6' : '#e5e7eb',
-                            transition: 'all 0.3s ease',
+                            flex: '1',
+                            height: '3px',
+                            borderRadius: '2px',
+                            background: '#e5e7eb',
+                            position: 'relative',
+                            overflow: 'hidden',
                             cursor: 'pointer'
                           }} onClick={(e) => {
                             e.stopPropagation();
                             if (!showTimeline[index]) {
                               toggleTimeline(index);
                             }
-                          }}></div>
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '0',
+                              left: '0',
+                              height: '100%',
+                              background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
+                              borderRadius: '2px',
+                              width: showTimeline[index] ? '100%' : '0%',
+                              transition: 'width 0.3s ease',
+                              animation: showTimeline[index] && autoRotateTimers[index] ? 'progressFill 4s linear infinite' : 'none'
+                            }}></div>
+                          </div>
                         </div>
                       )}
                       <div 
