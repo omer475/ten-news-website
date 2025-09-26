@@ -758,18 +758,10 @@ export default function Home() {
           flex-direction: column;
           justify-content: center;
           min-height: 38px;
-          position: relative;
         }
 
-        .news-detail-item:not(:last-child)::after {
-          content: '';
-          position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          height: 60%;
-          width: 1px;
-          background: #e2e8f0;
+        .news-detail-item:not(:last-child) {
+          border-right: 1px solid #e2e8f0;
         }
 
         .news-detail-label {
