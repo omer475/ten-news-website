@@ -1355,131 +1355,72 @@ export default function Home() {
                               </div>
                             );
                           })
-                        ) : (
-                          // Show Timeline - Compact 2-row design
-                          story.timeline && (
-                            <div style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              padding: '12px 20px',
-                              width: '100%',
-                              height: '100%',
-                              justifyContent: 'center',
-                              gap: '8px'
-                            }}>
-                              {/* First Row - Events 1 & 2 */}
+                          ) : (
+                           // Show Timeline - Compact design to match details height
+                            story.timeline && (
                               <div style={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                position: 'relative',
-                                gap: '20px'
+                                padding: '12px 20px',
+                                width: '100%',
+                                height: '100%',
+                                alignItems: 'center'
                               }}>
-                                {story.timeline.slice(0, 2).map((event, idx) => (
-                                  <div key={idx} style={{
-                                    flex: '1',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    position: 'relative'
-                                  }}>
-                                    <div style={{
-                                      width: '8px',
-                                      height: '8px',
-                                      borderRadius: '50%',
-                                      background: '#3b82f6',
-                                      flexShrink: '0'
-                                    }}></div>
-                                    <div>
+                                <div style={{
+                                  display: 'flex',
+                                  width: '100%',
+                                  gap: '16px',
+                                  alignItems: 'center'
+                                }}>
+                                  {story.timeline.map((event, idx) => (
+                                    <div key={idx} style={{
+                                      flex: '1',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      textAlign: 'center',
+                                      position: 'relative'
+                                    }}>
+                                      <div style={{
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
+                                        border: '2px solid #3b82f6',
+                                        marginBottom: '4px'
+                                      }}></div>
                                       <div style={{
                                         fontSize: '9px',
                                         fontWeight: '600',
                                         color: '#3b82f6',
                                         textTransform: 'uppercase',
-                                        letterSpacing: '1px'
+                                        letterSpacing: '0.5px',
+                                        marginBottom: '2px'
                                       }}>{event.date}</div>
                                       <div style={{
                                         fontSize: '11px',
                                         color: '#111827',
+                                        lineHeight: '1.2',
                                         fontWeight: '600'
-                                      }}>{event.event.substring(0, 25)}{event.event.length > 25 ? '...' : ''}</div>
+                                      }}>{event.event.length > 30 ? event.event.substring(0, 30) + '...' : event.event}</div>
+                                      
+                                      {/* Connecting line to next dot */}
+                                      {idx < story.timeline.length - 1 && (
+                                        <div style={{
+                                          position: 'absolute',
+                                          top: '4px',
+                                          left: '50%',
+                                          width: 'calc(100% + 16px)',
+                                          height: '2px',
+                                          background: '#e2e8f0',
+                                          zIndex: '0'
+                                        }}></div>
+                                      )}
                                     </div>
-                                    {idx === 0 && (
-                                      <div style={{
-                                        position: 'absolute',
-                                        right: '-10px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        width: '20px',
-                                        height: '2px',
-                                        background: '#3b82f6'
-                                      }}></div>
-                                    )}
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                              
-                              {/* Vertical Connector */}
-                              <div style={{
-                                width: '2px',
-                                height: '8px',
-                                background: '#3b82f6',
-                                margin: '0 auto'
-                              }}></div>
-                              
-                              {/* Second Row - Events 3 & 4 */}
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                position: 'relative',
-                                gap: '20px'
-                              }}>
-                                {story.timeline.slice(2, 4).map((event, idx) => (
-                                  <div key={idx + 2} style={{
-                                    flex: '1',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    position: 'relative'
-                                  }}>
-                                    <div style={{
-                                      width: '8px',
-                                      height: '8px',
-                                      borderRadius: '50%',
-                                      background: idx === 1 ? '#3b82f6' : 'white',
-                                      border: '2px solid #3b82f6',
-                                      flexShrink: '0'
-                                    }}></div>
-                                    <div>
-                                      <div style={{
-                                        fontSize: '9px',
-                                        fontWeight: '600',
-                                        color: '#3b82f6',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '1px'
-                                      }}>{event.date}</div>
-                                      <div style={{
-                                        fontSize: '11px',
-                                        color: '#111827',
-                                        fontWeight: '600'
-                                      }}>{event.event.substring(0, 25)}{event.event.length > 25 ? '...' : ''}</div>
-                                    </div>
-                                    {idx === 0 && (
-                                      <div style={{
-                                        position: 'absolute',
-                                        right: '-10px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        width: '20px',
-                                        height: '2px',
-                                        background: '#3b82f6'
-                                      }}></div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )
-                        )}
+                            )
+                          )}
                         
                         {/* Toggle Arrows */}
                         <div style={{
