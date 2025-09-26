@@ -1356,57 +1356,44 @@ export default function Home() {
                             );
                           })
                         ) : (
-                          // Show Timeline
+                          // Show Timeline - Compact horizontal design
                           story.timeline && (
                             <div style={{
                               display: 'flex',
-                              flexDirection: 'column',
-                              padding: '16px',
-                              width: '100%'
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '12px 20px',
+                              width: '100%',
+                              height: '100%'
                             }}>
-                              <div style={{
-                                position: 'relative',
-                                paddingLeft: '20px'
-                              }}>
-                                <div style={{
-                                  position: 'absolute',
-                                  left: '6px',
-                                  top: '8px',
-                                  bottom: '8px',
-                                  width: '2px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
-                                }}></div>
-                                {story.timeline.map((event, idx) => (
-                                  <div key={idx} style={{
-                                    position: 'relative',
-                                    marginBottom: '16px',
-                                    paddingLeft: '20px'
-                                  }}>
-                                    <div style={{
-                                      position: 'absolute',
-                                      left: '-14px',
-                                      top: '6px',
-                                      width: '12px',
-                                      height: '12px',
-                                      borderRadius: '50%',
-                                      background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
-                                      border: '2px solid #3b82f6',
-                                      zIndex: '1'
-                                    }}></div>
-                                    <div style={{
-                                      fontSize: '11px',
-                                      fontWeight: '600',
-                                      color: '#3b82f6',
-                                      marginBottom: '4px'
-                                    }}>{event.date}</div>
-                                    <div style={{
-                                      fontSize: '13px',
-                                      color: '#1e293b',
-                                      lineHeight: '1.4'
-                                    }}>{event.event}</div>
-                                  </div>
-                                ))}
-                              </div>
+                              {story.timeline.slice(0, 3).map((event, idx) => (
+                                <div key={idx} style={{
+                                  flex: '1',
+                                  textAlign: 'center',
+                                  padding: '0 8px',
+                                  borderRight: idx < 2 ? '1px solid #e2e8f0' : 'none',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'center',
+                                  minHeight: '38px'
+                                }}>
+                                  <div style={{
+                                    fontSize: '10px',
+                                    color: '#6b7280',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    fontWeight: '600',
+                                    marginBottom: '1px'
+                                  }}>{event.date}</div>
+                                  <div style={{
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    color: '#111827',
+                                    lineHeight: '1.2',
+                                    margin: '0'
+                                  }}>{event.event.substring(0, 30)}{event.event.length > 30 ? '...' : ''}</div>
+                                </div>
+                              ))}
                             </div>
                           )
                         )}
