@@ -1040,8 +1040,9 @@ TIMELINE REQUIREMENTS:
 1. Create exactly 4 timeline events
 2. Start with background/earlier events 
 3. End with "Today" or "Latest" for current development
-4. Keep each event under 8 words MAXIMUM
+4. Keep each event MAXIMUM 8 words - NO MORE THAN 8 WORDS
 5. Focus on key developments that led to this story
+6. Use simple, clear language
 
 TIMELINE FORMAT:
 - Date format: "March 18", "Last week", "Yesterday", "Today"
@@ -1053,19 +1054,19 @@ Return ONLY this JSON:
   "timeline": [
     {{
       "date": "March 15",
-      "event": "Initial reports emerge"
+      "event": "Initial reports emerge of situation developing"
     }},
     {{
       "date": "March 18", 
-      "event": "Emergency discussions begin"
+      "event": "Key stakeholders begin emergency discussions"
     }},
     {{
       "date": "Yesterday",
-      "event": "Major announcement triggers response"
+      "event": "Major announcement triggers widespread response"
     }},
     {{
       "date": "Today",
-      "event": "Current developments unfold"
+      "event": "Current developments unfold as reported"
     }}
   ]
 }}"""
@@ -1088,18 +1089,18 @@ Return ONLY this JSON:
             else:
                 print(f"   ⚠️ API call failed, using fallback timeline")
                 article['timeline'] = [
-                    {"date": "Background", "event": "Initial situation develops"},
-                    {"date": "Recently", "event": "Key events unfold"},
+                    {"date": "Background", "event": "Story develops from earlier events"},
+                    {"date": "Recently", "event": "Key developments begin to unfold"},
                     {"date": "Yesterday", "event": "Situation reaches critical point"},
-                    {"date": "Today", "event": "Major developments break"}
+                    {"date": "Today", "event": "Current story breaks and makes headlines"}
                 ]
         except Exception as e:
             print(f"   ❌ Error generating timeline: {str(e)}")
             article['timeline'] = [
-                {"date": "Background", "event": "Initial situation develops"},
-                {"date": "Recently", "event": "Key events unfold"},
+                {"date": "Background", "event": "Story develops from earlier events"},
+                {"date": "Recently", "event": "Key developments begin to unfold"},
                 {"date": "Yesterday", "event": "Situation reaches critical point"},
-                {"date": "Today", "event": "Major developments break"}
+                {"date": "Today", "event": "Current story breaks and makes headlines"}
             ]
         
         articles_with_timelines.append(article)
