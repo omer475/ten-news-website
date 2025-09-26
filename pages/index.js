@@ -1415,13 +1415,73 @@ export default function Home() {
                       </div>
                       
                       {story.timeline && (
-                        <div className={`timeline-section ${showTimeline[index] ? 'visible' : ''}`}>
-                          <div className="timeline-label">📅 TIMELINE & WHAT HAPPENED NEXT</div>
-                          <div className="timeline">
+                        <div 
+                          className={`timeline-section ${showTimeline[index] ? 'visible' : ''}`}
+                          style={{
+                            marginTop: '24px',
+                            paddingTop: '24px',
+                            borderTop: '1px solid #e2e8f0',
+                            background: '#f8fafc',
+                            padding: '20px',
+                            borderRadius: '12px',
+                            transform: showTimeline[index] ? 'translateX(0)' : 'translateX(100%)',
+                            opacity: showTimeline[index] ? 1 : 0,
+                            transition: 'all 0.4s ease'
+                          }}
+                        >
+                          <div style={{
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            color: '#94a3b8',
+                            marginBottom: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            📅 TIMELINE & WHAT HAPPENED NEXT
+                          </div>
+                          <div style={{
+                            position: 'relative',
+                            paddingLeft: '20px'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              left: '6px',
+                              top: '8px',
+                              bottom: '8px',
+                              width: '2px',
+                              background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
+                            }}></div>
                             {story.timeline.map((event, idx) => (
-                              <div key={idx} className="timeline-item">
-                                <div className="timeline-date">{event.date}</div>
-                                <div className="timeline-event">{event.event}</div>
+                              <div key={idx} style={{
+                                position: 'relative',
+                                marginBottom: '20px',
+                                paddingLeft: '20px'
+                              }}>
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '-14px',
+                                  top: '6px',
+                                  width: '12px',
+                                  height: '12px',
+                                  borderRadius: '50%',
+                                  background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
+                                  border: '2px solid #3b82f6',
+                                  zIndex: '1'
+                                }}></div>
+                                <div style={{
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  color: '#3b82f6',
+                                  marginBottom: '4px'
+                                }}>{event.date}</div>
+                                <div style={{
+                                  fontSize: '14px',
+                                  color: '#1e293b',
+                                  lineHeight: '1.4'
+                                }}>{event.event}</div>
                               </div>
                             ))}
                           </div>
