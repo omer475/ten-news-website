@@ -1529,41 +1529,45 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        {/* Details Section - With proper background and visibility */}
-                        <div style={{
-                          display: 'flex',
-                          background: '#ffffff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '16px',
-                          padding: '12px 20px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                          gap: '0',
-                          minHeight: '66px',
-                          visibility: showTimeline[index] ? 'hidden' : 'visible',
-                          opacity: showTimeline[index] ? 0 : 1,
-                          transition: 'opacity 0.3s ease'
-                        }}>
-                          {story.details && story.details.map((detail, i) => {
-                            const [label, value] = detail.split(':');
-                            const cleanLabel = label?.trim() || '';
-                            const cleanValue = value?.trim() || '';
-                            
-                            // Extract main number/value and subtitle
-                            const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                            const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                            const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                            
-                            return (
-                              <div key={i} className="news-detail-item">
-                                <div className="news-detail-label">{cleanLabel}</div>
-                                <div className="news-detail-value">{mainValue}</div>
-                                {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                              </div>
-                            );
-                          })}
-                        </div>
+                        {/* Details Section - Only visible when not showing timeline */}
+                        {!showTimeline[index] && (
+                          <div style={{
+                            display: 'flex',
+                            gap: '0',
+                            position: 'absolute',
+                            top: '0',
+                            left: '0',
+                            right: '0',
+                            background: '#ffffff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '16px',
+                            padding: '12px 20px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                            minHeight: '66px',
+                            zIndex: '10'
+                          }}>
+                            {story.details && story.details.map((detail, i) => {
+                              const [label, value] = detail.split(':');
+                              const cleanLabel = label?.trim() || '';
+                              const cleanValue = value?.trim() || '';
+                              
+                              // Extract main number/value and subtitle
+                              const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                              const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                              const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                              
+                              return (
+                                <div key={i} className="news-detail-item">
+                                  <div className="news-detail-label">{cleanLabel}</div>
+                                  <div className="news-detail-value">{mainValue}</div>
+                                  {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         
-                        {/* Timeline Overlay - Same starting position, extends downward */}
+                        {/* Timeline Section - Only visible when showing timeline */}
                         {showTimeline[index] && story.timeline && (
                           <div style={{
                             position: 'absolute',
@@ -1576,7 +1580,7 @@ export default function Home() {
                             padding: '12px 20px',
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                             zIndex: '20',
-                            minHeight: '90px'
+                            minHeight: '66px'
                           }}>
                             <div style={{
                               position: 'relative',
