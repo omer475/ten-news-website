@@ -76,10 +76,10 @@ export default function Home() {
               } else {
                 // Create fallback timeline for all stories (8 words max)
                 storyData.timeline = [
-                  {"date": "Background", "event": "Initial situation develops gradually"},
-                  {"date": "Recently", "event": "Key events begin to unfold"},
-                  {"date": "Yesterday", "event": "Situation reaches critical turning point"},
-                  {"date": "Today", "event": "Major developments break into headlines"}
+                  {"date": "Background", "event": "Initial situation develops"},
+                  {"date": "Recently", "event": "Key events unfold"},
+                  {"date": "Yesterday", "event": "Situation reaches critical point"},
+                  {"date": "Today", "event": "Major developments break"}
                 ];
               }
               
@@ -110,9 +110,9 @@ export default function Home() {
               url: '#',
               timeline: [
                 {"date": "Setup", "event": "GitHub Actions workflow configured"},
-                {"date": "Integration", "event": "GDELT API and Claude AI connected"},
+                {"date": "Integration", "event": "GDELT and Claude AI connected"},
                 {"date": "Testing", "event": "Automation tested and verified"},
-                {"date": "Live", "event": "Daily news generation now active"}
+                {"date": "Live", "event": "Daily generation now active"}
               ]
             },
             {
@@ -126,10 +126,10 @@ export default function Home() {
               source: 'Ten News System',
               url: '#',
               timeline: [
-                {"date": "Research", "event": "GDELT database identified as news source"},
-                {"date": "Development", "event": "API integration and filtering built"},
-                {"date": "Testing", "event": "Source verification and quality checks"},
-                {"date": "Active", "event": "Real-time global news processing online"}
+                {"date": "Research", "event": "GDELT database identified"},
+                {"date": "Development", "event": "API integration built"},
+                {"date": "Testing", "event": "Source verification completed"},
+                {"date": "Active", "event": "Global news processing online"}
               ]
             },
             {
@@ -145,8 +145,8 @@ export default function Home() {
               timeline: [
                 {"date": "Planning", "event": "AI curation system designed"},
                 {"date": "Implementation", "event": "Claude API integration completed"},
-                {"date": "Optimization", "event": "Story selection algorithms refined"},
-                {"date": "Production", "event": "AI curation now processing daily news"}
+                {"date": "Optimization", "event": "Selection algorithms refined"},
+                {"date": "Production", "event": "AI curation processing daily"}
               ]
             }
           ];
@@ -164,10 +164,10 @@ export default function Home() {
           source: 'Ten News',
           url: '#',
           timeline: [
-            {"date": "Step 1", "event": "Timeline feature was requested by user"},
-            {"date": "Step 2", "event": "Code was written and CSS styles added"},
-            {"date": "Step 3", "event": "Blue arrows were added to details box"},
-            {"date": "Now", "event": "Timeline test story created for demonstration"}
+            {"date": "Step 1", "event": "Timeline feature requested"},
+            {"date": "Step 2", "event": "Code written and styles added"},
+            {"date": "Step 3", "event": "Blue arrows added"},
+            {"date": "Now", "event": "Test story created"}
           ]
         });
 
@@ -199,7 +199,12 @@ export default function Home() {
   const prevStory = () => goToStory(currentIndex - 1);
 
   // Timeline toggle function
-  const toggleTimeline = (storyIndex) => {
+  const toggleTimeline = (storyIndex, isManual = false) => {
+    if (isManual) {
+      // Stop auto-rotation permanently when user manually interacts
+      stopAutoRotation(storyIndex);
+    }
+    
     setShowTimeline(prev => ({
       ...prev,
       [storyIndex]: !prev[storyIndex]
@@ -627,7 +632,7 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 60px 24px 60px;
+          padding: 80px 24px 60px;
           background: #fff;
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
@@ -1103,7 +1108,7 @@ export default function Home() {
           }
           
           .story-container {
-            padding: 50px 12px 60px;
+            padding: 70px 12px 60px;
           }
           
           .news-item {
@@ -1403,10 +1408,8 @@ export default function Home() {
                             cursor: 'pointer'
                           }} onClick={(e) => {
                             e.stopPropagation();
-                            stopAutoRotation(index);
-                            if (showTimeline[index]) {
-                              setShowTimeline(prev => ({ ...prev, [index]: false }));
-                            }
+                            console.log('Manual dot click - stopping auto-rotation');
+                            toggleTimeline(index, true); // Manual interaction
                           }}></div>
                           <div style={{
                             width: '8px',
@@ -1417,10 +1420,8 @@ export default function Home() {
                             cursor: 'pointer'
                           }} onClick={(e) => {
                             e.stopPropagation();
-                            stopAutoRotation(index);
-                            if (!showTimeline[index]) {
-                              setShowTimeline(prev => ({ ...prev, [index]: true }));
-                            }
+                            console.log('Manual dot click - stopping auto-rotation');
+                            toggleTimeline(index, true); // Manual interaction
                           }}></div>
                         </div>
                       )}
@@ -1471,16 +1472,13 @@ export default function Home() {
                               console.log('Manual horizontal swipe - stopping auto-rotation for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              // Stop auto-rotation permanently when user manually swipes
-                              stopAutoRotation(index);
-                              toggleTimeline(index);
+                              toggleTimeline(index, true); // Manual interaction
                             } else if (!hasMoved) {
-                              // Single tap toggles timeline and stops auto-rotation
+                              // Single tap toggles timeline
                               console.log('Manual tap - stopping auto-rotation for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              stopAutoRotation(index);
-                              toggleTimeline(index);
+                              toggleTimeline(index, true); // Manual interaction
                             }
                             // If it's vertical swipe, let it pass through for story navigation
                             
@@ -1590,8 +1588,8 @@ export default function Home() {
                           zIndex: '10'
                         }} onClick={(e) => {
                           e.stopPropagation();
-                          console.log('Left arrow clicked for story', index);
-                          toggleTimeline(index);
+                          console.log('Manual arrow click - stopping auto-rotation');
+                          toggleTimeline(index, true); // Manual interaction
                         }}>←</div>
                         
                         <div className="timeline-arrow" style={{
@@ -1606,8 +1604,8 @@ export default function Home() {
                           zIndex: '10'
                         }} onClick={(e) => {
                           e.stopPropagation();
-                          console.log('Right arrow clicked for story', index);
-                          toggleTimeline(index);
+                          console.log('Manual arrow click - stopping auto-rotation');
+                          toggleTimeline(index, true); // Manual interaction
                         }}>→</div>
                         
                       </div>
