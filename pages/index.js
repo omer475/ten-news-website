@@ -765,6 +765,10 @@ export default function Home() {
           border-right: none;
         }
 
+        .news-detail-item:nth-child(2) {
+          border-right: none;
+        }
+
         .news-detail-label {
           font-size: 10px;
           color: #6b7280;
@@ -1433,8 +1437,8 @@ export default function Home() {
                         }}
                       >
                         {!showTimeline[index] ? (
-                          // Show Details - Only first 2 details for cleaner design
-                          story.details && story.details.slice(0, 2).map((detail, i) => {
+                          // Show Details
+                          story.details && story.details.map((detail, i) => {
                             const [label, value] = detail.split(':');
                             const cleanLabel = label?.trim() || '';
                             const cleanValue = value?.trim() || '';
