@@ -73,13 +73,25 @@ export default function Home() {
               if (article.timeline) {
                 storyData.timeline = article.timeline;
               } else {
-                // Create fallback timeline for all stories
-                storyData.timeline = [
-                  {"date": "Background", "event": "Initial situation develops"},
-                  {"date": "Recently", "event": "Key events unfold"},
-                  {"date": "Yesterday", "event": "Critical point reached"},
-                  {"date": "Today", "event": "Major developments break"}
+                // Create fallback timeline for all stories (variable length)
+                const timelineVariations = [
+                  [
+                    {"date": "Background", "event": "Initial situation develops"},
+                    {"date": "Today", "event": "Major developments break"},
+                    {"date": "Next week", "event": "Follow-up expected"}
+                  ],
+                  [
+                    {"date": "Recently", "event": "Key events unfold"},
+                    {"date": "Yesterday", "event": "Critical point reached"},
+                    {"date": "Today", "event": "Story breaks"},
+                    {"date": "Coming days", "event": "Developments continue"}
+                  ],
+                  [
+                    {"date": "Last month", "event": "Initial reports emerge"},
+                    {"date": "Today", "event": "Major announcement made"}
+                  ]
                 ];
+                storyData.timeline = timelineVariations[index % timelineVariations.length];
               }
               
               processedStories.push(storyData);
@@ -162,12 +174,11 @@ export default function Home() {
           details: ['Test: Timeline feature', 'Arrows: Click to toggle', 'Status: Working'],
           source: 'Ten News',
           url: '#',
-          timeline: [
-            {"date": "Step 1", "event": "Timeline feature was requested by user"},
-            {"date": "Step 2", "event": "Code was written and CSS styles added"},
-            {"date": "Step 3", "event": "Blue arrows were added to details box"},
-            {"date": "Now", "event": "Timeline test story created for demonstration"}
-          ]
+            timeline: [
+              {"date": "Yesterday", "event": "Timeline feature requested"},
+              {"date": "Today", "event": "Feature coded and deployed"},
+              {"date": "Next update", "event": "More timeline improvements coming"}
+            ]
         });
 
         // Add newsletter signup at the end
@@ -722,6 +733,10 @@ export default function Home() {
           margin-bottom: 16px;
           padding-bottom: 16px;
           border-bottom: 1px solid #e2e8f0;
+          text-align: center;
+          max-width: 700px;
+          margin-left: auto;
+          margin-right: auto;
         }
 
         .news-meta {

@@ -1037,36 +1037,37 @@ Summary: {article['summary']}
 Category: {article['category']}
 
 TIMELINE REQUIREMENTS:
-1. Create exactly 4 timeline events
+1. Create 2-4 timeline events (flexible based on story complexity)
 2. Start with background/earlier events 
-3. End with "Today" or "Latest" for current development
-4. Keep each event MAXIMUM 8 words - NO MORE THAN 8 WORDS
-5. Focus on key developments that led to this story
-6. Use simple, clear language
+3. Include "Today" for current development
+4. Add future dates if relevant (e.g., "Next week", "December", "2026")
+5. Keep each event MAXIMUM 8 words - NO MORE THAN 8 WORDS
+6. Focus on key developments and future implications
+7. Use simple, clear language
 
 TIMELINE FORMAT:
 - Date format: "March 18", "Last week", "Yesterday", "Today"
 - Events should be factual and chronological
 - Show progression leading to current story
 
-Return ONLY this JSON:
+Return ONLY this JSON (2-4 events, include future if relevant):
 {{
   "timeline": [
     {{
       "date": "March 15",
-      "event": "Initial reports emerge of situation developing"
-    }},
-    {{
-      "date": "March 18", 
-      "event": "Key stakeholders begin emergency discussions"
+      "event": "Initial reports emerge"
     }},
     {{
       "date": "Yesterday",
-      "event": "Major announcement triggers widespread response"
+      "event": "Major announcement made"
     }},
     {{
       "date": "Today",
-      "event": "Current developments unfold as reported"
+      "event": "Current developments unfold"
+    }},
+    {{
+      "date": "Next week",
+      "event": "Follow-up meeting scheduled"
     }}
   ]
 }}"""
