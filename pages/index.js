@@ -1026,6 +1026,11 @@ export default function Home() {
             display: none;
           }
           
+          /* Hide arrows on mobile - use swipe only */
+          .timeline-arrow {
+            display: none !important;
+          }
+          
           .story-container {
             padding: 70px 12px 60px;
           }
@@ -1129,12 +1134,6 @@ export default function Home() {
           
           .news-detail-subtitle {
             font-size: 10px;
-          }
-          
-          /* Hide arrows on mobile - use swipe only */
-          .news-meta > div[style*="position: absolute"][style*="left: 8px"],
-          .news-meta > div[style*="position: absolute"][style*="right: 8px"] {
-            display: none !important;
           }
         }
       `}</style>
@@ -1331,6 +1330,8 @@ export default function Home() {
                           
                           const handleTouchMove = (moveEvent) => {
                             hasMoved = true;
+                            // Prevent default to stop any page scrolling during swipe
+                            moveEvent.preventDefault();
                           };
                           
                           const handleTouchEnd = (endEvent) => {
@@ -1339,10 +1340,11 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only respond to horizontal swipes (not vertical)
-                            if (hasMoved && Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
-                              console.log('Horizontal swipe detected on details box for story', index);
-                              console.log('Swipe distance:', diffX);
+                            // Only respond to horizontal swipes, ignore vertical
+                            if (hasMoved && Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
+                              console.log('Horizontal swipe detected - toggling timeline for story', index);
+                              e.preventDefault();
+                              e.stopPropagation();
                               toggleTimeline(index);
                             }
                             
@@ -1350,7 +1352,7 @@ export default function Home() {
                             document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          document.addEventListener('touchmove', handleTouchMove, { passive: true });
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
                           document.addEventListener('touchend', handleTouchEnd);
                         }}
                       >
@@ -1383,27 +1385,27 @@ export default function Home() {
                                padding: '12px 20px',
                                width: '100%'
                              }}>
-                               <div style={{
-                                 position: 'relative',
-                                 paddingLeft: '24px'
-                               }}>
-                                 <div style={{
-                                   position: 'absolute',
-                                   left: '8px',
-                                   top: '8px',
-                                   bottom: '8px',
-                                   width: '2px',
-                                   background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
-                                 }}></div>
+                              <div style={{
+                                position: 'relative',
+                                paddingLeft: '20px'
+                              }}>
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '6px',
+                                  top: '8px',
+                                  bottom: '8px',
+                                  width: '2px',
+                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
+                                }}></div>
                                  {story.timeline.map((event, idx) => (
                                    <div key={idx} style={{
                                      position: 'relative',
                                      marginBottom: '8px',
-                                     paddingLeft: '0px'
+                                     paddingLeft: '20px'
                                    }}>
                                      <div style={{
                                        position: 'absolute',
-                                       left: '-13px',
+                                       left: '-14px',
                                        top: '4px',
                                        width: '10px',
                                        height: '10px',
@@ -1430,8 +1432,8 @@ export default function Home() {
                           )
                         )}
                         
-                        {/* Toggle Arrows */}
-                        <div style={{
+                        {/* Toggle Arrows - Hidden on mobile */}
+                        <div className="timeline-arrow" style={{
                           position: 'absolute',
                           left: '8px',
                           top: '50%',
@@ -1447,7 +1449,7 @@ export default function Home() {
                           toggleTimeline(index);
                         }}>←</div>
                         
-                        <div style={{
+                        <div className="timeline-arrow" style={{
                           position: 'absolute',
                           right: '8px',
                           top: '50%',
