@@ -1383,27 +1383,27 @@ export default function Home() {
                                padding: '12px 20px',
                                width: '100%'
                              }}>
-                              <div style={{
-                                position: 'relative',
-                                paddingLeft: '12px'
-                              }}>
-                                <div style={{
-                                  position: 'absolute',
-                                  left: '2px',
-                                  top: '8px',
-                                  bottom: '8px',
-                                  width: '2px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
-                                }}></div>
+                               <div style={{
+                                 position: 'relative',
+                                 paddingLeft: '8px'
+                               }}>
+                                 <div style={{
+                                   position: 'absolute',
+                                   left: '2px',
+                                   top: '8px',
+                                   bottom: '8px',
+                                   width: '2px',
+                                   background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
+                                 }}></div>
                                  {story.timeline.map((event, idx) => (
                                    <div key={idx} style={{
                                      position: 'relative',
                                      marginBottom: '8px',
-                                     paddingLeft: '12px'
+                                     paddingLeft: '8px'
                                    }}>
                                      <div style={{
                                        position: 'absolute',
-                                       left: '-10px',
+                                       left: '-6px',
                                        top: '4px',
                                        width: '10px',
                                        height: '10px',
