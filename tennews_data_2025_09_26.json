@@ -17,19 +17,19 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
@@ -49,19 +49,19 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
@@ -81,19 +81,19 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
@@ -113,19 +113,19 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
@@ -144,20 +144,20 @@
       "url": "https://www.channelnewsasia.com/world/italy-spain-deploy-warships-protect-gaza-aid-flotilla-after-drone-attack-5369786",
       "timeline": [
         {
-          "date": "Background",
-          "event": "Story develops from earlier events"
+          "date": "Initial reports",
+          "event": "First alerts received"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Confirmation",
+          "event": "Officials confirm incident"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Response",
+          "event": "Emergency response deployed"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Latest",
+          "event": "Situation being monitored"
         }
       ]
     },
@@ -177,19 +177,19 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
@@ -209,56 +209,24 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
     {
       "rank": 8,
-      "emoji": "📰",
-      "title": "The Story of DOGE , as Told by Federal Workers",
-      "summary": "By Zoë Schiffer , Leah Feiger , Vittoria Elliott , Makena Kelly , Kate Knibbs , David Gilbert , Molly Taft , Aarian Marshall , Paresh Dave , and Jake Lahut The Big Story Sep 25, 2025 6:00 AM The Story of DOGE, as Told by Federal Workers WIRED spoke with more than 200 federal workers in dozens of agencies to learn what happened as the Department of Government Efficiency tore through their offices. ILLUSTRATIONS: YONK Save Story Save this story Sav",
-      "details": [
-        "Source: ",
-        "Category: World News",
-        "Method: Fallback"
-      ],
-      "category": "World News",
-      "source": "",
-      "url": "https://www.wired.com/story/oral-history-doge-federal-workers/",
-      "timeline": [
-        {
-          "date": "Background",
-          "event": "Story develops from earlier events"
-        },
-        {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
-        },
-        {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
-        },
-        {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
-        }
-      ]
-    },
-    {
-      "rank": 9,
       "emoji": "📰",
       "title": "مصر : مصرع وإصابة العشرات بحريق في مصنع ملابس وبيان رسمي يكشف تفاصيل",
       "summary": "مصر: مصرع وإصابة العشرات بحريق في مصنع ملابس وبيان رسمي يكشف تفاصيل الشرق الأوسط نشر الجمعة ، 26 سبتمبر / ايلول 2025 1 min قراءة صورة أرشيفية Credit: SAYED HASAN/AFP via Getty Images دبي، الإمارات العربية المتحدة ( CNN )-- أعلنت وزارة الصحة المصرية، الجمعة، مصرع 8 أشخاص وإصابة 35 آخرين في حصيلة أولية، نتيجة حريق اندلع بمصنع ملابس في مركز المحلة الكبرى بمحافظة الغربية، شمالي القاهرة. وقالت وزارة الصحة والسكان المصرية في بيان نشرته عبر حسابها الرسم",
@@ -273,24 +241,24 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     },
     {
-      "rank": 10,
+      "rank": 9,
       "emoji": "📰",
       "title": "Ice detainees death toll reaches 16 amid concerns over  horrendou conditions | U",
       "summary": "Concertina wire sits atop a fence surrounding an immigration processing center in Broadview, Illinois, on Monday. Photograph: Scott Olson/Getty Images View image in fullscreen Concertina wire sits atop a fence surrounding an immigration processing center in Broadview, Illinois, on Monday. Photograph: Scott Olson/Getty Images US immigration Ice detainees death toll reaches 16 amid concerns over ‘horrendous’ conditions Rising toll worries activists",
@@ -305,19 +273,51 @@
       "timeline": [
         {
           "date": "Background",
-          "event": "Story develops from earlier events"
+          "event": "Initial situation develops"
         },
         {
-          "date": "Recently",
-          "event": "Key developments begin to unfold"
+          "date": "Earlier",
+          "event": "Key factors emerge"
         },
         {
-          "date": "Yesterday",
-          "event": "Situation reaches critical point"
+          "date": "Recent",
+          "event": "Situation escalates"
         },
         {
-          "date": "Today",
-          "event": "Current story breaks and makes headlines"
+          "date": "Now",
+          "event": "Current developments unfold"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "📰",
+      "title": "Civilian injuries in Gaza similar to those of soldiers in war zones , study find",
+      "summary": "A wounded boy is treated by Nada Abu al-Rub, an Australian doctor volunteering at al-Shifa hospital in Gaza City, on 22 September. Photograph: Anadolu/Getty View image in fullscreen A wounded boy is treated by Nada Abu al-Rub, an Australian doctor volunteering at al-Shifa hospital in Gaza City, on 22 September. Photograph: Anadolu/Getty Gaza Civilian injuries in Gaza similar to those of soldiers in war zones, study finds Wounds such as burns or l",
+      "details": [
+        "Source: ",
+        "Category: World News",
+        "Method: Fallback"
+      ],
+      "category": "World News",
+      "source": "",
+      "url": "https://www.theguardian.com/world/2025/sep/25/civilian-injuries-gaza-combat-soldiers-study",
+      "timeline": [
+        {
+          "date": "Background",
+          "event": "Initial situation develops"
+        },
+        {
+          "date": "Earlier",
+          "event": "Key factors emerge"
+        },
+        {
+          "date": "Recent",
+          "event": "Situation escalates"
+        },
+        {
+          "date": "Now",
+          "event": "Current developments unfold"
         }
       ]
     }
@@ -343,6 +343,6 @@
       "description": "Apollo 11 lands on moon successfully"
     }
   ],
-  "generatedAt": "2025-09-26T12:52:33.341599",
-  "generatedAtUK": "2025-09-26T12:52:33.341635+01:00"
+  "generatedAt": "2025-09-26T13:36:18.147125",
+  "generatedAtUK": "2025-09-26T13:36:18.147163+01:00"
 }

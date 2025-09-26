@@ -1086,13 +1086,50 @@ Return ONLY this JSON:
                         {"date": "Today", "event": "Current story breaks and makes headlines"}
                     ]
             else:
-                print(f"   ⚠️ API call failed, using fallback timeline")
-                article['timeline'] = [
-                    {"date": "Background", "event": "Story develops from earlier events"},
-                    {"date": "Recently", "event": "Key developments begin to unfold"},
-                    {"date": "Yesterday", "event": "Situation reaches critical point"},
-                    {"date": "Today", "event": "Current story breaks and makes headlines"}
-                ]
+                print(f"   ⚠️ API call failed, creating smart fallback timeline")
+                # Create smarter fallback based on story content
+                title = article.get('title', '')
+                category = article.get('category', 'World News')
+                
+                # Create category-specific timelines
+                if 'election' in title.lower() or 'vote' in title.lower():
+                    timeline = [
+                        {"date": "Campaign", "event": "Election campaign begins"},
+                        {"date": "Polls open", "event": "Voting commences nationwide"},
+                        {"date": "Results", "event": "Initial results announced"},
+                        {"date": "Today", "event": "Final outcome confirmed"}
+                    ]
+                elif 'market' in title.lower() or 'stock' in title.lower():
+                    timeline = [
+                        {"date": "Opening", "event": "Markets open with volatility"},
+                        {"date": "Midday", "event": "Trading volume increases"},
+                        {"date": "Afternoon", "event": "Major moves detected"},
+                        {"date": "Close", "event": "Session ends with results"}
+                    ]
+                elif 'attack' in title.lower() or 'crisis' in title.lower():
+                    timeline = [
+                        {"date": "Initial reports", "event": "First alerts received"},
+                        {"date": "Confirmation", "event": "Officials confirm incident"},
+                        {"date": "Response", "event": "Emergency response deployed"},
+                        {"date": "Latest", "event": "Situation being monitored"}
+                    ]
+                elif category == 'Technology':
+                    timeline = [
+                        {"date": "Development", "event": "Technology advancement reported"},
+                        {"date": "Testing", "event": "Initial trials conducted"},
+                        {"date": "Approval", "event": "Regulatory approval granted"},
+                        {"date": "Launch", "event": "Product officially launched"}
+                    ]
+                else:
+                    # Generic fallback
+                    timeline = [
+                        {"date": "Background", "event": "Initial situation develops"},
+                        {"date": "Earlier", "event": "Key factors emerge"},
+                        {"date": "Recent", "event": "Situation escalates"},
+                        {"date": "Now", "event": "Current developments unfold"}
+                    ]
+                
+                article['timeline'] = timeline
         except Exception as e:
             print(f"   ❌ Error generating timeline: {str(e)}")
             article['timeline'] = [
