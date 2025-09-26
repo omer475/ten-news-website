@@ -1289,7 +1289,7 @@ export default function Home() {
                         {"year": "1945", "description": "UN Charter signed in San Francisco"},
                         {"year": "1963", "description": "JFK delivers 'Ich bin ein Berliner'"},
                         {"year": "1977", "description": "Elvis performs his final concert"}
-                      ]).map((event, i) => (
+                      ]).slice(0, 3).map((event, i) => (
                         <div key={i} style={{
                           textAlign: 'center',
                           minWidth: '150px'

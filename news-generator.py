@@ -1276,7 +1276,7 @@ def generate_historical_events():
 REQUIREMENTS:
 - Different time periods and categories
 - Globally significant events
-- Maximum 6 words per description (short and impactful)
+- Maximum 8 words per description
 - Format: year and description only
 
 Return ONLY this JSON:
@@ -1284,7 +1284,7 @@ Return ONLY this JSON:
   "events": [
     {{
       "year": "1485",
-      "description": "Battle of Bosworth Field ends"
+      "description": "Battle of Bosworth Field ends War"
     }},
     {{
       "year": "1969", 
@@ -1312,8 +1312,8 @@ Return ONLY this JSON:
     # Fallback events (3 events only)
     return [
         {"year": "1945", "description": "UN Charter signed in San Francisco"},
-        {"year": "1963", "description": "JFK delivers 'Ich bin ein Berliner'"},
-        {"year": "1977", "description": "Elvis performs his final concert"}
+        {"year": "1963", "description": "JFK delivers Berlin speech"},
+        {"year": "1977", "description": "Elvis performs final concert"}
     ]
 
 # ==================== CLAUDE API ====================
