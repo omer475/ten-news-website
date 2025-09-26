@@ -1529,104 +1529,93 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        {/* Details Section - Only visible when not showing timeline */}
-                        {!showTimeline[index] && (
-                          <div style={{
-                            display: 'flex',
-                            gap: '0',
-                            position: 'absolute',
-                            top: '0',
-                            left: '0',
-                            right: '0',
-                            background: '#ffffff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '16px',
-                            padding: '12px 20px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                            minHeight: '66px',
-                            zIndex: '10'
-                          }}>
-                            {story.details && story.details.map((detail, i) => {
-                              const [label, value] = detail.split(':');
-                              const cleanLabel = label?.trim() || '';
-                              const cleanValue = value?.trim() || '';
-                              
-                              // Extract main number/value and subtitle
-                              const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                              const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                              const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                              
-                              return (
-                                <div key={i} className="news-detail-item">
-                                  <div className="news-detail-label">{cleanLabel}</div>
-                                  <div className="news-detail-value">{mainValue}</div>
-                                  {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                        
-                        {/* Timeline Section - Only visible when showing timeline */}
-                        {showTimeline[index] && story.timeline && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '0',
-                            left: '0',
-                            right: '0',
-                            background: '#ffffff',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '16px',
-                            padding: '12px 20px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                            zIndex: '20',
-                            minHeight: '66px'
-                          }}>
-                            <div style={{
-                              position: 'relative',
-                              paddingLeft: '20px'
-                            }}>
-                              <div style={{
-                                position: 'absolute',
-                                left: '6px',
-                                top: '8px',
-                                bottom: '8px',
-                                width: '2px',
-                                background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
-                              }}></div>
-                              {story.timeline.map((event, idx) => (
-                                <div key={idx} style={{
-                                  position: 'relative',
-                                  marginBottom: '8px',
-                                  paddingLeft: '20px'
-                                }}>
-                                  <div style={{
-                                    position: 'absolute',
-                                    left: '-14px',
-                                    top: '4px',
-                                    width: '10px',
-                                    height: '10px',
-                                    borderRadius: '50%',
-                                    background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
-                                    border: '2px solid #3b82f6',
-                                    zIndex: '1'
-                                  }}></div>
-                                  <div style={{
-                                    fontSize: '10px',
-                                    fontWeight: '600',
-                                    color: '#3b82f6',
-                                    marginBottom: '2px'
-                                  }}>{event.date}</div>
-                                  <div style={{
-                                    fontSize: '12px',
-                                    color: '#1e293b',
-                                    lineHeight: '1.2'
-                                  }}>{event.event}</div>
-                                </div>
-                              ))}
+                        {/* Content Container - Switch between Details and Timeline */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '0',
+                          right: '0',
+                          background: '#ffffff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '16px',
+                          padding: '12px 20px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                          zIndex: '10',
+                          minHeight: '90px',
+                          transition: 'all 0.3s ease'
+                        }}>
+                          {!showTimeline[index] ? (
+                            // Show Details Only
+                            <div style={{ display: 'flex', gap: '0', width: '100%', height: '100%' }}>
+                              {story.details && story.details.map((detail, i) => {
+                                const [label, value] = detail.split(':');
+                                const cleanLabel = label?.trim() || '';
+                                const cleanValue = value?.trim() || '';
+                                
+                                // Extract main number/value and subtitle
+                                const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                                const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                                const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                                
+                                return (
+                                  <div key={i} className="news-detail-item">
+                                    <div className="news-detail-label">{cleanLabel}</div>
+                                    <div className="news-detail-value">{mainValue}</div>
+                                    {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          </div>
-                        )}
+                          ) : (
+                            // Show Timeline Only
+                            story.timeline && (
+                              <div style={{
+                                position: 'relative',
+                                paddingLeft: '20px',
+                                width: '100%'
+                              }}>
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '6px',
+                                  top: '8px',
+                                  bottom: '8px',
+                                  width: '2px',
+                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)'
+                                }}></div>
+                                {story.timeline.map((event, idx) => (
+                                  <div key={idx} style={{
+                                    position: 'relative',
+                                    marginBottom: '8px',
+                                    paddingLeft: '20px'
+                                  }}>
+                                    <div style={{
+                                      position: 'absolute',
+                                      left: '-14px',
+                                      top: '4px',
+                                      width: '10px',
+                                      height: '10px',
+                                      borderRadius: '50%',
+                                      background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
+                                      border: '2px solid #3b82f6',
+                                      zIndex: '1'
+                                    }}></div>
+                                    <div style={{
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                      color: '#3b82f6',
+                                      marginBottom: '2px'
+                                    }}>{event.date}</div>
+                                    <div style={{
+                                      fontSize: '12px',
+                                      color: '#1e293b',
+                                      lineHeight: '1.2'
+                                    }}>{event.event}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          )}
+                        </div>
                         
                         {/* Toggle Arrows - Hidden on mobile */}
                         <div className="timeline-arrow" style={{
