@@ -1378,20 +1378,12 @@ export default function Home() {
                           minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
-                          // CRITICAL: Completely stop event from bubbling up
-                          e.stopPropagation();
-                          e.preventDefault();
-                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
                           let isHorizontalSwipe = false;
                           
                           const handleTouchMove = (moveEvent) => {
-                            // CRITICAL: Stop all event propagation
-                            moveEvent.stopPropagation();
-                            moveEvent.preventDefault();
-                            
                             const currentX = moveEvent.touches[0].clientX;
                             const currentY = moveEvent.touches[0].clientY;
                             const diffX = Math.abs(startX - currentX);
@@ -1401,40 +1393,43 @@ export default function Home() {
                               hasMoved = true;
                             }
                             
-                            // Determine if this is a horizontal swipe early (easier detection)
+                            // Determine if this is a horizontal swipe early
                             if (diffX > 15 && diffX > diffY) {
                               isHorizontalSwipe = true;
+                              // Only prevent events for horizontal swipes on this element
+                              moveEvent.stopPropagation();
+                              moveEvent.preventDefault();
                             }
                           };
                           
                           const handleTouchEnd = (endEvent) => {
-                            // CRITICAL: Stop all event propagation
-                            endEvent.stopPropagation();
-                            endEvent.preventDefault();
-                            
                             const endX = endEvent.changedTouches[0].clientX;
                             const endY = endEvent.changedTouches[0].clientY;
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only toggle timeline if it was a clear horizontal swipe (easier threshold)
+                            // Only handle horizontal swipes, let vertical ones through
                             if (hasMoved && isHorizontalSwipe && Math.abs(diffX) > 25) {
+                              // This is a timeline swipe - handle it and stop propagation
+                              endEvent.stopPropagation();
+                              endEvent.preventDefault();
                               console.log('Timeline swipe detected - toggling for story', index);
                               toggleTimeline(index);
                             } else if (!hasMoved) {
-                              // Single tap also toggles
+                              // Single tap also toggles, but don't prevent other events
                               console.log('Timeline tap detected - toggling for story', index);
                               toggleTimeline(index);
                             }
+                            // If it's not a horizontal swipe, don't prevent default - let story navigation work
                             
-                            // Clean up listeners
+                            // Always clean up listeners
                             document.removeEventListener('touchmove', handleTouchMove);
                             document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
-                          // CRITICAL: Use capture phase to intercept before main story handler
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+                          // Use normal event listeners, not capture
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
                         {!showTimeline[index] ? (
