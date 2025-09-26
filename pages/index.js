@@ -1385,11 +1385,11 @@ export default function Home() {
                              }}>
                               <div style={{
                                 position: 'relative',
-                                paddingLeft: '20px'
+                                paddingLeft: '12px'
                               }}>
                                 <div style={{
                                   position: 'absolute',
-                                  left: '6px',
+                                  left: '2px',
                                   top: '8px',
                                   bottom: '8px',
                                   width: '2px',
@@ -1399,11 +1399,11 @@ export default function Home() {
                                    <div key={idx} style={{
                                      position: 'relative',
                                      marginBottom: '8px',
-                                     paddingLeft: '20px'
+                                     paddingLeft: '12px'
                                    }}>
                                      <div style={{
                                        position: 'absolute',
-                                       left: '-14px',
+                                       left: '-10px',
                                        top: '4px',
                                        width: '10px',
                                        height: '10px',
