@@ -1271,12 +1271,12 @@ def generate_historical_events():
     
     print(f"\n📚 Generating historical events for {current_month} {current_day}...")
     
-    prompt = f"""Find 3 historical events that occurred on {current_month} {current_day}.
+    prompt = f"""Find 4 historical events that occurred on {current_month} {current_day}.
 
 REQUIREMENTS:
 - Different time periods and categories
 - Globally significant events
-- Maximum 8 words per description
+- Maximum 10 words per description
 - Format: year and description only
 
 Return ONLY this JSON:
@@ -1284,15 +1284,19 @@ Return ONLY this JSON:
   "events": [
     {{
       "year": "1485",
-      "description": "Battle of Bosworth Field ends War"
+      "description": "Battle of Bosworth Field ends War of Roses"
     }},
     {{
       "year": "1969", 
-      "description": "Neil Armstrong walks on moon"
+      "description": "Neil Armstrong walks on moon for first time"
     }},
     {{
       "year": "YEAR3",
       "description": "Event 3 description"
+    }},
+    {{
+      "year": "YEAR4", 
+      "description": "Event 4 description"
     }}
   ]
 }}"""
@@ -1309,11 +1313,12 @@ Return ONLY this JSON:
         except Exception:
             pass
     
-    # Fallback events (3 events only)
+    # Fallback events
     return [
-        {"year": "1945", "description": "UN Charter signed in San Francisco"},
-        {"year": "1963", "description": "JFK delivers Berlin speech"},
-        {"year": "1977", "description": "Elvis performs final concert"}
+        {"year": "1485", "description": "Battle of Bosworth Field ends War of Roses"},
+        {"year": "1864", "description": "Geneva Convention for wounded soldiers signed"},
+        {"year": "1911", "description": "Mona Lisa stolen from Louvre Museum"},
+        {"year": "1969", "description": "Apollo 11 lands on moon successfully"}
     ]
 
 # ==================== CLAUDE API ====================
