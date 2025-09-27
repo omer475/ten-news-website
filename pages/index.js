@@ -733,10 +733,7 @@ export default function Home() {
           margin-bottom: 16px;
           padding-bottom: 16px;
           border-bottom: 1px solid #e2e8f0;
-          text-align: center;
-          max-width: 700px;
-          margin-left: auto;
-          margin-right: auto;
+          text-align: left;
         }
 
         .news-meta {
@@ -1346,67 +1343,63 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Instagram Stories Style Progress Bar */}
+                      {/* Modern Icon Toggle Buttons */}
                       {story.timeline && (
                         <div style={{
                           display: 'flex',
-                          justifyContent: 'center',
-                          gap: '4px',
+                          justifyContent: 'flex-end',
+                          gap: '12px',
                           marginBottom: '16px',
-                          padding: '0 20px'
+                          marginTop: '12px'
                         }}>
-                          {/* Details Progress Segment */}
+                          {/* Details Icon Button */}
                           <div style={{
-                            flex: '1',
-                            height: '3px',
-                            borderRadius: '2px',
-                            background: '#e5e7eb',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            cursor: 'pointer'
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '18px',
+                            background: !showTimeline[index] ? '#3b82f6' : 'rgba(59, 130, 246, 0.1)',
+                            color: !showTimeline[index] ? '#ffffff' : '#3b82f6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            border: '2px solid #3b82f6',
+                            boxShadow: !showTimeline[index] ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
                           }} onClick={(e) => {
                             e.stopPropagation();
                             if (showTimeline[index]) {
-                              toggleTimeline(index);
+                              setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }
                           }}>
-                            <div style={{
-                              position: 'absolute',
-                              top: '0',
-                              left: '0',
-                              height: '100%',
-                              background: 'linear-gradient(90deg, #3b82f6, #60a5fa)',
-                              borderRadius: '2px',
-                              width: !showTimeline[index] ? '100%' : '0%',
-                              transition: 'width 0.3s ease'
-                            }}></div>
+                            📊
                           </div>
                           
-                          {/* Timeline Progress Segment */}
+                          {/* Timeline Icon Button */}
                           <div style={{
-                            flex: '1',
-                            height: '3px',
-                            borderRadius: '2px',
-                            background: '#e5e7eb',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            cursor: 'pointer'
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '18px',
+                            background: showTimeline[index] ? '#8b5cf6' : 'rgba(139, 92, 246, 0.1)',
+                            color: showTimeline[index] ? '#ffffff' : '#8b5cf6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            border: '2px solid #8b5cf6',
+                            boxShadow: showTimeline[index] ? '0 4px 12px rgba(139, 92, 246, 0.3)' : 'none'
                           }} onClick={(e) => {
                             e.stopPropagation();
                             if (!showTimeline[index]) {
-                              toggleTimeline(index);
+                              setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }
                           }}>
-                            <div style={{
-                              position: 'absolute',
-                              top: '0',
-                              left: '0',
-                              height: '100%',
-                              background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
-                              borderRadius: '2px',
-                              width: showTimeline[index] ? '100%' : '0%',
-                              transition: 'width 0.3s ease'
-                            }}></div>
+                            📅
                           </div>
                         </div>
                       )}
