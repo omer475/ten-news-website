@@ -232,6 +232,50 @@ export default function Home() {
     }
   };
 
+  // Function to render title with important words in blue
+  const renderTitleWithBlueWords = (title) => {
+    if (!title) return '';
+    
+    // Define important words that should be blue
+    const importantWords = [
+      // People & Leaders
+      'Trump', 'Biden', 'Putin', 'Xi', 'Jinping', 'Zelensky', 'Modi', 'Macron', 'Netanyahu', 'Pope',
+      
+      // Companies & Organizations
+      'Apple', 'Google', 'Microsoft', 'Amazon', 'Meta', 'Facebook', 'Tesla', 'Netflix', 'Disney', 'OpenAI',
+      'ChatGPT', 'FBI', 'CIA', 'UN', 'NATO', 'EU', 'WHO', 'IMF', 'Fed', 'Boeing', 'Airbus',
+      
+      // Important Terms & Actions
+      'Breaking', 'Urgent', 'Crisis', 'Emergency', 'Record', 'Historic', 'Unprecedented', 'Dies', 'Dead', 
+      'Killed', 'Death', 'Attack', 'War', 'Peace', 'Deal', 'Agreement', 'Sanctions', 'Breakthrough',
+      'Launch', 'Announces', 'Reveals', 'Approves', 'Bans', 'Crashes', 'Surges', 'Reaches',
+      
+      // Numbers & Amounts (look for these patterns)
+      'Billion', 'Million', 'Trillion', 'Percent'
+    ];
+    
+    const words = title.split(' ');
+    
+    return words.map((word, index) => {
+      const cleanWord = word.replace(/[^\w]/g, ''); // Remove punctuation for matching
+      const isImportant = importantWords.some(importantWord => 
+        cleanWord.toLowerCase() === importantWord.toLowerCase() ||
+        word.includes('$') || word.includes('%') || word.includes('€') || word.includes('£') ||
+        /^\d+/.test(word) // Numbers at start of word
+      );
+      
+      return (
+        <span key={index} style={{ 
+          color: isImportant ? '#3b82f6' : '#000000',
+          fontWeight: isImportant ? '900' : '800'
+        }}>
+          {word}
+          {index < words.length - 1 ? ' ' : ''}
+        </span>
+      );
+    });
+  };
+
   // Function to render text with bold markup and category-colored containers
   const renderBoldText = (text, category) => {
     if (!text) return '';
@@ -256,44 +300,6 @@ export default function Home() {
         return <strong key={index} style={getCategoryBoldStyle(category)}>{part.slice(2, -2)}</strong>;
       }
       return part;
-    });
-  };
-
-  // Function to render title with important words in black, rest in gray
-  const renderTitle = (title) => {
-    if (!title) return '';
-    
-    // Define important words that should be black
-    const importantWords = [
-      // People & Organizations
-      'Trump', 'Biden', 'Putin', 'Xi', 'Jinping', 'Apple', 'Google', 'Microsoft', 'Amazon', 'Meta', 'Facebook',
-      'Tesla', 'Netflix', 'Disney', 'OpenAI', 'ChatGPT', 'AI', 'FBI', 'CIA', 'UN', 'NATO', 'EU', 'WHO', 'IMF',
-      
-      // Important Terms
-      'Breaking', 'Urgent', 'Crisis', 'Emergency', 'Record', 'Historic', 'Unprecedented', 'Billion', 'Million',
-      'Trillion', 'Dead', 'Killed', 'Dies', 'Death', 'Attack', 'War', 'Peace', 'Deal', 'Agreement', 'Sanctions',
-      
-      // Numbers & Amounts
-      '$', '€', '£', '¥', '%', 'Million', 'Billion', 'Trillion'
-    ];
-    
-    const words = title.split(' ');
-    
-    return words.map((word, index) => {
-      const cleanWord = word.replace(/[^\w]/g, ''); // Remove punctuation for matching
-      const isImportant = importantWords.some(importantWord => 
-        cleanWord.toLowerCase().includes(importantWord.toLowerCase()) ||
-        word.includes('$') || word.includes('%') || word.includes('€') || word.includes('£')
-      );
-      
-      return (
-        <span key={index} style={{ 
-          color: isImportant ? '#000000' : '#666666' 
-        }}>
-          {word}
-          {index < words.length - 1 ? ' ' : ''}
-        </span>
-      );
     });
   };
 
@@ -1352,7 +1358,7 @@ export default function Home() {
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
                       </div>
-                      <h3 className="news-title">{renderTitle(story.title)}</h3>
+                      <h3 className="news-title">{renderTitleWithBlueWords(story.title)}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
                       {/* Modern Segmented Control */}
