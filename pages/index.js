@@ -1347,7 +1347,7 @@ export default function Home() {
                           display: 'flex',
                           justifyContent: 'flex-end',
                           marginBottom: '16px',
-                          marginTop: '12px'
+                          marginTop: '0px'
                         }}>
                           <div style={{
                             display: 'flex',
@@ -1364,7 +1364,7 @@ export default function Home() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '6px 20px',
+                              padding: '4px 20px',
                               borderRadius: '16px',
                               background: !showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
@@ -1390,7 +1390,7 @@ export default function Home() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '6px 20px',
+                              padding: '4px 20px',
                               borderRadius: '16px',
                               background: showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
