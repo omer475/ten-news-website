@@ -1358,13 +1358,13 @@ export default function Home() {
                             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                             backdropFilter: 'blur(10px)'
                           }}>
-                            {/* Details Button */}
+                            {/* Details Button - Icons Only */}
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '6px',
-                              padding: '8px 16px',
-                              borderRadius: '20px',
+                              justifyContent: 'center',
+                              padding: '10px',
+                              borderRadius: '18px',
                               background: !showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
@@ -1376,28 +1376,21 @@ export default function Home() {
                               }
                             }}>
                               {/* Details Icon - Grid/Chart */}
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
                                 <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
                                 <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
                                 <rect x="14" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
                               </svg>
-                              <span style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: !showTimeline[index] ? '#3b82f6' : '#94a3b8',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                              }}>Details</span>
                             </div>
                             
-                            {/* Timeline Button */}
+                            {/* Timeline Button - Icons Only */}
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '6px',
-                              padding: '8px 16px',
-                              borderRadius: '20px',
+                              justifyContent: 'center',
+                              padding: '10px',
+                              borderRadius: '18px',
                               background: showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
@@ -1409,7 +1402,7 @@ export default function Home() {
                               }
                             }}>
                               {/* Timeline Icon - Connected Dots */}
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                                 <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
                                 <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
                                 <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
@@ -1417,13 +1410,6 @@ export default function Home() {
                                 <line x1="6" y1="12" x2="20" y2="12" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
                                 <line x1="6" y1="20" x2="20" y2="20" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
                               </svg>
-                              <span style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: showTimeline[index] ? '#8b5cf6' : '#94a3b8',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                              }}>Timeline</span>
                             </div>
                           </div>
                         </div>
