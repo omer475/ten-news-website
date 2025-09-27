@@ -731,8 +731,6 @@ export default function Home() {
           color: #4a4a4a;
           line-height: 1.6;
           margin-bottom: 16px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid #e2e8f0;
           text-align: left;
         }
 
@@ -1343,63 +1341,79 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Modern Icon Toggle Buttons */}
+                      {/* iPhone-Style Toggle Buttons */}
                       {story.timeline && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'flex-end',
-                          gap: '12px',
+                          gap: '8px',
                           marginBottom: '16px',
                           marginTop: '12px'
                         }}>
-                          {/* Details Icon Button */}
+                          {/* Details Toggle */}
                           <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '18px',
-                            background: !showTimeline[index] ? '#3b82f6' : 'rgba(59, 130, 246, 0.1)',
-                            color: !showTimeline[index] ? '#ffffff' : '#3b82f6',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            borderRadius: '20px',
+                            background: !showTimeline[index] ? '#3b82f6' : '#f1f5f9',
+                            border: '1px solid #e2e8f0',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            border: '2px solid #3b82f6',
-                            boxShadow: !showTimeline[index] ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
+                            boxShadow: !showTimeline[index] ? '0 2px 8px rgba(59, 130, 246, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
                           }} onClick={(e) => {
                             e.stopPropagation();
                             if (showTimeline[index]) {
                               setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }
                           }}>
-                            📊
+                            <div style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              background: !showTimeline[index] ? '#ffffff' : '#94a3b8'
+                            }}></div>
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              color: !showTimeline[index] ? '#ffffff' : '#64748b',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}>Details</span>
                           </div>
                           
-                          {/* Timeline Icon Button */}
+                          {/* Timeline Toggle */}
                           <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '18px',
-                            background: showTimeline[index] ? '#8b5cf6' : 'rgba(139, 92, 246, 0.1)',
-                            color: showTimeline[index] ? '#ffffff' : '#8b5cf6',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            borderRadius: '20px',
+                            background: showTimeline[index] ? '#8b5cf6' : '#f1f5f9',
+                            border: '1px solid #e2e8f0',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            border: '2px solid #8b5cf6',
-                            boxShadow: showTimeline[index] ? '0 4px 12px rgba(139, 92, 246, 0.3)' : 'none'
+                            boxShadow: showTimeline[index] ? '0 2px 8px rgba(139, 92, 246, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
                           }} onClick={(e) => {
                             e.stopPropagation();
                             if (!showTimeline[index]) {
                               setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }
                           }}>
-                            📅
+                            <div style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              background: showTimeline[index] ? '#ffffff' : '#94a3b8'
+                            }}></div>
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              color: showTimeline[index] ? '#ffffff' : '#64748b',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}>Timeline</span>
                           </div>
                         </div>
                       )}
