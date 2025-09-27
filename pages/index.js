@@ -55,18 +55,18 @@ export default function Home() {
           
           processedStories.push(openingStory);
           
-            // Convert news generator articles to website format
-            newsData.articles.forEach((article, index) => {
+          // Convert news generator articles to website format
+          newsData.articles.forEach((article, index) => {
               const storyData = {
-                type: 'news',
-                number: article.rank || (index + 1),
-                category: (article.category || 'WORLD NEWS').toUpperCase(),
-                emoji: article.emoji || '📰',
-                title: article.title || 'News Story',
-                summary: article.summary || 'News summary will appear here.',
-                details: article.details || [],
-                source: article.source || 'Ten News',
-                url: article.url || '#'
+              type: 'news',
+              number: article.rank || (index + 1),
+              category: (article.category || 'WORLD NEWS').toUpperCase(),
+              emoji: article.emoji || '📰',
+              title: article.title || 'News Story',
+              summary: article.summary || 'News summary will appear here.',
+              details: article.details || [],
+              source: article.source || 'Ten News',
+              url: article.url || '#'
               };
               
               // Add timeline data (from generator or create fallback)
@@ -95,7 +95,7 @@ export default function Home() {
               }
               
               processedStories.push(storyData);
-            });
+          });
         } else {
           // Fallback stories with sample data
           processedStories = [
@@ -163,7 +163,7 @@ export default function Home() {
           ];
         }
         
-
+        
         // Add newsletter signup at the end
         processedStories.push({
           type: 'newsletter',
@@ -256,6 +256,44 @@ export default function Home() {
         return <strong key={index} style={getCategoryBoldStyle(category)}>{part.slice(2, -2)}</strong>;
       }
       return part;
+    });
+  };
+
+  // Function to render title with important words in black, rest in gray
+  const renderTitle = (title) => {
+    if (!title) return '';
+    
+    // Define important words that should be black
+    const importantWords = [
+      // People & Organizations
+      'Trump', 'Biden', 'Putin', 'Xi', 'Jinping', 'Apple', 'Google', 'Microsoft', 'Amazon', 'Meta', 'Facebook',
+      'Tesla', 'Netflix', 'Disney', 'OpenAI', 'ChatGPT', 'AI', 'FBI', 'CIA', 'UN', 'NATO', 'EU', 'WHO', 'IMF',
+      
+      // Important Terms
+      'Breaking', 'Urgent', 'Crisis', 'Emergency', 'Record', 'Historic', 'Unprecedented', 'Billion', 'Million',
+      'Trillion', 'Dead', 'Killed', 'Dies', 'Death', 'Attack', 'War', 'Peace', 'Deal', 'Agreement', 'Sanctions',
+      
+      // Numbers & Amounts
+      '$', '€', '£', '¥', '%', 'Million', 'Billion', 'Trillion'
+    ];
+    
+    const words = title.split(' ');
+    
+    return words.map((word, index) => {
+      const cleanWord = word.replace(/[^\w]/g, ''); // Remove punctuation for matching
+      const isImportant = importantWords.some(importantWord => 
+        cleanWord.toLowerCase().includes(importantWord.toLowerCase()) ||
+        word.includes('$') || word.includes('%') || word.includes('€') || word.includes('£')
+      );
+      
+      return (
+        <span key={index} style={{ 
+          color: isImportant ? '#000000' : '#666666' 
+        }}>
+          {word}
+          {index < words.length - 1 ? ' ' : ''}
+        </span>
+      );
     });
   };
 
@@ -1314,7 +1352,7 @@ export default function Home() {
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
                       </div>
-                      <h3 className="news-title">{story.title}</h3>
+                      <h3 className="news-title">{renderTitle(story.title)}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
                       {/* Modern Segmented Control */}
@@ -1462,22 +1500,22 @@ export default function Home() {
                         {!showTimeline[index] ? (
                           // Show Details Only
                           story.details && story.details.map((detail, i) => {
-                            const [label, value] = detail.split(':');
-                            const cleanLabel = label?.trim() || '';
-                            const cleanValue = value?.trim() || '';
-                            
-                            // Extract main number/value and subtitle
-                            const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                            const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                            const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                            
-                            return (
-                              <div key={i} className="news-detail-item">
-                                <div className="news-detail-label">{cleanLabel}</div>
-                                <div className="news-detail-value">{mainValue}</div>
-                                {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                              </div>
-                            );
+                          const [label, value] = detail.split(':');
+                          const cleanLabel = label?.trim() || '';
+                          const cleanValue = value?.trim() || '';
+                          
+                          // Extract main number/value and subtitle
+                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                          
+                          return (
+                            <div key={i} className="news-detail-item">
+                              <div className="news-detail-label">{cleanLabel}</div>
+                              <div className="news-detail-value">{mainValue}</div>
+                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                            </div>
+                          );
                           })
                         ) : (
                           // Show Timeline Only - Compact with internal scrolling
@@ -1536,7 +1574,7 @@ export default function Home() {
                                       color: '#1e293b',
                                       lineHeight: '1.3'
                                     }}>{event.event}</div>
-                                  </div>
+                      </div>
                                 ))}
                                 
                                 {/* Scroll hint at bottom */}
