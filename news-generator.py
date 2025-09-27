@@ -718,8 +718,7 @@ CRITICAL REQUIREMENTS:
 2. **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers  
 3. **DETAILS**: Exactly 3 facts in "Label: Value" format with NEW information not in summary
 4. **TITLE**: 8-12 engaging words (NO emoji in title field)
-5. **TITLE HIGHLIGHTING**: Choose 2-5 important words in title and mark with ##word## for blue highlighting
-6. **EMOJI**: One relevant emoji per story
+5. **EMOJI**: One relevant emoji per story
 
 ## WORD COUNT VALIDATION PROCESS:
 For each summary:
@@ -733,12 +732,6 @@ For each summary:
 - **Bold** should highlight: important names, places, numbers, key concepts
 - Use 3-6 bold items per summary (not too few, not too many)
 - Example: "**Apple** reported **$89.5 billion** revenue for **Q4 2024**, exceeding analyst expectations by **12%** as **iPhone 15** sales surged globally."
-
-## TITLE HIGHLIGHTING RULES:
-- Choose 2-5 most important words in the title for blue highlighting
-- Mark with ##word## (example: "##Apple## Reports ##Record## Revenue in ##Q4##")
-- Highlight: Names, companies, countries, numbers, key actions, important concepts
-- Examples: ##Trump##, ##$2.5 billion##, ##Breaking##, ##Historic##, ##AI##, ##China##
 
 ## DETAILS FORMAT:
 Each detail must be "Label: Value" where:
@@ -754,7 +747,7 @@ Return ONLY this JSON structure with EXACTLY {len(selected_articles_with_content
     {{
       "rank": 1,
       "emoji": "📱",
-      "title": "##Apple## Reports ##Record## Revenue in Latest ##Quarter##",
+      "title": "Engaging title without emoji in 8-12 words",
       "summary": "Exactly 40-50 words with **bold** markup for key terms - count every word carefully to ensure perfect range",
       "details": ["Label: Value", "Label: Value", "Label: Value"],
       "category": "World News|Business|Technology|Science|Climate|Health",
