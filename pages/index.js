@@ -1357,7 +1357,7 @@ export default function Home() {
                             padding: '2px',
                             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                             backdropFilter: 'blur(10px)',
-                            width: '120px'
+                            width: '110px'
                           }}>
                             {/* Details Button - Icons Only */}
                             <div style={{
