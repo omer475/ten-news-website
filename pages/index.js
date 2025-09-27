@@ -1058,12 +1058,6 @@ export default function Home() {
             display: none !important;
           }
           
-          /* Fixed toggle position for mobile */
-          .fixed-toggle-container {
-            top: 420px !important;
-            right: 20px !important;
-          }
-          
           .story-container {
             padding: 60px 12px 40px;
           }
@@ -1347,12 +1341,12 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Position Toggle Buttons - Same spot on every page */}
+                      {/* Modern Segmented Control - Fixed Position */}
                       {story.timeline && (
-                        <div className="fixed-toggle-container" style={{
+                        <div style={{
                           position: 'absolute',
-                          top: '480px', // Fixed position from top
-                          right: '40px', // Fixed position from right
+                          top: '520px',
+                          right: '20px',
                           zIndex: '100'
                         }}>
                           <div style={{
@@ -1424,10 +1418,14 @@ export default function Home() {
                       <div 
                         className="news-meta" 
                         style={{ 
-                          position: 'relative', 
+                          position: 'absolute',
+                          top: '560px',
+                          left: '20px',
+                          right: '20px',
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '90px'
+                          minHeight: '110px',
+                          zIndex: '50'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
