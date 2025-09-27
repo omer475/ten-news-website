@@ -1313,7 +1313,7 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    <div className="news-content">
+                    <div className="news-content" style={{ position: 'relative' }}>
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
                                    story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
@@ -1341,22 +1341,22 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Modern Segmented Control */}
+                      {/* Modern Segmented Control - Fixed Position */}
                       {story.timeline && (
                         <div style={{
-                          display: 'flex',
-                          justifyContent: 'flex-end',
-                          marginBottom: '16px',
-                          marginTop: '12px'
+                          position: 'absolute',
+                          right: '20px',
+                          top: '20px',
+                          zIndex: '30'
                         }}>
                           <div style={{
                             display: 'flex',
-                            background: '#f1f5f9',
+                            background: 'rgba(241, 245, 249, 0.95)',
                             border: '1px solid #e2e8f0',
                             borderRadius: '20px',
                             padding: '2px',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                            backdropFilter: 'blur(20px)',
                             width: '110px'
                           }}>
                             {/* Details Button - Icons Only */}
