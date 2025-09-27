@@ -1353,18 +1353,19 @@ export default function Home() {
                             display: 'flex',
                             background: '#f1f5f9',
                             border: '1px solid #e2e8f0',
-                            borderRadius: '24px',
-                            padding: '3px',
+                            borderRadius: '20px',
+                            padding: '2px',
                             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                            backdropFilter: 'blur(10px)'
+                            backdropFilter: 'blur(10px)',
+                            width: '120px'
                           }}>
                             {/* Details Button - Icons Only */}
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '6px',
-                              borderRadius: '14px',
+                              padding: '6px 20px',
+                              borderRadius: '16px',
                               background: !showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
@@ -1389,8 +1390,8 @@ export default function Home() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '6px',
-                              borderRadius: '14px',
+                              padding: '6px 20px',
+                              borderRadius: '16px',
                               background: showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
