@@ -1313,7 +1313,7 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    <div className="news-content" style={{ position: 'relative' }}>
+                    <div className="news-content">
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
                                    story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
@@ -1340,23 +1340,22 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
-                      
-                      {/* Modern Segmented Control - Fixed Position */}
+                      {/* Fixed Toggle Buttons - Above Details/Timeline */}
                       {story.timeline && (
                         <div style={{
-                          position: 'absolute',
-                          right: '20px',
-                          top: '20px',
-                          zIndex: '30'
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          marginBottom: '16px',
+                          marginTop: '20px'
                         }}>
                           <div style={{
                             display: 'flex',
-                            background: 'rgba(241, 245, 249, 0.95)',
+                            background: '#f1f5f9',
                             border: '1px solid #e2e8f0',
                             borderRadius: '20px',
                             padding: '2px',
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                            backdropFilter: 'blur(20px)',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                            backdropFilter: 'blur(10px)',
                             width: '110px'
                           }}>
                             {/* Details Button - Icons Only */}
@@ -1372,9 +1371,7 @@ export default function Home() {
                               boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
-                              if (showTimeline[index]) {
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                              }
+                              setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }}>
                               {/* Details Icon - Grid/Chart */}
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1398,9 +1395,7 @@ export default function Home() {
                               boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
-                              if (!showTimeline[index]) {
-                                setShowTimeline(prev => ({ ...prev, [index]: true }));
-                              }
+                              setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }}>
                               {/* Timeline Icon - Connected Dots */}
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1415,13 +1410,14 @@ export default function Home() {
                           </div>
                         </div>
                       )}
+
                       <div 
                         className="news-meta" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '90px'
+                          minHeight: '110px'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
