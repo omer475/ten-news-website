@@ -114,7 +114,7 @@ export default function Home() {
               number: 1,
               category: 'SYSTEM STATUS',
               emoji: '🤖',
-              title: 'GitHub Actions Automation Active',
+              title: '##GitHub Actions## Automation ##Active##',
               summary: 'Your Ten News system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
               details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
               source: 'Ten News System',
@@ -131,7 +131,7 @@ export default function Home() {
               number: 2,
               category: 'SYSTEM STATUS', 
               emoji: '🌍',
-              title: 'GDELT Global News Integration Ready',
+              title: '##GDELT## Global News ##Integration## Ready',
               summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
               details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
               source: 'Ten News System',
@@ -148,7 +148,7 @@ export default function Home() {
               number: 3,
               category: 'SYSTEM STATUS',
               emoji: '🧠', 
-              title: 'Claude AI Curation System Online',
+              title: '##Claude AI## Curation System ##Online##',
               summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
               details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
               source: 'Ten News System',
@@ -232,47 +232,22 @@ export default function Home() {
     }
   };
 
-  // Function to render title with important words in blue
+  // Function to render title with blue highlighted words
   const renderTitleWithBlueWords = (title) => {
     if (!title) return '';
     
-    // Define important words that should be blue
-    const importantWords = [
-      // People & Leaders
-      'Trump', 'Biden', 'Putin', 'Xi', 'Jinping', 'Zelensky', 'Modi', 'Macron', 'Netanyahu', 'Pope',
-      
-      // Companies & Organizations
-      'Apple', 'Google', 'Microsoft', 'Amazon', 'Meta', 'Facebook', 'Tesla', 'Netflix', 'Disney', 'OpenAI',
-      'ChatGPT', 'FBI', 'CIA', 'UN', 'NATO', 'EU', 'WHO', 'IMF', 'Fed', 'Boeing', 'Airbus',
-      
-      // Important Terms & Actions
-      'Breaking', 'Urgent', 'Crisis', 'Emergency', 'Record', 'Historic', 'Unprecedented', 'Dies', 'Dead', 
-      'Killed', 'Death', 'Attack', 'War', 'Peace', 'Deal', 'Agreement', 'Sanctions', 'Breakthrough',
-      'Launch', 'Announces', 'Reveals', 'Approves', 'Bans', 'Crashes', 'Surges', 'Reaches',
-      
-      // Numbers & Amounts (look for these patterns)
-      'Billion', 'Million', 'Trillion', 'Percent'
-    ];
-    
-    const words = title.split(' ');
-    
-    return words.map((word, index) => {
-      const cleanWord = word.replace(/[^\w]/g, ''); // Remove punctuation for matching
-      const isImportant = importantWords.some(importantWord => 
-        cleanWord.toLowerCase() === importantWord.toLowerCase() ||
-        word.includes('$') || word.includes('%') || word.includes('€') || word.includes('£') ||
-        /^\d+/.test(word) // Numbers at start of word
-      );
-      
-      return (
-        <span key={index} style={{ 
-          color: isImportant ? '#3b82f6' : '#000000',
-          fontWeight: isImportant ? '900' : '800'
-        }}>
-          {word}
-          {index < words.length - 1 ? ' ' : ''}
-        </span>
-      );
+    return title.split(/(##.*?##)/).map((part, index) => {
+      if (part.startsWith('##') && part.endsWith('##')) {
+        return (
+          <span key={index} style={{ 
+            color: '#3b82f6',
+            fontWeight: '900'
+          }}>
+            {part.slice(2, -2)}
+          </span>
+        );
+      }
+      return part;
     });
   };
 
@@ -1358,7 +1333,7 @@ export default function Home() {
                         <span className="news-category-icon">{story.emoji}</span>
                         {story.category}
                       </div>
-                      <h3 className="news-title">{renderTitleWithBlueWords(story.title)}</h3>
+                       <h3 className="news-title">{renderTitleWithBlueWords(story.title)}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
                       {/* Modern Segmented Control */}
