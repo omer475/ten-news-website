@@ -1341,79 +1341,90 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* iPhone-Style Toggle Buttons */}
+                      {/* Modern Segmented Control */}
                       {story.timeline && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'flex-end',
-                          gap: '8px',
                           marginBottom: '16px',
                           marginTop: '12px'
                         }}>
-                          {/* Details Toggle */}
                           <div style={{
                             display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 12px',
-                            borderRadius: '20px',
-                            background: !showTimeline[index] ? '#3b82f6' : '#f1f5f9',
+                            background: '#f1f5f9',
                             border: '1px solid #e2e8f0',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            boxShadow: !showTimeline[index] ? '0 2px 8px rgba(59, 130, 246, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }} onClick={(e) => {
-                            e.stopPropagation();
-                            if (showTimeline[index]) {
-                              setShowTimeline(prev => ({ ...prev, [index]: false }));
-                            }
+                            borderRadius: '24px',
+                            padding: '3px',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                            backdropFilter: 'blur(10px)'
                           }}>
+                            {/* Details Button */}
                             <div style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: !showTimeline[index] ? '#ffffff' : '#94a3b8'
-                            }}></div>
-                            <span style={{
-                              fontSize: '11px',
-                              fontWeight: '600',
-                              color: !showTimeline[index] ? '#ffffff' : '#64748b',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}>Details</span>
-                          </div>
-                          
-                          {/* Timeline Toggle */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 12px',
-                            borderRadius: '20px',
-                            background: showTimeline[index] ? '#8b5cf6' : '#f1f5f9',
-                            border: '1px solid #e2e8f0',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            boxShadow: showTimeline[index] ? '0 2px 8px rgba(139, 92, 246, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }} onClick={(e) => {
-                            e.stopPropagation();
-                            if (!showTimeline[index]) {
-                              setShowTimeline(prev => ({ ...prev, [index]: true }));
-                            }
-                          }}>
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 16px',
+                              borderRadius: '20px',
+                              background: !showTimeline[index] ? '#ffffff' : 'transparent',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                              boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                            }} onClick={(e) => {
+                              e.stopPropagation();
+                              if (showTimeline[index]) {
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                              }
+                            }}>
+                              {/* Details Icon - Grid/Chart */}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                                <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                <rect x="14" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                              </svg>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                color: !showTimeline[index] ? '#3b82f6' : '#94a3b8',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Details</span>
+                            </div>
+                            
+                            {/* Timeline Button */}
                             <div style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: showTimeline[index] ? '#ffffff' : '#94a3b8'
-                            }}></div>
-                            <span style={{
-                              fontSize: '11px',
-                              fontWeight: '600',
-                              color: showTimeline[index] ? '#ffffff' : '#64748b',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}>Timeline</span>
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 16px',
+                              borderRadius: '20px',
+                              background: showTimeline[index] ? '#ffffff' : 'transparent',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                              boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                            }} onClick={(e) => {
+                              e.stopPropagation();
+                              if (!showTimeline[index]) {
+                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                              }
+                            }}>
+                              {/* Timeline Icon - Connected Dots */}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                                <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
+                                <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
+                                <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
+                                <line x1="6" y1="4" x2="20" y2="4" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
+                                <line x1="6" y1="12" x2="20" y2="12" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
+                                <line x1="6" y1="20" x2="20" y2="20" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
+                              </svg>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                color: showTimeline[index] ? '#8b5cf6' : '#94a3b8',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Timeline</span>
+                            </div>
                           </div>
                         </div>
                       )}
