@@ -13,7 +13,7 @@ export default function Newsletter({ onSignup }) {
   };
 
   return (
-    <div className="text-center py-15 bg-black text-white h-screen w-screen flex flex-col justify-center relative -mx-6 left-1/2 transform -translate-x-1/2">
+    <div className="text-center py-16 bg-black text-white h-screen w-full flex flex-col justify-center">
       <h2 className="text-4xl lg:text-5xl font-black tracking-tight mb-4">
         <span className="text-primary-500">Stay</span> Informed
       </h2>

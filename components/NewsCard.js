@@ -160,7 +160,8 @@ export default function NewsCard({ story, index, showTimeline, onToggleTimeline,
             onTouchStart={handleTouchStart}
           >
             {!showTimeline ? (
-              story.details && story.details.map((detail, i) => {
+              <div className="flex">
+                {story.details && story.details.map((detail, i) => {
                 const [label, value] = detail.split(':');
                 const cleanLabel = label?.trim() || '';
                 const cleanValue = value?.trim() || '';
@@ -184,7 +185,8 @@ export default function NewsCard({ story, index, showTimeline, onToggleTimeline,
                     )}
                   </div>
                 );
-              })
+                })}
+              </div>
             ) : (
               <Timeline timeline={story.timeline} />
             )}
