@@ -1343,88 +1343,217 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Modern Segmented Control */}
+                      {/* Fixed Bottom Section - Toggle + Details/Timeline as One Unit */}
                       {story.timeline && (
                         <div style={{
-                          display: 'flex',
-                          justifyContent: 'flex-end',
-                          marginBottom: '16px',
-                          marginTop: '12px'
+                          position: 'absolute',
+                          bottom: '60px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '90%',
+                          maxWidth: '900px',
+                          background: '#ffffff',
+                          borderRadius: '20px',
+                          padding: '16px 20px',
+                          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.1)',
+                          border: '1px solid #e5e7eb',
+                          zIndex: '100',
+                          backdropFilter: 'blur(20px)'
                         }}>
+                          {/* Toggle Buttons at Top */}
                           <div style={{
                             display: 'flex',
-                            background: '#f1f5f9',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '20px',
-                            padding: '2px',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                            backdropFilter: 'blur(10px)',
-                            width: '110px'
+                            justifyContent: 'center',
+                            marginBottom: '16px'
                           }}>
-                            {/* Details Button - Icons Only */}
                             <div style={{
                               display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '6px 20px',
-                              borderRadius: '16px',
-                              background: !showTimeline[index] ? '#ffffff' : 'transparent',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
-                            }} onClick={(e) => {
-                              e.stopPropagation();
-                              if (showTimeline[index]) {
+                              background: '#f1f5f9',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '20px',
+                              padding: '2px',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                              backdropFilter: 'blur(10px)',
+                              width: '110px'
+                            }}>
+                              {/* Details Button - Icons Only */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '6px 20px',
+                                borderRadius: '16px',
+                                background: !showTimeline[index] ? '#ffffff' : 'transparent',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                              }} onClick={(e) => {
+                                e.stopPropagation();
                                 setShowTimeline(prev => ({ ...prev, [index]: false }));
-                              }
-                            }}>
-                              {/* Details Icon - Grid/Chart */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="14" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                              </svg>
-                            </div>
-                            
-                            {/* Timeline Button - Icons Only */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '6px 20px',
-                              borderRadius: '16px',
-                              background: showTimeline[index] ? '#ffffff' : 'transparent',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
-                            }} onClick={(e) => {
-                              e.stopPropagation();
-                              if (!showTimeline[index]) {
+                              }}>
+                                {/* Details Icon - Grid/Chart */}
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                  <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                  <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                  <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                  <rect x="14" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
+                                </svg>
+                              </div>
+                              
+                              {/* Timeline Button - Icons Only */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '6px 20px',
+                                borderRadius: '16px',
+                                background: showTimeline[index] ? '#ffffff' : 'transparent',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                              }} onClick={(e) => {
+                                e.stopPropagation();
                                 setShowTimeline(prev => ({ ...prev, [index]: true }));
-                              }
-                            }}>
-                              {/* Timeline Icon - Connected Dots */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <line x1="6" y1="4" x2="20" y2="4" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                                <line x1="6" y1="12" x2="20" y2="12" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                                <line x1="6" y1="20" x2="20" y2="20" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                              </svg>
+                              }}>
+                                {/* Timeline Icon - Connected Dots */}
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                  <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
+                                  <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
+                                  <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
+                                  <line x1="6" y1="4" x2="20" y2="4" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
+                                  <line x1="6" y1="12" x2="20" y2="12" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
+                                  <line x1="6" y1="20" x2="20" y2="20" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
+                                </svg>
+                              </div>
                             </div>
+                          </div>
+                          
+                          {/* Content Section - Details or Timeline */}
+                          <div style={{
+                            minHeight: '110px',
+                            maxHeight: '150px'
+                          }}>
+                            {!showTimeline[index] ? (
+                              // Details View
+                              <div style={{
+                                display: 'flex',
+                                background: '#f8fafc',
+                                borderRadius: '12px',
+                                padding: '12px 20px',
+                                border: '1px solid #e5e7eb'
+                              }}>
+                                {story.details && story.details.map((detail, i) => {
+                                  const [label, value] = detail.split(':');
+                                  const cleanLabel = label?.trim() || '';
+                                  const cleanValue = value?.trim() || '';
+                                  
+                                  const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                                  const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                                  const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                                  
+                                  return (
+                                    <div key={i} style={{
+                                      flex: '1',
+                                      textAlign: 'center',
+                                      padding: '0 15px',
+                                      borderRight: i < story.details.length - 1 ? '1px solid #e2e8f0' : 'none',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      justifyContent: 'center',
+                                      minHeight: '38px'
+                                    }}>
+                                      <div style={{
+                                        fontSize: '10px',
+                                        color: '#6b7280',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        fontWeight: '600',
+                                        marginBottom: '1px'
+                                      }}>{cleanLabel}</div>
+                                      <div style={{
+                                        fontSize: '20px',
+                                        fontWeight: '800',
+                                        color: '#111827',
+                                        lineHeight: '1.2',
+                                        margin: '0'
+                                      }}>{mainValue}</div>
+                                      {subtitle && (
+                                        <div style={{
+                                          fontSize: '11px',
+                                          color: '#6b7280',
+                                          fontWeight: '500',
+                                          marginTop: '0'
+                                        }}>{subtitle}</div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              // Timeline View
+                              <div style={{
+                                background: '#f8fafc',
+                                borderRadius: '12px',
+                                padding: '16px 20px',
+                                border: '1px solid #e5e7eb',
+                                height: '110px',
+                                overflowY: 'auto'
+                              }}>
+                                <div style={{
+                                  position: 'relative',
+                                  paddingLeft: '20px'
+                                }}>
+                                  <div style={{
+                                    position: 'absolute',
+                                    left: '6px',
+                                    top: '8px',
+                                    bottom: '8px',
+                                    width: '2px',
+                                    background: 'linear-gradient(180deg, #8b5cf6, #e2e8f0)',
+                                    zIndex: '0'
+                                  }}></div>
+                                  {story.timeline.map((event, idx) => (
+                                    <div key={idx} style={{
+                                      position: 'relative',
+                                      marginBottom: '10px',
+                                      paddingLeft: '20px',
+                                      minHeight: '35px'
+                                    }}>
+                                      <div style={{
+                                        position: 'absolute',
+                                        left: '-14px',
+                                        top: '6px',
+                                        width: '10px',
+                                        height: '10px',
+                                        borderRadius: '50%',
+                                        background: idx === story.timeline.length - 1 ? '#8b5cf6' : 'white',
+                                        border: '2px solid #8b5cf6',
+                                        zIndex: '2'
+                                      }}></div>
+                                      <div style={{
+                                        fontSize: '10px',
+                                        fontWeight: '600',
+                                        color: '#8b5cf6',
+                                        marginBottom: '3px'
+                                      }}>{event.date}</div>
+                                      <div style={{
+                                        fontSize: '12px',
+                                        color: '#1e293b',
+                                        lineHeight: '1.3'
+                                      }}>{event.event}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
+                      
+                      {/* Spacer to prevent content overlap */}
+                      <div style={{ height: '200px' }}></div>
                       <div 
-                        className="news-meta" 
-                        style={{ 
-                          position: 'relative', 
-                          overflow: 'visible', 
-                          cursor: 'pointer',
-                          minHeight: '90px'
-                        }}
+                        style={{ display: 'none' }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
