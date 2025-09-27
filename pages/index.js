@@ -732,6 +732,8 @@ export default function Home() {
           line-height: 1.6;
           margin-bottom: 16px;
           text-align: left;
+          border-bottom: none;
+          padding-bottom: 0;
         }
 
         .news-meta {
@@ -1341,13 +1343,13 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Modern Segmented Control - Fixed Position */}
+                      {/* Modern Segmented Control */}
                       {story.timeline && (
                         <div style={{
-                          position: 'absolute',
-                          top: '520px',
-                          right: '20px',
-                          zIndex: '100'
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          marginBottom: '16px',
+                          marginTop: '12px'
                         }}>
                           <div style={{
                             display: 'flex',
@@ -1418,14 +1420,10 @@ export default function Home() {
                       <div 
                         className="news-meta" 
                         style={{ 
-                          position: 'absolute',
-                          top: '560px',
-                          left: '20px',
-                          right: '20px',
+                          position: 'relative', 
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '110px',
-                          zIndex: '50'
+                          minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
