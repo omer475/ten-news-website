@@ -589,6 +589,10 @@ export default function Home() {
           max-width: 1000px;
           width: 100%;
           margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          position: relative;
         }
 
         .opening-container {
@@ -1343,7 +1347,10 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Bottom Section - Toggle + Details/Timeline as One Unit */}
+                      {/* Spacer to push fixed section to bottom */}
+                      <div style={{ flexGrow: 1 }}></div>
+                      
+                      {/* Fixed Bottom Section - Toggle + Details/Timeline */}
                       {story.timeline && (
                         <div style={{
                           position: 'absolute',
@@ -1389,7 +1396,9 @@ export default function Home() {
                                 boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                               }} onClick={(e) => {
                                 e.stopPropagation();
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                if (showTimeline[index]) {
+                                  setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                }
                               }}>
                                 {/* Details Icon - Grid/Chart */}
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1413,7 +1422,9 @@ export default function Home() {
                                 boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                               }} onClick={(e) => {
                                 e.stopPropagation();
-                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                if (!showTimeline[index]) {
+                                  setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                }
                               }}>
                                 {/* Timeline Icon - Connected Dots */}
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1543,6 +1554,24 @@ export default function Home() {
                                       }}>{event.event}</div>
                                     </div>
                                   ))}
+                                  
+                                  {/* Scroll hint if content overflows */}
+                                  {story.timeline.length > 3 && (
+                                    <div style={{
+                                      position: 'sticky',
+                                      bottom: '0',
+                                      textAlign: 'center',
+                                      fontSize: '9px',
+                                      color: '#94a3b8',
+                                      background: 'linear-gradient(transparent, #f8fafc)',
+                                      padding: '8px 0 4px',
+                                      fontWeight: '500',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px'
+                                    }}>
+                                      ↓ SCROLL FOR MORE ↓
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )}
