@@ -1058,6 +1058,12 @@ export default function Home() {
             display: none !important;
           }
           
+          /* Fixed toggle position for mobile */
+          .fixed-toggle-container {
+            top: 420px !important;
+            right: 20px !important;
+          }
+          
           .story-container {
             padding: 60px 12px 40px;
           }
@@ -1340,13 +1346,14 @@ export default function Home() {
                       </div>
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
-                      {/* Fixed Toggle Buttons - Above Details/Timeline */}
+                      
+                      {/* Fixed Position Toggle Buttons - Same spot on every page */}
                       {story.timeline && (
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'flex-end',
-                          marginBottom: '16px',
-                          marginTop: '20px'
+                        <div className="fixed-toggle-container" style={{
+                          position: 'absolute',
+                          top: '480px', // Fixed position from top
+                          right: '40px', // Fixed position from right
+                          zIndex: '100'
                         }}>
                           <div style={{
                             display: 'flex',
@@ -1371,7 +1378,9 @@ export default function Home() {
                               boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
-                              setShowTimeline(prev => ({ ...prev, [index]: false }));
+                              if (showTimeline[index]) {
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                              }
                             }}>
                               {/* Details Icon - Grid/Chart */}
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1395,7 +1404,9 @@ export default function Home() {
                               boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
-                              setShowTimeline(prev => ({ ...prev, [index]: true }));
+                              if (!showTimeline[index]) {
+                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                              }
                             }}>
                               {/* Timeline Icon - Connected Dots */}
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1410,14 +1421,13 @@ export default function Home() {
                           </div>
                         </div>
                       )}
-
                       <div 
                         className="news-meta" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '110px'
+                          minHeight: '90px'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
