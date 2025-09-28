@@ -714,7 +714,10 @@ export default function Home() {
           color: #4a4a4a;
           line-height: 1.6;
           margin-bottom: 16px;
-          text-align: left;
+          text-align: center;
+          max-width: 700px;
+          margin-left: auto;
+          margin-right: auto;
           border-bottom: none;
           padding-bottom: 0;
         }
