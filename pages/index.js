@@ -1155,15 +1155,6 @@ export default function Home() {
         <div className="header">
           <div className="logo">
             <span className="logo-ten">TEN</span> NEWS
-            <span style={{
-              background: '#22c55e',
-              color: 'white',
-              padding: '2px 6px',
-              marginLeft: '8px',
-              borderRadius: '4px',
-              fontSize: '9px',
-              fontWeight: '700'
-            }}>120PX</span>
           </div>
           
           <div style={{ flex: 1 }}></div>
@@ -1329,7 +1320,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
                         position: 'fixed',
-                          bottom: '120px',
+                          bottom: '80px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
@@ -1516,7 +1507,7 @@ export default function Home() {
                               padding: '12px 20px',
                               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                               minHeight: '90px',
-                              maxHeight: '140px',
+                              maxHeight: '110px',
                               overflowY: 'auto',
                               zIndex: '10'
                             }}>
@@ -1537,9 +1528,9 @@ export default function Home() {
                                 {story.timeline.map((event, idx) => (
                                   <div key={idx} style={{
                                     position: 'relative',
-                                    marginBottom: '10px',
+                                    marginBottom: '8px',
                                     paddingLeft: '20px',
-                                    minHeight: '35px'
+                                    minHeight: '32px'
                                   }}>
                                     <div style={{
                                       position: 'absolute',
