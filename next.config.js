@@ -11,7 +11,17 @@ const nextConfig = {
   generateEtags: true,
   trailingSlash: false,
   // Ensure proper static optimization
-  output: 'standalone'
+  output: 'standalone',
+  // HIDE DEVELOPER INFORMATION FROM USERS
+  productionBrowserSourceMaps: false,
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      // Disable source maps and dev info in production
+      config.devtool = false;
+      config.optimization.minimize = true;
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig
