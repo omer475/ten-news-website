@@ -1295,7 +1295,7 @@ export default function Home() {
                       height: '100%',
                       justifyContent: 'center',
                       alignItems: 'flex-start',
-                      paddingTop: '15vh'
+                      paddingTop: '5vh'
                     }}>
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
