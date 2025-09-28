@@ -1317,10 +1317,10 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Position Toggle and Content Area */}
+                      {/* Fixed Position Toggle and Content Area - Much Lower */}
                       <div style={{
                         position: 'absolute',
-                        bottom: '20px',
+                        bottom: '80px',
                         left: '0',
                         right: '0',
                         paddingLeft: '15px',
