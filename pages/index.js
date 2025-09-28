@@ -714,10 +714,7 @@ export default function Home() {
           color: #4a4a4a;
           line-height: 1.6;
           margin-bottom: 16px;
-          text-align: center;
-          max-width: 700px;
-          margin-left: auto;
-          margin-right: auto;
+          text-align: left;
           border-bottom: none;
           padding-bottom: 0;
         }
@@ -1292,7 +1289,14 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    <div className="news-content">
+                    <div className="news-content" style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                      justifyContent: 'center',
+                      alignItems: 'flex-start',
+                      paddingTop: '10vh'
+                    }}>
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
                                    story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
