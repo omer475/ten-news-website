@@ -688,7 +688,7 @@ export default function Home() {
           font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          margin-bottom: 15px;
+          margin-bottom: 10px;
           transition: all 0.2s ease;
           cursor: pointer;
         }
@@ -705,7 +705,7 @@ export default function Home() {
           font-size: 48px;
           font-weight: 800;
           line-height: 1.2;
-          margin-bottom: 30px;
+          margin-bottom: 20px;
           color: #000000;
         }
 
@@ -1295,7 +1295,7 @@ export default function Home() {
                       height: '100%',
                       justifyContent: 'center',
                       alignItems: 'flex-start',
-                      paddingTop: '5vh'
+                      paddingTop: '15vh'
                     }}>
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
