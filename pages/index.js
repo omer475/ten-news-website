@@ -1320,7 +1320,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area */}
                       <div style={{
                         position: 'absolute',
-                        bottom: '60px',
+                        bottom: '30px',
                         left: '0',
                         right: '0',
                         paddingLeft: '15px',
