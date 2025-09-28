@@ -1320,7 +1320,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
                         position: 'fixed',
-                        bottom: '120px',
+                        bottom: '60px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
@@ -1410,7 +1410,8 @@ export default function Home() {
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '90px'
+                          minHeight: '90px',
+                          height: '90px'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1493,23 +1494,27 @@ export default function Home() {
                           );
                           })
                         ) : (
-                          // Show Timeline Only - Compact with internal scrolling
+                          // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
                             <div style={{
-                              display: 'flex',
-                              width: '100%',
-                              height: '110px', // Optimal timeline height
-                              overflow: 'hidden',
-                              position: 'relative'
+                              position: 'absolute',
+                              top: '0',
+                              left: '0',
+                              right: '0',
+                              background: '#ffffff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '16px',
+                              padding: '12px 20px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                              minHeight: '90px',
+                              maxHeight: '180px',
+                              overflowY: 'auto',
+                              zIndex: '10'
                             }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
-                                width: '100%',
-                                height: '100%',
-                                overflowY: 'auto', // Internal scrolling
-                                overflowX: 'hidden',
-                                paddingRight: '10px'
+                                width: '100%'
                               }}>
                                 <div style={{
                                   position: 'absolute',
