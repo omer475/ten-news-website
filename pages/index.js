@@ -1317,14 +1317,17 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Position Toggle and Content Area - Much Lower */}
+                      {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        left: '0',
-                        right: '0',
+                        position: 'fixed',
+                        bottom: '120px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '100%',
+                        maxWidth: '950px',
                         paddingLeft: '15px',
-                        paddingRight: '15px'
+                        paddingRight: '15px',
+                        zIndex: '50'
                       }}>
                         {/* Modern Segmented Control */}
                         {story.timeline && (
