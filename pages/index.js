@@ -1317,14 +1317,22 @@ export default function Home() {
                       <h3 className="news-title">{story.title}</h3>
                       <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Modern Segmented Control */}
-                      {story.timeline && (
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'flex-end',
-                          marginBottom: '16px',
-                          marginTop: '12px'
-                        }}>
+                      {/* Fixed Position Toggle and Content Area */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '60px',
+                        left: '0',
+                        right: '0',
+                        paddingLeft: '15px',
+                        paddingRight: '15px'
+                      }}>
+                        {/* Modern Segmented Control */}
+                        {story.timeline && (
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            marginBottom: '16px'
+                          }}>
                           <div style={{
                             display: 'flex',
                             background: '#f1f5f9',
@@ -1390,9 +1398,11 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
-                      )}
-                      <div 
-                        className="news-meta" 
+                        )}
+                        
+                        {/* Fixed Position Details/Timeline Section */}
+                        <div 
+                          className="news-meta" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
@@ -1595,6 +1605,7 @@ export default function Home() {
                         }}>→</div>
                         
                       </div>
+                      </div> {/* Close fixed position container */}
                     </div>
                   </div>
                 </div>
