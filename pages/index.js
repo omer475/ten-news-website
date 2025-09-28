@@ -1507,7 +1507,7 @@ export default function Home() {
                               padding: '12px 20px',
                               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                               minHeight: '90px',
-                              maxHeight: '180px',
+                              maxHeight: '140px',
                               overflowY: 'auto',
                               zIndex: '10'
                             }}>
