@@ -688,7 +688,7 @@ export default function Home() {
           font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          margin-bottom: 10px;
+          margin-bottom: 15px;
           transition: all 0.2s ease;
           cursor: pointer;
         }
@@ -705,7 +705,7 @@ export default function Home() {
           font-size: 48px;
           font-weight: 800;
           line-height: 1.2;
-          margin-bottom: 20px;
+          margin-bottom: 30px;
           color: #000000;
         }
 
