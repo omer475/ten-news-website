@@ -525,39 +525,43 @@ CRITICAL RULES:
 5. Focus on completely NEW stories and developments
 """
     
-    prompt = f"""You are an expert news curator responsible for selecting EXACTLY 10 most important and engaging global news stories from the provided list.
+    prompt = f"""You are a GLOBAL NEWS CURATOR selecting EXACTLY 10 stories that impact the ENTIRE WORLD. Focus on stories that matter to people across all continents.
 
 {previous_context}
 
-## CORE MANDATE
-Return EXACTLY 10 articles in JSON format. This is non-negotiable. If fewer than 10 ideal stories exist, include the best available to reach exactly 10.
+## GLOBAL IMPACT MANDATE
+Select ONLY stories with WORLDWIDE significance. Reject purely local/regional stories unless they have global implications.
 
-## SELECTION FRAMEWORK
+## GLOBAL PRIORITY FRAMEWORK
 
-### TIER 1 - CRITICAL IMPACT (Positions 1-3)
-Must meet AT LEAST TWO criteria:
-- Affects 10+ million people directly OR has global systemic impact
-- Breaking news with immediate consequences requiring public awareness
-- Historic/unprecedented events that will be referenced for years
-- Major threats to public safety, security, or economic stability
-- Government decisions fundamentally changing citizens' lives
+### WORLDWIDE CRITICAL (Positions 1-3)
+Stories affecting MULTIPLE COUNTRIES or GLOBAL SYSTEMS:
+- International conflicts, wars, peace agreements
+- Global economic crises, market crashes affecting worldwide markets
+- Climate disasters with international impact
+- Pandemics, health emergencies crossing borders
+- Major world leader decisions affecting international relations
+- Global supply chain disruptions
+- International sanctions, trade wars, global agreements
 
-### TIER 2 - HIGH IMPORTANCE (Positions 4-6)
-Must meet AT LEAST TWO criteria:
-- Affects 1-10 million people OR significant sector/industry
-- Major corporate/institutional developments with ripple effects
-- Scientific/medical breakthroughs with practical applications
-- Significant geopolitical shifts or diplomatic developments
-- Economic indicators/events affecting markets or employment
-- Cultural phenomena with measurable societal impact
+### WORLDWIDE HIGH IMPACT (Positions 4-6)
+Stories with CROSS-BORDER significance:
+- Multinational corporate deals (>$5B) affecting global markets
+- Scientific breakthroughs with worldwide applications
+- International sporting events, cultural phenomena
+- Global technology releases affecting billions (AI, social media)
+- Energy/oil decisions affecting global prices
+- International climate/environmental agreements
+- Global cyber attacks or security threats
 
-### TIER 3 - NOTABLE & ENGAGING (Positions 7-10)
-Must meet AT LEAST ONE criteria:
-- High viral/discussion potential while maintaining relevance
-- Updates on major ongoing stories people are following
-- Emerging trends that signal future changes
-- Human interest with broader implications or lessons
-- Regional stories with potential global precedent
+### WORLDWIDE NOTABLE (Positions 7-10)
+Stories with INTERNATIONAL ripple effects:
+- Regional conflicts with global security implications
+- Economic indicators from major economies (US, China, EU)
+- Global entertainment/cultural events
+- International legal precedents
+- Technology trends affecting worldwide users
+- Global health/science developments
 
 ## ENGAGEMENT OPTIMIZATION RULES
 
@@ -577,13 +581,23 @@ Must meet AT LEAST ONE criteria:
 - Speculation or rumors without confirmation
 - Stories older than 48 hours unless major new development
 
-## DIVERSITY REQUIREMENTS
+## GLOBAL FOCUS REQUIREMENTS
 
-Your 10 selections MUST include:
-- **Geographic Distribution**: Maximum 4 stories from any single country
-- **Topic Balance**: No more than 3 stories from same category
-- **Perspective Range**: Include both institutional and human-impact angles
-- **Temporal Mix**: At least 6 breaking/today's news, maximum 4 developing stories
+Your 10 selections MUST prioritize WORLDWIDE impact:
+- **GLOBAL stories first**: Choose stories affecting multiple countries/continents
+- **International implications**: Select stories with cross-border effects
+- **World economy**: Stories affecting global markets, trade, currencies
+- **Global security**: International conflicts, terrorism, cyber attacks
+- **Worldwide health**: Pandemics, global health crises, medical breakthroughs
+- **Climate/environment**: Stories affecting global climate and environment
+- **Global technology**: Tech developments affecting billions worldwide
+- **International politics**: World leader decisions, diplomatic relations
+
+## DIVERSITY REQUIREMENTS
+- **Geographic Distribution**: Maximum 3 stories from any single country (favor international stories)
+- **Continental Balance**: Include stories from multiple continents when possible
+- **Global perspective**: Favor stories with international angles over purely domestic
+- **World impact**: Prioritize stories that matter to a global audience
 
 ### SUGGESTED DISTRIBUTION:
 - 2-3 Politics/Governance stories
@@ -1029,48 +1043,67 @@ def generate_timeline_for_articles(articles_data):
     for i, article in enumerate(articles_data['articles'], 1):
         print(f"📅 Article {i}/10: Generating timeline for '{article['title'][:40]}...'")
         
-        prompt = f"""Generate a 4-event timeline for this news story. Create a chronological sequence showing how this story developed.
+        prompt = f"""You are a RESEARCH-POWERED timeline generator. Create a detailed timeline that goes BEYOND the summary by adding researched background information.
 
-STORY DETAILS:
+STORY TO RESEARCH:
 Title: {article['title']}
 Summary: {article['summary']}
 Category: {article['category']}
+URL: {article.get('url', '')}
 
-TIMELINE REQUIREMENTS:
-1. Create 2-4 timeline events (flexible based on story complexity)
-2. Start with background/earlier events 
-3. Include "Today" for current development
-4. Add future dates if relevant (e.g., "Next week", "December", "2026")
-5. Keep each event MAXIMUM 8 words - NO MORE THAN 8 WORDS
-6. Focus on key developments and future implications
-7. Use simple, clear language
+## RESEARCH MANDATE
+USE YOUR KNOWLEDGE to add context and background information NOT mentioned in the summary. Include:
+- Historical context leading to this story
+- Previous similar events or precedents
+- Key players and their backgrounds
+- Economic/political context
+- International implications
+- Future scheduled events or deadlines
 
-TIMELINE FORMAT:
-- Date format: "March 18", "Last week", "Yesterday", "Today"
-- Events should be factual and chronological
-- Show progression leading to current story
+## TIMELINE REQUIREMENTS:
+1. Create 2-4 timeline events with RESEARCHED information
+2. Include background information NOT in the summary
+3. Add specific dates, numbers, and context you know about
+4. Include future implications or scheduled follow-ups
+5. Each event: 5-15 words (detailed enough to be informative)
+6. Focus on factual, verifiable information
+7. Make it EDUCATIONAL - readers should learn something new
 
-Return ONLY this JSON (2-4 events, include future if relevant):
+## RESEARCH EXAMPLES:
+Instead of: "Key developments unfold"
+Write: "Federal Reserve raised interest rates by 0.75% in September"
+
+Instead of: "Situation reaches critical point"  
+Write: "UN Security Council called emergency session for third time this year"
+
+Instead of: "Major announcement made"
+Write: "CEO announced resignation following $2.3B quarterly loss report"
+
+## ENHANCED TIMELINE FORMAT:
+- Use SPECIFIC dates when possible: "September 15", "March 2024", "Last Tuesday"
+- Include NUMBERS and CONTEXT: amounts, percentages, quantities
+- Add RESEARCH DEPTH: background not mentioned in summary
+- Show CAUSE AND EFFECT: why events led to current story
+
+Return ONLY this JSON with RESEARCHED timeline:
 {{
   "timeline": [
     {{
-      "date": "March 15",
-      "event": "Initial reports emerge"
+      "date": "Specific date",
+      "event": "Detailed researched event with context and numbers"
     }},
     {{
-      "date": "Yesterday",
-      "event": "Major announcement made"
+      "date": "Another date",
+      "event": "Background information not in summary but relevant"
     }},
     {{
-      "date": "Today",
-      "event": "Current developments unfold"
-    }},
-    {{
-      "date": "Next week",
-      "event": "Follow-up meeting scheduled"
+      "date": "Today/Latest",
+      "event": "Current development as reported in story"
     }}
   ]
-}}"""
+}}
+
+RESEARCH CHALLENGE: Make this timeline more informative than the summary by adding your knowledge of the topic, context, and background."""
         
         try:
             response = call_claude_api_with_model(prompt, f"Timeline generation for article {i}", CLAUDE_SONNET_MODEL)
