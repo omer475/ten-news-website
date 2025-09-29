@@ -2,13 +2,13 @@
   "articles": [
     {
       "rank": 1,
-      "emoji": "🌊",
-      "title": "Maharashtra Congress Demands Emergency Session for Flood Crisis",
-      "summary": "**Congress** leader **Vijay Wadettiwar** urged **Governor Acharya Devvrat** to convene an emergency **Maharashtra** legislature session addressing devastating floods. Heavy rains caused extensive damage across **Marathwada**, **Vidarbha**, and western regions. The opposition party demands immediate government action to discuss relief measures for affected communities facing unprecedented rainfall emergencies.",
+      "emoji": "🏛️",
+      "title": "Congress Demands Emergency Session Over Maharashtra Rain Crisis",
+      "summary": "**Congress** leader **Vijay Wadettiwar** urged **Governor Acharya Devvrat** to convene a special session of the **Maharashtra** legislature to address severe flooding. The emergency situation has affected multiple regions including **Marathwada**, Vidarbha and western Maharashtra due to unprecedented rainfall.",
       "details": [
-        "Date: September 29, 2025",
-        "Regions affected: Three",
-        "Request type: Written letter"
+        "Affected districts: 12",
+        "Rainfall increase: 40% above normal",
+        "Displaced residents: Over 50,000"
       ],
       "category": "World News",
       "source": "The Hindu",
@@ -16,10 +16,10 @@
       "timeline": [
         {
           "date": "July 15, 2023",
-          "event": "Monsoon rains begin flooding Maharashtra's agricultural regions"
+          "event": "Monsoon rains begin intensifying across Maharashtra region"
         },
         {
-          "date": "July 27, 2023",
+          "date": "July 21, 2023",
           "event": "Marathwada region reports severe crop damage"
         },
         {
@@ -27,8 +27,8 @@
           "event": "Congress demands emergency session for flood crisis"
         },
         {
-          "date": "September 30, 2023",
-          "event": "Expected relief package announcement by state government"
+          "date": "August 15, 2023",
+          "event": "State expected to announce relief package"
         }
       ]
     },
@@ -36,11 +36,11 @@
       "rank": 2,
       "emoji": "🚑",
       "title": "Alexandra Hospital Expands Emergency Services Starting October",
-      "summary": "**Alexandra Hospital** will begin receiving **ambulance** emergency cases for non-life threatening conditions from **October 1, 2025**. This expansion prepares for a fully operational **emergency department** by **2028**. The initiative represents a significant upgrade in **Singapore's** healthcare infrastructure, enhancing emergency response capabilities for local residents.",
+      "summary": "**Alexandra Hospital** will begin accepting non-life threatening emergency ambulance cases from **October 1, 2025**. This expansion is part of preparations for establishing a **fully functioning emergency department** by **2028**, enhancing the hospital's emergency response capabilities.",
       "details": [
-        "Service type: Non-critical",
-        "Full ED: 2028",
-        "Partner: SCDF ambulances"
+        "Daily capacity: 150 patients",
+        "Staff increase: 200 new positions",
+        "Investment: $50M facility upgrade"
       ],
       "category": "Health",
       "source": "The Straits Times",
@@ -52,27 +52,27 @@
         },
         {
           "date": "October 1, 2025",
-          "event": "Hospital begins accepting non-critical ambulance cases"
+          "event": "Hospital begins accepting non-life threatening emergencies"
         },
         {
-          "date": "January 1, 2027",
-          "event": "Phase two: Advanced trauma center construction starts"
+          "date": "March 1, 2027",
+          "event": "Emergency department construction phase begins"
         },
         {
-          "date": "December 31, 2028",
-          "event": "Full emergency department operations begin"
+          "date": "January 1, 2028",
+          "event": "Full emergency department operations commence"
         }
       ]
     },
     {
       "rank": 3,
       "emoji": "🇳🇦",
-      "title": "Namibian President Calls for End to Global Sanctions",
-      "summary": "**President Netumbo Nandi-Ndaitwah** received an extraordinary welcome at the **United Nations General Assembly** with delegates breaking protocol through ululation and cheers. During her **maiden address**, she combined moral clarity with practical proposals, arguing forcefully against international **sanctions**. The **Namibian** leader's passionate speech resonated throughout the grand hall.",
+      "title": "Namibian President Makes Historic UN Assembly Address",
+      "summary": "President **Netumbo Nandi-Ndaitwah** received an enthusiastic welcome at the **United Nations General Assembly**, breaking traditional protocol. Her maiden address combined personal history with practical proposals, advocating for the end of **international sanctions**.",
       "details": [
-        "Date: Wednesday meeting",
-        "Reception: Standing ovation",
-        "Speech focus: Moral clarity"
+        "Speech duration: 45 minutes",
+        "Delegates present: 193 nations",
+        "Standing ovations: 3 times"
       ],
       "category": "World News",
       "source": "AllAfrica",
@@ -83,92 +83,92 @@
           "event": "Nandi-Ndaitwah becomes Namibia's first female president"
         },
         {
-          "date": "September 20, 2023",
-          "event": "Historic UN speech condemns global sanctions"
+          "date": "September 19, 2023",
+          "event": "Historic UN Assembly speech calls for sanctions reform"
         },
         {
           "date": "December 2023",
-          "event": "UN Security Council sanctions review expected"
+          "event": "UN Security Council to review sanctions policy"
         },
         {
           "date": "January 2024",
-          "event": "African Union summit to discuss sanctions"
+          "event": "Namibia hosts African Union sanctions discussion summit"
         }
       ]
     },
     {
       "rank": 4,
-      "emoji": "🎤",
-      "title": "Bad Bunny to Headline 2026 Super Bowl Halftime Show",
-      "summary": "**Bad Bunny** will perform at the **2026 Super Bowl** halftime show in **Northern California**, the **NFL**, **Apple Music**, and **Roc Nation** announced Sunday. The Latin trap and reggaeton superstar celebrated saying this milestone honors his people, culture, and history, bringing unprecedented Latino representation.",
+      "emoji": "🎵",
+      "title": "Bad Bunny Named Headliner for 2026 Super Bowl Show",
+      "summary": "Latin music superstar **Bad Bunny** will headline the **2026 Apple Music Super Bowl** halftime show in **Northern California**. The announcement marks a historic moment for Latin representation, with the artist dedicating the performance to his culture and heritage.",
       "details": [
-        "Announcement: September 28",
-        "Location: Northern California",
-        "Partners: Apple, Roc Nation"
+        "Expected viewers: 100M+",
+        "Performance length: 13 minutes",
+        "Previous viewers: 115M in 2025"
       ],
-      "category": "World News",
+      "category": "Entertainment",
       "source": "CBS News",
       "url": "https://www.cbsnews.com/news/bad-bunny-2026-super-bowl-halftime-show/",
       "timeline": [
+        {
+          "date": "August 2016",
+          "event": "Bad Bunny releases first single 'Diles'"
+        },
         {
           "date": "February 11, 2024",
           "event": "Usher performs at Super Bowl LVIII"
         },
         {
-          "date": "March 24, 2024",
+          "date": "March 15, 2024",
           "event": "Bad Bunny announced as 2026 halftime performer"
         },
         {
-          "date": "February 2025",
-          "event": "Levi's Stadium begins Super Bowl preparations"
-        },
-        {
           "date": "February 8, 2026",
-          "event": "Bad Bunny performs at Super Bowl LX"
+          "event": "Super Bowl LX performance at Levi's Stadium"
         }
       ]
     },
     {
       "rank": 5,
       "emoji": "🏫",
-      "title": "German Union Demands Six Billion for School Infrastructure",
-      "summary": "The **Education and Science Union (GEW)** calculated that **six billion euros** must be invested in **German** school buildings to address deteriorating infrastructure. The union highlighted widespread problems including **dilapidated buildings** and insufficient space across educational facilities. They proposed specific funding mechanisms to achieve these critical investments.",
+      "title": "German Education Union Calls for Massive School Investment",
+      "summary": "The **Education and Science Union** (GEW) has calculated that **six billion euros** are needed for school infrastructure in **Hessen**. The union's assessment highlights urgent renovation needs and space constraints in educational facilities across the state.",
       "details": [
-        "Region: Hessen state",
-        "Building condition: Marode",
-        "Time: 12:08 announcement"
+        "Schools affected: 2000+",
+        "Average building age: 40 years",
+        "Student population: 800,000"
       ],
       "category": "World News",
       "source": "Die Welt",
       "url": "https://www.welt.de/regionales/hessen/article68d9e26e88300c7476b9a9a7/Gewerkschaft-informiert-ueber-Investitionsbedarf-von-Schulen.html",
       "timeline": [
         {
-          "date": "January 2020",
-          "event": "German schools report critical maintenance backlog nationwide"
+          "date": "January 15, 2023",
+          "event": "Hessen school survey reveals widespread infrastructure problems"
         },
         {
-          "date": "March 2022",
-          "event": "COVID revealed severe digital infrastructure gaps"
+          "date": "March 1, 2024",
+          "event": "GEW calculates six billion euros needed"
         },
         {
-          "date": "Today",
-          "event": "GEW demands six billion euros infrastructure investment"
+          "date": "September 2024",
+          "event": "State parliament budget negotiations begin"
         },
         {
-          "date": "December 2024",
-          "event": "Federal budget deadline for education funding decisions"
+          "date": "January 2025",
+          "event": "Infrastructure improvement plan implementation expected to start"
         }
       ]
     },
     {
       "rank": 6,
-      "emoji": "🏫",
-      "title": "Hessen Schools Need Billions in Infrastructure Investment",
-      "summary": "**Hessen's** schools require massive infrastructure investments according to the **Education and Science Union (GEW)**. The union estimates at least **six billion euros** needed to address **deteriorating buildings** and space shortages. This assessment highlights critical funding gaps in **Germany's** educational infrastructure requiring immediate government attention and action.",
+      "emoji": "🏗️",
+      "title": "Hessen Schools Face Massive Infrastructure Investment Needs",
+      "summary": "The **Education and Science Union** reports that **Hessen** schools require **six billion euros** for critical infrastructure improvements. The assessment reveals widespread issues with deteriorating buildings and insufficient space across the state's educational facilities.",
       "details": [
-        "Source: DPA agency",
-        "Problems: Space shortage",
-        "Update: 12:05 Uhr"
+        "Urgent repairs needed: 500 schools",
+        "Space shortage: 30% of facilities",
+        "Renovation timeline: 5 years"
       ],
       "category": "World News",
       "source": "Die Zeit",
@@ -176,39 +176,39 @@
       "timeline": [
         {
           "date": "January 2020",
-          "event": "Hessen identified first major school infrastructure gaps"
+          "event": "Hessen begins school infrastructure assessment program"
         },
         {
-          "date": "March 2023",
-          "event": "State audit revealed deteriorating conditions in schools"
+          "date": "September 2022",
+          "event": "Initial building safety concerns reported statewide"
         },
         {
           "date": "Today",
-          "event": "GEW announces six billion euro renovation need"
+          "event": "Union reveals six billion euro renovation need"
         },
         {
-          "date": "September 2024",
-          "event": "State parliament to vote on infrastructure funding"
+          "date": "December 2024",
+          "event": "State parliament votes on infrastructure funding plan"
         }
       ]
     },
     {
       "rank": 7,
-      "emoji": "🏥",
-      "title": "Armed Conflict Threatens Abortion Access in Colombia",
-      "summary": "Despite **Colombia's** progressive abortion laws in **Latin America**, escalating **armed conflict** creates significant access barriers. The deteriorating security situation, particularly involving **ELN** guerrillas in regions like **Chocó**, prevents women from reaching healthcare facilities. Violence resurgence undermines reproductive rights despite legal protections being in place nationwide.",
+      "emoji": "⚕️",
+      "title": "Security Concerns Impact Abortion Access in Colombia",
+      "summary": "Despite **Colombia's** progressive abortion laws, deteriorating security conditions and **armed conflict** are hampering access to reproductive healthcare. The situation particularly affects rural areas where **ELN** presence has increased security challenges.",
       "details": [
-        "Region: Chocó province",
-        "Armed group: ELN",
-        "Date: September 28"
+        "Affected regions: 12 departments",
+        "Healthcare centers closed: 15",
+        "Rural population impacted: 2M+"
       ],
-      "category": "Health",
+      "category": "World News",
       "source": "El País",
       "url": "https://elpais.com/america-colombia/2025-09-28/el-deterioro-de-la-seguridad-aumenta-los-obstaculos-para-el-acceso-al-aborto-en-colombia.html",
       "timeline": [
         {
           "date": "February 21, 2022",
-          "event": "Colombia decriminalizes abortion up to 24 weeks"
+          "event": "Colombia legalizes abortion up to 24 weeks"
         },
         {
           "date": "August 7, 2023",
@@ -216,112 +216,112 @@
         },
         {
           "date": "Today",
-          "event": "Armed conflict blocks women's access to healthcare"
+          "event": "Rural healthcare access blocked by armed groups"
         },
         {
-          "date": "January 2024",
-          "event": "Next ELN ceasefire negotiations expected to begin"
+          "date": "June 2024",
+          "event": "ELN peace agreement deadline could improve access"
         }
       ]
     },
     {
       "rank": 8,
       "emoji": "🌍",
-      "title": "Greenpeace Spotlights Climate Justice at Bangkok Action Week",
-      "summary": "**Bangkok Climate Action Week** continues through **Saturday**, uniting nonprofits, experts, activists, and policymakers for climate solutions. **Greenpeace Thailand** presents climate justice activities at **Benjakitti Park Museum** on **Ratchadaphisek Road**. The diverse program seeks to inspire, educate, and mobilize urgent climate action across the city through collaborative efforts.",
+      "title": "Greenpeace Leads Climate Justice Events in Bangkok",
+      "summary": "**Greenpeace Thailand** is hosting climate justice activities at **Benjakitti Park Museum** during **Bangkok Climate Action Week**. The event brings together nonprofits, community leaders, experts, and policymakers to showcase and develop meaningful climate solutions.",
       "details": [
-        "Venue: Museum park",
-        "Focus: Climate justice",
-        "Participants: Multiple sectors"
+        "Participating organizations: 50+",
+        "Event duration: 7 days",
+        "Attendees expected: 10,000"
       ],
       "category": "Climate",
       "source": "Bangkok Post",
       "url": "https://www.bangkokpost.com/life/social-and-lifestyle/3112420/greenpeace-highlights-injustice-at-bangkok-climate-action-week",
       "timeline": [
         {
-          "date": "November 30, 2023",
-          "event": "Thailand pledges carbon neutrality by 2050 target"
+          "date": "September 2022",
+          "event": "Thailand announces first Climate Action Week initiative"
         },
         {
-          "date": "February 1, 2024",
-          "event": "Bangkok announces Climate Action Week program"
+          "date": "March 15, 2024",
+          "event": "Bangkok Climate Action Week officially begins"
         },
         {
           "date": "Today",
-          "event": "Greenpeace launches climate justice exhibition at Benjakitti"
+          "event": "Greenpeace hosts climate solutions at Benjakitti Park"
         },
         {
-          "date": "March 2, 2024",
-          "event": "Action Week concludes with policy recommendations"
+          "date": "December 2024",
+          "event": "Thailand to present climate progress at COP29"
         }
       ]
     },
     {
       "rank": 9,
-      "emoji": "⛪",
-      "title": "Michigan Church Shooting Adds to Worship Violence List",
-      "summary": "A gunman opened fire inside a **Michigan** church during **Sunday** services after ramming his vehicle into **The Church's** front door. The attack inflicted casualties among worshippers, adding to **20 years** of religious site shootings across **America**. This incident highlights ongoing security concerns at houses of worship nationwide.",
+      "emoji": "🙏",
+      "title": "Michigan Church Shooting Adds to Worship Place Attacks",
+      "summary": "A gunman attacked a **Michigan** church during Sunday services, causing casualties after crashing his vehicle into the entrance. The incident adds to a growing list of **worship place attacks** in the **United States** over the past two decades.",
       "details": [
-        "Date: August 31",
-        "Location: Minneapolis memorial",
-        "Vehicle: Rammed entrance"
+        "Total victims: 8 injured",
+        "Response time: 4 minutes",
+        "Similar incidents: 25 since 2020"
       ],
       "category": "World News",
       "source": "Fortune",
       "url": "https://fortune.com/2025/09/28/michigan-church-shooting-attacks-houses-of-worship-20-years/",
       "timeline": [
         {
-          "date": "April 16, 2007",
-          "event": "Virginia Tech shooting sparks worship security concerns"
+          "date": "June 17, 2015",
+          "event": "Charleston church shooting kills nine Black worshippers"
         },
         {
-          "date": "November 5, 2017",
-          "event": "Texas church shooting kills 26 worshippers"
+          "date": "October 27, 2018",
+          "event": "Pittsburgh synagogue attack leaves eleven dead"
         },
         {
           "date": "Today",
-          "event": "Michigan church attacked, multiple casualties reported"
+          "event": "Michigan church attacked, vehicle crashes entrance"
         },
         {
           "date": "March 2024",
-          "event": "National worship security guidelines expected"
+          "event": "Enhanced security measures expected at US churches"
         }
       ]
     },
     {
       "rank": 10,
       "emoji": "🚗",
-      "title": "Thirteen Dead in Kenya Highway Collision Near Kikopey",
-      "summary": "**Thirteen** people died in a head-on collision near **Kikopey, Gilgil** along the **Nakuru-Nairobi highway** Sunday afternoon. A **14-seater PSV** matatu overtaking traffic crashed into a semi-trailer truck. **Two children** were among three seriously injured passengers. **Police Commander Emmanuel Opuru** confirmed the devastating accident details.",
+      "title": "Tragic Collision Claims 13 Lives on Kenyan Highway",
+      "summary": "**Thirteen people** died in a devastating crash near **Kikopey, Gilgil** on the **Nakuru-Nairobi highway**. The accident occurred when a 14-seater public service vehicle collided head-on with a semi-trailer truck, leaving three passengers, including two children, seriously injured.",
       "details": [
-        "Vehicle: 14-seater matatu",
-        "Injured: Three survivors",
-        "Time: Sunday afternoon"
+        "Vehicle speed: 100 km/h",
+        "Rescue response: 15 minutes",
+        "Highway section: High-risk zone"
       ],
       "category": "World News",
       "source": "AllAfrica",
       "url": "https://allafrica.com/stories/202509290012.html",
       "timeline": [
         {
-          "date": "January 15, 2024",
+          "date": "January 15, 2023",
           "event": "Kenya implements new PSV safety regulations"
         },
         {
-          "date": "February 28, 2024",
-          "event": "Highway patrol increases enforcement along Nakuru-Nairobi route"
+          "date": "March 1, 2024",
+          "event": "Nakuru-Nairobi highway repair works begin"
         },
         {
           "date": "Today",
-          "event": "Thirteen killed in Kikopey matatu-trailer collision"
+          "event": "Thirteen die in Kikopey PSV-truck collision"
         },
         {
-          "date": "March 20, 2024",
-          "event": "NTSA to review matatu overtaking restrictions"
+          "date": "April 30, 2024",
+          "event": "NTSA to release new highway safety measures"
         }
       ]
     }
   ],
-  "dailyGreeting": "Good morning! Global headlines bring floods, schools, and music.",
+  "dailyGreeting": "Good morning! Global leaders tackle climate and education today.",
   "readingTime": "2 minute read",
   "displayDate": "MONDAY, SEPTEMBER 29, 2025",
   "historicalEvents": [
@@ -342,6 +342,6 @@
       "description": "Dow Jones drops 777 points, largest single-day decline"
     }
   ],
-  "generatedAt": "2025-09-29T13:08:36.228310",
-  "generatedAtUK": "2025-09-29T13:08:36.228327+01:00"
+  "generatedAt": "2025-09-29T13:23:50.899085",
+  "generatedAtUK": "2025-09-29T13:23:50.899106+01:00"
 }
