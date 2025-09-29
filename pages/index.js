@@ -438,7 +438,7 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</span>
-          <span style={{ color: '#0f172a' }}>{restOfText}</span>
+          <span style={{ color: '#ffffff' }}>{restOfText}</span>
         </>
       );
     }
