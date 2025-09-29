@@ -438,7 +438,7 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</span>
-          <span style={{ color: '#ffffff' }}>{restOfText}</span>
+          <span style={{ color: darkMode ? '#ffffff' : '#0f172a' }}>{restOfText}</span>
         </>
       );
     }
@@ -1181,6 +1181,58 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Dark Mode Toggle - Only on First Page, positioned under newsletter button */}
+        {currentIndex === 0 && (
+          <div style={{
+            position: 'fixed',
+            top: '70px',
+            right: '20px',
+            zIndex: 1001
+          }}>
+            <div style={{
+              display: 'flex',
+              background: darkMode ? '#1f2937' : '#f1f5f9',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '2px',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+              width: '85px',
+              cursor: 'pointer'
+            }} onClick={toggleDarkMode}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px 10px',
+                borderRadius: '16px',
+                background: !darkMode ? '#ffffff' : 'transparent',
+                transition: 'all 0.3s ease',
+                boxShadow: !darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="4" fill={!darkMode ? '#f59e0b' : '#94a3b8'}/>
+                  <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414" stroke={!darkMode ? '#f59e0b' : '#94a3b8'} strokeWidth="1.5"/>
+                </svg>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px 10px',
+                borderRadius: '16px',
+                background: darkMode ? '#ffffff' : 'transparent',
+                transition: 'all 0.3s ease',
+                boxShadow: darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill={darkMode ? '#6b7280' : '#94a3b8'}/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stories */}
         {stories.map((story, index) => (
           <div
@@ -1203,56 +1255,6 @@ export default function Home() {
               {story.type === 'opening' ? (
                 <div className="opening-container">
                   <div className="date-header">{story.date}</div>
-
-                  {/* Dark Mode Toggle - Only on First Page */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginBottom: '20px',
-                    marginTop: '10px'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      background: darkMode ? '#1f2937' : '#f1f5f9',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '20px',
-                      padding: '2px',
-                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-                      width: '85px',
-                      cursor: 'pointer'
-                    }} onClick={toggleDarkMode}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '6px 10px',
-                        borderRadius: '16px',
-                        background: !darkMode ? '#ffffff' : 'transparent',
-                        transition: 'all 0.3s ease',
-                        boxShadow: !darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
-                      }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="12" r="4" fill={!darkMode ? '#f59e0b' : '#94a3b8'}/>
-                          <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414" stroke={!darkMode ? '#f59e0b' : '#94a3b8'} strokeWidth="1.5"/>
-                        </svg>
-                      </div>
-
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '6px 10px',
-                        borderRadius: '16px',
-                        background: darkMode ? '#ffffff' : 'transparent',
-                        transition: 'all 0.3s ease',
-                        boxShadow: darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
-                      }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill={darkMode ? '#6b7280' : '#94a3b8'}/>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
                   <h1 className="main-headline">
                     {renderGreeting(story.headline)}
                   </h1>
