@@ -1033,6 +1033,14 @@ export default function Home() {
         }
 
 
+        /* Desktop timeline - no height limit */
+        @media (min-width: 769px) {
+          .timeline-container-desktop {
+            max-height: none !important;
+            height: auto !important;
+          }
+        }
+
         @media (max-width: 768px) {
           .header-right .time {
             display: none;
@@ -1503,21 +1511,23 @@ export default function Home() {
                         ) : (
                           // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '0',
-                              left: '0',
-                              right: '0',
-                              background: '#ffffff',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '16px',
-                              padding: '12px 20px',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                              minHeight: '90px',
-                              maxHeight: '110px',
-                              overflowY: 'auto',
-                              zIndex: '10'
-                            }}>
+                            <div 
+                              className="timeline-container-desktop"
+                              style={{
+                                position: 'absolute',
+                                top: '0',
+                                left: '0',
+                                right: '0',
+                                background: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '16px',
+                                padding: '12px 20px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                                minHeight: '90px',
+                                maxHeight: '110px',
+                                overflowY: 'auto',
+                                zIndex: '10'
+                              }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
