@@ -243,7 +243,7 @@ export default function Home() {
     if (!text) return '';
     
     const getCategoryBoldStyle = (category) => {
-      const styles = {
+      const lightModeStyles = {
         'WORLD NEWS': { background: '#fee2e2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
@@ -254,7 +254,23 @@ export default function Home() {
         'SPORTS': { background: '#fffbeb', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'ENTERTAINMENT': { background: '#fdf2f8', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
       };
-      return styles[category] || { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
+
+      const darkModeStyles = {
+        'WORLD NEWS': { background: '#7f1d1d', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'BUSINESS': { background: '#9a3412', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'MARKETS': { background: '#0c4a6e', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'TECH & AI': { background: '#3730a3', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'SCIENCE': { background: '#0369a1', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'HEALTH': { background: '#166534', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'CLIMATE': { background: '#14532d', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'SPORTS': { background: '#9a3412', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'ENTERTAINMENT': { background: '#831843', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' }
+      };
+
+      const currentStyles = darkMode ? darkModeStyles : lightModeStyles;
+      return currentStyles[category] || (darkMode
+        ? { background: '#374151', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' }
+        : { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' });
     };
     
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
