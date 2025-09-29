@@ -22,9 +22,9 @@ import schedule
 # ==================== API KEY CONFIGURATION ====================
 CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', 'your-api-key-here')
 
-# Claude Models - Updated to latest Opus 4.1
-CLAUDE_MODEL = "claude-opus-4-1-20250805"  # Latest Opus version for article writing
-CLAUDE_SONNET_MODEL = "claude-3-5-sonnet-20241022"  # Keep Sonnet for other tasks
+# Claude Models - Upgraded to latest Claude 3.5 Sonnet for superior writing quality
+CLAUDE_MODEL = "claude-3-5-sonnet-20241022"  # Latest Claude 3.5 Sonnet for article writing - BEST for content quality
+CLAUDE_SONNET_MODEL = "claude-3-5-sonnet-20241022"  # Same model for all tasks for consistency
 
 # ==================== APPROVED NEWS SOURCES ====================
 ALLOWED_DOMAINS = [
@@ -722,19 +722,20 @@ def create_dedicated_rewriting_prompt(selected_articles_with_content):
 
 CRITICAL REQUIREMENTS:
 
-1. **WORD COUNT**: Every summary MUST be EXACTLY 40-50 words. Count carefully!
-2. **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers  
+1. **WORD COUNT - STRICT**: Every summary MUST be EXACTLY 40-50 words. NO EXCEPTIONS!
+2. **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers
 3. **DETAILS**: Exactly 3 facts in "Label: Value" format with NEW information not in summary
 4. **TITLE**: 8-12 engaging words (NO emoji in title field)
 5. **EMOJI**: One relevant emoji per story
 
-## WORD COUNT VALIDATION PROCESS:
+## WORD COUNT VALIDATION PROCESS - MANDATORY:
 For each summary:
 1. Write the summary
-2. Count every single word
-3. If under 40 words: Add more relevant details
-4. If over 50 words: Remove unnecessary words  
-5. Final count MUST be 40-50 words
+2. Count every single word (including articles, prepositions, everything)
+3. If under 40 words: Add more relevant details from the article content
+4. If over 50 words: Remove unnecessary words while keeping key information
+5. Final count MUST be between 40-50 words inclusive - this is non-negotiable
+6. Use a word counter if needed: the summary should match "40-50 words" exactly
 
 ## BOLD MARKUP RULES:
 - **Bold** should highlight: important names, places, numbers, key concepts
@@ -781,11 +782,12 @@ Source: {article.get('source', 'Unknown')}
     
     prompt += f"""
 
-FINAL REMINDER: 
-- Each summary must be EXACTLY 40-50 words
-- Use **bold** markup for 3-6 key terms
-- Details must be completely NEW information not in summary
-- Return EXACTLY {len(selected_articles_with_content)} articles
+FINAL REMINDER - CRITICAL VALIDATION:
+- WORD COUNT: Each summary MUST be EXACTLY 40-50 words - count carefully, no exceptions
+- BOLD MARKUP: Use **bold** for 3-6 key terms (names, places, numbers, concepts)
+- DETAILS: Must be completely NEW information not mentioned in summary
+- VALIDATION: System will reject any summary outside 40-50 word range
+- OUTPUT: Return EXACTLY {len(selected_articles_with_content)} articles with perfect formatting
 """
     
     return prompt
@@ -801,11 +803,13 @@ REWRITE RULES:
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
 
-WORD COUNT ENFORCEMENT:
-- Every summary MUST contain between 40-50 words (inclusive)
-- Count words carefully - if under 40 words, add more detail
-- If over 50 words, trim unnecessary words
-- This is MANDATORY - summaries with wrong word count will be rejected
+WORD COUNT ENFORCEMENT - STRICT MANDATORY:
+- Every summary MUST contain EXACTLY 40-50 words (inclusive) - NO EXCEPTIONS
+- Count EVERY word including articles, prepositions, and small words
+- If under 40 words: Add more relevant details from the article content
+- If over 50 words: Remove unnecessary words while preserving key information
+- This is CRITICAL - summaries with wrong word count will be automatically rejected
+- Final validation: Use word counter - must be 40-50 words exactly
 
 ## Details Section Instructions for AI - Complete Format Guide
 
@@ -1010,20 +1014,20 @@ Content: {content}
     
     prompt += f"""
 
-FINAL REMINDER: 
-1. SUMMARIES: Each must be EXACTLY 40-50 words. Count carefully:
-   - Too short (under 40): Add more relevant details
-   - Too long (over 50): Remove unnecessary words
-   - Perfect range (40-50): Proceed with confidence
+FINAL REMINDER - STRICT VALIDATION REQUIRED:
+1. WORD COUNT - NON-NEGOTIABLE: Each summary MUST be EXACTLY 40-50 words:
+   - Under 40 words: REJECTED - add more relevant details
+   - Over 50 words: REJECTED - remove unnecessary words
+   - Perfect 40-50 range: ACCEPTED - count every single word
 
-2. DETAILS: Each must be COMPLETELY NEW information:
-   - Read your summary first
-   - Identify ALL facts mentioned
-   - Generate 3 details that add DIFFERENT information
-   - Use the validation algorithm for each detail
-   - NO repetition of summary content allowed
+2. DETAILS VALIDATION: Each must be COMPLETELY NEW information:
+   - Compare against your summary word-for-word
+   - Find facts NOT mentioned in the summary
+   - Generate 3 completely different details
+   - Use validation algorithm for perfect format
+   - NO summary content repetition allowed
 
-Return ONLY the JSON with all {len(articles_with_content)} articles, each with 40-50 word summaries and 3 unique details."""
+CRITICAL: Return ONLY valid JSON with all {len(articles_with_content)} articles. Each summary must pass 40-50 word validation or be rejected."""
     
     return prompt
 
@@ -1143,17 +1147,18 @@ def dedicated_rewrite_selected_articles(articles_with_content):
         if response:
             parsed = parse_json_with_fallback(response)
             if parsed and 'articles' in parsed and len(parsed['articles']) == 10:
-                # Validate word counts
+                # STRICT word count validation - reject anything outside 40-50 range
                 valid_articles = []
                 for article in parsed['articles']:
                     summary = article.get('summary', '')
                     word_count = len(summary.split())
                     if 40 <= word_count <= 50:
                         valid_articles.append(article)
+                        print(f"✅ Article {article.get('rank', 'unknown')}: {word_count} words (valid)")
                     else:
-                        print(f"⚠️ Article {article.get('rank', 'unknown')} has {word_count} words (should be 40-50)")
-                
-                if len(valid_articles) >= 8:  # Accept if at least 8 articles have correct word count
+                        print(f"❌ Article {article.get('rank', 'unknown')} REJECTED: {word_count} words (must be 40-50)")
+
+                if len(valid_articles) >= 9:  # Require at least 9/10 articles to have correct word count
                     print(f"✅ Rewriting successful: {len(valid_articles)}/10 articles have correct word count")
                     # Fill in any missing articles
                     while len(valid_articles) < 10:
