@@ -256,15 +256,15 @@ export default function Home() {
       };
 
       const darkModeStyles = {
-        'WORLD NEWS': { background: '#7f1d1d', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: '#9a3412', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: '#0c4a6e', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: '#3730a3', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: '#0369a1', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'HEALTH': { background: '#166534', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: '#14532d', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'SPORTS': { background: '#9a3412', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: '#831843', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' }
+        'WORLD NEWS': { background: '#dc2626', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'BUSINESS': { background: '#ea580c', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'MARKETS': { background: '#0891b2', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'TECH & AI': { background: '#6366f1', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'SCIENCE': { background: '#0284c7', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'HEALTH': { background: '#16a34a', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'CLIMATE': { background: '#22c55e', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'SPORTS': { background: '#ea580c', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
+        'ENTERTAINMENT': { background: '#db2777', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' }
       };
 
       const currentStyles = darkMode ? darkModeStyles : lightModeStyles;
