@@ -200,6 +200,11 @@ export default function Home() {
     }));
   };
 
+  // Dark mode toggle function
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
+
   // Newsletter signup handler
   const handleNewsletterSignup = async () => {
     const emailInput = document.getElementById('newsletter-email');
@@ -468,14 +473,14 @@ export default function Home() {
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background: #fff;
+          background: ${darkMode ? '#000000' : '#fff'};
         }
 
         .loading-spinner {
           width: 40px;
           height: 40px;
-          border: 3px solid #f3f3f3;
-          border-top: 3px solid #1d1d1f;
+          border: 3px solid ${darkMode ? '#333333' : '#f3f3f3'};
+          border-top: 3px solid ${darkMode ? '#ffffff' : '#1d1d1f'};
           border-radius: 50%;
           animation: spin 1s linear infinite;
           margin-bottom: 16px;
@@ -483,7 +488,7 @@ export default function Home() {
 
         .loading-text {
           font-size: 16px;
-          color: #86868b;
+          color: ${darkMode ? '#86868b' : '#86868b'};
         }
 
         @keyframes spin {
@@ -522,7 +527,7 @@ export default function Home() {
         }
 
         .logo-ten {
-          color: #0f172a;
+          color: ${darkMode ? '#ffffff' : '#0f172a'};
           font-weight: 900;
         }
 
@@ -536,7 +541,7 @@ export default function Home() {
         }
 
         .time {
-          color: #94a3b8;
+          color: ${darkMode ? '#94a3b8' : '#94a3b8'};
           font-weight: 500;
         }
 
@@ -566,7 +571,7 @@ export default function Home() {
           align-items: flex-start;
           justify-content: center;
           padding: 70px 24px 40px;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#fff'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
         }
@@ -603,7 +608,7 @@ export default function Home() {
           line-height: 1.12; /* compact */
           letter-spacing: -1px; /* tighter */
           margin-bottom: 40px;
-          color: #0f172a;
+          color: ${darkMode ? '#ffffff' : '#0f172a'};
         }
 
         .subheadline {
@@ -710,7 +715,6 @@ export default function Home() {
           line-height: 1.2;
           margin-bottom: 20px;
           color: ${darkMode ? '#ffffff' : '#000000'};
-          transition: color 0.3s ease;
         }
 
         .news-summary {
@@ -721,7 +725,6 @@ export default function Home() {
           text-align: left;
           border-bottom: none;
           padding-bottom: 0;
-          transition: color 0.3s ease;
         }
 
         .news-meta {
@@ -733,7 +736,6 @@ export default function Home() {
           gap: 0;
           border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
           box-shadow: 0 4px 12px ${darkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)'};
-          transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .news-detail-item {
@@ -753,12 +755,11 @@ export default function Home() {
 
         .news-detail-label {
           font-size: 10px;
-          color: ${darkMode ? '#9ca3af' : '#6b7280'};
+          color: #6b7280;
           text-transform: uppercase;
           letter-spacing: 1px;
           font-weight: 600;
           margin-bottom: 1px;
-          transition: color 0.3s ease;
         }
 
         .news-detail-value {
@@ -767,15 +768,13 @@ export default function Home() {
           color: ${darkMode ? '#f9fafb' : '#111827'};
           line-height: 1.2;
           margin: 0;
-          transition: color 0.3s ease;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: ${darkMode ? '#9ca3af' : '#6b7280'};
+          color: #6b7280;
           font-weight: 500;
           margin-top: 0;
-          transition: color 0.3s ease;
         }
 
         .progress-indicator {
@@ -1144,7 +1143,7 @@ export default function Home() {
           .news-meta {
             padding: 10px 15px;
             margin-top: 15px;
-            background: #ffffff;
+            background: ${darkMode ? '#1f2937' : '#ffffff'};
             border: 1px solid #e5e7eb;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
           }
@@ -1178,51 +1177,46 @@ export default function Home() {
           
           <div className="header-right">
             <span className="time">{currentTime}</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-              <button className="subscribe-btn" onClick={() => goToStory(stories.length - 1)}>NEWSLETTER</button>
-              
-              {/* Dark Mode Toggle */}
+            <button className="subscribe-btn" onClick={() => goToStory(stories.length - 1)}>NEWSLETTER</button>
+            <div style={{
+              display: 'flex',
+              background: darkMode ? '#1f2937' : '#f1f5f9',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '2px',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+              width: '85px',
+              cursor: 'pointer'
+            }} onClick={toggleDarkMode}>
               <div style={{
                 display: 'flex',
-                background: darkMode ? '#1f2937' : '#f1f5f9',
-                border: '1px solid #e2e8f0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px 10px',
                 borderRadius: '16px',
-                padding: '2px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                width: '70px'
+                background: !darkMode ? '#ffffff' : 'transparent',
+                transition: 'all 0.3s ease',
+                boxShadow: !darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  background: !darkMode ? '#ffffff' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: !darkMode ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
-                }} onClick={() => setDarkMode(false)}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="4" fill={!darkMode ? '#f59e0b' : '#94a3b8'}/>
-                    <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414" stroke={!darkMode ? '#f59e0b' : '#94a3b8'} strokeWidth="1.5"/>
-                  </svg>
-                </div>
-                
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  background: darkMode ? '#ffffff' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: darkMode ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
-                }} onClick={() => setDarkMode(true)}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill={darkMode ? '#6b7280' : '#94a3b8'}/>
-                  </svg>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="4" fill={!darkMode ? '#f59e0b' : '#94a3b8'}/>
+                  <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414" stroke={!darkMode ? '#f59e0b' : '#94a3b8'} strokeWidth="1.5"/>
+                </svg>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px 10px',
+                borderRadius: '16px',
+                background: darkMode ? '#ffffff' : 'transparent',
+                transition: 'all 0.3s ease',
+                boxShadow: darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill={darkMode ? '#6b7280' : '#94a3b8'}/>
+                </svg>
               </div>
             </div>
           </div>
@@ -1573,7 +1567,7 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: '#ffffff',
+                                background: darkMode ? '#1f2937' : '#ffffff',
                                 border: '1px solid #e5e7eb',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
@@ -1623,7 +1617,7 @@ export default function Home() {
                                     }}>{event.date}</div>
                                     <div style={{
                                       fontSize: '12px',
-                                      color: '#1e293b',
+                                      color: darkMode ? '#e2e8f0' : '#1e293b',
                                       lineHeight: '1.3'
                                     }}>{event.event}</div>
                       </div>
@@ -1637,7 +1631,7 @@ export default function Home() {
                                     textAlign: 'center',
                                     fontSize: '9px',
                                     color: '#94a3b8',
-                                    background: 'linear-gradient(transparent, #ffffff)',
+                                    background: darkMode ? 'linear-gradient(transparent, #1f2937)' : 'linear-gradient(transparent, #ffffff)',
                                     padding: '8px 0 4px',
                                     fontWeight: '500',
                                     textTransform: 'uppercase',
