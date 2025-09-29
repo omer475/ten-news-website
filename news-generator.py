@@ -525,87 +525,81 @@ CRITICAL RULES:
 5. Focus on completely NEW stories and developments
 """
     
-    prompt = f"""You are a GLOBAL NEWS CURATOR selecting EXACTLY 10 stories that impact the ENTIRE WORLD. Focus on stories that matter to people across all continents.
+    prompt = f"""You are a global news curator selecting EXACTLY 10 stories that concern THE WHOLE WORLD - not just regional or local news.
 
 {previous_context}
 
-## GLOBAL IMPACT MANDATE
-Select ONLY stories with WORLDWIDE significance. Reject purely local/regional stories unless they have global implications.
+## CORE MANDATE: GLOBAL RELEVANCE ONLY
+Select stories that affect people WORLDWIDE, not just one country or region. Every story must have GLOBAL implications or interest.
 
-## GLOBAL PRIORITY FRAMEWORK
+## GLOBAL RELEVANCE CRITERIA
 
-### WORLDWIDE CRITICAL (Positions 1-3)
-Stories affecting MULTIPLE COUNTRIES or GLOBAL SYSTEMS:
-- International conflicts, wars, peace agreements
-- Global economic crises, market crashes affecting worldwide markets
-- Climate disasters with international impact
-- Pandemics, health emergencies crossing borders
-- Major world leader decisions affecting international relations
-- Global supply chain disruptions
-- International sanctions, trade wars, global agreements
+### PRIORITY 1 - WORLDWIDE IMPACT (Positions 1-4)
+- Global economic events (markets, currencies, trade affecting multiple continents)
+- International conflicts or diplomatic developments
+- Climate change and environmental crises with global effects
+- Pandemics, health crises, or medical breakthroughs affecting humanity
+- Technology developments that change how the world works
+- Natural disasters with international implications
 
-### WORLDWIDE HIGH IMPACT (Positions 4-6)
-Stories with CROSS-BORDER significance:
-- Multinational corporate deals (>$5B) affecting global markets
-- Scientific breakthroughs with worldwide applications
-- International sporting events, cultural phenomena
-- Global technology releases affecting billions (AI, social media)
-- Energy/oil decisions affecting global prices
-- International climate/environmental agreements
-- Global cyber attacks or security threats
+### PRIORITY 2 - GLOBAL INTEREST (Positions 5-7)
+- Major world leaders and their decisions affecting international relations
+- Multinational corporations and deals affecting global markets
+- Scientific discoveries or space exploration with worldwide significance
+- Cultural events or phenomena that span multiple countries
+- International sports or entertainment with global following
 
-### WORLDWIDE NOTABLE (Positions 7-10)
-Stories with INTERNATIONAL ripple effects:
-- Regional conflicts with global security implications
-- Economic indicators from major economies (US, China, EU)
-- Global entertainment/cultural events
-- International legal precedents
-- Technology trends affecting worldwide users
-- Global health/science developments
+### PRIORITY 3 - EMERGING GLOBAL TRENDS (Positions 8-10)
+- New technologies or innovations spreading worldwide
+- Social movements or cultural shifts crossing borders
+- Economic indicators that signal global trends
+- International cooperation or conflict developments
 
-## ENGAGEMENT OPTIMIZATION RULES
+## STRICT GLOBAL FILTER
+REJECT stories that are:
+- Purely domestic/local news (unless massive global implications)
+- Regional politics (unless affects multiple countries)
+- Local disasters (unless international response/significance)
+- Single-country business news (unless global company/impact)
+- Local crime or social issues (unless international pattern)
 
-### MUST INCLUDE (if available from credible sources):
-- **Power & Scandal**: Leadership crises, corruption exposés, whistleblower revelations
-- **Records & Extremes**: First-ever, largest, smallest, most expensive, unprecedented outcomes
-- **Celebrity Impact**: Major figures making significant moves (not gossip - think business decisions, political involvement, major initiatives)
-- **David vs Goliath**: Underdog victories, shocking upsets, unexpected reversals
-- **Money Moves**: Billion-dollar deals, market crashes/surges, wealth transfers
-- **Cultural Moments**: Events everyone will discuss (major sports finals, Oscar surprises, viral phenomena with substance)
+## GLOBAL SELECTION RULES
+1. Ask: "Why should someone in Japan/Brazil/Germany/Nigeria care about this?"
+2. Ensure story affects or interests people on multiple continents
+3. Prioritize stories that will be discussed globally
+4. Focus on events that shape international relations, global economy, or human progress
+5. Include diverse geographic perspectives but with global relevance
 
-### MUST EXCLUDE:
-- Purely local stories without wider implications
-- Minor corporate earnings unless dramatically unexpected
-- Incremental policy updates or routine announcements
-- Personal drama without societal relevance
-- Speculation or rumors without confirmation
-- Stories older than 48 hours unless major new development
+## GLOBAL SELECTION PRIORITY
 
-## GLOBAL FOCUS REQUIREMENTS
+### MUST INCLUDE (if available):
+- **Breaking global events**: Wars, disasters, major diplomatic developments
+- **Economic shockwaves**: Market crashes, currency crises, trade wars affecting multiple countries
+- **Technology breakthroughs**: AI, space exploration, medical advances changing the world
+- **Climate emergencies**: Environmental crises with international impact
+- **Geopolitical shifts**: Elections, sanctions, treaties affecting global balance
+- **Cultural phenomena**: Events discussed across continents
 
-Your 10 selections MUST prioritize WORLDWIDE impact:
-- **GLOBAL stories first**: Choose stories affecting multiple countries/continents
-- **International implications**: Select stories with cross-border effects
-- **World economy**: Stories affecting global markets, trade, currencies
-- **Global security**: International conflicts, terrorism, cyber attacks
-- **Worldwide health**: Pandemics, global health crises, medical breakthroughs
-- **Climate/environment**: Stories affecting global climate and environment
-- **Global technology**: Tech developments affecting billions worldwide
-- **International politics**: World leader decisions, diplomatic relations
+### AUTOMATICALLY REJECT:
+- Single-country local politics (unless massive global impact)
+- Regional business news (unless affects global markets)
+- Local disasters (unless international response)
+- Domestic crime or social issues
+- Minor corporate updates
+- Celebrity gossip without substance
 
-## DIVERSITY REQUIREMENTS
-- **Geographic Distribution**: Maximum 3 stories from any single country (favor international stories)
-- **Continental Balance**: Include stories from multiple continents when possible
-- **Global perspective**: Favor stories with international angles over purely domestic
-- **World impact**: Prioritize stories that matter to a global audience
+## GLOBAL DIVERSITY REQUIREMENTS
 
-### SUGGESTED DISTRIBUTION:
-- 2-3 Politics/Governance stories
-- 2-3 Economy/Business stories  
-- 1-2 Technology/Science stories
-- 1-2 Health/Climate/Environment stories
-- 1-2 Society/Culture/Human Interest stories
-- 1 Wildcard (Sports/Entertainment IF globally significant)
+GEOGRAPHIC SPREAD:
+- Maximum 3 stories from any single country
+- Include perspectives from different continents
+- Prioritize stories affecting multiple regions
+
+TOPIC BALANCE:
+- 3-4 International politics/conflicts
+- 2-3 Global economy/business
+- 2-3 Technology/science/health affecting humanity
+- 1-2 Climate/environment with worldwide implications
 
 ## QUALITY VERIFICATION
 
@@ -1043,67 +1037,57 @@ def generate_timeline_for_articles(articles_data):
     for i, article in enumerate(articles_data['articles'], 1):
         print(f"📅 Article {i}/10: Generating timeline for '{article['title'][:40]}...'")
         
-        prompt = f"""You are a RESEARCH-POWERED timeline generator. Create a detailed timeline that goes BEYOND the summary by adding researched background information.
+        prompt = f"""You are a timeline researcher. Create a detailed chronological timeline for this news story using your knowledge beyond just the summary provided.
 
 STORY TO RESEARCH:
 Title: {article['title']}
 Summary: {article['summary']}
 Category: {article['category']}
-URL: {article.get('url', '')}
 
-## RESEARCH MANDATE
-USE YOUR KNOWLEDGE to add context and background information NOT mentioned in the summary. Include:
-- Historical context leading to this story
-- Previous similar events or precedents
-- Key players and their backgrounds
-- Economic/political context
-- International implications
-- Future scheduled events or deadlines
+RESEARCH INSTRUCTIONS:
+1. Use your knowledge about this topic/companies/people mentioned
+2. Research the background context leading to this story
+3. Include information NOT mentioned in the summary
+4. Add relevant future dates and expected developments
+5. Make the timeline INFORMATIVE and VALUABLE
 
-## TIMELINE REQUIREMENTS:
-1. Create 2-4 timeline events with RESEARCHED information
-2. Include background information NOT in the summary
-3. Add specific dates, numbers, and context you know about
-4. Include future implications or scheduled follow-ups
-5. Each event: 5-15 words (detailed enough to be informative)
-6. Focus on factual, verifiable information
-7. Make it EDUCATIONAL - readers should learn something new
+TIMELINE REQUIREMENTS:
+1. Create 2-4 timeline events (based on story complexity)
+2. Each event MAXIMUM 8 words - count carefully
+3. Start with background context (research beyond summary)
+4. Include "Today" for current development  
+5. Add future dates when relevant (meetings, deadlines, expected outcomes)
+6. Use specific dates when possible ("March 15" not just "Recently")
 
-## RESEARCH EXAMPLES:
-Instead of: "Key developments unfold"
-Write: "Federal Reserve raised interest rates by 0.75% in September"
+RESEARCH DEPTH:
+- If it's about a company: Include previous major events, earnings, leadership changes
+- If it's political: Include previous policies, elections, diplomatic history
+- If it's conflict: Include peace talks, previous escalations, international responses
+- If it's economic: Include previous market movements, policy changes, forecasts
 
-Instead of: "Situation reaches critical point"  
-Write: "UN Security Council called emergency session for third time this year"
+WORD COUNT ENFORCEMENT:
+Each event must be EXACTLY 8 words or fewer. Examples:
+✅ GOOD: "Company announced merger talks in January" (7 words)
+✅ GOOD: "Previous sanctions imposed last year failed" (6 words) 
+❌ BAD: "The company made an important announcement about potential merger discussions" (11 words)
 
-Instead of: "Major announcement made"
-Write: "CEO announced resignation following $2.3B quarterly loss report"
-
-## ENHANCED TIMELINE FORMAT:
-- Use SPECIFIC dates when possible: "September 15", "March 2024", "Last Tuesday"
-- Include NUMBERS and CONTEXT: amounts, percentages, quantities
-- Add RESEARCH DEPTH: background not mentioned in summary
-- Show CAUSE AND EFFECT: why events led to current story
-
-Return ONLY this JSON with RESEARCHED timeline:
+Return ONLY this JSON with researched timeline:
 {{
   "timeline": [
     {{
       "date": "Specific date",
-      "event": "Detailed researched event with context and numbers"
+      "event": "Researched background event (max 8 words)"
     }},
     {{
-      "date": "Another date",
-      "event": "Background information not in summary but relevant"
+      "date": "Today",
+      "event": "Current story development (max 8 words)"
     }},
     {{
-      "date": "Today/Latest",
-      "event": "Current development as reported in story"
+      "date": "Future date",
+      "event": "Expected outcome or next step (max 8 words)"
     }}
   ]
-}}
-
-RESEARCH CHALLENGE: Make this timeline more informative than the summary by adding your knowledge of the topic, context, and background."""
+}}"""
         
         try:
             response = call_claude_api_with_model(prompt, f"Timeline generation for article {i}", CLAUDE_SONNET_MODEL)
