@@ -243,7 +243,7 @@ export default function Home() {
     if (!text) return '';
     
     const getCategoryBoldStyle = (category) => {
-      const lightModeStyles = {
+      const styles = {
         'WORLD NEWS': { background: '#fee2e2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
@@ -254,23 +254,7 @@ export default function Home() {
         'SPORTS': { background: '#fffbeb', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
         'ENTERTAINMENT': { background: '#fdf2f8', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
       };
-
-      const darkModeStyles = {
-        'WORLD NEWS': { background: '#dc2626', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: '#ea580c', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: '#0891b2', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: '#6366f1', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: '#0284c7', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'HEALTH': { background: '#16a34a', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: '#22c55e', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'SPORTS': { background: '#ea580c', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: '#db2777', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' }
-      };
-
-      const currentStyles = darkMode ? darkModeStyles : lightModeStyles;
-      return currentStyles[category] || (darkMode
-        ? { background: '#374151', color: '#ffffff', padding: '2px 6px', borderRadius: '4px' }
-        : { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' });
+      return styles[category] || { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
     };
     
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
@@ -667,9 +651,7 @@ export default function Home() {
           max-width: 950px;
         }
 
-        .news-item.first-news {
-          /* Removed negative margin to fix alignment with other news cards */
-        }
+        /* Removed first-news special styling to align all news cards */
 
         .news-item:hover {
           background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
@@ -1365,7 +1347,7 @@ export default function Home() {
                     </div>
                   )}
                   
-                  <div className={`news-item ${story.number === 1 ? 'first-news' : ''}`} onClick={() => {
+                  <div className="news-item" onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
