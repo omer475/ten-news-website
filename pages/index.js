@@ -1541,18 +1541,18 @@ export default function Home() {
                         }}
                       >
                         {/* Content - Either Details OR Timeline (never both visible) */}
-                        {!showTimeline[index] ? (
-                          // Show Details Only
-                          story.details && story.details.map((detail, i) => {
+                        <div style={{ display: !showTimeline[index] ? 'block' : 'none' }}>
+                          {/* Details Section - Hidden when timeline is active */}
+                          {story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
                           const cleanValue = value?.trim() || '';
-                          
+
                           // Extract main number/value and subtitle
                           const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
                           const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                          
+
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
@@ -1560,27 +1560,29 @@ export default function Home() {
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
-                          })
-                        ) : (
-                          // Show Timeline Only - Starts at same level, extends downward
-                          story.timeline && (
-                            <div 
-                              className="timeline-container-desktop"
-                              style={{
-                                position: 'absolute',
-                                top: '0',
-                                left: '0',
-                                right: '0',
-                                background: darkMode ? '#1f2937' : '#ffffff',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '16px',
-                                padding: '12px 20px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                                minHeight: '90px',
-                                maxHeight: '110px',
-                                overflowY: 'auto',
-                                zIndex: '10'
-                              }}>
+                          })}
+                        </div>
+
+                        <div style={{ display: showTimeline[index] ? 'block' : 'none' }}>
+                          {/* Timeline Section - Hidden when details is active */}
+                          {story.timeline && (
+                          <div
+                            className="timeline-container-desktop"
+                            style={{
+                              position: 'absolute',
+                              top: '0',
+                              left: '0',
+                              right: '0',
+                              background: darkMode ? '#1f2937' : '#ffffff',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '16px',
+                              padding: '12px 20px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                              minHeight: '90px',
+                              maxHeight: '110px',
+                              overflowY: 'auto',
+                              zIndex: '10'
+                            }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
@@ -1646,7 +1648,8 @@ export default function Home() {
                                 )}
                               </div>
                             </div>
-                          )
+                          )}
+                          </div>
                         )}
                         
                         {/* Toggle Arrows - Hidden on mobile */}
