@@ -1395,11 +1395,11 @@ export default function Home() {
                             display: 'flex',
                             background: '#f1f5f9',
                             border: '1px solid #e2e8f0',
-                            borderRadius: '20px',
+                            borderRadius: '16px',
                             padding: '2px',
                             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                             backdropFilter: 'blur(10px)',
-                            width: '110px'
+                            width: '100px'
                           }}>
                             {/* Details Button - Icons Only */}
                             <div style={{
