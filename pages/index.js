@@ -727,7 +727,7 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: ${darkMode ? '#1f2937' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#ffffff'};
           border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
@@ -1141,7 +1141,7 @@ export default function Home() {
           .news-meta {
             padding: 10px 15px;
             margin-top: 15px;
-            background: ${darkMode ? '#1f2937' : '#ffffff'};
+            background: ${darkMode ? '#000000' : '#ffffff'};
             border: 1px solid #e5e7eb;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
           }
@@ -1558,7 +1558,7 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: darkMode ? '#1f2937' : '#ffffff',
+                                background: darkMode ? '#000000' : '#ffffff',
                                 border: '1px solid #e5e7eb',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
@@ -1622,7 +1622,7 @@ export default function Home() {
                                     textAlign: 'center',
                                     fontSize: '9px',
                                     color: '#94a3b8',
-                                    background: darkMode ? 'linear-gradient(transparent, #1f2937)' : 'linear-gradient(transparent, #ffffff)',
+                                    background: darkMode ? 'linear-gradient(transparent, #000000)' : 'linear-gradient(transparent, #ffffff)',
                                     padding: '8px 0 4px',
                                     fontWeight: '500',
                                     textTransform: 'uppercase',
