@@ -667,10 +667,6 @@ export default function Home() {
           max-width: 950px;
         }
 
-        .news-item.first-news {
-          margin-top: -40px;
-        }
-
         .news-item:hover {
           background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
@@ -1346,26 +1342,7 @@ export default function Home() {
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
-                  {story.number === 1 && (
-                    <div style={{ 
-                      textAlign: 'center', 
-                      padding: '32px 0',
-                      marginBottom: '24px',
-                      position: 'relative'
-                    }}>
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '-2px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '80px',
-                        height: '2px',
-                        background: 'linear-gradient(90deg, #f97316, #06b6d4)'
-                      }}></div>
-                    </div>
-                  )}
-                  
-                  <div className={`news-item ${story.number === 1 ? 'first-news' : ''}`} onClick={() => {
+                  <div className="news-item" onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
