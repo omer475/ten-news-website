@@ -667,6 +667,10 @@ export default function Home() {
           max-width: 950px;
         }
 
+        .news-item.first-news {
+          margin-top: -40px;
+        }
+
         .news-item:hover {
           background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
@@ -1067,6 +1071,10 @@ export default function Home() {
           }
           
           /* Hide arrows on mobile - use swipe only */
+          .timeline-arrow {
+            display: none !important;
+          }
+          
           .story-container {
             padding: 60px 12px 40px;
           }
@@ -1338,7 +1346,8 @@ export default function Home() {
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
-                  <div className="news-item" onClick={() => {
+                  
+                  <div className={`news-item ${story.number === 1 ? 'first-news' : ''}`} onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
@@ -1468,85 +1477,78 @@ export default function Home() {
                         )}
                         
                         {/* Fixed Position Details/Timeline Section */}
-                        <div
-                          style={{
-                            position: 'relative',
-                            minHeight: '90px'
-                          }}
-                        >
+                        <div 
+                          className="news-meta" 
+                        style={{ 
+                          position: 'relative', 
+                          overflow: 'visible', 
+                          cursor: 'pointer',
+                          minHeight: '90px',
+                          height: '90px'
+                        }}
+                        onTouchStart={(e) => {
+                          const startX = e.touches[0].clientX;
+                          const startY = e.touches[0].clientY;
+                          let hasMoved = false;
+                          let swipeDirection = null;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
+                            
+                            if (diffX > 15 || diffY > 15) {
+                              hasMoved = true;
+                              
+                              // Determine swipe direction - be more strict
+                              if (diffX > diffY && diffX > 30) {
+                                swipeDirection = 'horizontal';
+                                // ONLY prevent default for clear horizontal swipes
+                                moveEvent.preventDefault();
+                                moveEvent.stopPropagation();
+                              } else if (diffY > diffX && diffY > 30) {
+                                swipeDirection = 'vertical';
+                                // Let vertical swipes pass through for story navigation
+                              }
+                            }
+                          };
+                          
+                          const handleTouchEnd = (endEvent) => {
+                            const endX = endEvent.changedTouches[0].clientX;
+                            const endY = endEvent.changedTouches[0].clientY;
+                            const diffX = startX - endX;
+                            const diffY = startY - endY;
+                            
+                            // Only handle horizontal swipes for timeline
+                            if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
+                              console.log('Horizontal timeline swipe detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              toggleTimeline(index);
+                            } else if (!hasMoved) {
+                              // Single tap toggles timeline
+                              console.log('Timeline tap detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              toggleTimeline(index);
+                            }
+                            // If it's vertical swipe, let it pass through for story navigation
+                            
+                            // Clean up listeners
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          // Use normal event listeners, let vertical swipes pass through
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                        }}
+                      >
                         {/* Content - Either Details OR Timeline (never both visible) */}
                         {!showTimeline[index] ? (
                           // Show Details Only
-                          <div
-                            style={{
-                              background: darkMode ? '#1f2937' : '#ffffff',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '16px',
-                              padding: '12px 20px',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                              minHeight: '90px',
-                              cursor: 'pointer'
-                            }}
-                            onTouchStart={(e) => {
-                              const startX = e.touches[0].clientX;
-                              const startY = e.touches[0].clientY;
-                              let hasMoved = false;
-                              let swipeDirection = null;
-
-                              const handleTouchMove = (moveEvent) => {
-                                const currentX = moveEvent.touches[0].clientX;
-                                const currentY = moveEvent.touches[0].clientY;
-                                const diffX = Math.abs(startX - currentX);
-                                const diffY = Math.abs(startY - currentY);
-
-                                if (diffX > 15 || diffY > 15) {
-                                  hasMoved = true;
-
-                                  // Determine swipe direction - be more strict
-                                  if (diffX > diffY && diffX > 30) {
-                                    swipeDirection = 'horizontal';
-                                    // ONLY prevent default for clear horizontal swipes
-                                    moveEvent.preventDefault();
-                                    moveEvent.stopPropagation();
-                                  } else if (diffY > diffX && diffY > 30) {
-                                    swipeDirection = 'vertical';
-                                    // Let vertical swipes pass through for story navigation
-                                  }
-                                }
-                              };
-
-                              const handleTouchEnd = (endEvent) => {
-                                const endX = endEvent.changedTouches[0].clientX;
-                                const endY = endEvent.changedTouches[0].clientY;
-                                const diffX = startX - endX;
-                                const diffY = startY - endY;
-
-                                // Only handle horizontal swipes for timeline
-                                if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                                  console.log('Horizontal timeline swipe detected for story', index);
-                                  endEvent.preventDefault();
-                                  endEvent.stopPropagation();
-                                  toggleTimeline(index);
-                                } else if (!hasMoved) {
-                                  // Single tap toggles timeline
-                                  console.log('Timeline tap detected for story', index);
-                                  endEvent.preventDefault();
-                                  endEvent.stopPropagation();
-                                  toggleTimeline(index);
-                                }
-                                // If it's vertical swipe, let it pass through for story navigation
-
-                                // Clean up listeners
-                                document.removeEventListener('touchmove', handleTouchMove);
-                                document.removeEventListener('touchend', handleTouchEnd);
-                              };
-
-                              // Use normal event listeners, let vertical swipes pass through
-                              document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                              document.addEventListener('touchend', handleTouchEnd, { passive: false });
-                            }}
-                          >
-                          {story.details && story.details.map((detail, i) => {
+                          story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
                           const cleanValue = value?.trim() || '';
@@ -1564,11 +1566,10 @@ export default function Home() {
                             </div>
                           );
                           })
-                          </div>
                         ) : (
                           // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
-                            <div
+                            <div 
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
@@ -1583,66 +1584,7 @@ export default function Home() {
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',
-                                zIndex: '10',
-                                cursor: 'pointer'
-                              }}
-                              onTouchStart={(e) => {
-                                const startX = e.touches[0].clientX;
-                                const startY = e.touches[0].clientY;
-                                let hasMoved = false;
-                                let swipeDirection = null;
-
-                                const handleTouchMove = (moveEvent) => {
-                                  const currentX = moveEvent.touches[0].clientX;
-                                  const currentY = moveEvent.touches[0].clientY;
-                                  const diffX = Math.abs(startX - currentX);
-                                  const diffY = Math.abs(startY - currentY);
-
-                                  if (diffX > 15 || diffY > 15) {
-                                    hasMoved = true;
-
-                                    // Determine swipe direction - be more strict
-                                    if (diffX > diffY && diffX > 30) {
-                                      swipeDirection = 'horizontal';
-                                      // ONLY prevent default for clear horizontal swipes
-                                      moveEvent.preventDefault();
-                                      moveEvent.stopPropagation();
-                                    } else if (diffY > diffX && diffY > 30) {
-                                      swipeDirection = 'vertical';
-                                      // Let vertical swipes pass through for story navigation
-                                    }
-                                  }
-                                };
-
-                                const handleTouchEnd = (endEvent) => {
-                                  const endX = endEvent.changedTouches[0].clientX;
-                                  const endY = endEvent.changedTouches[0].clientY;
-                                  const diffX = startX - endX;
-                                  const diffY = startY - endY;
-
-                                  // Only handle horizontal swipes for timeline
-                                  if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                                    console.log('Horizontal timeline swipe detected for story', index);
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    toggleTimeline(index);
-                                  } else if (!hasMoved) {
-                                    // Single tap toggles timeline
-                                    console.log('Timeline tap detected for story', index);
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    toggleTimeline(index);
-                                  }
-                                  // If it's vertical swipe, let it pass through for story navigation
-
-                                  // Clean up listeners
-                                  document.removeEventListener('touchmove', handleTouchMove);
-                                  document.removeEventListener('touchend', handleTouchEnd);
-                                };
-
-                                // Use normal event listeners, let vertical swipes pass through
-                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                                zIndex: '10'
                               }}>
                               <div style={{
                                 position: 'relative',
@@ -1711,7 +1653,40 @@ export default function Home() {
                             </div>
                           )
                         )}
-
+                        
+                        {/* Toggle Arrows - Hidden on mobile */}
+                        <div className="timeline-arrow" style={{
+                          position: 'absolute',
+                          left: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          fontSize: '20px',
+                          color: '#3b82f6',
+                          cursor: 'pointer',
+                          opacity: '0.7',
+                          zIndex: '10'
+                        }} onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Left arrow clicked for story', index);
+                          toggleTimeline(index);
+                        }}>←</div>
+                        
+                        <div className="timeline-arrow" style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          fontSize: '20px',
+                          color: '#3b82f6',
+                          cursor: 'pointer',
+                          opacity: '0.7',
+                          zIndex: '10'
+                        }} onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Right arrow clicked for story', index);
+                          toggleTimeline(index);
+                        }}>→</div>
+                        
                       </div>
                       </div> {/* Close fixed position container */}
                     </div>
