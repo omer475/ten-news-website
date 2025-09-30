@@ -1472,11 +1472,11 @@ export default function Home() {
                         )}
                         
                         {/* Fixed Position Details/Timeline Section */}
-                        <div
-                          className="news-meta"
-                        style={{
-                          position: 'relative',
-                          overflow: showTimeline[index] ? 'hidden' : 'visible',
+                        <div 
+                          className="news-meta" 
+                        style={{ 
+                          position: 'relative', 
+                          overflow: 'visible', 
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px'
@@ -1541,50 +1541,51 @@ export default function Home() {
                         }}
                       >
                         {/* Content - Either Details OR Timeline (never both visible) */}
-                        <div style={{ display: !showTimeline[index] ? 'block' : 'none' }}>
-                          {/* Details Section - Hidden when timeline is active */}
-                        {story.details && story.details.map((detail, i) => {
-                          const [label, value] = detail.split(':');
-                          const cleanLabel = label?.trim() || '';
-                          const cleanValue = value?.trim() || '';
-                          
-                          // Extract main number/value and subtitle
-                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                          
-                          return (
-                            <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                        <div style={{ display: showTimeline[index] ? 'block' : 'none' }}>
-                          {/* Timeline Section - Hidden when details is active */}
-                          {story.timeline && (
+                        {!showTimeline[index] ? (
+                          // Show Details Only
                           <div
-                            className="timeline-container-desktop"
                             style={{
-                              position: 'absolute',
-                              top: '0',
-                              left: '0',
-                              right: '0',
-                              bottom: '0',
                               background: darkMode ? '#1f2937' : '#ffffff',
                               border: '1px solid #e5e7eb',
                               borderRadius: '16px',
                               padding: '12px 20px',
                               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                              minHeight: '90px',
-                              maxHeight: '110px',
-                              overflowY: 'auto',
-                              overflowX: 'hidden',
-                              zIndex: '10'
+                              minHeight: '90px'
                             }}>
+                            {story.details && story.details.map((detail, i) => {
+                            const [label, value] = detail.split(':');
+                            const cleanLabel = label?.trim() || '';
+                            const cleanValue = value?.trim() || '';
+
+                            // Extract main number/value and subtitle
+                            const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                            const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                            const subtitle = valueMatch ? valueMatch[2].trim() : '';
+
+                            return (
+                              <div key={i} className="news-detail-item">
+                                <div className="news-detail-label">{cleanLabel}</div>
+                                <div className="news-detail-value">{mainValue}</div>
+                                {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                              </div>
+                            );
+                            })}
+                          </div>
+                        ) : (
+                          // Show Timeline Only - Starts at same level, extends downward
+                          story.timeline && (
+                            <div
+                              className="timeline-container-desktop"
+                              style={{
+                                background: darkMode ? '#1f2937' : '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '16px',
+                                padding: '12px 20px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                                minHeight: '90px',
+                                maxHeight: '110px',
+                                overflowY: 'auto'
+                              }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
@@ -1628,7 +1629,7 @@ export default function Home() {
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
                                       lineHeight: '1.3'
                                     }}>{event.event}</div>
-                    </div>
+                      </div>
                                 ))}
                                 
                                 {/* Scroll hint at bottom */}
@@ -1650,8 +1651,7 @@ export default function Home() {
                                 )}
                               </div>
                             </div>
-                          )}
-                          </div>
+                          )
                         )}
                         
                         {/* Toggle Arrows - Hidden on mobile */}
