@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '../lib/supabase';
 
+export async function getServerSideProps() {
+  return {
+    props: {}, // Will be passed to the page component as props
+  }
+}
+
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
