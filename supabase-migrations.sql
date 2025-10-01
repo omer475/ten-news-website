@@ -1,9 +1,6 @@
 -- Supabase Migration for Ten News User Profiles
 -- Run this SQL in your Supabase SQL Editor
 
--- Enable Row Level Security
-ALTER TABLE IF EXISTS auth.users ENABLE ROW LEVEL SECURITY;
-
 -- Create profiles table
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
