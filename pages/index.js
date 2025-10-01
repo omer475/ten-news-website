@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createClient } from '../lib/supabase';
 
 export default function Home() {
   const [stories, setStories] = useState([]);
@@ -7,6 +8,18 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
   const [darkMode, setDarkMode] = useState(false);
+
+  // Authentication state
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authModal, setAuthModal] = useState(null); // 'login', 'signup', or null
+  const [authError, setAuthError] = useState('');
+  const [supabase] = useState(() => createClient());
+
+  // Check authentication status on mount
+  useEffect(() => {
+    checkUser();
+  }, []);
 
   useEffect(() => {
     const loadNewsData = async () => {
@@ -209,7 +222,7 @@ export default function Home() {
   const handleNewsletterSignup = async () => {
     const emailInput = document.getElementById('newsletter-email');
     const email = emailInput?.value?.trim();
-    
+
     if (!email || !email.includes('@')) {
       alert('Please enter a valid email address');
       return;
@@ -235,6 +248,94 @@ export default function Home() {
     } catch (error) {
       console.error('Newsletter signup error:', error);
       alert('Failed to subscribe. Please try again.');
+    }
+  };
+
+  // Authentication functions
+  const handleLogin = async (email, password) => {
+    setAuthError('');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+        setAuthModal(null);
+        // Check user session
+        await checkUser();
+      } else {
+        setAuthError(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setAuthError('Login failed. Please try again.');
+    }
+  };
+
+  const handleSignup = async (email, password, fullName) => {
+    setAuthError('');
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAuthModal(null);
+        alert('Account created successfully! Please check your email to verify your account.');
+      } else {
+        setAuthError(data.message || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setAuthError('Signup failed. Please try again.');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setUser(null);
+        await checkUser();
+      } else {
+        console.error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const checkUser = async () => {
+    try {
+      const response = await fetch('/api/auth/user');
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Check user error:', error);
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -902,6 +1003,196 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
+        /* Authentication Styles */
+        .auth-btn {
+          padding: 8px 16px;
+          background: transparent;
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-transform: uppercase;
+        }
+
+        .auth-btn:hover {
+          background: ${darkMode ? '#374151' : '#f9fafb'};
+        }
+
+        .user-welcome {
+          font-size: 13px;
+          color: ${darkMode ? '#94a3b8' : '#86868b'};
+          margin-right: 12px;
+        }
+
+        .auth-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+          backdrop-filter: blur(4px);
+        }
+
+        .auth-modal {
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          width: 90%;
+          max-width: 400px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .auth-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 24px 24px 0;
+          margin-bottom: 24px;
+        }
+
+        .auth-modal-header h2 {
+          font-size: 24px;
+          font-weight: 800;
+          color: ${darkMode ? '#ffffff' : '#0f172a'};
+          margin: 0;
+        }
+
+        .auth-close {
+          background: none;
+          border: none;
+          font-size: 24px;
+          color: ${darkMode ? '#94a3b8' : '#6b7280'};
+          cursor: pointer;
+          padding: 0;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: all 0.2s;
+        }
+
+        .auth-close:hover {
+          background: ${darkMode ? '#374151' : '#f3f4f6'};
+          color: ${darkMode ? '#ffffff' : '#374151'};
+        }
+
+        .auth-modal-body {
+          padding: 0 24px 24px;
+        }
+
+        .auth-error {
+          background: #fee2e2;
+          color: #dc2626;
+          padding: 12px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          margin-bottom: 20px;
+          border: 1px solid #fecaca;
+        }
+
+        .auth-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .auth-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .auth-field label {
+          font-size: 14px;
+          font-weight: 600;
+          color: ${darkMode ? '#d1d5db' : '#374151'};
+        }
+
+        .auth-field input {
+          padding: 12px 16px;
+          border: 1px solid ${darkMode ? '#374151' : '#d5d5d5'};
+          border-radius: 8px;
+          font-size: 16px;
+          background: ${darkMode ? '#111827' : '#ffffff'};
+          color: ${darkMode ? '#ffffff' : '#111827'};
+          transition: border-color 0.2s;
+        }
+
+        .auth-field input:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .auth-field-error {
+          font-size: 12px;
+          color: #dc2626;
+          margin-top: 4px;
+        }
+
+        .auth-submit {
+          padding: 14px 24px;
+          background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin-top: 8px;
+        }
+
+        .auth-submit:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .auth-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .auth-modal-footer {
+          margin-top: 24px;
+          padding-top: 20px;
+          border-top: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          text-align: center;
+        }
+
+        .auth-modal-footer p {
+          margin: 0;
+          font-size: 14px;
+          color: ${darkMode ? '#94a3b8' : '#6b7280'};
+        }
+
+        .auth-switch {
+          background: none;
+          border: none;
+          color: #3b82f6;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: underline;
+          padding: 0;
+          font-size: inherit;
+        }
+
+        .auth-switch:hover {
+          color: #2563eb;
+        }
+
         @keyframes progressFill {
           0% { width: 0%; }
           100% { width: 100%; }
@@ -1175,6 +1466,17 @@ export default function Home() {
           
           <div className="header-right">
             <span className="time">{currentTime}</span>
+            {user ? (
+              <>
+                <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
+                <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
+              </>
+            ) : (
+              <>
+                <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
+                <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+              </>
+            )}
             <button className="subscribe-btn" onClick={() => goToStory(stories.length - 1)}>NEWSLETTER</button>
           </div>
         </div>
@@ -1712,7 +2014,191 @@ export default function Home() {
             />
           ))}
         </div>
+
+        {/* Authentication Modal */}
+        {authModal && (
+          <div className="auth-modal-overlay" onClick={() => setAuthModal(null)}>
+            <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="auth-modal-header">
+                <h2>{authModal === 'login' ? 'Login to Ten News' : 'Create Your Account'}</h2>
+                <button className="auth-close" onClick={() => setAuthModal(null)}>×</button>
+              </div>
+
+              <div className="auth-modal-body">
+                {authError && (
+                  <div className="auth-error">{authError}</div>
+                )}
+
+                {authModal === 'login' ? (
+                  <LoginForm onSubmit={handleLogin} />
+                ) : (
+                  <SignupForm onSubmit={handleSignup} />
+                )}
+
+                <div className="auth-modal-footer">
+                  {authModal === 'login' ? (
+                    <p>Don't have an account? <button className="auth-switch" onClick={() => {setAuthModal('signup'); setAuthError('');}}>Sign up</button></p>
+                  ) : (
+                    <p>Already have an account? <button className="auth-switch" onClick={() => {setAuthModal('login'); setAuthError('');}}>Login</button></p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
+  );
+}
+
+// Login Form Component
+function LoginForm({ onSubmit }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setLoading(true);
+    try {
+      await onSubmit(email, password);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="auth-form">
+      <div className="auth-field">
+        <label htmlFor="login-email">Email</label>
+        <input
+          id="login-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
+      </div>
+
+      <div className="auth-field">
+        <label htmlFor="login-password">Password</label>
+        <input
+          id="login-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          required
+        />
+      </div>
+
+      <button type="submit" className="auth-submit" disabled={loading}>
+        {loading ? 'Logging in...' : 'Login'}
+      </button>
+    </form>
+  );
+}
+
+// Signup Form Component
+function SignupForm({ onSubmit }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+
+  const validatePassword = (pass) => {
+    if (pass.length < 8) return 'Password must be at least 8 characters';
+    if (pass !== confirmPassword) return 'Passwords do not match';
+    return '';
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password || !fullName) return;
+
+    const error = validatePassword(password);
+    if (error) {
+      setPasswordError(error);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit(email, password, fullName);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = (pass) => {
+    setPassword(pass);
+    setPasswordError(validatePassword(pass));
+  };
+
+  const handleConfirmPasswordChange = (confirmPass) => {
+    setConfirmPassword(confirmPass);
+    setPasswordError(validatePassword(password));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="auth-form">
+      <div className="auth-field">
+        <label htmlFor="signup-name">Full Name</label>
+        <input
+          id="signup-name"
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Enter your full name"
+          required
+        />
+      </div>
+
+      <div className="auth-field">
+        <label htmlFor="signup-email">Email</label>
+        <input
+          id="signup-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
+      </div>
+
+      <div className="auth-field">
+        <label htmlFor="signup-password">Password</label>
+        <input
+          id="signup-password"
+          type="password"
+          value={password}
+          onChange={(e) => handlePasswordChange(e.target.value)}
+          placeholder="Create a password (min 8 characters)"
+          required
+        />
+      </div>
+
+      <div className="auth-field">
+        <label htmlFor="signup-confirm">Confirm Password</label>
+        <input
+          id="signup-confirm"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+          placeholder="Confirm your password"
+          required
+        />
+        {passwordError && <span className="auth-field-error">{passwordError}</span>}
+      </div>
+
+      <button type="submit" className="auth-submit" disabled={loading || passwordError}>
+        {loading ? 'Creating Account...' : 'Create Account'}
+      </button>
+    </form>
   );
 }

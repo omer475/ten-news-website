@@ -1,0 +1,31 @@
+# Ten News Environment Variables Template
+# Copy this file to .env.local for local development
+# Add these variables to Vercel for production deployment
+
+# ==========================================
+# SUPABASE AUTHENTICATION (NEW)
+# ==========================================
+# Get these from https://supabase.com/dashboard -> Your Project -> Settings -> API
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+
+# ==========================================
+# AI & NEWS GENERATION
+# ==========================================
+# Claude AI API Key (for news generation)
+CLAUDE_API_KEY=your_claude_api_key_here
+
+# ==========================================
+# EMAIL & NEWSLETTER
+# ==========================================
+# Resend API Key (for email newsletters)
+RESEND_API_KEY=your_resend_api_key_here
+
+# Secret key for newsletter API security
+NEWSLETTER_SECRET=your_newsletter_secret_key_here
+
+# ==========================================
+# DEPLOYMENT
+# ==========================================
+# Set to 'production' in Vercel
+NODE_ENV=development
