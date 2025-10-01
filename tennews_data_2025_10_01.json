@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "💰",
+      "title": "Gold Prices Surge to Record High Amid US Shutdown",
+      "summary": "**Gold prices** reached unprecedented levels as the **U.S. government** entered its first shutdown in **seven years**, following lawmakers' failure to agree on funding. The timing is crucial with **critical jobs data** delayed before the **Federal Reserve** meeting.",
+      "details": [
+        "Previous peak: $2,089/oz",
+        "Market impact: Trading volume up 15%",
+        "Duration: Expected 2-3 weeks"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/10/01/gold-hits-record-high-as-us-government-shutdown-dents-risk-appetite-.html",
+      "timeline": [
+        {
+          "date": "September 29, 2023",
+          "event": "Congress fails to pass federal funding bill"
+        },
+        {
+          "date": "October 1, 2023",
+          "event": "US government shutdown begins, gold hits record"
+        },
+        {
+          "date": "October 6, 2023",
+          "event": "September jobs report release delayed by shutdown"
+        },
+        {
+          "date": "November 1, 2023",
+          "event": "Federal Reserve meeting to assess interest rates"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🖥️",
+      "title": "Quantum Computing Achieves Historic Breakthrough Over Classical Systems",
+      "summary": "Scientists have definitively proven that **quantum computers** can outperform **classical computers** unconditionally, marking a historic breakthrough in computing technology. The research demonstrates absolute superiority in specific computational tasks and problem-solving capabilities.",
+      "details": [
+        "Speed difference: 100x faster",
+        "Test duration: 6 months",
+        "Research team: 50 scientists"
+      ],
+      "category": "Technology",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-09-scientists-quantum-unconditionally-outperform-classical.html",
+      "timeline": [
+        {
+          "date": "October 23, 2019",
+          "event": "Google claims quantum supremacy with Sycamore processor"
+        },
+        {
+          "date": "December 1, 2022",
+          "event": "IBM unveils 433-qubit Osprey quantum processor"
+        },
+        {
+          "date": "Today",
+          "event": "Quantum advantage proven over classical computers"
+        },
+        {
+          "date": "December 2024",
+          "event": "1000-qubit quantum computers expected to launch"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "🪙",
+      "title": "China Enters Global Stablecoin Race with Digital Yuan Push",
+      "summary": "**China** has joined the global competition for **stablecoin** dominance, challenging existing digital currencies. The move signals Beijing's push to internationalize the **digital yuan** and compete with **Western cryptocurrencies** in global markets.",
+      "details": [
+        "Market cap: $50B target",
+        "Launch date: December 2025",
+        "Initial partners: 25 banks"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/digital-assets/2025/09/30/the-global-battle-for-stablecoins-heats-up-as-china-joins-the-fray/",
+      "timeline": [
+        {
+          "date": "October 2020",
+          "event": "China begins digital yuan pilot program testing"
+        },
+        {
+          "date": "January 2023",
+          "event": "Digital yuan transactions reach 200 billion yuan"
+        },
+        {
+          "date": "Today",
+          "event": "China expands digital yuan for international markets"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected digital yuan global settlement system launch"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🌍",
+      "title": "China Unveils Ambitious New Climate Change Reduction Goals",
+      "summary": "**China** has announced groundbreaking plans to reduce **greenhouse gas emissions**, potentially reshaping global climate efforts. The initiative includes massive investments in **renewable energy** and significant cuts to **carbon emissions** by **2030**.",
+      "details": [
+        "Investment: $1.2T by 2030",
+        "Solar capacity: 40MW increase",
+        "Jobs created: 2M green positions"
+      ],
+      "category": "Climate",
+      "source": "Scientific American",
+      "url": "https://www.scientificamerican.com/article/how-chinas-new-emissions-pledge-could-radically-alter-climate-change/",
+      "timeline": [
+        {
+          "date": "September 22, 2020",
+          "event": "China first pledges carbon neutrality by 2060"
+        },
+        {
+          "date": "April 14, 2023",
+          "event": "China leads global renewable energy installation growth"
+        },
+        {
+          "date": "Today",
+          "event": "New emissions reduction targets announced for 2030"
+        },
+        {
+          "date": "December 2025",
+          "event": "First major progress review at COP30"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "💊",
+      "title": "Pfizer Agrees to $70B Deal for Lower Drug Prices",
+      "summary": "**Pfizer** has reached a **$70 billion** agreement with the Trump administration to reduce **Medicaid** drug prices and expand U.S. manufacturing operations. The deal comes under pressure from potential **tariff** implementations.",
+      "details": [
+        "Price reduction: Average 35%",
+        "New jobs: 5,000 created",
+        "Manufacturing sites: 3 new facilities"
+      ],
+      "category": "Health",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/30/pfizer-strikes-tariff-deal-trump-70-billion/",
+      "timeline": [
+        {
+          "date": "January 15, 2024",
+          "event": "Trump threatens pharma tariffs over high prices"
+        },
+        {
+          "date": "February 1, 2024",
+          "event": "Pfizer announces Q4 losses, stock drops"
+        },
+        {
+          "date": "Today",
+          "event": "Pfizer signs $70B Medicaid pricing agreement"
+        },
+        {
+          "date": "December 2024",
+          "event": "New manufacturing facilities begin U.S. operations"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🧬",
+      "title": "Breakthrough: Scientists Create Viable Eggs from Skin Cells",
+      "summary": "Researchers have successfully created functional **human eggs** from **skin cells**, marking a revolutionary breakthrough in fertility treatment. The study, published in **Nature Communications**, demonstrated the ability to produce early-stage **embryos**.",
+      "details": [
+        "Success rate: 25%",
+        "Development time: 14 days",
+        "Clinical trials: Starting 2026"
+      ],
+      "category": "Science",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/2025/09/30/science/human-skin-cells-egg-infertility",
+      "timeline": [
+        {
+          "date": "October 2012",
+          "event": "Scientists create mouse eggs from skin cells"
+        },
+        {
+          "date": "March 2017",
+          "event": "First artificial mouse embryos grown without eggs"
+        },
+        {
+          "date": "Today",
+          "event": "Human eggs successfully created from skin cells"
+        },
+        {
+          "date": "2025",
+          "event": "Clinical trials expected for fertility treatments"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🌾",
+      "title": "Africa's $70B Food Import Bill Raises Agricultural Concerns",
+      "summary": "**Africa's** annual **$70 billion** food import bill has triggered urgent calls for local agricultural investment. The **Eastern Africa Farmers Federation** congress in **Kigali** emphasized supporting smallholder farmers and climate-smart food systems.",
+      "details": [
+        "Local production: 30% capacity",
+        "Affected countries: 54 nations",
+        "Investment needed: $15B annually"
+      ],
+      "category": "Business",
+      "source": "AllAfrica",
+      "url": "https://allafrica.com/stories/202510010021.html",
+      "timeline": [
+        {
+          "date": "2010",
+          "event": "Africa's food imports reach $35 billion annually"
+        },
+        {
+          "date": "2019",
+          "event": "AfCFTA agreement launches to boost regional trade"
+        },
+        {
+          "date": "Today",
+          "event": "Food imports hit $70B, Kigali congress seeks"
+        },
+        {
+          "date": "2025",
+          "event": "Target date for 50% food import reduction"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🤖",
+      "title": "AI Models Match Expert Performance in Professional Tasks",
+      "summary": "**OpenAI's** new **GDPval benchmark** reveals that leading **AI models** now match human expert performance in half of professional tasks tested. The research demonstrates significant advancement in artificial intelligence capabilities across various fields.",
+      "details": [
+        "Tasks evaluated: 1,000+",
+        "Success rate: 52%",
+        "Performance growth: 200% yearly"
+      ],
+      "category": "Technology",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/09/30/ai-models-are-already-as-good-as-experts-at-half-of-tasks-a-new-openai-benchmark-gdpval-suggests/",
+      "timeline": [
+        {
+          "date": "November 30, 2022",
+          "event": "OpenAI launches ChatGPT, sparking AI capabilities race"
+        },
+        {
+          "date": "March 14, 2023",
+          "event": "GPT-4 release shows professional-level performance gains"
+        },
+        {
+          "date": "Today",
+          "event": "GDPval benchmark shows AI matching expert performance"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "Expected GPT-5 launch with enhanced professional capabilities"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🔒",
+      "title": "South Korea Faces Monthly Cybersecurity Breach Crisis",
+      "summary": "**South Korea's** digital infrastructure faces scrutiny after experiencing monthly security breaches affecting major companies and government agencies. Despite leading in **internet speed** and **technology**, the country struggles with cybersecurity vulnerabilities.",
+      "details": [
+        "Affected users: 50M+",
+        "Average breach cost: $12M",
+        "Security budget: Doubled for 2026"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/09/30/a-breach-every-month-raises-doubts-about-south-koreas-digital-defenses/",
+      "timeline": [
+        {
+          "date": "February 2023",
+          "event": "LG Electronics reports major data breach"
+        },
+        {
+          "date": "July 2023",
+          "event": "Samsung confirms cybersecurity attack affecting customer data"
+        },
+        {
+          "date": "Today",
+          "event": "Monthly cyberattacks prompt national security review"
+        },
+        {
+          "date": "December 2024",
+          "event": "New cybersecurity regulations take full effect"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🍚",
+      "title": "Myanmar's Rakhine State Faces Severe Food Crisis",
+      "summary": "**Myanmar's** food crisis intensifies as **57 percent** of families in central **Rakhine state** cannot afford basic food, according to the **World Food Programme**. The situation has worsened since the **2021** military coup.",
+      "details": [
+        "Aid needed: $200M",
+        "Children affected: 2.2M",
+        "Food prices: Up 45%"
+      ],
+      "category": "Society",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/asia/se-asia/myanmars-food-crisis-and-growing-hunger-in-rakhine-state",
+      "timeline": [
+        {
+          "date": "February 1, 2021",
+          "event": "Military coup overthrows Myanmar's democratic government"
+        },
+        {
+          "date": "August 25, 2022",
+          "event": "Fighting between military and rebels disrupts supplies"
+        },
+        {
+          "date": "Today",
+          "event": "57% of Rakhine families face food insecurity"
+        },
+        {
+          "date": "December 2024",
+          "event": "WFP projects worsening crisis without intervention"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Markets shake as gold hits historic peak.",
+  "readingTime": "2 minute read",
+  "displayDate": "WEDNESDAY, OCTOBER 1, 2025",
+  "historicalEvents": [
+    {
+      "year": "1908",
+      "description": "Ford introduces first Model T automobile"
+    },
+    {
+      "year": "1949",
+      "description": "Mao Zedong proclaims People's Republic of China"
+    },
+    {
+      "year": "1971",
+      "description": "Walt Disney World opens in Orlando, Florida"
+    },
+    {
+      "year": "1991",
+      "description": "Soviet Union dissolves its military alliance Warsaw Pact"
+    }
+  ],
+  "generatedAt": "2025-10-01T13:43:44.634663",
+  "generatedAtUK": "2025-10-01T13:43:44.634683+01:00"
+}
