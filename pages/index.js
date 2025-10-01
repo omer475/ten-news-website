@@ -14,10 +14,39 @@ export default function Home() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authModal, setAuthModal] = useState(null); // 'login', 'signup', or null
   const [authError, setAuthError] = useState('');
+  const [emailConfirmation, setEmailConfirmation] = useState(null); // { email: string } or null
+
+  // Form data persistence
+  const [formData, setFormData] = useState({
+    loginEmail: '',
+    loginPassword: '',
+    signupEmail: '',
+    signupPassword: '',
+    signupFullName: ''
+  });
   const [supabase] = useState(() => createClient());
 
   // Check authentication status on mount
   useEffect(() => {
+    // Check for stored session first
+    const storedUser = localStorage.getItem('tennews_user');
+    const storedSession = localStorage.getItem('tennews_session');
+
+    if (storedUser && storedSession) {
+      try {
+        const userData = JSON.parse(storedUser);
+        const sessionData = JSON.parse(storedSession);
+        setUser(userData);
+        setAuthLoading(false);
+        return; // Skip API check if we have stored session
+      } catch (error) {
+        // Invalid stored data, clear it
+        localStorage.removeItem('tennews_user');
+        localStorage.removeItem('tennews_session');
+      }
+    }
+
+    // Fallback to API check
     checkUser();
   }, []);
 
@@ -178,11 +207,6 @@ export default function Home() {
         }
         
         
-        // Add newsletter signup at the end
-        processedStories.push({
-          type: 'newsletter',
-          content: 'Professional Newsletter Signup'
-        });
         
         setStories(processedStories);
         setLoading(false);
@@ -218,38 +242,6 @@ export default function Home() {
     setDarkMode(prev => !prev);
   };
 
-  // Newsletter signup handler
-  const handleNewsletterSignup = async () => {
-    const emailInput = document.getElementById('newsletter-email');
-    const email = emailInput?.value?.trim();
-
-    if (!email || !email.includes('@')) {
-      alert('Please enter a valid email address');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert('✅ Successfully subscribed! Check your email for confirmation.');
-        emailInput.value = '';
-      } else {
-        alert(data.message || 'Failed to subscribe. Please try again.');
-      }
-    } catch (error) {
-      console.error('Newsletter signup error:', error);
-      alert('Failed to subscribe. Please try again.');
-    }
-  };
 
   // Authentication functions
   const handleLogin = async (email, password) => {
@@ -268,8 +260,11 @@ export default function Home() {
       if (response.ok) {
         setUser(data.user);
         setAuthModal(null);
-        // Check user session
-        await checkUser();
+        // Store session in localStorage for persistence
+        localStorage.setItem('tennews_user', JSON.stringify(data.user));
+        if (data.session) {
+          localStorage.setItem('tennews_session', JSON.stringify(data.session));
+        }
       } else {
         setAuthError(data.message || 'Login failed');
       }
@@ -294,7 +289,7 @@ export default function Home() {
 
       if (response.ok) {
         setAuthModal(null);
-        alert('Account created successfully! Please check your email to verify your account.');
+        setEmailConfirmation({ email });
       } else {
         setAuthError(data.message || 'Signup failed');
       }
@@ -312,7 +307,9 @@ export default function Home() {
 
       if (response.ok) {
         setUser(null);
-        await checkUser();
+        // Clear stored session from localStorage
+        localStorage.removeItem('tennews_user');
+        localStorage.removeItem('tennews_session');
       } else {
         console.error('Logout failed');
       }
@@ -384,6 +381,17 @@ export default function Home() {
       
       if (Math.abs(diff) > 30) {
         isTransitioning = true;
+
+        // Allow backward navigation, but prevent forward navigation when paywall is active
+        const isPaywallActive = !user && currentIndex >= 5;
+        const isForwardNavigation = diff > 0; // diff > 0 means scrolling up/down to next story
+
+        if (isPaywallActive && isForwardNavigation) {
+          // Block forward navigation when paywall is active
+          isTransitioning = false;
+          return;
+        }
+
         if (diff > 0) {
           nextStory();
         } else {
@@ -397,9 +405,18 @@ export default function Home() {
 
     const handleWheel = (e) => {
       if (isTransitioning) return;
-      e.preventDefault();
       
       if (Math.abs(e.deltaY) > 30) {
+        // Allow backward navigation, but prevent forward navigation when paywall is active
+        const isPaywallActive = !user && currentIndex >= 5;
+        const isForwardNavigation = e.deltaY > 0; // deltaY > 0 means scrolling down to next story
+
+        if (isPaywallActive && isForwardNavigation) {
+          // Block forward navigation when paywall is active
+          return;
+        }
+
+        e.preventDefault();
         isTransitioning = true;
         if (e.deltaY > 0) {
           nextStory();
@@ -414,8 +431,13 @@ export default function Home() {
 
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
+
+      const isPaywallActive = !user && currentIndex >= 5;
       
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
+        // Allow forward navigation unless paywall is active
+        if (isPaywallActive) return;
+
         e.preventDefault();
         isTransitioning = true;
         nextStory();
@@ -423,6 +445,7 @@ export default function Home() {
           isTransitioning = false;
         }, 500);
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        // Always allow backward navigation
         e.preventDefault();
         isTransitioning = true;
         prevStory();
@@ -444,6 +467,24 @@ export default function Home() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [currentIndex, stories.length]);
+
+  // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
+  useEffect(() => {
+    const isPaywallActive = !user && currentIndex >= 5;
+
+    if (isPaywallActive) {
+      // Prevent page-level scrolling but allow touch navigation (controlled by handlers)
+      document.body.style.overflow = 'hidden';
+      // Remove touch-action: none to allow touch events for navigation
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [user, currentIndex]);
 
   if (loading) {
     return (
@@ -646,23 +687,6 @@ export default function Home() {
           font-weight: 500;
         }
 
-        .subscribe-btn {
-          padding: 8px 20px;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-transform: uppercase;
-        }
-
-        .subscribe-btn:hover {
-          background: #2563eb;
-        }
 
         .story-container {
           position: absolute;
@@ -681,6 +705,93 @@ export default function Home() {
           max-width: 1000px;
           width: 100%;
           margin: 0 auto;
+        }
+
+        .paywall-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          backdrop-filter: blur(5px);
+          pointer-events: auto;
+        }
+
+        .paywall-modal {
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
+          border-radius: 16px;
+          padding: 32px;
+          max-width: 400px;
+          width: 90%;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          pointer-events: auto;
+          position: relative;
+          z-index: 1001;
+        }
+
+        .paywall-modal h2 {
+          color: ${darkMode ? '#ffffff' : '#1f2937'};
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0 0 8px 0;
+          text-align: center;
+        }
+
+        .paywall-modal p {
+          color: ${darkMode ? '#9ca3af' : '#6b7280'};
+          font-size: 16px;
+          line-height: 1.5;
+          margin: 0 0 24px 0;
+          text-align: center;
+        }
+
+        .paywall-footer {
+          margin-top: 24px;
+          padding-top: 16px;
+          border-top: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          text-align: center;
+        }
+
+        .paywall-footer p {
+          margin: 0;
+          color: ${darkMode ? '#9ca3af' : '#6b7280'};
+          font-size: 14px;
+        }
+
+        .paywall-footer .auth-switch {
+          background: none;
+          border: none;
+          color: #3b82f6;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: underline;
+        }
+
+        .paywall-footer .auth-switch:hover {
+          color: #2563eb;
+        }
+
+        /* Ensure form inputs work in paywall modal */
+        .paywall-modal input,
+        .paywall-modal button,
+        .paywall-modal textarea,
+        .paywall-modal select {
+          pointer-events: auto;
+        }
+
+        .paywall-modal .auth-form,
+        .paywall-modal .auth-field,
+        .paywall-modal .auth-submit,
+        .paywall-modal .auth-error,
+        .paywall-modal .auth-switch {
+          pointer-events: auto;
         }
 
         .opening-container {
@@ -848,7 +959,8 @@ export default function Home() {
           min-height: 38px;
         }
 
-        .news-detail-item:last-child {
+        .news-detail-item:last-child,
+        .news-detail-item:nth-child(3) {
           border-right: none;
         }
 
@@ -903,85 +1015,6 @@ export default function Home() {
           background: linear-gradient(180deg, #1f2937, #000000);
         }
 
-        .newsletter-container {
-          text-align: center;
-          padding: 60px 0;
-          background: #000;
-          color: #fff;
-          height: 100vh;
-          width: 100vw;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          margin: 0;
-          position: relative;
-          left: 50%;
-          transform: translateX(-50%);
-        }
-
-        .newsletter-title {
-          font-size: 42px;
-          font-weight: 800;
-          letter-spacing: -1.5px;
-          margin-bottom: 16px;
-        }
-
-        .newsletter-subtitle {
-          font-size: 18px;
-          color: #86868b;
-          margin-bottom: 40px;
-        }
-
-        .newsletter-form {
-          max-width: 440px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .newsletter-input {
-          width: 100%;
-          padding: 16px 20px;
-          font-size: 16px;
-          border: 1px solid #333;
-          border-radius: 12px;
-          background: #1c1c1e;
-          color: #fff;
-          outline: none;
-          transition: border-color 0.2s;
-        }
-
-        .newsletter-input:focus {
-          border-color: #f97316;
-        }
-
-        .newsletter-input::placeholder {
-          color: #6e6e73;
-        }
-
-        .newsletter-button {
-          width: 100%;
-          padding: 16px 32px;
-          background: #fff;
-          color: #000;
-          border: none;
-          border-radius: 12px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-
-        .newsletter-button:hover {
-          background: #f0f0f0;
-        }
-
-        .newsletter-info {
-          font-size: 13px;
-          color: #6e6e73;
-          margin-top: 24px;
-        }
 
         .scroll-hint {
           position: absolute;
@@ -1336,6 +1369,11 @@ export default function Home() {
             max-height: none !important;
             height: auto !important;
           }
+
+          /* Hide arrows on desktop - show on mobile/tablet */
+          .timeline-arrow {
+            display: none !important;
+          }
         }
 
         @media (max-width: 768px) {
@@ -1343,10 +1381,7 @@ export default function Home() {
             display: none;
           }
           
-          /* Hide arrows on mobile - use swipe only */
-          .timeline-arrow {
-            display: none !important;
-          }
+          /* Show arrows on mobile/tablet - hide on desktop */
           
           .story-container {
             padding: 60px 12px 40px;
@@ -1477,11 +1512,10 @@ export default function Home() {
                 <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
               </>
             )}
-            <button className="subscribe-btn" onClick={() => goToStory(stories.length - 1)}>NEWSLETTER</button>
           </div>
         </div>
 
-        {/* Dark Mode Toggle - Only on First Page, positioned under newsletter button */}
+        {/* Dark Mode Toggle - Only on First Page */}
         {currentIndex === 0 && (
           <div style={{
             position: 'fixed',
@@ -1548,10 +1582,30 @@ export default function Home() {
               }`,
               opacity: index === currentIndex ? 1 : 0,
               zIndex: index === currentIndex ? 10 : 1,
-              pointerEvents: index === currentIndex ? 'auto' : 'none',
+              pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
             }}
           >
-            <div className="story-content">
+            {/* Paywall for stories 6+ (index >= 5) */}
+            {index >= 5 && !user && (
+              <div className="paywall-overlay">
+                <div className="paywall-modal">
+                  <h2>Create Your Account</h2>
+                  <p>Continue reading beyond the 5th story by creating a free account.</p>
+                  <SignupForm onSubmit={handleSignup} />
+                  <div className="paywall-footer">
+                    <p>Already have an account? <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button></p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div
+              className="story-content"
+              style={{
+                filter: index >= 5 && !user ? 'blur(5px)' : 'none',
+                pointerEvents: index >= 5 && !user ? 'none' : 'auto',
+              }}
+            >
               {story.type === 'opening' ? (
                 <div className="opening-container">
                   <div className="date-header">{story.date}</div>
@@ -1976,29 +2030,6 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              ) : story.type === 'newsletter' ? (
-                <div className="newsletter-container">
-                  <h2 className="newsletter-title">
-                    <span style={{ color: '#3b82f6' }}>Stay</span> Informed
-                  </h2>
-                  <p className="newsletter-subtitle">
-                    Get Ten News delivered to your inbox every morning
-                  </p>
-                  <div className="newsletter-form">
-                    <input 
-                      type="email" 
-                      placeholder="Enter your email" 
-                      className="newsletter-input"
-                      id="newsletter-email"
-                    />
-                    <button className="newsletter-button" onClick={handleNewsletterSignup}>
-                      Subscribe
-                    </button>
-                  </div>
-                  <p className="newsletter-info">
-                    Join 2.5M+ readers • No spam • Unsubscribe anytime
-                  </p>
-                </div>
               ) : null}
             </div>
           </div>
@@ -2010,7 +2041,15 @@ export default function Home() {
             <div
               key={index}
               className={`progress-dot ${index === currentIndex ? 'active' : ''}`}
-              onClick={() => goToStory(index)}
+              onClick={() => {
+                const isPaywallActive = !user && currentIndex >= 5;
+                const isForwardNavigation = index > currentIndex; // Clicking on a higher index (forward)
+
+                // Allow backward navigation, but prevent forward navigation when paywall is active
+                if (!(isPaywallActive && isForwardNavigation)) {
+                  goToStory(index);
+                }
+              }}
             />
           ))}
         </div>
@@ -2030,9 +2069,9 @@ export default function Home() {
                 )}
 
                 {authModal === 'login' ? (
-                  <LoginForm onSubmit={handleLogin} />
+                  <LoginForm onSubmit={handleLogin} formData={formData} setFormData={setFormData} />
                 ) : (
-                  <SignupForm onSubmit={handleSignup} />
+                  <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
                 )}
 
                 <div className="auth-modal-footer">
@@ -2046,16 +2085,35 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Email Confirmation Modal */}
+        {emailConfirmation && (
+          <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)}>
+            <EmailConfirmation
+              email={emailConfirmation.email}
+              onBack={() => setEmailConfirmation(null)}
+            />
+          </div>
+        )}
       </div>
     </>
   );
 }
 
 // Login Form Component
-function LoginForm({ onSubmit }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+function LoginForm({ onSubmit, formData, setFormData }) {
+  const [email, setEmail] = useState(formData?.loginEmail || '');
+  const [password, setPassword] = useState(formData?.loginPassword || '');
   const [loading, setLoading] = useState(false);
+
+  // Sync with global formData
+  useEffect(() => {
+    setEmail(formData?.loginEmail || '');
+  }, [formData?.loginEmail]);
+
+  useEffect(() => {
+    setPassword(formData?.loginPassword || '');
+  }, [formData?.loginPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -2077,7 +2135,10 @@ function LoginForm({ onSubmit }) {
           id="login-email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setFormData(prev => ({ ...prev, loginEmail: e.target.value }));
+          }}
           placeholder="Enter your email"
           required
         />
@@ -2089,7 +2150,10 @@ function LoginForm({ onSubmit }) {
           id="login-password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setFormData(prev => ({ ...prev, loginPassword: e.target.value }));
+          }}
           placeholder="Enter your password"
           required
         />
@@ -2103,17 +2167,35 @@ function LoginForm({ onSubmit }) {
 }
 
 // Signup Form Component
-function SignupForm({ onSubmit }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+function SignupForm({ onSubmit, formData, setFormData }) {
+  const [email, setEmail] = useState(formData?.signupEmail || '');
+  const [password, setPassword] = useState(formData?.signupPassword || '');
+  const [fullName, setFullName] = useState(formData?.signupFullName || '');
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
+  // Helper function to safely update formData
+  const updateFormData = (key, value) => {
+    if (setFormData) {
+      setFormData(prev => ({ ...prev, [key]: value }));
+    }
+  };
+
+  // Sync with global formData
+  useEffect(() => {
+    setEmail(formData?.signupEmail || '');
+  }, [formData?.signupEmail]);
+
+  useEffect(() => {
+    setPassword(formData?.signupPassword || '');
+  }, [formData?.signupPassword]);
+
+  useEffect(() => {
+    setFullName(formData?.signupFullName || '');
+  }, [formData?.signupFullName]);
+
   const validatePassword = (pass) => {
     if (pass.length < 8) return 'Password must be at least 8 characters';
-    if (pass !== confirmPassword) return 'Passwords do not match';
     return '';
   };
 
@@ -2140,11 +2222,6 @@ function SignupForm({ onSubmit }) {
     setPasswordError(validatePassword(pass));
   };
 
-  const handleConfirmPasswordChange = (confirmPass) => {
-    setConfirmPassword(confirmPass);
-    setPasswordError(validatePassword(password));
-  };
-
   return (
     <form onSubmit={handleSubmit} className="auth-form">
       <div className="auth-field">
@@ -2153,7 +2230,10 @@ function SignupForm({ onSubmit }) {
           id="signup-name"
           type="text"
           value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
+          onChange={(e) => {
+            setFullName(e.target.value);
+            updateFormData('signupFullName', e.target.value);
+          }}
           placeholder="Enter your full name"
           required
         />
@@ -2165,7 +2245,10 @@ function SignupForm({ onSubmit }) {
           id="signup-email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            updateFormData('signupEmail', e.target.value);
+          }}
           placeholder="Enter your email"
           required
         />
@@ -2177,20 +2260,11 @@ function SignupForm({ onSubmit }) {
           id="signup-password"
           type="password"
           value={password}
-          onChange={(e) => handlePasswordChange(e.target.value)}
+          onChange={(e) => {
+            handlePasswordChange(e.target.value);
+            updateFormData('signupPassword', e.target.value);
+          }}
           placeholder="Create a password (min 8 characters)"
-          required
-        />
-      </div>
-
-      <div className="auth-field">
-        <label htmlFor="signup-confirm">Confirm Password</label>
-        <input
-          id="signup-confirm"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-          placeholder="Confirm your password"
           required
         />
         {passwordError && <span className="auth-field-error">{passwordError}</span>}
@@ -2200,5 +2274,89 @@ function SignupForm({ onSubmit }) {
         {loading ? 'Creating Account...' : 'Create Account'}
       </button>
     </form>
+  );
+}
+
+// Email Confirmation Component
+function EmailConfirmation({ email, onBack }) {
+  return (
+    <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="auth-modal-header">
+        <h2>Check Your Email</h2>
+        <button className="auth-close" onClick={onBack}>×</button>
+      </div>
+
+      <div className="auth-modal-body">
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '16px',
+            opacity: '0.8'
+          }}>📧</div>
+
+          <h3 style={{
+            color: '#1f2937',
+            fontSize: '20px',
+            fontWeight: '600',
+            margin: '0 0 12px 0'
+          }}>Verification Email Sent!</h3>
+
+          <p style={{
+            color: '#6b7280',
+            fontSize: '16px',
+            lineHeight: '1.5',
+            margin: '0 0 20px 0'
+          }}>
+            We've sent a verification link to <strong>{email}</strong>
+          </p>
+
+          <div style={{
+            background: '#f3f4f6',
+            padding: '16px',
+            borderRadius: '8px',
+            margin: '20px 0',
+            textAlign: 'left'
+          }}>
+            <h4 style={{
+              color: '#1f2937',
+              fontSize: '16px',
+              fontWeight: '600',
+              margin: '0 0 8px 0'
+            }}>Next steps:</h4>
+            <ol style={{
+              color: '#4b5563',
+              margin: '0',
+              paddingLeft: '20px',
+              lineHeight: '1.6'
+            }}>
+              <li>Check your email inbox (and spam folder)</li>
+              <li>Click the verification link</li>
+              <li>Return here and log in with your credentials</li>
+            </ol>
+          </div>
+
+          <p style={{
+            color: '#6b7280',
+            fontSize: '14px',
+            margin: '16px 0 0 0'
+          }}>
+            Didn't receive the email? Check your spam folder or{' '}
+            <button
+              onClick={onBack}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#3b82f6',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontSize: '14px'
+              }}
+            >
+              try again
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

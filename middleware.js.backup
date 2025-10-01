@@ -1,0 +1,32 @@
+import { createMiddlewareSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+
+export async function middleware(req) {
+  const res = NextResponse.next()
+
+  // Create authenticated Supabase Client
+  const supabase = createMiddlewareSupabaseClient({ req, res })
+
+  // Refresh session if expired - required for Server Components
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  return res
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - api/auth (auth routes)
+     * - api/news (news data)
+     * - api/newsletter (newsletter signup)
+     * - api/send-newsletter (newsletter sending)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|api/auth|api/news|api/newsletter|api/send-newsletter).*)',
+  ],
+}

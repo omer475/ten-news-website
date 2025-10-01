@@ -36,6 +36,8 @@ After your project is created:
 2. Copy and paste the entire contents of `supabase-migrations.sql`
 3. Click **Run** to execute the migration
 
+**Important Note:** If you get a "must be owner of table users" error, this means the migration file has been updated to remove the problematic line. The error occurs when trying to modify Supabase's built-in `auth.users` table, which is not allowed. The migration only creates your custom `profiles` table and related functions.
+
 This will create:
 - `profiles` table with user profile data
 - Row Level Security (RLS) policies

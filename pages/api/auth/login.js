@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabase = createClient()
+    const supabase = createClient({ req, res })
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
