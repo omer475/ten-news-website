@@ -1902,8 +1902,9 @@ export default function Home() {
                                     }}>{event.date}</div>
                                     <div style={{
                                       fontSize: '12px',
-                                      color: darkMode ? '#e2e8f0' : '#1e293b',
-                                      lineHeight: '1.3'
+                                      color: 'rgba(255, 255, 255, 0.95)',
+                                      lineHeight: '1.3',
+                                      fontWeight: '500'
                                     }}>{event.event}</div>
                       </div>
                                 ))}
@@ -1915,8 +1916,8 @@ export default function Home() {
                                     bottom: '0',
                                     textAlign: 'center',
                                     fontSize: '9px',
-                                    color: '#94a3b8',
-                                    background: darkMode ? 'linear-gradient(transparent, #000000)' : 'linear-gradient(transparent, #ffffff)',
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    background: 'linear-gradient(transparent, rgba(255, 255, 255, 0.15))',
                                     padding: '8px 0 4px',
                                     fontWeight: '500',
                                     textTransform: 'uppercase',
