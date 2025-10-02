@@ -82,7 +82,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           padding: '0 20px 32px'
         }}>
           {/* Greeting Section - UPDATED HIERARCHY */}
-          <div style={{ marginBottom: '24px', marginTop: '20px' }}>
+          <div style={{ marginBottom: '30px', marginTop: '20px' }}>
             <h2 style={{
               fontSize: '28px',
               fontWeight: '700',
@@ -95,7 +95,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '42px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
               {stories[currentStory].title}
             </h1>
           </div>
@@ -119,29 +119,22 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             ))}
           </div>
 
-          {/* Today's 10 News Widget - STRONG BLUE GLASSMORPHISM */}
+          {/* Today's Briefing - GLASSMORPHISM BOX (SAME AS TIMELINE/DETAILS) */}
           <div style={{ 
-            background: 'rgba(59, 130, 246, 0.25)', 
-            backdropFilter: 'blur(30px)', 
-            WebkitBackdropFilter: 'blur(30px)',
-            border: '1px solid rgba(96, 165, 250, 0.4)', 
+            background: 'rgba(255, 255, 255, 0.15)', 
+            backdropFilter: 'blur(20px)', 
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)', 
             borderRadius: '16px', 
-            boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)', 
             padding: '20px', 
-            marginBottom: '40px', 
-            textAlign: 'center' 
+            marginBottom: '30px',
+            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
           }}>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: 'white', marginBottom: '6px', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}>Today's 10 News to Know</div>
-            <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.85)' }}>2-minute daily summary</div>
-          </div>
-
-          {/* Today's Briefing - CLEAN TEXT LAYOUT (NO BOX) */}
-          <div style={{ marginBottom: '40px' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '18px' }}>✨</span>
-                <h3 style={{ fontSize: '20px', fontWeight: '700', color: darkMode ? 'white' : '#111827', textShadow: darkMode ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none' }}>Today's Briefing</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
@@ -149,73 +142,34 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
               </div>
             </div>
 
-            {/* What's Happening - Clean Text */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: darkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* What's Happening */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {whatsHappening.map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
                     <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: darkMode ? 'white' : '#111827' }}>{item.text}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Today in History - Clean Text */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: darkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Today in History */}
+            <div style={{ marginBottom: 0 }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '12px' }}>📅</span>
                 TODAY IN HISTORY
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
                   <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: darkMode ? 'white' : '#111827' }}>{event.event}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Alerts Button - With Glassmorphism */}
-            <button 
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: 'rgba(59, 130, 246, 0.2)',
-                backdropFilter: 'blur(15px)',
-                WebkitBackdropFilter: 'blur(15px)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                borderRadius: '14px',
-                fontWeight: '700',
-                fontSize: '15px',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                color: 'white',
-                boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.25)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(59, 130, 246, 0.2)';
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ fontSize: '18px' }}>🔔</span>
-                  <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '22px', height: '22px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'white' }}>{alertCount > 99 ? '99+' : alertCount}</span>
-                  </div>
-                </div>
-                <span>{alertCount} New {alertCount === 1 ? 'Alert' : 'Alerts'}</span>
-              </div>
-            </button>
           </div>
 
           {/* Live Reader Counter */}
