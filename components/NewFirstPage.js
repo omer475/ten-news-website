@@ -100,24 +100,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </h1>
           </div>
 
-          {/* Story Navigation Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
-            {stories.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentStory(i)}
-                style={{
-                  width: i === currentStory ? '24px' : '4px',
-                  height: '4px',
-                  background: i === currentStory ? 'linear-gradient(to right, #3B82F6, #A855F7)' : '#D1D5DB',
-                  borderRadius: '9999px',
-                  transition: 'all 0.3s',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              />
-            ))}
-          </div>
 
           {/* Today's Briefing - GLASSMORPHISM BOX (SAME AS TIMELINE/DETAILS) */}
           <div style={{ 
@@ -134,7 +116,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '18px' }}>✨</span>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#000000', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
@@ -144,12 +126,12 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
 
             {/* What's Happening */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {whatsHappening.map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
                     <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{item.text}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
@@ -157,7 +139,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
 
             {/* Today in History */}
             <div style={{ marginBottom: 0 }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '12px' }}>📅</span>
                 TODAY IN HISTORY
               </div>
@@ -165,20 +147,13 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 {historicalEvents.slice(0, 3).map((event, i) => (
                   <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{event.event}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Live Reader Counter */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ fontSize: '16px' }}>👥</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981' }}>{readerCount.toLocaleString()}</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>reading now</span>
-            <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-          </div>
 
           {/* Scroll Hint */}
           <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
