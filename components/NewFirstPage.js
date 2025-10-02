@@ -118,133 +118,80 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             ))}
           </div>
 
-          {/* Today's 10 News Widget - Glassmorphism */}
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.2)', 
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            borderRadius: '16px', 
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.2)', 
-            padding: '16px', 
-            marginBottom: '12px', 
-            textAlign: 'center' 
-          }}>
+          {/* Today's 10 News Widget */}
+          <div style={{ background: '#DBEAFE', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', padding: '16px', marginBottom: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>Today's 10 News to Know</div>
-            <div style={{ fontSize: '12px', color: '#475569' }}>2-minute daily summary</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>2-minute daily summary</div>
           </div>
 
-          {/* Today's Briefing Card - Premium Glassmorphism */}
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.15)', 
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '20px', 
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)', 
-            padding: '16px', 
-            marginBottom: '12px', 
-            position: 'relative', 
-            overflow: 'hidden' 
-          }}>
-            {/* Decorative gradients */}
-            <div style={{ position: 'absolute', top: 0, right: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent)', filter: 'blur(40px)' }}></div>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent)', filter: 'blur(40px)' }}></div>
-
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', position: 'relative', zIndex: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '16px' }}>✨</span>
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1f2937' }}>Today's Briefing</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-                <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>Live</span>
-              </div>
+          {/* Today's Briefing Section - NO GLASS CONTAINER, LARGER TYPOGRAPHY */}
+          <div style={{ marginBottom: '24px' }}>
+            {/* Main Briefing Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+              <span style={{ fontSize: '22px' }}>✨</span>
+              <span style={{ fontSize: '22px', fontWeight: 800, color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}>Today's Briefing</span>
             </div>
 
-            {/* What's Happening - Nested Glass */}
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.08)', 
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '12px', 
-              padding: '10px', 
-              marginBottom: '10px', 
-              position: 'relative', 
-              zIndex: 10 
-            }}>
-              <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.9, marginBottom: '8px', color: '#1f2937' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {/* What's Happening */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '16px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {whatsHappening.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                    <div style={{ width: '4px', height: '4px', background: item.color, borderRadius: '50%', marginTop: '6px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4', color: '#1f2937' }}>{item.text}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '20px', position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: 0, top: '6px', width: '8px', height: '8px', background: i === 0 ? '#EF4444' : 'white', borderRadius: '50%', flexShrink: 0, animation: i === 0 ? 'pulse 2s infinite' : 'none' }}></div>
+                    <span style={{ fontSize: '16px', fontWeight: 600, lineHeight: '1.5', color: 'white', textShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Today in History - Nested Glass */}
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.08)', 
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '12px', 
-              padding: '10px', 
-              marginBottom: '12px', 
-              position: 'relative', 
-              zIndex: 10 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px' }}>📅</span>
-                <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.9, color: '#1f2937' }}>TODAY IN HISTORY</div>
+            {/* Today in History */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📅</span>
+                <span>TODAY IN HISTORY</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '8px' }}>
-                    <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#7c3aed' }}>{event.year}</span>
-                    <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4', color: '#1f2937' }}>{event.event}</span>
+                  <div key={i} style={{ paddingLeft: '20px', position: 'relative' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#a78bfa', marginBottom: '4px' }}>{event.year}</div>
+                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'white', lineHeight: '1.4', textShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>{event.event}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Alerts Button - Glass Button */}
+            {/* Alerts Button - Glassmorphism */}
             <button 
               style={{
                 width: '100%',
-                padding: '12px',
-                background: 'rgba(59, 130, 246, 0.2)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                borderRadius: '12px',
-                fontWeight: 'bold',
-                fontSize: '14px',
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '14px',
+                fontWeight: 700,
+                fontSize: '16px',
                 cursor: 'pointer',
                 transition: 'all 0.3s',
-                position: 'relative',
-                zIndex: 10,
-                color: '#1f2937',
-                boxShadow: '0 4px 16px rgba(31, 38, 135, 0.1)'
+                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                color: 'white'
               }}
-              onMouseOver={(e) => { 
-                e.currentTarget.style.transform = 'scale(1.02)';
-                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
               }}
-              onMouseOut={(e) => { 
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ fontSize: '16px' }}>🔔</span>
-                  <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '16px', height: '16px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite' }}>
-                    <span style={{ fontSize: '9px', fontWeight: 'bold', color: 'white' }}>{alertCount > 99 ? '99+' : alertCount}</span>
+                  <span style={{ fontSize: '20px' }}>🔔</span>
+                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '20px', height: '20px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'white' }}>{alertCount > 99 ? '99+' : alertCount}</span>
                   </div>
                 </div>
                 <span>{alertCount} New {alertCount === 1 ? 'Alert' : 'Alerts'}</span>
@@ -252,29 +199,9 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </button>
           </div>
 
-          {/* Live Reader Counter - Glass Badge */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '8px', 
-            background: 'rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(15px)',
-            WebkitBackdropFilter: 'blur(15px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '20px',
-            padding: '8px 16px',
-            marginBottom: '16px',
-            boxShadow: '0 4px 16px rgba(31, 38, 135, 0.1)'
-          }}>
-            <span style={{ fontSize: '16px' }}>👥</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981' }}>{readerCount.toLocaleString()}</span>
-            <span style={{ fontSize: '12px', color: '#475569' }}>reading now</span>
-            <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-          </div>
 
           {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px', color: 'white', textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)' }}>
+          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
             SCROLL TO CONTINUE ↓
           </div>
         </div>

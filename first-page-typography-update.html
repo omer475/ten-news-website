@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - First Page Typography Update</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Header with glassmorphism */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+            font-size: 12px;
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Greeting Section */
+        .greeting {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-headline {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .story-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            width: 24px;
+            background: white;
+        }
+
+        /* Today's 10 News Widget - Light Blue Compact */
+        .ten-news-widget {
+            background: #DBEAFE;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .ten-news-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+
+        .ten-news-subtitle {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* TODAY'S BRIEFING SECTION - NO GLASS CONTAINER, LARGER TYPOGRAPHY */
+        .briefing-section {
+            margin-bottom: 30px;
+            /* NO background, NO border, NO glassmorphism */
+        }
+
+        .briefing-main-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .briefing-section-header {
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 16px;
+            margin-top: 24px;
+        }
+
+        .briefing-item {
+            margin-bottom: 16px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .briefing-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .briefing-item.urgent::before {
+            background: #EF4444;
+            animation: pulse 2s infinite;
+        }
+
+        .briefing-item-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            line-height: 1.5;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .history-item {
+            margin-bottom: 14px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .history-year {
+            font-size: 14px;
+            font-weight: 800;
+            color: #a78bfa;
+            margin-bottom: 4px;
+        }
+
+        .history-event {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            line-height: 1.4;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Alerts button with glassmorphism */
+        .alerts-button {
+            width: 100%;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .alerts-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .alert-badge {
+            background: #EF4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        /* Today in History - Glass Card */
+        .history-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .history-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .scroll-hint {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Info banner */
+        .info-banner {
+            background: rgba(16, 185, 129, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .info-banner strong {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <strong>✨ First Page Typography Update:</strong> Today's Briefing section now features larger, more readable typography without glassmorphic background. All content displays clearly with enhanced font sizes.
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">TEN NEWS</div>
+        <div class="header-controls">
+            <button class="glass-button">LOGIN</button>
+            <button class="glass-button">SIGN UP</button>
+            <div class="dark-mode-toggle">🌙</div>
+        </div>
+    </div>
+
+    <!-- Greeting -->
+    <h1 class="greeting">Good afternoon!</h1>
+    
+    <!-- Main Headline -->
+    <p class="main-headline">Critical NATO-Russia tensions dominate today's headlines.</p>
+
+    <!-- Story Navigation Dots -->
+    <div class="story-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <!-- Today's 10 News Widget - Light Blue Compact -->
+    <div class="ten-news-widget">
+        <div class="ten-news-title">Today's 10 News to Know</div>
+        <div class="ten-news-subtitle">2-minute daily summary</div>
+    </div>
+
+    <!-- TODAY'S BRIEFING SECTION - NO GLASS CONTAINER, LARGER TYPOGRAPHY -->
+    <div class="briefing-section">
+        <div class="briefing-main-title">
+            <span>✨</span>
+            <span>Today's Briefing</span>
+        </div>
+
+        <!-- What's Happening Section -->
+        <div class="briefing-section-header">WHAT'S HAPPENING</div>
+        
+        <div class="briefing-item urgent">
+            <div class="briefing-item-text">NATO-Russia tensions escalate in Eastern Europe</div>
+        </div>
+        
+        <div class="briefing-item">
+            <div class="briefing-item-text">Global markets surge 3% on trade deal optimism</div>
+        </div>
+        
+        <div class="briefing-item">
+            <div class="briefing-item-text">Tech giants announce joint AI safety initiative</div>
+        </div>
+
+        <!-- Today in History Section -->
+        <div class="briefing-section-header">📅 TODAY IN HISTORY</div>
+        
+        <div class="history-item">
+            <div class="history-year">1789</div>
+            <div class="history-event">U.S. Constitution ratified by required states</div>
+        </div>
+        
+        <div class="history-item">
+            <div class="history-year">1957</div>
+            <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+        </div>
+        
+        <div class="history-item">
+            <div class="history-year">1991</div>
+            <div class="history-event">World Wide Web made publicly available</div>
+        </div>
+
+        <!-- Alerts Button -->
+        <button class="alerts-button">
+            <span>🔔</span>
+            <div class="alert-badge">23</div>
+            <span>23 New Alerts</span>
+        </button>
+    </div>
+
+    <!-- Today in History - Glass Card (Separate section example) -->
+    <div class="history-card">
+        <div class="history-title">
+            <span>🌍</span>
+            <span>Live Reader Counter</span>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 32px; font-weight: 800; color: #10b981; margin-bottom: 4px;">2,347</div>
+            <div style="font-size: 14px; color: rgba(255,255,255,0.8);">reading now</div>
+        </div>
+    </div>
+
+    <!-- Scroll Hint -->
+    <div class="scroll-hint">Scroll to continue ↓</div>
+
+    <!-- Design Notes -->
+    <div class="info-banner" style="margin-top: 40px; background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3);">
+        <strong>🎨 Typography Changes Applied:</strong>
+        <ul style="margin-top: 8px; padding-left: 20px; line-height: 1.8;">
+            <li><strong>Main Briefing Title:</strong> 22px, weight 800 (up from 14px)</li>
+            <li><strong>Section Headers:</strong> 14px, weight 800, uppercase (up from 9px)</li>
+            <li><strong>Briefing Items:</strong> 16px, weight 600 (up from 10px)</li>
+            <li><strong>History Years:</strong> 14px, weight 800 (up from 9px)</li>
+            <li><strong>History Events:</strong> 15px, weight 600 (up from 10px)</li>
+            <li><strong>Alert Button:</strong> 16px, weight 700 (up from 14px)</li>
+        </ul>
+        <div style="margin-top: 12px;">
+            <strong>✅ Removed:</strong> Glass container background from briefing section
+            <br>
+            <strong>✅ Removed:</strong> "Reading Right Now" section completely
+            <br>
+            <strong>✅ Kept:</strong> Glassmorphism on other cards and buttons
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.dark-mode-toggle').addEventListener('click', function() {
+            this.innerHTML = this.innerHTML === '🌙' ? '☀️' : '🌙';
+        });
+    </script>
+</body>
+</html>
