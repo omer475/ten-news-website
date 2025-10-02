@@ -72,7 +72,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
       
       <div style={{
         minHeight: '100vh',
-        background: darkMode ? '#111827' : 'linear-gradient(to bottom right, #eff6ff, #faf5ff, #ffffff)',
+        background: 'transparent',
         color: darkMode ? '#ffffff' : '#111827',
         transition: 'all 0.5s',
         overflow: 'hidden'
@@ -90,7 +90,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 style={{ padding: '6px', borderRadius: '9999px', background: darkMode ? '#374151' : '#E5E7EB', transition: 'all 0.3s', cursor: 'pointer', border: 'none', fontSize: '16px' }}
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? '☀️' : '🌙'}
               </button>
             </div>
           </div>
