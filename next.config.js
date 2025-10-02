@@ -5,15 +5,13 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  // Disable static optimization for client-side features
-  experimental: {
-    serverComponentsExternalPackages: []
-  },
   // Vercel-optimized settings
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
   trailingSlash: false,
+  // Ensure proper static optimization
+  output: 'standalone',
   // HIDE DEVELOPER INFORMATION FROM USERS
   productionBrowserSourceMaps: false,
   webpack: (config, { dev }) => {
