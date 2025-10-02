@@ -100,25 +100,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </h1>
           </div>
 
-          {/* Story Navigation Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
-            {stories.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentStory(i)}
-                style={{
-                  width: i === currentStory ? '24px' : '4px',
-                  height: '4px',
-                  background: i === currentStory ? 'linear-gradient(to right, #3B82F6, #A855F7)' : '#D1D5DB',
-                  borderRadius: '9999px',
-                  transition: 'all 0.3s',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              />
-            ))}
-          </div>
-
           {/* Today's Briefing - GLASSMORPHISM BOX (SAME AS TIMELINE/DETAILS) */}
           <div style={{ 
             background: 'rgba(255, 255, 255, 0.15)', 
@@ -170,14 +151,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Live Reader Counter */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ fontSize: '16px' }}>👥</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981' }}>{readerCount.toLocaleString()}</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>reading now</span>
-            <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
           </div>
 
           {/* Scroll Hint */}

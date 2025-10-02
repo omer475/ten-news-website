@@ -940,54 +940,15 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: linear-gradient(
-            -75deg,
-            rgba(255, 255, 255, 0.05),
-            rgba(255, 255, 255, 0.2),
-            rgba(255, 255, 255, 0.05)
-          );
-          backdrop-filter: blur(2px);
-          -webkit-backdrop-filter: blur(2px);
-          border-radius: 999vw;
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
-            inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
-            0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2),
-            0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2);
-          position: relative;
-        }
-        
-        .news-meta::after {
-          content: "";
-          position: absolute;
-          z-index: 1;
-          inset: 0;
-          border-radius: 999vw;
-          width: calc(100% + 1px);
-          height: calc(100% + 1px);
-          top: calc(0% - 0.5px);
-          left: calc(0% - 0.5px);
-          padding: 1px;
-          box-sizing: border-box;
-          background: conic-gradient(
-              from var(--angle-1) at 50% 50%,
-              rgba(0, 0, 0, 0.5),
-              rgba(0, 0, 0, 0) 5% 40%,
-              rgba(0, 0, 0, 0.5) 50%,
-              rgba(0, 0, 0, 0) 60% 95%,
-              rgba(0, 0, 0, 0.5)
-            ),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
-          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          mask-composite: exclude;
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1), --angle-1 500ms ease;
-          box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.5);
-          pointer-events: none;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
         }
 
         .news-detail-item {
@@ -1793,15 +1754,14 @@ export default function Home() {
                           }}>
                           <div style={{
                             display: 'flex',
-                            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                            backdropFilter: 'blur(2px)',
-                            WebkitBackdropFilter: 'blur(2px)',
-                            border: '1px solid rgba(255, 255, 255, 0.5)',
-                            borderRadius: '999vw',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '16px',
                             padding: '2px',
-                            boxShadow: 'inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05), inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5), 0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2), 0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2)',
-                            width: '100px',
-                            position: 'relative'
+                            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                            width: '100px'
                           }}>
                             {/* Details Button - Icons Only */}
                             <div style={{
@@ -1963,13 +1923,13 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                                backdropFilter: 'blur(2px)',
-                                WebkitBackdropFilter: 'blur(2px)',
-                                border: '1px solid rgba(255, 255, 255, 0.5)',
-                                borderRadius: '999vw',
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: 'inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05), inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5), 0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2), 0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2)',
+                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',
