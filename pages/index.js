@@ -1052,11 +1052,6 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-
         /* Authentication Styles */
         .auth-btn {
           padding: 8px 16px;
@@ -1668,94 +1663,49 @@ export default function Home() {
                     {renderGreeting(story.headline)}
                   </h1>
 
-                  {/* Today's Briefing Card */}
+                  {/* Today's Briefing - Compact Modern News App Style */}
                   <div style={{
-                    background: darkMode ? '#1f2937' : '#ffffff',
-                    borderRadius: '20px',
-                    padding: '32px',
-                    marginTop: '40px',
-                    marginBottom: '40px',
-                    border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                    maxWidth: '950px',
-                    margin: '40px auto'
+                    maxWidth: '500px',
+                    margin: '32px auto 24px',
+                    padding: '0 20px'
                   }}>
-                    {/* Header with icon and Live badge */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '32px'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px'
-                      }}>
-                        <span style={{ fontSize: '28px' }}>✨</span>
-                        <h2 style={{
-                          fontSize: '24px',
-                          fontWeight: '700',
-                          color: darkMode ? '#ffffff' : '#0f172a',
-                          margin: 0
-                        }}>Today's Briefing</h2>
-                      </div>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 12px',
-                        background: '#10b981',
-                        borderRadius: '20px'
-                      }}>
-                        <div style={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: '#ffffff',
-                          animation: 'pulse 2s infinite'
-                        }}></div>
-                        <span style={{
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          color: '#ffffff'
-                        }}>Live</span>
-                      </div>
-                    </div>
-
                     {/* What's Happening */}
-                    <div style={{ marginBottom: '32px' }}>
+                    <div style={{ marginBottom: '20px' }}>
                       <h3 style={{
-                        fontSize: '14px',
+                        fontSize: '13px',
                         fontWeight: '700',
                         color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '16px',
+                        marginBottom: '12px',
                         textTransform: 'uppercase',
-                        letterSpacing: '1px'
-                      }}>WHAT'S HAPPENING</h3>
+                        letterSpacing: '0.5px'
+                      }}>Today</h3>
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '12px'
+                        gap: '8px'
                       }}>
                         {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
                           <div key={i} style={{
                             display: 'flex',
-                            gap: '12px',
-                            alignItems: 'flex-start'
+                            gap: '10px',
+                            alignItems: 'flex-start',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(249, 250, 251, 0.5)',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
                           }}>
                             <div style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: ['#ef4444', '#10b981', '#3b82f6'][i],
-                              marginTop: '8px',
-                              flexShrink: 0
-                            }}></div>
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              color: ['#dc2626', '#f97316', '#3b82f6'][i],
+                              minWidth: '18px',
+                              marginTop: '2px'
+                            }}>0{i + 1}</div>
                             <div style={{
-                              fontSize: '16px',
+                              fontSize: '14px',
                               fontWeight: '500',
-                              lineHeight: '1.5',
+                              lineHeight: '1.4',
                               color: darkMode ? '#e5e7eb' : '#1f2937'
                             }}>{newsStory.title}</div>
                           </div>
@@ -1763,70 +1713,38 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Today in History */}
+                    {/* History - Simplified */}
                     <div>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '16px'
-                      }}>
-                        <div style={{
-                          background: '#8b5cf6',
-                          borderRadius: '8px',
-                          padding: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minWidth: '40px'
-                        }}>
-                          <div style={{
-                            fontSize: '10px',
-                            fontWeight: '700',
-                            color: '#ffffff',
-                            textAlign: 'center',
-                            lineHeight: '1.2'
-                          }}>
-                            <div>📅</div>
-                            <div style={{ fontSize: '12px' }}>17</div>
-                          </div>
-                        </div>
-                        <h3 style={{
-                          fontSize: '14px',
-                          fontWeight: '700',
-                          color: darkMode ? '#9ca3af' : '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '1px',
-                          margin: 0
-                        }}>TODAY IN HISTORY</h3>
-                      </div>
+                      <h3 style={{
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: darkMode ? '#9ca3af' : '#6b7280',
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>On This Day</h3>
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '10px'
+                        gap: '8px'
                       }}>
                         {[
-                          { year: '1789', event: 'US Congress proposes Bill of Rights' },
-                          { year: '1957', event: 'Nine students integrate Little Rock High School' },
-                          { year: '2001', event: 'Apple releases first iPod, revolutionizing music' }
+                          { year: '1969', event: 'Apollo 11 moon landing' },
+                          { year: '2007', event: 'First iPhone released' }
                         ].map((item, i) => (
                           <div key={i} style={{
                             display: 'flex',
-                            gap: '12px',
-                            alignItems: 'flex-start'
+                            gap: '10px',
+                            alignItems: 'center',
+                            fontSize: '13px',
+                            color: darkMode ? '#9ca3af' : '#6b7280'
                           }}>
-                            <div style={{
-                              fontSize: '16px',
-                              fontWeight: '700',
-                              color: '#8b5cf6',
-                              minWidth: '50px'
-                            }}>{item.year}</div>
-                            <div style={{
-                              fontSize: '16px',
-                              fontWeight: '500',
-                              lineHeight: '1.5',
-                              color: darkMode ? '#e5e7eb' : '#1f2937'
-                            }}>{item.event}</div>
+                            <span style={{
+                              fontWeight: '600',
+                              color: '#8b5cf6'
+                            }}>{item.year}</span>
+                            <span>·</span>
+                            <span>{item.event}</span>
                           </div>
                         ))}
                       </div>
