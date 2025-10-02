@@ -549,48 +549,56 @@ export default function Home() {
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
-    
+
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
       'good morning',
-      'good evening', 
+      'good evening',
       'good night',
       'good afternoon'
     ];
-    
+
     const lowerHeadline = headline.toLowerCase();
     let foundGreeting = null;
-    
+
     for (const pattern of greetingPatterns) {
       if (lowerHeadline.startsWith(pattern)) {
         foundGreeting = pattern;
         break;
       }
     }
-    
+
     if (foundGreeting) {
       // Replace AI's greeting with the correct time-based greeting
       const restOfText = headline.substring(foundGreeting.length).trim();
       return (
         <div style={{ textAlign: 'center' }}>
-          {/* Greeting on top - larger */}
-          <div style={{ 
-            fontSize: '80px',
+          {/* Greeting on top - dramatic typography */}
+          <div style={{
+            fontSize: 'clamp(60px, 12vw, 120px)',
             fontWeight: '900',
-            lineHeight: '1',
-            marginBottom: '20px',
+            lineHeight: '0.9',
+            marginBottom: '24px',
             background: gradient,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            backgroundClip: 'text',
+            letterSpacing: '-3px',
+            textShadow: darkMode
+              ? '0 0 40px rgba(59, 130, 246, 0.3)'
+              : '0 0 60px rgba(59, 130, 246, 0.2)',
+            animation: 'textGlow 3s ease-in-out infinite alternate'
           }}>{correctGreeting}</div>
-          
-          {/* Rest of text below - smaller */}
-          <div style={{ 
-            fontSize: '36px',
-            fontWeight: '700',
+
+          {/* Rest of text below - elegant serif typography */}
+          <div style={{
+            fontSize: 'clamp(24px, 4vw, 48px)',
+            fontWeight: '400',
             lineHeight: '1.2',
-            color: darkMode ? '#ffffff' : '#0f172a'
+            color: darkMode ? '#e5e7eb' : '#374151',
+            fontFamily: '"Times New Roman", serif',
+            letterSpacing: '-0.5px',
+            opacity: 0.9
           }}>{restOfText}</div>
         </div>
       );
@@ -1050,6 +1058,41 @@ export default function Home() {
         @keyframes gentleBounce {
           0%, 100% { transform: translateX(-50%) translateY(0px); }
           50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes scrollBounce {
+          0%, 100% {
+            transform: translateX(-50%) translateY(6px);
+            opacity: 0.6;
+          }
+          50% {
+            transform: translateX(-50%) translateY(12px);
+            opacity: 1;
+          }
+        }
+
+        @keyframes textGlow {
+          0% {
+            text-shadow: ${darkMode
+              ? '0 0 40px rgba(59, 130, 246, 0.3), 0 0 80px rgba(139, 92, 246, 0.2)'
+              : '0 0 60px rgba(59, 130, 246, 0.2), 0 0 120px rgba(16, 185, 129, 0.1)'};
+          }
+          100% {
+            text-shadow: ${darkMode
+              ? '0 0 60px rgba(59, 130, 246, 0.4), 0 0 100px rgba(139, 92, 246, 0.3)'
+              : '0 0 80px rgba(59, 130, 246, 0.3), 0 0 160px rgba(16, 185, 129, 0.15)'};
+          }
         }
 
         /* Authentication Styles */
@@ -1512,6 +1555,146 @@ export default function Home() {
             font-size: 10px;
           }
         }
+
+        /* Premium First Page Responsive Design */
+        @media (max-width: 1024px) {
+          .opening-container {
+            padding: 0 24px !important;
+          }
+
+          /* Glassmorphism cards - smaller on tablets */
+          .opening-container > div > div > div:nth-child(2) {
+            top: 15% !important;
+            right: 5% !important;
+            width: 240px !important;
+            height: 150px !important;
+          }
+
+          .opening-container > div > div > div:nth-child(3) {
+            bottom: 20% !important;
+            left: 5% !important;
+            width: 220px !important;
+            height: 140px !important;
+          }
+
+          /* Category pills - 4 per row on tablets */
+          .opening-container > div > div > div > div:first-child {
+            gap: 12px !important;
+            margin-bottom: 48px !important;
+          }
+
+          /* Main content adjustments */
+          .opening-container > div > div > div > div:nth-child(2) {
+            max-width: 700px !important;
+          }
+
+          /* News card adjustments */
+          .opening-container > div > div > div > div:nth-child(3) > div {
+            max-width: 550px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          /* Hero section mobile adjustments */
+          .opening-container {
+            padding: 0 16px !important;
+            min-height: calc(100vh - 80px) !important;
+          }
+
+          /* Hide glassmorphism cards on mobile for cleaner look */
+          .opening-container > div > div > div:nth-child(2),
+          .opening-container > div > div > div:nth-child(3) {
+            display: none !important;
+          }
+
+          /* Category pills - stack vertically on mobile */
+          .opening-container > div > div > div > div:first-child {
+            flex-direction: column !important;
+            gap: 8px !important;
+            margin-bottom: 40px !important;
+            align-items: center !important;
+          }
+
+          .opening-container > div > div > div > div:first-child > div {
+            padding: 10px 20px !important;
+            font-size: 12px !important;
+          }
+
+          /* Hero headline - smaller on mobile */
+          .opening-container > div > div > div > div:nth-child(2) > div:first-child {
+            margin-bottom: 32px !important;
+          }
+
+          .opening-container > div > div > div > div:nth-child(2) > div:first-child > div:first-child {
+            font-size: clamp(48px, 15vw, 80px) !important;
+            margin-bottom: 16px !important;
+          }
+
+          .opening-container > div > div > div > div:nth-child(2) > div:first-child > div:last-child {
+            font-size: clamp(20px, 5vw, 32px) !important;
+          }
+
+          /* News card - full width on mobile */
+          .opening-container > div > div > div > div:nth-child(3) > div {
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 24px 20px !important;
+          }
+
+          /* News items - stack vertically on mobile */
+          .opening-container > div > div > div > div:nth-child(3) > div > div > div {
+            padding: 16px !important;
+            gap: 12px !important;
+          }
+
+          .opening-container > div > div > div > div:nth-child(3) > div > div > div > div:last-child {
+            font-size: 14px !important;
+            line-height: 1.3 !important;
+          }
+
+          /* Scroll indicator - adjust position */
+          .opening-container > div > div > div > div:last-child {
+            bottom: 32px !important;
+          }
+
+          .opening-container > div > div > div > div:last-child > div > div:first-child {
+            font-size: 10px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          /* Extra small screens */
+          .opening-container {
+            padding: 0 12px !important;
+          }
+
+          /* Category pills - smaller on very small screens */
+          .opening-container > div > div > div > div:first-child > div {
+            padding: 8px 16px !important;
+            font-size: 11px !important;
+          }
+
+          /* News card - tighter padding on small screens */
+          .opening-container > div > div > div > div:nth-child(3) > div {
+            padding: 20px 16px !important;
+          }
+
+          /* News items - compact on small screens */
+          .opening-container > div > div > div > div:nth-child(3) > div > div > div {
+            padding: 12px !important;
+            gap: 8px !important;
+          }
+
+          .opening-container > div > div > div > div:nth-child(3) > div > div > div > div:first-child {
+            width: 28px !important;
+            height: 28px !important;
+            font-size: 12px !important;
+          }
+
+          .opening-container > div > div > div > div:nth-child(3) > div > div > div > div:nth-child(2) {
+            font-size: 14px !important;
+          }
+        }
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
@@ -1632,126 +1815,362 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <div className="opening-container">
-                  {/* Swipeable Category Pills */}
+                  {/* Premium Hero Section */}
                   <div style={{
+                    position: 'relative',
+                    minHeight: '100vh',
                     display: 'flex',
-                    gap: '10px',
-                    overflowX: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                    marginBottom: '32px',
-                    padding: '0 20px'
-                  }} className="category-pills">
-                    {['World', 'Business', 'Tech', 'Sports', 'Health', 'Climate', 'Science'].map((cat, idx) => (
-                      <div key={idx} style={{
-                        padding: '8px 20px',
-                        background: darkMode ? '#1f2937' : '#f1f5f9',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: darkMode ? '#d1d5db' : '#4b5563',
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                      }}>{cat}</div>
-                    ))}
-                  </div>
-
-                  <h1 className="main-headline">
-                    {renderGreeting(story.headline)}
-                  </h1>
-
-                  {/* Today's Briefing - Compact Modern News App Style */}
-                  <div style={{
-                    maxWidth: '500px',
-                    margin: '32px auto 24px',
-                    padding: '0 20px'
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'hidden'
                   }}>
-                    {/* What's Happening */}
-                    <div style={{ marginBottom: '20px' }}>
-                      <h3 style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>Today</h3>
+
+                    {/* Background Effects */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: darkMode
+                        ? 'radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.1) 0%, transparent 50%)'
+                        : 'radial-gradient(ellipse at top, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at bottom, rgba(16, 185, 129, 0.06) 0%, transparent 50%)',
+                      zIndex: 0
+                    }} />
+
+                    {/* Glassmorphism Cards */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '20%',
+                      right: '8%',
+                      width: '280px',
+                      height: '180px',
+                      background: darkMode
+                        ? 'rgba(31, 41, 55, 0.3)'
+                        : 'rgba(255, 255, 255, 0.4)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '24px',
+                      border: `1px solid ${darkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.5)'}`,
+                      boxShadow: darkMode
+                        ? '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(75, 85, 99, 0.1)'
+                        : '0 25px 50px -12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.8)',
+                      transform: 'rotate(2deg) translateY(20px)',
+                      opacity: 0,
+                      animation: 'fadeInUp 1s ease-out 0.3s forwards',
+                      zIndex: 1
+                    }}>
                       <div style={{
+                        padding: '24px',
+                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '8px'
+                        justifyContent: 'center'
                       }}>
-                        {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
-                          <div key={i} style={{
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'flex-start',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            background: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(249, 250, 251, 0.5)',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer'
-                          }}>
-                            <div style={{
-                              fontSize: '13px',
-                              fontWeight: '700',
-                              color: ['#dc2626', '#f97316', '#3b82f6'][i],
-                              minWidth: '18px',
-                              marginTop: '2px'
-                            }}>0{i + 1}</div>
-                            <div style={{
-                              fontSize: '14px',
-                              fontWeight: '500',
-                              lineHeight: '1.4',
-                              color: darkMode ? '#e5e7eb' : '#1f2937'
-                            }}>{newsStory.title}</div>
-                          </div>
-                        ))}
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          color: darkMode ? '#9ca3af' : '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '1px',
+                          marginBottom: '8px'
+                        }}>Breaking</div>
+                        <div style={{
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          color: darkMode ? '#ffffff' : '#1f2937',
+                          lineHeight: '1.4'
+                        }}>{stories.filter(s => s.type === 'news').slice(0, 1)[0]?.title}</div>
                       </div>
                     </div>
 
-                    {/* History - Simplified */}
-                    <div>
-                      <h3 style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>On This Day</h3>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '25%',
+                      left: '8%',
+                      width: '260px',
+                      height: '160px',
+                      background: darkMode
+                        ? 'rgba(31, 41, 55, 0.25)'
+                        : 'rgba(255, 255, 255, 0.35)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '20px',
+                      border: `1px solid ${darkMode ? 'rgba(75, 85, 99, 0.2)' : 'rgba(229, 231, 235, 0.4)'}`,
+                      boxShadow: darkMode
+                        ? '0 20px 40px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.1)'
+                        : '0 20px 40px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.7)',
+                      transform: 'rotate(-1deg) translateY(-20px)',
+                      opacity: 0,
+                      animation: 'fadeInUp 1s ease-out 0.6s forwards',
+                      zIndex: 1
+                    }}>
                       <div style={{
+                        padding: '20px',
+                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '8px'
+                        justifyContent: 'center'
                       }}>
-                        {[
-                          { year: '1969', event: 'Apollo 11 moon landing' },
-                          { year: '2007', event: 'First iPhone released' }
-                        ].map((item, i) => (
-                          <div key={i} style={{
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'center',
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: darkMode ? '#9ca3af' : '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '1px',
+                          marginBottom: '6px'
+                        }}>Trending</div>
+                        <div style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: darkMode ? '#e5e7eb' : '#374151',
+                          lineHeight: '1.3'
+                        }}>{stories.filter(s => s.type === 'news').slice(1, 2)[0]?.title}</div>
+                      </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div style={{
+                      position: 'relative',
+                      zIndex: 2,
+                      textAlign: 'center',
+                      maxWidth: '800px',
+                      width: '100%',
+                      padding: '0 32px'
+                    }}>
+                      {/* Category Pills - Premium Design */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        marginBottom: '64px',
+                        flexWrap: 'wrap',
+                        opacity: 0,
+                        animation: 'fadeInUp 1s ease-out 0.1s forwards'
+                      }}>
+                        {['World', 'Business', 'Tech', 'Sports', 'Health'].map((cat, idx) => (
+                          <div key={idx} style={{
+                            padding: '12px 24px',
+                            background: darkMode
+                              ? 'rgba(31, 41, 55, 0.6)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                            backdropFilter: 'blur(12px)',
+                            borderRadius: '50px',
                             fontSize: '13px',
-                            color: darkMode ? '#9ca3af' : '#6b7280'
-                          }}>
-                            <span style={{
-                              fontWeight: '600',
-                              color: '#8b5cf6'
-                            }}>{item.year}</span>
-                            <span>·</span>
-                            <span>{item.event}</span>
-                          </div>
+                            fontWeight: '600',
+                            color: darkMode ? '#e5e7eb' : '#374151',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            border: `1px solid ${darkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.5)'}`,
+                            transform: 'translateY(20px)',
+                            animation: `fadeInUp 0.8s ease-out ${0.1 + idx * 0.1}s forwards`
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(0) scale(1.05)';
+                            e.target.style.boxShadow = darkMode
+                              ? '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.2)'
+                              : '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.9)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0) scale(1)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >{cat}</div>
                         ))}
+                      </div>
+
+                      {/* Hero Headline - Dramatic Typography */}
+                      <div style={{
+                        marginBottom: '80px',
+                        opacity: 0,
+                        animation: 'fadeInUp 1.2s ease-out 0.4s forwards'
+                      }}>
+                        {renderGreeting(story.headline)}
+                      </div>
+
+                      {/* News Feed - Modern Card Design */}
+                      <div style={{
+                        maxWidth: '600px',
+                        margin: '0 auto',
+                        opacity: 0,
+                        animation: 'fadeInUp 1s ease-out 0.7s forwards'
+                      }}>
+                        <div style={{
+                          marginBottom: '32px',
+                          padding: '32px',
+                          background: darkMode
+                            ? 'rgba(31, 41, 55, 0.4)'
+                            : 'rgba(255, 255, 255, 0.6)',
+                          backdropFilter: 'blur(20px)',
+                          borderRadius: '32px',
+                          border: `1px solid ${darkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 0.6)'}`,
+                          boxShadow: darkMode
+                            ? '0 32px 64px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(75, 85, 99, 0.1)'
+                            : '0 32px 64px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}>
+                          {/* Subtle gradient overlay */}
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.03) 100%)',
+                            pointerEvents: 'none'
+                          }} />
+
+                          <div style={{ position: 'relative', zIndex: 1 }}>
+                            {/* Section Header */}
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              marginBottom: '24px'
+                            }}>
+                              <div style={{
+                                width: '4px',
+                                height: '20px',
+                                background: 'linear-gradient(180deg, #3b82f6, #8b5cf6)',
+                                borderRadius: '2px',
+                                marginRight: '12px'
+                              }} />
+                              <h2 style={{
+                                fontSize: '18px',
+                                fontWeight: '700',
+                                color: darkMode ? '#ffffff' : '#1f2937',
+                                letterSpacing: '-0.3px',
+                                margin: 0
+                              }}>Today's Headlines</h2>
+                            </div>
+
+                            {/* News Items */}
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '16px'
+                            }}>
+                              {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
+                                <div key={i} style={{
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  gap: '16px',
+                                  padding: '20px',
+                                  background: darkMode
+                                    ? 'rgba(17, 24, 39, 0.4)'
+                                    : 'rgba(249, 250, 251, 0.8)',
+                                  borderRadius: '16px',
+                                  border: `1px solid ${darkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(229, 231, 235, 0.5)'}`,
+                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  cursor: 'pointer',
+                                  position: 'relative',
+                                  overflow: 'hidden'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.transform = 'translateY(-2px) scale(1.01)';
+                                  e.target.style.boxShadow = darkMode
+                                    ? '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(55, 65, 81, 0.2)'
+                                    : '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(229, 231, 235, 0.6)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.transform = 'translateY(0) scale(1)';
+                                  e.target.style.boxShadow = 'none';
+                                }}
+                                >
+                                  {/* Number Badge */}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '32px',
+                                    height: '32px',
+                                    background: ['linear-gradient(135deg, #dc2626, #ef4444)', 'linear-gradient(135deg, #ea580c, #f97316)', 'linear-gradient(135deg, #2563eb, #3b82f6)'][i],
+                                    borderRadius: '12px',
+                                    fontSize: '14px',
+                                    fontWeight: '800',
+                                    color: '#ffffff',
+                                    flexShrink: 0,
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                                  }}>
+                                    {i + 1}
+                                  </div>
+
+                                  {/* Content */}
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{
+                                      fontSize: '16px',
+                                      fontWeight: '600',
+                                      lineHeight: '1.4',
+                                      color: darkMode ? '#ffffff' : '#1f2937',
+                                      marginBottom: '8px'
+                                    }}>{newsStory.title}</div>
+                                    <div style={{
+                                      fontSize: '13px',
+                                      color: darkMode ? '#9ca3af' : '#6b7280',
+                                      fontWeight: '500'
+                                    }}>{newsStory.category}</div>
+                                  </div>
+
+                                  {/* Subtle arrow indicator */}
+                                  <div style={{
+                                    color: darkMode ? '#6b7280' : '#9ca3af',
+                                    fontSize: '18px',
+                                    transition: 'all 0.2s'
+                                  }}>→</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scroll Indicator - Premium Design */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '48px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        opacity: 0,
+                        animation: 'fadeInUp 1s ease-out 1s forwards'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '16px',
+                          cursor: 'pointer'
+                        }}>
+                          <div style={{
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            color: darkMode ? '#9ca3af' : '#6b7280',
+                            textTransform: 'uppercase',
+                            letterSpacing: '2px',
+                            opacity: 0.8
+                          }}>Scroll to Continue</div>
+                          <div style={{
+                            width: '24px',
+                            height: '32px',
+                            border: `2px solid ${darkMode ? '#9ca3af' : '#6b7280'}`,
+                            borderRadius: '12px',
+                            position: 'relative',
+                            opacity: 0.6
+                          }}>
+                            <div style={{
+                              width: '4px',
+                              height: '8px',
+                              background: darkMode ? '#9ca3af' : '#6b7280',
+                              borderRadius: '2px',
+                              position: 'absolute',
+                              top: '6px',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              animation: 'scrollBounce 2s infinite'
+                            }} />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
