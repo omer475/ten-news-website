@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
+export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue, onAuthModal }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -82,13 +82,33 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           padding: '0 20px 32px'
         }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '12px 0', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: darkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: darkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '20px', fontWeight: 'bold' }}>TEN NEWS</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => onAuthModal('login')}
+                style={{ padding: '6px 12px', borderRadius: '6px', background: 'transparent', border: '1px solid #3B82F6', color: '#3B82F6', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s' }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#3B82F6', e.currentTarget.style.color = 'white'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent', e.currentTarget.style.color = '#3B82F6'}
+              >
+                LOGIN
+              </button>
+              <button
+                onClick={() => onAuthModal('signup')}
+                style={{ padding: '6px 12px', borderRadius: '6px', background: '#3B82F6', border: '1px solid #3B82F6', color: 'white', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s' }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#2563EB'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#3B82F6'}
+              >
+                SIGN UP
+              </button>
               <button
                 onClick={toggleDarkMode}
                 style={{ padding: '6px', borderRadius: '9999px', background: darkMode ? '#374151' : '#E5E7EB', transition: 'all 0.3s', cursor: 'pointer', border: 'none', fontSize: '16px' }}
                 aria-label="Toggle dark mode"
               >
+                {darkMode ? '☀️' : '🌙'}
               </button>
             </div>
           </div>

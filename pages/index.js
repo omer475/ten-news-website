@@ -1608,10 +1608,11 @@ export default function Home() {
               }}
             >
               {story.type === 'opening' ? (
-                <NewFirstPage 
-                  darkMode={darkMode} 
+                <NewFirstPage
+                  darkMode={darkMode}
                   toggleDarkMode={toggleDarkMode}
                   onContinue={nextStory}
+                  onAuthModal={setAuthModal}
                 />
               ) : story.type === 'news' ? (
                 <div className="news-grid">
