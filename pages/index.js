@@ -1016,240 +1016,6 @@ export default function Home() {
         }
 
 
-        /* Today's Briefing Styles */
-        .todays-briefing-container {
-          max-width: 800px;
-          margin: 40px auto 0;
-          padding: 0 20px;
-        }
-
-        .briefing-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 24px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-        }
-
-        .briefing-icon {
-          font-size: 24px;
-        }
-
-        .briefing-title {
-          font-size: 28px;
-          font-weight: 700;
-          color: ${darkMode ? '#ffffff' : '#1f2937'};
-          margin: 0;
-          flex: 1;
-        }
-
-        .live-indicator {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 14px;
-          color: #10b981;
-          font-weight: 600;
-        }
-
-        .live-dot {
-          width: 8px;
-          height: 8px;
-          background: #10b981;
-          border-radius: 50%;
-          animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        .whats-happening {
-          background: ${darkMode ? '#1f2937' : '#ffffff'};
-          border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 24px;
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-        }
-
-        .section-title {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 1.5px;
-          color: ${darkMode ? '#9ca3af' : '#6b7280'};
-          margin: 0 0 16px 0;
-        }
-
-        .happening-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-
-        .happening-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 12px 0;
-          font-size: 16px;
-          line-height: 1.5;
-          color: ${darkMode ? '#e5e7eb' : '#1f2937'};
-        }
-
-        .happening-bullet {
-          font-size: 8px;
-          margin-top: 6px;
-          flex-shrink: 0;
-        }
-
-        .happening-bullet.red {
-          color: #ef4444;
-        }
-
-        .happening-bullet.green {
-          color: #10b981;
-        }
-
-        .happening-bullet.blue {
-          color: #3b82f6;
-        }
-
-        .happening-text {
-          font-weight: 500;
-        }
-
-        .history-section {
-          background: ${darkMode ? '#1f2937' : '#ffffff'};
-          border-radius: 16px;
-          padding: 24px;
-          margin-bottom: 24px;
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-        }
-
-        .history-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 16px;
-        }
-
-        .history-icon {
-          font-size: 16px;
-        }
-
-        .history-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .history-item {
-          display: flex;
-          gap: 16px;
-          align-items: flex-start;
-        }
-
-        .history-year {
-          font-size: 16px;
-          font-weight: 700;
-          color: #8b5cf6;
-          min-width: 50px;
-        }
-
-        .history-event {
-          font-size: 16px;
-          color: ${darkMode ? '#e5e7eb' : '#1f2937'};
-          line-height: 1.5;
-        }
-
-        .view-alerts-btn {
-          width: 100%;
-          background: ${darkMode ? '#3b82f6' : '#eff6ff'};
-          border: none;
-          border-radius: 16px;
-          padding: 20px;
-          margin-bottom: 24px;
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-        }
-
-        .view-alerts-btn:hover {
-          background: ${darkMode ? '#2563eb' : '#dbeafe'};
-          transform: translateY(-2px);
-        }
-
-        .alert-badge {
-          font-size: 24px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .alert-text {
-          font-size: 18px;
-          font-weight: 600;
-          color: ${darkMode ? '#ffffff' : '#1e293b'};
-        }
-
-        .ai-briefing {
-          background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-          border-radius: 16px;
-          padding: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 40px;
-        }
-
-        .ai-briefing-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .ai-icon {
-          font-size: 20px;
-        }
-
-        .ai-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: #5b21b6;
-        }
-
-        .ai-subtitle {
-          font-size: 14px;
-          color: #7c3aed;
-          margin: 4px 0 0 28px;
-        }
-
-        .ai-play-btn {
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          background: #ffffff;
-          border: none;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          color: #7c3aed;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-          transition: all 0.2s;
-        }
-
-        .ai-play-btn:hover {
-          transform: scale(1.1);
-          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
-        }
-
         .scroll-hint {
           position: absolute;
           bottom: 160px;
@@ -1842,142 +1608,252 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <div className="opening-container">
-                  <div className="date-header">{story.date}</div>
+                  {/* Greeting */}
                   <h1 className="main-headline">
                     {renderGreeting(story.headline)}
                   </h1>
-                  <div className="subheadline">
-                    <div style={{ display: 'inline-block' }}>
-                      <span style={{ fontWeight: 600, color: '#64748b' }}>Today: </span>
-                      <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
-                        {stories.filter(s => s.type === 'news').slice(0, 5).map((story, i) => {
-                          const categoryColors = {
-                            'WORLD NEWS': '#dc2626',
-                            'BUSINESS': '#f97316',
-                            'MARKETS': '#06b6d4',
-                            'TECH & AI': '#8b5cf6',
-                            'SCIENCE': '#0ea5e9',
-                            'HEALTH': '#10b981',
-                            'CLIMATE': '#22c55e',
-                            'SPORTS': '#f59e0b',
-                            'ENTERTAINMENT': '#ec4899'
-                          };
-                          const color = categoryColors[story.category] || '#3b82f6';
-                          const shortTitle = story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title;
-                          
-                          return (
-                            <span
-                              key={i}
-                              className="topic-item"
-                              style={{
-                                position: 'absolute',
-                                left: 0,
-                                whiteSpace: 'nowrap',
-                                opacity: 0,
-                                animation: 'topicRotate 15s infinite',
-                                animationDelay: `${i * 3}s`,
-                                color: color,
-                                fontWeight: 700,
-                                transition: 'opacity 0.5s ease-in-out'
-                              }}
-                            >
-                              {shortTitle}
-                            </span>
-                          );
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="news-info" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    gap: '20px',
-                    marginBottom: '50px',
-                    fontSize: '13px',
-                    color: '#64748b',
-                    fontWeight: 500,
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase'
+
+                  {/* Main headline */}
+                  <h2 style={{
+                    fontSize: '32px',
+                    fontWeight: '700',
+                    lineHeight: '1.2',
+                    color: darkMode ? '#ffffff' : '#000000',
+                    marginBottom: '16px',
+                    textAlign: 'center'
                   }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      background: 'rgba(59, 130, 246, 0.1)',
-                      borderRadius: '4px',
-                      color: '#3b82f6'
-                    }}>10 Stories</span>
-                    <span style={{ color: '#cbd5e1' }}>•</span>
-                    <span style={{
-                      padding: '4px 12px',
-                      background: 'rgba(96, 165, 250, 0.1)',
-                      borderRadius: '4px',
-                      color: '#60a5fa'
-                    }}>2 Min Read</span>
+                    {stories.filter(s => s.type === 'news')[0]?.title || 'Critical NATO-Russia tensions dominate today\'s headlines.'}
+                  </h2>
+
+                  {/* Rotating topic */}
+                  <div style={{ 
+                    textAlign: 'center', 
+                    marginBottom: '40px',
+                    fontSize: '18px',
+                    color: '#64748b'
+                  }}>
+                    <span style={{ fontWeight: 600 }}>Today: </span>
+                    <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                      {stories.filter(s => s.type === 'news')[0]?.title.substring(0, 30) || 'NATO Issues Stern Wa'}...
+                    </span>
                   </div>
-                  
-                  {/* Today's Briefing Section */}
-                  <div className="todays-briefing-container">
-                    <div className="briefing-header">
-                      <span className="briefing-icon">✨</span>
-                      <h2 className="briefing-title">Today's Briefing</h2>
-                      <span className="live-indicator">
-                        <span className="live-dot"></span> Live
+
+                  {/* Today's Briefing Card */}
+                  <div style={{
+                    background: darkMode ? '#1f2937' : '#ffffff',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    marginBottom: '24px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    textAlign: 'left',
+                    border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginBottom: '16px' 
+                    }}>
+                      <span style={{ fontSize: '20px' }}>✨</span>
+                      <h3 style={{ 
+                        fontSize: '20px', 
+                        fontWeight: '700',
+                        color: darkMode ? '#ffffff' : '#000000',
+                        margin: 0
+                      }}>Today's Briefing</h3>
+                      <span style={{ 
+                        marginLeft: 'auto', 
+                        color: '#22c55e', 
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontWeight: '500'
+                      }}>
+                        <span style={{ 
+                          width: '8px', 
+                          height: '8px', 
+                          background: '#22c55e', 
+                          borderRadius: '50%' 
+                        }}></span>
+                        Live
                       </span>
                     </div>
 
-                    {/* What's Happening */}
-                    <div className="whats-happening">
-                      <h3 className="section-title">WHAT'S HAPPENING</h3>
-                      <ul className="happening-list">
-                        {stories.filter(s => s.type === 'news').slice(0, 3).map((story, i) => (
-                          <li key={i} className="happening-item">
-                            <span className={`happening-bullet ${i === 0 ? 'red' : i === 1 ? 'green' : 'blue'}`}>●</span>
-                            <span className="happening-text">{story.title}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <h4 style={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600',
+                      color: darkMode ? '#9ca3af' : '#6b7280',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      marginBottom: '12px'
+                    }}>WHAT'S HAPPENING</h4>
+
+                    <ul style={{ 
+                      listStyle: 'none', 
+                      padding: 0, 
+                      margin: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}>
+                      {stories.filter(s => s.type === 'news').slice(0, 3).map((story, idx) => (
+                        <li key={idx} style={{ 
+                          display: 'flex', 
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                          fontSize: '16px',
+                          lineHeight: '1.5',
+                          color: darkMode ? '#d1d5db' : '#374151'
+                        }}>
+                          <span style={{ 
+                            width: '8px', 
+                            height: '8px', 
+                            borderRadius: '50%',
+                            background: idx === 0 ? '#ef4444' : idx === 1 ? '#22c55e' : '#3b82f6',
+                            marginTop: '6px',
+                            flexShrink: 0
+                          }}></span>
+                          <span>{story.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Today in History Card */}
+                  <div style={{
+                    background: darkMode ? '#1f2937' : '#ffffff',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    marginBottom: '24px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                    textAlign: 'left',
+                    border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginBottom: '16px' 
+                    }}>
+                      <span style={{ fontSize: '20px' }}>📅</span>
+                      <h3 style={{ 
+                        fontSize: '16px', 
+                        fontWeight: '600',
+                        color: darkMode ? '#9ca3af' : '#6b7280',
+                        margin: 0,
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                      }}>TODAY IN HISTORY</h3>
                     </div>
 
-                    {/* Today in History */}
-                    <div className="history-section">
-                      <div className="history-header">
-                        <span className="history-icon">📅</span>
-                        <h3 className="section-title">TODAY IN HISTORY</h3>
-                      </div>
-                      <div className="history-list">
-                        <div className="history-item">
-                          <span className="history-year">1789</span>
-                          <span className="history-event">US Congress proposes Bill of Rights</span>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '12px' 
+                    }}>
+                      {[
+                        { year: '1789', event: 'US Congress proposes Bill of Rights' },
+                        { year: '1957', event: 'Nine students integrate Little Rock High School' },
+                        { year: '2001', event: 'Apple releases first iPod, revolutionizing music' }
+                      ].map((item, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: '16px', alignItems: 'baseline' }}>
+                          <span style={{ 
+                            fontSize: '18px', 
+                            fontWeight: '700',
+                            color: '#8b5cf6',
+                            minWidth: '60px'
+                          }}>{item.year}</span>
+                          <span style={{ 
+                            fontSize: '16px',
+                            color: darkMode ? '#d1d5db' : '#374151',
+                            lineHeight: '1.4'
+                          }}>{item.event}</span>
                         </div>
-                        <div className="history-item">
-                          <span className="history-year">1957</span>
-                          <span className="history-event">Nine students integrate Little Rock High School</span>
-                        </div>
-                        <div className="history-item">
-                          <span className="history-year">2001</span>
-                          <span className="history-event">Apple releases first iPod, revolutionizing music</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* View Alerts Button */}
-                    <button className="view-alerts-btn">
-                      <span className="alert-badge">🔔 23</span>
-                      <span className="alert-text">View 23 New Alerts</span>
-                    </button>
-
-                    {/* AI Briefing */}
-                    <div className="ai-briefing">
-                      <div className="ai-briefing-header">
-                        <span className="ai-icon">✨</span>
-                        <span className="ai-title">AI Briefing</span>
-                      </div>
-                      <p className="ai-subtitle">60-sec personalized summary</p>
-                      <button className="ai-play-btn">▶</button>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
+                  {/* View Alerts Button */}
+                  <button style={{
+                    width: '100%',
+                    padding: '16px 24px',
+                    background: 'linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    color: '#4c1d95',
+                    cursor: 'pointer',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'transform 0.2s'
+                  }} onClick={() => nextStory()}>
+                    <span style={{ fontSize: '24px' }}>🔔</span>
+                    <span style={{ position: 'relative' }}>
+                      <span style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-24px',
+                        background: '#ef4444',
+                        color: '#ffffff',
+                        borderRadius: '12px',
+                        padding: '2px 8px',
+                        fontSize: '14px',
+                        fontWeight: '700'
+                      }}>23</span>
+                      View 23 New Alerts
+                    </span>
+                  </button>
+
+                  {/* AI Briefing Card */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s'
+                  }} onClick={() => nextStory()}>
+                    <div>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        marginBottom: '4px'
+                      }}>
+                        <span style={{ fontSize: '20px' }}>✨</span>
+                        <h3 style={{ 
+                          fontSize: '18px', 
+                          fontWeight: '700',
+                          color: '#6b21a8',
+                          margin: 0
+                        }}>AI Briefing</h3>
+                      </div>
+                      <p style={{ 
+                        fontSize: '14px',
+                        color: '#7c3aed',
+                        margin: 0,
+                        fontWeight: '500'
+                      }}>60-sec personalized summary</p>
+                    </div>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      background: '#ffffff',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      color: '#8b5cf6'
+                    }}>▶</div>
+                  </div>
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
