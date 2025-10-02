@@ -81,22 +81,25 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           overflowY: 'auto',
           padding: '0 20px 32px'
         }}>
-          {/* Greeting Section */}
-          <div style={{ marginBottom: '16px' }}>
-            <h1 style={{
-              fontSize: '36px',
-              fontWeight: 'bold',
+          {/* Greeting Section - Refined Hierarchy */}
+          <div style={{ marginBottom: '16px', marginTop: '40px' }}>
+            {/* Main Headline - LARGER than greeting */}
+            <h1 style={{ fontSize: '32px', fontWeight: 800, color: 'white', marginBottom: '20px', lineHeight: '1.2', textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}>
+              {stories[currentStory].title}
+            </h1>
+            
+            {/* Greeting - SMALLER than headline */}
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: 700,
               marginBottom: '12px',
-              background: 'linear-gradient(to right, #3B82F6, #A855F7)',
+              background: 'linear-gradient(to right, #60a5fa, #a78bfa)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
             }}>
               {getGreeting()}
-            </h1>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', lineHeight: '1.3', padding: '0 8px', marginBottom: '8px' }}>
-              {stories[currentStory].title}
-            </p>
+            </h2>
           </div>
 
           {/* Story Navigation Dots */}
@@ -118,80 +121,105 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             ))}
           </div>
 
-          {/* Today's 10 News Widget */}
-          <div style={{ background: '#DBEAFE', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', padding: '16px', marginBottom: '12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>Today's 10 News to Know</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>2-minute daily summary</div>
+          {/* VERY GLASSY BLUE-TINTED BOX - Today's 10 News */}
+          <div 
+            style={{ 
+              background: 'rgba(59, 130, 246, 0.25)', 
+              backdropFilter: 'blur(25px)', 
+              WebkitBackdropFilter: 'blur(25px)',
+              border: '1px solid rgba(96, 165, 250, 0.3)', 
+              borderRadius: '16px', 
+              boxShadow: '0 12px 40px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)', 
+              padding: '20px', 
+              marginBottom: '40px', 
+              textAlign: 'center',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 16px 48px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.25)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+            }}
+          >
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'white', marginBottom: '6px', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}>Today's 10 News to Know</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.85)', fontWeight: 500 }}>2-minute daily summary</div>
           </div>
 
-          {/* Today's Briefing Section - NO GLASS CONTAINER, LARGER TYPOGRAPHY */}
-          <div style={{ marginBottom: '24px' }}>
-            {/* Main Briefing Title */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <span style={{ fontSize: '22px' }}>✨</span>
-              <span style={{ fontSize: '22px', fontWeight: 800, color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}>Today's Briefing</span>
+          {/* EDITORIAL-STYLE LAYOUT - NO BOXES, LARGER TYPOGRAPHY */}
+          <div style={{ marginBottom: '50px' }}>
+            {/* Editorial Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
+              <span style={{ fontSize: '26px' }}>✨</span>
+              <span style={{ fontSize: '26px', fontWeight: 800, color: 'white', textShadow: '0 2px 6px rgba(0, 0, 0, 0.3)', letterSpacing: '-0.5px' }}>Today's Briefing</span>
             </div>
 
-            {/* What's Happening */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '16px' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* What's Happening - Editorial Style */}
+            <div style={{ marginBottom: '40px' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '24px', borderBottom: '2px solid rgba(255, 255, 255, 0.2)', paddingBottom: '8px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {whatsHappening.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingLeft: '20px', position: 'relative' }}>
-                    <div style={{ position: 'absolute', left: 0, top: '6px', width: '8px', height: '8px', background: i === 0 ? '#EF4444' : 'white', borderRadius: '50%', flexShrink: 0, animation: i === 0 ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '16px', fontWeight: 600, lineHeight: '1.5', color: 'white', textShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>{item.text}</span>
+                  <div key={i} style={{ paddingLeft: '24px', position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: 0, top: '8px', width: '10px', height: '10px', background: i === 0 ? '#EF4444' : 'white', borderRadius: '50%', boxShadow: i === 0 ? '0 2px 8px rgba(239, 68, 68, 0.6)' : '0 2px 6px rgba(255, 255, 255, 0.4)', animation: i === 0 ? 'pulse 2s infinite' : 'none' }}></div>
+                    <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '1.6', color: 'white', textShadow: '0 1px 4px rgba(0, 0, 0, 0.3)' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Today in History */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(255, 255, 255, 0.8)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Today in History - Editorial Style */}
+            <div style={{ marginBottom: '40px' }}>
+              <div style={{ fontSize: '16px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '24px', borderBottom: '2px solid rgba(255, 255, 255, 0.2)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>📅</span>
                 <span>TODAY IN HISTORY</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
-                  <div key={i} style={{ paddingLeft: '20px', position: 'relative' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#a78bfa', marginBottom: '4px' }}>{event.year}</div>
-                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'white', lineHeight: '1.4', textShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}>{event.event}</div>
+                  <div key={i} style={{ paddingLeft: '24px', position: 'relative' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 900, color: '#c4b5fd', marginBottom: '6px', letterSpacing: '0.5px' }}>{event.year}</div>
+                    <div style={{ fontSize: '17px', fontWeight: 600, color: 'white', lineHeight: '1.5', textShadow: '0 1px 4px rgba(0, 0, 0, 0.3)' }}>{event.event}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Alerts Button - Glassmorphism */}
+            {/* Alerts Button - Strong Glassmorphism */}
             <button 
               style={{
                 width: '100%',
-                padding: '16px',
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '14px',
-                fontWeight: 700,
-                fontSize: '16px',
+                padding: '18px',
+                background: 'rgba(255, 255, 255, 0.18)',
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '16px',
+                fontWeight: 800,
+                fontSize: '17px',
                 cursor: 'pointer',
-                transition: 'all 0.3s',
-                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 12px 40px rgba(31, 38, 135, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
                 color: 'white'
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = '0 16px 48px rgba(31, 38, 135, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)';
                 e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 12px 40px rgba(31, 38, 135, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ fontSize: '20px' }}>🔔</span>
-                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '20px', height: '20px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'white' }}>{alertCount > 99 ? '99+' : alertCount}</span>
+                  <span style={{ fontSize: '22px' }}>🔔</span>
+                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '26px', height: '26px', background: '#EF4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 2s infinite', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.5)' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: 'white' }}>{alertCount > 99 ? '99+' : alertCount}</span>
                   </div>
                 </div>
                 <span>{alertCount} New {alertCount === 1 ? 'Alert' : 'Alerts'}</span>

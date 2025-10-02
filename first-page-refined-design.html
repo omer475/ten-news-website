@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - Refined First Page Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Header with glassmorphism */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 60px; /* More spacing before content */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+            font-size: 12px;
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Main Headline - LARGER than greeting */
+        .main-headline {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Greeting - SMALLER than headline, MORE SPACING from top */
+        .greeting {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            margin-top: 40px; /* EXTRA spacing from header */
+        }
+
+        .story-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 32px;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            width: 24px;
+            background: white;
+        }
+
+        /* VERY GLASSY BLUE-TINTED BOX for Today's 10 News */
+        .ten-news-glassy-box {
+            background: rgba(59, 130, 246, 0.25); /* Strong blue tint */
+            backdrop-filter: blur(25px); /* Extra strong blur */
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(96, 165, 250, 0.3); /* Blue-tinted border */
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            margin-bottom: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .ten-news-glassy-box:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 48px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .ten-news-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .ten-news-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+
+        /* EDITORIAL-STYLE TEXT LAYOUT - NO BOXES */
+        .editorial-section {
+            margin-bottom: 50px;
+        }
+
+        .editorial-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
+        }
+
+        .editorial-subheading {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 24px;
+            margin-top: 40px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .editorial-item {
+            margin-bottom: 20px;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .editorial-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 2px 6px rgba(255, 255, 255, 0.4);
+        }
+
+        .editorial-item.urgent::before {
+            background: #EF4444;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        .editorial-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            line-height: 1.6;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .history-item {
+            margin-bottom: 20px;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .history-year {
+            font-size: 16px;
+            font-weight: 900;
+            color: #c4b5fd;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .history-event {
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            line-height: 1.5;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Alerts button with strong glassmorphism */
+        .alerts-button {
+            width: 100%;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .alerts-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px rgba(31, 38, 135, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .alert-badge {
+            background: #EF4444;
+            color: white;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+
+        .scroll-hint {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 50px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* Info banner */
+        .info-banner {
+            background: rgba(16, 185, 129, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .info-banner strong {
+            color: #10b981;
+        }
+
+        .comparison {
+            background: rgba(239, 68, 68, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <strong>🎨 Design Update:</strong> Refined typography hierarchy with headline larger than greeting, very glassy blue box for 10 News, and editorial-style text layout without boxes.
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">TEN NEWS</div>
+        <div class="header-controls">
+            <button class="glass-button">LOGIN</button>
+            <button class="glass-button">SIGN UP</button>
+            <div class="dark-mode-toggle">🌙</div>
+        </div>
+    </div>
+
+    <!-- Greeting - SMALLER, MORE SPACING FROM TOP -->
+    <h2 class="greeting">Good evening!</h2>
+    
+    <!-- Main Headline - LARGER than greeting -->
+    <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
+
+    <!-- Story Navigation Dots -->
+    <div class="story-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <!-- VERY GLASSY BLUE-TINTED BOX - Today's 10 News -->
+    <div class="ten-news-glassy-box">
+        <div class="ten-news-title">Today's 10 News to Know</div>
+        <div class="ten-news-subtitle">2-minute daily summary</div>
+    </div>
+
+    <!-- Typography Comparison Box -->
+    <div class="comparison">
+        <strong>📏 Size Hierarchy:</strong><br>
+        → Main Headline: <strong>32px</strong> (Critical NATO...)<br>
+        → Greeting: <strong>24px</strong> (Good evening!)<br>
+        → Briefing Title: <strong>26px</strong> (Today's Briefing)<br>
+        → Section Headers: <strong>16px</strong> (WHAT'S HAPPENING)<br>
+        → Body Text: <strong>18px</strong> (Story items)
+    </div>
+
+    <!-- EDITORIAL-STYLE LAYOUT - NO BOXES -->
+    <div class="editorial-section">
+        <!-- Editorial Title -->
+        <div class="editorial-title">
+            <span>✨</span>
+            <span>Today's Briefing</span>
+        </div>
+
+        <!-- What's Happening Section - Editorial Style -->
+        <div class="editorial-subheading">WHAT'S HAPPENING</div>
+        
+        <div class="editorial-item urgent">
+            <div class="editorial-text">NATO-Russia tensions escalate in Eastern Europe</div>
+        </div>
+        
+        <div class="editorial-item">
+            <div class="editorial-text">Global markets surge 3% on trade deal optimism</div>
+        </div>
+        
+        <div class="editorial-item">
+            <div class="editorial-text">Tech giants announce joint AI safety initiative</div>
+        </div>
+
+        <!-- Today in History Section - Editorial Style -->
+        <div class="editorial-subheading">
+            <span style="margin-right: 8px;">📅</span>TODAY IN HISTORY
+        </div>
+        
+        <div class="history-item">
+            <div class="history-year">1789</div>
+            <div class="history-event">U.S. Constitution ratified by required states</div>
+        </div>
+        
+        <div class="history-item">
+            <div class="history-year">1957</div>
+            <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+        </div>
+        
+        <div class="history-item">
+            <div class="history-year">1991</div>
+            <div class="history-event">World Wide Web made publicly available</div>
+        </div>
+
+        <!-- Alerts Button - Strong Glassmorphism -->
+        <button class="alerts-button">
+            <span style="font-size: 22px;">🔔</span>
+            <div class="alert-badge">23</div>
+            <span>23 New Alerts</span>
+        </button>
+    </div>
+
+    <!-- Scroll Hint -->
+    <div class="scroll-hint">Scroll to continue ↓</div>
+
+    <!-- Design Notes -->
+    <div class="info-banner" style="margin-top: 50px; background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3);">
+        <strong>✨ Applied Changes:</strong>
+        <ul style="margin-top: 12px; padding-left: 20px; line-height: 1.9;">
+            <li><strong>Greeting moved lower:</strong> margin-top: 40px from header</li>
+            <li><strong>Greeting smaller:</strong> 24px (down from 36px)</li>
+            <li><strong>Headline LARGER:</strong> 32px (bigger than greeting)</li>
+            <li><strong>Clear hierarchy:</strong> Headline (32px) > Greeting (24px)</li>
+            <li><strong>Very glassy blue box:</strong> blur(25px) + rgba(59,130,246,0.25)</li>
+            <li><strong>Editorial text layout:</strong> No boxes, magazine-style presentation</li>
+            <li><strong>Generous spacing:</strong> 40-50px between major sections</li>
+            <li><strong>Typography hierarchy:</strong> Clear size differentiation</li>
+            <li><strong>Modern readable fonts:</strong> 16-18px body text</li>
+        </ul>
+    </div>
+
+    <div class="info-banner" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3);">
+        <strong>🎨 Glassmorphism Applied To:</strong>
+        <ul style="margin-top: 8px; padding-left: 20px; line-height: 1.8;">
+            <li>✅ Header (subtle glass)</li>
+            <li>✅ Today's 10 News box (VERY glassy blue)</li>
+            <li>✅ Alerts button (strong glass)</li>
+            <li>✅ All controls and buttons</li>
+        </ul>
+        <div style="margin-top: 12px;">
+            <strong>📝 Editorial Style (No Boxes):</strong>
+            <ul style="margin-top: 8px; padding-left: 20px; line-height: 1.8;">
+                <li>✅ Today's Briefing content</li>
+                <li>✅ What's Happening section</li>
+                <li>✅ Today in History section</li>
+                <li>✅ Clean, open typography layout</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.dark-mode-toggle').addEventListener('click', function() {
+            this.innerHTML = this.innerHTML === '🌙' ? '☀️' : '🌙';
+        });
+    </script>
+</body>
+</html>
