@@ -549,32 +549,32 @@ export default function Home() {
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
-
+    
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
       'good morning',
-      'good evening',
+      'good evening', 
       'good night',
       'good afternoon'
     ];
-
+    
     const lowerHeadline = headline.toLowerCase();
     let foundGreeting = null;
-
+    
     for (const pattern of greetingPatterns) {
       if (lowerHeadline.startsWith(pattern)) {
         foundGreeting = pattern;
         break;
       }
     }
-
+    
     if (foundGreeting) {
       // Replace AI's greeting with the correct time-based greeting
       const restOfText = headline.substring(foundGreeting.length).trim();
       return (
         <div style={{ textAlign: 'center' }}>
           {/* Greeting on top - larger */}
-          <div style={{
+          <div style={{ 
             fontSize: '80px',
             fontWeight: '900',
             lineHeight: '1',
@@ -584,9 +584,9 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</div>
-
+          
           {/* Rest of text below - smaller */}
-          <div style={{
+          <div style={{ 
             fontSize: '36px',
             fontWeight: '700',
             lineHeight: '1.2',
@@ -1512,7 +1512,6 @@ export default function Home() {
             font-size: 10px;
           }
         }
-
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
@@ -1632,16 +1631,7 @@ export default function Home() {
               }}
             >
               {story.type === 'opening' ? (
-                <div className="opening-container" style={{
-                  position: 'relative',
-                  background: darkMode
-                    ? 'radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.1) 0%, transparent 50%)'
-                    : 'radial-gradient(ellipse at top, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(ellipse at bottom, rgba(16, 185, 129, 0.06) 0%, transparent 50%)',
-                  minHeight: '100vh',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center'
-                }}>
+                <div className="opening-container">
                   {/* Swipeable Category Pills */}
                   <div style={{
                     display: 'flex',
@@ -1677,10 +1667,35 @@ export default function Home() {
                   <div style={{
                     maxWidth: '500px',
                     margin: '32px auto 24px',
-                    padding: '0 20px'
+                    padding: '20px',
+                    background: darkMode
+                      ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
+                      : 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 100%)',
+                    borderRadius: '16px',
+                    boxShadow: darkMode
+                      ? '0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2)'
+                      : '0 8px 32px rgba(59, 130, 246, 0.1), 0 4px 16px rgba(59, 130, 246, 0.08)',
+                    border: darkMode
+                      ? '1px solid rgba(148, 163, 184, 0.1)'
+                      : '1px solid rgba(59, 130, 246, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}>
+                    {/* Subtle texture overlay for premium feel */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: darkMode
+                        ? 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%)'
+                        : 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.02) 0%, transparent 50%)',
+                      pointerEvents: 'none'
+                    }}></div>
                     {/* What's Happening */}
-                    <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                       <h3 style={{
                         fontSize: '13px',
                         fontWeight: '700',
@@ -1718,13 +1733,13 @@ export default function Home() {
                               lineHeight: '1.4',
                               color: darkMode ? '#e5e7eb' : '#1f2937'
                             }}>{newsStory.title}</div>
-                          </div>
+                    </div>
                         ))}
-                      </div>
+                  </div>
                     </div>
 
                     {/* History - Simplified */}
-                    <div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
                       <h3 style={{
                         fontSize: '13px',
                         fontWeight: '700',
@@ -1734,7 +1749,7 @@ export default function Home() {
                         letterSpacing: '0.5px'
                       }}>On This Day</h3>
                       <div style={{
-                        display: 'flex',
+                    display: 'flex', 
                         flexDirection: 'column',
                         gap: '8px'
                       }}>
@@ -1745,21 +1760,21 @@ export default function Home() {
                           <div key={i} style={{
                             display: 'flex',
                             gap: '10px',
-                            alignItems: 'center',
-                            fontSize: '13px',
+                    alignItems: 'center',
+                    fontSize: '13px',
                             color: darkMode ? '#9ca3af' : '#6b7280'
-                          }}>
-                            <span style={{
+                  }}>
+                    <span style={{
                               fontWeight: '600',
                               color: '#8b5cf6'
                             }}>{item.year}</span>
                             <span>·</span>
                             <span>{item.event}</span>
-                          </div>
+                  </div>
                         ))}
                       </div>
                     </div>
-                  </div>
+                    </div>
 
                   <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
