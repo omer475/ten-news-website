@@ -1843,29 +1843,12 @@ export default function Home() {
                         ) : (
                           // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
-                            <div 
-                              className="timeline-container-desktop"
-                              style={{
-                                position: 'absolute',
-                                top: '0',
-                                left: '0',
-                                right: '0',
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: '16px',
-                                padding: '12px 20px',
-                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
-                                minHeight: '90px',
-                                maxHeight: '110px',
-                                overflowY: 'auto',
-                                zIndex: '10'
-                              }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
-                                width: '100%'
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column'
                               }}>
                                 <div style={{
                                   position: 'absolute',
@@ -1927,7 +1910,6 @@ export default function Home() {
                     </div>
                                 )}
                   </div>
-                </div>
                           )
                         )}
                         
