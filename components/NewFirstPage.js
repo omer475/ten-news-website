@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
+export default function NewFirstPage({ onContinue }) {
+  const darkMode = false; // Dark mode removed
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -70,24 +71,20 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
       `}</style>
       
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: 'transparent',
-        color: darkMode ? '#ffffff' : '#111827',
-        transition: 'all 0.5s',
-        overflow: 'hidden'
+        color: '#111827',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '12px 20px'
       }}>
-        <div style={{
-          height: '100vh',
-          overflowY: 'auto',
-          padding: '0 20px 32px'
-        }}>
-          {/* Greeting Section - UPDATED HIERARCHY */}
-          <div style={{ marginBottom: '30px', marginTop: '20px' }}>
+          {/* Greeting Section - COMPRESSED FOR 100VH */}
+          <div style={{ marginBottom: '12px', flexShrink: 0 }}>
             <h2 style={{
-              fontSize: '28px',
+              fontSize: '24px',
               fontWeight: '700',
-              marginBottom: '16px',
-              marginTop: '8px',
+              marginBottom: '10px',
               background: 'linear-gradient(to right, #3B82F6, #A855F7)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -95,58 +92,62 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1.2', color: 'white', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
               {stories[currentStory].title}
             </h1>
           </div>
 
-          {/* Today's Briefing - GLASSMORPHISM BOX (SAME AS TIMELINE/DETAILS) */}
+          {/* Today's Briefing - ADVANCED GLASSMORPHISM BOX */}
           <div style={{ 
-            background: 'rgba(255, 255, 255, 0.15)', 
-            backdropFilter: 'blur(20px)', 
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)', 
-            borderRadius: '16px', 
-            padding: '20px', 
-            marginBottom: '30px',
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))', 
+            backdropFilter: 'blur(2px)', 
+            WebkitBackdropFilter: 'blur(2px)',
+            border: '1px solid rgba(255, 255, 255, 0.5)', 
+            borderRadius: '20px', 
+            padding: '14px', 
+            marginBottom: '12px',
+            boxShadow: 'inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05), inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5), 0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2), 0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2)',
+            position: 'relative',
+            flex: 1,
+            overflowY: 'auto',
+            minHeight: 0
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '18px' }}>✨</span>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>✨</span>
+                <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Live</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <div style={{ width: '5px', height: '5px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>Live</span>
               </div>
             </div>
 
-            {/* What's Happening */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* What's Happening - BLACK TEXT */}
+            <div style={{ marginBottom: '12px', position: 'relative', zIndex: 2 }}>
+              <div style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#374151', marginBottom: '8px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {whatsHappening.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
-                    <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{item.text}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '2px' }}>
+                    <div style={{ width: '4px', height: '4px', background: item.color, borderRadius: '50%', marginTop: '5px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: '1.4', color: '#000000' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Today in History */}
-            <div style={{ marginBottom: 0 }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '12px' }}>📅</span>
+            {/* Today in History - BLACK TEXT */}
+            <div style={{ marginBottom: 0, position: 'relative', zIndex: 2 }}>
+              <div style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#374151', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px' }}>📅</span>
                 TODAY IN HISTORY
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{event.event}</span>
+                  <div key={i} style={{ display: 'flex', gap: '8px', paddingLeft: '2px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '700', color: '#7c3aed', minWidth: '40px' }}>{event.year}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: '1.4', color: '#000000' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
@@ -154,10 +155,9 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           </div>
 
           {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
+          <div style={{ textAlign: 'center', fontSize: '9px', color: 'rgba(255, 255, 255, 0.5)', padding: '8px 0', letterSpacing: '1px', flexShrink: 0 }}>
             SCROLL TO CONTINUE ↓
           </div>
-        </div>
       </div>
     </>
   );
