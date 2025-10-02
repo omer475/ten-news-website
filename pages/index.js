@@ -1040,20 +1040,25 @@ export default function Home() {
         /* Authentication Styles */
         .auth-btn {
           padding: 8px 16px;
-          background: transparent;
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.5px;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.3s ease;
           text-transform: uppercase;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .auth-btn:hover {
-          background: ${darkMode ? '#374151' : '#f9fafb'};
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .user-welcome {

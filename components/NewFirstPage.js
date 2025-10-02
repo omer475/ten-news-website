@@ -67,6 +67,33 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
+          border-radius: 16px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-card-dark {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 16px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-button {
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          transition: all 0.3s ease;
+        }
+        .glass-button:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-1px);
+        }
       `}</style>
       
       <div style={{
@@ -119,13 +146,13 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           </div>
 
           {/* Today's 10 News Widget */}
-          <div style={{ background: '#DBEAFE', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', padding: '16px', marginBottom: '12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>Today's 10 News to Know</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>2-minute daily summary</div>
+          <div className={darkMode ? 'glass-card-dark' : 'glass-card'} style={{ padding: '16px', marginBottom: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: darkMode ? '#ffffff' : '#1e40af', marginBottom: '4px' }}>Today's 10 News to Know</div>
+            <div style={{ fontSize: '12px', color: darkMode ? 'rgba(255, 255, 255, 0.8)' : '#64748b' }}>2-minute daily summary</div>
           </div>
 
           {/* Today's Briefing Card */}
-          <div style={{ background: darkMode ? '#1F2937' : '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', padding: '16px', marginBottom: '12px', position: 'relative', overflow: 'hidden' }}>
+          <div className={darkMode ? 'glass-card-dark' : 'glass-card'} style={{ padding: '16px', marginBottom: '12px', position: 'relative', overflow: 'hidden' }}>
             {/* Decorative gradients */}
             <div style={{ position: 'absolute', top: 0, right: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1), transparent)', filter: 'blur(40px)' }}></div>
             <div style={{ position: 'absolute', bottom: 0, left: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent)', filter: 'blur(40px)' }}></div>
