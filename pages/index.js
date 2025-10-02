@@ -678,7 +678,7 @@ export default function Home() {
         .header-right {
           display: flex;
           align-items: center;
-          gap: 20px;
+          gap: 8px;
           font-size: 13px;
           font-weight: 500;
         }
@@ -1512,24 +1512,49 @@ export default function Home() {
                 <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
                 <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
                 {currentIndex === 0 && (
-                  <button
+                  <div
                     onClick={toggleDarkMode}
                     style={{
-                      marginLeft: '8px',
-                      padding: '6px',
-                      borderRadius: '50%',
-                      background: darkMode ? '#374151' : '#E5E7EB',
-                      border: 'none',
+                      marginLeft: '4px',
+                      position: 'relative',
+                      width: '50px',
+                      height: '24px',
+                      borderRadius: '24px',
+                      background: darkMode
+                        ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%)'
+                        : 'linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.8) 100%)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(8px)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                       cursor: 'pointer',
-                      transition: 'all 0.3s',
+                      transition: 'all 0.3s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      padding: '0 2px'
                     }}
                     aria-label="Toggle dark mode"
                   >
-                    {darkMode ? '🌙' : '☀️'}
-                  </button>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: darkMode
+                          ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
+                          : 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+                        transition: 'all 0.3s ease',
+                        transform: darkMode ? 'translateX(26px)' : 'translateX(0)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '10px'
+                      }}
+                    >
+                      {darkMode ? '🌙' : '☀️'}
+                    </div>
+                  </div>
                 )}
               </>
             )}
