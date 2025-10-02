@@ -1755,12 +1755,13 @@ export default function Home() {
                           className="news-meta" 
                         style={{ 
                           position: 'relative', 
-                          overflow: showTimeline[index] ? 'hidden' : 'visible',
-                          overflowY: showTimeline[index] ? 'auto' : 'visible',
+                          overflow: 'visible', 
                           cursor: 'pointer',
                           minHeight: '90px',
-                          height: showTimeline[index] ? '270px' : '90px',
-                          transition: 'height 0.3s ease'
+                          height: '90px',
+                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
+                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
+                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1843,53 +1844,93 @@ export default function Home() {
                           );
                           })
                         ) : (
-                          // Show Timeline Only - Rebuilt card-based layout
-                          story.timeline && story.timeline.map((event, idx) => (
-                            <div key={idx} style={{
-                              background: 'rgba(255, 255, 255, 0.08)',
-                              backdropFilter: 'blur(10px)',
-                              WebkitBackdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              borderRadius: '12px',
-                              padding: '16px',
-                              marginBottom: '12px',
-                              height: '110px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              transition: 'all 0.3s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                              e.currentTarget.style.transform = 'translateX(4px)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                              e.currentTarget.style.transform = 'translateX(0)';
-                            }}
-                            >
+                          // Show Timeline Only - Starts at same level, extends downward
+                          story.timeline && (
+                            <div 
+                              className="timeline-container-desktop"
+                              style={{
+                                position: 'absolute',
+                                top: '0',
+                                left: '0',
+                                right: '0',
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '16px',
+                                padding: '12px 20px',
+                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                                minHeight: '90px',
+                                maxHeight: '110px',
+                                overflowY: 'auto',
+                                zIndex: '10'
+                              }}>
                               <div style={{
-                                fontSize: '13px',
-                                fontWeight: '700',
-                                color: '#60a5fa',
-                                marginBottom: '8px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                              }}>{event.date}</div>
-                              <div style={{
-                                fontSize: '14px',
-                                fontWeight: '700',
-                                color: 'white',
-                                marginBottom: '6px',
-                                lineHeight: '1.3'
-                              }}>{event.event}</div>
-                              <div style={{
-                                fontSize: '12px',
-                                color: 'rgba(255, 255, 255, 0.8)',
-                                lineHeight: '1.4',
-                                flexGrow: 1
-                              }}>{event.description || ''}</div>
-                            </div>
-                          ))
+                                position: 'relative',
+                                paddingLeft: '20px',
+                                width: '100%'
+                              }}>
+                                <div style={{
+                                  position: 'absolute',
+                                  left: '6px',
+                                  top: '8px',
+                                  bottom: '8px',
+                                  width: '2px',
+                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)',
+                                  zIndex: '0'
+                                }}></div>
+                                {story.timeline.map((event, idx) => (
+                                  <div key={idx} style={{
+                                    position: 'relative',
+                                    marginBottom: '8px',
+                                    paddingLeft: '20px',
+                                    minHeight: '32px'
+                                  }}>
+                                    <div style={{
+                                      position: 'absolute',
+                                      left: '-14px',
+                                      top: '6px',
+                                      width: '10px',
+                                      height: '10px',
+                                      borderRadius: '50%',
+                                      background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
+                                      border: '2px solid #3b82f6',
+                                      zIndex: '2'
+                                    }}></div>
+                                    <div style={{
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                      color: '#3b82f6',
+                                      marginBottom: '3px'
+                                    }}>{event.date}</div>
+                                    <div style={{
+                                      fontSize: '12px',
+                                      color: darkMode ? '#e2e8f0' : '#1e293b',
+                                      lineHeight: '1.3'
+                                    }}>{event.event}</div>
+                      </div>
+                                ))}
+                                
+                                {/* Scroll hint at bottom */}
+                                {story.timeline.length > 3 && (
+                                  <div style={{
+                                    position: 'sticky',
+                                    bottom: '0',
+                                    textAlign: 'center',
+                                    fontSize: '9px',
+                                    color: '#94a3b8',
+                                    background: darkMode ? 'linear-gradient(transparent, #000000)' : 'linear-gradient(transparent, #ffffff)',
+                                    padding: '8px 0 4px',
+                                    fontWeight: '500',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                  }}>
+                                    ↓ SCROLL FOR MORE ↓
+                    </div>
+                                )}
+                  </div>
+                </div>
+                          )
                         )}
                         
                   </div>
