@@ -678,7 +678,7 @@ export default function Home() {
         .header-right {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 4px;
           font-size: 13px;
           font-weight: 500;
         }
@@ -1515,7 +1515,7 @@ export default function Home() {
                   <div
                     onClick={toggleDarkMode}
                     style={{
-                      marginLeft: '4px',
+                      marginLeft: '2px',
                       position: 'relative',
                       width: '50px',
                       height: '24px',
@@ -1552,7 +1552,33 @@ export default function Home() {
                         fontSize: '10px'
                       }}
                     >
-                      {darkMode ? '🌙' : '☀️'}
+                      {darkMode ? (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="url(#moon-gradient)" opacity="0.9"/>
+                          <defs>
+                            <linearGradient id="moon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:1}} />
+                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:1}} />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      ) : (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="4" fill="url(#sun-gradient)"/>
+                          <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414"
+                            stroke="url(#sun-stroke-gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+                          <defs>
+                            <linearGradient id="sun-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:1}} />
+                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:1}} />
+                            </linearGradient>
+                            <linearGradient id="sun-stroke-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:0.8}} />
+                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:0.8}} />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      )}
                     </div>
                   </div>
                 )}
