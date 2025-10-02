@@ -816,12 +816,6 @@ export default function Home() {
           min-height: calc(100vh - 140px);
         }
 
-        /* Hover effects for story cards */
-        .story-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-
         .date-header {
           font-size: 12px;
           font-weight: 600;
@@ -1637,231 +1631,127 @@ export default function Home() {
               }}
             >
               {story.type === 'opening' ? (
-                <div style={{ 
-                  height: 'calc(100vh - 60px)',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: '24px',
-                  maxWidth: '1400px',
-                  margin: '0 auto'
-                }}>
-                  {/* Top Section - Greeting + Date */}
-                  <div style={{ 
-                    textAlign: 'center', 
-                    marginBottom: '24px'
-                  }}>
-                    <div style={{ 
-                      fontSize: '42px',
-                      fontWeight: '900',
-                      lineHeight: '1',
-                      marginBottom: '8px',
-                      background: getGreetingGradient(),
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    }}>{getGreetingText()}</div>
-                    <div style={{ 
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      color: darkMode ? '#9ca3af' : '#6b7280',
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px'
-                    }}>{story.date}</div>
+                <div className="opening-container">
+                  {/* Swipeable Category Pills */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    overflowX: 'auto',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    marginBottom: '32px',
+                    padding: '0 20px'
+                  }} className="category-pills">
+                    {['World', 'Business', 'Tech', 'Sports', 'Health', 'Climate', 'Science'].map((cat, idx) => (
+                      <div key={idx} style={{
+                        padding: '8px 20px',
+                        background: darkMode ? '#1f2937' : '#f1f5f9',
+                        borderRadius: '20px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: darkMode ? '#d1d5db' : '#4b5563',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                      }}>{cat}</div>
+                    ))}
                   </div>
 
-                  {/* Main Content Grid - Compact to fit screen */}
+                  <h1 className="main-headline">
+                    {renderGreeting(story.headline)}
+                  </h1>
+
+                  {/* Today's Briefing - Compact Modern News App Style */}
                   <div style={{
-                    flex: 1,
-                    display: 'grid',
-                    gridTemplateColumns: '2fr 1fr',
-                    gap: '20px',
-                    overflow: 'hidden'
+                    maxWidth: '500px',
+                    margin: '32px auto 24px',
+                    padding: '0 20px'
                   }}>
-                    {/* Left Column - Top Stories Grid */}
+                    {/* What's Happening */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <h3 style={{
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: darkMode ? '#9ca3af' : '#6b7280',
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>Today</h3>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px'
+                      }}>
+                        {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
+                          <div key={i} style={{
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'flex-start',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(249, 250, 251, 0.5)',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              color: ['#dc2626', '#f97316', '#3b82f6'][i],
+                              minWidth: '18px',
+                              marginTop: '2px'
+                            }}>0{i + 1}</div>
+                            <div style={{
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              lineHeight: '1.4',
+                              color: darkMode ? '#e5e7eb' : '#1f2937'
+                            }}>{newsStory.title}</div>
+                    </div>
+                        ))}
+                  </div>
+                    </div>
+
+                    {/* History - Simplified */}
                     <div>
                       <h3 style={{
-                        fontSize: '16px',
-                        fontWeight: '800',
-                        color: darkMode ? '#ffffff' : '#0f172a',
-                        marginBottom: '16px',
-                        letterSpacing: '-0.3px'
-                      }}>Top Stories</h3>
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: darkMode ? '#9ca3af' : '#6b7280',
+                        marginBottom: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>On This Day</h3>
                       <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
-                        gap: '12px',
-                        height: 'calc(100% - 40px)'
+                    display: 'flex', 
+                        flexDirection: 'column',
+                        gap: '8px'
                       }}>
-                        {stories.filter(s => s.type === 'news').slice(0, 4).map((newsStory, i) => (
+                        {[
+                          { year: '1969', event: 'Apollo 11 moon landing' },
+                          { year: '2007', event: 'First iPhone released' }
+                        ].map((item, i) => (
                           <div key={i} style={{
-                            background: darkMode ? '#1f2937' : '#ffffff',
-                            borderRadius: '12px',
-                            padding: '16px',
-                            border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
                             display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden'
-                          }} onClick={() => goToStory(i + 1)}>
-                            <div style={{
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              color: ['#dc2626', '#f97316', '#3b82f6', '#10b981'][i],
-                              textTransform: 'uppercase',
-                              marginBottom: '8px',
-                              letterSpacing: '0.5px'
-                            }}>{newsStory.emoji} {newsStory.category}</div>
-                            <h4 style={{
-                              fontSize: '15px',
-                              fontWeight: '700',
-                              lineHeight: '1.3',
-                              marginBottom: '8px',
-                              color: darkMode ? '#ffffff' : '#0f172a',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: '2',
-                              WebkitBoxOrient: 'vertical'
-                            }}>{newsStory.title}</h4>
-                            <p style={{
-                              fontSize: '12px',
-                              lineHeight: '1.4',
-                              color: darkMode ? '#9ca3af' : '#6b7280',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: '2',
-                              WebkitBoxOrient: 'vertical',
-                              flex: 1
-                            }}>{newsStory.summary?.substring(0, 80)}...</p>
-                          </div>
+                            gap: '10px',
+                    alignItems: 'center',
+                    fontSize: '13px',
+                            color: darkMode ? '#9ca3af' : '#6b7280'
+                  }}>
+                    <span style={{
+                              fontWeight: '600',
+                              color: '#8b5cf6'
+                            }}>{item.year}</span>
+                            <span>·</span>
+                            <span>{item.event}</span>
+                  </div>
                         ))}
                       </div>
                     </div>
-
-                    {/* Right Column - More Stories + History */}
-                    <div style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '20px'
-                    }}>
-                      {/* More Headlines */}
-                      <div>
-                        <h3 style={{
-                          fontSize: '16px',
-                          fontWeight: '800',
-                          color: darkMode ? '#ffffff' : '#0f172a',
-                          marginBottom: '12px',
-                          letterSpacing: '-0.3px'
-                        }}>More Headlines</h3>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '10px'
-                        }}>
-                          {stories.filter(s => s.type === 'news').slice(4, 7).map((newsStory, i) => (
-                            <div key={i} style={{
-                              padding: '12px',
-                              background: darkMode ? '#1f2937' : '#f9fafb',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                              border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                            }} onClick={() => goToStory(i + 5)}>
-                              <div style={{
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                lineHeight: '1.3',
-                                color: darkMode ? '#e5e7eb' : '#1f2937',
-                                marginBottom: '4px'
-                              }}>{newsStory.title}</div>
-                              <div style={{
-                                fontSize: '10px',
-                                color: darkMode ? '#9ca3af' : '#6b7280'
-                              }}>{newsStory.category}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Today in History - Compact */}
-                      <div style={{
-                        background: darkMode ? '#1f2937' : '#ffffff',
-                        borderRadius: '12px',
-                        padding: '16px',
-                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                      }}>
-                        <h3 style={{
-                          fontSize: '13px',
-                          fontWeight: '700',
-                          color: darkMode ? '#9ca3af' : '#6b7280',
-                          marginBottom: '12px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>On This Day</h3>
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px'
-                        }}>
-                          {[
-                            { year: '1969', event: 'Moon landing' },
-                            { year: '2007', event: 'First iPhone' }
-                          ].map((item, i) => (
-                            <div key={i} style={{
-                              fontSize: '12px',
-                              color: darkMode ? '#9ca3af' : '#6b7280',
-                              display: 'flex',
-                              gap: '8px'
-                            }}>
-                              <span style={{ fontWeight: '700', color: '#8b5cf6' }}>{item.year}</span>
-                              <span>{item.event}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div style={{
-                        background: darkMode ? '#1f2937' : '#ffffff',
-                        borderRadius: '12px',
-                        padding: '16px',
-                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                        textAlign: 'center'
-                      }}>
-                        <div style={{
-                          fontSize: '32px',
-                          fontWeight: '800',
-                          color: '#3b82f6',
-                          lineHeight: '1'
-                        }}>10</div>
-                        <div style={{
-                          fontSize: '11px',
-                          color: darkMode ? '#9ca3af' : '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          marginTop: '4px'
-                        }}>Stories Today</div>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* Bottom Navigation Hint */}
-                  <div style={{
-                    textAlign: 'center',
-                    paddingTop: '16px',
-                    borderTop: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                  }}>
-                    <div style={{
-                      fontSize: '11px',
-                      color: '#94a3b8',
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px',
-                      fontWeight: '600'
-                    }}>↓ Scroll for stories</div>
-                  </div>
+                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
