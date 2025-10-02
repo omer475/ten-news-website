@@ -130,8 +130,8 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             marginBottom: '12px', 
             textAlign: 'center' 
           }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', marginBottom: '4px', textShadow: '0 2px 4px rgba(0, 0, 0, 0.15)' }}>Today's 10 News to Know</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.85)' }}>2-minute daily summary</div>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>Today's 10 News to Know</div>
+            <div style={{ fontSize: '12px', color: '#475569' }}>2-minute daily summary</div>
           </div>
 
           {/* Today's Briefing Card - Premium Glassmorphism */}
@@ -155,7 +155,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', position: 'relative', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '16px' }}>✨</span>
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'white', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</span>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1f2937' }}>Today's Briefing</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
@@ -175,12 +175,12 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
               position: 'relative', 
               zIndex: 10 
             }}>
-              <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.75, marginBottom: '8px', color: 'white' }}>WHAT'S HAPPENING</div>
+              <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.9, marginBottom: '8px', color: '#1f2937' }}>WHAT'S HAPPENING</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {whatsHappening.map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                     <div style={{ width: '4px', height: '4px', background: item.color, borderRadius: '50%', marginTop: '6px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4', color: 'white' }}>{item.text}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4', color: '#1f2937' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
@@ -200,13 +200,13 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                 <span style={{ fontSize: '12px' }}>📅</span>
-                <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.75, color: 'white' }}>TODAY IN HISTORY</div>
+                <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.9, color: '#1f2937' }}>TODAY IN HISTORY</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
                   <div key={i} style={{ display: 'flex', gap: '8px' }}>
-                    <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#A855F7' }}>{event.year}</span>
-                    <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4', color: 'white' }}>{event.event}</span>
+                    <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#7c3aed' }}>{event.year}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4', color: '#1f2937' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
@@ -228,7 +228,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 transition: 'all 0.3s',
                 position: 'relative',
                 zIndex: 10,
-                color: 'white',
+                color: '#1f2937',
                 boxShadow: '0 4px 16px rgba(31, 38, 135, 0.1)'
               }}
               onMouseOver={(e) => { 
@@ -269,7 +269,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           }}>
             <span style={{ fontSize: '16px' }}>👥</span>
             <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981' }}>{readerCount.toLocaleString()}</span>
-            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)' }}>reading now</span>
+            <span style={{ fontSize: '12px', color: '#475569' }}>reading now</span>
             <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
           </div>
 
