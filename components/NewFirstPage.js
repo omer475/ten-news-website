@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
+export default function NewFirstPage({ onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -72,7 +72,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
       <div style={{
         minHeight: '100vh',
         background: 'transparent',
-        color: darkMode ? '#ffffff' : '#111827',
+        color: '#111827',
         transition: 'all 0.5s',
         overflow: 'hidden'
       }}>
@@ -95,22 +95,15 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
               {stories[currentStory].title}
             </h1>
           </div>
 
 
-          {/* Today's Briefing - GLASSMORPHISM BOX (SAME AS TIMELINE/DETAILS) */}
+          {/* Today's Briefing - NO GLASS BOX */}
           <div style={{ 
-            background: 'rgba(255, 255, 255, 0.15)', 
-            backdropFilter: 'blur(20px)', 
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)', 
-            borderRadius: '16px', 
-            padding: '20px', 
-            marginBottom: '30px',
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+            marginBottom: '30px'
           }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
