@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue, onAuthModal }) {
+export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -90,8 +90,8 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue, onA
               <button
                 onClick={() => onAuthModal('login')}
                 style={{ padding: '6px 12px', borderRadius: '6px', background: 'transparent', border: '1px solid #3B82F6', color: '#3B82F6', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s' }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#3B82F6', e.currentTarget.style.color = 'white'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'transparent', e.currentTarget.style.color = '#3B82F6'}
+                onMouseOver={(e) => { e.currentTarget.style.background = '#3B82F6'; e.currentTarget.style.color = 'white'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#3B82F6'; }}
               >
                 LOGIN
               </button>
