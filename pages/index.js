@@ -1632,8 +1632,6 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <div className="opening-container">
-                  <div className="date-header">{story.date}</div>
-                  
                   {/* Swipeable Category Pills */}
                   <div style={{
                     display: 'flex',
@@ -1678,70 +1676,42 @@ export default function Home() {
                     margin: '40px auto'
                   }}>
                     {/* What's Happening */}
-                    <div style={{ marginBottom: '32px' }}>
+                    <div style={{ marginBottom: '24px' }}>
                       <h3 style={{
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        color: darkMode ? '#ffffff' : '#1f2937',
-                        marginBottom: '16px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px'
+                        fontSize: '18px',
+                        fontWeight: '800',
+                        color: darkMode ? '#ffffff' : '#0f172a',
+                        marginBottom: '20px',
+                        letterSpacing: '-0.5px'
                       }}>What's Happening</h3>
-                      {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
-                        <div key={i} style={{
-                          display: 'flex',
-                          gap: '12px',
-                          marginBottom: '12px',
-                          alignItems: 'flex-start'
-                        }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: ['#dc2626', '#f97316', '#3b82f6'][i],
-                            marginTop: '6px',
-                            flexShrink: 0
-                          }}></div>
-                          <div style={{
-                            fontSize: '14px',
-                            lineHeight: '1.5',
-                            color: darkMode ? '#d1d5db' : '#4b5563'
-                          }}>{newsStory.title}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Alerts Button */}
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      marginBottom: '24px'
-                    }}>
-                      <button style={{
-                        background: '#dc2626',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '24px',
-                        padding: '12px 24px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        transition: 'all 0.2s'
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px'
                       }}>
-                        🔔 Alerts
-                        <span style={{
-                          position: 'absolute',
-                          top: '-4px',
-                          right: '-4px',
-                          background: '#ef4444',
-                          color: '#ffffff',
-                          borderRadius: '12px',
-                          padding: '2px 6px',
-                          fontSize: '10px',
-                          fontWeight: '700'
-                        }}>3</span>
-                      </button>
+                        {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
+                          <div key={i} style={{
+                            padding: '16px',
+                            background: darkMode ? '#111827' : '#f9fafb',
+                            borderRadius: '12px',
+                            borderLeft: `3px solid ${['#dc2626', '#f97316', '#3b82f6'][i]}`,
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{
+                              fontSize: '15px',
+                              fontWeight: '600',
+                              lineHeight: '1.4',
+                              color: darkMode ? '#ffffff' : '#1f2937'
+                            }}>{newsStory.title}</div>
+                            <div style={{
+                              fontSize: '12px',
+                              color: darkMode ? '#9ca3af' : '#6b7280',
+                              marginTop: '6px'
+                            }}>{newsStory.category}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Today in History */}
