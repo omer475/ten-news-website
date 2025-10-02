@@ -70,7 +70,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
       `}</style>
       
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: 'transparent',
         color: darkMode ? '#ffffff' : '#111827',
         transition: 'all 0.5s',
@@ -79,14 +79,16 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
         <div style={{
           height: '100vh',
           overflowY: 'auto',
-          padding: '0 20px 32px'
+          padding: '12px 20px',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           {/* Greeting Section - UPDATED HIERARCHY */}
-          <div style={{ marginBottom: '30px', marginTop: '20px' }}>
+          <div style={{ marginBottom: '20px', marginTop: '10px', flexShrink: 0 }}>
             <h2 style={{
               fontSize: '28px',
               fontWeight: '700',
-              marginBottom: '16px',
+              marginBottom: '12px',
               marginTop: '8px',
               background: 'linear-gradient(to right, #3B82F6, #A855F7)',
               WebkitBackgroundClip: 'text',
@@ -95,13 +97,13 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
+            <h1 style={{ fontSize: '34px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : 'white', marginBottom: '12px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
               {stories[currentStory].title}
             </h1>
           </div>
 
           {/* Story Navigation Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '20px', flexShrink: 0 }}>
             {stories.map((_, i) => (
               <button
                 key={i}
@@ -109,7 +111,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 style={{
                   width: i === currentStory ? '24px' : '4px',
                   height: '4px',
-                  background: i === currentStory ? 'linear-gradient(to right, #3B82F6, #A855F7)' : '#D1D5DB',
+                  background: i === currentStory ? 'linear-gradient(to right, #3B82F6, #A855F7)' : 'rgba(255, 255, 255, 0.3)',
                   borderRadius: '9999px',
                   transition: 'all 0.3s',
                   border: 'none',
@@ -126,62 +128,55 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.2)', 
             borderRadius: '16px', 
-            padding: '20px', 
-            marginBottom: '30px',
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
+            padding: '18px', 
+            marginBottom: '20px',
+            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+            flexShrink: 0
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '18px' }}>✨</span>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
+                <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Live</span>
+                <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>Live</span>
               </div>
             </div>
 
-            {/* What's Happening */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* What's Happening - READABLE IN BOTH MODES */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {whatsHappening.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
-                    <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{item.text}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '4px' }}>
+                    <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '6px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                    <span style={{ fontSize: '12px', fontWeight: 500, lineHeight: '1.5', color: darkMode ? 'white' : '#1f2937' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Today in History */}
+            {/* Today in History - READABLE IN BOTH MODES */}
             <div style={{ marginBottom: 0 }}>
-              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '12px' }}>📅</span>
                 TODAY IN HISTORY
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{event.event}</span>
+                  <div key={i} style={{ display: 'flex', gap: '10px', paddingLeft: '4px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '700', color: '#A855F7', minWidth: '40px' }}>{event.year}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 500, lineHeight: '1.5', color: darkMode ? 'white' : '#1f2937' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Live Reader Counter */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ fontSize: '16px' }}>👥</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981' }}>{readerCount.toLocaleString()}</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>reading now</span>
-            <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-          </div>
-
           {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
+          <div style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', marginTop: 'auto', paddingTop: '15px', paddingBottom: '10px', letterSpacing: '1px', flexShrink: 0 }}>
             SCROLL TO CONTINUE ↓
           </div>
         </div>
