@@ -816,6 +816,12 @@ export default function Home() {
           min-height: calc(100vh - 140px);
         }
 
+        /* Hover effects for story cards */
+        .story-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
         .date-header {
           font-size: 12px;
           font-weight: 600;
@@ -1631,152 +1637,202 @@ export default function Home() {
               }}
             >
               {story.type === 'opening' ? (
-                <div className="opening-container">
-                  {/* Swipeable Category Pills */}
-                  <div style={{
-                    display: 'flex',
-                    gap: '10px',
-                    overflowX: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                    marginBottom: '32px',
-                    padding: '0 20px'
-                  }} className="category-pills">
-                    {['World', 'Business', 'Tech', 'Sports', 'Health', 'Climate', 'Science'].map((cat, idx) => (
-                      <div key={idx} style={{
-                        padding: '8px 20px',
-                        background: darkMode ? '#1f2937' : '#f1f5f9',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: darkMode ? '#d1d5db' : '#4b5563',
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                      }}>{cat}</div>
-                    ))}
+                <div style={{ 
+                  maxWidth: '1200px', 
+                  margin: '0 auto', 
+                  padding: '40px 24px',
+                  minHeight: 'calc(100vh - 140px)'
+                }}>
+                  {/* Hero Section with Greeting */}
+                  <div style={{ 
+                    textAlign: 'center', 
+                    marginBottom: '48px',
+                    paddingTop: '20px'
+                  }}>
+                    <div style={{ 
+                      fontSize: '56px',
+                      fontWeight: '900',
+                      lineHeight: '1',
+                      marginBottom: '12px',
+                      background: getGreetingGradient(),
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}>{getGreetingText()}</div>
+                    <div style={{ 
+                      fontSize: '18px',
+                      fontWeight: '500',
+                      color: darkMode ? '#9ca3af' : '#6b7280',
+                      marginBottom: '32px'
+                    }}>Your daily global news digest</div>
                   </div>
 
-                  <h1 className="main-headline">
-                    {renderGreeting(story.headline)}
-                  </h1>
-
-                  {/* Today's Briefing - Compact Modern News App Style */}
-                  <div style={{
-                    maxWidth: '500px',
-                    margin: '32px auto 24px',
-                    padding: '20px',
-                    background: darkMode
-                      ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
-                      : 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 100%)',
-                    borderRadius: '16px',
-                    boxShadow: darkMode
-                      ? '0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2)'
-                      : '0 8px 32px rgba(59, 130, 246, 0.1), 0 4px 16px rgba(59, 130, 246, 0.08)',
-                    border: darkMode
-                      ? '1px solid rgba(148, 163, 184, 0.1)'
-                      : '1px solid rgba(59, 130, 246, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    {/* Subtle texture overlay for premium feel */}
+                  {/* Featured Story - Large Card */}
+                  {stories.filter(s => s.type === 'news')[0] && (
                     <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: darkMode
-                        ? 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%)'
-                        : 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.02) 0%, transparent 50%)',
-                      pointerEvents: 'none'
-                    }}></div>
-                    {/* What's Happening */}
-                    <div style={{ marginBottom: '20px', position: 'relative', zIndex: 1 }}>
-                      <h3 style={{
-                        fontSize: '13px',
+                      background: darkMode ? '#1f2937' : '#ffffff',
+                      borderRadius: '16px',
+                      padding: '32px',
+                      marginBottom: '40px',
+                      border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s'
+                    }} onClick={() => goToStory(1)}>
+                      <div style={{
+                        display: 'inline-block',
+                        padding: '6px 12px',
+                        background: 'rgba(220, 38, 38, 0.1)',
+                        color: '#dc2626',
+                        borderRadius: '6px',
+                        fontSize: '11px',
                         fontWeight: '700',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '12px',
                         textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>Today</h3>
+                        letterSpacing: '0.5px',
+                        marginBottom: '16px'
+                      }}>{stories.filter(s => s.type === 'news')[0].emoji} {stories.filter(s => s.type === 'news')[0].category}</div>
+                      <h2 style={{
+                        fontSize: '36px',
+                        fontWeight: '800',
+                        lineHeight: '1.2',
+                        marginBottom: '16px',
+                        color: darkMode ? '#ffffff' : '#0f172a'
+                      }}>{stories.filter(s => s.type === 'news')[0].title}</h2>
+                      <p style={{
+                        fontSize: '16px',
+                        lineHeight: '1.6',
+                        color: darkMode ? '#d1d5db' : '#4b5563',
+                        marginBottom: '16px'
+                      }}>{stories.filter(s => s.type === 'news')[0].summary?.substring(0, 150)}...</p>
+                      <div style={{
+                        fontSize: '13px',
+                        color: darkMode ? '#9ca3af' : '#6b7280'
+                      }}>{stories.filter(s => s.type === 'news')[0].source}</div>
+                    </div>
+                  )}
+
+                  {/* Today's Top Stories - Grid */}
+                  <div style={{ marginBottom: '40px' }}>
+                    <h3 style={{
+                      fontSize: '24px',
+                      fontWeight: '800',
+                      color: darkMode ? '#ffffff' : '#0f172a',
+                      marginBottom: '24px',
+                      letterSpacing: '-0.5px'
+                    }}>Today's Top Stories</h3>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                      gap: '24px'
+                    }}>
+                      {stories.filter(s => s.type === 'news').slice(1, 7).map((newsStory, i) => (
+                        <div key={i} style={{
+                          background: darkMode ? '#1f2937' : '#ffffff',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          height: '100%'
+                        }} onClick={() => goToStory(i + 2)}>
+                          <div style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            background: `rgba(${i % 2 === 0 ? '59, 130, 246' : '249, 115, 22'}, 0.1)`,
+                            color: i % 2 === 0 ? '#3b82f6' : '#f97316',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            marginBottom: '12px'
+                          }}>{newsStory.emoji} {newsStory.category}</div>
+                          <h4 style={{
+                            fontSize: '18px',
+                            fontWeight: '700',
+                            lineHeight: '1.3',
+                            marginBottom: '8px',
+                            color: darkMode ? '#ffffff' : '#0f172a'
+                          }}>{newsStory.title}</h4>
+                          <p style={{
+                            fontSize: '13px',
+                            lineHeight: '1.5',
+                            color: darkMode ? '#9ca3af' : '#6b7280'
+                          }}>{newsStory.summary?.substring(0, 100)}...</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* More Stories */}
+                  {stories.filter(s => s.type === 'news').length > 7 && (
+                    <div style={{ marginBottom: '40px' }}>
+                      <h3 style={{
+                        fontSize: '24px',
+                        fontWeight: '800',
+                        color: darkMode ? '#ffffff' : '#0f172a',
+                        marginBottom: '24px',
+                        letterSpacing: '-0.5px'
+                      }}>More Stories</h3>
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '8px'
+                        gap: '16px'
                       }}>
-                        {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
+                        {stories.filter(s => s.type === 'news').slice(7).map((newsStory, i) => (
                           <div key={i} style={{
                             display: 'flex',
-                            gap: '10px',
-                            alignItems: 'flex-start',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            background: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(249, 250, 251, 0.5)',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer'
-                          }}>
-                            <div style={{
-                              fontSize: '13px',
-                              fontWeight: '700',
-                              color: ['#dc2626', '#f97316', '#3b82f6'][i],
-                              minWidth: '18px',
-                              marginTop: '2px'
-                            }}>0{i + 1}</div>
-                            <div style={{
-                              fontSize: '14px',
-                              fontWeight: '500',
-                              lineHeight: '1.4',
-                              color: darkMode ? '#e5e7eb' : '#1f2937'
-                            }}>{newsStory.title}</div>
-                    </div>
-                        ))}
-                  </div>
-                    </div>
-
-                    {/* History - Simplified */}
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                      <h3 style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>On This Day</h3>
-                      <div style={{
-                    display: 'flex', 
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}>
-                        {[
-                          { year: '1969', event: 'Apollo 11 moon landing' },
-                          { year: '2007', event: 'First iPhone released' }
-                        ].map((item, i) => (
-                          <div key={i} style={{
-                            display: 'flex',
-                            gap: '10px',
-                    alignItems: 'center',
-                    fontSize: '13px',
-                            color: darkMode ? '#9ca3af' : '#6b7280'
-                  }}>
-                    <span style={{
-                              fontWeight: '600',
-                              color: '#8b5cf6'
-                            }}>{item.year}</span>
-                            <span>·</span>
-                            <span>{item.event}</span>
-                  </div>
+                            gap: '16px',
+                            padding: '16px',
+                            background: darkMode ? '#1f2937' : '#ffffff',
+                            borderRadius: '12px',
+                            border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s'
+                          }} onClick={() => goToStory(i + 8)}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{
+                                display: 'inline-block',
+                                padding: '4px 8px',
+                                background: 'rgba(139, 92, 246, 0.1)',
+                                color: '#8b5cf6',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                marginBottom: '8px'
+                              }}>{newsStory.emoji} {newsStory.category}</div>
+                              <h4 style={{
+                                fontSize: '16px',
+                                fontWeight: '700',
+                                lineHeight: '1.3',
+                                marginBottom: '8px',
+                                color: darkMode ? '#ffffff' : '#0f172a'
+                              }}>{newsStory.title}</h4>
+                              <p style={{
+                                fontSize: '13px',
+                                color: darkMode ? '#9ca3af' : '#6b7280'
+                              }}>{newsStory.source}</p>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
-                    </div>
+                  )}
 
-                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
+                  {/* Scroll hint */}
+                  <div style={{
+                    textAlign: 'center',
+                    marginTop: '40px',
+                    paddingBottom: '40px'
+                  }}>
+                    <div style={{
+                      fontSize: '12px',
+                      color: '#94a3b8',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      fontWeight: '600'
+                    }}>Click any story to read more ↑</div>
+                  </div>
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
