@@ -41,7 +41,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
     { year: '1991', event: 'World Wide Web made publicly available' },
   ];
 
-  const topics = ['Tech', 'Sports', 'Climate', 'Politics', 'Science', 'Culture'];
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -171,7 +170,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.75 }}>TODAY IN HISTORY</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {historicalEvents.slice(0, 2).map((event, i) => (
+                {historicalEvents.slice(0, 3).map((event, i) => (
                   <div key={i} style={{ display: 'flex', gap: '8px' }}>
                     <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#A855F7' }}>{event.year}</span>
                     <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: '1.4' }}>{event.event}</span>
@@ -249,33 +248,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </div>
           </div>
 
-          {/* Topic Pills */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 'bold', opacity: 0.5, marginBottom: '8px' }}>EXPLORE TOPICS</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {topics.map((topic, i) => (
-                <button
-                  key={i}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '9999px',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    transition: 'all 0.3s',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: darkMode ? '#374151' : '#ffffff',
-                    color: darkMode ? '#D1D5DB' : '#374151',
-                    boxShadow: darkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  {topic}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Live Reader Counter */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
