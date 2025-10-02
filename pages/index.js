@@ -1374,9 +1374,6 @@ export default function Home() {
           }
 
           /* Hide arrows on desktop - show on mobile/tablet */
-          .timeline-arrow {
-            display: none !important;
-          }
         }
 
         @media (max-width: 768px) {
@@ -1853,28 +1850,10 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.12)' :
-                                           story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.12)' :
-                                           story.category === 'MARKETS' ? 'rgba(6, 182, 212, 0.12)' :
-                                           story.category === 'TECH & AI' ? 'rgba(102, 126, 234, 0.12)' :
-                                           story.category === 'SCIENCE' ? 'rgba(14, 165, 233, 0.12)' :
-                                           story.category === 'HEALTH' ? 'rgba(0, 210, 160, 0.12)' :
-                                           story.category === 'CLIMATE' ? 'rgba(34, 197, 94, 0.12)' :
-                                           story.category === 'SPORTS' ? 'rgba(245, 158, 11, 0.12)' :
-                                           story.category === 'ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.12)' : 
-                                           'rgba(255, 255, 255, 0.15)',
+                                background: 'rgba(255, 255, 255, 0.15)',
                                 backdropFilter: 'blur(20px)',
                                 WebkitBackdropFilter: 'blur(20px)',
-                                border: story.category === 'WORLD NEWS' ? '1px solid rgba(220, 38, 38, 0.2)' :
-                                        story.category === 'BUSINESS' ? '1px solid rgba(255, 107, 53, 0.2)' :
-                                        story.category === 'MARKETS' ? '1px solid rgba(6, 182, 212, 0.2)' :
-                                        story.category === 'TECH & AI' ? '1px solid rgba(102, 126, 234, 0.2)' :
-                                        story.category === 'SCIENCE' ? '1px solid rgba(14, 165, 233, 0.2)' :
-                                        story.category === 'HEALTH' ? '1px solid rgba(0, 210, 160, 0.2)' :
-                                        story.category === 'CLIMATE' ? '1px solid rgba(34, 197, 94, 0.2)' :
-                                        story.category === 'SPORTS' ? '1px solid rgba(245, 158, 11, 0.2)' :
-                                        story.category === 'ENTERTAINMENT' ? '1px solid rgba(236, 72, 153, 0.2)' : 
-                                        '1px solid rgba(255, 255, 255, 0.2)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
                                 boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
@@ -1950,39 +1929,6 @@ export default function Home() {
                 </div>
                           )
                         )}
-                        
-                        {/* Toggle Arrows - Hidden on mobile */}
-                        <div className="timeline-arrow" style={{
-                          position: 'absolute',
-                          left: '8px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          fontSize: '20px',
-                          color: '#3b82f6',
-                          cursor: 'pointer',
-                          opacity: '0.7',
-                          zIndex: '10'
-                        }} onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Left arrow clicked for story', index);
-                          toggleTimeline(index);
-                        }}>←</div>
-                        
-                        <div className="timeline-arrow" style={{
-                          position: 'absolute',
-                          right: '8px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          fontSize: '20px',
-                          color: '#3b82f6',
-                          cursor: 'pointer',
-                          opacity: '0.7',
-                          zIndex: '10'
-                        }} onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Right arrow clicked for story', index);
-                          toggleTimeline(index);
-                        }}>→</div>
                         
                   </div>
                       </div> {/* Close fixed position container */}
