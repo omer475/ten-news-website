@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - First Page Critical Fix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden; /* CRITICAL: No overflow */
+            color: #1f2937;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        }
+
+        /* CRITICAL: First page container - EXACTLY 100vh */
+        .first-page-container {
+            height: 100vh;
+            overflow: hidden; /* No scrolling on first page */
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px 20px;
+        }
+
+        /* Header - compact */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 10px 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 5px 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+            margin-left: 5px;
+            font-size: 11px;
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Greeting section - very compact */
+        .greeting-section {
+            margin-bottom: 12px;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .greeting-text {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .main-headline {
+            font-size: 32px;
+            font-weight: 800;
+            color: #000000; /* BLACK in light mode */
+            line-height: 1.2;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .main-headline {
+            color: #ffffff; /* WHITE in dark mode */
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Story navigation dots - compact */
+        .story-dots {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            width: 20px;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+        }
+
+        /* GLASSMORPHISM CARD - COMPACT */
+        .glass-card-briefing {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            flex-shrink: 0;
+            overflow-y: auto; /* Allow internal scroll if needed */
+            max-height: calc(100vh - 420px); /* Ensure it fits */
+        }
+
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .briefing-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .briefing-title h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .live-dot {
+            width: 5px;
+            height: 5px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 9px;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        /* Text sections - READABLE IN BOTH MODES */
+        .text-section {
+            margin-bottom: 12px;
+        }
+
+        .section-label {
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .text-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            margin-bottom: 6px;
+            padding-left: 3px;
+        }
+
+        .text-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .text-item-content {
+            font-size: 11px;
+            line-height: 1.4;
+            color: #000000; /* BLACK in light mode */
+            font-weight: 500;
+        }
+
+        body.dark-mode .text-item-content {
+            color: #ffffff; /* WHITE in dark mode */
+        }
+
+        .history-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding-left: 3px;
+        }
+
+        .history-year {
+            font-size: 9px;
+            font-weight: 700;
+            color: #A855F7;
+            min-width: 35px;
+        }
+
+        .history-event {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+            color: #000000; /* BLACK in light mode */
+        }
+
+        body.dark-mode .history-event {
+            color: #ffffff; /* WHITE in dark mode */
+        }
+
+        .scroll-hint {
+            text-align: center;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: auto;
+            padding: 8px 0;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive for smaller screens */
+        @media (max-width: 768px) {
+            .first-page-container {
+                padding: 8px 16px;
+            }
+
+            .greeting-text {
+                font-size: 22px;
+                margin-bottom: 8px;
+            }
+
+            .main-headline {
+                font-size: 26px;
+            }
+
+            .header {
+                padding: 8px 14px;
+                margin-bottom: 10px;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .glass-button {
+                padding: 4px 10px;
+                font-size: 10px;
+            }
+
+            .glass-card-briefing {
+                padding: 12px;
+                max-height: calc(100vh - 380px);
+            }
+        }
+
+        @media (max-height: 700px) {
+            /* Extra compact for short screens */
+            .greeting-section {
+                margin-bottom: 8px;
+                margin-top: 3px;
+            }
+
+            .greeting-text {
+                font-size: 20px;
+                margin-bottom: 6px;
+            }
+
+            .main-headline {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .story-dots {
+                margin-bottom: 8px;
+            }
+
+            .glass-card-briefing {
+                padding: 10px;
+                margin-bottom: 8px;
+                max-height: calc(100vh - 340px);
+            }
+
+            .text-section {
+                margin-bottom: 8px;
+            }
+
+            .text-item-content,
+            .history-event {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <!-- CRITICAL: First page fits EXACTLY in 100vh -->
+    <div class="first-page-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TEN NEWS</div>
+            <div style="display: flex; align-items: center;">
+                <button class="glass-button">LOGIN</button>
+                <button class="glass-button">SIGN UP</button>
+                <button class="glass-button" id="dark-mode-toggle" style="padding: 6px; border-radius: 50%; min-width: 32px;">🌙</button>
+            </div>
+        </div>
+
+        <!-- Greeting Section -->
+        <div class="greeting-section">
+            <h2 class="greeting-text">Goood evening!</h2>
+            <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
+        </div>
+
+        <!-- Story Navigation Dots -->
+        <div class="story-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <!-- TODAY'S BRIEFING - READABLE BLACK TEXT IN LIGHT MODE -->
+        <div class="glass-card-briefing">
+            <div class="briefing-header">
+                <div class="briefing-title">
+                    <span style="font-size: 16px;">✨</span>
+                    <h3>Today's Briefing</h3>
+                </div>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span class="live-text">Live</span>
+                </div>
+            </div>
+
+            <!-- What's Happening - BLACK TEXT IN LIGHT MODE -->
+            <div class="text-section">
+                <div class="section-label">WHAT'S HAPPENING</div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
+                    <div class="text-item-content">NATO-Russia tensions escalate in Eastern Europe</div>
+                </div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #10B981;"></div>
+                    <div class="text-item-content">Global markets surge 3% on trade deal optimism</div>
+                </div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #3B82F6;"></div>
+                    <div class="text-item-content">Tech giants announce joint AI safety initiative</div>
+                </div>
+            </div>
+
+            <!-- Today in History - BLACK TEXT IN LIGHT MODE -->
+            <div class="text-section" style="margin-bottom: 0;">
+                <div class="section-label">📅 TODAY IN HISTORY</div>
+                <div class="history-item">
+                    <div class="history-year">1789</div>
+                    <div class="history-event">U.S. Constitution ratified by required states</div>
+                </div>
+                <div class="history-item">
+                    <div class="history-year">1957</div>
+                    <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+                </div>
+                <div class="history-item" style="margin-bottom: 0;">
+                    <div class="history-year">1991</div>
+                    <div class="history-event">World Wide Web made publicly available</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Hint - positioned at bottom with flexbox -->
+        <div class="scroll-hint">
+            SCROLL TO CONTINUE ↓
+        </div>
+
+        <!-- Demo Toggle (for testing) -->
+        <div style="position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 8px 12px; border-radius: 8px; font-size: 10px;">
+            <div>Light Mode: Main headline is BLACK ✓</div>
+            <div>Dark Mode: Main headline is WHITE ✓</div>
+            <div>Page height: 100vh (no scroll) ✓</div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode toggle
+        const toggleBtn = document.getElementById('dark-mode-toggle');
+        const body = document.body;
+
+        toggleBtn.addEventListener('click', function() {
+            body.classList.toggle('dark-mode');
+            body.classList.toggle('light-mode');
+            this.innerHTML = body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        });
+
+        // Dot navigation
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', function() {
+                dots.forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Check viewport fit
+        window.addEventListener('load', function() {
+            const container = document.querySelector('.first-page-container');
+            console.log('Container height:', container.offsetHeight);
+            console.log('Viewport height:', window.innerHeight);
+            console.log('Fits in viewport:', container.offsetHeight <= window.innerHeight);
+        });
+    </script>
+</body>
+</html>
