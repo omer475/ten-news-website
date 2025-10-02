@@ -96,7 +96,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#000000', marginBottom: '10px', textShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+            <h1 style={{ fontSize: '30px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#000000', marginBottom: '10px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
               {stories[currentStory].title}
             </h1>
           </div>
@@ -130,9 +130,9 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             padding: '14px', 
             marginBottom: '12px',
             boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
-            flexShrink: 0,
+            flex: 1,
             overflowY: 'auto',
-            maxHeight: 'calc(100vh - 280px)'
+            minHeight: 0
           }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -177,7 +177,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           </div>
 
           {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', marginTop: 'auto', paddingTop: '15px', paddingBottom: '10px', letterSpacing: '1px', flexShrink: 0 }}>
+          <div style={{ textAlign: 'center', fontSize: '9px', color: 'rgba(255, 255, 255, 0.5)', padding: '8px 0', letterSpacing: '1px', flexShrink: 0 }}>
             SCROLL TO CONTINUE ↓
           </div>
         </div>
