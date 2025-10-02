@@ -678,7 +678,7 @@ export default function Home() {
         .header-right {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 20px;
           font-size: 13px;
           font-weight: 500;
         }
@@ -1512,58 +1512,41 @@ export default function Home() {
                 <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
                 <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
                 {currentIndex === 0 && (
-                  <div
+                  <button
                     onClick={toggleDarkMode}
                     style={{
-                      marginLeft: '2px',
-                      position: 'relative',
-                      width: '50px',
-                      height: '24px',
-                      borderRadius: '24px',
-                      background: darkMode
-                        ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.8) 100%)'
-                        : 'linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.8) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      backdropFilter: 'blur(8px)',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                      marginLeft: '4px',
+                      padding: '8px',
+                      borderRadius: '50%',
+                      background: darkMode ? '#1f2937' : '#f8fafc',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      padding: '0 2px'
+                      justifyContent: 'center',
+                      boxShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      backdropFilter: 'blur(8px)'
                     }}
                     aria-label="Toggle dark mode"
                   >
-                    <div
-                      style={{
-                        position: 'absolute',
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
-                        background: darkMode
-                          ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
-                          : 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-                        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
-                        transition: 'all 0.3s ease',
-                        transform: darkMode ? 'translateX(26px)' : 'translateX(0)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '10px'
-                      }}
-                    >
+                    <div style={{
+                      transition: 'all 0.3s ease',
+                      transform: darkMode ? 'rotate(0deg)' : 'rotate(0deg)',
+                      opacity: 1
+                    }}>
                       {darkMode ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="url(#moon-gradient)" opacity="0.9"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' }}>
+                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="url(#moon-gradient)"/>
                           <defs>
                             <linearGradient id="moon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:1}} />
-                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:1}} />
+                              <stop offset="0%" style={{stopColor:'#60a5fa', stopOpacity:1}} />
+                              <stop offset="100%" style={{stopColor:'#3b82f6', stopOpacity:1}} />
                             </linearGradient>
                           </defs>
                         </svg>
                       ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2))' }}>
                           <circle cx="12" cy="12" r="4" fill="url(#sun-gradient)"/>
                           <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414"
                             stroke="url(#sun-stroke-gradient)" strokeWidth="1.5" strokeLinecap="round"/>
@@ -1580,7 +1563,7 @@ export default function Home() {
                         </svg>
                       )}
                     </div>
-                  </div>
+                  </button>
                 )}
               </>
             )}
