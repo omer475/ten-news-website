@@ -80,13 +80,13 @@ export default function NewFirstPage({ onContinue }) {
         flexDirection: 'column',
         justifyContent: 'space-between'
       }}>
-          {/* Greeting Section - COMPRESSED FOR 100VH */}
-          <div style={{ marginBottom: '12px', marginTop: '10px', flexShrink: 0 }}>
+          {/* Greeting Section - PROFESSIONAL SPACING */}
+          <div style={{ marginBottom: '18px', marginTop: '0', flexShrink: 0 }}>
             <h2 style={{
               fontSize: '24px',
               fontWeight: '700',
-              marginBottom: '10px',
-              marginTop: '6px',
+              marginBottom: '12px',
+              marginTop: '0',
               background: 'linear-gradient(to right, #3B82F6, #A855F7)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -99,23 +99,22 @@ export default function NewFirstPage({ onContinue }) {
             </h1>
           </div>
 
-          {/* Today's Briefing - COMPRESSED FOR 100VH */}
+          {/* Today's Briefing - PROFESSIONAL SPACING */}
           <div style={{
             background: 'rgba(255, 255, 255, 0.15)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '14px',
-            padding: '12px',
+            padding: '16px',
             boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
             overflow: 'hidden'
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '16px' }}>✨</span>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Today's Briefing</h3>
@@ -126,10 +125,10 @@ export default function NewFirstPage({ onContinue }) {
               </div>
             </div>
 
-            {/* What's Happening - LARGER TEXT */}
-            <div style={{ marginBottom: '8px', flexShrink: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#111827', marginBottom: '8px', opacity: '0.7' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {/* What's Happening - PROFESSIONAL SPACING */}
+            <div style={{ marginBottom: '14px', flexShrink: 0 }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#111827', marginBottom: '10px', opacity: '0.7' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {whatsHappening.map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '2px' }}>
                     <div style={{ width: '4px', height: '4px', background: item.color, borderRadius: '50%', marginTop: '6px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
@@ -139,12 +138,12 @@ export default function NewFirstPage({ onContinue }) {
               </div>
             </div>
 
-            {/* Today in History - LARGER TEXT, NO EMOJI */}
+            {/* Today in History - PROFESSIONAL SPACING, NO EMOJI */}
             <div style={{ marginBottom: 0, flexShrink: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#111827', marginBottom: '8px', opacity: '0.7' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#111827', marginBottom: '10px', opacity: '0.7' }}>
                 TODAY IN HISTORY
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
                   <div key={i} style={{ display: 'flex', gap: '10px', paddingLeft: '2px' }}>
                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#7c3aed', minWidth: '40px' }}>{event.year}</span>
@@ -155,8 +154,8 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '9px', color: 'rgba(0, 0, 0, 0.4)', padding: '8px 0', letterSpacing: '1px', flexShrink: 0 }}>
+          {/* Scroll Hint - PROFESSIONAL SPACING */}
+          <div style={{ textAlign: 'center', fontSize: '9px', color: 'rgba(0, 0, 0, 0.4)', padding: '10px 0', letterSpacing: '1px', flexShrink: 0, marginTop: '8px' }}>
             SCROLL TO CONTINUE ↓
           </div>
       </div>

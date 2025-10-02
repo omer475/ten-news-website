@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - Professional Spacing Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            color: #1f2937;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 14px 20px; /* Balanced padding */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header - Professional spacing */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 12px 18px; /* Balanced padding */
+            margin-bottom: 16px; /* Proper breathing room */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        @property --angle-1 {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: -75deg;
+        }
+
+        .glass-button {
+            all: unset;
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(
+                -75deg,
+                rgba(255, 255, 255, 0.05),
+                rgba(255, 255, 255, 0.2),
+                rgba(255, 255, 255, 0.05)
+            );
+            border-radius: 999vw;
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05),
+                inset 0 -2px 2px rgba(255, 255, 255, 0.5),
+                0 4px 2px -2px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            padding: 8px 16px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+            font-size: 11px;
+            color: rgba(50, 50, 50, 1);
+            text-shadow: 0em 0.25em 0.05em rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-left: 6px;
+        }
+
+        /* PROFESSIONAL SPACING: Greeting Section */
+        .greeting-section {
+            margin-bottom: 18px; /* Balanced spacing to briefing */
+            margin-top: 0; /* Clean top alignment */
+            flex-shrink: 0;
+        }
+
+        .greeting-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px; /* Balanced gap to headline */
+            margin-top: 0;
+        }
+
+        .main-headline {
+            font-size: 30px;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.1;
+            margin-bottom: 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* PROFESSIONAL SPACING: Glassmorphism Card */
+        .glass-card-briefing {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 16px; /* Increased for breathing room */
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px; /* Professional spacing */
+            flex-shrink: 0;
+        }
+
+        .briefing-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .briefing-title h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .live-dot {
+            width: 5px;
+            height: 5px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 10px;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        /* PROFESSIONAL SPACING: What's Happening */
+        .whats-happening-section {
+            margin-bottom: 14px; /* Balanced gap to history section */
+            flex-shrink: 0;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #111827;
+            opacity: 0.7;
+            margin-bottom: 10px; /* Professional spacing */
+        }
+
+        .text-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 7px; /* Consistent item spacing */
+            padding-left: 2px;
+        }
+
+        .text-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .text-item-content {
+            font-size: 13px;
+            line-height: 1.4;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        /* PROFESSIONAL SPACING: Today in History */
+        .history-section {
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        .history-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 7px; /* Consistent item spacing */
+            padding-left: 2px;
+        }
+
+        .history-year {
+            font-size: 11px;
+            font-weight: 700;
+            color: #7c3aed;
+            min-width: 40px;
+        }
+
+        .history-event {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            color: #111827;
+        }
+
+        /* Bottom scroll hint */
+        .scroll-hint {
+            text-align: center;
+            font-size: 9px;
+            color: rgba(0, 0, 0, 0.4);
+            padding: 10px 0; /* Balanced padding */
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            margin-top: 8px; /* Small separation from content */
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TEN NEWS</div>
+            <div style="display: flex; align-items: center;">
+                <button class="glass-button">LOGIN</button>
+                <button class="glass-button">SIGN UP</button>
+            </div>
+        </div>
+
+        <!-- Greeting Section - PROFESSIONAL SPACING -->
+        <div class="greeting-section">
+            <h2 class="greeting-text">Goood evening!</h2>
+            <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
+        </div>
+
+        <!-- TODAY'S BRIEFING - PROFESSIONAL SPACING -->
+        <div class="glass-card-briefing">
+            <!-- Header -->
+            <div class="briefing-header">
+                <div class="briefing-title">
+                    <span style="font-size: 16px;">✨</span>
+                    <h3>Today's Briefing</h3>
+                </div>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span class="live-text">Live</span>
+                </div>
+            </div>
+
+            <!-- What's Happening - BALANCED SPACING -->
+            <div class="whats-happening-section">
+                <div class="section-label">WHAT'S HAPPENING</div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
+                    <div class="text-item-content">NATO-Russia tensions escalate in Eastern Europe</div>
+                </div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #10B981;"></div>
+                    <div class="text-item-content">Global markets surge 3% on trade deal optimism</div>
+                </div>
+                <div class="text-item" style="margin-bottom: 0;">
+                    <div class="text-dot" style="background: #3B82F6;"></div>
+                    <div class="text-item-content">Tech giants announce joint AI safety initiative</div>
+                </div>
+            </div>
+
+            <!-- Today in History - BALANCED SPACING, NO EMOJI -->
+            <div class="history-section">
+                <div class="section-label">TODAY IN HISTORY</div>
+                <div class="history-item">
+                    <div class="history-year">1789</div>
+                    <div class="history-event">U.S. Constitution ratified by required states</div>
+                </div>
+                <div class="history-item">
+                    <div class="history-year">1957</div>
+                    <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+                </div>
+                <div class="history-item" style="margin-bottom: 0;">
+                    <div class="history-year">1991</div>
+                    <div class="history-event">World Wide Web made publicly available</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Hint - PROFESSIONAL SPACING -->
+        <div class="scroll-hint">
+            SCROLL TO CONTINUE ↓
+        </div>
+
+        <!-- Design Notes -->
+        <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(16, 185, 129, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px; color: white; max-width: 300px; font-size: 11px;">
+            <strong>✨ Professional Spacing Applied:</strong><br>
+            • Header margin: 16px (balanced)<br>
+            • Greeting to headline: 12px (clear separation)<br>
+            • Headline to briefing: 18px (visual breathing room)<br>
+            • Briefing padding: 16px (comfortable)<br>
+            • Header spacing: 14px (professional)<br>
+            • Section gap: 14px (balanced)<br>
+            • Item spacing: 7px (consistent)<br>
+            • Scroll hint: 10px padding + 8px top margin<br>
+            <br>
+            <strong>✅ Still fits 100vh viewport</strong>
+        </div>
+    </div>
+</body>
+</html>
