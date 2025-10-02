@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function NewFirstPage({ onContinue }) {
+export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -70,23 +70,24 @@ export default function NewFirstPage({ onContinue }) {
       `}</style>
       
       <div style={{
-        height: '100vh',
-        maxHeight: '100vh',
+        minHeight: '100vh',
         background: 'transparent',
-        color: '#111827',
-        overflow: 'hidden',
-        padding: '0 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between'
+        color: darkMode ? '#ffffff' : '#111827',
+        transition: 'all 0.5s',
+        overflow: 'hidden'
       }}>
-          {/* Greeting Section - PROFESSIONAL SPACING */}
-          <div style={{ marginBottom: '18px', marginTop: '0', flexShrink: 0 }}>
+        <div style={{
+          height: '100vh',
+          overflowY: 'auto',
+          padding: '0 20px 32px'
+        }}>
+          {/* Greeting Section - UPDATED HIERARCHY */}
+          <div style={{ marginBottom: '30px', marginTop: '20px' }}>
             <h2 style={{
-              fontSize: '24px',
+              fontSize: '28px',
               fontWeight: '700',
-              marginBottom: '12px',
-              marginTop: '0',
+              marginBottom: '16px',
+              marginTop: '8px',
               background: 'linear-gradient(to right, #3B82F6, #A855F7)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -94,70 +95,96 @@ export default function NewFirstPage({ onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '30px', fontWeight: '800', lineHeight: '1.1', color: '#111827', marginBottom: '0', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: darkMode ? '#ffffff' : '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
               {stories[currentStory].title}
             </h1>
           </div>
 
-          {/* Today's Briefing - PROFESSIONAL SPACING */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(20px)',
+          {/* Story Navigation Dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px' }}>
+            {stories.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentStory(i)}
+                style={{
+                  width: i === currentStory ? '24px' : '4px',
+                  height: '4px',
+                  background: i === currentStory ? 'linear-gradient(to right, #3B82F6, #A855F7)' : '#D1D5DB',
+                  borderRadius: '9999px',
+                  transition: 'all 0.3s',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Today's Briefing - GLASSMORPHISM BOX (SAME AS TIMELINE/DETAILS) */}
+          <div style={{ 
+            background: 'rgba(255, 255, 255, 0.15)', 
+            backdropFilter: 'blur(20px)', 
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
+            border: '1px solid rgba(255, 255, 255, 0.2)', 
+            borderRadius: '16px', 
+            padding: '20px', 
+            marginBottom: '30px',
+            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)'
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '16px' }}>✨</span>
-                <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#111827' }}>Today's Briefing</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>✨</span>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <div style={{ width: '5px', height: '5px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-                <span style={{ fontSize: '10px', color: '#10B981', fontWeight: 600 }}>Live</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Live</span>
               </div>
             </div>
 
-            {/* What's Happening - PROFESSIONAL SPACING */}
-            <div style={{ marginBottom: '14px', flexShrink: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#111827', marginBottom: '10px', opacity: '0.7' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+            {/* What's Happening */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {whatsHappening.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', paddingLeft: '2px' }}>
-                    <div style={{ width: '4px', height: '4px', background: item.color, borderRadius: '50%', marginTop: '6px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.4', color: '#111827' }}>{item.text}</span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
+                    <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Today in History - PROFESSIONAL SPACING, NO EMOJI */}
-            <div style={{ marginBottom: 0, flexShrink: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#111827', marginBottom: '10px', opacity: '0.7' }}>
+            {/* Today in History */}
+            <div style={{ marginBottom: 0 }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '12px' }}>📅</span>
                 TODAY IN HISTORY
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {historicalEvents.slice(0, 3).map((event, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '10px', paddingLeft: '2px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#7c3aed', minWidth: '40px' }}>{event.year}</span>
-                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.4', color: '#111827' }}>{event.event}</span>
+                  <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: 'white' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Scroll Hint - PROFESSIONAL SPACING */}
-          <div style={{ textAlign: 'center', fontSize: '9px', color: 'rgba(0, 0, 0, 0.4)', padding: '10px 0', letterSpacing: '1px', flexShrink: 0, marginTop: '8px' }}>
+          {/* Live Reader Counter */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '16px' }}>👥</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#10B981' }}>{readerCount.toLocaleString()}</span>
+            <span style={{ fontSize: '12px', color: '#6B7280' }}>reading now</span>
+            <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+          </div>
+
+          {/* Scroll Hint */}
+          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
             SCROLL TO CONTINUE ↓
           </div>
+        </div>
       </div>
     </>
   );

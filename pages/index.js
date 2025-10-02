@@ -940,15 +940,15 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-radius: 16px;
+          background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border-radius: 12px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2);
         }
 
         .news-detail-item {
@@ -1537,11 +1537,11 @@ export default function Home() {
           .news-meta {
             padding: 10px 15px;
             margin-top: 15px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2);
           }
           
           .news-detail-item {
@@ -1582,6 +1582,60 @@ export default function Home() {
               <>
                 <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
                 <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+                {currentIndex === 0 && (
+                  <button
+                    onClick={toggleDarkMode}
+                    style={{
+                      marginLeft: '4px',
+                      padding: '8px',
+                      borderRadius: '50%',
+                      background: darkMode ? '#1f2937' : '#f8fafc',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    aria-label="Toggle dark mode"
+                  >
+                    <div style={{
+                      transition: 'all 0.3s ease',
+                      transform: darkMode ? 'rotate(0deg)' : 'rotate(0deg)',
+                      opacity: 1
+                    }}>
+                      {darkMode ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' }}>
+                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="url(#moon-gradient)"/>
+                          <defs>
+                            <linearGradient id="moon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" style={{stopColor:'#60a5fa', stopOpacity:1}} />
+                              <stop offset="100%" style={{stopColor:'#3b82f6', stopOpacity:1}} />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2))' }}>
+                          <circle cx="12" cy="12" r="4" fill="url(#sun-gradient)"/>
+                          <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414"
+                            stroke="url(#sun-stroke-gradient)" strokeWidth="1.5" strokeLinecap="round"/>
+                          <defs>
+                            <linearGradient id="sun-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:1}} />
+                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:1}} />
+                            </linearGradient>
+                            <linearGradient id="sun-stroke-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:0.8}} />
+                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:0.8}} />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -1629,6 +1683,8 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <NewFirstPage 
+                  darkMode={darkMode} 
+                  toggleDarkMode={toggleDarkMode}
                   onContinue={nextStory}
                 />
               ) : story.type === 'news' ? (
@@ -1698,13 +1754,13 @@ export default function Home() {
                           }}>
                           <div style={{
                             display: 'flex',
-                            background: 'rgba(255, 255, 255, 0.15)',
-                            backdropFilter: 'blur(20px)',
-                            WebkitBackdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            borderRadius: '16px',
+                            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+                            backdropFilter: 'blur(4px)',
+                            WebkitBackdropFilter: 'blur(4px)',
+                            border: '1px solid rgba(255, 255, 255, 0.5)',
+                            borderRadius: '999vw',
                             padding: '2px',
-                            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                            boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
                             width: '100px'
                           }}>
                             {/* Details Button - Icons Only */}
@@ -1714,7 +1770,7 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.4)' : 'transparent',
+                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
                               boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
@@ -1740,7 +1796,7 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.4)' : 'transparent',
+                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
                               boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
@@ -1773,9 +1829,9 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
-                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
+                          background: showTimeline[index] ? 'transparent' : 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.5)',
+                          boxShadow: showTimeline[index] ? 'none' : 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1867,13 +1923,13 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: '16px',
+                                background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+                                backdropFilter: 'blur(4px)',
+                                WebkitBackdropFilter: 'blur(4px)',
+                                border: '1px solid rgba(255, 255, 255, 0.5)',
+                                borderRadius: '12px',
                                 padding: '12px 20px',
-                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                                boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',
