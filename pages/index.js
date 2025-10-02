@@ -545,11 +545,10 @@ export default function Home() {
     }
   };
 
-  // Function to render greeting with gradient first part
+  // Function to render greeting with gradient first part - separated layout
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
-    const restGradient = getHeadlineRestGradient();
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -571,17 +570,29 @@ export default function Home() {
     
     if (foundGreeting) {
       // Replace AI's greeting with the correct time-based greeting
-      const restOfText = headline.substring(foundGreeting.length);
+      const restOfText = headline.substring(foundGreeting.length).trim();
       return (
-        <>
-          <span style={{ 
+        <div style={{ textAlign: 'center' }}>
+          {/* Greeting on top - larger */}
+          <div style={{ 
+            fontSize: '80px',
+            fontWeight: '900',
+            lineHeight: '1',
+            marginBottom: '20px',
             background: gradient,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
-          }}>{correctGreeting}</span>
-          <span style={{ color: darkMode ? '#ffffff' : '#0f172a' }}>{restOfText}</span>
-        </>
+          }}>{correctGreeting}</div>
+          
+          {/* Rest of text below - smaller */}
+          <div style={{ 
+            fontSize: '36px',
+            fontWeight: '700',
+            lineHeight: '1.2',
+            color: darkMode ? '#ffffff' : '#0f172a'
+          }}>{restOfText}</div>
+        </div>
       );
     }
     return headline;
@@ -821,6 +832,11 @@ export default function Home() {
           letter-spacing: -1px; /* tighter */
           margin-bottom: 40px;
           color: ${darkMode ? '#ffffff' : '#0f172a'};
+        }
+
+        /* Hide category pills scrollbar */
+        .category-pills::-webkit-scrollbar {
+          display: none;
         }
 
         .subheadline {
@@ -1414,6 +1430,14 @@ export default function Home() {
             margin-bottom: 30px;
             line-height: 1.12;
           }
+
+          .main-headline > div > div:first-child {
+            font-size: 48px !important;
+          }
+
+          .main-headline > div > div:last-child {
+            font-size: 24px !important;
+          }
           
           .date-header {
             font-size: 11px;
@@ -1608,34 +1632,105 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <div className="opening-container">
-                  {/* Greeting */}
+                  <div className="date-header">{story.date}</div>
+                  
+                  {/* Swipeable Category Pills */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    overflowX: 'auto',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    marginBottom: '32px',
+                    padding: '0 20px'
+                  }} className="category-pills">
+                    {['World', 'Business', 'Tech', 'Sports', 'Health', 'Climate', 'Science'].map((cat, idx) => (
+                      <div key={idx} style={{
+                        padding: '8px 20px',
+                        background: darkMode ? '#1f2937' : '#f1f5f9',
+                        borderRadius: '20px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: darkMode ? '#d1d5db' : '#4b5563',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                      }}>{cat}</div>
+                    ))}
+                  </div>
+
                   <h1 className="main-headline">
                     {renderGreeting(story.headline)}
                   </h1>
-
-                  {/* Main headline */}
-                  <h2 style={{
-                    fontSize: '32px',
-                    fontWeight: '700',
-                    lineHeight: '1.2',
-                    color: darkMode ? '#ffffff' : '#000000',
-                    marginBottom: '16px',
-                    textAlign: 'center'
+                  <div className="subheadline">
+                    <div style={{ display: 'inline-block' }}>
+                      <span style={{ fontWeight: 600, color: '#64748b' }}>Today's 10 News to Know: </span>
+                      <span className="rotating-topics" style={{ position: 'relative', display: 'inline-block', minWidth: '200px', height: '26px', verticalAlign: 'middle' }}>
+                        {stories.filter(s => s.type === 'news').slice(0, 5).map((story, i) => {
+                          const categoryColors = {
+                            'WORLD NEWS': '#dc2626',
+                            'BUSINESS': '#f97316',
+                            'MARKETS': '#06b6d4',
+                            'TECH & AI': '#8b5cf6',
+                            'SCIENCE': '#0ea5e9',
+                            'HEALTH': '#10b981',
+                            'CLIMATE': '#22c55e',
+                            'SPORTS': '#f59e0b',
+                            'ENTERTAINMENT': '#ec4899'
+                          };
+                          const color = categoryColors[story.category] || '#3b82f6';
+                          const shortTitle = story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title;
+                          
+                          return (
+                            <span
+                              key={i}
+                              className="topic-item"
+                              style={{
+                                position: 'absolute',
+                                left: 0,
+                                whiteSpace: 'nowrap',
+                                opacity: 0,
+                                animation: 'topicRotate 15s infinite',
+                                animationDelay: `${i * 3}s`,
+                                color: color,
+                                fontWeight: 700,
+                                transition: 'opacity 0.5s ease-in-out'
+                              }}
+                            >
+                              {shortTitle}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="news-info" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    gap: '20px',
+                    marginBottom: '50px',
+                    fontSize: '13px',
+                    color: '#64748b',
+                    fontWeight: 500,
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase'
                   }}>
-                    {stories.filter(s => s.type === 'news')[0]?.title || 'Critical NATO-Russia tensions dominate today\'s headlines.'}
-                  </h2>
-
-                  {/* Rotating topic */}
-                  <div style={{ 
-                    textAlign: 'center', 
-                    marginBottom: '40px',
-                    fontSize: '18px',
-                    color: '#64748b'
-                  }}>
-                    <span style={{ fontWeight: 600 }}>Today: </span>
-                    <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                      {stories.filter(s => s.type === 'news')[0]?.title.substring(0, 30) || 'NATO Issues Stern Wa'}...
-                    </span>
+                    <span style={{
+                      padding: '4px 12px',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      borderRadius: '4px',
+                      color: '#3b82f6'
+                    }}>10 Stories</span>
+                    <span style={{ color: '#cbd5e1' }}>•</span>
+                    <span style={{
+                      padding: '4px 12px',
+                      background: 'rgba(96, 165, 250, 0.1)',
+                      borderRadius: '4px',
+                      color: '#60a5fa'
+                    }}>2-minute daily summary</span>
                   </div>
 
                   {/* Today's Briefing Card */}
@@ -1643,217 +1738,118 @@ export default function Home() {
                     background: darkMode ? '#1f2937' : '#ffffff',
                     borderRadius: '16px',
                     padding: '24px',
-                    marginBottom: '24px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                    textAlign: 'left',
-                    border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                    marginTop: '40px',
+                    marginBottom: '40px',
+                    border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                    maxWidth: '600px',
+                    margin: '40px auto'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '8px', 
-                      marginBottom: '16px' 
-                    }}>
-                      <span style={{ fontSize: '20px' }}>✨</span>
-                      <h3 style={{ 
-                        fontSize: '20px', 
+                    {/* What's Happening */}
+                    <div style={{ marginBottom: '32px' }}>
+                      <h3 style={{
+                        fontSize: '16px',
                         fontWeight: '700',
-                        color: darkMode ? '#ffffff' : '#000000',
-                        margin: 0
-                      }}>Today's Briefing</h3>
-                      <span style={{ 
-                        marginLeft: 'auto', 
-                        color: '#22c55e', 
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        fontWeight: '500'
-                      }}>
-                        <span style={{ 
-                          width: '8px', 
-                          height: '8px', 
-                          background: '#22c55e', 
-                          borderRadius: '50%' 
-                        }}></span>
-                        Live
-                      </span>
-                    </div>
-
-                    <h4 style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '600',
-                      color: darkMode ? '#9ca3af' : '#6b7280',
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px',
-                      marginBottom: '12px'
-                    }}>WHAT'S HAPPENING</h4>
-
-                    <ul style={{ 
-                      listStyle: 'none', 
-                      padding: 0, 
-                      margin: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '12px'
-                    }}>
-                      {stories.filter(s => s.type === 'news').slice(0, 3).map((story, idx) => (
-                        <li key={idx} style={{ 
-                          display: 'flex', 
-                          alignItems: 'flex-start',
-                          gap: '12px',
-                          fontSize: '16px',
-                          lineHeight: '1.5',
-                          color: darkMode ? '#d1d5db' : '#374151'
-                        }}>
-                          <span style={{ 
-                            width: '8px', 
-                            height: '8px', 
-                            borderRadius: '50%',
-                            background: idx === 0 ? '#ef4444' : idx === 1 ? '#22c55e' : '#3b82f6',
-                            marginTop: '6px',
-                            flexShrink: 0
-                          }}></span>
-                          <span>{story.title}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Today in History Card */}
-                  <div style={{
-                    background: darkMode ? '#1f2937' : '#ffffff',
-                    borderRadius: '16px',
-                    padding: '24px',
-                    marginBottom: '24px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                    textAlign: 'left',
-                    border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                  }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '8px', 
-                      marginBottom: '16px' 
-                    }}>
-                      <span style={{ fontSize: '20px' }}>📅</span>
-                      <h3 style={{ 
-                        fontSize: '16px', 
-                        fontWeight: '600',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        margin: 0,
+                        color: darkMode ? '#ffffff' : '#1f2937',
+                        marginBottom: '16px',
                         textTransform: 'uppercase',
                         letterSpacing: '1px'
-                      }}>TODAY IN HISTORY</h3>
+                      }}>What's Happening</h3>
+                      {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
+                        <div key={i} style={{
+                          display: 'flex',
+                          gap: '12px',
+                          marginBottom: '12px',
+                          alignItems: 'flex-start'
+                        }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: ['#dc2626', '#f97316', '#3b82f6'][i],
+                            marginTop: '6px',
+                            flexShrink: 0
+                          }}></div>
+                          <div style={{
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            color: darkMode ? '#d1d5db' : '#4b5563'
+                          }}>{newsStory.title}</div>
+                        </div>
+                      ))}
                     </div>
 
-                    <div style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '12px' 
+                    {/* Alerts Button */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      marginBottom: '24px'
                     }}>
+                      <button style={{
+                        background: '#dc2626',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '24px',
+                        padding: '12px 24px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'all 0.2s'
+                      }}>
+                        🔔 Alerts
+                        <span style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          background: '#ef4444',
+                          color: '#ffffff',
+                          borderRadius: '12px',
+                          padding: '2px 6px',
+                          fontSize: '10px',
+                          fontWeight: '700'
+                        }}>3</span>
+                      </button>
+                    </div>
+
+                    {/* Today in History */}
+                    <div>
+                      <h3 style={{
+                        fontSize: '16px',
+                        fontWeight: '700',
+                        color: darkMode ? '#ffffff' : '#1f2937',
+                        marginBottom: '16px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                      }}>Today in History</h3>
                       {[
-                        { year: '1789', event: 'US Congress proposes Bill of Rights' },
-                        { year: '1957', event: 'Nine students integrate Little Rock High School' },
-                        { year: '2001', event: 'Apple releases first iPod, revolutionizing music' }
-                      ].map((item, idx) => (
-                        <div key={idx} style={{ display: 'flex', gap: '16px', alignItems: 'baseline' }}>
-                          <span style={{ 
-                            fontSize: '18px', 
+                        { year: '1969', event: 'Apollo 11 lands on the moon' },
+                        { year: '1945', event: 'World War II ends' },
+                        { year: '2007', event: 'First iPhone is released' }
+                      ].map((item, i) => (
+                        <div key={i} style={{
+                          display: 'flex',
+                          gap: '12px',
+                          marginBottom: '12px',
+                          alignItems: 'flex-start'
+                        }}>
+                          <div style={{
+                            fontSize: '14px',
                             fontWeight: '700',
                             color: '#8b5cf6',
-                            minWidth: '60px'
-                          }}>{item.year}</span>
-                          <span style={{ 
-                            fontSize: '16px',
-                            color: darkMode ? '#d1d5db' : '#374151',
-                            lineHeight: '1.4'
-                          }}>{item.event}</span>
+                            minWidth: '45px'
+                          }}>{item.year}</div>
+                          <div style={{
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            color: darkMode ? '#d1d5db' : '#4b5563'
+                          }}>{item.event}</div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* View Alerts Button */}
-                  <button style={{
-                    width: '100%',
-                    padding: '16px 24px',
-                    background: 'linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    color: '#4c1d95',
-                    cursor: 'pointer',
-                    marginBottom: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    transition: 'transform 0.2s'
-                  }} onClick={() => nextStory()}>
-                    <span style={{ fontSize: '24px' }}>🔔</span>
-                    <span style={{ position: 'relative' }}>
-                      <span style={{
-                        position: 'absolute',
-                        top: '-8px',
-                        right: '-24px',
-                        background: '#ef4444',
-                        color: '#ffffff',
-                        borderRadius: '12px',
-                        padding: '2px 8px',
-                        fontSize: '14px',
-                        fontWeight: '700'
-                      }}>23</span>
-                      View 23 New Alerts
-                    </span>
-                  </button>
-
-                  {/* AI Briefing Card */}
-                  <div style={{
-                    background: 'linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s'
-                  }} onClick={() => nextStory()}>
-                    <div>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        marginBottom: '4px'
-                      }}>
-                        <span style={{ fontSize: '20px' }}>✨</span>
-                        <h3 style={{ 
-                          fontSize: '18px', 
-                          fontWeight: '700',
-                          color: '#6b21a8',
-                          margin: 0
-                        }}>AI Briefing</h3>
-                      </div>
-                      <p style={{ 
-                        fontSize: '14px',
-                        color: '#7c3aed',
-                        margin: 0,
-                        fontWeight: '500'
-                      }}>60-sec personalized summary</p>
-                    </div>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      background: '#ffffff',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      color: '#8b5cf6'
-                    }}>▶</div>
-                  </div>
+                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid">
