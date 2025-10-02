@@ -83,10 +83,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           padding: '0 20px 32px'
         }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: darkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '20px', fontWeight: 'bold' }}>TEN NEWS</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '12px 0', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: darkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 onClick={toggleDarkMode}
@@ -115,10 +112,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </h1>
             <p style={{ fontSize: '20px', fontWeight: 'bold', lineHeight: '1.3', padding: '0 8px', marginBottom: '8px' }}>
               {stories[currentStory].title}
-            </p>
-            <p style={{ fontSize: '14px', padding: '0 8px' }}>
-              <span style={{ color: '#6B7280' }}>Today: </span>
-              <span style={{ color: '#EF4444', fontWeight: 600 }}>{stories[currentStory].subtitle}</span>
             </p>
           </div>
 
