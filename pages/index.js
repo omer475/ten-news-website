@@ -8,6 +8,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
+  const [darkMode, setDarkMode] = useState(false);
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -237,6 +238,10 @@ export default function Home() {
     }));
   };
 
+  // Dark mode toggle function
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
 
 
   // Authentication functions
@@ -576,7 +581,7 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>{correctGreeting}</span>
-          <span style={{ color: '#0f172a' }}>{restOfText}</span>
+          <span style={{ color: darkMode ? '#ffffff' : '#0f172a' }}>{restOfText}</span>
         </>
       );
     }
@@ -595,8 +600,8 @@ export default function Home() {
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          background: #ffffff;
-          color: #1d1d1f;
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           overflow: hidden;
           position: fixed;
           width: 100%;
@@ -611,14 +616,14 @@ export default function Home() {
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background: #fff;
+          background: ${darkMode ? '#000000' : '#fff'};
         }
 
         .loading-spinner {
           width: 40px;
           height: 40px;
-          border: 3px solid #f3f3f3;
-          border-top: 3px solid #1d1d1f;
+          border: 3px solid ${darkMode ? '#333333' : '#f3f3f3'};
+          border-top: 3px solid ${darkMode ? '#ffffff' : '#1d1d1f'};
           border-radius: 50%;
           animation: spin 1s linear infinite;
           margin-bottom: 16px;
@@ -626,7 +631,7 @@ export default function Home() {
 
         .loading-text {
           font-size: 16px;
-          color: #86868b;
+          color: ${darkMode ? '#86868b' : '#86868b'};
         }
 
         @keyframes spin {
@@ -640,7 +645,7 @@ export default function Home() {
           left: 0;
           right: 0;
           height: 60px;
-          background: rgba(255,255,255,0.97);
+          background: ${darkMode ? 'rgba(0,0,0,0.97)' : 'rgba(255,255,255,0.97)'};
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           z-index: 1000;
@@ -648,7 +653,7 @@ export default function Home() {
           align-items: center;
           justify-content: space-between;
           padding: 0 20px;
-          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+          border-bottom: 1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(148, 163, 184, 0.1)'};
           transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
@@ -665,7 +670,7 @@ export default function Home() {
         }
 
         .logo-ten {
-          color: #0f172a;
+          color: ${darkMode ? '#ffffff' : '#0f172a'};
           font-weight: 900;
         }
 
@@ -679,7 +684,7 @@ export default function Home() {
         }
 
         .time {
-          color: #94a3b8;
+          color: ${darkMode ? '#94a3b8' : '#94a3b8'};
           font-weight: 500;
         }
 
@@ -692,7 +697,7 @@ export default function Home() {
           align-items: flex-start;
           justify-content: center;
           padding: 70px 24px 40px;
-          background: #fff;
+          background: ${darkMode ? '#000000' : '#fff'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
         }
@@ -719,20 +724,20 @@ export default function Home() {
         }
 
         .paywall-modal {
-          background: #ffffff;
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
           border-radius: 16px;
           padding: 32px;
           max-width: 400px;
           width: 90%;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-          border: 1px solid #e5e7eb;
+          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
           pointer-events: auto;
           position: relative;
           z-index: 1001;
         }
 
         .paywall-modal h2 {
-          color: #1f2937;
+          color: ${darkMode ? '#ffffff' : '#1f2937'};
           font-size: 24px;
           font-weight: 600;
           margin: 0 0 8px 0;
@@ -740,7 +745,7 @@ export default function Home() {
         }
 
         .paywall-modal p {
-          color: #6b7280;
+          color: ${darkMode ? '#9ca3af' : '#6b7280'};
           font-size: 16px;
           line-height: 1.5;
           margin: 0 0 24px 0;
@@ -750,13 +755,13 @@ export default function Home() {
         .paywall-footer {
           margin-top: 24px;
           padding-top: 16px;
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
           text-align: center;
         }
 
         .paywall-footer p {
           margin: 0;
-          color: #6b7280;
+          color: ${darkMode ? '#9ca3af' : '#6b7280'};
           font-size: 14px;
         }
 
@@ -816,7 +821,7 @@ export default function Home() {
           line-height: 1.12; /* compact */
           letter-spacing: -1px; /* tighter */
           margin-bottom: 40px;
-          color: #0f172a;
+          color: ${darkMode ? '#ffffff' : '#0f172a'};
         }
 
         .subheadline {
@@ -920,12 +925,12 @@ export default function Home() {
           font-weight: 800;
           line-height: 1.2;
           margin-bottom: 20px;
-          color: #000000;
+          color: ${darkMode ? '#ffffff' : '#000000'};
         }
 
         .news-summary {
           font-size: 17px;
-          color: #4a4a4a;
+          color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
           line-height: 1.6;
           margin-bottom: 16px;
           text-align: left;
@@ -974,7 +979,7 @@ export default function Home() {
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: #111827;
+          color: ${darkMode ? '#f9fafb' : '#111827'};
           line-height: 1.2;
           margin: 0;
         }
@@ -1125,7 +1130,7 @@ export default function Home() {
 
         .user-welcome {
           font-size: 13px;
-          color: #86868b;
+          color: ${darkMode ? '#94a3b8' : '#86868b'};
           margin-right: 12px;
         }
 
@@ -1144,7 +1149,7 @@ export default function Home() {
         }
 
         .auth-modal {
-          background: #ffffff;
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
           border-radius: 16px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           width: 90%;
@@ -1164,7 +1169,7 @@ export default function Home() {
         .auth-modal-header h2 {
           font-size: 24px;
           font-weight: 800;
-          color: #0f172a;
+          color: ${darkMode ? '#ffffff' : '#0f172a'};
           margin: 0;
         }
 
@@ -1172,7 +1177,7 @@ export default function Home() {
           background: none;
           border: none;
           font-size: 24px;
-          color: #6b7280;
+          color: ${darkMode ? '#94a3b8' : '#6b7280'};
           cursor: pointer;
           padding: 0;
           width: 32px;
@@ -1185,8 +1190,8 @@ export default function Home() {
         }
 
         .auth-close:hover {
-          background: #f3f4f6;
-          color: #374151;
+          background: ${darkMode ? '#374151' : '#f3f4f6'};
+          color: ${darkMode ? '#ffffff' : '#374151'};
         }
 
         .auth-modal-body {
@@ -1218,16 +1223,16 @@ export default function Home() {
         .auth-field label {
           font-size: 14px;
           font-weight: 600;
-          color: #374151;
+          color: ${darkMode ? '#d1d5db' : '#374151'};
         }
 
         .auth-field input {
           padding: 12px 16px;
-          border: 1px solid #d5d5d5;
+          border: 1px solid ${darkMode ? '#374151' : '#d5d5d5'};
           border-radius: 8px;
           font-size: 16px;
-          background: #ffffff;
-          color: #111827;
+          background: ${darkMode ? '#111827' : '#ffffff'};
+          color: ${darkMode ? '#ffffff' : '#111827'};
           transition: border-color 0.2s;
         }
 
@@ -1269,14 +1274,14 @@ export default function Home() {
         .auth-modal-footer {
           margin-top: 24px;
           padding-top: 20px;
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
           text-align: center;
         }
 
         .auth-modal-footer p {
           margin: 0;
           font-size: 14px;
-          color: #6b7280;
+          color: ${darkMode ? '#94a3b8' : '#6b7280'};
         }
 
         .auth-switch {
@@ -1623,9 +1628,9 @@ export default function Home() {
               }}
             >
               {story.type === 'opening' ? (
-                  <NewFirstPage
-                    onContinue={nextStory}
-                  />
+                <NewFirstPage 
+                  onContinue={nextStory}
+                />
               ) : story.type === 'news' ? (
                 <div className="news-grid">
                   
@@ -1914,7 +1919,7 @@ export default function Home() {
                                     }}>{event.date}</div>
                                     <div style={{
                                       fontSize: '12px',
-                                      color: '#1e293b',
+                                      color: darkMode ? '#e2e8f0' : '#1e293b',
                                       lineHeight: '1.3'
                                     }}>{event.event}</div>
                       </div>
@@ -1928,7 +1933,7 @@ export default function Home() {
                                     textAlign: 'center',
                                     fontSize: '9px',
                                     color: '#94a3b8',
-                                    background: 'linear-gradient(transparent, #ffffff)',
+                                    background: darkMode ? 'linear-gradient(transparent, #000000)' : 'linear-gradient(transparent, #ffffff)',
                                     padding: '8px 0 4px',
                                     fontWeight: '500',
                                     textTransform: 'uppercase',

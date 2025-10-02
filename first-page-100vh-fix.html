@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - 100vh First Page (No Dark Mode)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            color: #1f2937;
+            overflow: hidden; /* NO SCROLLING */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px 16px; /* Reduced padding */
+            height: 100vh; /* EXACTLY 100vh */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* NO SCROLLING */
+        }
+
+        /* Header with glassmorphism - COMPRESSED */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 10px 16px; /* Reduced from 16px 24px */
+            margin-bottom: 12px; /* Reduced from 30px */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 20px; /* Reduced from 24px */
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Advanced glassmorphic buttons */
+        @property --angle-1 {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: -75deg;
+        }
+
+        .glass-button {
+            all: unset;
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(
+                -75deg,
+                rgba(255, 255, 255, 0.05),
+                rgba(255, 255, 255, 0.2),
+                rgba(255, 255, 255, 0.05)
+            );
+            border-radius: 999vw;
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05),
+                inset 0 -2px 2px rgba(255, 255, 255, 0.5),
+                0 4px 2px -2px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            padding: 8px 16px; /* Reduced from 10px 20px */
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+            font-size: 11px; /* Reduced from 12px */
+            color: rgba(50, 50, 50, 1);
+            text-shadow: 0em 0.25em 0.05em rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-left: 6px; /* Reduced from 8px */
+        }
+
+        .glass-button:hover {
+            transform: scale(0.975);
+        }
+
+        /* COMPRESSED HIERARCHY: Main Headline > Good Evening */
+        .greeting-section {
+            margin-bottom: 12px; /* Reduced from 30px */
+            flex-shrink: 0;
+        }
+
+        .greeting-text {
+            font-size: 24px; /* Reduced from 28px */
+            font-weight: 700;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px; /* Reduced from 16px */
+            margin-top: 6px; /* Reduced from 8px */
+        }
+
+        .main-headline {
+            font-size: 30px; /* Reduced from 36px */
+            font-weight: 800;
+            color: #111827; /* BLACK TEXT for readability */
+            line-height: 1.1; /* Tighter line height */
+            margin-bottom: 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* GLASSMORPHISM CARD - COMPRESSED */
+        .glass-card-briefing {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px; /* Reduced from 16px */
+            padding: 12px; /* Reduced from 20px */
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            flex: 1; /* Takes remaining space */
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Scrollable if content too long */
+        }
+
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px; /* Reduced from 20px */
+            flex-shrink: 0;
+        }
+
+        .briefing-title {
+            display: flex;
+            align-items: center;
+            gap: 6px; /* Reduced from 8px */
+        }
+
+        .briefing-title h3 {
+            font-size: 16px; /* Reduced from 18px */
+            font-weight: 700;
+            color: #111827; /* BLACK TEXT for readability */
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .live-dot {
+            width: 5px; /* Reduced from 6px */
+            height: 5px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 10px; /* Reduced from 11px */
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        /* Text sections inside glass card - COMPRESSED */
+        .text-section {
+            margin-bottom: 12px; /* Reduced from 20px */
+        }
+
+        .section-label {
+            font-size: 9px; /* Reduced from 10px */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #111827; /* BLACK TEXT for readability */
+            opacity: 0.7;
+            margin-bottom: 8px; /* Reduced from 12px */
+        }
+
+        .text-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px; /* Reduced from 10px */
+            margin-bottom: 6px; /* Reduced from 8px */
+            padding-left: 2px;
+        }
+
+        .text-dot {
+            width: 4px; /* Reduced from 5px */
+            height: 4px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .text-item-content {
+            font-size: 12px; /* Reduced from 13px */
+            line-height: 1.4; /* Tighter line height */
+            color: #111827; /* BLACK TEXT for readability */
+            font-weight: 500;
+        }
+
+        .history-item {
+            display: flex;
+            gap: 10px; /* Reduced from 12px */
+            margin-bottom: 6px; /* Reduced from 8px */
+            padding-left: 2px;
+        }
+
+        .history-year {
+            font-size: 10px; /* Reduced from 11px */
+            font-weight: 700;
+            color: #7c3aed; /* Purple for contrast */
+            min-width: 40px;
+        }
+
+        .history-event {
+            font-size: 12px; /* Reduced from 13px */
+            font-weight: 500;
+            line-height: 1.4;
+            color: #111827; /* BLACK TEXT for readability */
+        }
+
+        /* Scroll hint - BOTTOM */
+        .scroll-hint {
+            text-align: center;
+            font-size: 9px; /* Reduced from 11px */
+            color: rgba(0, 0, 0, 0.4); /* Dark for visibility */
+            margin-top: 8px;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            padding: 6px 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive - ensure 100vh on all devices */
+        @media (max-width: 768px) {
+            .greeting-text {
+                font-size: 22px;
+            }
+
+            .main-headline {
+                font-size: 26px;
+            }
+
+            .briefing-title h3 {
+                font-size: 14px;
+            }
+
+            .text-item-content,
+            .history-event {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            /* Extra compression for short screens */
+            .header {
+                padding: 8px 12px;
+                margin-bottom: 8px;
+            }
+
+            .greeting-section {
+                margin-bottom: 8px;
+            }
+
+            .greeting-text {
+                font-size: 20px;
+                margin-bottom: 6px;
+            }
+
+            .main-headline {
+                font-size: 24px;
+            }
+
+            .glass-card-briefing {
+                padding: 10px;
+            }
+
+            .text-item-content,
+            .history-event {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header - NO DARK MODE TOGGLE -->
+        <div class="header">
+            <div class="logo">TEN NEWS</div>
+            <div style="display: flex; align-items: center;">
+                <button class="glass-button">LOGIN</button>
+                <button class="glass-button">SIGN UP</button>
+                <!-- ❌ DARK MODE TOGGLE REMOVED -->
+            </div>
+        </div>
+
+        <!-- COMPRESSED HIERARCHY: Greeting Section -->
+        <div class="greeting-section">
+            <!-- Good Evening - Smaller -->
+            <h2 class="greeting-text">Goood evening!</h2>
+            
+            <!-- Main Headline - Larger, BLACK TEXT -->
+            <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
+        </div>
+
+        <!-- ❌ NAVIGATION DOTS REMOVED -->
+
+        <!-- TODAY'S BRIEFING IN GLASSMORPHISM BOX - COMPRESSED TO FIT 100VH -->
+        <div class="glass-card-briefing">
+            <!-- Header -->
+            <div class="briefing-header">
+                <div class="briefing-title">
+                    <span style="font-size: 16px;">✨</span>
+                    <h3>Today's Briefing</h3>
+                </div>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span class="live-text">Live</span>
+                </div>
+            </div>
+
+            <!-- What's Happening - Compressed, BLACK TEXT -->
+            <div class="text-section">
+                <div class="section-label">WHAT'S HAPPENING</div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
+                    <div class="text-item-content">NATO-Russia tensions escalate in Eastern Europe</div>
+                </div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #10B981;"></div>
+                    <div class="text-item-content">Global markets surge 3% on trade deal optimism</div>
+                </div>
+                <div class="text-item">
+                    <div class="text-dot" style="background: #3B82F6;"></div>
+                    <div class="text-item-content">Tech giants announce joint AI safety initiative</div>
+                </div>
+            </div>
+
+            <!-- Today in History - Compressed, BLACK TEXT -->
+            <div class="text-section" style="margin-bottom: 0;">
+                <div class="section-label">📅 TODAY IN HISTORY</div>
+                <div class="history-item">
+                    <div class="history-year">1789</div>
+                    <div class="history-event">U.S. Constitution ratified by required states</div>
+                </div>
+                <div class="history-item">
+                    <div class="history-year">1957</div>
+                    <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+                </div>
+                <div class="history-item" style="margin-bottom: 0;">
+                    <div class="history-year">1991</div>
+                    <div class="history-event">World Wide Web made publicly available</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ❌ READER COUNTER REMOVED -->
+
+        <!-- Scroll Hint - Bottom -->
+        <div class="scroll-hint">
+            SCROLL TO CONTINUE ↓
+        </div>
+
+        <!-- Design Notes -->
+        <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(16, 185, 129, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px; color: white; max-width: 250px; font-size: 11px;">
+            <strong>✅ 100vh Fix Applied:</strong><br>
+            • Dark mode removed<br>
+            • All content fits in viewport<br>
+            • No scrolling on first page<br>
+            • Black text for readability<br>
+            • Compressed spacing/sizes
+        </div>
+    </div>
+</body>
+</html>
