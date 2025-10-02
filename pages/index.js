@@ -1638,200 +1638,229 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <div style={{ 
-                  maxWidth: '1200px', 
-                  margin: '0 auto', 
-                  padding: '40px 24px',
-                  minHeight: 'calc(100vh - 140px)'
+                  height: 'calc(100vh - 60px)',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '24px',
+                  maxWidth: '1400px',
+                  margin: '0 auto'
                 }}>
-                  {/* Hero Section with Greeting */}
+                  {/* Top Section - Greeting + Date */}
                   <div style={{ 
                     textAlign: 'center', 
-                    marginBottom: '48px',
-                    paddingTop: '20px'
+                    marginBottom: '24px'
                   }}>
                     <div style={{ 
-                      fontSize: '56px',
+                      fontSize: '42px',
                       fontWeight: '900',
                       lineHeight: '1',
-                      marginBottom: '12px',
+                      marginBottom: '8px',
                       background: getGreetingGradient(),
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
                     }}>{getGreetingText()}</div>
                     <div style={{ 
-                      fontSize: '18px',
-                      fontWeight: '500',
+                      fontSize: '13px',
+                      fontWeight: '600',
                       color: darkMode ? '#9ca3af' : '#6b7280',
-                      marginBottom: '32px'
-                    }}>Your daily global news digest</div>
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px'
+                    }}>{story.date}</div>
                   </div>
 
-                  {/* Featured Story - Large Card */}
-                  {stories.filter(s => s.type === 'news')[0] && (
-                    <div style={{
-                      background: darkMode ? '#1f2937' : '#ffffff',
-                      borderRadius: '16px',
-                      padding: '32px',
-                      marginBottom: '40px',
-                      border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s'
-                    }} onClick={() => goToStory(1)}>
-                      <div style={{
-                        display: 'inline-block',
-                        padding: '6px 12px',
-                        background: 'rgba(220, 38, 38, 0.1)',
-                        color: '#dc2626',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        marginBottom: '16px'
-                      }}>{stories.filter(s => s.type === 'news')[0].emoji} {stories.filter(s => s.type === 'news')[0].category}</div>
-                      <h2 style={{
-                        fontSize: '36px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        marginBottom: '16px',
-                        color: darkMode ? '#ffffff' : '#0f172a'
-                      }}>{stories.filter(s => s.type === 'news')[0].title}</h2>
-                      <p style={{
-                        fontSize: '16px',
-                        lineHeight: '1.6',
-                        color: darkMode ? '#d1d5db' : '#4b5563',
-                        marginBottom: '16px'
-                      }}>{stories.filter(s => s.type === 'news')[0].summary?.substring(0, 150)}...</p>
-                      <div style={{
-                        fontSize: '13px',
-                        color: darkMode ? '#9ca3af' : '#6b7280'
-                      }}>{stories.filter(s => s.type === 'news')[0].source}</div>
-                    </div>
-                  )}
-
-                  {/* Today's Top Stories - Grid */}
-                  <div style={{ marginBottom: '40px' }}>
-                    <h3 style={{
-                      fontSize: '24px',
-                      fontWeight: '800',
-                      color: darkMode ? '#ffffff' : '#0f172a',
-                      marginBottom: '24px',
-                      letterSpacing: '-0.5px'
-                    }}>Today's Top Stories</h3>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                      gap: '24px'
-                    }}>
-                      {stories.filter(s => s.type === 'news').slice(1, 7).map((newsStory, i) => (
-                        <div key={i} style={{
-                          background: darkMode ? '#1f2937' : '#ffffff',
-                          borderRadius: '12px',
-                          padding: '20px',
-                          border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s',
-                          height: '100%'
-                        }} onClick={() => goToStory(i + 2)}>
-                          <div style={{
-                            display: 'inline-block',
-                            padding: '4px 8px',
-                            background: `rgba(${i % 2 === 0 ? '59, 130, 246' : '249, 115, 22'}, 0.1)`,
-                            color: i % 2 === 0 ? '#3b82f6' : '#f97316',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            marginBottom: '12px'
-                          }}>{newsStory.emoji} {newsStory.category}</div>
-                          <h4 style={{
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            lineHeight: '1.3',
-                            marginBottom: '8px',
-                            color: darkMode ? '#ffffff' : '#0f172a'
-                          }}>{newsStory.title}</h4>
-                          <p style={{
-                            fontSize: '13px',
-                            lineHeight: '1.5',
-                            color: darkMode ? '#9ca3af' : '#6b7280'
-                          }}>{newsStory.summary?.substring(0, 100)}...</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* More Stories */}
-                  {stories.filter(s => s.type === 'news').length > 7 && (
-                    <div style={{ marginBottom: '40px' }}>
+                  {/* Main Content Grid - Compact to fit screen */}
+                  <div style={{
+                    flex: 1,
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr',
+                    gap: '20px',
+                    overflow: 'hidden'
+                  }}>
+                    {/* Left Column - Top Stories Grid */}
+                    <div>
                       <h3 style={{
-                        fontSize: '24px',
+                        fontSize: '16px',
                         fontWeight: '800',
                         color: darkMode ? '#ffffff' : '#0f172a',
-                        marginBottom: '24px',
-                        letterSpacing: '-0.5px'
-                      }}>More Stories</h3>
+                        marginBottom: '16px',
+                        letterSpacing: '-0.3px'
+                      }}>Top Stories</h3>
                       <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '16px'
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '12px',
+                        height: 'calc(100% - 40px)'
                       }}>
-                        {stories.filter(s => s.type === 'news').slice(7).map((newsStory, i) => (
+                        {stories.filter(s => s.type === 'news').slice(0, 4).map((newsStory, i) => (
                           <div key={i} style={{
-                            display: 'flex',
-                            gap: '16px',
-                            padding: '16px',
                             background: darkMode ? '#1f2937' : '#ffffff',
                             borderRadius: '12px',
+                            padding: '16px',
                             border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
                             cursor: 'pointer',
-                            transition: 'all 0.3s'
-                          }} onClick={() => goToStory(i + 8)}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{
-                                display: 'inline-block',
-                                padding: '4px 8px',
-                                background: 'rgba(139, 92, 246, 0.1)',
-                                color: '#8b5cf6',
-                                borderRadius: '4px',
-                                fontSize: '10px',
-                                fontWeight: '700',
-                                textTransform: 'uppercase',
-                                marginBottom: '8px'
-                              }}>{newsStory.emoji} {newsStory.category}</div>
-                              <h4 style={{
-                                fontSize: '16px',
-                                fontWeight: '700',
-                                lineHeight: '1.3',
-                                marginBottom: '8px',
-                                color: darkMode ? '#ffffff' : '#0f172a'
-                              }}>{newsStory.title}</h4>
-                              <p style={{
-                                fontSize: '13px',
-                                color: darkMode ? '#9ca3af' : '#6b7280'
-                              }}>{newsStory.source}</p>
-                            </div>
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden'
+                          }} onClick={() => goToStory(i + 1)}>
+                            <div style={{
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              color: ['#dc2626', '#f97316', '#3b82f6', '#10b981'][i],
+                              textTransform: 'uppercase',
+                              marginBottom: '8px',
+                              letterSpacing: '0.5px'
+                            }}>{newsStory.emoji} {newsStory.category}</div>
+                            <h4 style={{
+                              fontSize: '15px',
+                              fontWeight: '700',
+                              lineHeight: '1.3',
+                              marginBottom: '8px',
+                              color: darkMode ? '#ffffff' : '#0f172a',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: '2',
+                              WebkitBoxOrient: 'vertical'
+                            }}>{newsStory.title}</h4>
+                            <p style={{
+                              fontSize: '12px',
+                              lineHeight: '1.4',
+                              color: darkMode ? '#9ca3af' : '#6b7280',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: '2',
+                              WebkitBoxOrient: 'vertical',
+                              flex: 1
+                            }}>{newsStory.summary?.substring(0, 80)}...</p>
                           </div>
                         ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Scroll hint */}
+                    {/* Right Column - More Stories + History */}
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '20px'
+                    }}>
+                      {/* More Headlines */}
+                      <div>
+                        <h3 style={{
+                          fontSize: '16px',
+                          fontWeight: '800',
+                          color: darkMode ? '#ffffff' : '#0f172a',
+                          marginBottom: '12px',
+                          letterSpacing: '-0.3px'
+                        }}>More Headlines</h3>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '10px'
+                        }}>
+                          {stories.filter(s => s.type === 'news').slice(4, 7).map((newsStory, i) => (
+                            <div key={i} style={{
+                              padding: '12px',
+                              background: darkMode ? '#1f2937' : '#f9fafb',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                            }} onClick={() => goToStory(i + 5)}>
+                              <div style={{
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                lineHeight: '1.3',
+                                color: darkMode ? '#e5e7eb' : '#1f2937',
+                                marginBottom: '4px'
+                              }}>{newsStory.title}</div>
+                              <div style={{
+                                fontSize: '10px',
+                                color: darkMode ? '#9ca3af' : '#6b7280'
+                              }}>{newsStory.category}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Today in History - Compact */}
+                      <div style={{
+                        background: darkMode ? '#1f2937' : '#ffffff',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
+                      }}>
+                        <h3 style={{
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          color: darkMode ? '#9ca3af' : '#6b7280',
+                          marginBottom: '12px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>On This Day</h3>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px'
+                        }}>
+                          {[
+                            { year: '1969', event: 'Moon landing' },
+                            { year: '2007', event: 'First iPhone' }
+                          ].map((item, i) => (
+                            <div key={i} style={{
+                              fontSize: '12px',
+                              color: darkMode ? '#9ca3af' : '#6b7280',
+                              display: 'flex',
+                              gap: '8px'
+                            }}>
+                              <span style={{ fontWeight: '700', color: '#8b5cf6' }}>{item.year}</span>
+                              <span>{item.event}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stats */}
+                      <div style={{
+                        background: darkMode ? '#1f2937' : '#ffffff',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                        textAlign: 'center'
+                      }}>
+                        <div style={{
+                          fontSize: '32px',
+                          fontWeight: '800',
+                          color: '#3b82f6',
+                          lineHeight: '1'
+                        }}>10</div>
+                        <div style={{
+                          fontSize: '11px',
+                          color: darkMode ? '#9ca3af' : '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginTop: '4px'
+                        }}>Stories Today</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Navigation Hint */}
                   <div style={{
                     textAlign: 'center',
-                    marginTop: '40px',
-                    paddingBottom: '40px'
+                    paddingTop: '16px',
+                    borderTop: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
                   }}>
                     <div style={{
-                      fontSize: '12px',
+                      fontSize: '11px',
                       color: '#94a3b8',
                       textTransform: 'uppercase',
                       letterSpacing: '1px',
                       fontWeight: '600'
-                    }}>Click any story to read more ↑</div>
+                    }}>↓ Scroll for stories</div>
                   </div>
                 </div>
               ) : story.type === 'news' ? (
