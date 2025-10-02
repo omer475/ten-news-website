@@ -1052,6 +1052,11 @@ export default function Home() {
           50% { transform: translateX(-50%) translateY(-8px); }
         }
 
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
         /* Authentication Styles */
         .auth-btn {
           padding: 8px 16px;
@@ -1666,49 +1671,93 @@ export default function Home() {
                   {/* Today's Briefing Card */}
                   <div style={{
                     background: darkMode ? '#1f2937' : '#ffffff',
-                    borderRadius: '16px',
-                    padding: '24px',
+                    borderRadius: '20px',
+                    padding: '32px',
                     marginTop: '40px',
                     marginBottom: '40px',
                     border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                    maxWidth: '600px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                    maxWidth: '950px',
                     margin: '40px auto'
                   }}>
+                    {/* Header with icon and Live badge */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '32px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}>
+                        <span style={{ fontSize: '28px' }}>✨</span>
+                        <h2 style={{
+                          fontSize: '24px',
+                          fontWeight: '700',
+                          color: darkMode ? '#ffffff' : '#0f172a',
+                          margin: 0
+                        }}>Today's Briefing</h2>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 12px',
+                        background: '#10b981',
+                        borderRadius: '20px'
+                      }}>
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#ffffff',
+                          animation: 'pulse 2s infinite'
+                        }}></div>
+                        <span style={{
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          color: '#ffffff'
+                        }}>Live</span>
+                      </div>
+                    </div>
+
                     {/* What's Happening */}
-                    <div style={{ marginBottom: '24px' }}>
+                    <div style={{ marginBottom: '32px' }}>
                       <h3 style={{
-                        fontSize: '18px',
-                        fontWeight: '800',
-                        color: darkMode ? '#ffffff' : '#0f172a',
-                        marginBottom: '20px',
-                        letterSpacing: '-0.5px'
-                      }}>What's Happening</h3>
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        color: darkMode ? '#9ca3af' : '#6b7280',
+                        marginBottom: '16px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                      }}>WHAT'S HAPPENING</h3>
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '16px'
+                        gap: '12px'
                       }}>
                         {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
                           <div key={i} style={{
-                            padding: '16px',
-                            background: darkMode ? '#111827' : '#f9fafb',
-                            borderRadius: '12px',
-                            borderLeft: `3px solid ${['#dc2626', '#f97316', '#3b82f6'][i]}`,
-                            transition: 'all 0.2s',
-                            cursor: 'pointer'
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'flex-start'
                           }}>
                             <div style={{
-                              fontSize: '15px',
-                              fontWeight: '600',
-                              lineHeight: '1.4',
-                              color: darkMode ? '#ffffff' : '#1f2937'
-                            }}>{newsStory.title}</div>
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              background: ['#ef4444', '#10b981', '#3b82f6'][i],
+                              marginTop: '8px',
+                              flexShrink: 0
+                            }}></div>
                             <div style={{
-                              fontSize: '12px',
-                              color: darkMode ? '#9ca3af' : '#6b7280',
-                              marginTop: '6px'
-                            }}>{newsStory.category}</div>
+                              fontSize: '16px',
+                              fontWeight: '500',
+                              lineHeight: '1.5',
+                              color: darkMode ? '#e5e7eb' : '#1f2937'
+                            }}>{newsStory.title}</div>
                           </div>
                         ))}
                       </div>
@@ -1716,38 +1765,71 @@ export default function Home() {
 
                     {/* Today in History */}
                     <div>
-                      <h3 style={{
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        color: darkMode ? '#ffffff' : '#1f2937',
-                        marginBottom: '16px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px'
-                      }}>Today in History</h3>
-                      {[
-                        { year: '1969', event: 'Apollo 11 lands on the moon' },
-                        { year: '1945', event: 'World War II ends' },
-                        { year: '2007', event: 'First iPhone is released' }
-                      ].map((item, i) => (
-                        <div key={i} style={{
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '16px'
+                      }}>
+                        <div style={{
+                          background: '#8b5cf6',
+                          borderRadius: '8px',
+                          padding: '8px',
                           display: 'flex',
-                          gap: '12px',
-                          marginBottom: '12px',
-                          alignItems: 'flex-start'
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '40px'
                         }}>
                           <div style={{
-                            fontSize: '14px',
+                            fontSize: '10px',
                             fontWeight: '700',
-                            color: '#8b5cf6',
-                            minWidth: '45px'
-                          }}>{item.year}</div>
-                          <div style={{
-                            fontSize: '14px',
-                            lineHeight: '1.5',
-                            color: darkMode ? '#d1d5db' : '#4b5563'
-                          }}>{item.event}</div>
+                            color: '#ffffff',
+                            textAlign: 'center',
+                            lineHeight: '1.2'
+                          }}>
+                            <div>📅</div>
+                            <div style={{ fontSize: '12px' }}>17</div>
+                          </div>
                         </div>
-                      ))}
+                        <h3 style={{
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          color: darkMode ? '#9ca3af' : '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '1px',
+                          margin: 0
+                        }}>TODAY IN HISTORY</h3>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px'
+                      }}>
+                        {[
+                          { year: '1789', event: 'US Congress proposes Bill of Rights' },
+                          { year: '1957', event: 'Nine students integrate Little Rock High School' },
+                          { year: '2001', event: 'Apple releases first iPod, revolutionizing music' }
+                        ].map((item, i) => (
+                          <div key={i} style={{
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'flex-start'
+                          }}>
+                            <div style={{
+                              fontSize: '16px',
+                              fontWeight: '700',
+                              color: '#8b5cf6',
+                              minWidth: '50px'
+                            }}>{item.year}</div>
+                            <div style={{
+                              fontSize: '16px',
+                              fontWeight: '500',
+                              lineHeight: '1.5',
+                              color: darkMode ? '#e5e7eb' : '#1f2937'
+                            }}>{item.event}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
