@@ -940,13 +940,15 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
           border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-          box-shadow: 0 4px 12px ${darkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .news-detail-item {
@@ -1040,20 +1042,49 @@ export default function Home() {
         /* Authentication Styles */
         .auth-btn {
           padding: 8px 16px;
-          background: transparent;
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 16px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.5px;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.3s ease;
           text-transform: uppercase;
+          position: relative;
         }
 
         .auth-btn:hover {
-          background: ${darkMode ? '#374151' : '#f9fafb'};
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-1px);
+        }
+
+        .subscribe-btn {
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 16px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          position: relative;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(168, 85, 247, 0.8) 100%);
+        }
+
+        .subscribe-btn:hover {
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
+          transform: translateY(-1px);
         }
 
         .user-welcome {
@@ -1489,49 +1520,6 @@ export default function Home() {
             font-size: 10px;
           }
         }
-
-        /* Glassy design */
-        .glass-card {
-          /* Essential for the glassy look */
-          background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
-          backdrop-filter: blur(5px); /* The "frosted glass" effect */
-          -webkit-backdrop-filter: blur(5px); /* For Safari compatibility */
-
-          /* Enhances the effect */
-          border-radius: 16px; /* Rounded corners */
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Adds depth */
-          border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
-
-          /* Other properties */
-          position: relative; /* Or other desired positioning */
-          color: white; /* Example text color */
-        }
-
-        .glass-card-dark {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          border-radius: 16px;
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          position: relative;
-          color: white;
-        }
-
-        .glass-button {
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          transition: all 0.3s ease;
-          border-radius: 8px;
-          color: white;
-        }
-
-        .glass-button:hover {
-          background: rgba(255, 255, 255, 0.25);
-          transform: translateY(-1px);
-        }
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
@@ -1548,23 +1536,28 @@ export default function Home() {
             {user ? (
               <>
                 <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
-                <button className="auth-btn glass-button" onClick={handleLogout}>LOGOUT</button>
+                <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
               </>
             ) : (
               <>
-                <button className="auth-btn glass-button" onClick={() => setAuthModal('login')}>LOGIN</button>
-                <button className="subscribe-btn glass-button" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+                <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
+                <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
                 {currentIndex === 0 && (
                   <button
                     onClick={toggleDarkMode}
-                    className="glass-button"
                     style={{
                       marginLeft: '4px',
                       padding: '8px',
                       borderRadius: '50%',
+                      background: darkMode ? '#1f2937' : '#f8fafc',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      boxShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      backdropFilter: 'blur(8px)'
                     }}
                     aria-label="Toggle dark mode"
                   >
@@ -1657,7 +1650,7 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid">
                   
-                  <div className="news-item glass-card" onClick={() => {
+                  <div className="news-item" onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
@@ -1736,10 +1729,13 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: !showTimeline[index] ? '#ffffff' : 'transparent',
+                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                              backdropFilter: 'blur(5px)',
+                              WebkitBackdropFilter: 'blur(5px)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                              transition: 'all 0.3s ease'
                             }} onClick={(e) => {
                               e.stopPropagation();
                               if (showTimeline[index]) {
@@ -1762,10 +1758,13 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: showTimeline[index] ? '#ffffff' : 'transparent',
+                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                              backdropFilter: 'blur(5px)',
+                              WebkitBackdropFilter: 'blur(5px)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                              transition: 'all 0.3s ease'
                             }} onClick={(e) => {
                               e.stopPropagation();
                               if (!showTimeline[index]) {
@@ -1787,8 +1786,8 @@ export default function Home() {
                         )}
                         
                         {/* Fixed Position Details/Timeline Section */}
-                        <div
-                          className="news-meta glass-card" 
+                        <div 
+                          className="news-meta" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
@@ -1879,18 +1878,20 @@ export default function Home() {
                         ) : (
                           // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
-                            <div 
+                            <div
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: darkMode ? '#000000' : '#ffffff',
-                                border: '1px solid #e5e7eb',
+                                background: 'rgba(255, 255, 255, 0.2)',
+                                backdropFilter: 'blur(5px)',
+                                WebkitBackdropFilter: 'blur(5px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
                                 borderRadius: '16px',
+                                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
                                 padding: '12px 20px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',
