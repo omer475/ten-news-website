@@ -940,15 +940,15 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
         }
 
         .news-detail-item {
@@ -1537,11 +1537,11 @@ export default function Home() {
           .news-meta {
             padding: 10px 15px;
             margin-top: 15px;
-            background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
           }
           
           .news-detail-item {
@@ -1755,8 +1755,8 @@ export default function Home() {
                           <div style={{
                             display: 'flex',
                             background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                            backdropFilter: 'blur(4px)',
-                            WebkitBackdropFilter: 'blur(4px)',
+                            backdropFilter: 'blur(2px)',
+                            WebkitBackdropFilter: 'blur(2px)',
                             border: '1px solid rgba(255, 255, 255, 0.5)',
                             borderRadius: '999vw',
                             padding: '2px',
@@ -1769,11 +1769,11 @@ export default function Home() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               padding: '8px 16px',
-                              borderRadius: '16px',
+                              borderRadius: '999vw',
                               background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                              transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
+                              boxShadow: !showTimeline[index] ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
                               if (showTimeline[index]) {
@@ -1795,11 +1795,11 @@ export default function Home() {
                               alignItems: 'center',
                               justifyContent: 'center',
                               padding: '8px 16px',
-                              borderRadius: '16px',
+                              borderRadius: '999vw',
                               background: showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                              transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
+                              boxShadow: showTimeline[index] ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
                               if (!showTimeline[index]) {
@@ -1829,9 +1829,9 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.5)',
-                          boxShadow: showTimeline[index] ? 'none' : 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)'
+                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
+                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
+                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1923,13 +1923,13 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                                backdropFilter: 'blur(4px)',
-                                WebkitBackdropFilter: 'blur(4px)',
-                                border: '1px solid rgba(255, 255, 255, 0.5)',
-                                borderRadius: '12px',
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
+                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',
