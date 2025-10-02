@@ -106,7 +106,7 @@ export default function NewFirstPage({ onContinue }) {
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '12px',
-            padding: '12px',
+            padding: '10px',
             boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
             flex: 1,
             display: 'flex',
@@ -114,10 +114,10 @@ export default function NewFirstPage({ onContinue }) {
             justifyContent: 'space-between'
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '14px' }}>✨</span>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: 'white', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#000000', textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>Today's Briefing</h3>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                 <div style={{ width: '4px', height: '4px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
@@ -126,13 +126,13 @@ export default function NewFirstPage({ onContinue }) {
             </div>
 
             {/* What's Happening - COMPRESSED */}
-            <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '6px' }}>WHAT'S HAPPENING</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {whatsHappening.map((item, i) => (
+            <div style={{ marginBottom: '6px' }}>
+              <div style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '4px' }}>WHAT'S HAPPENING</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {whatsHappening.slice(0, 2).map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', paddingLeft: '2px' }}>
-                    <div style={{ width: '3px', height: '3px', background: item.color, borderRadius: '50%', marginTop: '4px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: '1.3', color: 'white' }}>{item.text}</span>
+                    <div style={{ width: '3px', height: '3px', background: item.color, borderRadius: '50%', marginTop: '3px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: '1.2', color: '#000000' }}>{item.text}</span>
                   </div>
                 ))}
               </div>
@@ -140,15 +140,15 @@ export default function NewFirstPage({ onContinue }) {
 
             {/* Today in History - COMPRESSED */}
             <div style={{ marginBottom: 0 }}>
-              <div style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '10px' }}>📅</span>
                 TODAY IN HISTORY
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {historicalEvents.slice(0, 3).map((event, i) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {historicalEvents.slice(0, 2).map((event, i) => (
                   <div key={i} style={{ display: 'flex', gap: '8px', paddingLeft: '2px' }}>
                     <span style={{ fontSize: '9px', fontWeight: '700', color: '#A855F7', minWidth: '35px' }}>{event.year}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: '1.3', color: 'white' }}>{event.event}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 500, lineHeight: '1.2', color: '#000000' }}>{event.event}</span>
                   </div>
                 ))}
               </div>
