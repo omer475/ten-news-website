@@ -1040,22 +1040,92 @@ export default function Home() {
         }
 
         /* Authentication Styles */
-        .auth-btn {
-          padding: 8px 16px;
-          background: transparent;
-          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
+        @property --angle-1 {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: -75deg;
+        }
+
+        @property --angle-2 {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: -45deg;
+        }
+
+        .auth-btn, .subscribe-btn {
+          all: unset;
           cursor: pointer;
-          transition: all 0.2s;
+          position: relative;
+          -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+          pointer-events: auto;
+          z-index: 3;
+          background: linear-gradient(
+            -75deg,
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.05)
+          );
+          border-radius: 999vw;
+          box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
+            inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
+            0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2),
+            0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+          transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+          padding: 10px 20px;
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+          letter-spacing: -0.05em;
+          font-weight: 500;
+          font-size: 12px;
+          color: rgba(50, 50, 50, 1);
+          text-shadow: 0em 0.25em 0.05em rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.5);
           text-transform: uppercase;
         }
 
-        .auth-btn:hover {
-          background: ${darkMode ? '#374151' : '#f9fafb'};
+        .auth-btn:hover, .subscribe-btn:hover {
+          transform: scale(0.975);
+          backdrop-filter: blur(0.5px);
+          -webkit-backdrop-filter: blur(0.5px);
+          box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
+            inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
+            0 0.15em 0.05em -0.1em rgba(0, 0, 0, 0.25),
+            0 0 0.05em 0.1em inset rgba(255, 255, 255, 0.5);
+          text-shadow: 0.025em 0.025em 0.025em rgba(0, 0, 0, 0.12);
+        }
+
+        .auth-btn::after, .subscribe-btn::after {
+          content: "";
+          position: absolute;
+          z-index: 1;
+          inset: 0;
+          border-radius: 999vw;
+          width: calc(100% + 1px);
+          height: calc(100% + 1px);
+          top: calc(0% - 0.5px);
+          left: calc(0% - 0.5px);
+          padding: 1px;
+          box-sizing: border-box;
+          background: conic-gradient(
+              from var(--angle-1) at 50% 50%,
+              rgba(0, 0, 0, 0.5),
+              rgba(0, 0, 0, 0) 5% 40%,
+              rgba(0, 0, 0, 0.5) 50%,
+              rgba(0, 0, 0, 0) 60% 95%,
+              rgba(0, 0, 0, 0.5)
+            ),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1), --angle-1 500ms ease;
+          box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.5);
+        }
+
+        .auth-btn:hover::after, .subscribe-btn:hover::after {
+          --angle-1: -125deg;
         }
 
         .user-welcome {
