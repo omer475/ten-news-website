@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '../lib/supabase';
+import NewFirstPage from '../components/NewFirstPage';
 
 export default function Home() {
   const [stories, setStories] = useState([]);
@@ -545,10 +546,11 @@ export default function Home() {
     }
   };
 
-  // Function to render greeting with gradient first part - separated layout
+  // Function to render greeting with gradient first part
   const renderGreeting = (headline) => {
     const correctGreeting = getGreetingText(); // Get the time-appropriate greeting
     const gradient = getGreetingGradient();
+    const restGradient = getHeadlineRestGradient();
     
     // Check for various greeting patterns that AI might write
     const greetingPatterns = [
@@ -570,29 +572,17 @@ export default function Home() {
     
     if (foundGreeting) {
       // Replace AI's greeting with the correct time-based greeting
-      const restOfText = headline.substring(foundGreeting.length).trim();
+      const restOfText = headline.substring(foundGreeting.length);
       return (
-        <div style={{ textAlign: 'center' }}>
-          {/* Greeting on top - larger */}
-          <div style={{ 
-            fontSize: '80px',
-            fontWeight: '900',
-            lineHeight: '1',
-            marginBottom: '20px',
+        <>
+          <span style={{ 
             background: gradient,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
-          }}>{correctGreeting}</div>
-          
-          {/* Rest of text below - smaller */}
-          <div style={{ 
-            fontSize: '36px',
-            fontWeight: '700',
-            lineHeight: '1.2',
-            color: darkMode ? '#ffffff' : '#0f172a'
-          }}>{restOfText}</div>
-        </div>
+          }}>{correctGreeting}</span>
+          <span style={{ color: darkMode ? '#ffffff' : '#0f172a' }}>{restOfText}</span>
+        </>
       );
     }
     return headline;
@@ -832,11 +822,6 @@ export default function Home() {
           letter-spacing: -1px; /* tighter */
           margin-bottom: 40px;
           color: ${darkMode ? '#ffffff' : '#0f172a'};
-        }
-
-        /* Hide category pills scrollbar */
-        .category-pills::-webkit-scrollbar {
-          display: none;
         }
 
         .subheadline {
@@ -1430,14 +1415,6 @@ export default function Home() {
             margin-bottom: 30px;
             line-height: 1.12;
           }
-
-          .main-headline > div > div:first-child {
-            font-size: 48px !important;
-          }
-
-          .main-headline > div > div:last-child {
-            font-size: 24px !important;
-          }
           
           .date-header {
             font-size: 11px;
@@ -1631,128 +1608,11 @@ export default function Home() {
               }}
             >
               {story.type === 'opening' ? (
-                <div className="opening-container">
-                  {/* Swipeable Category Pills */}
-                  <div style={{
-                    display: 'flex',
-                    gap: '10px',
-                    overflowX: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                    marginBottom: '32px',
-                    padding: '0 20px'
-                  }} className="category-pills">
-                    {['World', 'Business', 'Tech', 'Sports', 'Health', 'Climate', 'Science'].map((cat, idx) => (
-                      <div key={idx} style={{
-                        padding: '8px 20px',
-                        background: darkMode ? '#1f2937' : '#f1f5f9',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: darkMode ? '#d1d5db' : '#4b5563',
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`
-                      }}>{cat}</div>
-                    ))}
-                  </div>
-
-                  <h1 className="main-headline">
-                    {renderGreeting(story.headline)}
-                  </h1>
-
-                  {/* Today's Briefing - Compact Modern News App Style */}
-                  <div style={{
-                    maxWidth: '500px',
-                    margin: '32px auto 24px',
-                    padding: '0 20px'
-                  }}>
-                    {/* What's Happening */}
-                    <div style={{ marginBottom: '20px' }}>
-                      <h3 style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>Today</h3>
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}>
-                        {stories.filter(s => s.type === 'news').slice(0, 3).map((newsStory, i) => (
-                          <div key={i} style={{
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'flex-start',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            background: darkMode ? 'rgba(31, 41, 55, 0.3)' : 'rgba(249, 250, 251, 0.5)',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer'
-                          }}>
-                            <div style={{
-                              fontSize: '13px',
-                              fontWeight: '700',
-                              color: ['#dc2626', '#f97316', '#3b82f6'][i],
-                              minWidth: '18px',
-                              marginTop: '2px'
-                            }}>0{i + 1}</div>
-                            <div style={{
-                              fontSize: '14px',
-                              fontWeight: '500',
-                              lineHeight: '1.4',
-                              color: darkMode ? '#e5e7eb' : '#1f2937'
-                            }}>{newsStory.title}</div>
-                    </div>
-                        ))}
-                  </div>
-                    </div>
-
-                    {/* History - Simplified */}
-                    <div>
-                      <h3 style={{
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: darkMode ? '#9ca3af' : '#6b7280',
-                        marginBottom: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>On This Day</h3>
-                      <div style={{
-                    display: 'flex', 
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}>
-                        {[
-                          { year: '1969', event: 'Apollo 11 moon landing' },
-                          { year: '2007', event: 'First iPhone released' }
-                        ].map((item, i) => (
-                          <div key={i} style={{
-                            display: 'flex',
-                            gap: '10px',
-                    alignItems: 'center',
-                    fontSize: '13px',
-                            color: darkMode ? '#9ca3af' : '#6b7280'
-                  }}>
-                    <span style={{
-                              fontWeight: '600',
-                              color: '#8b5cf6'
-                            }}>{item.year}</span>
-                            <span>·</span>
-                            <span>{item.event}</span>
-                  </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="scroll-hint">SCROLL TO CONTINUE ↓</div>
-                </div>
+                <NewFirstPage 
+                  darkMode={darkMode} 
+                  toggleDarkMode={toggleDarkMode}
+                  onContinue={nextStory}
+                />
               ) : story.type === 'news' ? (
                 <div className="news-grid">
                   
