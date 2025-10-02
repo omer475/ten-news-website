@@ -1602,7 +1602,7 @@ export default function Home() {
 
             <div
               className="story-content"
-              style={{
+                              style={{
                 filter: index >= 5 && !user ? 'blur(5px)' : 'none',
                 pointerEvents: index >= 5 && !user ? 'none' : 'auto',
               }}

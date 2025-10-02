@@ -13,14 +13,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
     return () => clearInterval(interval);
   }, []);
 
-  const categories = [
-    { name: '🌍 World', active: true },
-    { name: '💼 Business', active: false },
-    { name: '⚡ Tech', active: false },
-    { name: '🏅 Sports', active: false },
-    { name: '🎬 Entertainment', active: false },
-    { name: '🔬 Science', active: false },
-  ];
 
   const stories = [
     {
@@ -50,13 +42,6 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
   ];
 
   const topics = ['Tech', 'Sports', 'Climate', 'Politics', 'Science', 'Culture'];
-
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  }).toUpperCase();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -101,12 +86,9 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', background: darkMode ? 'rgba(17, 24, 39, 0.9)' : 'rgba(255, 255, 255, 0.9)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '20px', fontWeight: 'bold' }}>TEN NEWS</div>
-              <div style={{ background: '#EF4444', color: 'white', padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 'bold', animation: 'pulse 2s infinite' }}>
-                LIVE
-              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button 
+              <button
                 onClick={toggleDarkMode}
                 style={{ padding: '6px', borderRadius: '9999px', background: darkMode ? '#374151' : '#E5E7EB', transition: 'all 0.3s', cursor: 'pointer', border: 'none', fontSize: '16px' }}
                 aria-label="Toggle dark mode"
@@ -116,49 +98,10 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </div>
           </div>
 
-          {/* Breaking News Ticker */}
-          <div style={{ background: darkMode ? 'rgba(127, 29, 29, 0.3)' : '#FEF2F2', borderLeft: '4px solid #EF4444', padding: '8px 12px', marginBottom: '12px', borderRadius: '0 8px 8px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#DC2626', flexShrink: 0 }}>⚡ BREAKING:</span>
-              <div style={{ fontSize: '11px', whiteSpace: 'nowrap', animation: 'marquee 20s linear infinite' }}>
-                NATO-Russia tensions escalate • Global markets rally on trade deal • AI breakthrough in medicine
-              </div>
-            </div>
-          </div>
 
-          {/* Swipeable Categories */}
-          <div style={{ margin: '0 -20px', padding: '0 20px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }} className="scrollbar-hide">
-              {categories.map((cat, i) => (
-                <button
-                  key={i}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '9999px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.3s',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: cat.active 
-                      ? 'linear-gradient(to right, #3B82F6, #A855F7)' 
-                      : darkMode ? '#374151' : '#ffffff',
-                    color: cat.active ? '#ffffff' : darkMode ? '#D1D5DB' : '#374151',
-                    boxShadow: cat.active ? '0 4px 6px rgba(0,0,0,0.1)' : darkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Greeting Section */}
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ color: '#EF4444', fontWeight: 600, fontSize: '12px', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              {currentDate}
-            </div>
             <h1 style={{
               fontSize: '36px',
               fontWeight: 'bold',
