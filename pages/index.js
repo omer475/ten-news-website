@@ -940,13 +940,15 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
-          box-shadow: 0 4px 12px ${darkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)'};
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
         }
 
         .news-detail-item {
@@ -1468,9 +1470,11 @@ export default function Home() {
           .news-meta {
             padding: 10px 15px;
             margin-top: 15px;
-            background: ${darkMode ? '#000000' : '#ffffff'};
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
           }
           
           .news-detail-item {
@@ -1683,12 +1687,13 @@ export default function Home() {
                           }}>
                           <div style={{
                             display: 'flex',
-                            background: '#f1f5f9',
-                            border: '1px solid #e2e8f0',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
                             borderRadius: '16px',
                             padding: '2px',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                             width: '100px'
                           }}>
                             {/* Details Button - Icons Only */}
@@ -1698,7 +1703,7 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: !showTimeline[index] ? '#ffffff' : 'transparent',
+                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
                               boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
@@ -1724,7 +1729,7 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: showTimeline[index] ? '#ffffff' : 'transparent',
+                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
                               transition: 'all 0.3s ease',
                               boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
@@ -1848,11 +1853,31 @@ export default function Home() {
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: darkMode ? '#000000' : '#ffffff',
-                                border: '1px solid #e5e7eb',
+                                background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.12)' :
+                                           story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.12)' :
+                                           story.category === 'MARKETS' ? 'rgba(6, 182, 212, 0.12)' :
+                                           story.category === 'TECH & AI' ? 'rgba(102, 126, 234, 0.12)' :
+                                           story.category === 'SCIENCE' ? 'rgba(14, 165, 233, 0.12)' :
+                                           story.category === 'HEALTH' ? 'rgba(0, 210, 160, 0.12)' :
+                                           story.category === 'CLIMATE' ? 'rgba(34, 197, 94, 0.12)' :
+                                           story.category === 'SPORTS' ? 'rgba(245, 158, 11, 0.12)' :
+                                           story.category === 'ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.12)' : 
+                                           'rgba(255, 255, 255, 0.15)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: story.category === 'WORLD NEWS' ? '1px solid rgba(220, 38, 38, 0.2)' :
+                                        story.category === 'BUSINESS' ? '1px solid rgba(255, 107, 53, 0.2)' :
+                                        story.category === 'MARKETS' ? '1px solid rgba(6, 182, 212, 0.2)' :
+                                        story.category === 'TECH & AI' ? '1px solid rgba(102, 126, 234, 0.2)' :
+                                        story.category === 'SCIENCE' ? '1px solid rgba(14, 165, 233, 0.2)' :
+                                        story.category === 'HEALTH' ? '1px solid rgba(0, 210, 160, 0.2)' :
+                                        story.category === 'CLIMATE' ? '1px solid rgba(34, 197, 94, 0.2)' :
+                                        story.category === 'SPORTS' ? '1px solid rgba(245, 158, 11, 0.2)' :
+                                        story.category === 'ENTERTAINMENT' ? '1px solid rgba(236, 72, 153, 0.2)' : 
+                                        '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',

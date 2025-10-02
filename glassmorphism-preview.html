@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - iOS Glassmorphism Design Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* iOS-style Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Category-specific glass colors */
+        .glass-world {
+            background: rgba(220, 38, 38, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .glass-business {
+            background: rgba(255, 107, 53, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+        }
+
+        .glass-tech {
+            background: rgba(102, 126, 234, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .glass-sports {
+            background: rgba(245, 158, 11, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .glass-science {
+            background: rgba(14, 165, 233, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+
+        .glass-entertainment {
+            background: rgba(236, 72, 153, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(236, 72, 153, 0.2);
+        }
+
+        /* Header with glassmorphism */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Glass buttons */
+        .glass-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);
+        }
+
+        /* Timeline section with glassmorphism */
+        .timeline-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        /* Details section with glassmorphism */
+        .details-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        /* Toggle switch with glassmorphism */
+        .toggle-switch {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 4px;
+            display: inline-flex;
+            gap: 4px;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+        }
+
+        .toggle-option {
+            background: transparent;
+            border: none;
+            border-radius: 16px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-option.active {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* News card with glassmorphism */
+        .news-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .news-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            line-height: 1.3;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .news-summary {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+        }
+
+        /* Demo sections */
+        .demo-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .news-title {
+                font-size: 22px;
+            }
+        }
+
+        /* Dark mode toggle example */
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.1);
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: rotate(180deg);
+        }
+
+        /* Info box */
+        .info-box {
+            background: rgba(59, 130, 246, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .info-box h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Info Section -->
+        <div class="info-box">
+            <h2>🎨 iOS-Style Glassmorphism Design Preview</h2>
+            <p>This preview demonstrates the glassmorphism styling that will be applied to your news website. All features and structure remain identical - only the visual style is enhanced with frosted glass effects, category-colored tints, and modern iOS-inspired aesthetics.</p>
+        </div>
+
+        <!-- Header Example -->
+        <div class="demo-section">
+            <div class="section-title">Header with Glassmorphism</div>
+            <div class="header">
+                <div class="logo">TEN NEWS</div>
+                <div class="controls">
+                    <button class="glass-button">LOGIN</button>
+                    <button class="glass-button">SIGN UP</button>
+                    <div class="dark-mode-toggle">🌙</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- News Cards with Category Colors -->
+        <div class="demo-section">
+            <div class="section-title">News Cards - Category-Specific Glass Tints</div>
+            
+            <div class="news-card glass-world">
+                <div class="category-badge" style="color: #dc2626;">🌍 WORLD NEWS</div>
+                <h2 class="news-title">Critical NATO-Russia tensions dominate headlines</h2>
+                <p class="news-summary">NATO has issued its strongest warning yet to Russia, marking a significant escalation in diplomatic tensions...</p>
+                <button class="glass-button">Read More</button>
+            </div>
+
+            <div class="news-card glass-tech">
+                <div class="category-badge" style="color: #667EEA;">⚡ TECH & AI</div>
+                <h2 class="news-title">Revolutionary AI breakthrough in medical diagnostics</h2>
+                <p class="news-summary">A new artificial intelligence system has achieved unprecedented accuracy in detecting early-stage diseases...</p>
+                <button class="glass-button">Read More</button>
+            </div>
+
+            <div class="news-card glass-sports">
+                <div class="category-badge" style="color: #f59e0b;">🏅 SPORTS</div>
+                <h2 class="news-title">Historic championship victory breaks records</h2>
+                <p class="news-summary">In an extraordinary display of athleticism, the underdog team secured a legendary championship win...</p>
+                <button class="glass-button">Read More</button>
+            </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <div class="demo-section">
+            <div class="section-title">Timeline Section with Glassmorphism</div>
+            <div class="timeline-section glass-tech">
+                <h3 style="color: white; margin-bottom: 16px; font-size: 18px;">📅 Historical Context</h3>
+                <div class="timeline-item">
+                    <div style="font-weight: 700; color: white; margin-bottom: 4px;">2023</div>
+                    <div style="color: rgba(255,255,255,0.85); font-size: 14px;">Major AI advancement announced</div>
+                </div>
+                <div class="timeline-item">
+                    <div style="font-weight: 700; color: white; margin-bottom: 4px;">2020</div>
+                    <div style="color: rgba(255,255,255,0.85); font-size: 14px;">Initial research breakthrough</div>
+                </div>
+                <div class="timeline-item">
+                    <div style="font-weight: 700; color: white; margin-bottom: 4px;">2015</div>
+                    <div style="color: rgba(255,255,255,0.85); font-size: 14px;">Foundation for technology laid</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toggle Switches -->
+        <div class="demo-section">
+            <div class="section-title">Interactive Controls with Glassmorphism</div>
+            <div class="glass-card">
+                <div style="margin-bottom: 16px;">
+                    <div style="color: white; margin-bottom: 12px; font-weight: 600;">View Mode:</div>
+                    <div class="toggle-switch">
+                        <button class="toggle-option active">Timeline</button>
+                        <button class="toggle-option">Details</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="color: white; margin-bottom: 12px; font-weight: 600;">Content Filter:</div>
+                    <div class="controls">
+                        <button class="glass-button">All</button>
+                        <button class="glass-button">World</button>
+                        <button class="glass-button">Tech</button>
+                        <button class="glass-button">Sports</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Section -->
+        <div class="demo-section">
+            <div class="section-title">Details Section with Glassmorphism</div>
+            <div class="details-section glass-business">
+                <h3 style="color: white; margin-bottom: 16px; font-size: 18px;">📊 Key Details</h3>
+                <div class="detail-item">
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">PUBLISHED</div>
+                    <div style="color: white; font-weight: 600;">October 2, 2025</div>
+                </div>
+                <div class="detail-item">
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">READ TIME</div>
+                    <div style="color: white; font-weight: 600;">3 minutes</div>
+                </div>
+                <div class="detail-item">
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px;">CATEGORY</div>
+                    <div style="color: white; font-weight: 600;">Business & Markets</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Category Examples Grid -->
+        <div class="demo-section">
+            <div class="section-title">All Category Glass Tints</div>
+            <div class="grid">
+                <div class="glass-card glass-world">
+                    <div class="category-badge" style="color: #dc2626;">🌍 WORLD</div>
+                    <div style="color: white; font-weight: 600;">Red tint</div>
+                </div>
+                <div class="glass-card glass-business">
+                    <div class="category-badge" style="color: #FF6B35;">💼 BUSINESS</div>
+                    <div style="color: white; font-weight: 600;">Orange tint</div>
+                </div>
+                <div class="glass-card glass-tech">
+                    <div class="category-badge" style="color: #667EEA;">⚡ TECH</div>
+                    <div style="color: white; font-weight: 600;">Blue-purple tint</div>
+                </div>
+                <div class="glass-card glass-sports">
+                    <div class="category-badge" style="color: #f59e0b;">🏅 SPORTS</div>
+                    <div style="color: white; font-weight: 600;">Amber tint</div>
+                </div>
+                <div class="glass-card glass-science">
+                    <div class="category-badge" style="color: #0ea5e9;">🔬 SCIENCE</div>
+                    <div style="color: white; font-weight: 600;">Sky blue tint</div>
+                </div>
+                <div class="glass-card glass-entertainment">
+                    <div class="category-badge" style="color: #ec4899;">🎬 ENTERTAINMENT</div>
+                    <div style="color: white; font-weight: 600;">Pink tint</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design Specifications -->
+        <div class="info-box" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3);">
+            <h2>✨ Applied Glassmorphism Specifications</h2>
+            <p><strong>Frosted Glass Effect:</strong> backdrop-filter: blur(20px) on all main containers</p>
+            <p><strong>Category Colors:</strong> Each category has a subtle rgba() tint (0.12 opacity) matching its brand color</p>
+            <p><strong>Borders:</strong> 1px solid rgba(255,255,255,0.2) for subtle definition</p>
+            <p><strong>Shadows:</strong> 0 8px 32px rgba(31, 38, 135, 0.15) for depth</p>
+            <p><strong>Hover Effects:</strong> Enhanced glass opacity and transform animations</p>
+            <p><strong>Readability:</strong> White text with subtle shadows for clarity through glass</p>
+        </div>
+
+        <div class="glass-card" style="text-align: center; background: rgba(255, 255, 255, 0.1);">
+            <p style="color: white; font-size: 14px; opacity: 0.9;">
+                This design maintains all existing features while adding modern iOS-inspired glassmorphism aesthetics.
+                <br>
+                <strong>Ready to apply to your production website!</strong>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Simple interactivity demo
+        document.querySelectorAll('.toggle-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.toggle-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelector('.dark-mode-toggle').addEventListener('click', function() {
+            this.innerHTML = this.innerHTML === '🌙' ? '☀️' : '🌙';
+        });
+    </script>
+</body>
+</html>

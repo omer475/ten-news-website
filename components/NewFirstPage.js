@@ -71,47 +71,15 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
       
       <div style={{
         minHeight: '100vh',
-        background: darkMode 
-          ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)'
-          : 'linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 25%, #fce7f3 50%, #e0f2fe 75%, #e0e7ff 100%)',
+        background: 'transparent',
         color: darkMode ? '#ffffff' : '#111827',
         transition: 'all 0.5s',
-        overflow: 'hidden',
-        position: 'relative'
+        overflow: 'hidden'
       }}>
-        {/* Background decorative elements */}
-        <div style={{
-          position: 'absolute',
-          top: '10%',
-          right: '10%',
-          width: '300px',
-          height: '300px',
-          background: darkMode 
-            ? 'radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent)'
-            : 'radial-gradient(circle, rgba(167, 139, 250, 0.2), transparent)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          pointerEvents: 'none'
-        }}></div>
-        <div style={{
-          position: 'absolute',
-          bottom: '20%',
-          left: '5%',
-          width: '250px',
-          height: '250px',
-          background: darkMode 
-            ? 'radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent)'
-            : 'radial-gradient(circle, rgba(96, 165, 250, 0.2), transparent)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          pointerEvents: 'none'
-        }}></div>
         <div style={{
           height: '100vh',
           overflowY: 'auto',
-          padding: '0 20px 32px',
-          position: 'relative',
-          zIndex: 1
+          padding: '0 20px 32px'
         }}>
           {/* Greeting Section */}
           <div style={{ marginBottom: '16px' }}>
@@ -151,41 +119,16 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
           </div>
 
           {/* Today's 10 News Widget */}
-          <div style={{ 
-            background: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.4)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '16px', 
-            boxShadow: darkMode 
-              ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              : '0 8px 32px rgba(31, 38, 135, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5)', 
-            padding: '16px', 
-            marginBottom: '12px', 
-            textAlign: 'center',
-            border: darkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.4)'
-          }}>
-            <div style={{ fontSize: '16px', fontWeight: 'bold', color: darkMode ? '#c7d2fe' : '#3730a3', marginBottom: '4px' }}>Today's 10 News to Know</div>
-            <div style={{ fontSize: '12px', color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#64748b' }}>2-minute daily summary</div>
+          <div style={{ background: '#DBEAFE', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', padding: '16px', marginBottom: '12px', textAlign: 'center' }}>
+            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af', marginBottom: '4px' }}>Today's 10 News to Know</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>2-minute daily summary</div>
           </div>
 
           {/* Today's Briefing Card */}
-          <div style={{ 
-            background: darkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.5)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '20px', 
-            boxShadow: darkMode 
-              ? '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-              : '0 8px 32px rgba(31, 38, 135, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)', 
-            padding: '16px', 
-            marginBottom: '12px', 
-            position: 'relative', 
-            overflow: 'hidden',
-            border: darkMode ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(255, 255, 255, 0.5)'
-          }}>
+          <div style={{ background: darkMode ? '#1F2937' : '#ffffff', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', padding: '16px', marginBottom: '12px', position: 'relative', overflow: 'hidden' }}>
             {/* Decorative gradients */}
-            <div style={{ position: 'absolute', top: 0, right: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(168, 85, 247, 0.2), transparent)', filter: 'blur(40px)' }}></div>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent)', filter: 'blur(40px)' }}></div>
+            <div style={{ position: 'absolute', top: 0, right: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1), transparent)', filter: 'blur(40px)' }}></div>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '128px', height: '128px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent)', filter: 'blur(40px)' }}></div>
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', position: 'relative', zIndex: 10 }}>
@@ -200,20 +143,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </div>
 
             {/* What's Happening */}
-            <div style={{ 
-              background: darkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.35)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              borderRadius: '14px', 
-              padding: '12px', 
-              marginBottom: '10px', 
-              position: 'relative', 
-              zIndex: 10,
-              border: darkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: darkMode 
-                ? '0 4px 16px rgba(0, 0, 0, 0.2)'
-                : '0 4px 16px rgba(31, 38, 135, 0.1)'
-            }}>
+            <div style={{ background: darkMode ? 'rgba(55, 65, 81, 0.3)' : '#F9FAFB', borderRadius: '12px', padding: '10px', marginBottom: '10px', position: 'relative', zIndex: 10 }}>
               <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.75, marginBottom: '8px' }}>WHAT'S HAPPENING</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {whatsHappening.map((item, i) => (
@@ -226,20 +156,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             </div>
 
             {/* Today in History */}
-            <div style={{ 
-              background: darkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.35)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              borderRadius: '14px', 
-              padding: '12px', 
-              marginBottom: '12px', 
-              position: 'relative', 
-              zIndex: 10,
-              border: darkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: darkMode 
-                ? '0 4px 16px rgba(0, 0, 0, 0.2)'
-                : '0 4px 16px rgba(31, 38, 135, 0.1)'
-            }}>
+            <div style={{ background: darkMode ? 'rgba(55, 65, 81, 0.3)' : '#F9FAFB', borderRadius: '12px', padding: '10px', marginBottom: '12px', position: 'relative', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                 <span style={{ fontSize: '12px' }}>📅</span>
                 <div style={{ fontSize: '9px', fontWeight: 'bold', opacity: 0.75 }}>TODAY IN HISTORY</div>
@@ -258,33 +175,20 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
             <button 
               style={{
                 width: '100%',
-                padding: '14px',
-                background: darkMode 
-                  ? 'rgba(99, 102, 241, 0.2)' 
-                  : 'rgba(255, 255, 255, 0.4)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: '14px',
+                padding: '12px',
+                background: darkMode ? 'linear-gradient(to right, #1e3a8a, #581c87)' : 'linear-gradient(to right, #DBEAFE, #F3E8FF)',
+                borderRadius: '12px',
                 fontWeight: 'bold',
                 fontSize: '14px',
-                border: darkMode ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255, 255, 255, 0.4)',
+                border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.3s',
                 position: 'relative',
                 zIndex: 10,
-                color: darkMode ? '#c7d2fe' : '#4338ca',
-                boxShadow: darkMode 
-                  ? '0 4px 16px rgba(0, 0, 0, 0.2)'
-                  : '0 4px 16px rgba(31, 38, 135, 0.12)'
+                color: darkMode ? '#ffffff' : '#111827'
               }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'scale(1.02)';
-                e.currentTarget.style.background = darkMode ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255, 255, 255, 0.5)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = darkMode ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 255, 255, 0.4)';
-              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <div style={{ position: 'relative' }}>
