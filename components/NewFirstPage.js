@@ -108,7 +108,7 @@ export default function NewFirstPage({ darkMode, toggleDarkMode, onContinue }) {
                 style={{ padding: '6px', borderRadius: '9999px', background: darkMode ? '#374151' : '#E5E7EB', transition: 'all 0.3s', cursor: 'pointer', border: 'none', fontSize: '16px' }}
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? '☀️' : '🌙'}
+                {darkMode ? '🌙' : '☀️'}
               </button>
             </div>
           </div>
