@@ -940,15 +940,13 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(5px);
-          -webkit-backdrop-filter: blur(5px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
           border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          box-shadow: 0 4px 12px ${darkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)'};
         }
 
         .news-detail-item {
@@ -1042,49 +1040,20 @@ export default function Home() {
         /* Authentication Styles */
         .auth-btn {
           padding: 8px 16px;
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(5px);
-          -webkit-backdrop-filter: blur(5px);
+          background: transparent;
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 16px;
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.5px;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s;
           text-transform: uppercase;
-          position: relative;
         }
 
         .auth-btn:hover {
-          background: rgba(255, 255, 255, 0.25);
-          transform: translateY(-1px);
-        }
-
-        .subscribe-btn {
-          padding: 8px 16px;
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(5px);
-          -webkit-backdrop-filter: blur(5px);
-          color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 16px;
-          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          text-transform: uppercase;
-          position: relative;
-          background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(168, 85, 247, 0.8) 100%);
-        }
-
-        .subscribe-btn:hover {
-          background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
-          transform: translateY(-1px);
+          background: ${darkMode ? '#374151' : '#f9fafb'};
         }
 
         .user-welcome {
@@ -1729,13 +1698,10 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                              backdropFilter: 'blur(5px)',
-                              WebkitBackdropFilter: 'blur(5px)',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+                              background: !showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease'
+                              transition: 'all 0.3s ease',
+                              boxShadow: !showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
                               if (showTimeline[index]) {
@@ -1758,13 +1724,10 @@ export default function Home() {
                               justifyContent: 'center',
                               padding: '8px 16px',
                               borderRadius: '16px',
-                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                              backdropFilter: 'blur(5px)',
-                              WebkitBackdropFilter: 'blur(5px)',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+                              background: showTimeline[index] ? '#ffffff' : 'transparent',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease'
+                              transition: 'all 0.3s ease',
+                              boxShadow: showTimeline[index] ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                             }} onClick={(e) => {
                               e.stopPropagation();
                               if (!showTimeline[index]) {
@@ -1878,20 +1841,18 @@ export default function Home() {
                         ) : (
                           // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
-                            <div
+                            <div 
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
                                 top: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'rgba(255, 255, 255, 0.2)',
-                                backdropFilter: 'blur(5px)',
-                                WebkitBackdropFilter: 'blur(5px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                background: darkMode ? '#000000' : '#ffffff',
+                                border: '1px solid #e5e7eb',
                                 borderRadius: '16px',
-                                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
                                 padding: '12px 20px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                                 minHeight: '90px',
                                 maxHeight: '110px',
                                 overflowY: 'auto',
