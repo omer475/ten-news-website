@@ -1040,25 +1040,20 @@ export default function Home() {
         /* Authentication Styles */
         .auth-btn {
           padding: 8px 16px;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
+          background: transparent;
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 8px;
+          border: 1px solid ${darkMode ? '#374151' : '#e5e7eb'};
+          border-radius: 6px;
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.5px;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s;
           text-transform: uppercase;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .auth-btn:hover {
-          background: rgba(255, 255, 255, 0.25);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          background: ${darkMode ? '#374151' : '#f9fafb'};
         }
 
         .user-welcome {
@@ -1494,6 +1489,49 @@ export default function Home() {
             font-size: 10px;
           }
         }
+
+        /* Glassy design */
+        .glass-card {
+          /* Essential for the glassy look */
+          background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+          backdrop-filter: blur(5px); /* The "frosted glass" effect */
+          -webkit-backdrop-filter: blur(5px); /* For Safari compatibility */
+
+          /* Enhances the effect */
+          border-radius: 16px; /* Rounded corners */
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Adds depth */
+          border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle border */
+
+          /* Other properties */
+          position: relative; /* Or other desired positioning */
+          color: white; /* Example text color */
+        }
+
+        .glass-card-dark {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 16px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          position: relative;
+          color: white;
+        }
+
+        .glass-button {
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          transition: all 0.3s ease;
+          border-radius: 8px;
+          color: white;
+        }
+
+        .glass-button:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-1px);
+        }
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
@@ -1510,28 +1548,23 @@ export default function Home() {
             {user ? (
               <>
                 <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
-                <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
+                <button className="auth-btn glass-button" onClick={handleLogout}>LOGOUT</button>
               </>
             ) : (
               <>
-                <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
-                <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+                <button className="auth-btn glass-button" onClick={() => setAuthModal('login')}>LOGIN</button>
+                <button className="subscribe-btn glass-button" onClick={() => setAuthModal('signup')}>SIGN UP</button>
                 {currentIndex === 0 && (
                   <button
                     onClick={toggleDarkMode}
+                    className="glass-button"
                     style={{
                       marginLeft: '4px',
                       padding: '8px',
                       borderRadius: '50%',
-                      background: darkMode ? '#1f2937' : '#f8fafc',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                      backdropFilter: 'blur(8px)'
+                      justifyContent: 'center'
                     }}
                     aria-label="Toggle dark mode"
                   >
@@ -1624,7 +1657,7 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid">
                   
-                  <div className="news-item" onClick={() => {
+                  <div className="news-item glass-card" onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
@@ -1754,8 +1787,8 @@ export default function Home() {
                         )}
                         
                         {/* Fixed Position Details/Timeline Section */}
-                        <div 
-                          className="news-meta" 
+                        <div
+                          className="news-meta glass-card" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
