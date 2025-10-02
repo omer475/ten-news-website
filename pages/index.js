@@ -1683,6 +1683,8 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <NewFirstPage 
+                  darkMode={darkMode} 
+                  toggleDarkMode={toggleDarkMode}
                   onContinue={nextStory}
                 />
               ) : story.type === 'news' ? (
