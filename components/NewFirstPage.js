@@ -53,18 +53,35 @@ export default function NewFirstPage({ onContinue }) {
     <>
       <style>{`
         @keyframes pulse {
-          0%, 100% { 
-            opacity: 1; 
-            transform: scale(1);
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        @keyframes float {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
           }
-          50% { 
-            opacity: 0.7; 
-            transform: scale(1.05);
+          33% {
+            transform: translate(30px, -30px) scale(1.1);
+          }
+          66% {
+            transform: translate(-30px, 30px) scale(0.9);
           }
         }
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
+        @keyframes reading-sweep {
+          0% {
+            left: 0%;
+            opacity: 0;
+          }
+          5% {
+            opacity: 1;
+          }
+          95% {
+            opacity: 1;
+          }
+          100% {
+            left: 100%;
+            opacity: 0;
+          }
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -77,48 +94,51 @@ export default function NewFirstPage({ onContinue }) {
       
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: '#ffffff',
         color: '#111827',
         transition: 'all 0.5s',
         overflow: 'hidden',
         position: 'relative'
       }}>
-        {/* Animated Background Circles */}
+        {/* Subtle background blur spots */}
         <div style={{
-          position: 'absolute',
-          top: '10%',
-          left: '10%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(102, 126, 234, 0.4), transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          animation: 'pulse 8s ease-in-out infinite',
-          pointerEvents: 'none'
-        }}></div>
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          right: '5%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          animation: 'pulse 10s ease-in-out infinite 2s',
-          pointerEvents: 'none'
-        }}></div>
-        <div style={{
-          position: 'absolute',
-          bottom: '15%',
-          left: '15%',
+          position: 'fixed',
+          top: '15%',
+          right: '10%',
           width: '300px',
           height: '300px',
-          background: 'radial-gradient(circle, rgba(240, 147, 251, 0.4), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(239, 68, 68, 0.08), transparent 70%)',
           borderRadius: '50%',
-          filter: 'blur(60px)',
-          animation: 'pulse 12s ease-in-out infinite 4s',
-          pointerEvents: 'none'
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          animation: 'float 20s ease-in-out infinite'
+        }}></div>
+        <div style={{
+          position: 'fixed',
+          top: '40%',
+          left: '5%',
+          width: '350px',
+          height: '350px',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          animation: 'float 25s ease-in-out infinite 5s'
+        }}></div>
+        <div style={{
+          position: 'fixed',
+          bottom: '20%',
+          right: '15%',
+          width: '320px',
+          height: '320px',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.08), transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+          zIndex: 0,
+          animation: 'float 30s ease-in-out infinite 10s'
         }}></div>
         <div style={{
           height: '100vh',
@@ -141,9 +161,23 @@ export default function NewFirstPage({ onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', marginBottom: '8px', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
-              {stories[currentStory].title}
-            </h1>
+            <div style={{ position: 'relative', marginBottom: '8px' }}>
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '150px',
+                height: '100%',
+                background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.15), transparent 70%)',
+                filter: 'blur(20px)',
+                pointerEvents: 'none',
+                zIndex: 1,
+                animation: 'reading-sweep 12s ease-in-out infinite'
+              }}></div>
+              <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', position: 'relative', zIndex: 2 }}>
+                {stories[currentStory].title}
+              </h1>
+            </div>
           </div>
 
 
