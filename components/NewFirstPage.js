@@ -4,7 +4,6 @@ export default function NewFirstPage({ onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
-  const [highlightedWordIndex, setHighlightedWordIndex] = useState(0);
 
   // Simulate live reader count updates
   useEffect(() => {
@@ -50,16 +49,6 @@ export default function NewFirstPage({ onContinue }) {
     return 'Goood evening!';
   };
 
-  // Word-by-word blur animation for headline
-  const headlineWords = stories[currentStory].title.split(' ');
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHighlightedWordIndex(prev => (prev + 1) % headlineWords.length);
-    }, 700); // 700ms per word for normal reading pace
-    return () => clearInterval(interval);
-  }, [headlineWords.length]);
-
   return (
     <>
       <style>{`
@@ -83,9 +72,9 @@ export default function NewFirstPage({ onContinue }) {
           33% { transform: translate(30px, -30px); }
           66% { transform: translate(-30px, 30px); }
         }
-        @keyframes sweep-headline {
+        @keyframes sweep-smooth {
           0% {
-            left: -150px;
+            left: -120px;
             opacity: 0;
           }
           5% {
@@ -95,7 +84,7 @@ export default function NewFirstPage({ onContinue }) {
             opacity: 1;
           }
           100% {
-            left: calc(100% + 150px);
+            left: calc(100% + 120px);
             opacity: 0;
           }
         }
@@ -171,24 +160,20 @@ export default function NewFirstPage({ onContinue }) {
               {getGreeting()}
             </h2>
             <div style={{ position: 'relative', marginBottom: '8px' }}>
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '-120px',
+                width: '120px',
+                height: '100%',
+                background: 'radial-gradient(ellipse 120px 50px, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.15) 50%, transparent 80%)',
+                filter: 'blur(15px)',
+                pointerEvents: 'none',
+                zIndex: 3,
+                animation: 'sweep-smooth 6s ease-in-out infinite'
+              }}></div>
               <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', position: 'relative', zIndex: 2 }}>
-                {headlineWords.map((word, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      display: 'inline-block',
-                      marginRight: '0.3em',
-                      position: 'relative',
-                      transition: 'all 0.4s ease-in-out',
-                      filter: index === highlightedWordIndex
-                        ? 'drop-shadow(0 0 10px rgba(59, 130, 246, 1)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 30px rgba(59, 130, 246, 0.6))'
-                        : 'none',
-                      transform: index === highlightedWordIndex ? 'scale(1.05)' : 'scale(1)'
-                    }}
-                  >
-                    {word}
-                  </span>
-                ))}
+                {stories[currentStory].title}
               </h1>
             </div>
           </div>
