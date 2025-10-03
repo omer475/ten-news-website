@@ -56,18 +56,22 @@ export default function NewFirstPage({ onContinue }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
-        @keyframes float {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -30px) scale(1.1);
-          }
-          66% {
-            transform: translate(-30px, 30px) scale(0.9);
-          }
+        @keyframes float-1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -30px) scale(1.1); }
+          66% { transform: translate(-30px, 30px) scale(0.9); }
         }
-        @keyframes reading-sweep {
+        @keyframes float-2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-40px, 40px) scale(1.15); }
+          66% { transform: translate(40px, -20px) scale(0.95); }
+        }
+        @keyframes float-3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(25px, 35px) scale(1.05); }
+          66% { transform: translate(-35px, -25px) scale(0.9); }
+        }
+        @keyframes headline-sweep {
           0% {
             left: -180px;
             opacity: 0;
@@ -94,25 +98,25 @@ export default function NewFirstPage({ onContinue }) {
       
       <div style={{
         minHeight: '100vh',
-        background: '#ffffff',
+        background: 'transparent',
         color: '#111827',
         transition: 'all 0.5s',
         overflow: 'hidden',
         position: 'relative'
       }}>
-        {/* Soft Colored Background Spots */}
+        {/* Soft Background Color Blurs */}
         <div style={{
           position: 'fixed',
           top: '15%',
           right: '10%',
           width: '400px',
           height: '400px',
-          background: 'radial-gradient(circle, rgba(239, 68, 68, 0.08), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0,
-          animation: 'float 25s ease-in-out infinite'
+          animation: 'float-1 25s ease-in-out infinite'
         }}></div>
         <div style={{
           position: 'fixed',
@@ -120,12 +124,12 @@ export default function NewFirstPage({ onContinue }) {
           left: '5%',
           width: '450px',
           height: '450px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0,
-          animation: 'float 30s ease-in-out infinite 10s'
+          animation: 'float-2 30s ease-in-out infinite'
         }}></div>
         <div style={{
           position: 'fixed',
@@ -133,12 +137,12 @@ export default function NewFirstPage({ onContinue }) {
           right: '15%',
           width: '380px',
           height: '380px',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.08), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0,
-          animation: 'float 35s ease-in-out infinite 5s'
+          animation: 'float-3 35s ease-in-out infinite'
         }}></div>
         <div style={{
           height: '100vh',
@@ -172,7 +176,7 @@ export default function NewFirstPage({ onContinue }) {
                 filter: 'blur(20px)',
                 pointerEvents: 'none',
                 zIndex: 1,
-                animation: 'reading-sweep 10s ease-in-out infinite'
+                animation: 'headline-sweep 10s ease-in-out infinite'
               }}></div>
               <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', position: 'relative', zIndex: 2 }}>
                 {stories[currentStory].title}

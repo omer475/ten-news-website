@@ -13,66 +13,11 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-            background: #ffffff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #1f2937;
             overflow-x: hidden;
             position: relative;
-        }
-
-        /* SOFT COLORED BACKGROUND SPOTS */
-        .bg-spot-red {
-            position: fixed;
-            top: 15%;
-            right: 10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(239, 68, 68, 0.08), transparent 70%);
-            border-radius: 50%;
-            filter: blur(80px);
-            pointer-events: none;
-            z-index: 0;
-            animation: float 25s ease-in-out infinite;
-        }
-
-        .bg-spot-blue {
-            position: fixed;
-            top: 45%;
-            left: 5%;
-            width: 450px;
-            height: 450px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
-            border-radius: 50%;
-            filter: blur(80px);
-            pointer-events: none;
-            z-index: 0;
-            animation: float 30s ease-in-out infinite 10s;
-        }
-
-        .bg-spot-purple {
-            position: fixed;
-            bottom: 20%;
-            right: 15%;
-            width: 380px;
-            height: 380px;
-            background: radial-gradient(circle, rgba(168, 85, 247, 0.08), transparent 70%);
-            border-radius: 50%;
-            filter: blur(80px);
-            pointer-events: none;
-            z-index: 0;
-            animation: float 35s ease-in-out infinite 5s;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-            }
-            33% {
-                transform: translate(30px, -30px) scale(1.1);
-            }
-            66% {
-                transform: translate(-30px, 30px) scale(0.9);
-            }
         }
 
         .container {
@@ -80,7 +25,80 @@
             margin: 0 auto;
             padding: 20px;
             position: relative;
-            z-index: 1;
+            z-index: 10;
+        }
+
+        /* BACKGROUND BLUR EFFECTS */
+        .background-blur {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blur-red {
+            top: 15%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%);
+            animation: float-1 25s ease-in-out infinite;
+        }
+
+        .blur-blue {
+            top: 45%;
+            left: 5%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%);
+            animation: float-2 30s ease-in-out infinite;
+        }
+
+        .blur-purple {
+            bottom: 20%;
+            right: 15%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%);
+            animation: float-3 35s ease-in-out infinite;
+        }
+
+        /* Floating animations for background blurs */
+        @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 40px) scale(1.15); }
+            66% { transform: translate(40px, -20px) scale(0.95); }
+        }
+
+        @keyframes float-3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(25px, 35px) scale(1.05); }
+            66% { transform: translate(-35px, -25px) scale(0.9); }
+        }
+
+        /* MOVING BLUE BLUR ANIMATION ACROSS HEADLINE */
+        @keyframes headline-sweep {
+            0% {
+                left: -180px;
+                opacity: 0;
+            }
+            5% {
+                opacity: 1;
+            }
+            95% {
+                opacity: 1;
+            }
+            100% {
+                left: calc(100% + 180px);
+                opacity: 0;
+            }
         }
 
         /* Header with glassmorphism */
@@ -101,8 +119,8 @@
         .logo {
             font-size: 24px;
             font-weight: bold;
-            color: #111827;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .glass-button {
@@ -116,7 +134,6 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5);
             margin-left: 8px;
             font-size: 12px;
             text-transform: uppercase;
@@ -139,24 +156,13 @@
             margin-top: 8px;
         }
 
-        /* ANIMATED HEADLINE WITH BLUE BLUR */
+        /* Headline with animated blur effect */
         .headline-container {
             position: relative;
-            margin-bottom: 30px;
+            margin-bottom: 8px;
         }
 
-        .main-headline {
-            font-size: 36px;
-            font-weight: 800;
-            color: #111827;
-            line-height: 1.2;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* Blue blur effect that sweeps across the text */
-        .headline-container::before {
-            content: '';
+        .headline-blur-overlay {
             position: absolute;
             top: 0;
             left: 0;
@@ -166,28 +172,20 @@
             filter: blur(20px);
             pointer-events: none;
             z-index: 1;
-            animation: reading-sweep 10s ease-in-out infinite;
+            animation: headline-sweep 10s ease-in-out infinite;
         }
 
-        /* Smooth sweep animation across the headline */
-        @keyframes reading-sweep {
-            0% {
-                left: -180px;
-                opacity: 0;
-            }
-            5% {
-                opacity: 1;
-            }
-            95% {
-                opacity: 1;
-            }
-            100% {
-                left: calc(100% + 180px);
-                opacity: 0;
-            }
+        .main-headline {
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.2;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
         }
 
-        /* Premium Glassmorphism Card */
+        /* Glassmorphism Card */
         .glass-card {
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(13px);
@@ -233,39 +231,6 @@
                 transparent,
                 rgba(255, 255, 255, 0.3)
             );
-        }
-
-        .briefing-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .briefing-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #000000;
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .live-dot {
-            width: 6px;
-            height: 6px;
-            background: #10B981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .live-text {
-            font-size: 11px;
-            color: #10B981;
-            font-weight: 600;
         }
 
         .section-label {
@@ -325,14 +290,46 @@
             text-align: center;
             font-size: 10px;
             opacity: 0.5;
-            margin-top: 30px;
-            letter-spacing: 1px;
+            margin-bottom: 16px;
             color: rgba(0, 0, 0, 0.5);
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .briefing-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 11px;
+            color: #10B981;
+            font-weight: 600;
         }
 
         /* Responsive */
@@ -348,19 +345,14 @@
             .main-headline {
                 font-size: 30px;
             }
-
-            .header {
-                flex-direction: column;
-                gap: 12px;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- SOFT COLORED BACKGROUND SPOTS -->
-    <div class="bg-spot-red"></div>
-    <div class="bg-spot-blue"></div>
-    <div class="bg-spot-purple"></div>
+    <!-- SOFT BACKGROUND COLOR BLURS -->
+    <div class="background-blur blur-red"></div>
+    <div class="background-blur blur-blue"></div>
+    <div class="background-blur blur-purple"></div>
 
     <div class="container">
         <!-- Header -->
@@ -376,13 +368,14 @@
         <div class="greeting-section">
             <h2 class="greeting-text">Goood evening!</h2>
             
-            <!-- ANIMATED HEADLINE WITH BLUE BLUR SWEEP -->
+            <!-- ANIMATED HEADLINE WITH MOVING BLUE BLUR -->
             <div class="headline-container">
+                <div class="headline-blur-overlay"></div>
                 <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
             </div>
         </div>
 
-        <!-- Today's Briefing Header (No Box) -->
+        <!-- Today's Briefing Header -->
         <div style="margin-bottom: 20px;">
             <div class="briefing-header">
                 <h3 class="briefing-title">Today's Briefing</h3>
@@ -393,7 +386,7 @@
             </div>
         </div>
 
-        <!-- What's Happening - Glassmorphism Box -->
+        <!-- What's Happening - GLASSMORPHISM BOX -->
         <div class="glass-card">
             <div class="section-label">WHAT'S HAPPENING</div>
             <div class="text-item">
@@ -404,13 +397,13 @@
                 <div class="text-dot" style="background: #10B981;"></div>
                 <div class="text-item-content">Global markets surge 3% on trade deal optimism</div>
             </div>
-            <div class="text-item" style="margin-bottom: 0;">
+            <div class="text-item">
                 <div class="text-dot" style="background: #3B82F6;"></div>
                 <div class="text-item-content">Tech giants announce joint AI safety initiative</div>
             </div>
         </div>
 
-        <!-- Today in History - Glassmorphism Box -->
+        <!-- Today in History - GLASSMORPHISM BOX -->
         <div class="glass-card" style="margin-bottom: 30px;">
             <div class="section-label">TODAY IN HISTORY</div>
             <div class="history-item">
@@ -421,7 +414,7 @@
                 <div class="history-year">1957</div>
                 <div class="history-event">Sputnik 1 launched, starting Space Age</div>
             </div>
-            <div class="history-item" style="margin-bottom: 0;">
+            <div class="history-item">
                 <div class="history-year">1991</div>
                 <div class="history-event">World Wide Web made publicly available</div>
             </div>
@@ -433,16 +426,15 @@
         </div>
 
         <!-- Design Notes -->
-        <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.12); backdrop-filter: blur(13px); -webkit-backdrop-filter: blur(13px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; padding: 24px; color: #000;">
+        <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white; position: relative; z-index: 10;">
             <h3 style="margin-bottom: 16px; font-size: 18px;">✨ Visual Effects Applied</h3>
             <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
-                <li><strong>White background</strong> with soft colored spots (red, blue, purple)</li>
-                <li><strong>Blurred gradients:</strong> Very subtle (0.08 opacity), heavily blurred (80px)</li>
-                <li><strong>Floating animation:</strong> Gentle movement over 25-35 seconds</li>
-                <li><strong>Headline animation:</strong> Blue blur sweeps across text smoothly</li>
-                <li><strong>Reading speed:</strong> 10 second cycle for comfortable reading pace</li>
-                <li><strong>Smooth motion:</strong> ease-in-out timing for 60fps performance</li>
-                <li><strong>Text readability:</strong> Blur is subtle, text remains clear</li>
+                <li><strong>Background blurs:</strong> Soft red, blue, and purple color spots with blur(80px)</li>
+                <li><strong>Animated blurs:</strong> Float gently in background (25s, 30s, 35s cycles)</li>
+                <li><strong>Headline animation:</strong> Blue blur sweeps across text every 10 seconds</li>
+                <li><strong>Smooth movement:</strong> ease-in-out timing for fluid motion</li>
+                <li><strong>Text legibility:</strong> Blur is subtle enough to maintain readability</li>
+                <li><strong>Glassmorphism:</strong> Enhanced with pseudo-element highlights</li>
             </ul>
         </div>
     </div>
