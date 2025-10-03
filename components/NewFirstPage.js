@@ -6,6 +6,8 @@ export default function NewFirstPage({ onContinue }) {
   const [currentStory, setCurrentStory] = useState(0);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [autoRotationEnabled, setAutoRotationEnabled] = useState(true);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // Simulate live reader count updates
   useEffect(() => {
@@ -66,6 +68,35 @@ export default function NewFirstPage({ onContinue }) {
   const switchCard = (index) => {
     setAutoRotationEnabled(false);
     setCurrentCardIndex(index);
+  };
+
+  // Touch handlers for swipe
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe && currentCardIndex < 1) {
+      switchCard(currentCardIndex + 1);
+    }
+    
+    if (isRightSwipe && currentCardIndex > 0) {
+      switchCard(currentCardIndex - 1);
+    }
+    
+    // Reset
+    setTouchStart(0);
+    setTouchEnd(0);
   };
 
   return (
@@ -220,17 +251,20 @@ export default function NewFirstPage({ onContinue }) {
           </div>
 
           {/* SWIPEABLE CAROUSEL CONTAINER */}
-          <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px' }}>
+          <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px', borderRadius: '20px' }}>
             <div 
               style={{ 
                 display: 'flex', 
                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 transform: `translateX(-${currentCardIndex * 100}%)`,
-                touchAction: 'pan-y',
+                touchAction: 'pan-x',
                 willChange: 'transform',
                 cursor: 'pointer'
               }}
               onClick={() => switchCard((currentCardIndex + 1) % 2)}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               {/* Card 1: What's Happening */}
               <div style={{ 
@@ -246,7 +280,8 @@ export default function NewFirstPage({ onContinue }) {
                 minWidth: '100%',
                 width: '100%',
                 flexShrink: 0,
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                margin: 0
               }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -273,7 +308,8 @@ export default function NewFirstPage({ onContinue }) {
                 minWidth: '100%',
                 width: '100%',
                 flexShrink: 0,
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                margin: 0
               }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
