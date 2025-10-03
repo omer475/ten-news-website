@@ -69,7 +69,7 @@ export default function NewFirstPage({ onContinue }) {
         }
         @keyframes reading-sweep {
           0% {
-            left: 0%;
+            left: -180px;
             opacity: 0;
           }
           5% {
@@ -79,7 +79,7 @@ export default function NewFirstPage({ onContinue }) {
             opacity: 1;
           }
           100% {
-            left: 100%;
+            left: calc(100% + 180px);
             opacity: 0;
           }
         }
@@ -100,45 +100,45 @@ export default function NewFirstPage({ onContinue }) {
         overflow: 'hidden',
         position: 'relative'
       }}>
-        {/* Subtle background blur spots */}
+        {/* Soft Colored Background Spots */}
         <div style={{
           position: 'fixed',
           top: '15%',
           right: '10%',
-          width: '300px',
-          height: '300px',
+          width: '400px',
+          height: '400px',
           background: 'radial-gradient(circle, rgba(239, 68, 68, 0.08), transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0,
-          animation: 'float 20s ease-in-out infinite'
+          animation: 'float 25s ease-in-out infinite'
         }}></div>
         <div style={{
           position: 'fixed',
-          top: '40%',
+          top: '45%',
           left: '5%',
-          width: '350px',
-          height: '350px',
+          width: '450px',
+          height: '450px',
           background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0,
-          animation: 'float 25s ease-in-out infinite 5s'
+          animation: 'float 30s ease-in-out infinite 10s'
         }}></div>
         <div style={{
           position: 'fixed',
           bottom: '20%',
           right: '15%',
-          width: '320px',
-          height: '320px',
+          width: '380px',
+          height: '380px',
           background: 'radial-gradient(circle, rgba(168, 85, 247, 0.08), transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(80px)',
           pointerEvents: 'none',
           zIndex: 0,
-          animation: 'float 30s ease-in-out infinite 10s'
+          animation: 'float 35s ease-in-out infinite 5s'
         }}></div>
         <div style={{
           height: '100vh',
@@ -166,13 +166,13 @@ export default function NewFirstPage({ onContinue }) {
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                width: '150px',
+                width: '180px',
                 height: '100%',
-                background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.15), transparent 70%)',
+                background: 'radial-gradient(ellipse 150px 60px, rgba(59, 130, 246, 0.25), transparent 70%)',
                 filter: 'blur(20px)',
                 pointerEvents: 'none',
                 zIndex: 1,
-                animation: 'reading-sweep 12s ease-in-out infinite'
+                animation: 'reading-sweep 10s ease-in-out infinite'
               }}></div>
               <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', position: 'relative', zIndex: 2 }}>
                 {stories[currentStory].title}
