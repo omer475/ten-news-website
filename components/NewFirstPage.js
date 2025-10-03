@@ -5,7 +5,6 @@ export default function NewFirstPage({ onContinue }) {
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
   const [highlightedWordIndex, setHighlightedWordIndex] = useState(0);
-  const [showHistory, setShowHistory] = useState(true);
 
   // Simulate live reader count updates
   useEffect(() => {
@@ -201,58 +200,42 @@ export default function NewFirstPage({ onContinue }) {
           </div>
 
 
-          {/* Toggle Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-            <div style={{
-              display: 'flex',
-              background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-              backdropFilter: 'blur(2px)',
-              WebkitBackdropFilter: 'blur(2px)',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
-              borderRadius: '999vw',
-              padding: '2px',
-              width: '180px'
-            }}>
-              <div
-                onClick={() => setShowHistory(true)}
-                style={{
-                  flex: 1,
-                  padding: '8px 16px',
-                  borderRadius: '999vw',
-                  background: showHistory ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-                  boxShadow: showHistory ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none',
-                  textAlign: 'center',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  color: 'rgba(50, 50, 50, 1)'
-                }}
-              >
-                History
-              </div>
-              <div
-                onClick={() => setShowHistory(false)}
-                style={{
-                  flex: 1,
-                  padding: '8px 16px',
-                  borderRadius: '999vw',
-                  background: !showHistory ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-                  boxShadow: !showHistory ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none',
-                  textAlign: 'center',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  color: 'rgba(50, 50, 50, 1)'
-                }}
-              >
-                Happening
+          {/* Today's Briefing - Header Only (No Icon) */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>Today's Briefing</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Live</span>
               </div>
             </div>
           </div>
 
-          {/* Swipeable Glassmorphism Box */}
+          {/* What's Happening - GLASSMORPHISM BOX */}
+          <div style={{ 
+            background: 'rgba(255, 255, 255, 0.12)',
+            backdropFilter: 'blur(13px)',
+            WebkitBackdropFilter: 'blur(13px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
+            padding: '16px',
+            marginBottom: '16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {whatsHappening.map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
+                  <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                  <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Today in History - GLASSMORPHISM BOX (No Icon) */}
           <div style={{ 
             background: 'rgba(255, 255, 255, 0.12)',
             backdropFilter: 'blur(13px)',
@@ -265,33 +248,15 @@ export default function NewFirstPage({ onContinue }) {
             position: 'relative',
             overflow: 'hidden'
           }}>
-            {showHistory ? (
-              // Today in History
-              <>
-                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {historicalEvents.slice(0, 3).map((event, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
-                    </div>
-                  ))}
+            <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {historicalEvents.slice(0, 3).map((event, i) => (
+                <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
                 </div>
-              </>
-            ) : (
-              // What's Happening
-              <>
-                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {whatsHappening.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
-                      <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+              ))}
+            </div>
           </div>
 
 
