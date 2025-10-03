@@ -53,8 +53,14 @@ export default function NewFirstPage({ onContinue }) {
     <>
       <style>{`
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          0%, 100% { 
+            opacity: 1; 
+            transform: scale(1);
+          }
+          50% { 
+            opacity: 0.7; 
+            transform: scale(1.05);
+          }
         }
         @keyframes marquee {
           0% { transform: translateX(0%); }
@@ -71,15 +77,55 @@ export default function NewFirstPage({ onContinue }) {
       
       <div style={{
         minHeight: '100vh',
-        background: 'transparent',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
         color: '#111827',
         transition: 'all 0.5s',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}>
+        {/* Animated Background Circles */}
+        <div style={{
+          position: 'absolute',
+          top: '10%',
+          left: '10%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(102, 126, 234, 0.4), transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'pulse 8s ease-in-out infinite',
+          pointerEvents: 'none'
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          right: '5%',
+          width: '350px',
+          height: '350px',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'pulse 10s ease-in-out infinite 2s',
+          pointerEvents: 'none'
+        }}></div>
+        <div style={{
+          position: 'absolute',
+          bottom: '15%',
+          left: '15%',
+          width: '300px',
+          height: '300px',
+          background: 'radial-gradient(circle, rgba(240, 147, 251, 0.4), transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'pulse 12s ease-in-out infinite 4s',
+          pointerEvents: 'none'
+        }}></div>
         <div style={{
           height: '100vh',
           overflowY: 'auto',
-          padding: '0 20px 32px'
+          padding: '0 20px 32px',
+          position: 'relative',
+          zIndex: 1
         }}>
           {/* Greeting Section - UPDATED HIERARCHY */}
           <div style={{ marginBottom: '30px', marginTop: '20px' }}>
