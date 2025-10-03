@@ -100,7 +100,13 @@ export default function NewFirstPage({ onContinue }) {
   };
 
   return (
-    <>
+    <div style={{ 
+      minHeight: '100vh', 
+      height: '100vh',
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
@@ -192,18 +198,22 @@ export default function NewFirstPage({ onContinue }) {
       }}></div>
 
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: 'transparent',
         color: '#111827',
         transition: 'all 0.5s',
-        overflow: 'hidden',
+        overflow: 'auto',
         position: 'relative',
-        zIndex: 1
+        zIndex: 1,
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         <div style={{
-          height: '100vh',
+          flex: 1,
           overflowY: 'auto',
-          padding: '0 20px 32px'
+          padding: '0 20px 32px',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           {/* Greeting Section - UPDATED HIERARCHY */}
           <div style={{ marginBottom: '30px', marginTop: '20px' }}>
@@ -324,31 +334,34 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* Card Indicators */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '30px' }}>
+          {/* Modern Card Indicators */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '30px' }}>
             {[0, 1].map((index) => (
               <div
                 key={index}
                 onClick={() => switchCard(index)}
                 style={{
-                  width: currentCardIndex === index ? '20px' : '6px',
-                  height: '6px',
-                  borderRadius: currentCardIndex === index ? '3px' : '50%',
-                  background: currentCardIndex === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
-                  transition: 'all 0.3s',
-                  cursor: 'pointer'
+                  width: currentCardIndex === index ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '12px',
+                  background: currentCardIndex === index 
+                    ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' 
+                    : 'rgba(255, 255, 255, 0.25)',
+                  boxShadow: currentCardIndex === index 
+                    ? '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)' 
+                    : 'none',
+                  transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  cursor: 'pointer',
+                  transform: currentCardIndex === index ? 'scale(1.1)' : 'scale(1)',
+                  backdropFilter: 'blur(4px)'
                 }}
               />
             ))}
           </div>
 
 
-          {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
-            SCROLL TO CONTINUE ↓
-          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
