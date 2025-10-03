@@ -77,6 +77,38 @@
             66% { transform: translate(-30px, 30px); }
         }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes travel-multi-row {
+            0% {
+                left: -100px;
+                top: 0;
+                opacity: 0;
+            }
+            2% {
+                opacity: 1;
+            }
+            0%, 35% {
+                top: 0;
+            }
+            35%, 70% {
+                top: 43px;
+            }
+            70%, 95% {
+                top: 86px;
+            }
+            98% {
+                opacity: 1;
+            }
+            100% {
+                left: calc(100% + 100px);
+                opacity: 0;
+            }
+        }
+
         /* Header */
         .header {
             background: rgba(255, 255, 255, 0.1);
@@ -129,7 +161,7 @@
             margin-top: 8px;
         }
 
-        /* Headline */
+        /* ULTRA-SMOOTH CONTINUOUS BLUR ANIMATION */
         .headline-container {
             position: relative;
             margin-bottom: 8px;
@@ -146,45 +178,23 @@
             z-index: 2;
         }
 
-        /* Smooth blur spotlight */
+        /* Smooth traveling blue blur spotlight */
         .blur-spotlight {
             position: absolute;
             top: 0;
             left: 0;
             width: 100px;
             height: 48px;
-            background: radial-gradient(ellipse 100px 48px at center, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.2) 50%, transparent 75%);
+            background: radial-gradient(
+                ellipse 100px 48px at center,
+                rgba(59, 130, 246, 0.4),
+                rgba(59, 130, 246, 0.2) 50%,
+                transparent 75%
+            );
             filter: blur(12px);
             pointer-events: none;
             z-index: 3;
             animation: travel-multi-row 10s linear infinite;
-        }
-
-        @keyframes travel-multi-row {
-            0% {
-                left: -100px;
-                top: 0;
-                opacity: 0;
-            }
-            2% {
-                opacity: 1;
-            }
-            0%, 35% {
-                top: 0;
-            }
-            35%, 70% {
-                top: 43px;
-            }
-            70%, 95% {
-                top: 86px;
-            }
-            98% {
-                opacity: 1;
-            }
-            100% {
-                left: calc(100% + 100px);
-                opacity: 0;
-            }
         }
 
         /* SWIPEABLE CAROUSEL CONTAINER */
@@ -193,15 +203,27 @@
             width: 100%;
             overflow: hidden;
             margin-bottom: 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .carousel-track {
             display: flex;
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            touch-action: pan-y; /* Allow vertical scroll, prevent horizontal */
+            touch-action: pan-y;
+            will-change: transform;
         }
 
-        /* Glass Card with auto-height */
+        .carousel-slide {
+            min-width: 100%;
+            flex-shrink: 0;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Glass Cards */
         .glass-card {
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(13px);
@@ -216,10 +238,7 @@
                 inset 0 0 22px 11px rgba(255, 255, 255, 0.11);
             position: relative;
             overflow: hidden;
-            min-width: calc(100% - 60px); /* Show edge of next card */
-            margin-right: 20px;
-            flex-shrink: 0;
-            min-height: 150px; /* Auto-adjusts based on content */
+            min-height: 150px;
         }
 
         .glass-card::before {
@@ -295,7 +314,7 @@
             color: #000000;
         }
 
-        /* Carousel indicators */
+        /* Carousel Indicators */
         .carousel-indicators {
             display: flex;
             justify-content: center;
@@ -303,7 +322,7 @@
             margin-bottom: 30px;
         }
 
-        .indicator-dot {
+        .indicator {
             width: 6px;
             height: 6px;
             border-radius: 50%;
@@ -312,17 +331,18 @@
             cursor: pointer;
         }
 
-        .indicator-dot.active {
+        .indicator.active {
             width: 20px;
             border-radius: 3px;
             background: rgba(59, 130, 246, 0.8);
         }
 
+        /* Briefing Header */
         .briefing-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .briefing-title {
@@ -359,9 +379,28 @@
             color: #000000;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        /* Swipe hints */
+        .swipe-hint {
+            text-align: center;
+            font-size: 10px;
+            opacity: 0.4;
+            margin-top: 8px;
+            color: #000000;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .main-headline {
+                font-size: 28px;
+            }
+            
+            .greeting-text {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -385,15 +424,17 @@
         <div class="greeting-section">
             <h2 class="greeting-text">Goood evening!</h2>
             
-            <!-- Headline with blur -->
+            <!-- HEADLINE WITH ULTRA-SMOOTH CONTINUOUS BLUR -->
             <div class="headline-container">
+                <!-- Traveling blue blur spotlight -->
                 <div class="blur-spotlight"></div>
+                <!-- Text remains unchanged -->
                 <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
             </div>
         </div>
 
         <!-- Today's Briefing Header -->
-        <div class="briefing-header" style="margin-bottom: 20px;">
+        <div class="briefing-header">
             <h3 class="briefing-title">Today's Briefing</h3>
             <div class="live-indicator">
                 <div class="live-dot"></div>
@@ -402,39 +443,51 @@
         </div>
 
         <!-- SWIPEABLE CAROUSEL -->
-        <div class="carousel-container">
-            <div class="carousel-track" id="carousel-track">
+        <div class="carousel-container" id="carouselContainer">
+            <div class="carousel-track" id="carouselTrack">
                 <!-- Card 1: What's Happening -->
-                <div class="glass-card">
-                    <div class="section-label">WHAT'S HAPPENING</div>
-                    <div class="text-item">
-                        <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
-                        <div class="text-content">NATO-Russia tensions escalate in Eastern Europe</div>
-                    </div>
-                    <div class="text-item">
-                        <div class="text-dot" style="background: #10B981;"></div>
-                        <div class="text-content">Global markets surge 3% on trade deal optimism</div>
-                    </div>
-                    <div class="text-item" style="margin-bottom: 0;">
-                        <div class="text-dot" style="background: #3B82F6;"></div>
-                        <div class="text-content">Tech giants announce joint AI safety initiative</div>
+                <div class="carousel-slide">
+                    <div class="glass-card">
+                        <div class="section-label">WHAT'S HAPPENING</div>
+                        <div class="text-item">
+                            <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
+                            <div class="text-content">NATO-Russia tensions escalate in Eastern Europe</div>
+                        </div>
+                        <div class="text-item">
+                            <div class="text-dot" style="background: #10B981;"></div>
+                            <div class="text-content">Global markets surge 3% on trade deal optimism</div>
+                        </div>
+                        <div class="text-item">
+                            <div class="text-dot" style="background: #3B82F6;"></div>
+                            <div class="text-content">Tech giants announce joint AI safety initiative</div>
+                        </div>
+                        <div class="text-item" style="margin-bottom: 0;">
+                            <div class="text-dot" style="background: #F59E0B;"></div>
+                            <div class="text-content">Climate summit reaches historic emissions agreement</div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Card 2: Today in History -->
-                <div class="glass-card">
-                    <div class="section-label">TODAY IN HISTORY</div>
-                    <div class="history-item">
-                        <div class="history-year">1789</div>
-                        <div class="history-event">U.S. Constitution ratified by required states</div>
-                    </div>
-                    <div class="history-item">
-                        <div class="history-year">1957</div>
-                        <div class="history-event">Sputnik 1 launched, starting Space Age</div>
-                    </div>
-                    <div class="history-item" style="margin-bottom: 0;">
-                        <div class="history-year">1991</div>
-                        <div class="history-event">World Wide Web made publicly available</div>
+                <div class="carousel-slide">
+                    <div class="glass-card">
+                        <div class="section-label">TODAY IN HISTORY</div>
+                        <div class="history-item">
+                            <div class="history-year">1789</div>
+                            <div class="history-event">U.S. Constitution ratified by required states</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-year">1957</div>
+                            <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-year">1991</div>
+                            <div class="history-event">World Wide Web made publicly available</div>
+                        </div>
+                        <div class="history-item" style="margin-bottom: 0;">
+                            <div class="history-year">2001</div>
+                            <div class="history-event">iPod introduced, revolutionizing music industry</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -442,8 +495,13 @@
 
         <!-- Carousel Indicators -->
         <div class="carousel-indicators">
-            <div class="indicator-dot active" data-index="0"></div>
-            <div class="indicator-dot" data-index="1"></div>
+            <div class="indicator active" data-slide="0"></div>
+            <div class="indicator" data-slide="1"></div>
+        </div>
+
+        <!-- Swipe Hint -->
+        <div class="swipe-hint">
+            ← Swipe to explore →
         </div>
 
         <!-- Scroll Hint -->
@@ -453,88 +511,193 @@
 
         <!-- Design Notes -->
         <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
-            <h3 style="margin-bottom: 16px; font-size: 18px;">✨ Swipeable Carousel Features</h3>
+            <h3 style="margin-bottom: 16px; font-size: 18px;">🎠 Swipeable Carousel Features</h3>
             <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
-                <li><strong>Swipeable:</strong> Touch/drag to switch between sections</li>
-                <li><strong>Edge peek:</strong> See 60px of next card (shows what's coming)</li>
-                <li><strong>Auto-rotation:</strong> Switches every 4 seconds automatically</li>
-                <li><strong>Stop on interaction:</strong> Auto-rotation stops when user swipes</li>
-                <li><strong>Height:</strong> Auto-adjusts based on content (min: 150px)</li>
-                <li><strong>Scroll safe:</strong> Only carousel slides, page scroll unaffected</li>
-                <li><strong>Touch action:</strong> pan-y allows vertical scroll</li>
+                <li><strong>Swipeable:</strong> Horizontal swipe left/right to switch sections</li>
+                <li><strong>Auto-rotation:</strong> Automatically switches every 4 seconds</li>
+                <li><strong>Manual override:</strong> User interaction stops auto-rotation</li>
+                <li><strong>Smooth transitions:</strong> CSS cubic-bezier easing</li>
+                <li><strong>Touch & mouse:</strong> Works on mobile and desktop</li>
+                <li><strong>Scroll prevention:</strong> Only carousel slides, page stays fixed</li>
+                <li><strong>Visual indicators:</strong> Active slide indicator dots</li>
+                <li><strong>Responsive height:</strong> Adjusts to content automatically</li>
             </ul>
         </div>
     </div>
 
     <script>
-        let currentIndex = 0;
-        let autoRotationEnabled = true;
-        let autoRotationInterval;
-        const track = document.getElementById('carousel-track');
-        const indicators = document.querySelectorAll('.indicator-dot');
-        
-        function updateCarousel(index) {
-            currentIndex = index;
-            const offset = index * (100);
-            track.style.transform = `translateX(-${offset}%)`;
-            
-            // Update indicators
-            indicators.forEach((dot, i) => {
-                dot.classList.toggle('active', i === index);
-            });
-        }
-
-        // Auto-rotation every 4 seconds
-        function startAutoRotation() {
-            autoRotationInterval = setInterval(() => {
-                if (autoRotationEnabled) {
-                    updateCarousel((currentIndex + 1) % 2);
-                }
-            }, 4000);
-        }
-
-        // Manual control
-        let startX = 0;
-        let startY = 0;
-
-        track.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        });
-
-        track.addEventListener('touchend', (e) => {
-            const endX = e.changedTouches[0].clientX;
-            const endY = e.changedTouches[0].clientY;
-            const diffX = startX - endX;
-            const diffY = startY - endY;
-            
-            // Only act on horizontal swipes (not vertical scrolls)
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                e.preventDefault();
-                autoRotationEnabled = false; // Stop auto-rotation on user interaction
-                clearInterval(autoRotationInterval);
+        class SwipeableCarousel {
+            constructor() {
+                this.container = document.getElementById('carouselContainer');
+                this.track = document.getElementById('carouselTrack');
+                this.indicators = document.querySelectorAll('.indicator');
+                this.currentSlide = 0;
+                this.totalSlides = 2;
+                this.autoRotate = true;
+                this.autoRotateInterval = null;
+                this.isTransitioning = false;
                 
-                if (diffX > 0) {
-                    // Swipe left - next
-                    updateCarousel((currentIndex + 1) % 2);
-                } else {
-                    // Swipe right - previous
-                    updateCarousel((currentIndex - 1 + 2) % 2);
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.startAutoRotation();
+                this.updateIndicators();
+            }
+
+            setupEventListeners() {
+                // Touch events
+                let startX = 0;
+                let startY = 0;
+                let isDragging = false;
+
+                this.container.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    isDragging = true;
+                    this.stopAutoRotation();
+                }, { passive: true });
+
+                this.container.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const currentX = e.touches[0].clientX;
+                    const currentY = e.touches[0].clientY;
+                    const diffX = startX - currentX;
+                    const diffY = startY - currentY;
+                    
+                    // Prevent vertical scrolling if horizontal swipe is detected
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                this.container.addEventListener('touchend', (e) => {
+                    if (!isDragging) return;
+                    
+                    const endX = e.changedTouches[0].clientX;
+                    const diffX = startX - endX;
+                    
+                    if (Math.abs(diffX) > 50) { // Minimum swipe distance
+                        if (diffX > 0) {
+                            this.nextSlide();
+                        } else {
+                            this.prevSlide();
+                        }
+                    }
+                    
+                    isDragging = false;
+                }, { passive: true });
+
+                // Mouse events for desktop
+                let mouseStartX = 0;
+                let mouseIsDragging = false;
+
+                this.container.addEventListener('mousedown', (e) => {
+                    mouseStartX = e.clientX;
+                    mouseIsDragging = true;
+                    this.stopAutoRotation();
+                    e.preventDefault();
+                });
+
+                this.container.addEventListener('mousemove', (e) => {
+                    if (!mouseIsDragging) return;
+                    e.preventDefault();
+                });
+
+                this.container.addEventListener('mouseup', (e) => {
+                    if (!mouseIsDragging) return;
+                    
+                    const mouseEndX = e.clientX;
+                    const diffX = mouseStartX - mouseEndX;
+                    
+                    if (Math.abs(diffX) > 50) {
+                        if (diffX > 0) {
+                            this.nextSlide();
+                        } else {
+                            this.prevSlide();
+                        }
+                    }
+                    
+                    mouseIsDragging = false;
+                });
+
+                this.container.addEventListener('mouseleave', () => {
+                    mouseIsDragging = false;
+                });
+
+                // Indicator clicks
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => {
+                        this.stopAutoRotation();
+                        this.goToSlide(index);
+                    });
+                });
+
+                // Click anywhere on carousel to advance
+                this.container.addEventListener('click', (e) => {
+                    if (e.target.closest('.indicator')) return;
+                    this.stopAutoRotation();
+                    this.nextSlide();
+                });
+            }
+
+            nextSlide() {
+                if (this.isTransitioning) return;
+                this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+                this.updateCarousel();
+            }
+
+            prevSlide() {
+                if (this.isTransitioning) return;
+                this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+                this.updateCarousel();
+            }
+
+            goToSlide(index) {
+                if (this.isTransitioning || index === this.currentSlide) return;
+                this.currentSlide = index;
+                this.updateCarousel();
+            }
+
+            updateCarousel() {
+                this.isTransitioning = true;
+                this.track.style.transform = `translateX(-${this.currentSlide * 100}%)`;
+                this.updateIndicators();
+                
+                setTimeout(() => {
+                    this.isTransitioning = false;
+                }, 400);
+            }
+
+            updateIndicators() {
+                this.indicators.forEach((indicator, index) => {
+                    indicator.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+
+            startAutoRotation() {
+                if (!this.autoRotate) return;
+                
+                this.autoRotateInterval = setInterval(() => {
+                    this.nextSlide();
+                }, 4000);
+            }
+
+            stopAutoRotation() {
+                this.autoRotate = false;
+                if (this.autoRotateInterval) {
+                    clearInterval(this.autoRotateInterval);
+                    this.autoRotateInterval = null;
                 }
             }
-        });
+        }
 
-        // Click indicators
-        indicators.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                autoRotationEnabled = false;
-                clearInterval(autoRotationInterval);
-                updateCarousel(index);
-            });
+        // Initialize carousel when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new SwipeableCarousel();
         });
-
-        // Start auto-rotation
-        startAutoRotation();
     </script>
 </body>
 </html>
