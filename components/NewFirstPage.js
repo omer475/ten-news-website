@@ -245,14 +245,16 @@ export default function NewFirstPage({ onContinue }) {
                  minWidth: 'calc(100% - 40px)',
                  marginRight: '20px',
                  flexShrink: 0,
-                 minHeight: '150px'
+                 minHeight: '150px',
+                 width: 'calc(100% - 40px)',
+                 maxWidth: 'calc(100% - 40px)'
                }}>
                  <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                    {whatsHappening.map((item, i) => (
-                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
+                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px', width: '100%' }}>
                        <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                       <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
+                       <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1 }}>{item.text}</span>
                      </div>
                    ))}
                  </div>
@@ -272,14 +274,16 @@ export default function NewFirstPage({ onContinue }) {
                  minWidth: 'calc(100% - 40px)',
                  marginRight: '20px',
                  flexShrink: 0,
-                 minHeight: '150px'
+                 minHeight: '150px',
+                 width: 'calc(100% - 40px)',
+                 maxWidth: 'calc(100% - 40px)'
                }}>
                  <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                    {historicalEvents.slice(0, 3).map((event, i) => (
-                     <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
-                       <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                       <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
+                     <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px', width: '100%' }}>
+                       <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px', flexShrink: 0 }}>{event.year}</span>
+                       <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1 }}>{event.event}</span>
                      </div>
                    ))}
                  </div>
