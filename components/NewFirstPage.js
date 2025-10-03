@@ -4,7 +4,6 @@ export default function NewFirstPage({ onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
-  const [highlightedWordIndex, setHighlightedWordIndex] = useState(0);
 
   // Simulate live reader count updates
   useEffect(() => {
@@ -13,16 +12,6 @@ export default function NewFirstPage({ onContinue }) {
     }, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  // Word-by-word blur animation for headline
-  const headlineWords = stories[currentStory].title.split(' ');
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHighlightedWordIndex(prev => (prev + 1) % headlineWords.length);
-    }, 700); // 700ms per word for normal reading pace
-    return () => clearInterval(interval);
-  }, [headlineWords.length]);
 
 
   const stories = [
@@ -67,24 +56,25 @@ export default function NewFirstPage({ onContinue }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
-        @keyframes float-1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -30px) scale(1.1); }
-          66% { transform: translate(-30px, 30px) scale(0.9); }
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
         }
-        @keyframes float-2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-40px, 40px) scale(1.15); }
-          66% { transform: translate(40px, -20px) scale(0.95); }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
-        @keyframes float-3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(25px, 35px) scale(1.05); }
-          66% { transform: translate(-35px, -25px) scale(0.9); }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
-        @keyframes headline-sweep {
+        @keyframes float-soft {
+          0%, 100% { transform: translate(0, 0); }
+          33% { transform: translate(30px, -30px); }
+          66% { transform: translate(-30px, 30px); }
+        }
+        @keyframes sweep-headline {
           0% {
-            left: -180px;
+            left: -150px;
             opacity: 0;
           }
           5% {
@@ -94,73 +84,66 @@ export default function NewFirstPage({ onContinue }) {
             opacity: 1;
           }
           100% {
-            left: calc(100% + 180px);
+            left: calc(100% + 150px);
             opacity: 0;
           }
         }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
       `}</style>
       
+      {/* BACKGROUND BLUR EFFECTS - Soft Pastel Colors */}
+      <div style={{
+        position: 'fixed',
+        top: '15%',
+        right: '10%',
+        width: '400px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(254, 202, 202, 0.25), transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(80px)',
+        pointerEvents: 'none',
+        zIndex: 0,
+        animation: 'float-soft 25s ease-in-out infinite'
+      }}></div>
+      <div style={{
+        position: 'fixed',
+        top: '45%',
+        left: '5%',
+        width: '450px',
+        height: '450px',
+        background: 'radial-gradient(circle, rgba(191, 219, 254, 0.25), transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(80px)',
+        pointerEvents: 'none',
+        zIndex: 0,
+        animation: 'float-soft 30s ease-in-out infinite reverse'
+      }}></div>
+      <div style={{
+        position: 'fixed',
+        bottom: '20%',
+        right: '15%',
+        width: '380px',
+        height: '380px',
+        background: 'radial-gradient(circle, rgba(221, 214, 254, 0.25), transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(80px)',
+        pointerEvents: 'none',
+        zIndex: 0,
+        animation: 'float-soft 35s ease-in-out infinite'
+      }}></div>
+
       <div style={{
         minHeight: '100vh',
         background: 'transparent',
         color: '#111827',
         transition: 'all 0.5s',
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        zIndex: 1
       }}>
-        {/* Soft Background Color Blurs */}
-        <div style={{
-          position: 'fixed',
-          top: '15%',
-          right: '10%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-          animation: 'float-1 25s ease-in-out infinite'
-        }}></div>
-        <div style={{
-          position: 'fixed',
-          top: '45%',
-          left: '5%',
-          width: '450px',
-          height: '450px',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-          animation: 'float-2 30s ease-in-out infinite'
-        }}></div>
-        <div style={{
-          position: 'fixed',
-          bottom: '20%',
-          right: '15%',
-          width: '380px',
-          height: '380px',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-          zIndex: 0,
-          animation: 'float-3 35s ease-in-out infinite'
-        }}></div>
         <div style={{
           height: '100vh',
           overflowY: 'auto',
-          padding: '0 20px 32px',
-          position: 'relative',
-          zIndex: 1
+          padding: '0 20px 32px'
         }}>
           {/* Greeting Section - UPDATED HIERARCHY */}
           <div style={{ marginBottom: '30px', marginTop: '20px' }}>
@@ -177,24 +160,20 @@ export default function NewFirstPage({ onContinue }) {
               {getGreeting()}
             </h2>
             <div style={{ position: 'relative', marginBottom: '8px' }}>
-              <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', position: 'relative', zIndex: 2 }}>
-                {headlineWords.map((word, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      display: 'inline-block',
-                      marginRight: '0.3em',
-                      position: 'relative',
-                      transition: 'all 0.3s ease-in-out',
-                      filter: index === highlightedWordIndex
-                        ? 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 15px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 25px rgba(59, 130, 246, 0.4))'
-                        : 'none',
-                      transform: index === highlightedWordIndex ? 'scale(1.02)' : 'scale(1)'
-                    }}
-                  >
-                    {word}
-                  </span>
-                ))}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '-150px',
+                width: '150px',
+                height: '100%',
+                background: 'radial-gradient(ellipse 150px 60px, rgba(59, 130, 246, 0.35), rgba(59, 130, 246, 0.15) 40%, transparent 70%)',
+                filter: 'blur(12px)',
+                pointerEvents: 'none',
+                zIndex: 1,
+                animation: 'sweep-headline 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite'
+              }}></div>
+              <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', position: 'relative', zIndex: 2 }}>
+                {stories[currentStory].title}
               </h1>
             </div>
           </div>
