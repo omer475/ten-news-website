@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ten News - Swipeable Briefing Cards</title>
+    <title>Ten News - Swipeable Carousel</title>
     <style>
         * {
             margin: 0;
@@ -129,7 +129,7 @@
             margin-top: 8px;
         }
 
-        /* HEADLINE WITH BLUR ANIMATION */
+        /* Headline */
         .headline-container {
             position: relative;
             margin-bottom: 8px;
@@ -146,18 +146,14 @@
             z-index: 2;
         }
 
+        /* Smooth blur spotlight */
         .blur-spotlight {
             position: absolute;
             top: 0;
             left: 0;
             width: 100px;
             height: 48px;
-            background: radial-gradient(
-                ellipse 100px 48px at center,
-                rgba(59, 130, 246, 0.4),
-                rgba(59, 130, 246, 0.2) 50%,
-                transparent 75%
-            );
+            background: radial-gradient(ellipse 100px 48px at center, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.2) 50%, transparent 75%);
             filter: blur(12px);
             pointer-events: none;
             z-index: 3;
@@ -165,30 +161,47 @@
         }
 
         @keyframes travel-multi-row {
-            0% { left: -100px; top: 0; opacity: 0; }
-            2% { opacity: 1; }
-            0%, 35% { top: 0; }
-            35%, 70% { top: 43px; }
-            70%, 95% { top: 86px; }
-            98% { opacity: 1; }
-            100% { left: calc(100% + 100px); opacity: 0; }
+            0% {
+                left: -100px;
+                top: 0;
+                opacity: 0;
+            }
+            2% {
+                opacity: 1;
+            }
+            0%, 35% {
+                top: 0;
+            }
+            35%, 70% {
+                top: 43px;
+            }
+            70%, 95% {
+                top: 86px;
+            }
+            98% {
+                opacity: 1;
+            }
+            100% {
+                left: calc(100% + 100px);
+                opacity: 0;
+            }
         }
 
-        /* SWIPEABLE CARDS CONTAINER - SAME AS DETAILS/TIMELINE */
-        .cards-wrapper {
+        /* SWIPEABLE CAROUSEL CONTAINER */
+        .carousel-container {
             position: relative;
             width: 100%;
             overflow: hidden;
             margin-bottom: 12px;
         }
 
-        .cards-track {
+        .carousel-track {
             display: flex;
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            touch-action: pan-y;
+            touch-action: pan-y; /* Allow vertical scroll, prevent horizontal */
         }
 
-        /* Glass Card - EXACT SAME STYLING AS TIMELINE/DETAILS */
+        /* Glass Card with auto-height */
         .glass-card {
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(13px);
@@ -203,9 +216,10 @@
                 inset 0 0 22px 11px rgba(255, 255, 255, 0.11);
             position: relative;
             overflow: hidden;
-            min-width: calc(100% - 20px);
+            min-width: calc(100% - 60px); /* Show edge of next card */
             margin-right: 20px;
             flex-shrink: 0;
+            min-height: 150px; /* Auto-adjusts based on content */
         }
 
         .glass-card::before {
@@ -226,29 +240,6 @@
             width: 1px;
             height: 100%;
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
-        }
-
-        /* Card Indicators - SAME AS DETAILS/TIMELINE */
-        .card-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 30px;
-        }
-
-        .card-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .card-dot.active {
-            width: 20px;
-            border-radius: 3px;
-            background: rgba(59, 130, 246, 0.8);
         }
 
         .section-label {
@@ -302,6 +293,29 @@
             font-weight: 500;
             line-height: 1.5;
             color: #000000;
+        }
+
+        /* Carousel indicators */
+        .carousel-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .indicator-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .indicator-dot.active {
+            width: 20px;
+            border-radius: 3px;
+            background: rgba(59, 130, 246, 0.8);
         }
 
         .briefing-header {
@@ -371,7 +385,7 @@
         <div class="greeting-section">
             <h2 class="greeting-text">Goood evening!</h2>
             
-            <!-- Headline with blur animation -->
+            <!-- Headline with blur -->
             <div class="headline-container">
                 <div class="blur-spotlight"></div>
                 <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
@@ -387,9 +401,9 @@
             </div>
         </div>
 
-        <!-- SWIPEABLE CARDS - SAME AS DETAILS/TIMELINE -->
-        <div class="cards-wrapper">
-            <div class="cards-track" id="cards-track">
+        <!-- SWIPEABLE CAROUSEL -->
+        <div class="carousel-container">
+            <div class="carousel-track" id="carousel-track">
                 <!-- Card 1: What's Happening -->
                 <div class="glass-card">
                     <div class="section-label">WHAT'S HAPPENING</div>
@@ -426,10 +440,10 @@
             </div>
         </div>
 
-        <!-- Card Indicators - SAME AS DETAILS/TIMELINE -->
-        <div class="card-indicators">
-            <div class="card-dot active" onclick="switchCard(0)"></div>
-            <div class="card-dot" onclick="switchCard(1)"></div>
+        <!-- Carousel Indicators -->
+        <div class="carousel-indicators">
+            <div class="indicator-dot active" data-index="0"></div>
+            <div class="indicator-dot" data-index="1"></div>
         </div>
 
         <!-- Scroll Hint -->
@@ -439,74 +453,88 @@
 
         <!-- Design Notes -->
         <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
-            <h3 style="margin-bottom: 16px; font-size: 18px;">✨ Swipeable Cards System</h3>
+            <h3 style="margin-bottom: 16px; font-size: 18px;">✨ Swipeable Carousel Features</h3>
             <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
-                <li><strong>Cards:</strong> What's Happening and Today in History as swipeable cards</li>
-                <li><strong>Styling:</strong> EXACT SAME glassmorphism as Details/Timeline cards</li>
-                <li><strong>Switching:</strong> Horizontal swipe or click indicators</li>
-                <li><strong>Auto-rotation:</strong> Every 4 seconds (stops on manual interaction)</li>
-                <li><strong>Transition:</strong> Smooth cubic-bezier animation</li>
-                <li><strong>Edge peek:</strong> 20px margin shows edge of next card</li>
+                <li><strong>Swipeable:</strong> Touch/drag to switch between sections</li>
+                <li><strong>Edge peek:</strong> See 60px of next card (shows what's coming)</li>
+                <li><strong>Auto-rotation:</strong> Switches every 4 seconds automatically</li>
+                <li><strong>Stop on interaction:</strong> Auto-rotation stops when user swipes</li>
+                <li><strong>Height:</strong> Auto-adjusts based on content (min: 150px)</li>
+                <li><strong>Scroll safe:</strong> Only carousel slides, page scroll unaffected</li>
+                <li><strong>Touch action:</strong> pan-y allows vertical scroll</li>
             </ul>
         </div>
     </div>
 
     <script>
-        let currentCard = 0;
+        let currentIndex = 0;
         let autoRotationEnabled = true;
-        const cardsTrack = document.getElementById('cards-track');
-        const dots = document.querySelectorAll('.card-dot');
-
-        function switchCard(index) {
-            // Stop auto-rotation on manual interaction
-            autoRotationEnabled = false;
-            
-            currentCard = index;
-            cardsTrack.style.transform = `translateX(-${currentCard * 100}%)`;
+        let autoRotationInterval;
+        const track = document.getElementById('carousel-track');
+        const indicators = document.querySelectorAll('.indicator-dot');
+        
+        function updateCarousel(index) {
+            currentIndex = index;
+            const offset = index * (100);
+            track.style.transform = `translateX(-${offset}%)`;
             
             // Update indicators
-            dots.forEach((dot, i) => {
-                if (i === currentCard) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
+            indicators.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
             });
         }
 
         // Auto-rotation every 4 seconds
-        setInterval(() => {
-            if (autoRotationEnabled) {
-                currentCard = (currentCard + 1) % 2;
-                switchCard(currentCard);
-                // Re-enable auto-rotation after switching
-                autoRotationEnabled = true;
-            }
-        }, 4000);
+        function startAutoRotation() {
+            autoRotationInterval = setInterval(() => {
+                if (autoRotationEnabled) {
+                    updateCarousel((currentIndex + 1) % 2);
+                }
+            }, 4000);
+        }
 
-        // Swipe functionality
+        // Manual control
         let startX = 0;
-        cardsTrack.addEventListener('touchstart', (e) => {
+        let startY = 0;
+
+        track.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
         });
 
-        cardsTrack.addEventListener('touchend', (e) => {
+        track.addEventListener('touchend', (e) => {
             const endX = e.changedTouches[0].clientX;
-            const diff = startX - endX;
-
-            if (Math.abs(diff) > 50) {
-                if (diff > 0 && currentCard < 1) {
-                    switchCard(currentCard + 1);
-                } else if (diff < 0 && currentCard > 0) {
-                    switchCard(currentCard - 1);
+            const endY = e.changedTouches[0].clientY;
+            const diffX = startX - endX;
+            const diffY = startY - endY;
+            
+            // Only act on horizontal swipes (not vertical scrolls)
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                e.preventDefault();
+                autoRotationEnabled = false; // Stop auto-rotation on user interaction
+                clearInterval(autoRotationInterval);
+                
+                if (diffX > 0) {
+                    // Swipe left - next
+                    updateCarousel((currentIndex + 1) % 2);
+                } else {
+                    // Swipe right - previous
+                    updateCarousel((currentIndex - 1 + 2) % 2);
                 }
             }
         });
 
-        // Click to switch
-        cardsTrack.addEventListener('click', () => {
-            switchCard((currentCard + 1) % 2);
+        // Click indicators
+        indicators.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                autoRotationEnabled = false;
+                clearInterval(autoRotationInterval);
+                updateCarousel(index);
+            });
         });
+
+        // Start auto-rotation
+        startAutoRotation();
     </script>
 </body>
 </html>

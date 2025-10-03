@@ -219,17 +219,18 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* SWIPEABLE CARDS - ONE AT A TIME */}
+          {/* SWIPEABLE CAROUSEL CONTAINER */}
           <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px' }}>
             <div 
               style={{ 
                 display: 'flex', 
                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 transform: `translateX(-${currentCardIndex * (100)}%)`,
-                width: '100%'
+                touchAction: 'pan-y'
               }}
+              onClick={() => switchCard((currentCardIndex + 1) % 2)}
             >
-              {/* Card 1: What's Happening - SMOOTH SCROLLING */}
+              {/* Card 1: What's Happening */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.12)',
                 backdropFilter: 'blur(13px)',
@@ -239,11 +240,11 @@ export default function NewFirstPage({ onContinue }) {
                 padding: '16px',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
                 position: 'relative',
-                overflowY: 'auto',
-                scrollBehavior: 'smooth',
-                minWidth: '100%',
+                overflow: 'hidden',
+                minWidth: 'calc(100% - 60px)',
+                marginRight: '20px',
                 flexShrink: 0,
-                maxHeight: '300px'
+                minHeight: '150px'
               }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -256,7 +257,7 @@ export default function NewFirstPage({ onContinue }) {
                 </div>
               </div>
 
-              {/* Card 2: Today in History - SMOOTH SCROLLING */}
+              {/* Card 2: Today in History */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.12)',
                 backdropFilter: 'blur(13px)',
@@ -266,11 +267,11 @@ export default function NewFirstPage({ onContinue }) {
                 padding: '16px',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
                 position: 'relative',
-                overflowY: 'auto',
-                scrollBehavior: 'smooth',
-                minWidth: '100%',
+                overflow: 'hidden',
+                minWidth: 'calc(100% - 60px)',
+                marginRight: '20px',
                 flexShrink: 0,
-                maxHeight: '300px'
+                minHeight: '150px'
               }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -304,6 +305,10 @@ export default function NewFirstPage({ onContinue }) {
           </div>
 
 
+          {/* Scroll Hint */}
+          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
+            SCROLL TO CONTINUE ↓
+          </div>
         </div>
       </div>
     </>
