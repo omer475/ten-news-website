@@ -191,25 +191,25 @@ export default function NewFirstPage({ onContinue }) {
         animation: 'float-soft 35s ease-in-out infinite'
       }}></div>
 
-      <div style={{
-        width: '100vw',
-        height: '100vh',
-        background: 'transparent',
-        color: '#111827',
-        overflow: 'hidden',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        zIndex: 1
-      }}>
         <div style={{
-          width: '100%',
-          height: '100%',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          padding: '0 20px 32px',
-          WebkitOverflowScrolling: 'touch'
-        }} className="scrollbar-hide">
+          width: '100vw',
+          height: '100vh',
+          background: 'transparent',
+          color: '#111827',
+          overflow: 'hidden',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 1
+        }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            padding: '0 20px 32px',
+            WebkitOverflowScrolling: 'touch'
+          }}>
           {/* Greeting Section - UPDATED HIERARCHY */}
           <div style={{ marginBottom: '30px', marginTop: '20px' }}>
             <h2 style={{
