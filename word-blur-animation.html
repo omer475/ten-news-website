@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - Word-by-Word Blur Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Background blur effects */
+        .background-blur-red {
+            position: fixed;
+            top: 15%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(254, 202, 202, 0.25), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-soft 25s ease-in-out infinite;
+        }
+
+        .background-blur-blue {
+            position: fixed;
+            top: 45%;
+            left: 5%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(191, 219, 254, 0.25), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-soft 30s ease-in-out infinite reverse;
+        }
+
+        .background-blur-purple {
+            position: fixed;
+            bottom: 20%;
+            right: 15%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(221, 214, 254, 0.25), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-soft 35s ease-in-out infinite;
+        }
+
+        @keyframes float-soft {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(30px, -30px); }
+            66% { transform: translate(-30px, 30px); }
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-button {
+            background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 999vw;
+            padding: 10px 20px;
+            color: rgba(50, 50, 50, 1);
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Greeting Section */
+        .greeting-section {
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+
+        .greeting-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            margin-top: 8px;
+        }
+
+        /* HEADLINE WITH WORD-BY-WORD BLUR ANIMATION */
+        .headline-container {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .main-headline {
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.2;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Individual word styling */
+        .headline-word {
+            display: inline-block;
+            margin-right: 0.3em;
+            position: relative;
+            transition: all 0.4s ease-in-out;
+        }
+
+        /* Blue blur effect on active word - MORE VISIBLE */
+        .headline-word.active {
+            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 1))
+                    drop-shadow(0 0 20px rgba(59, 130, 246, 0.8))
+                    drop-shadow(0 0 30px rgba(59, 130, 246, 0.6));
+            transform: scale(1.05);
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(13px);
+            -webkit-backdrop-filter: blur(13px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 0 22px 11px rgba(255, 255, 255, 0.11);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
+        }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #000000;
+            margin-bottom: 12px;
+        }
+
+        .text-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .text-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            margin-top: 7px;
+            flex-shrink: 0;
+        }
+
+        .text-content {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .history-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .history-year {
+            font-size: 11px;
+            font-weight: 700;
+            color: #A855F7;
+            min-width: 45px;
+        }
+
+        .history-event {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #000000;
+        }
+
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .briefing-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 11px;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        .scroll-hint {
+            text-align: center;
+            font-size: 10px;
+            opacity: 0.5;
+            margin-bottom: 16px;
+            color: #000000;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background blur effects -->
+    <div class="background-blur-red"></div>
+    <div class="background-blur-blue"></div>
+    <div class="background-blur-purple"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TEN NEWS</div>
+            <div style="display: flex; align-items: center;">
+                <button class="glass-button">LOGIN</button>
+                <button class="glass-button">SIGN UP</button>
+            </div>
+        </div>
+
+        <!-- Greeting Section -->
+        <div class="greeting-section">
+            <h2 class="greeting-text">Goood evening!</h2>
+            
+            <!-- HEADLINE WITH WORD-BY-WORD BLUR ANIMATION -->
+            <div class="headline-container">
+                <h1 class="main-headline" id="animated-headline">
+                    <!-- Words will be dynamically inserted here by JavaScript -->
+                </h1>
+            </div>
+        </div>
+
+        <!-- Today's Briefing Header -->
+        <div class="briefing-header" style="margin-bottom: 20px;">
+            <h3 class="briefing-title">Today's Briefing</h3>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span class="live-text">Live</span>
+            </div>
+        </div>
+
+        <!-- What's Happening - Glass Card -->
+        <div class="glass-card">
+            <div class="section-label">WHAT'S HAPPENING</div>
+            <div class="text-item">
+                <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
+                <div class="text-content">NATO-Russia tensions escalate in Eastern Europe</div>
+            </div>
+            <div class="text-item">
+                <div class="text-dot" style="background: #10B981;"></div>
+                <div class="text-content">Global markets surge 3% on trade deal optimism</div>
+            </div>
+            <div class="text-item" style="margin-bottom: 0;">
+                <div class="text-dot" style="background: #3B82F6;"></div>
+                <div class="text-content">Tech giants announce joint AI safety initiative</div>
+            </div>
+        </div>
+
+        <!-- Today in History - Glass Card -->
+        <div class="glass-card" style="margin-bottom: 30px;">
+            <div class="section-label">TODAY IN HISTORY</div>
+            <div class="history-item">
+                <div class="history-year">1789</div>
+                <div class="history-event">U.S. Constitution ratified by required states</div>
+            </div>
+            <div class="history-item">
+                <div class="history-year">1957</div>
+                <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+            </div>
+            <div class="history-item" style="margin-bottom: 0;">
+                <div class="history-year">1991</div>
+                <div class="history-event">World Wide Web made publicly available</div>
+            </div>
+        </div>
+
+        <!-- Scroll Hint -->
+        <div class="scroll-hint">
+            SCROLL TO CONTINUE ↓
+        </div>
+
+        <!-- Design Notes -->
+        <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
+            <h3 style="margin-bottom: 16px; font-size: 18px;">✨ Word-by-Word Blur Animation</h3>
+            <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
+                <li><strong>Animation:</strong> Blue blur highlights each word sequentially</li>
+                <li><strong>Speed:</strong> 700ms per word (normal reading pace)</li>
+                <li><strong>Visibility:</strong> Enhanced blue glow with multiple drop-shadows</li>
+                <li><strong>Effect:</strong> drop-shadow(0 0 10px blue) + 20px + 30px layers</li>
+                <li><strong>Transform:</strong> scale(1.05) on active word for emphasis</li>
+                <li><strong>Loop:</strong> Infinite, smooth transitions between words</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Word-by-word blur animation
+        const headline = "Critical NATO-Russia tensions dominate today's headlines";
+        const words = headline.split(' ');
+        const headlineElement = document.getElementById('animated-headline');
+        
+        // Create spans for each word
+        words.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.className = 'headline-word';
+            span.textContent = word;
+            span.dataset.index = index;
+            headlineElement.appendChild(span);
+        });
+
+        let currentWordIndex = 0;
+        const wordSpans = document.querySelectorAll('.headline-word');
+
+        function animateWords() {
+            // Remove active class from all words
+            wordSpans.forEach(span => span.classList.remove('active'));
+            
+            // Add active class to current word
+            wordSpans[currentWordIndex].classList.add('active');
+            
+            // Move to next word
+            currentWordIndex = (currentWordIndex + 1) % words.length;
+        }
+
+        // Start animation immediately
+        animateWords();
+
+        // Continue animation every 700ms (normal reading speed)
+        setInterval(animateWords, 700);
+    </script>
+</body>
+</html>

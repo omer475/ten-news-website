@@ -4,6 +4,7 @@ export default function NewFirstPage({ onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
+  const [highlightedWordIndex, setHighlightedWordIndex] = useState(0);
 
   // Simulate live reader count updates
   useEffect(() => {
@@ -48,6 +49,16 @@ export default function NewFirstPage({ onContinue }) {
     if (hour >= 12 && hour < 18) return 'Goood afternoon!';
     return 'Goood evening!';
   };
+
+  // Word-by-word blur animation for headline
+  const headlineWords = stories[currentStory].title.split(' ');
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHighlightedWordIndex(prev => (prev + 1) % headlineWords.length);
+    }, 700); // 700ms per word for normal reading pace
+    return () => clearInterval(interval);
+  }, [headlineWords.length]);
 
   return (
     <>
@@ -160,20 +171,24 @@ export default function NewFirstPage({ onContinue }) {
               {getGreeting()}
             </h2>
             <div style={{ position: 'relative', marginBottom: '8px' }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: '-150px',
-                width: '150px',
-                height: '100%',
-                background: 'radial-gradient(ellipse 150px 60px, rgba(59, 130, 246, 0.35), rgba(59, 130, 246, 0.15) 40%, transparent 70%)',
-                filter: 'blur(12px)',
-                pointerEvents: 'none',
-                zIndex: 1,
-                animation: 'sweep-headline 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite'
-              }}></div>
               <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', position: 'relative', zIndex: 2 }}>
-                {stories[currentStory].title}
+                {headlineWords.map((word, index) => (
+                  <span
+                    key={index}
+                    style={{
+                      display: 'inline-block',
+                      marginRight: '0.3em',
+                      position: 'relative',
+                      transition: 'all 0.4s ease-in-out',
+                      filter: index === highlightedWordIndex
+                        ? 'drop-shadow(0 0 10px rgba(59, 130, 246, 1)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 30px rgba(59, 130, 246, 0.6))'
+                        : 'none',
+                      transform: index === highlightedWordIndex ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    {word}
+                  </span>
+                ))}
               </h1>
             </div>
           </div>
