@@ -77,38 +77,6 @@
             66% { transform: translate(-30px, 30px); }
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @keyframes travel-multi-row {
-            0% {
-                left: -100px;
-                top: 0;
-                opacity: 0;
-            }
-            2% {
-                opacity: 1;
-            }
-            0%, 35% {
-                top: 0;
-            }
-            35%, 70% {
-                top: 43px;
-            }
-            70%, 95% {
-                top: 86px;
-            }
-            98% {
-                opacity: 1;
-            }
-            100% {
-                left: calc(100% + 100px);
-                opacity: 0;
-            }
-        }
-
         /* Header */
         .header {
             background: rgba(255, 255, 255, 0.1);
@@ -161,7 +129,7 @@
             margin-top: 8px;
         }
 
-        /* ULTRA-SMOOTH CONTINUOUS BLUR ANIMATION */
+        /* Ultra-smooth continuous blur animation */
         .headline-container {
             position: relative;
             margin-bottom: 8px;
@@ -197,30 +165,59 @@
             animation: travel-multi-row 10s linear infinite;
         }
 
+        @keyframes travel-multi-row {
+            0% {
+                left: -100px;
+                top: 0;
+                opacity: 0;
+            }
+            2% {
+                opacity: 1;
+            }
+            0%, 35% {
+                top: 0;
+            }
+            35%, 70% {
+                top: 43px;
+            }
+            70%, 95% {
+                top: 86px;
+            }
+            98% {
+                opacity: 1;
+            }
+            100% {
+                left: calc(100% + 100px);
+                opacity: 0;
+            }
+        }
+
         /* SWIPEABLE CAROUSEL CONTAINER */
         .carousel-container {
             position: relative;
             width: 100%;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 20px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            touch-action: pan-y;
         }
 
         .carousel-track {
             display: flex;
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            touch-action: pan-y;
             will-change: transform;
         }
 
         .carousel-slide {
-            min-width: 100%;
+            min-width: calc(100% - 40px);
+            width: calc(100% - 40px);
+            max-width: calc(100% - 40px);
             flex-shrink: 0;
-            padding: 20px;
-            position: relative;
+            margin-right: 20px;
+            padding: 0 20px;
         }
 
         /* Glass Cards */
@@ -291,6 +288,9 @@
             line-height: 1.5;
             color: #000000;
             font-weight: 500;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            flex: 1;
         }
 
         .history-item {
@@ -305,6 +305,7 @@
             font-weight: 700;
             color: #A855F7;
             min-width: 45px;
+            flex-shrink: 0;
         }
 
         .history-event {
@@ -312,6 +313,9 @@
             font-weight: 500;
             line-height: 1.5;
             color: #000000;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            flex: 1;
         }
 
         /* Carousel Indicators */
@@ -379,28 +383,18 @@
             color: #000000;
         }
 
-        /* Swipe hints */
-        .swipe-hint {
-            text-align: center;
-            font-size: 10px;
-            opacity: 0.4;
-            margin-top: 8px;
-            color: #000000;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 16px;
-            }
-            
-            .main-headline {
-                font-size: 28px;
-            }
-            
-            .greeting-text {
-                font-size: 24px;
-            }
+        /* Touch-friendly swipe area */
+        .carousel-container {
+            cursor: grab;
+        }
+
+        .carousel-container:active {
+            cursor: grabbing;
         }
     </style>
 </head>
@@ -442,7 +436,7 @@
             </div>
         </div>
 
-        <!-- SWIPEABLE CAROUSEL -->
+        <!-- SWIPEABLE CAROUSEL CONTAINER -->
         <div class="carousel-container" id="carouselContainer">
             <div class="carousel-track" id="carouselTrack">
                 <!-- Card 1: What's Happening -->
@@ -451,19 +445,15 @@
                         <div class="section-label">WHAT'S HAPPENING</div>
                         <div class="text-item">
                             <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
-                            <div class="text-content">NATO-Russia tensions escalate in Eastern Europe</div>
+                            <div class="text-content">NATO-Russia tensions escalate in Eastern Europe with military exercises intensifying</div>
                         </div>
                         <div class="text-item">
                             <div class="text-dot" style="background: #10B981;"></div>
-                            <div class="text-content">Global markets surge 3% on trade deal optimism</div>
-                        </div>
-                        <div class="text-item">
-                            <div class="text-dot" style="background: #3B82F6;"></div>
-                            <div class="text-content">Tech giants announce joint AI safety initiative</div>
+                            <div class="text-content">Global markets surge 3% on trade deal optimism and economic recovery signals</div>
                         </div>
                         <div class="text-item" style="margin-bottom: 0;">
-                            <div class="text-dot" style="background: #F59E0B;"></div>
-                            <div class="text-content">Climate summit reaches historic emissions agreement</div>
+                            <div class="text-dot" style="background: #3B82F6;"></div>
+                            <div class="text-content">Tech giants announce joint AI safety initiative to address emerging challenges</div>
                         </div>
                     </div>
                 </div>
@@ -474,19 +464,15 @@
                         <div class="section-label">TODAY IN HISTORY</div>
                         <div class="history-item">
                             <div class="history-year">1789</div>
-                            <div class="history-event">U.S. Constitution ratified by required states</div>
+                            <div class="history-event">U.S. Constitution ratified by required states, establishing federal government</div>
                         </div>
                         <div class="history-item">
                             <div class="history-year">1957</div>
-                            <div class="history-event">Sputnik 1 launched, starting Space Age</div>
-                        </div>
-                        <div class="history-item">
-                            <div class="history-year">1991</div>
-                            <div class="history-event">World Wide Web made publicly available</div>
+                            <div class="history-event">Sputnik 1 launched, starting Space Age and Cold War space race</div>
                         </div>
                         <div class="history-item" style="margin-bottom: 0;">
-                            <div class="history-year">2001</div>
-                            <div class="history-event">iPod introduced, revolutionizing music industry</div>
+                            <div class="history-year">1991</div>
+                            <div class="history-event">World Wide Web made publicly available, revolutionizing global communication</div>
                         </div>
                     </div>
                 </div>
@@ -499,11 +485,6 @@
             <div class="indicator" data-slide="1"></div>
         </div>
 
-        <!-- Swipe Hint -->
-        <div class="swipe-hint">
-            ← Swipe to explore →
-        </div>
-
         <!-- Scroll Hint -->
         <div class="scroll-hint">
             SCROLL TO CONTINUE ↓
@@ -511,16 +492,16 @@
 
         <!-- Design Notes -->
         <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
-            <h3 style="margin-bottom: 16px; font-size: 18px;">🎠 Swipeable Carousel Features</h3>
+            <h3 style="margin-bottom: 16px; font-size: 18px;">🎯 Swipeable Carousel Features</h3>
             <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
-                <li><strong>Swipeable:</strong> Horizontal swipe left/right to switch sections</li>
+                <li><strong>Swipe Navigation:</strong> Left/right swipe to switch between sections</li>
                 <li><strong>Auto-rotation:</strong> Automatically switches every 4 seconds</li>
-                <li><strong>Manual override:</strong> User interaction stops auto-rotation</li>
-                <li><strong>Smooth transitions:</strong> CSS cubic-bezier easing</li>
-                <li><strong>Touch & mouse:</strong> Works on mobile and desktop</li>
-                <li><strong>Scroll prevention:</strong> Only carousel slides, page stays fixed</li>
-                <li><strong>Visual indicators:</strong> Active slide indicator dots</li>
-                <li><strong>Responsive height:</strong> Adjusts to content automatically</li>
+                <li><strong>User Control:</strong> Manual swipe stops auto-rotation permanently</li>
+                <li><strong>Edge Preview:</strong> Shows ~15% of next section for discoverability</li>
+                <li><strong>Smooth Animation:</strong> Cubic-bezier easing for natural feel</li>
+                <li><strong>Touch-Friendly:</strong> Optimized for mobile swipe gestures</li>
+                <li><strong>Text Wrapping:</strong> Cards expand in height for long text</li>
+                <li><strong>Vertical Scroll:</strong> Page scrolling doesn't affect carousel</li>
             </ul>
         </div>
     </div>
@@ -533,10 +514,10 @@
                 this.indicators = document.querySelectorAll('.indicator');
                 this.currentSlide = 0;
                 this.totalSlides = 2;
-                this.autoRotate = true;
-                this.autoRotateInterval = null;
+                this.autoRotationEnabled = true;
+                this.autoRotationInterval = null;
                 this.isTransitioning = false;
-                
+
                 this.init();
             }
 
@@ -547,124 +528,91 @@
             }
 
             setupEventListeners() {
-                // Touch events
+                // Touch events for mobile
                 let startX = 0;
                 let startY = 0;
-                let isDragging = false;
+                let isScrolling = false;
 
                 this.container.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
                     startY = e.touches[0].clientY;
-                    isDragging = true;
-                    this.stopAutoRotation();
-                }, { passive: true });
+                    isScrolling = false;
+                });
 
                 this.container.addEventListener('touchmove', (e) => {
-                    if (!isDragging) return;
-                    
-                    const currentX = e.touches[0].clientX;
-                    const currentY = e.touches[0].clientY;
-                    const diffX = startX - currentX;
-                    const diffY = startY - currentY;
-                    
-                    // Prevent vertical scrolling if horizontal swipe is detected
-                    if (Math.abs(diffX) > Math.abs(diffY)) {
-                        e.preventDefault();
+                    if (!isScrolling) {
+                        const deltaX = Math.abs(e.touches[0].clientX - startX);
+                        const deltaY = Math.abs(e.touches[0].clientY - startY);
+                        
+                        if (deltaY > deltaX) {
+                            isScrolling = true;
+                            return;
+                        }
                     }
-                }, { passive: false });
+                });
 
                 this.container.addEventListener('touchend', (e) => {
-                    if (!isDragging) return;
-                    
+                    if (isScrolling) return;
+
                     const endX = e.changedTouches[0].clientX;
-                    const diffX = startX - endX;
-                    
-                    if (Math.abs(diffX) > 50) { // Minimum swipe distance
-                        if (diffX > 0) {
+                    const deltaX = startX - endX;
+                    const threshold = 50;
+
+                    if (Math.abs(deltaX) > threshold) {
+                        if (deltaX > 0) {
                             this.nextSlide();
                         } else {
                             this.prevSlide();
                         }
                     }
-                    
-                    isDragging = false;
-                }, { passive: true });
+                });
 
                 // Mouse events for desktop
-                let mouseStartX = 0;
-                let mouseIsDragging = false;
-
-                this.container.addEventListener('mousedown', (e) => {
-                    mouseStartX = e.clientX;
-                    mouseIsDragging = true;
-                    this.stopAutoRotation();
-                    e.preventDefault();
-                });
-
-                this.container.addEventListener('mousemove', (e) => {
-                    if (!mouseIsDragging) return;
-                    e.preventDefault();
-                });
-
-                this.container.addEventListener('mouseup', (e) => {
-                    if (!mouseIsDragging) return;
-                    
-                    const mouseEndX = e.clientX;
-                    const diffX = mouseStartX - mouseEndX;
-                    
-                    if (Math.abs(diffX) > 50) {
-                        if (diffX > 0) {
-                            this.nextSlide();
-                        } else {
-                            this.prevSlide();
-                        }
-                    }
-                    
-                    mouseIsDragging = false;
-                });
-
-                this.container.addEventListener('mouseleave', () => {
-                    mouseIsDragging = false;
+                this.container.addEventListener('click', (e) => {
+                    if (e.target.closest('.indicator')) return;
+                    this.nextSlide();
                 });
 
                 // Indicator clicks
                 this.indicators.forEach((indicator, index) => {
                     indicator.addEventListener('click', () => {
-                        this.stopAutoRotation();
                         this.goToSlide(index);
                     });
                 });
 
-                // Click anywhere on carousel to advance
-                this.container.addEventListener('click', (e) => {
-                    if (e.target.closest('.indicator')) return;
-                    this.stopAutoRotation();
-                    this.nextSlide();
-                });
+                // Stop auto-rotation on any user interaction
+                this.container.addEventListener('touchstart', () => this.stopAutoRotation());
+                this.container.addEventListener('click', () => this.stopAutoRotation());
             }
 
             nextSlide() {
                 if (this.isTransitioning) return;
                 this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
                 this.updateCarousel();
+                this.updateIndicators();
+                this.stopAutoRotation();
             }
 
             prevSlide() {
                 if (this.isTransitioning) return;
-                this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+                this.currentSlide = this.currentSlide === 0 ? this.totalSlides - 1 : this.currentSlide - 1;
                 this.updateCarousel();
+                this.updateIndicators();
+                this.stopAutoRotation();
             }
 
             goToSlide(index) {
                 if (this.isTransitioning || index === this.currentSlide) return;
                 this.currentSlide = index;
                 this.updateCarousel();
+                this.updateIndicators();
+                this.stopAutoRotation();
             }
 
             updateCarousel() {
                 this.isTransitioning = true;
-                this.track.style.transform = `translateX(-${this.currentSlide * 100}%)`;
-                this.updateIndicators();
+                const translateX = -this.currentSlide * 100;
+                this.track.style.transform = `translateX(${translateX}%)`;
                 
                 setTimeout(() => {
                     this.isTransitioning = false;
@@ -678,18 +626,22 @@
             }
 
             startAutoRotation() {
-                if (!this.autoRotate) return;
+                if (this.autoRotationInterval) {
+                    clearInterval(this.autoRotationInterval);
+                }
                 
-                this.autoRotateInterval = setInterval(() => {
-                    this.nextSlide();
+                this.autoRotationInterval = setInterval(() => {
+                    if (this.autoRotationEnabled) {
+                        this.nextSlide();
+                    }
                 }, 4000);
             }
 
             stopAutoRotation() {
-                this.autoRotate = false;
-                if (this.autoRotateInterval) {
-                    clearInterval(this.autoRotateInterval);
-                    this.autoRotateInterval = null;
+                this.autoRotationEnabled = false;
+                if (this.autoRotationInterval) {
+                    clearInterval(this.autoRotationInterval);
+                    this.autoRotationInterval = null;
                 }
             }
         }

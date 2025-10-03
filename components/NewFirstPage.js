@@ -219,95 +219,95 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-           {/* SWIPEABLE CAROUSEL CONTAINER */}
-           <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-             <div 
-               style={{ 
-                 display: 'flex', 
-                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                 transform: `translateX(-${currentCardIndex * (100)}%)`,
-                 touchAction: 'pan-y',
-                 willChange: 'transform'
-               }}
-               onClick={() => switchCard((currentCardIndex + 1) % 2)}
-             >
-               {/* Card 1: What's Happening */}
-               <div style={{ 
-                 background: 'rgba(255, 255, 255, 0.12)',
-                 backdropFilter: 'blur(13px)',
-                 WebkitBackdropFilter: 'blur(13px)',
-                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                 borderRadius: '20px',
-                 padding: '16px',
-                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
-                 position: 'relative',
-                 overflow: 'hidden',
-                 minWidth: 'calc(100% - 40px)',
-                 marginRight: '20px',
-                 flexShrink: 0,
-                 minHeight: '150px',
-                 width: 'calc(100% - 40px)',
-                 maxWidth: 'calc(100% - 40px)'
-               }}>
-                 <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                   {whatsHappening.map((item, i) => (
-                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px', width: '100%' }}>
-                       <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                       <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1 }}>{item.text}</span>
-                     </div>
-                   ))}
-                 </div>
-               </div>
+            {/* SWIPEABLE CAROUSEL CONTAINER */}
+            <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                  transform: `translateX(-${currentCardIndex * (100)}%)`,
+                  touchAction: 'pan-y',
+                  willChange: 'transform'
+                }}
+                onClick={() => switchCard((currentCardIndex + 1) % 2)}
+              >
+                {/* Card 1: What's Happening */}
+                <div style={{ 
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(13px)',
+                  WebkitBackdropFilter: 'blur(13px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '20px',
+                  padding: '16px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  minWidth: 'calc(100% - 40px)',
+                  marginRight: '20px',
+                  flexShrink: 0,
+                  minHeight: '150px',
+                  width: 'calc(100% - 40px)',
+                  maxWidth: 'calc(100% - 40px)'
+                }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {whatsHappening.map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px', width: '100%' }}>
+                        <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                        <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1 }}>{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-               {/* Card 2: Today in History */}
-               <div style={{ 
-                 background: 'rgba(255, 255, 255, 0.12)',
-                 backdropFilter: 'blur(13px)',
-                 WebkitBackdropFilter: 'blur(13px)',
-                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                 borderRadius: '20px',
-                 padding: '16px',
-                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
-                 position: 'relative',
-                 overflow: 'hidden',
-                 minWidth: 'calc(100% - 40px)',
-                 marginRight: '20px',
-                 flexShrink: 0,
-                 minHeight: '150px',
-                 width: 'calc(100% - 40px)',
-                 maxWidth: 'calc(100% - 40px)'
-               }}>
-                 <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
-                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                   {historicalEvents.slice(0, 3).map((event, i) => (
-                     <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px', width: '100%' }}>
-                       <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px', flexShrink: 0 }}>{event.year}</span>
-                       <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1 }}>{event.event}</span>
-                     </div>
-                   ))}
-                 </div>
-               </div>
-             </div>
-           </div>
+                {/* Card 2: Today in History */}
+                <div style={{ 
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(13px)',
+                  WebkitBackdropFilter: 'blur(13px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '20px',
+                  padding: '16px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  minWidth: 'calc(100% - 40px)',
+                  marginRight: '20px',
+                  flexShrink: 0,
+                  minHeight: '150px',
+                  width: 'calc(100% - 40px)',
+                  maxWidth: 'calc(100% - 40px)'
+                }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {historicalEvents.slice(0, 3).map((event, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px', width: '100%' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px', flexShrink: 0 }}>{event.year}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000', wordWrap: 'break-word', overflowWrap: 'break-word', flex: 1 }}>{event.event}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-           {/* Card Indicators */}
-           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '30px' }}>
-             {[0, 1].map((index) => (
-               <div
-                 key={index}
-                 onClick={() => switchCard(index)}
-                 style={{
-                   width: currentCardIndex === index ? '20px' : '6px',
-                   height: '6px',
-                   borderRadius: currentCardIndex === index ? '3px' : '50%',
-                   background: currentCardIndex === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
-                   transition: 'all 0.3s',
-                   cursor: 'pointer'
-                 }}
-               />
-             ))}
-           </div>
+            {/* Card Indicators */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '30px' }}>
+              {[0, 1].map((index) => (
+                <div
+                  key={index}
+                  onClick={() => switchCard(index)}
+                  style={{
+                    width: currentCardIndex === index ? '20px' : '6px',
+                    height: '6px',
+                    borderRadius: currentCardIndex === index ? '3px' : '50%',
+                    background: currentCardIndex === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
+                    transition: 'all 0.3s',
+                    cursor: 'pointer'
+                  }}
+                />
+              ))}
+            </div>
 
 
           {/* Scroll Hint */}
