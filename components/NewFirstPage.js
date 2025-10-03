@@ -112,16 +112,18 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* What's Happening - GLASS BOX */}
+          {/* What's Happening - GLASSMORPHISM BOX */}
           <div style={{ 
-            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
-            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.12)',
+            backdropFilter: 'blur(13px)',
+            WebkitBackdropFilter: 'blur(13px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
             padding: '16px',
             marginBottom: '16px',
-            boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
             <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -134,16 +136,18 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* Today in History - GLASS BOX (No Icon) */}
+          {/* Today in History - GLASSMORPHISM BOX (No Icon) */}
           <div style={{ 
-            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
-            borderRadius: '8px',
+            background: 'rgba(255, 255, 255, 0.12)',
+            backdropFilter: 'blur(13px)',
+            WebkitBackdropFilter: 'blur(13px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
             padding: '16px',
             marginBottom: '30px',
-            boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
             <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
