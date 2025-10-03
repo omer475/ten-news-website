@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - Word-by-Word Animation & Swipeable Sections</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* SOFT BACKGROUND COLOR BLURS */
+        .background-blur-red {
+            position: fixed;
+            top: 15%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-1 25s ease-in-out infinite;
+        }
+
+        .background-blur-blue {
+            position: fixed;
+            top: 45%;
+            left: 5%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-2 30s ease-in-out infinite;
+        }
+
+        .background-blur-purple {
+            position: fixed;
+            bottom: 20%;
+            right: 15%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-3 35s ease-in-out infinite;
+        }
+
+        @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 40px) scale(1.15); }
+            66% { transform: translate(40px, -20px) scale(0.95); }
+        }
+
+        @keyframes float-3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(25px, 35px) scale(1.05); }
+            66% { transform: translate(-35px, -25px) scale(0.9); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .glass-button {
+            background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 999vw;
+            padding: 10px 20px;
+            color: rgba(50, 50, 50, 1);
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Greeting */
+        .greeting-section {
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+
+        .greeting-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            margin-top: 8px;
+        }
+
+        /* HEADLINE WITH WORD-BY-WORD BLUE BLUR */
+        .headline-container {
+            margin-bottom: 30px;
+        }
+
+        .main-headline {
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.2;
+            display: inline;
+        }
+
+        .headline-word {
+            display: inline-block;
+            margin-right: 0.3em;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .headline-word.highlighted {
+            color: #111827;
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) 
+                    drop-shadow(0 0 15px rgba(59, 130, 246, 0.6))
+                    drop-shadow(0 0 25px rgba(59, 130, 246, 0.4));
+            transform: scale(1.02);
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+
+        .toggle-switch {
+            background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 999vw;
+            padding: 2px;
+            display: inline-flex;
+            gap: 0;
+            width: 180px;
+        }
+
+        .toggle-option {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 999vw;
+            background: transparent;
+            border: none;
+            color: rgba(50, 50, 50, 1);
+            font-weight: 600;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
+            text-align: center;
+        }
+
+        .toggle-option.active {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(13px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 0 22px 11px rgba(255, 255, 255, 0.11);
+            position: relative;
+            overflow: hidden;
+            padding: 16px;
+            margin-bottom: 30px;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
+        }
+
+        /* Swipeable sections */
+        .swipeable-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .swipeable-content {
+            display: flex;
+            transition: transform 400ms ease-in-out;
+        }
+
+        .swipeable-section {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #000000;
+            margin-bottom: 12px;
+        }
+
+        .text-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .text-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            margin-top: 7px;
+            flex-shrink: 0;
+        }
+
+        .text-item-content {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .history-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .history-year {
+            font-size: 11px;
+            font-weight: 700;
+            color: #A855F7;
+            min-width: 45px;
+        }
+
+        .history-event {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #000000;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <!-- SOFT BACKGROUND COLOR BLURS -->
+    <div class="background-blur-red"></div>
+    <div class="background-blur-blue"></div>
+    <div class="background-blur-purple"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TEN NEWS</div>
+            <div style="display: flex; align-items: center;">
+                <button class="glass-button">LOGIN</button>
+                <button class="glass-button">SIGN UP</button>
+            </div>
+        </div>
+
+        <!-- Greeting Section -->
+        <div class="greeting-section">
+            <h2 class="greeting-text">Goood evening!</h2>
+            
+            <!-- HEADLINE WITH WORD-BY-WORD BLUE BLUR -->
+            <div class="headline-container">
+                <h1 class="main-headline" id="animated-headline">
+                    <span class="headline-word">Critical</span>
+                    <span class="headline-word">NATO-Russia</span>
+                    <span class="headline-word">tensions</span>
+                    <span class="headline-word">dominate</span>
+                    <span class="headline-word">today's</span>
+                    <span class="headline-word">headlines</span>
+                </h1>
+            </div>
+        </div>
+
+        <!-- SWIPEABLE TOGGLE BUTTONS -->
+        <div class="toggle-container">
+            <div class="toggle-switch">
+                <button class="toggle-option" id="history-btn">Today in History</button>
+                <button class="toggle-option active" id="happening-btn">What's Happening</button>
+            </div>
+        </div>
+
+        <!-- SWIPEABLE SECTIONS IN GLASSMORPHISM BOX -->
+        <div class="glass-card">
+            <div class="swipeable-container" id="swipeable-container">
+                <div class="swipeable-content" id="swipeable-content" style="transform: translateX(-100%);">
+                    <!-- TODAY IN HISTORY (First section - shown by default) -->
+                    <div class="swipeable-section">
+                        <div class="section-label">TODAY IN HISTORY</div>
+                        <div class="history-item">
+                            <div class="history-year">1789</div>
+                            <div class="history-event">U.S. Constitution ratified by required states</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-year">1957</div>
+                            <div class="history-event">Sputnik 1 launched, starting Space Age</div>
+                        </div>
+                        <div class="history-item">
+                            <div class="history-year">1991</div>
+                            <div class="history-event">World Wide Web made publicly available</div>
+                        </div>
+                    </div>
+
+                    <!-- WHAT'S HAPPENING (Second section - swipe to see) -->
+                    <div class="swipeable-section">
+                        <div class="section-label">WHAT'S HAPPENING</div>
+                        <div class="text-item">
+                            <div class="text-dot" style="background: #EF4444; animation: pulse 2s infinite;"></div>
+                            <div class="text-item-content">NATO-Russia tensions escalate in Eastern Europe</div>
+                        </div>
+                        <div class="text-item">
+                            <div class="text-dot" style="background: #10B981;"></div>
+                            <div class="text-item-content">Global markets surge 3% on trade deal optimism</div>
+                        </div>
+                        <div class="text-item">
+                            <div class="text-dot" style="background: #3B82F6;"></div>
+                            <div class="text-item-content">Tech giants announce joint AI safety initiative</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Hint -->
+        <div style="text-align: center; font-size: 10px; opacity: 0.5; letter-spacing: 1px; color: rgba(0, 0, 0, 0.5);">
+            SCROLL TO CONTINUE ↓
+        </div>
+
+        <!-- Design Notes -->
+        <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
+            <h3 style="margin-bottom: 16px; font-size: 18px;">✨ New Features</h3>
+            <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
+                <li><strong>Word-by-word blur:</strong> Blue glow highlights each word sequentially</li>
+                <li><strong>Stronger effect:</strong> More visible blue glow with drop-shadow filters</li>
+                <li><strong>Smooth transitions:</strong> ease-in-out timing between words</li>
+                <li><strong>Swipeable sections:</strong> Toggle between "Today in History" and "What's Happening"</li>
+                <li><strong>Default view:</strong> "Today in History" shown first</li>
+                <li><strong>Background blurs:</strong> Soft red, blue, purple spots floating</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // WORD-BY-WORD BLUR ANIMATION
+        const words = document.querySelectorAll('.headline-word');
+        let currentWordIndex = 0;
+
+        function animateWords() {
+            // Remove highlight from all words
+            words.forEach(word => word.classList.remove('highlighted'));
+            
+            // Add highlight to current word
+            if (words[currentWordIndex]) {
+                words[currentWordIndex].classList.add('highlighted');
+            }
+            
+            // Move to next word
+            currentWordIndex++;
+            
+            // Loop back to beginning after last word
+            if (currentWordIndex >= words.length) {
+                currentWordIndex = 0;
+            }
+        }
+
+        // Start animation (700ms per word = normal reading pace)
+        setInterval(animateWords, 700);
+
+        // SWIPEABLE SECTIONS
+        const historyBtn = document.getElementById('history-btn');
+        const happeningBtn = document.getElementById('happening-btn');
+        const swipeableContent = document.getElementById('swipeable-content');
+        const swipeableContainer = document.getElementById('swipeable-container');
+
+        let currentSection = 1; // 0 = history, 1 = happening
+
+        function showHistory() {
+            swipeableContent.style.transform = 'translateX(0%)';
+            historyBtn.classList.add('active');
+            happeningBtn.classList.remove('active');
+            currentSection = 0;
+        }
+
+        function showHappening() {
+            swipeableContent.style.transform = 'translateX(-100%)';
+            historyBtn.classList.remove('active');
+            happeningBtn.classList.add('active');
+            currentSection = 1;
+        }
+
+        historyBtn.addEventListener('click', showHistory);
+        happeningBtn.addEventListener('click', showHappening);
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        swipeableContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        swipeableContainer.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeDistance = touchStartX - touchEndX;
+            
+            if (Math.abs(swipeDistance) > 50) {
+                if (swipeDistance > 0 && currentSection === 0) {
+                    // Swipe left - show happening
+                    showHappening();
+                } else if (swipeDistance < 0 && currentSection === 1) {
+                    // Swipe right - show history
+                    showHistory();
+                }
+            }
+        }
+
+        // Show "What's Happening" by default (starts at -100%)
+        // Already set in inline style
+    </script>
+</body>
+</html>
