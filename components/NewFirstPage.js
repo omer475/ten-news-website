@@ -219,17 +219,15 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* CENTERED SWIPEABLE CARDS CONTAINER */}
-          <div style={{ position: 'relative', width: '100%', overflow: 'visible', marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+          {/* SWIPEABLE CARDS - ONE AT A TIME */}
+          <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px' }}>
             <div 
               style={{ 
                 display: 'flex', 
                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 transform: `translateX(-${currentCardIndex * (100)}%)`,
-                touchAction: 'pan-y',
                 width: '100%'
               }}
-              onClick={() => switchCard((currentCardIndex + 1) % 2)}
             >
               {/* Card 1: What's Happening - SMOOTH SCROLLING */}
               <div style={{ 
