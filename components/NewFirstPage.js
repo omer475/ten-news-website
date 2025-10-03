@@ -4,6 +4,8 @@ export default function NewFirstPage({ onContinue }) {
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [autoRotationEnabled, setAutoRotationEnabled] = useState(true);
 
   // Simulate live reader count updates
   useEffect(() => {
@@ -47,6 +49,23 @@ export default function NewFirstPage({ onContinue }) {
     if (hour >= 5 && hour < 12) return 'Goood morning!';
     if (hour >= 12 && hour < 18) return 'Goood afternoon!';
     return 'Goood evening!';
+  };
+
+  // Auto-rotation for cards (every 4 seconds)
+  useEffect(() => {
+    if (!autoRotationEnabled) return;
+    
+    const interval = setInterval(() => {
+      setCurrentCardIndex(prev => (prev + 1) % 2);
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, [autoRotationEnabled]);
+
+  // Manual card switch - stops auto-rotation
+  const switchCard = (index) => {
+    setAutoRotationEnabled(false);
+    setCurrentCardIndex(index);
   };
 
   return (
@@ -200,52 +219,87 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* What's Happening - GLASSMORPHISM BOX */}
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.12)',
-            backdropFilter: 'blur(13px)',
-            WebkitBackdropFilter: 'blur(13px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '20px',
-            padding: '16px',
-            marginBottom: '16px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {whatsHappening.map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
-                  <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                  <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
+          {/* SWIPEABLE CARDS CONTAINER */}
+          <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transform: `translateX(-${currentCardIndex * (100)}%)`,
+                touchAction: 'pan-y'
+              }}
+              onClick={() => switchCard((currentCardIndex + 1) % 2)}
+            >
+              {/* Card 1: What's Happening */}
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(13px)',
+                WebkitBackdropFilter: 'blur(13px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '20px',
+                padding: '16px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+                position: 'relative',
+                overflow: 'hidden',
+                minWidth: 'calc(100% - 20px)',
+                marginRight: '20px',
+                flexShrink: 0
+              }}>
+                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {whatsHappening.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
+                      <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Card 2: Today in History */}
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(13px)',
+                WebkitBackdropFilter: 'blur(13px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '20px',
+                padding: '16px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
+                position: 'relative',
+                overflow: 'hidden',
+                minWidth: 'calc(100% - 20px)',
+                marginRight: '20px',
+                flexShrink: 0
+              }}>
+                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {historicalEvents.slice(0, 3).map((event, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Today in History - GLASSMORPHISM BOX (No Icon) */}
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.12)',
-            backdropFilter: 'blur(13px)',
-            WebkitBackdropFilter: 'blur(13px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '20px',
-            padding: '16px',
-            marginBottom: '30px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {historicalEvents.slice(0, 3).map((event, i) => (
-                <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px' }}>{event.year}</span>
-                  <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
-                </div>
-              ))}
-            </div>
+          {/* Card Indicators */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '30px' }}>
+            {[0, 1].map((index) => (
+              <div
+                key={index}
+                onClick={() => switchCard(index)}
+                style={{
+                  width: currentCardIndex === index ? '20px' : '6px',
+                  height: '6px',
+                  borderRadius: currentCardIndex === index ? '3px' : '50%',
+                  background: currentCardIndex === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
+                  transition: 'all 0.3s',
+                  cursor: 'pointer'
+                }}
+              />
+            ))}
           </div>
 
 
