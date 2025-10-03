@@ -20,47 +20,46 @@
             position: relative;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* BACKGROUND BLUR EFFECTS */
-        .background-blur {
+        /* SOFT BACKGROUND COLOR BLURS */
+        .background-blur-red {
             position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .blur-red {
             top: 15%;
             right: 10%;
             width: 400px;
             height: 400px;
             background: radial-gradient(circle, rgba(239, 68, 68, 0.15), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
             animation: float-1 25s ease-in-out infinite;
         }
 
-        .blur-blue {
+        .background-blur-blue {
+            position: fixed;
             top: 45%;
             left: 5%;
             width: 450px;
             height: 450px;
             background: radial-gradient(circle, rgba(59, 130, 246, 0.15), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
             animation: float-2 30s ease-in-out infinite;
         }
 
-        .blur-purple {
+        .background-blur-purple {
+            position: fixed;
             bottom: 20%;
             right: 15%;
             width: 380px;
             height: 380px;
             background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
             animation: float-3 35s ease-in-out infinite;
         }
 
@@ -83,7 +82,7 @@
             66% { transform: translate(-35px, -25px) scale(0.9); }
         }
 
-        /* MOVING BLUE BLUR ANIMATION ACROSS HEADLINE */
+        /* ANIMATED BLUE BLUR ACROSS HEADLINE */
         @keyframes headline-sweep {
             0% {
                 left: -180px;
@@ -99,6 +98,14 @@
                 left: calc(100% + 180px);
                 opacity: 0;
             }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         /* Header with glassmorphism */
@@ -156,20 +163,20 @@
             margin-top: 8px;
         }
 
-        /* Headline with animated blur effect */
-        .headline-container {
+        /* HEADLINE WITH ANIMATED BLUE BLUR */
+        .headline-wrapper {
             position: relative;
             margin-bottom: 8px;
         }
 
-        .headline-blur-overlay {
+        .headline-blur-effect {
             position: absolute;
-            top: 0;
+            top: -5px;
             left: 0;
-            width: 180px;
-            height: 100%;
-            background: radial-gradient(ellipse 150px 60px, rgba(59, 130, 246, 0.25), transparent 70%);
-            filter: blur(20px);
+            width: 200px;
+            height: calc(100% + 10px);
+            background: radial-gradient(ellipse 200px 80px, rgba(59, 130, 246, 0.45), transparent 65%);
+            filter: blur(15px);
             pointer-events: none;
             z-index: 1;
             animation: headline-sweep 10s ease-in-out infinite;
@@ -180,7 +187,6 @@
             font-weight: 800;
             color: #111827;
             line-height: 1.2;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             position: relative;
             z-index: 2;
         }
@@ -190,10 +196,8 @@
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(13px);
             -webkit-backdrop-filter: blur(13px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 
                 0 8px 32px rgba(0, 0, 0, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 0.5),
@@ -201,6 +205,8 @@
                 inset 0 0 22px 11px rgba(255, 255, 255, 0.11);
             position: relative;
             overflow: hidden;
+            padding: 16px;
+            margin-bottom: 16px;
         }
 
         .glass-card::before {
@@ -231,6 +237,39 @@
                 transparent,
                 rgba(255, 255, 255, 0.3)
             );
+        }
+
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .briefing-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 11px;
+            color: #10B981;
+            font-weight: 600;
         }
 
         .section-label {
@@ -291,45 +330,13 @@
             font-size: 10px;
             opacity: 0.5;
             margin-bottom: 16px;
+            letter-spacing: 1px;
             color: rgba(0, 0, 0, 0.5);
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
-        }
-
-        .briefing-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .briefing-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #000000;
-        }
-
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .live-dot {
-            width: 6px;
-            height: 6px;
-            background: #10B981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .live-text {
-            font-size: 11px;
-            color: #10B981;
-            font-weight: 600;
         }
 
         /* Responsive */
@@ -345,14 +352,19 @@
             .main-headline {
                 font-size: 30px;
             }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <!-- SOFT BACKGROUND COLOR BLURS -->
-    <div class="background-blur blur-red"></div>
-    <div class="background-blur blur-blue"></div>
-    <div class="background-blur blur-purple"></div>
+    <div class="background-blur-red"></div>
+    <div class="background-blur-blue"></div>
+    <div class="background-blur-purple"></div>
 
     <div class="container">
         <!-- Header -->
@@ -368,25 +380,23 @@
         <div class="greeting-section">
             <h2 class="greeting-text">Goood evening!</h2>
             
-            <!-- ANIMATED HEADLINE WITH MOVING BLUE BLUR -->
-            <div class="headline-container">
-                <div class="headline-blur-overlay"></div>
+            <!-- HEADLINE WITH ANIMATED BLUE BLUR -->
+            <div class="headline-wrapper">
+                <div class="headline-blur-effect"></div>
                 <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines</h1>
             </div>
         </div>
 
         <!-- Today's Briefing Header -->
-        <div style="margin-bottom: 20px;">
-            <div class="briefing-header">
-                <h3 class="briefing-title">Today's Briefing</h3>
-                <div class="live-indicator">
-                    <div class="live-dot"></div>
-                    <span class="live-text">Live</span>
-                </div>
+        <div class="briefing-header">
+            <h3 class="briefing-title">Today's Briefing</h3>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span class="live-text">Live</span>
             </div>
         </div>
 
-        <!-- What's Happening - GLASSMORPHISM BOX -->
+        <!-- WHAT'S HAPPENING - Glassmorphism Box -->
         <div class="glass-card">
             <div class="section-label">WHAT'S HAPPENING</div>
             <div class="text-item">
@@ -403,7 +413,7 @@
             </div>
         </div>
 
-        <!-- Today in History - GLASSMORPHISM BOX -->
+        <!-- TODAY IN HISTORY - Glassmorphism Box -->
         <div class="glass-card" style="margin-bottom: 30px;">
             <div class="section-label">TODAY IN HISTORY</div>
             <div class="history-item">
@@ -414,7 +424,7 @@
                 <div class="history-year">1957</div>
                 <div class="history-event">Sputnik 1 launched, starting Space Age</div>
             </div>
-            <div class="history-item">
+            <div class="history-item" style="margin-bottom: 0;">
                 <div class="history-year">1991</div>
                 <div class="history-event">World Wide Web made publicly available</div>
             </div>
@@ -426,15 +436,15 @@
         </div>
 
         <!-- Design Notes -->
-        <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white; position: relative; z-index: 10;">
+        <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
             <h3 style="margin-bottom: 16px; font-size: 18px;">✨ Visual Effects Applied</h3>
             <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
-                <li><strong>Background blurs:</strong> Soft red, blue, and purple color spots with blur(80px)</li>
-                <li><strong>Animated blurs:</strong> Float gently in background (25s, 30s, 35s cycles)</li>
+                <li><strong>Background blurs:</strong> Soft red, blue, and purple color spots with 80px blur</li>
+                <li><strong>Floating animation:</strong> Background colors gently move (25-35s cycles)</li>
                 <li><strong>Headline animation:</strong> Blue blur sweeps across text every 10 seconds</li>
-                <li><strong>Smooth movement:</strong> ease-in-out timing for fluid motion</li>
+                <li><strong>Smooth movement:</strong> ease-in-out timing for fluid animation</li>
                 <li><strong>Text legibility:</strong> Blur is subtle enough to maintain readability</li>
-                <li><strong>Glassmorphism:</strong> Enhanced with pseudo-element highlights</li>
+                <li><strong>Infinite loop:</strong> Animations repeat continuously</li>
             </ul>
         </div>
     </div>

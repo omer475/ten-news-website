@@ -168,12 +168,12 @@ export default function NewFirstPage({ onContinue }) {
             <div style={{ position: 'relative', marginBottom: '8px' }}>
               <div style={{
                 position: 'absolute',
-                top: 0,
+                top: '-5px',
                 left: 0,
-                width: '180px',
-                height: '100%',
-                background: 'radial-gradient(ellipse 150px 60px, rgba(59, 130, 246, 0.25), transparent 70%)',
-                filter: 'blur(20px)',
+                width: '200px',
+                height: 'calc(100% + 10px)',
+                background: 'radial-gradient(ellipse 200px 80px, rgba(59, 130, 246, 0.45), transparent 65%)',
+                filter: 'blur(15px)',
                 pointerEvents: 'none',
                 zIndex: 1,
                 animation: 'headline-sweep 10s ease-in-out infinite'
