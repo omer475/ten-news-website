@@ -1,27 +1,17 @@
-/**
- * ============================================================================
- * COMPLETE FIRST PAGE DESIGN CODE
- * ============================================================================
- * 
- * Features Included:
- * - Ultra-smooth continuous blue blur animation on headline
- * - Swipeable carousel (touch swipe left/right + click)
- * - Auto-rotation every 4 seconds
- * - Glassmorphism card designs
- * - Animated background blur effects (red, blue, purple)
- * - Time-based greeting (morning/afternoon/evening)
- * - Live indicator with pulse animation
- * - Touch-optimized interactions
- * - Smooth rounded corners
- * - Card indicators (dots)
- * 
- * ============================================================================
- */
+// ============================================================
+// COMPLETE FIRST PAGE DESIGN CODE - TEN NEWS
+// ============================================================
+// This is the complete, production-ready code for the first page
+// Includes: Ultra-smooth blur animation, swipeable cards, glassmorphism,
+// background effects, touch gestures, auto-rotation, and all styling
+// ============================================================
 
 import { useState, useEffect } from 'react';
 
 export default function NewFirstPage({ onContinue }) {
-  // ========== STATE MANAGEMENT ==========
+  // ============================================================
+  // STATE MANAGEMENT
+  // ============================================================
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -30,7 +20,21 @@ export default function NewFirstPage({ onContinue }) {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
 
-  // ========== DATA ==========
+  // ============================================================
+  // LIVE READER COUNT SIMULATION
+  // ============================================================
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setReaderCount(prev => prev + Math.floor(Math.random() * 7) - 3);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ============================================================
+  // DATA CONFIGURATION
+  // ============================================================
+  
+  // Story headlines (can be dynamically loaded)
   const stories = [
     {
       title: "Critical NATO-Russia tensions dominate today's headlines.",
@@ -46,28 +50,45 @@ export default function NewFirstPage({ onContinue }) {
     },
   ];
 
+  // What's Happening card data
   const whatsHappening = [
-    { text: 'NATO-Russia tensions escalate in Eastern Europe', color: '#EF4444', urgent: true },
-    { text: 'Global markets surge 3% on trade deal optimism', color: '#10B981', urgent: false },
-    { text: 'Tech giants announce joint AI safety initiative', color: '#3B82F6', urgent: false },
+    { 
+      text: 'NATO-Russia tensions escalate in Eastern Europe', 
+      color: '#EF4444',  // Red for urgent
+      urgent: true 
+    },
+    { 
+      text: 'Global markets surge 3% on trade deal optimism', 
+      color: '#10B981',  // Green for positive
+      urgent: false 
+    },
+    { 
+      text: 'Tech giants announce joint AI safety initiative', 
+      color: '#3B82F6',  // Blue for tech
+      urgent: false 
+    },
   ];
 
+  // Today in History card data
   const historicalEvents = [
     { year: '1789', event: 'U.S. Constitution ratified by required states' },
     { year: '1957', event: 'Sputnik 1 launched, starting Space Age' },
     { year: '1991', event: 'World Wide Web made publicly available' },
   ];
 
-  // ========== EFFECTS ==========
-  // Simulate live reader count updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setReaderCount(prev => prev + Math.floor(Math.random() * 7) - 3);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  // ============================================================
+  // GREETING LOGIC (Time-based)
+  // ============================================================
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Goood morning!';
+    if (hour >= 12 && hour < 18) return 'Goood afternoon!';
+    return 'Goood evening!';
+  };
 
-  // Auto-rotation for cards (every 4 seconds)
+  // ============================================================
+  // CAROUSEL AUTO-ROTATION (Every 4 seconds)
+  // ============================================================
   useEffect(() => {
     if (!autoRotationEnabled) return;
     
@@ -78,22 +99,17 @@ export default function NewFirstPage({ onContinue }) {
     return () => clearInterval(interval);
   }, [autoRotationEnabled]);
 
-  // ========== FUNCTIONS ==========
-  // Get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return 'Goood morning!';
-    if (hour >= 12 && hour < 18) return 'Goood afternoon!';
-    return 'Goood evening!';
-  };
-
-  // Manual card switch - stops auto-rotation
+  // ============================================================
+  // MANUAL CARD SWITCHING (Stops auto-rotation)
+  // ============================================================
   const switchCard = (index) => {
     setAutoRotationEnabled(false);
     setCurrentCardIndex(index);
   };
 
-  // Touch handlers for swipe functionality
+  // ============================================================
+  // TOUCH SWIPE HANDLERS (Left/Right swipe detection)
+  // ============================================================
   const handleTouchStart = (e) => {
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -106,40 +122,46 @@ export default function NewFirstPage({ onContinue }) {
     if (!touchStart || !touchEnd) return;
     
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
+    const isLeftSwipe = distance > 50;   // Minimum 50px for swipe
     const isRightSwipe = distance < -50;
     
+    // Swipe left: Go to next card
     if (isLeftSwipe && currentCardIndex < 1) {
       switchCard(currentCardIndex + 1);
     }
     
+    // Swipe right: Go to previous card
     if (isRightSwipe && currentCardIndex > 0) {
       switchCard(currentCardIndex - 1);
     }
     
-    // Reset
+    // Reset touch positions
     setTouchStart(0);
     setTouchEnd(0);
   };
 
-  // ========== RENDER ==========
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <>
-      {/* ========== ANIMATIONS & STYLES ========== */}
+      {/* ============================================================ */}
+      {/* CSS KEYFRAME ANIMATIONS */}
+      {/* ============================================================ */}
       <style>{`
-        /* Pulse animation for live indicator and urgent items */
+        /* Pulse animation for live indicators and urgent items */
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
 
-        /* Marquee animation (unused but available) */
+        /* Marquee animation (currently unused but available) */
         @keyframes marquee {
           0% { transform: translateX(0%); }
           100% { transform: translateX(-50%); }
         }
 
-        /* Hide scrollbar */
+        /* Hide scrollbar while maintaining scroll functionality */
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
@@ -148,48 +170,42 @@ export default function NewFirstPage({ onContinue }) {
           scrollbar-width: none;
         }
 
-        /* Floating animation for background blurs */
+        /* Soft floating animation for background blur effects */
         @keyframes float-soft {
           0%, 100% { transform: translate(0, 0); }
           33% { transform: translate(30px, -30px); }
           66% { transform: translate(-30px, 30px); }
         }
 
-        /* Ultra-smooth continuous blue blur traveling animation */
+        /* Ultra-smooth continuous blur spotlight traveling across headline */
         @keyframes travel-multi-row {
-          /* Start position - before first word */
+          /* Start: Before text, invisible */
           0% {
             left: -100px;
             top: 0;
             opacity: 0;
           }
-          
           /* Fade in as it enters */
           2% {
             opacity: 1;
           }
-          
-          /* Travel across first row */
+          /* Travel across first row (0-35% of animation) */
           0%, 35% {
             top: 0;
           }
-          
-          /* Transition to second row */
+          /* Transition to second row (35-70% of animation) */
           35%, 70% {
             top: 43px;
           }
-          
-          /* Transition to third row */
+          /* Transition to third row if exists (70-95% of animation) */
           70%, 95% {
             top: 86px;
           }
-          
           /* Fade out before loop */
           98% {
             opacity: 1;
           }
-          
-          /* End position - after last word */
+          /* End: After text, invisible */
           100% {
             left: calc(100% + 100px);
             opacity: 0;
@@ -197,8 +213,11 @@ export default function NewFirstPage({ onContinue }) {
         }
       `}</style>
       
-      {/* ========== BACKGROUND BLUR EFFECTS ========== */}
-      {/* Red/Pink blur - top right */}
+      {/* ============================================================ */}
+      {/* BACKGROUND BLUR EFFECTS - Floating soft pastel gradients */}
+      {/* ============================================================ */}
+      
+      {/* Red/Pink blur - Top right */}
       <div style={{
         position: 'fixed',
         top: '15%',
@@ -213,7 +232,7 @@ export default function NewFirstPage({ onContinue }) {
         animation: 'float-soft 25s ease-in-out infinite'
       }}></div>
 
-      {/* Blue blur - middle left */}
+      {/* Blue blur - Middle left */}
       <div style={{
         position: 'fixed',
         top: '45%',
@@ -228,7 +247,7 @@ export default function NewFirstPage({ onContinue }) {
         animation: 'float-soft 30s ease-in-out infinite reverse'
       }}></div>
 
-      {/* Purple blur - bottom right */}
+      {/* Purple blur - Bottom right */}
       <div style={{
         position: 'fixed',
         bottom: '20%',
@@ -243,7 +262,9 @@ export default function NewFirstPage({ onContinue }) {
         animation: 'float-soft 35s ease-in-out infinite'
       }}></div>
 
-      {/* ========== MAIN CONTENT CONTAINER ========== */}
+      {/* ============================================================ */}
+      {/* MAIN CONTENT CONTAINER */}
+      {/* ============================================================ */}
       <div style={{
         minHeight: '100vh',
         background: 'transparent',
@@ -259,8 +280,11 @@ export default function NewFirstPage({ onContinue }) {
           padding: '0 20px 32px'
         }}>
           
-          {/* ========== GREETING SECTION ========== */}
+          {/* ============================================================ */}
+          {/* GREETING & HEADLINE SECTION */}
+          {/* ============================================================ */}
           <div style={{ marginBottom: '30px', marginTop: '20px' }}>
+            
             {/* Time-based greeting with gradient */}
             <h2 style={{
               fontSize: '28px',
@@ -277,6 +301,7 @@ export default function NewFirstPage({ onContinue }) {
 
             {/* Main headline with ultra-smooth blue blur animation */}
             <div style={{ position: 'relative', marginBottom: '8px', overflow: 'visible' }}>
+              
               {/* Traveling blue blur spotlight */}
               <div style={{
                 position: 'absolute',
@@ -291,7 +316,7 @@ export default function NewFirstPage({ onContinue }) {
                 animation: 'travel-multi-row 10s linear infinite'
               }}></div>
 
-              {/* Headline text */}
+              {/* Headline text (never changes, only blur moves) */}
               <h1 style={{ 
                 fontSize: '36px', 
                 fontWeight: '800', 
@@ -306,14 +331,31 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* ========== TODAY'S BRIEFING HEADER ========== */}
+          {/* ============================================================ */}
+          {/* TODAY'S BRIEFING HEADER */}
+          {/* ============================================================ */}
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: '16px' 
+            }}>
+              {/* Section title */}
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '700', 
+                color: '#000000' 
+              }}>
                 Today's Briefing
               </h3>
-              {/* Live indicator */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+
+              {/* Live indicator with pulsing dot */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px' 
+              }}>
                 <div style={{ 
                   width: '6px', 
                   height: '6px', 
@@ -321,26 +363,35 @@ export default function NewFirstPage({ onContinue }) {
                   borderRadius: '50%', 
                   animation: 'pulse 2s infinite' 
                 }}></div>
-                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Live</span>
+                <span style={{ 
+                  fontSize: '11px', 
+                  color: '#10B981', 
+                  fontWeight: 600 
+                }}>
+                  Live
+                </span>
               </div>
             </div>
           </div>
 
-          {/* ========== SWIPEABLE CAROUSEL CONTAINER ========== */}
+          {/* ============================================================ */}
+          {/* SWIPEABLE CAROUSEL CONTAINER */}
+          {/* ============================================================ */}
           <div style={{ 
             position: 'relative', 
             width: '100%', 
             overflow: 'hidden', 
             marginBottom: '12px', 
-            borderRadius: '20px' 
+            borderRadius: '20px'  // Clips cards to rounded corners
           }}>
-            {/* Flex container for cards */}
+            
+            {/* Carousel track (slides horizontally) */}
             <div 
               style={{ 
                 display: 'flex', 
                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 transform: `translateX(-${currentCardIndex * 100}%)`,
-                touchAction: 'pan-x',
+                touchAction: 'pan-x',  // Enable horizontal touch scrolling
                 willChange: 'transform',
                 cursor: 'pointer'
               }}
@@ -350,7 +401,9 @@ export default function NewFirstPage({ onContinue }) {
               onTouchEnd={handleTouchEnd}
             >
               
-              {/* ========== CARD 1: WHAT'S HAPPENING ========== */}
+              {/* ============================================================ */}
+              {/* CARD 1: WHAT'S HAPPENING */}
+              {/* ============================================================ */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.12)',
                 backdropFilter: 'blur(13px)',
@@ -367,7 +420,7 @@ export default function NewFirstPage({ onContinue }) {
                 boxSizing: 'border-box',
                 margin: 0
               }}>
-                {/* Card title */}
+                {/* Card header */}
                 <div style={{ 
                   fontSize: '10px', 
                   fontWeight: '700', 
@@ -379,8 +432,12 @@ export default function NewFirstPage({ onContinue }) {
                   WHAT'S HAPPENING
                 </div>
 
-                {/* News items with colored dots */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* News items list */}
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '8px' 
+                }}>
                   {whatsHappening.map((item, i) => (
                     <div key={i} style={{ 
                       display: 'flex', 
@@ -388,7 +445,7 @@ export default function NewFirstPage({ onContinue }) {
                       gap: '10px', 
                       paddingLeft: '4px' 
                     }}>
-                      {/* Colored dot indicator */}
+                      {/* Color-coded dot (pulses if urgent) */}
                       <div style={{ 
                         width: '5px', 
                         height: '5px', 
@@ -398,6 +455,7 @@ export default function NewFirstPage({ onContinue }) {
                         flexShrink: 0, 
                         animation: item.urgent ? 'pulse 2s infinite' : 'none' 
                       }}></div>
+                      
                       {/* News text */}
                       <span style={{ 
                         fontSize: '13px', 
@@ -412,7 +470,9 @@ export default function NewFirstPage({ onContinue }) {
                 </div>
               </div>
 
-              {/* ========== CARD 2: TODAY IN HISTORY ========== */}
+              {/* ============================================================ */}
+              {/* CARD 2: TODAY IN HISTORY */}
+              {/* ============================================================ */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.12)',
                 backdropFilter: 'blur(13px)',
@@ -429,7 +489,7 @@ export default function NewFirstPage({ onContinue }) {
                 boxSizing: 'border-box',
                 margin: 0
               }}>
-                {/* Card title */}
+                {/* Card header */}
                 <div style={{ 
                   fontSize: '10px', 
                   fontWeight: '700', 
@@ -441,15 +501,19 @@ export default function NewFirstPage({ onContinue }) {
                   TODAY IN HISTORY
                 </div>
 
-                {/* Historical events with year labels */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* Historical events list */}
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '8px' 
+                }}>
                   {historicalEvents.slice(0, 3).map((event, i) => (
                     <div key={i} style={{ 
                       display: 'flex', 
                       gap: '12px', 
                       paddingLeft: '4px' 
                     }}>
-                      {/* Year in purple */}
+                      {/* Year (purple color) */}
                       <span style={{ 
                         fontSize: '11px', 
                         fontWeight: '700', 
@@ -459,6 +523,7 @@ export default function NewFirstPage({ onContinue }) {
                       }}>
                         {event.year}
                       </span>
+                      
                       {/* Event description */}
                       <span style={{ 
                         fontSize: '13px', 
@@ -475,7 +540,9 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* ========== CARD INDICATORS (DOTS) ========== */}
+          {/* ============================================================ */}
+          {/* CARD INDICATORS (Dots showing current card) */}
+          {/* ============================================================ */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -490,7 +557,9 @@ export default function NewFirstPage({ onContinue }) {
                   width: currentCardIndex === index ? '20px' : '6px',
                   height: '6px',
                   borderRadius: currentCardIndex === index ? '3px' : '50%',
-                  background: currentCardIndex === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
+                  background: currentCardIndex === index 
+                    ? 'rgba(59, 130, 246, 0.8)'   // Active: Blue elongated
+                    : 'rgba(255, 255, 255, 0.3)', // Inactive: White dot
                   transition: 'all 0.3s',
                   cursor: 'pointer'
                 }}
@@ -498,7 +567,9 @@ export default function NewFirstPage({ onContinue }) {
             ))}
           </div>
 
-          {/* ========== SCROLL HINT ========== */}
+          {/* ============================================================ */}
+          {/* SCROLL HINT */}
+          {/* ============================================================ */}
           <div style={{ 
             textAlign: 'center', 
             fontSize: '10px', 
@@ -513,48 +584,79 @@ export default function NewFirstPage({ onContinue }) {
   );
 }
 
-/**
- * ============================================================================
- * DESIGN SPECIFICATIONS
- * ============================================================================
- * 
- * COLORS:
- * - Greeting Gradient: #3B82F6 → #A855F7
- * - Headline Text: #111827
- * - Live Indicator: #10B981
- * - Urgent News Dot: #EF4444 (red)
- * - Positive News Dot: #10B981 (green)
- * - Info News Dot: #3B82F6 (blue)
- * - History Year: #A855F7 (purple)
- * - Glass Background: rgba(255, 255, 255, 0.12)
- * - Glass Border: rgba(255, 255, 255, 0.3)
- * 
- * ANIMATIONS:
- * - Blue Blur Travel: 10s linear infinite
- * - Background Float: 25s-35s ease-in-out
- * - Pulse: 2s infinite
- * - Card Auto-Rotate: 4s interval
- * - Card Transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)
- * 
- * GLASSMORPHISM:
- * - Backdrop Blur: 13px
- * - Border: 1px solid rgba(255, 255, 255, 0.3)
- * - Border Radius: 20px
- * - Multiple inset shadows for depth
- * 
- * TOUCH INTERACTIONS:
- * - Swipe Left: Next card (min 50px distance)
- * - Swipe Right: Previous card (min 50px distance)
- * - Tap: Toggle between cards
- * - Dot Tap: Jump to specific card
- * 
- * TYPOGRAPHY:
- * - Greeting: 28px, weight 700
- * - Headline: 36px, weight 800
- * - Section Title: 18px, weight 700
- * - Card Title: 10px, weight 700, uppercase
- * - News Text: 13px, weight 500
- * - Year Label: 11px, weight 700
- * 
- * ============================================================================
- */
+// ============================================================
+// COLOR PALETTE REFERENCE
+// ============================================================
+/*
+PRIMARY COLORS:
+- Blue (Primary): #3B82F6
+- Purple (Accent): #A855F7
+- Green (Positive/Live): #10B981
+- Red (Urgent): #EF4444
+
+TEXT COLORS:
+- Primary Text: #111827 (Dark gray)
+- Secondary Text: #000000 (Black)
+
+BACKGROUND EFFECTS:
+- Red Blur: rgba(254, 202, 202, 0.25)
+- Blue Blur: rgba(191, 219, 254, 0.25)
+- Purple Blur: rgba(221, 214, 254, 0.25)
+
+GLASSMORPHISM:
+- Background: rgba(255, 255, 255, 0.12)
+- Border: rgba(255, 255, 255, 0.3)
+- Backdrop Filter: blur(13px)
+*/
+
+// ============================================================
+// INTERACTION METHODS
+// ============================================================
+/*
+1. CLICK/TAP: Click anywhere on card to switch
+2. SWIPE: Swipe left/right with finger (50px minimum)
+3. INDICATORS: Click bottom dots to switch to specific card
+4. AUTO-ROTATION: Cards auto-switch every 4 seconds (stops on manual interaction)
+*/
+
+// ============================================================
+// ANIMATION DETAILS
+// ============================================================
+/*
+HEADLINE BLUR ANIMATION:
+- Duration: 10 seconds per complete cycle
+- Timing: Linear (constant speed)
+- Coverage: All rows (top: 0 → 43px → 86px)
+- Blur: 100px × 48px radial gradient
+- Color: rgba(59, 130, 246, 0.4)
+- Infinite loop with fade in/out
+
+BACKGROUND BLUR FLOATS:
+- Red Blur: 25s cycle
+- Blue Blur: 30s cycle (reverse)
+- Purple Blur: 35s cycle
+- All use soft easing
+
+CAROUSEL TRANSITION:
+- Duration: 0.4s
+- Easing: cubic-bezier(0.25, 0.46, 0.45, 0.94)
+- Transform: translateX(-100% per card)
+
+PULSE ANIMATION:
+- Duration: 2s
+- Opacity: 1 → 0.5 → 1
+- Used for: Live indicator, urgent items
+*/
+
+// ============================================================
+// RESPONSIVE CONSIDERATIONS
+// ============================================================
+/*
+- All font sizes are in px for consistency
+- Layout uses flexbox for flexibility
+- Touch actions optimized for mobile
+- Swipe requires 50px minimum distance
+- Cards are 100% width for proper alignment
+- Border radius clips overflow for rounded corners
+*/
+
