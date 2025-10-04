@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ten News - Complete First Page Design</title>
+    <style>
+        /* ============================================
+           COMPLETE FIRST PAGE DESIGN CODE
+           Includes: Swipe, Colors, Animations, Glass
+           ============================================ */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #111827;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        
+        /* Pulsing effect for urgent items */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Floating background blurs */
+        @keyframes float-soft {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(30px, -30px); }
+            66% { transform: translate(-30px, 30px); }
+        }
+
+        /* Ultra-smooth blue blur traveling across headline */
+        @keyframes travel-multi-row {
+            0% {
+                left: -100px;
+                top: 0;
+                opacity: 0;
+            }
+            2% {
+                opacity: 1;
+            }
+            0%, 35% {
+                top: 0;
+            }
+            35%, 70% {
+                top: 43px;
+            }
+            70%, 95% {
+                top: 86px;
+            }
+            98% {
+                opacity: 1;
+            }
+            100% {
+                left: calc(100% + 100px);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           BACKGROUND BLUR EFFECTS
+           ============================================ */
+        
+        .background-blur-red {
+            position: fixed;
+            top: 15%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(254, 202, 202, 0.25), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-soft 25s ease-in-out infinite;
+        }
+
+        .background-blur-blue {
+            position: fixed;
+            top: 45%;
+            left: 5%;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(191, 219, 254, 0.25), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-soft 30s ease-in-out infinite reverse;
+        }
+
+        .background-blur-purple {
+            position: fixed;
+            bottom: 20%;
+            right: 15%;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(221, 214, 254, 0.25), transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float-soft 35s ease-in-out infinite;
+        }
+
+        /* ============================================
+           LAYOUT & CONTAINER
+           ============================================ */
+        
+        .container {
+            min-height: 100vh;
+            background: transparent;
+            color: #111827;
+            transition: all 0.5s;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .scroll-container {
+            height: 100vh;
+            overflow-y: auto;
+            padding: 0 20px 32px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            letter-spacing: -0.5px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ============================================
+           GLASSMORPHISM BUTTONS
+           ============================================ */
+        
+        .glass-button {
+            all: unset;
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 999px;
+            padding: 10px 20px;
+            color: rgba(50, 50, 50, 1);
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5);
+            transition: all 0.3s;
+        }
+
+        .glass-button:hover {
+            transform: scale(0.975);
+        }
+
+        /* ============================================
+           GREETING SECTION
+           ============================================ */
+        
+        .greeting-section {
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+
+        .greeting-text {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            margin-top: 8px;
+            background: linear-gradient(to right, #3B82F6, #A855F7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ============================================
+           HEADLINE WITH BLUE BLUR ANIMATION
+           ============================================ */
+        
+        .headline-container {
+            position: relative;
+            margin-bottom: 8px;
+            overflow: visible;
+        }
+
+        .blur-spotlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 48px;
+            background: radial-gradient(
+                ellipse 100px 48px at center,
+                rgba(59, 130, 246, 0.4),
+                rgba(59, 130, 246, 0.2) 50%,
+                transparent 75%
+            );
+            filter: blur(12px);
+            pointer-events: none;
+            z-index: 3;
+            animation: travel-multi-row 10s linear infinite;
+        }
+
+        .main-headline {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #111827;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ============================================
+           BRIEFING HEADER
+           ============================================ */
+        
+        .briefing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .briefing-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #10B981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .live-text {
+            font-size: 11px;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        /* ============================================
+           SWIPEABLE CAROUSEL
+           ============================================ */
+        
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border-radius: 20px;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            touch-action: pan-x;
+            will-change: transform;
+            cursor: pointer;
+        }
+
+        /* ============================================
+           GLASSMORPHISM CARDS
+           ============================================ */
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(13px);
+            -webkit-backdrop-filter: blur(13px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 0 22px 11px rgba(255, 255, 255, 0.11);
+            position: relative;
+            overflow: hidden;
+            min-width: 100%;
+            width: 100%;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .card-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #000000;
+            margin-bottom: 12px;
+        }
+
+        /* ============================================
+           CARD CONTENT ITEMS
+           ============================================ */
+        
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .content-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding-left: 4px;
+        }
+
+        .status-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            margin-top: 7px;
+            flex-shrink: 0;
+        }
+
+        .status-dot.urgent {
+            animation: pulse 2s infinite;
+        }
+
+        .item-text {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #000000;
+        }
+
+        /* History items */
+        .history-item {
+            display: flex;
+            gap: 12px;
+            padding-left: 4px;
+        }
+
+        .history-year {
+            font-size: 11px;
+            font-weight: 700;
+            color: #A855F7;
+            min-width: 45px;
+            flex-shrink: 0;
+        }
+
+        .history-event {
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #000000;
+        }
+
+        /* ============================================
+           CAROUSEL INDICATORS
+           ============================================ */
+        
+        .indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 30px;
+            margin-top: 12px;
+        }
+
+        .indicator-dot {
+            height: 6px;
+            border-radius: 3px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .indicator-dot:not(.active) {
+            width: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .indicator-dot.active {
+            width: 20px;
+            background: rgba(59, 130, 246, 0.8);
+        }
+
+        /* ============================================
+           SCROLL HINT
+           ============================================ */
+        
+        .scroll-hint {
+            text-align: center;
+            font-size: 10px;
+            opacity: 0.5;
+            margin-bottom: 16px;
+            color: #000000;
+        }
+
+        /* ============================================
+           COLOR PALETTE (for reference)
+           ============================================ */
+        
+        /*
+        RED (Urgent):     #EF4444
+        GREEN (Positive): #10B981  
+        BLUE (Info):      #3B82F6
+        PURPLE (History): #A855F7
+        BLACK (Text):     #000000
+        GRAY (Text):      #111827
+        
+        Glass Background:     rgba(255, 255, 255, 0.12)
+        Glass Border:         rgba(255, 255, 255, 0.3)
+        Background Red Blur:  rgba(254, 202, 202, 0.25)
+        Background Blue Blur: rgba(191, 219, 254, 0.25)
+        Background Purple:    rgba(221, 214, 254, 0.25)
+        */
+    </style>
+</head>
+<body>
+    <!-- Background blur effects -->
+    <div class="background-blur-red"></div>
+    <div class="background-blur-blue"></div>
+    <div class="background-blur-purple"></div>
+
+    <!-- Main container -->
+    <div class="container">
+        <div class="scroll-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">TEN NEWS</div>
+                <div class="header-buttons">
+                    <button class="glass-button">LOGIN</button>
+                    <button class="glass-button">SIGN UP</button>
+                </div>
+            </div>
+
+            <!-- Greeting Section -->
+            <div class="greeting-section">
+                <h2 class="greeting-text" id="greeting">Goood evening!</h2>
+                
+                <!-- Headline with ultra-smooth blur -->
+                <div class="headline-container">
+                    <div class="blur-spotlight"></div>
+                    <h1 class="main-headline">Critical NATO-Russia tensions dominate today's headlines.</h1>
+                </div>
+            </div>
+
+            <!-- Today's Briefing Header -->
+            <div style="margin-bottom: 20px;">
+                <div class="briefing-header">
+                    <h3 class="briefing-title">Today's Briefing</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span class="live-text">Live</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SWIPEABLE CAROUSEL -->
+            <div class="carousel-container">
+                <div class="carousel-track" id="carousel-track">
+                    <!-- Card 1: What's Happening -->
+                    <div class="glass-card">
+                        <div class="card-label">WHAT'S HAPPENING</div>
+                        <div class="content-list">
+                            <div class="content-item">
+                                <div class="status-dot urgent" style="background: #EF4444;"></div>
+                                <span class="item-text">NATO-Russia tensions escalate in Eastern Europe</span>
+                            </div>
+                            <div class="content-item">
+                                <div class="status-dot" style="background: #10B981;"></div>
+                                <span class="item-text">Global markets surge 3% on trade deal optimism</span>
+                            </div>
+                            <div class="content-item">
+                                <div class="status-dot" style="background: #3B82F6;"></div>
+                                <span class="item-text">Tech giants announce joint AI safety initiative</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Today in History -->
+                    <div class="glass-card">
+                        <div class="card-label">TODAY IN HISTORY</div>
+                        <div class="content-list">
+                            <div class="history-item">
+                                <span class="history-year">1789</span>
+                                <span class="history-event">U.S. Constitution ratified by required states</span>
+                            </div>
+                            <div class="history-item">
+                                <span class="history-year">1957</span>
+                                <span class="history-event">Sputnik 1 launched, starting Space Age</span>
+                            </div>
+                            <div class="history-item">
+                                <span class="history-year">1991</span>
+                                <span class="history-event">World Wide Web made publicly available</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carousel Indicators -->
+            <div class="indicators">
+                <div class="indicator-dot active" data-index="0"></div>
+                <div class="indicator-dot" data-index="1"></div>
+            </div>
+
+            <!-- Scroll Hint -->
+            <div class="scroll-hint">SCROLL TO CONTINUE ↓</div>
+
+            <!-- Design Documentation -->
+            <div style="margin-top: 60px; background: rgba(16, 185, 129, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 24px; color: white;">
+                <h3 style="margin-bottom: 16px; font-size: 18px;">📋 Complete Design Features</h3>
+                
+                <h4 style="margin-top: 16px; margin-bottom: 8px;">🎨 Colors:</h4>
+                <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
+                    <li><strong style="color: #EF4444;">Red (#EF4444)</strong> - Urgent/Breaking news</li>
+                    <li><strong style="color: #10B981;">Green (#10B981)</strong> - Positive news, Live indicator</li>
+                    <li><strong style="color: #3B82F6;">Blue (#3B82F6)</strong> - Info, Headline blur</li>
+                    <li><strong style="color: #A855F7;">Purple (#A855F7)</strong> - History years, Gradient</li>
+                    <li><strong>Black (#000000)</strong> - Primary text</li>
+                </ul>
+
+                <h4 style="margin-top: 16px; margin-bottom: 8px;">✨ Animations:</h4>
+                <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
+                    <li><strong>Blue Blur Spotlight:</strong> 10s continuous travel across headline</li>
+                    <li><strong>Pulse Effect:</strong> 2s for urgent items & live dot</li>
+                    <li><strong>Float Effect:</strong> 25-35s for background blurs</li>
+                    <li><strong>Carousel Slide:</strong> 0.4s cubic-bezier transition</li>
+                </ul>
+
+                <h4 style="margin-top: 16px; margin-bottom: 8px;">👆 Swipe Features:</h4>
+                <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
+                    <li><strong>Touch Swipe:</strong> Left/Right with 50px minimum</li>
+                    <li><strong>Click/Tap:</strong> Tap card to switch</li>
+                    <li><strong>Indicators:</strong> Click dots to jump to card</li>
+                    <li><strong>Auto-rotation:</strong> 4 seconds (stops on interaction)</li>
+                </ul>
+
+                <h4 style="margin-top: 16px; margin-bottom: 8px;">🪟 Glassmorphism:</h4>
+                <ul style="line-height: 1.8; font-size: 14px; opacity: 0.9; list-style-position: inside;">
+                    <li><strong>Backdrop blur:</strong> 13px for cards, 2px for buttons</li>
+                    <li><strong>Background:</strong> rgba(255, 255, 255, 0.12)</li>
+                    <li><strong>Border:</strong> rgba(255, 255, 255, 0.3)</li>
+                    <li><strong>Shadows:</strong> Multi-layer inset + drop shadows</li>
+                    <li><strong>Border radius:</strong> 20px cards, 999px buttons</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================
+           JAVASCRIPT FOR SWIPE & INTERACTION
+           ============================================ */
+        
+        let currentCardIndex = 0;
+        let autoRotationEnabled = true;
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let autoRotateInterval;
+
+        const carouselTrack = document.getElementById('carousel-track');
+        const indicators = document.querySelectorAll('.indicator-dot');
+        const greetingElement = document.getElementById('greeting');
+
+        // Set greeting based on time
+        function setGreeting() {
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) {
+                greetingElement.textContent = 'Goood morning!';
+            } else if (hour >= 12 && hour < 18) {
+                greetingElement.textContent = 'Goood afternoon!';
+            } else {
+                greetingElement.textContent = 'Goood evening!';
+            }
+        }
+
+        // Update carousel position
+        function updateCarousel() {
+            carouselTrack.style.transform = `translateX(-${currentCardIndex * 100}%)`;
+            
+            // Update indicators
+            indicators.forEach((dot, index) => {
+                if (index === currentCardIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        // Switch to specific card
+        function switchCard(index) {
+            if (index < 0 || index > 1) return;
+            autoRotationEnabled = false;
+            clearInterval(autoRotateInterval);
+            currentCardIndex = index;
+            updateCarousel();
+        }
+
+        // Touch event handlers
+        carouselTrack.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        carouselTrack.addEventListener('touchmove', (e) => {
+            touchEndX = e.touches[0].clientX;
+        });
+
+        carouselTrack.addEventListener('touchend', () => {
+            if (!touchStartX || !touchEndX) return;
+            
+            const distance = touchStartX - touchEndX;
+            const isLeftSwipe = distance > 50;
+            const isRightSwipe = distance < -50;
+            
+            if (isLeftSwipe && currentCardIndex < 1) {
+                switchCard(currentCardIndex + 1);
+            }
+            
+            if (isRightSwipe && currentCardIndex > 0) {
+                switchCard(currentCardIndex - 1);
+            }
+            
+            touchStartX = 0;
+            touchEndX = 0;
+        });
+
+        // Click to switch
+        carouselTrack.addEventListener('click', () => {
+            switchCard((currentCardIndex + 1) % 2);
+        });
+
+        // Indicator clicks
+        indicators.forEach((dot) => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = parseInt(dot.getAttribute('data-index'));
+                switchCard(index);
+            });
+        });
+
+        // Auto-rotation
+        function startAutoRotation() {
+            autoRotateInterval = setInterval(() => {
+                if (autoRotationEnabled) {
+                    currentCardIndex = (currentCardIndex + 1) % 2;
+                    updateCarousel();
+                }
+            }, 4000);
+        }
+
+        // Initialize
+        setGreeting();
+        updateCarousel();
+        startAutoRotation();
+    </script>
+</body>
+</html>
