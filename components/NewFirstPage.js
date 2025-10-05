@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function NewFirstPage({ onContinue }) {
+  // ============================================================
+  // STATE MANAGEMENT
+  // ============================================================
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -8,8 +11,27 @@ export default function NewFirstPage({ onContinue }) {
   const [autoRotationEnabled, setAutoRotationEnabled] = useState(true);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [wordPositions, setWordPositions] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const headlineRef = useRef(null);
+  const categoryScrollRef = useRef(null);
 
-  // Simulate live reader count updates
+  // Categories data
+  const categories = [
+    'All',
+    'Politics',
+    'Technology',
+    'Business',
+    'Science',
+    'Health',
+    'Sports',
+    'Entertainment',
+    'World'
+  ];
+
+  // ============================================================
+  // LIVE READER COUNT SIMULATION
+  // ============================================================
   useEffect(() => {
     const interval = setInterval(() => {
       setReaderCount(prev => prev + Math.floor(Math.random() * 7) - 3);
@@ -17,7 +39,11 @@ export default function NewFirstPage({ onContinue }) {
     return () => clearInterval(interval);
   }, []);
 
-
+  // ============================================================
+  // DATA CONFIGURATION
+  // ============================================================
+  
+  // Story headlines (can be dynamically loaded)
   const stories = [
     {
       title: "Critical NATO-Russia tensions dominate today's headlines.",
@@ -33,19 +59,83 @@ export default function NewFirstPage({ onContinue }) {
     },
   ];
 
+  // What's Happening card data
   const whatsHappening = [
-    { text: 'NATO-Russia tensions escalate in Eastern Europe', color: '#EF4444', urgent: true },
-    { text: 'Global markets surge 3% on trade deal optimism', color: '#10B981', urgent: false },
-    { text: 'Tech giants announce joint AI safety initiative', color: '#3B82F6', urgent: false },
+    { 
+      text: 'NATO-Russia tensions escalate in Eastern Europe', 
+      color: '#EF4444',
+      urgent: true 
+    },
+    { 
+      text: 'Global markets surge 3% on trade deal optimism', 
+      color: '#10B981',
+      urgent: false 
+    },
+    { 
+      text: 'Tech giants announce joint AI safety initiative', 
+      color: '#3B82F6',
+      urgent: false 
+    },
   ];
 
+  // Today in History card data
   const historicalEvents = [
     { year: '1789', event: 'U.S. Constitution ratified by required states' },
     { year: '1957', event: 'Sputnik 1 launched, starting Space Age' },
     { year: '1991', event: 'World Wide Web made publicly available' },
   ];
 
+  // ============================================================
+  // CALCULATE WORD POSITIONS FOR BLUR ANIMATION
+  // ============================================================
+  useEffect(() => {
+    if (!headlineRef.current) return;
 
+    const calculatePositions = () => {
+      const spans = headlineRef.current.querySelectorAll('.word-span');
+      const positions = [];
+      let currentRow = 0;
+      let lastTop = null;
+
+      spans.forEach((span, index) => {
+        const rect = span.getBoundingClientRect();
+        const parentRect = headlineRef.current.getBoundingClientRect();
+        
+        const relativeTop = rect.top - parentRect.top;
+        const relativeLeft = rect.left - parentRect.left;
+        
+        // Detect new row
+        if (lastTop !== null && Math.abs(relativeTop - lastTop) > 10) {
+          currentRow++;
+        }
+        lastTop = relativeTop;
+
+        positions.push({
+          left: relativeLeft,
+          top: relativeTop,
+          width: rect.width,
+          height: rect.height,
+          row: currentRow,
+          index: index
+        });
+      });
+
+      setWordPositions(positions);
+    };
+
+    // Calculate on mount and resize
+    calculatePositions();
+    window.addEventListener('resize', calculatePositions);
+    
+    // Small delay to ensure fonts are loaded
+    setTimeout(calculatePositions, 100);
+
+    return () => window.removeEventListener('resize', calculatePositions);
+  }, [currentStory]);
+
+  // ============================================================
+  // GREETING LOGIC (Time-based)
+  // ============================================================
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return 'Goood morning!';
@@ -53,7 +143,9 @@ export default function NewFirstPage({ onContinue }) {
     return 'Goood evening!';
   };
 
-  // Auto-rotation for cards (every 4 seconds)
+  // ============================================================
+  // CAROUSEL AUTO-ROTATION (Every 4 seconds)
+  // ============================================================
   useEffect(() => {
     if (!autoRotationEnabled) return;
     
@@ -64,13 +156,17 @@ export default function NewFirstPage({ onContinue }) {
     return () => clearInterval(interval);
   }, [autoRotationEnabled]);
 
-  // Manual card switch - stops auto-rotation
+  // ============================================================
+  // MANUAL CARD SWITCHING (Stops auto-rotation)
+  // ============================================================
   const switchCard = (index) => {
     setAutoRotationEnabled(false);
     setCurrentCardIndex(index);
   };
 
-  // Touch handlers for swipe
+  // ============================================================
+  // TOUCH SWIPE HANDLERS (Left/Right swipe detection)
+  // ============================================================
   const handleTouchStart = (e) => {
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -94,11 +190,87 @@ export default function NewFirstPage({ onContinue }) {
       switchCard(currentCardIndex - 1);
     }
     
-    // Reset
     setTouchStart(0);
     setTouchEnd(0);
   };
 
+  // ============================================================
+  // GENERATE KEYFRAMES BASED ON WORD POSITIONS
+  // ============================================================
+  const generateKeyframes = () => {
+    if (wordPositions.length === 0) return '';
+
+    let keyframes = '@keyframes travel-headline-dynamic {\n';
+    
+    // Group words by row
+    const rowGroups = {};
+    wordPositions.forEach(pos => {
+      if (!rowGroups[pos.row]) rowGroups[pos.row] = [];
+      rowGroups[pos.row].push(pos);
+    });
+    
+    const rows = Object.keys(rowGroups).map(Number).sort((a, b) => a - b);
+    const totalRows = rows.length;
+    const percentPerRow = 100 / totalRows;
+    
+    rows.forEach((rowNum, rowIndex) => {
+      const wordsInRow = rowGroups[rowNum];
+      const startPercent = rowIndex * percentPerRow;
+      const endPercent = (rowIndex + 1) * percentPerRow;
+      const rowDuration = endPercent - startPercent;
+      
+      wordsInRow.forEach((pos, wordIndex) => {
+        const wordProgress = (wordIndex / wordsInRow.length) * rowDuration;
+        const percent = startPercent + wordProgress;
+        
+        keyframes += `  ${percent.toFixed(2)}% {\n`;
+        keyframes += `    left: ${pos.left + pos.width/2}px;\n`;
+        keyframes += `    top: ${pos.top + pos.height/2}px;\n`;
+        keyframes += `    opacity: 1;\n`;
+        keyframes += `  }\n`;
+      });
+      
+      // At end of row (except last row), disappear
+      if (rowIndex < totalRows - 1) {
+        const lastWord = wordsInRow[wordsInRow.length - 1];
+        keyframes += `  ${(endPercent - 0.1).toFixed(2)}% {\n`;
+        keyframes += `    left: ${lastWord.left + lastWord.width}px;\n`;
+        keyframes += `    top: ${lastWord.top + lastWord.height/2}px;\n`;
+        keyframes += `    opacity: 1;\n`;
+        keyframes += `  }\n`;
+        
+        keyframes += `  ${endPercent.toFixed(2)}% {\n`;
+        keyframes += `    left: ${lastWord.left + lastWord.width}px;\n`;
+        keyframes += `    top: ${lastWord.top + lastWord.height/2}px;\n`;
+        keyframes += `    opacity: 0;\n`;
+        keyframes += `  }\n`;
+        
+        // At start of next row, appear
+        const nextRowWords = rowGroups[rows[rowIndex + 1]];
+        const firstNextWord = nextRowWords[0];
+        keyframes += `  ${(endPercent + 0.1).toFixed(2)}% {\n`;
+        keyframes += `    left: ${firstNextWord.left}px;\n`;
+        keyframes += `    top: ${firstNextWord.top + firstNextWord.height/2}px;\n`;
+        keyframes += `    opacity: 1;\n`;
+        keyframes += `  }\n`;
+      }
+    });
+    
+    // Final position - disappear
+    keyframes += `  100% {\n`;
+    const lastPos = wordPositions[wordPositions.length - 1];
+    keyframes += `    left: ${lastPos.left + lastPos.width}px;\n`;
+    keyframes += `    top: ${lastPos.top + lastPos.height/2}px;\n`;
+    keyframes += `    opacity: 0;\n`;
+    keyframes += `  }\n`;
+    keyframes += '}';
+    
+    return keyframes;
+  };
+
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <>
       <style>{`
@@ -106,10 +278,7 @@ export default function NewFirstPage({ onContinue }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
+
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
@@ -117,40 +286,17 @@ export default function NewFirstPage({ onContinue }) {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+
         @keyframes float-soft {
           0%, 100% { transform: translate(0, 0); }
           33% { transform: translate(30px, -30px); }
           66% { transform: translate(-30px, 30px); }
         }
-        @keyframes travel-multi-row {
-          0% {
-            left: -100px;
-            top: 0;
-            opacity: 0;
-          }
-          2% {
-            opacity: 1;
-          }
-          0%, 35% {
-            top: 0;
-          }
-          35%, 70% {
-            top: 43px;
-          }
-          70%, 95% {
-            top: 86px;
-          }
-          98% {
-            opacity: 1;
-          }
-          100% {
-            left: calc(100% + 100px);
-            opacity: 0;
-          }
-        }
+
+        ${generateKeyframes()}
       `}</style>
       
-      {/* BACKGROUND BLUR EFFECTS - Soft Pastel Colors */}
+      {/* Background blur effects */}
       <div style={{
         position: 'fixed',
         top: '15%',
@@ -164,6 +310,7 @@ export default function NewFirstPage({ onContinue }) {
         zIndex: 0,
         animation: 'float-soft 25s ease-in-out infinite'
       }}></div>
+
       <div style={{
         position: 'fixed',
         top: '45%',
@@ -177,6 +324,7 @@ export default function NewFirstPage({ onContinue }) {
         zIndex: 0,
         animation: 'float-soft 30s ease-in-out infinite reverse'
       }}></div>
+
       <div style={{
         position: 'fixed',
         bottom: '20%',
@@ -191,6 +339,7 @@ export default function NewFirstPage({ onContinue }) {
         animation: 'float-soft 35s ease-in-out infinite'
       }}></div>
 
+      {/* Main content */}
       <div style={{
         minHeight: '100vh',
         background: 'transparent',
@@ -203,10 +352,61 @@ export default function NewFirstPage({ onContinue }) {
         <div style={{
           height: '100vh',
           overflowY: 'auto',
-          padding: '0 20px 32px'
+          padding: '0 24px 32px',
+          maxWidth: '600px',
+          margin: '0 auto'
         }}>
-          {/* Greeting Section - UPDATED HIERARCHY */}
-          <div style={{ marginBottom: '30px', marginTop: '20px' }}>
+          
+          {/* ============================================================ */}
+          {/* CATEGORY BAR - Swipeable horizontal scroll */}
+          {/* ============================================================ */}
+          <div 
+            ref={categoryScrollRef}
+            style={{ 
+              display: 'flex', 
+              gap: '8px', 
+              overflowX: 'auto', 
+              paddingBottom: '4px',
+              marginBottom: '20px',
+              marginTop: '12px',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+            className="scrollbar-hide"
+          >
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: 'none',
+                  background: selectedCategory === category 
+                    ? 'rgba(59, 130, 246, 0.15)'
+                    : 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  color: selectedCategory === category ? '#3B82F6' : '#6B7280',
+                  fontSize: '13px',
+                  fontWeight: selectedCategory === category ? '600' : '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  boxShadow: selectedCategory === category 
+                    ? '0 2px 8px rgba(59, 130, 246, 0.15)'
+                    : 'none'
+                }}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ marginBottom: '30px' }}>
+            
             <h2 style={{
               fontSize: '28px',
               fontWeight: '700',
@@ -219,39 +419,71 @@ export default function NewFirstPage({ onContinue }) {
             }}>
               {getGreeting()}
             </h2>
-            <div style={{ position: 'relative', marginBottom: '8px', overflow: 'visible' }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100px',
-                height: '48px',
-                background: 'radial-gradient(ellipse 100px 48px at center, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.2) 50%, transparent 75%)',
-                filter: 'blur(12px)',
-                pointerEvents: 'none',
-                zIndex: 3,
-                animation: 'travel-multi-row 10s linear infinite'
-              }}></div>
-              <h1 style={{ fontSize: '36px', fontWeight: '800', lineHeight: '1.2', color: '#111827', textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', position: 'relative', zIndex: 2 }}>
-                {stories[currentStory].title}
+
+            {/* Headline with dynamic blur */}
+            <div ref={headlineRef} style={{ position: 'relative', marginBottom: '8px', overflow: 'visible' }}>
+              
+              {/* Traveling blur based on calculated positions */}
+              {wordPositions.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  width: '120px',
+                  height: '50px',
+                  background: 'radial-gradient(ellipse 120px 50px at center, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.3) 50%, transparent 75%)',
+                  filter: 'blur(15px)',
+                  pointerEvents: 'none',
+                  zIndex: 3,
+                  animation: 'travel-headline-dynamic 1.2s linear forwards',
+                  transform: 'translate(-50%, -50%)'
+                }}></div>
+              )}
+
+              {/* Headline text with word tracking */}
+              <h1 style={{ 
+                fontSize: '36px', 
+                fontWeight: '800', 
+                lineHeight: '1.2', 
+                color: '#111827', 
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', 
+                position: 'relative', 
+                zIndex: 2
+              }}>
+                {stories[currentStory].title.split(' ').map((word, index) => (
+                  <span key={index} className="word-span" style={{ display: 'inline-block', marginRight: '0.3em' }}>
+                    {word}
+                  </span>
+                ))}
               </h1>
             </div>
           </div>
 
-
-          {/* Today's Briefing - Header Only (No Icon) */}
+          {/* Today's Briefing */}
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#000000' }}>Today's Briefing</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '6px', height: '6px', background: '#10B981', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
-                <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 600 }}>Live</span>
-              </div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: '16px' 
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '700', 
+                color: '#000000' 
+              }}>
+                Today's Briefing
+              </h3>
             </div>
           </div>
 
-          {/* SWIPEABLE CAROUSEL CONTAINER */}
-          <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px', borderRadius: '20px' }}>
+          {/* Carousel */}
+          <div style={{ 
+            position: 'relative', 
+            width: '100%', 
+            overflow: 'hidden', 
+            marginBottom: '12px', 
+            borderRadius: '20px'
+          }}>
+            
             <div 
               style={{ 
                 display: 'flex', 
@@ -266,6 +498,7 @@ export default function NewFirstPage({ onContinue }) {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
+              
               {/* Card 1: What's Happening */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.12)',
@@ -283,12 +516,47 @@ export default function NewFirstPage({ onContinue }) {
                 boxSizing: 'border-box',
                 margin: 0
               }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  fontWeight: '700', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  color: '#000000', 
+                  marginBottom: '12px' 
+                }}>
+                  WHAT'S HAPPENING
+                </div>
+
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '8px' 
+                }}>
                   {whatsHappening.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
-                      <div style={{ width: '5px', height: '5px', background: item.color, borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
-                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
+                    <div key={i} style={{ 
+                      display: 'flex', 
+                      alignItems: 'flex-start', 
+                      gap: '10px', 
+                      paddingLeft: '4px' 
+                    }}>
+                      <div style={{ 
+                        width: '5px', 
+                        height: '5px', 
+                        background: item.color, 
+                        borderRadius: '50%', 
+                        marginTop: '7px', 
+                        flexShrink: 0, 
+                        animation: item.urgent ? 'pulse 2s infinite' : 'none' 
+                      }}></div>
+                      
+                      <span style={{ 
+                        fontSize: '13px', 
+                        fontWeight: 500, 
+                        lineHeight: '1.5', 
+                        color: '#000000' 
+                      }}>
+                        {item.text}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -311,12 +579,46 @@ export default function NewFirstPage({ onContinue }) {
                 boxSizing: 'border-box',
                 margin: 0
               }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#000000', marginBottom: '12px' }}>TODAY IN HISTORY</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ 
+                  fontSize: '10px', 
+                  fontWeight: '700', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  color: '#000000', 
+                  marginBottom: '12px' 
+                }}>
+                  TODAY IN HISTORY
+                </div>
+
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '8px' 
+                }}>
                   {historicalEvents.slice(0, 3).map((event, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#A855F7', minWidth: '45px', flexShrink: 0 }}>{event.year}</span>
-                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
+                    <div key={i} style={{ 
+                      display: 'flex', 
+                      gap: '12px', 
+                      paddingLeft: '4px' 
+                    }}>
+                      <span style={{ 
+                        fontSize: '11px', 
+                        fontWeight: '700', 
+                        color: '#A855F7', 
+                        minWidth: '45px', 
+                        flexShrink: 0 
+                      }}>
+                        {event.year}
+                      </span>
+                      
+                      <span style={{ 
+                        fontSize: '13px', 
+                        fontWeight: 500, 
+                        lineHeight: '1.5', 
+                        color: '#000000' 
+                      }}>
+                        {event.event}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -324,8 +626,13 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* Card Indicators */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '30px' }}>
+          {/* Card indicators */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '8px', 
+            marginBottom: '30px' 
+          }}>
             {[0, 1].map((index) => (
               <div
                 key={index}
@@ -334,18 +641,14 @@ export default function NewFirstPage({ onContinue }) {
                   width: currentCardIndex === index ? '20px' : '6px',
                   height: '6px',
                   borderRadius: currentCardIndex === index ? '3px' : '50%',
-                  background: currentCardIndex === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
+                  background: currentCardIndex === index 
+                    ? 'rgba(59, 130, 246, 0.8)'
+                    : 'rgba(255, 255, 255, 0.3)',
                   transition: 'all 0.3s',
                   cursor: 'pointer'
                 }}
               />
             ))}
-          </div>
-
-
-          {/* Scroll Hint */}
-          <div style={{ textAlign: 'center', fontSize: '10px', opacity: 0.5, marginBottom: '16px' }}>
-            SCROLL TO CONTINUE ↓
           </div>
         </div>
       </div>
