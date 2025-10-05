@@ -63,9 +63,7 @@ export default function NewFirstPage({ onContinue }) {
   ];
 
 
-  // ============================================================
-  // CALCULATE WORD POSITIONS FOR BLUR ANIMATION
-  // ============================================================
+  // Calculate word positions for blur animation
   useEffect(() => {
     if (!headlineRef.current) return;
 
@@ -82,7 +80,6 @@ export default function NewFirstPage({ onContinue }) {
         const relativeTop = rect.top - parentRect.top;
         const relativeLeft = rect.left - parentRect.left;
         
-        // Detect new row
         if (lastTop !== null && Math.abs(relativeTop - lastTop) > 10) {
           currentRow++;
         }
@@ -101,11 +98,8 @@ export default function NewFirstPage({ onContinue }) {
       setWordPositions(positions);
     };
 
-    // Calculate on mount and resize
     calculatePositions();
     window.addEventListener('resize', calculatePositions);
-    
-    // Small delay to ensure fonts are loaded
     setTimeout(calculatePositions, 100);
 
     return () => window.removeEventListener('resize', calculatePositions);
@@ -164,15 +158,12 @@ export default function NewFirstPage({ onContinue }) {
     setTouchEnd(0);
   };
 
-  // ============================================================
-  // GENERATE KEYFRAMES BASED ON WORD POSITIONS
-  // ============================================================
+  // Generate dynamic keyframes based on word positions
   const generateKeyframes = () => {
     if (wordPositions.length === 0) return '';
 
     let keyframes = '@keyframes travel-headline-dynamic {\n';
     
-    // Group words by row
     const rowGroups = {};
     wordPositions.forEach(pos => {
       if (!rowGroups[pos.row]) rowGroups[pos.row] = [];
@@ -181,7 +172,16 @@ export default function NewFirstPage({ onContinue }) {
     
     const rows = Object.keys(rowGroups).map(Number).sort((a, b) => a - b);
     const totalRows = rows.length;
-    const percentPerRow = 100 / totalRows;
+    
+    const minX = Math.min(...wordPositions.map(p => p.left));
+    const maxX = Math.max(...wordPositions.map(p => p.left + p.width));
+    const minY = Math.min(...wordPositions.map(p => p.top));
+    const maxY = Math.max(...wordPositions.map(p => p.top + p.height));
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    
+    const phase1Duration = 25;
+    const percentPerRow = phase1Duration / totalRows;
     
     rows.forEach((rowNum, rowIndex) => {
       const wordsInRow = rowGroups[rowNum];
@@ -193,46 +193,31 @@ export default function NewFirstPage({ onContinue }) {
         const wordProgress = (wordIndex / wordsInRow.length) * rowDuration;
         const percent = startPercent + wordProgress;
         
-        keyframes += `  ${percent.toFixed(2)}% {\n`;
-        keyframes += `    left: ${pos.left + pos.width/2}px;\n`;
-        keyframes += `    top: ${pos.top + pos.height/2}px;\n`;
-        keyframes += `    opacity: 1;\n`;
-        keyframes += `  }\n`;
+        keyframes += `  ${percent.toFixed(2)}% { left: ${pos.left + pos.width/2}px; top: ${pos.top + pos.height/2}px; opacity: 1; }\n`;
       });
-      
-      // At end of row (except last row), disappear
-      if (rowIndex < totalRows - 1) {
-        const lastWord = wordsInRow[wordsInRow.length - 1];
-        keyframes += `  ${(endPercent - 0.1).toFixed(2)}% {\n`;
-        keyframes += `    left: ${lastWord.left + lastWord.width}px;\n`;
-        keyframes += `    top: ${lastWord.top + lastWord.height/2}px;\n`;
-        keyframes += `    opacity: 1;\n`;
-        keyframes += `  }\n`;
-        
-        keyframes += `  ${endPercent.toFixed(2)}% {\n`;
-        keyframes += `    left: ${lastWord.left + lastWord.width}px;\n`;
-        keyframes += `    top: ${lastWord.top + lastWord.height/2}px;\n`;
-        keyframes += `    opacity: 0;\n`;
-        keyframes += `  }\n`;
-        
-        // At start of next row, appear
-        const nextRowWords = rowGroups[rows[rowIndex + 1]];
-        const firstNextWord = nextRowWords[0];
-        keyframes += `  ${(endPercent + 0.1).toFixed(2)}% {\n`;
-        keyframes += `    left: ${firstNextWord.left}px;\n`;
-        keyframes += `    top: ${firstNextWord.top + firstNextWord.height/2}px;\n`;
-        keyframes += `    opacity: 1;\n`;
-        keyframes += `  }\n`;
-      }
     });
     
-    // Final position - disappear
-    keyframes += `  100% {\n`;
+    const radiusX = (maxX - minX) / 3;
+    const radiusY = (maxY - minY) / 3;
+    
+    for (let i = 0; i <= 8; i++) {
+      const percent = 25 + (i / 8) * 15;
+      const angle = (i / 8) * Math.PI * 2;
+      const x = centerX + Math.cos(angle) * radiusX;
+      const y = centerY + Math.sin(angle) * radiusY;
+      keyframes += `  ${percent.toFixed(2)}% { left: ${x}px; top: ${y}px; opacity: 1; }\n`;
+    }
+    
+    for (let i = 0; i <= 10; i++) {
+      const percent = 40 + (i / 10) * 10;
+      const wiggleX = minX + Math.random() * (maxX - minX);
+      const wiggleY = minY + Math.random() * (maxY - minY);
+      keyframes += `  ${percent.toFixed(2)}% { left: ${wiggleX}px; top: ${wiggleY}px; opacity: 1; }\n`;
+    }
+    
     const lastPos = wordPositions[wordPositions.length - 1];
-    keyframes += `    left: ${lastPos.left + lastPos.width}px;\n`;
-    keyframes += `    top: ${lastPos.top + lastPos.height/2}px;\n`;
-    keyframes += `    opacity: 0;\n`;
-    keyframes += `  }\n`;
+    keyframes += `  95% { left: ${lastPos.left + lastPos.width}px; top: ${lastPos.top + lastPos.height/2}px; opacity: 1; }\n`;
+    keyframes += `  100% { left: ${lastPos.left + lastPos.width}px; top: ${lastPos.top + lastPos.height/2}px; opacity: 0; }\n`;
     keyframes += '}';
     
     return keyframes;
@@ -245,7 +230,6 @@ export default function NewFirstPage({ onContinue }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
-
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
@@ -253,13 +237,11 @@ export default function NewFirstPage({ onContinue }) {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-
         @keyframes float-soft {
           0%, 100% { transform: translate(0, 0); }
           33% { transform: translate(30px, -30px); }
           66% { transform: translate(-30px, 30px); }
         }
-
         ${generateKeyframes()}
       `}</style>
       
@@ -321,15 +303,16 @@ export default function NewFirstPage({ onContinue }) {
           margin: '0 auto'
         }}>
           
-          {/* CATEGORY BAR */}
+          {/* CATEGORY BAR - NO GAP WITH HEADER */}
           <div style={{
-            background: '#F3F4F6',
-            padding: '8px 16px',
-            marginLeft: '-24px',
-            marginRight: '-24px',
+            paddingBottom: '12px',
             marginBottom: '20px',
             marginTop: '12px',
-            borderRadius: '0px'
+            borderBottom: '1px solid #E5E7EB',
+            marginLeft: '-24px',
+            marginRight: '-24px',
+            paddingLeft: '24px',
+            paddingRight: '24px'
           }}>
             <div 
               ref={categoryScrollRef}
@@ -352,7 +335,7 @@ export default function NewFirstPage({ onContinue }) {
                     onClick={() => setSelectedCategory(category.name)}
                     style={{
                       padding: '8px 16px',
-                      borderRadius: '20px',
+                      borderRadius: '8px',
                       border: 'none',
                       background: isSelected 
                         ? `${category.color}20`
@@ -378,7 +361,6 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* Greeting & Headline Section */}
           <div style={{ marginBottom: '30px' }}>
             
             <h2 style={{
@@ -407,7 +389,7 @@ export default function NewFirstPage({ onContinue }) {
                   filter: 'blur(15px)',
                   pointerEvents: 'none',
                   zIndex: 3,
-                  animation: 'travel-headline-dynamic 1.2s linear forwards',
+                  animation: 'travel-headline-dynamic 8s ease-in-out forwards',
                   transform: 'translate(-50%, -50%)'
                 }}></div>
               )}
@@ -431,21 +413,29 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-
-          {/* Today's Briefing */}
+          {/* Today's Briefing - BLUE BANNER */}
           <div style={{ 
-            marginBottom: '20px'
+            marginBottom: '20px',
+            marginLeft: '-24px',
+            marginRight: '-24px'
           }}>
-            <h3 style={{ 
-              fontSize: '18px', 
-              fontWeight: '700', 
-              color: '#111827',
-              margin: 0,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+            <div style={{ 
+              background: 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)',
+              padding: '10px 24px',
+              boxShadow: '0 4px 20px rgba(59, 130, 246, 0.25)',
+              borderRadius: '0px'
             }}>
-              Today's Briefing
-            </h3>
+              <h3 style={{ 
+                fontSize: '16px', 
+                fontWeight: '700', 
+                color: '#FFFFFF',
+                margin: 0,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Today's Briefing
+              </h3>
+            </div>
           </div>
 
           {/* SWIPEABLE CAROUSEL CONTAINER */}
@@ -481,47 +471,12 @@ export default function NewFirstPage({ onContinue }) {
                 boxSizing: 'border-box',
                 margin: 0
               }}>
-                <div style={{ 
-                  fontSize: '10px', 
-                  fontWeight: '700', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1px', 
-                  color: '#F97316', 
-                  marginBottom: '12px' 
-                }}>
-                  WHAT'S HAPPENING
-                </div>
-
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '8px' 
-                }}>
+                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#F97316', marginBottom: '12px' }}>WHAT'S HAPPENING</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {whatsHappening.map((item, i) => (
-                    <div key={i} style={{ 
-                      display: 'flex', 
-                      alignItems: 'flex-start', 
-                      gap: '10px', 
-                      paddingLeft: '4px' 
-                    }}>
-                      <div style={{ 
-                        width: '5px', 
-                        height: '5px', 
-                        background: '#F97316', 
-                        borderRadius: '50%', 
-                        marginTop: '7px', 
-                        flexShrink: 0, 
-                        animation: item.urgent ? 'pulse 2s infinite' : 'none' 
-                      }}></div>
-                      
-                      <span style={{ 
-                        fontSize: '13px', 
-                        fontWeight: 500, 
-                        lineHeight: '1.5', 
-                        color: '#000000' 
-                      }}>
-                        {item.text}
-                      </span>
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '4px' }}>
+                      <div style={{ width: '5px', height: '5px', background: '#F97316', borderRadius: '50%', marginTop: '7px', flexShrink: 0, animation: item.urgent ? 'pulse 2s infinite' : 'none' }}></div>
+                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{item.text}</span>
                     </div>
                   ))}
                 </div>
@@ -544,46 +499,12 @@ export default function NewFirstPage({ onContinue }) {
                 boxSizing: 'border-box',
                 margin: 0
               }}>
-                <div style={{ 
-                  fontSize: '10px', 
-                  fontWeight: '700', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1px', 
-                  color: '#10B981', 
-                  marginBottom: '12px' 
-                }}>
-                  TODAY IN HISTORY
-                </div>
-
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '8px' 
-                }}>
+                <div style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#10B981', marginBottom: '12px' }}>TODAY IN HISTORY</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {historicalEvents.slice(0, 3).map((event, i) => (
-                    <div key={i} style={{ 
-                      display: 'flex', 
-                      gap: '12px', 
-                      paddingLeft: '4px' 
-                    }}>
-                      <span style={{ 
-                        fontSize: '11px', 
-                        fontWeight: '700', 
-                        color: '#10B981', 
-                        minWidth: '45px', 
-                        flexShrink: 0 
-                      }}>
-                        {event.year}
-                      </span>
-                      
-                      <span style={{ 
-                        fontSize: '13px', 
-                        fontWeight: 500, 
-                        lineHeight: '1.5', 
-                        color: '#000000' 
-                      }}>
-                        {event.event}
-                      </span>
+                    <div key={i} style={{ display: 'flex', gap: '12px', paddingLeft: '4px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: '700', color: '#10B981', minWidth: '45px', flexShrink: 0 }}>{event.year}</span>
+                      <span style={{ fontSize: '13px', fontWeight: 500, lineHeight: '1.5', color: '#000000' }}>{event.event}</span>
                     </div>
                   ))}
                 </div>
@@ -591,13 +512,8 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
-          {/* Card indicators */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '8px', 
-            marginBottom: '30px' 
-          }}>
+          {/* Card Indicators */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '30px' }}>
             {[0, 1].map((index) => (
               <div
                 key={index}
@@ -606,9 +522,7 @@ export default function NewFirstPage({ onContinue }) {
                   width: currentCardIndex === index ? '20px' : '6px',
                   height: '6px',
                   borderRadius: currentCardIndex === index ? '3px' : '50%',
-                  background: currentCardIndex === index 
-                    ? '#000000'
-                    : '#D1D5DB',
+                  background: currentCardIndex === index ? '#000000' : '#D1D5DB',
                   transition: 'all 0.3s',
                   cursor: 'pointer'
                 }}
