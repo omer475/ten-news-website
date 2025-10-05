@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
 export default function NewFirstPage({ onContinue }) {
-  // ============================================================
-  // STATE MANAGEMENT
-  // ============================================================
   const [readerCount, setReaderCount] = useState(2347);
   const [alertCount] = useState(23);
   const [currentStory, setCurrentStory] = useState(0);
@@ -16,22 +13,20 @@ export default function NewFirstPage({ onContinue }) {
   const headlineRef = useRef(null);
   const categoryScrollRef = useRef(null);
 
-  // Categories data
+  // Categories data with specific colors
   const categories = [
-    'All',
-    'Politics',
-    'Technology',
-    'Business',
-    'Science',
-    'Health',
-    'Sports',
-    'Entertainment',
-    'World'
+    { name: 'All', color: '#6366F1' },
+    { name: 'Politics', color: '#DC2626' },
+    { name: 'Technology', color: '#3B82F6' },
+    { name: 'Business', color: '#059669' },
+    { name: 'Science', color: '#8B5CF6' },
+    { name: 'Health', color: '#EC4899' },
+    { name: 'Sports', color: '#F97316' },
+    { name: 'Entertainment', color: '#EAB308' },
+    { name: 'World', color: '#06B6D4' }
   ];
 
-  // ============================================================
-  // LIVE READER COUNT SIMULATION
-  // ============================================================
+  // Simulate live reader count updates
   useEffect(() => {
     const interval = setInterval(() => {
       setReaderCount(prev => prev + Math.floor(Math.random() * 7) - 3);
@@ -39,11 +34,7 @@ export default function NewFirstPage({ onContinue }) {
     return () => clearInterval(interval);
   }, []);
 
-  // ============================================================
-  // DATA CONFIGURATION
-  // ============================================================
-  
-  // Story headlines (can be dynamically loaded)
+
   const stories = [
     {
       title: "Critical NATO-Russia tensions dominate today's headlines.",
@@ -59,31 +50,18 @@ export default function NewFirstPage({ onContinue }) {
     },
   ];
 
-  // What's Happening card data
   const whatsHappening = [
-    { 
-      text: 'NATO-Russia tensions escalate in Eastern Europe', 
-      color: '#EF4444',
-      urgent: true 
-    },
-    { 
-      text: 'Global markets surge 3% on trade deal optimism', 
-      color: '#10B981',
-      urgent: false 
-    },
-    { 
-      text: 'Tech giants announce joint AI safety initiative', 
-      color: '#3B82F6',
-      urgent: false 
-    },
+    { text: 'NATO-Russia tensions escalate in Eastern Europe', color: '#EF4444', urgent: true },
+    { text: 'Global markets surge 3% on trade deal optimism', color: '#10B981', urgent: false },
+    { text: 'Tech giants announce joint AI safety initiative', color: '#3B82F6', urgent: false },
   ];
 
-  // Today in History card data
   const historicalEvents = [
     { year: '1789', event: 'U.S. Constitution ratified by required states' },
     { year: '1957', event: 'Sputnik 1 launched, starting Space Age' },
     { year: '1991', event: 'World Wide Web made publicly available' },
   ];
+
 
   // ============================================================
   // CALCULATE WORD POSITIONS FOR BLUR ANIMATION
@@ -133,9 +111,6 @@ export default function NewFirstPage({ onContinue }) {
     return () => window.removeEventListener('resize', calculatePositions);
   }, [currentStory]);
 
-  // ============================================================
-  // GREETING LOGIC (Time-based)
-  // ============================================================
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return 'Goood morning!';
@@ -143,9 +118,7 @@ export default function NewFirstPage({ onContinue }) {
     return 'Goood evening!';
   };
 
-  // ============================================================
-  // CAROUSEL AUTO-ROTATION (Every 4 seconds)
-  // ============================================================
+  // Auto-rotation for cards (every 4 seconds)
   useEffect(() => {
     if (!autoRotationEnabled) return;
     
@@ -156,17 +129,13 @@ export default function NewFirstPage({ onContinue }) {
     return () => clearInterval(interval);
   }, [autoRotationEnabled]);
 
-  // ============================================================
-  // MANUAL CARD SWITCHING (Stops auto-rotation)
-  // ============================================================
+  // Manual card switch - stops auto-rotation
   const switchCard = (index) => {
     setAutoRotationEnabled(false);
     setCurrentCardIndex(index);
   };
 
-  // ============================================================
-  // TOUCH SWIPE HANDLERS (Left/Right swipe detection)
-  // ============================================================
+  // Touch handlers for swipe
   const handleTouchStart = (e) => {
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -190,6 +159,7 @@ export default function NewFirstPage({ onContinue }) {
       switchCard(currentCardIndex - 1);
     }
     
+    // Reset
     setTouchStart(0);
     setTouchEnd(0);
   };
@@ -268,9 +238,6 @@ export default function NewFirstPage({ onContinue }) {
     return keyframes;
   };
 
-  // ============================================================
-  // RENDER
-  // ============================================================
   return (
     <>
       <style>{`
@@ -296,7 +263,7 @@ export default function NewFirstPage({ onContinue }) {
         ${generateKeyframes()}
       `}</style>
       
-      {/* Background blur effects */}
+      {/* BACKGROUND BLUR EFFECTS - Soft Pastel Colors */}
       <div style={{
         position: 'fixed',
         top: '15%',
@@ -310,7 +277,6 @@ export default function NewFirstPage({ onContinue }) {
         zIndex: 0,
         animation: 'float-soft 25s ease-in-out infinite'
       }}></div>
-
       <div style={{
         position: 'fixed',
         top: '45%',
@@ -324,7 +290,6 @@ export default function NewFirstPage({ onContinue }) {
         zIndex: 0,
         animation: 'float-soft 30s ease-in-out infinite reverse'
       }}></div>
-
       <div style={{
         position: 'fixed',
         bottom: '20%',
@@ -339,7 +304,6 @@ export default function NewFirstPage({ onContinue }) {
         animation: 'float-soft 35s ease-in-out infinite'
       }}></div>
 
-      {/* Main content */}
       <div style={{
         minHeight: '100vh',
         background: 'transparent',
@@ -357,54 +321,64 @@ export default function NewFirstPage({ onContinue }) {
           margin: '0 auto'
         }}>
           
-          {/* ============================================================ */}
-          {/* CATEGORY BAR - Swipeable horizontal scroll */}
-          {/* ============================================================ */}
-          <div 
-            ref={categoryScrollRef}
-            style={{ 
-              display: 'flex', 
-              gap: '8px', 
-              overflowX: 'auto', 
-              paddingBottom: '4px',
-              marginBottom: '20px',
-              marginTop: '12px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
-            }}
-            className="scrollbar-hide"
-          >
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  border: 'none',
-                  background: selectedCategory === category 
-                    ? 'rgba(59, 130, 246, 0.15)'
-                    : 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  color: selectedCategory === category ? '#3B82F6' : '#6B7280',
-                  fontSize: '13px',
-                  fontWeight: selectedCategory === category ? '600' : '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  boxShadow: selectedCategory === category 
-                    ? '0 2px 8px rgba(59, 130, 246, 0.15)'
-                    : 'none'
-                }}
-              >
-                {category}
-              </button>
-            ))}
+          {/* CATEGORY BAR */}
+          <div style={{
+            background: '#F3F4F6',
+            padding: '8px 16px',
+            marginLeft: '-24px',
+            marginRight: '-24px',
+            marginBottom: '20px',
+            marginTop: '12px',
+            borderRadius: '0px'
+          }}>
+            <div 
+              ref={categoryScrollRef}
+              style={{ 
+                display: 'flex', 
+                gap: '8px', 
+                overflowX: 'auto', 
+                paddingBottom: '4px',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch'
+              }}
+              className="scrollbar-hide"
+            >
+              {categories.map((category) => {
+                const isSelected = selectedCategory === category.name;
+                return (
+                  <button
+                    key={category.name}
+                    onClick={() => setSelectedCategory(category.name)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      border: 'none',
+                      background: isSelected 
+                        ? `${category.color}20`
+                        : 'rgba(255, 255, 255, 0.6)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      color: isSelected ? category.color : '#6B7280',
+                      fontSize: '13px',
+                      fontWeight: isSelected ? '600' : '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      boxShadow: isSelected 
+                        ? `0 2px 8px ${category.color}40`
+                        : 'none'
+                    }}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
+          {/* Greeting & Headline Section */}
           <div style={{ marginBottom: '30px' }}>
             
             <h2 style={{
@@ -412,7 +386,7 @@ export default function NewFirstPage({ onContinue }) {
               fontWeight: '700',
               marginBottom: '16px',
               marginTop: '8px',
-              background: 'linear-gradient(to right, #3B82F6, #A855F7)',
+              background: 'linear-gradient(to right, #3B82F6, #60A5FA)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -457,33 +431,25 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
 
+
           {/* Today's Briefing */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              marginBottom: '16px' 
+          <div style={{ 
+            marginBottom: '20px'
+          }}>
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: '700', 
+              color: '#111827',
+              margin: 0,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
-              <h3 style={{ 
-                fontSize: '18px', 
-                fontWeight: '700', 
-                color: '#000000' 
-              }}>
-                Today's Briefing
-              </h3>
-            </div>
+              Today's Briefing
+            </h3>
           </div>
 
-          {/* Carousel */}
-          <div style={{ 
-            position: 'relative', 
-            width: '100%', 
-            overflow: 'hidden', 
-            marginBottom: '12px', 
-            borderRadius: '20px'
-          }}>
-            
+          {/* SWIPEABLE CAROUSEL CONTAINER */}
+          <div style={{ position: 'relative', width: '100%', overflow: 'hidden', marginBottom: '12px', borderRadius: '20px' }}>
             <div 
               style={{ 
                 display: 'flex', 
@@ -498,7 +464,6 @@ export default function NewFirstPage({ onContinue }) {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              
               {/* Card 1: What's Happening */}
               <div style={{ 
                 background: 'rgba(255, 255, 255, 0.12)',
@@ -521,7 +486,7 @@ export default function NewFirstPage({ onContinue }) {
                   fontWeight: '700', 
                   textTransform: 'uppercase', 
                   letterSpacing: '1px', 
-                  color: '#000000', 
+                  color: '#F97316', 
                   marginBottom: '12px' 
                 }}>
                   WHAT'S HAPPENING
@@ -542,7 +507,7 @@ export default function NewFirstPage({ onContinue }) {
                       <div style={{ 
                         width: '5px', 
                         height: '5px', 
-                        background: item.color, 
+                        background: '#F97316', 
                         borderRadius: '50%', 
                         marginTop: '7px', 
                         flexShrink: 0, 
@@ -584,7 +549,7 @@ export default function NewFirstPage({ onContinue }) {
                   fontWeight: '700', 
                   textTransform: 'uppercase', 
                   letterSpacing: '1px', 
-                  color: '#000000', 
+                  color: '#10B981', 
                   marginBottom: '12px' 
                 }}>
                   TODAY IN HISTORY
@@ -604,7 +569,7 @@ export default function NewFirstPage({ onContinue }) {
                       <span style={{ 
                         fontSize: '11px', 
                         fontWeight: '700', 
-                        color: '#A855F7', 
+                        color: '#10B981', 
                         minWidth: '45px', 
                         flexShrink: 0 
                       }}>
@@ -642,8 +607,8 @@ export default function NewFirstPage({ onContinue }) {
                   height: '6px',
                   borderRadius: currentCardIndex === index ? '3px' : '50%',
                   background: currentCardIndex === index 
-                    ? 'rgba(59, 130, 246, 0.8)'
-                    : 'rgba(255, 255, 255, 0.3)',
+                    ? '#000000'
+                    : '#D1D5DB',
                   transition: 'all 0.3s',
                   cursor: 'pointer'
                 }}
