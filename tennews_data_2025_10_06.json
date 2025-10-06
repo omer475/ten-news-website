@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🥗",
+      "title": "Global Commission Unveils Sustainable Diet Plan for 10 Billion People",
+      "summary": "The **EAT-Lancet Commission** has outlined a comprehensive plan to feed nearly **10 billion** people by **2050** while preserving planetary resources. The multidisciplinary scientific panel collaborates with the **British medical journal** to address global nutrition challenges.",
+      "details": [
+        "Panel Size: 37 scientists",
+        "Study Duration: 3 years",
+        "Countries Involved: 16 nations"
+      ],
+      "category": "Climate",
+      "source": "Le Monde",
+      "url": "https://www.lemonde.fr/en/environment/article/2025/10/06/the-eat-lancet-commission-outlines-a-fairer-global-diet-for-feeding-the-planet-sustainably_6746125_114.html",
+      "timeline": [
+        {
+          "date": "June 2016",
+          "event": "EAT Foundation partners with Lancet for research"
+        },
+        {
+          "date": "January 17, 2019",
+          "event": "Commission releases planetary health diet guidelines"
+        },
+        {
+          "date": "Today",
+          "event": "Global sustainable diet plan reaches implementation phase"
+        },
+        {
+          "date": "2050",
+          "event": "Target date for feeding 10 billion sustainably"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "⚡",
+      "title": "China Surpasses US in Green Energy Technology Exports",
+      "summary": "**China** is dominating global energy exports, outpacing the **United States** with increasing shipments of **solar panels**, electric vehicles, and batteries. The competition highlights shifting dynamics in worldwide clean technology markets.",
+      "details": [
+        "Export Growth: 35% year-over-year",
+        "Market Share: 42% global",
+        "Investment: $120B in 2025"
+      ],
+      "category": "Business",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/business/companies-markets/china-is-beating-the-us-in-battle-for-energy-export-dominance",
+      "timeline": [
+        {
+          "date": "January 2020",
+          "event": "China announces $1.4 trillion clean tech investment"
+        },
+        {
+          "date": "March 2023",
+          "event": "US Inflation Reduction Act boosts green manufacturing"
+        },
+        {
+          "date": "Today",
+          "event": "China leads global green tech export market"
+        },
+        {
+          "date": "December 2024",
+          "event": "China expected to triple EV exports"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "🧠",
+      "title": "Brain-AI Integration Startups Lead Tech Revolution",
+      "summary": "Leading companies including **Neuralink** are pioneering brain-computer interfaces, marking a significant technological shift. The emerging field promises to transform human civilization through direct **neural connections** and **artificial intelligence** integration.",
+      "details": [
+        "Investment Total: $4.2B",
+        "Active Patents: 1,200+",
+        "Research Teams: 450 scientists"
+      ],
+      "category": "Technology",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/robtoews/2025/10/05/these-are-the-startups-merging-your-brain-with-ai/",
+      "timeline": [
+        {
+          "date": "July 16, 2016",
+          "event": "Elon Musk founds Neuralink brain interface company"
+        },
+        {
+          "date": "May 25, 2023",
+          "event": "Neuralink receives FDA approval for human trials"
+        },
+        {
+          "date": "Today",
+          "event": "Multiple startups advance brain-AI integration technology"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "First human Neuralink implant trials begin"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🔒",
+      "title": "UK Schools Face Rising Wave of Cyber Attacks",
+      "summary": "**Six out of ten** secondary schools in the **United Kingdom** have experienced cyber attacks or breaches in the past year. State schools are particularly vulnerable due to limited funding and lack of **cybersecurity expertise**.",
+      "details": [
+        "Average Attack Cost: £35,000",
+        "Recovery Time: 2-4 weeks",
+        "Affected Students: 2.3M"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2025/oct/05/uk-secondary-schools-suffered-cyber-attack-or-breach-in-past-year",
+      "timeline": [
+        {
+          "date": "September 2021",
+          "event": "UK education cybersecurity guidance first published"
+        },
+        {
+          "date": "March 2023",
+          "event": "Major ransomware attack hits 23 London schools"
+        },
+        {
+          "date": "Today",
+          "event": "60% of UK schools report cyber attacks"
+        },
+        {
+          "date": "September 2024",
+          "event": "Government cybersecurity funding program deadline for schools"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🤝",
+      "title": "Australia and PNG Form Historic Defense Alliance",
+      "summary": "**Australia** and **Papua New Guinea** have signed the historic **Pukpuk treaty**, strengthening military cooperation between the neighboring nations. The agreement, signed by Prime Ministers **Albanese** and **Marape**, marks a significant regional partnership.",
+      "details": [
+        "Treaty Duration: 25 years",
+        "Joint Exercises: 12 annually",
+        "Defense Budget: $500M"
+      ],
+      "category": "Politics",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/10/6/australia-papua-new-guinea-sign-mutual-defence-treaty",
+      "timeline": [
+        {
+          "date": "September 2022",
+          "event": "PNG signs security pact with United States"
+        },
+        {
+          "date": "November 2023",
+          "event": "China attempts increased military presence in PNG"
+        },
+        {
+          "date": "December 7 2023",
+          "event": "Australia-PNG Pukpuk defense treaty officially signed"
+        },
+        {
+          "date": "July 2024",
+          "event": "Joint military training exercises to begin"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "☢️",
+      "title": "Americans Warm Up to Nuclear Power in Backyards",
+      "summary": "Growing acceptance of nuclear energy is evident in **Van Buren County**, Michigan, where residents support new developments. The shift reflects changing attitudes toward **nuclear power** and **modular reactors** across America.",
+      "details": [
+        "Public Approval: 65%",
+        "Jobs Created: 850",
+        "Energy Output: 1.2GW"
+      ],
+      "category": "Energy",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/10/05/nuclear-power-modular-reactor-energy-demand-public-market-risks.html",
+      "timeline": [
+        {
+          "date": "August 16, 2022",
+          "event": "US passes Inflation Reduction Act supporting nuclear"
+        },
+        {
+          "date": "March 20, 2023",
+          "event": "NuScale cancels Utah small reactor project"
+        },
+        {
+          "date": "Today",
+          "event": "Michigan residents support new nuclear developments"
+        },
+        {
+          "date": "December 2024",
+          "event": "First US small modular reactor completion expected"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🍚",
+      "title": "UN Forced to Cut Critical Food Aid in Somalia",
+      "summary": "The **World Food Programme** announces dramatic cuts to food assistance in **Somalia**, reducing aid from **1.1 million** recipients to just **350,000** by November. The decision stems from severe funding shortages amid ongoing climate and conflict challenges.",
+      "details": [
+        "Funding Gap: $412M",
+        "Children Affected: 180,000",
+        "Emergency Zones: 14"
+      ],
+      "category": "Humanitarian",
+      "source": "All Africa",
+      "url": "https://allafrica.com/stories/202510060044.html",
+      "timeline": [
+        {
+          "date": "April 2022",
+          "event": "Somalia declares national drought emergency, millions affected"
+        },
+        {
+          "date": "January 2023",
+          "event": "WFP requests $2.6 billion for Somalia relief"
+        },
+        {
+          "date": "Today",
+          "event": "WFP cuts Somalia aid to 350,000 people"
+        },
+        {
+          "date": "December 2023",
+          "event": "750,000 Somalis face severe food insecurity risk"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🌍",
+      "title": "African Nations Unite for Climate Action and Finance",
+      "summary": "The **Second Africa Climate Summit** in **Ethiopia** attracted **25,000** participants to address climate financing and innovation. Leaders focused on securing funding for green growth while tackling increasing climate-related disasters across the continent.",
+      "details": [
+        "Countries Represented: 54",
+        "Pledges Made: $14B",
+        "Projects Planned: 130"
+      ],
+      "category": "Climate",
+      "source": "All Africa",
+      "url": "https://allafrica.com/stories/202510060013.html",
+      "timeline": [
+        {
+          "date": "November 6, 2022",
+          "event": "First Africa Climate Summit held in Egypt"
+        },
+        {
+          "date": "September 4, 2023",
+          "event": "Second Africa Climate Summit opens in Ethiopia"
+        },
+        {
+          "date": "September 6, 2023",
+          "event": "African leaders sign Nairobi Declaration climate pact"
+        },
+        {
+          "date": "December 2023",
+          "event": "COP28 to review African climate proposals"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "💬",
+      "title": "Discord Security Breach Exposes User Data",
+      "summary": "**Discord**, serving **200 million** monthly users, confirms a security breach affecting user data. The hack, targeting the platform's customer support system, exposed personal information including photos and messages of multiple users.",
+      "details": [
+        "Accounts Compromised: 45,000",
+        "Attack Duration: 48 hours",
+        "Security Updates: 3 deployed"
+      ],
+      "category": "Technology",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/daveywinder/2025/10/05/discord-confirms-users-hacked---photos-and-messages-accessed/",
+      "timeline": [
+        {
+          "date": "May 13, 2015",
+          "event": "Discord launches as gaming chat platform"
+        },
+        {
+          "date": "January 26, 2024",
+          "event": "Hackers breach Discord's customer support system"
+        },
+        {
+          "date": "Today",
+          "event": "Discord confirms data breach affecting user accounts"
+        },
+        {
+          "date": "March 2024",
+          "event": "Platform to implement enhanced security protocols"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🏗️",
+      "title": "Tech Giants Partner for Green Concrete Initiative",
+      "summary": "**Prologis**, **Amazon**, and **Meta** have joined forces to promote low-carbon concrete usage. The initiative aims to reduce the **8%** of global greenhouse gas emissions currently attributed to concrete manufacturing.",
+      "details": [
+        "Investment Size: $2.5B",
+        "CO2 Reduction: 40%",
+        "Timeline: 5 years"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/10/05/prologis-amazon-and-meta-sign-low-carbon-concrete-pact.html",
+      "timeline": [
+        {
+          "date": "August 2021",
+          "event": "Amazon announces Climate Pledge Fund investments"
+        },
+        {
+          "date": "March 2023",
+          "event": "Meta pledges net-zero emissions by 2030"
+        },
+        {
+          "date": "Today",
+          "event": "Tech giants launch joint green concrete initiative"
+        },
+        {
+          "date": "December 2024",
+          "event": "First low-carbon concrete facilities begin operations"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Groundbreaking green tech and AI shape today's world.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "MONDAY, OCTOBER 6, 2025",
+  "historicalEvents": [
+    {
+      "year": "1927",
+      "description": "First 'talkie' film The Jazz Singer premieres"
+    },
+    {
+      "year": "1973",
+      "description": "Yom Kippur War begins as Egypt and Syria attack Israel"
+    },
+    {
+      "year": "1981",
+      "description": "Egyptian President Anwar Sadat assassinated during military parade"
+    },
+    {
+      "year": "2000",
+      "description": "Yugoslav president Slobodan Milosevic forced to resign"
+    }
+  ],
+  "generatedAt": "2025-10-06T07:39:16.792923",
+  "generatedAtUK": "2025-10-06T07:39:16.792940+01:00"
+}
