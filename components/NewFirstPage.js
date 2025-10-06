@@ -4,81 +4,42 @@ export default function NewFirstPage({ onContinue }) {
   // ============================================================
   // STATE MANAGEMENT
   // ============================================================
-  const [readerCount, setReaderCount] = useState(2347);
-  const [alertCount] = useState(23);
-  const [currentStory, setCurrentStory] = useState(0);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [autoRotationEnabled, setAutoRotationEnabled] = useState(true);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-  const [wordPositions, setWordPositions] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const headlineRef = useRef(null);
+  const [expandedCard, setExpandedCard] = useState(null);
   const categoryScrollRef = useRef(null);
 
-  // Categories data with specific colors
+  // Categories with light, subtle colors inspired by modern platforms
   const categories = [
-    { name: 'All', color: '#6366F1' },
-    { name: 'Politics', color: '#DC2626' },
-    { name: 'Technology', color: '#3B82F6' },
-    { name: 'Business', color: '#059669' },
-    { name: 'Science', color: '#8B5CF6' },
-    { name: 'Health', color: '#EC4899' },
-    { name: 'Sports', color: '#F97316' },
-    { name: 'Entertainment', color: '#EAB308' },
-    { name: 'World', color: '#06B6D4' }
+    { name: 'All', color: '#6366F1', bgColor: '#EEF2FF' },
+    { name: 'Politics', color: '#DC2626', bgColor: '#FEF2F2' },
+    { name: 'Technology', color: '#3B82F6', bgColor: '#EFF6FF' },
+    { name: 'Business', color: '#059669', bgColor: '#ECFDF5' },
+    { name: 'Science', color: '#8B5CF6', bgColor: '#F5F3FF' },
+    { name: 'Health', color: '#EC4899', bgColor: '#FDF2F8' },
+    { name: 'Sports', color: '#F97316', bgColor: '#FFF7ED' },
+    { name: 'Entertainment', color: '#EAB308', bgColor: '#FEFCE8' },
+    { name: 'World', color: '#06B6D4', bgColor: '#F0FDFA' }
   ];
-
-  // ============================================================
-  // LIVE READER COUNT SIMULATION
-  // ============================================================
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setReaderCount(prev => prev + Math.floor(Math.random() * 7) - 3);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   // ============================================================
   // DATA CONFIGURATION
   // ============================================================
-  
-  // Story headlines (can be dynamically loaded)
-  const stories = [
-    {
-      title: "Critical NATO-Russia tensions dominate today's headlines.",
-      subtitle: "NATO Issues Stern Wa...",
-    },
-    {
-      title: "Global markets rally on breakthrough trade agreement.",
-      subtitle: "Markets surge as deal...",
-    },
-    {
-      title: "AI breakthrough transforms medical diagnostics worldwide.",
-      subtitle: "Revolutionary AI tech...",
-    },
-  ];
 
-  // What's Happening card data
   const whatsHappening = [
-    { 
-      text: 'NATO-Russia tensions escalate in Eastern Europe', 
-      color: '#EF4444',
-      urgent: true 
+    {
+      text: 'NATO-Russia tensions escalate in Eastern Europe',
+      category: 'Politics'
     },
-    { 
-      text: 'Global markets surge 3% on trade deal optimism', 
-      color: '#10B981',
-      urgent: false 
+    {
+      text: 'Global markets surge 3% on trade deal optimism',
+      category: 'Business'
     },
-    { 
-      text: 'Tech giants announce joint AI safety initiative', 
-      color: '#3B82F6',
-      urgent: false 
+    {
+      text: 'Tech giants announce joint AI safety initiative',
+      category: 'Technology'
     },
   ];
 
-  // Today in History card data
   const historicalEvents = [
     { year: '1789', event: 'U.S. Constitution ratified by required states' },
     { year: '1957', event: 'Sputnik 1 launched, starting Space Age' },
@@ -86,186 +47,13 @@ export default function NewFirstPage({ onContinue }) {
   ];
 
   // ============================================================
-  // CALCULATE WORD POSITIONS FOR BLUR ANIMATION
-  // ============================================================
-  useEffect(() => {
-    if (!headlineRef.current) return;
-
-    const calculatePositions = () => {
-      const spans = headlineRef.current.querySelectorAll('.word-span');
-      const positions = [];
-      let currentRow = 0;
-      let lastTop = null;
-
-      spans.forEach((span, index) => {
-        const rect = span.getBoundingClientRect();
-        const parentRect = headlineRef.current.getBoundingClientRect();
-        
-        const relativeTop = rect.top - parentRect.top;
-        const relativeLeft = rect.left - parentRect.left;
-        
-        // Detect new row
-        if (lastTop !== null && Math.abs(relativeTop - lastTop) > 10) {
-          currentRow++;
-        }
-        lastTop = relativeTop;
-
-        positions.push({
-          left: relativeLeft,
-          top: relativeTop,
-          width: rect.width,
-          height: rect.height,
-          row: currentRow,
-          index: index
-        });
-      });
-
-      setWordPositions(positions);
-    };
-
-    // Calculate on mount and resize
-    calculatePositions();
-    window.addEventListener('resize', calculatePositions);
-    
-    // Small delay to ensure fonts are loaded
-    setTimeout(calculatePositions, 100);
-
-    return () => window.removeEventListener('resize', calculatePositions);
-  }, [currentStory]);
-
-  // ============================================================
-  // GREETING LOGIC (Time-based)
+  // GREETING LOGIC
   // ============================================================
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return 'Goood morning!';
-    if (hour >= 12 && hour < 18) return 'Goood afternoon!';
-    return 'Goood evening!';
-  };
-
-  // ============================================================
-  // CAROUSEL AUTO-ROTATION (Every 4 seconds)
-  // ============================================================
-  useEffect(() => {
-    if (!autoRotationEnabled) return;
-    
-    const interval = setInterval(() => {
-      setCurrentCardIndex(prev => (prev + 1) % 2);
-    }, 4000);
-    
-    return () => clearInterval(interval);
-  }, [autoRotationEnabled]);
-
-  // ============================================================
-  // MANUAL CARD SWITCHING (Stops auto-rotation)
-  // ============================================================
-  const switchCard = (index) => {
-    setAutoRotationEnabled(false);
-    setCurrentCardIndex(index);
-  };
-
-  // ============================================================
-  // TOUCH SWIPE HANDLERS (Left/Right swipe detection)
-  // ============================================================
-  const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-    
-    if (isLeftSwipe && currentCardIndex < 1) {
-      switchCard(currentCardIndex + 1);
-    }
-    
-    if (isRightSwipe && currentCardIndex > 0) {
-      switchCard(currentCardIndex - 1);
-    }
-    
-    setTouchStart(0);
-    setTouchEnd(0);
-  };
-
-  // ============================================================
-  // GENERATE KEYFRAMES BASED ON WORD POSITIONS
-  // ============================================================
-  const generateKeyframes = () => {
-    if (wordPositions.length === 0) return '';
-
-    let keyframes = '@keyframes travel-headline-dynamic {\n';
-    
-    // Group words by row
-    const rowGroups = {};
-    wordPositions.forEach(pos => {
-      if (!rowGroups[pos.row]) rowGroups[pos.row] = [];
-      rowGroups[pos.row].push(pos);
-    });
-    
-    const rows = Object.keys(rowGroups).map(Number).sort((a, b) => a - b);
-    const totalRows = rows.length;
-    const percentPerRow = 100 / totalRows;
-    
-    rows.forEach((rowNum, rowIndex) => {
-      const wordsInRow = rowGroups[rowNum];
-      const startPercent = rowIndex * percentPerRow;
-      const endPercent = (rowIndex + 1) * percentPerRow;
-      const rowDuration = endPercent - startPercent;
-      
-      wordsInRow.forEach((pos, wordIndex) => {
-        const wordProgress = (wordIndex / wordsInRow.length) * rowDuration;
-        const percent = startPercent + wordProgress;
-        
-        keyframes += `  ${percent.toFixed(2)}% {\n`;
-        keyframes += `    left: ${pos.left + pos.width/2}px;\n`;
-        keyframes += `    top: ${pos.top + pos.height/2}px;\n`;
-        keyframes += `    opacity: 1;\n`;
-        keyframes += `  }\n`;
-      });
-      
-      // At end of row (except last row), disappear
-      if (rowIndex < totalRows - 1) {
-        const lastWord = wordsInRow[wordsInRow.length - 1];
-        keyframes += `  ${(endPercent - 0.1).toFixed(2)}% {\n`;
-        keyframes += `    left: ${lastWord.left + lastWord.width}px;\n`;
-        keyframes += `    top: ${lastWord.top + lastWord.height/2}px;\n`;
-        keyframes += `    opacity: 1;\n`;
-        keyframes += `  }\n`;
-        
-        keyframes += `  ${endPercent.toFixed(2)}% {\n`;
-        keyframes += `    left: ${lastWord.left + lastWord.width}px;\n`;
-        keyframes += `    top: ${lastWord.top + lastWord.height/2}px;\n`;
-        keyframes += `    opacity: 0;\n`;
-        keyframes += `  }\n`;
-        
-        // At start of next row, appear
-        const nextRowWords = rowGroups[rows[rowIndex + 1]];
-        const firstNextWord = nextRowWords[0];
-        keyframes += `  ${(endPercent + 0.1).toFixed(2)}% {\n`;
-        keyframes += `    left: ${firstNextWord.left}px;\n`;
-        keyframes += `    top: ${firstNextWord.top + firstNextWord.height/2}px;\n`;
-        keyframes += `    opacity: 1;\n`;
-        keyframes += `  }\n`;
-      }
-    });
-    
-    // Final position - disappear
-    keyframes += `  100% {\n`;
-    const lastPos = wordPositions[wordPositions.length - 1];
-    keyframes += `    left: ${lastPos.left + lastPos.width}px;\n`;
-    keyframes += `    top: ${lastPos.top + lastPos.height/2}px;\n`;
-    keyframes += `    opacity: 0;\n`;
-    keyframes += `  }\n`;
-    keyframes += '}';
-    
-    return keyframes;
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 18) return 'Good afternoon';
+    return 'Good evening';
   };
 
   // ============================================================
@@ -274,382 +62,422 @@ export default function NewFirstPage({ onContinue }) {
   return (
     <>
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
+        
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
 
-        @keyframes float-soft {
-          0%, 100% { transform: translate(0, 0); }
-          33% { transform: translate(30px, -30px); }
-          66% { transform: translate(-30px, 30px); }
+        @keyframes fadeIn {
+          from { 
+            opacity: 0; 
+            transform: translateY(20px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
         }
 
-        ${generateKeyframes()}
+        .fade-in {
+          animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+          from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
+        }
+
+        .slide-up {
+          animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        .gradient-text {
+          background: linear-gradient(135deg, #667EEA 0%, #764BA2 25%, #F093FB 50%, #667EEA 75%, #764BA2 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: gradientShift 8s ease infinite;
+        }
+
+        @media (max-width: 768px) {
+          .mobile-stack {
+            flex-direction: column !important;
+          }
+        }
       `}</style>
       
-      {/* Background blur effects */}
-      <div style={{
-        position: 'fixed',
-        top: '15%',
-        right: '10%',
-        width: '400px',
-        height: '400px',
-        background: 'radial-gradient(circle, rgba(254, 202, 202, 0.25), transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        pointerEvents: 'none',
-        zIndex: 0,
-        animation: 'float-soft 25s ease-in-out infinite'
-      }}></div>
-
-      <div style={{
-        position: 'fixed',
-        top: '45%',
-        left: '5%',
-        width: '450px',
-        height: '450px',
-        background: 'radial-gradient(circle, rgba(191, 219, 254, 0.25), transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        pointerEvents: 'none',
-        zIndex: 0,
-        animation: 'float-soft 30s ease-in-out infinite reverse'
-      }}></div>
-
-      <div style={{
-        position: 'fixed',
-        bottom: '20%',
-        right: '15%',
-        width: '380px',
-        height: '380px',
-        background: 'radial-gradient(circle, rgba(221, 214, 254, 0.25), transparent 70%)',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        pointerEvents: 'none',
-        zIndex: 0,
-        animation: 'float-soft 35s ease-in-out infinite'
-      }}></div>
-
-      {/* Main content */}
+      {/* Main Container */}
       <div style={{
         minHeight: '100vh',
-        background: 'transparent',
-        color: '#111827',
-        transition: 'all 0.5s',
-        overflow: 'hidden',
-        position: 'relative',
-        zIndex: 1
+        background: 'linear-gradient(to bottom, #FAFAFA 0%, #F3F4F6 100%)',
+        color: '#000000'
       }}>
+        {/* Category Navigation */}
         <div style={{
-          height: '100vh',
-          overflowY: 'auto',
-          padding: '0 20px 32px',
-          maxWidth: '600px',
-          margin: '0 auto'
+          background: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 40,
+          padding: '16px 0'
         }}>
-          
-          {/* CATEGORY BAR */}
-          <div 
-            ref={categoryScrollRef}
-            style={{ 
-              display: 'flex', 
-              gap: '8px', 
-              overflowX: 'auto', 
-              paddingBottom: '4px',
-              marginBottom: '20px',
-              marginTop: '12px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
-            }}
-            className="scrollbar-hide"
-          >
-            {categories.map((category) => {
-              const isSelected = selectedCategory === category.name;
-              return (
-                <button
-                  key={category.name}
-                  onClick={() => setSelectedCategory(category.name)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    border: 'none',
-                    background: isSelected 
-                      ? category.color
-                      : '#E5E7EB',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    color: isSelected ? '#FFFFFF' : '#6B7280',
-                    fontSize: '13px',
-                    fontWeight: isSelected ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    boxShadow: isSelected 
-                      ? `0 2px 8px ${category.color}40`
-                      : 'none'
-                  }}
-                >
-                  {category.name}
-                </button>
-              );
-            })}
+          <div style={{
+            maxWidth: '680px',
+            margin: '0 auto',
+            padding: '0 24px'
+          }}>
+            <div 
+              ref={categoryScrollRef}
+              className="scrollbar-hide"
+              style={{
+                display: 'flex',
+                gap: '8px',
+                overflowX: 'auto',
+                paddingBottom: '2px'
+              }}
+            >
+              {categories.map((category) => {
+                const isSelected = selectedCategory === category.name;
+                return (
+                  <button
+                    key={category.name}
+                    onClick={() => setSelectedCategory(category.name)}
+                    style={{
+                      padding: '8px 16px',
+                      background: isSelected ? category.bgColor : 'transparent',
+                      border: isSelected ? 'none' : '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      color: isSelected ? category.color : '#6B7280',
+                      fontSize: '13px',
+                      fontWeight: isSelected ? '500' : '400',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      letterSpacing: '-0.01em',
+                      outline: 'none',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = '#F9FAFB';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
+                        e.currentTarget.style.color = '#374151';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = '#E5E7EB';
+                        e.currentTarget.style.color = '#6B7280';
+                      }
+                    }}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        </div>
 
-          <div style={{ marginBottom: '30px' }}>
-            
+        {/* Main Content */}
+        <main style={{
+          maxWidth: '680px',
+          margin: '0 auto',
+          padding: '24px'
+        }}>
+          {/* Greeting Section */}
+          <div style={{ marginBottom: '32px' }} className="fade-in">
             <h2 style={{
-              fontSize: '28px',
-              fontWeight: '700',
-              marginBottom: '16px',
-              marginTop: '8px',
-              background: 'linear-gradient(to right, #3B82F6, #60A5FA)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
+              fontSize: '24px',
+              fontWeight: '500',
+              marginBottom: '32px',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.2',
+              color: '#6B7280'
             }}>
               {getGreeting()}
             </h2>
 
-            {/* Headline with dynamic blur */}
-            <div ref={headlineRef} style={{ position: 'relative', marginBottom: '8px', overflow: 'visible' }}>
+            {/* Main Headline - Visual Treatment */}
+            <div style={{
+              marginBottom: '48px',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '-20px',
+                left: '-20px',
+                right: '-20px',
+                bottom: '-20px',
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                borderRadius: '24px',
+                filter: 'blur(40px)',
+                zIndex: 0
+              }}></div>
               
-              {/* Traveling blur based on calculated positions */}
-              {wordPositions.length > 0 && (
-                <div style={{
-                  position: 'absolute',
-                  width: '120px',
-                  height: '50px',
-                  background: 'radial-gradient(ellipse 120px 50px at center, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.3) 50%, transparent 75%)',
-                  filter: 'blur(15px)',
-                  pointerEvents: 'none',
-                  zIndex: 3,
-                  animation: 'travel-headline-dynamic 4.8s linear infinite',
-                  transform: 'translate(-50%, -50%)'
-                }}></div>
-              )}
-
-              {/* Headline text with word tracking */}
-              <h1 style={{ 
-                fontSize: '36px', 
-                fontWeight: '800', 
-                lineHeight: '1.2', 
-                color: '#111827', 
-                textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)', 
-                position: 'relative', 
-                zIndex: 2
+              <h1 className="gradient-text slide-up" style={{
+                fontSize: 'clamp(32px, 6vw, 48px)',
+                fontWeight: '700',
+                lineHeight: '1.15',
+                letterSpacing: '-0.04em',
+                position: 'relative',
+                zIndex: 1
               }}>
-                {stories[currentStory].title.split(' ').map((word, index) => (
-                  <span key={index} className="word-span" style={{ display: 'inline-block', marginRight: '0.3em' }}>
-                    {word}
-                  </span>
-                ))}
+                Critical NATO-Russia tensions dominate today's headlines
               </h1>
             </div>
           </div>
 
-          {/* Today's Briefing */}
-          <div style={{ 
-            marginBottom: '20px'
-          }}>
-            <h3 style={{ 
-              fontSize: '18px', 
-              fontWeight: '700', 
-              color: '#111827',
-              margin: 0,
+          {/* Today's Briefing - Mobile Optimized */}
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              marginBottom: '20px',
+              letterSpacing: '0.05em',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+              color: '#6B7280'
             }}>
               Today's Briefing
             </h3>
-          </div>
 
-          {/* Carousel */}
-          <div style={{ 
-            position: 'relative', 
-            width: '100%', 
-            overflow: 'hidden', 
-            marginBottom: '12px', 
-            borderRadius: '20px'
-          }}>
-            
+            {/* Breaking Updates - Full Width Card */}
             <div 
-              style={{ 
-                display: 'flex', 
-                transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                transform: `translateX(-${currentCardIndex * 100}%)`,
-                touchAction: 'pan-x',
-                willChange: 'transform',
-                cursor: 'pointer'
+              style={{
+                background: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '16px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                border: '1px solid rgba(0, 0, 0, 0.04)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
               }}
-              onClick={() => switchCard((currentCardIndex + 1) % 2)}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              onClick={() => setExpandedCard(expandedCard === 'breaking' ? null : 'breaking')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
-              
-              {/* Card 1: What's Happening */}
-              <div style={{ 
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(13px)',
-                WebkitBackdropFilter: 'blur(13px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '20px',
-                padding: '16px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
-                position: 'relative',
-                overflow: 'hidden',
-                minWidth: '100%',
-                width: '100%',
-                flexShrink: 0,
-                boxSizing: 'border-box',
-                margin: 0
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: expandedCard === 'breaking' ? '16px' : '0'
               }}>
-                <div style={{ 
-                  fontSize: '10px', 
-                  fontWeight: '700', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1px', 
-                  color: '#F97316', 
-                  marginBottom: '12px' 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
                 }}>
-                  WHAT'S HAPPENING
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#EF4444',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.1)'
+                  }}></div>
+                  <span style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    letterSpacing: '0.05em',
+                    color: '#111827'
+                  }}>
+                    BREAKING NEWS
+                  </span>
                 </div>
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 20 20" 
+                  fill="none"
+                  style={{
+                    transform: expandedCard === 'breaking' ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.3s ease'
+                  }}
+                >
+                  <path d="M6 8L10 12L14 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
 
+              {expandedCard === 'breaking' && (
                 <div style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  gap: '8px' 
+                  gap: '12px',
+                  paddingTop: '4px'
                 }}>
                   {whatsHappening.map((item, i) => (
-                    <div key={i} style={{ 
-                      display: 'flex', 
-                      alignItems: 'flex-start', 
-                      gap: '10px', 
-                      paddingLeft: '4px' 
+                    <div key={i} style={{
+                      paddingBottom: '12px',
+                      borderBottom: i < whatsHappening.length - 1 ? '1px solid #F3F4F6' : 'none'
                     }}>
-                      <div style={{ 
-                        width: '5px', 
-                        height: '5px', 
-                        background: '#F97316', 
-                        borderRadius: '50%', 
-                        marginTop: '7px', 
-                        flexShrink: 0, 
-                        animation: item.urgent ? 'pulse 2s infinite' : 'none' 
-                      }}></div>
-                      
-                      <span style={{ 
-                        fontSize: '13px', 
-                        fontWeight: 500, 
-                        lineHeight: '1.5', 
-                        color: '#000000' 
+                      <p style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151',
+                        margin: '0 0 6px 0'
                       }}>
                         {item.text}
+                      </p>
+                      <span style={{
+                        fontSize: '11px',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        background: categories.find(c => c.name === item.category)?.bgColor || '#F3F4F6',
+                        color: categories.find(c => c.name === item.category)?.color || '#6B7280',
+                        fontWeight: '500'
+                      }}>
+                        {item.category}
                       </span>
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+
+            {/* Historical Events - Full Width Card */}
+            <div 
+              style={{
+                background: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                border: '1px solid rgba(0, 0, 0, 0.04)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onClick={() => setExpandedCard(expandedCard === 'history' ? null : 'history')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: expandedCard === 'history' ? '16px' : '0'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#10B981',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
+                  }}></div>
+                  <span style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    letterSpacing: '0.05em',
+                    color: '#111827'
+                  }}>
+                    TODAY IN HISTORY
+                  </span>
+                </div>
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 20 20" 
+                  fill="none"
+                  style={{
+                    transform: expandedCard === 'history' ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.3s ease'
+                  }}
+                >
+                  <path d="M6 8L10 12L14 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
 
-              {/* Card 2: Today in History */}
-              <div style={{ 
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(13px)',
-                WebkitBackdropFilter: 'blur(13px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '20px',
-                padding: '16px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1), inset 0 0 22px 11px rgba(255, 255, 255, 0.11)',
-                position: 'relative',
-                overflow: 'hidden',
-                minWidth: '100%',
-                width: '100%',
-                flexShrink: 0,
-                boxSizing: 'border-box',
-                margin: 0
-              }}>
-                <div style={{ 
-                  fontSize: '10px', 
-                  fontWeight: '700', 
-                  textTransform: 'uppercase', 
-                  letterSpacing: '1px', 
-                  color: '#10B981', 
-                  marginBottom: '12px' 
-                }}>
-                  TODAY IN HISTORY
-                </div>
-
+              {expandedCard === 'history' && (
                 <div style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  gap: '8px' 
+                  gap: '12px',
+                  paddingTop: '4px'
                 }}>
-                  {historicalEvents.slice(0, 3).map((event, i) => (
-                    <div key={i} style={{ 
-                      display: 'flex', 
-                      gap: '12px', 
-                      paddingLeft: '4px' 
+                  {historicalEvents.map((event, i) => (
+                    <div key={i} style={{
+                      paddingBottom: '12px',
+                      borderBottom: i < historicalEvents.length - 1 ? '1px solid #F3F4F6' : 'none'
                     }}>
-                      <span style={{ 
-                        fontSize: '11px', 
-                        fontWeight: '700', 
-                        color: '#10B981', 
-                        minWidth: '45px', 
-                        flexShrink: 0 
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px'
                       }}>
-                        {event.year}
-                      </span>
-                      
-                      <span style={{ 
-                        fontSize: '13px', 
-                        fontWeight: 500, 
-                        lineHeight: '1.5', 
-                        color: '#000000' 
-                      }}>
-                        {event.event}
-                      </span>
+                        <span style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: '#10B981',
+                          background: '#ECFDF5',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          minWidth: 'fit-content'
+                        }}>
+                          {event.year}
+                        </span>
+                        <p style={{
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          color: '#374151',
+                          margin: 0,
+                          flex: 1
+                        }}>
+                          {event.event}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              )}
             </div>
           </div>
-
-          {/* Card indicators */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '8px', 
-            marginBottom: '30px' 
-          }}>
-            {[0, 1].map((index) => (
-              <div
-                key={index}
-                onClick={() => switchCard(index)}
-                style={{
-                  width: currentCardIndex === index ? '20px' : '6px',
-                  height: '6px',
-                  borderRadius: currentCardIndex === index ? '3px' : '50%',
-                  background: currentCardIndex === index 
-                    ? '#000000'
-                    : '#D1D5DB',
-                  transition: 'all 0.3s',
-                  cursor: 'pointer'
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        </main>
       </div>
     </>
   );
