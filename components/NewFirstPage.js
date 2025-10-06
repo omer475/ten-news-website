@@ -76,6 +76,32 @@ export default function NewFirstPage({ onContinue }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Auto-scroll categories from right to left
+  useEffect(() => {
+    const scrollContainer = categoryScrollRef.current;
+    if (!scrollContainer) return;
+
+    let scrollPosition = 0;
+    const scrollSpeed = 0.5; // pixels per frame
+    const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+    const autoScroll = () => {
+      scrollPosition += scrollSpeed;
+      
+      // Reset to beginning when reaching end
+      if (scrollPosition >= maxScroll) {
+        scrollPosition = 0;
+      }
+      
+      scrollContainer.scrollLeft = scrollPosition;
+      requestAnimationFrame(autoScroll);
+    };
+
+    const animationFrame = requestAnimationFrame(autoScroll);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, []);
+
   // ============================================================
   // FUNCTIONS
   // ============================================================
@@ -202,21 +228,22 @@ export default function NewFirstPage({ onContinue }) {
       
       {/* Main Container */}
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: '#FFFFFF',
         color: '#000000',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        {/* Category Navigation with Shadow on Scroll */}
+        {/* Category Navigation with Auto-Scroll */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
-          position: 'sticky',
-          top: 0,
           zIndex: 40,
-          padding: '16px 0',
-          boxShadow: showBackToTop ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none',
-          transition: 'box-shadow 0.3s ease'
+          padding: '12px 0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          flexShrink: 0
         }}>
           <div style={{
             maxWidth: '680px',
@@ -285,19 +312,21 @@ export default function NewFirstPage({ onContinue }) {
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - Scrollable */}
         <main style={{
           maxWidth: '680px',
           margin: '0 auto',
-          padding: '16px 24px 24px 24px'
+          padding: '12px 20px 16px 20px',
+          overflowY: 'auto',
+          flex: 1
         }}
-        className="mobile-compact">
+        className="scrollbar-hide mobile-compact">
           {/* Greeting Section */}
-          <div style={{ marginBottom: '20px' }} className="fade-in">
+          <div style={{ marginBottom: '16px' }} className="fade-in">
             <h2 style={{
-              fontSize: '24px',
+              fontSize: '20px',
               fontWeight: '600',
-              marginBottom: '20px',
+              marginBottom: '12px',
               letterSpacing: '-0.02em',
               lineHeight: '1.2',
               color: '#111827'
@@ -305,9 +334,9 @@ export default function NewFirstPage({ onContinue }) {
               {getGreeting()}
             </h2>
 
-            {/* Main Headline */}
+            {/* Main Headline - More Compact */}
             <div style={{
-              marginBottom: '32px',
+              marginBottom: '20px',
               position: 'relative'
             }}>
               <div style={{
@@ -321,13 +350,13 @@ export default function NewFirstPage({ onContinue }) {
               }}></div>
               
               <h1 className="slide-up headline-mobile" style={{
-                fontSize: 'clamp(32px, 6vw, 56px)',
+                fontSize: 'clamp(24px, 5vw, 36px)',
                 fontWeight: '800',
                 lineHeight: '1.1',
-                letterSpacing: '-0.04em',
+                letterSpacing: '-0.03em',
                 position: 'relative',
                 zIndex: 1,
-                paddingLeft: '16px',
+                paddingLeft: '12px',
                 cursor: 'pointer',
                 transition: 'transform 0.2s ease'
               }}
@@ -339,13 +368,13 @@ export default function NewFirstPage({ onContinue }) {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  fontSize: '1.1em'
+                  fontSize: '1em'
                 }}>Critical NATO-Russia tensions</span>
                 {' '}
                 <span style={{ 
                   color: '#374151', 
                   fontWeight: '400',
-                  fontSize: '0.75em',
+                  fontSize: '0.8em',
                   display: 'inline-block',
                   opacity: 0.9
                 }}>
@@ -356,11 +385,11 @@ export default function NewFirstPage({ onContinue }) {
           </div>
 
           {/* Today's Briefing with Swipeable Cards */}
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <h3 style={{
-              fontSize: '14px',
+              fontSize: '12px',
               fontWeight: '600',
-              marginBottom: '16px',
+              marginBottom: '12px',
               letterSpacing: '0.05em',
               textTransform: 'uppercase',
               color: '#6B7280'
@@ -394,8 +423,8 @@ export default function NewFirstPage({ onContinue }) {
                   className="touch-feedback"
                   style={{
                     background: '#FFFFFF',
-                    borderRadius: '16px',
-                    padding: '20px',
+                    borderRadius: '12px',
+                    padding: '16px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
                     border: '1px solid rgba(0, 0, 0, 0.04)',
                     minWidth: '100%',
@@ -408,22 +437,22 @@ export default function NewFirstPage({ onContinue }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '20px'
+                    marginBottom: '14px'
                   }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '12px'
+                      gap: '10px'
                     }}>
                       <div style={{
-                        width: '8px',
-                        height: '8px',
+                        width: '6px',
+                        height: '6px',
                         background: '#EF4444',
                         borderRadius: '50%',
-                        boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.1)'
+                        boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.1)'
                       }}></div>
                       <span style={{
-                        fontSize: '13px',
+                        fontSize: '11px',
                         fontWeight: '600',
                         letterSpacing: '0.05em',
                         color: '#111827'
@@ -436,7 +465,7 @@ export default function NewFirstPage({ onContinue }) {
                   <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
-                    gap: '12px'
+                    gap: '10px'
                   }}>
                     {whatsHappening.map((item, i) => (
                       <div key={i} style={{
@@ -490,8 +519,8 @@ export default function NewFirstPage({ onContinue }) {
                   className="touch-feedback"
                   style={{
                     background: '#FFFFFF',
-                    borderRadius: '16px',
-                    padding: '20px',
+                    borderRadius: '12px',
+                    padding: '16px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
                     border: '1px solid rgba(0, 0, 0, 0.04)',
                     minWidth: '100%',
@@ -505,22 +534,22 @@ export default function NewFirstPage({ onContinue }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    marginBottom: '20px'
+                    marginBottom: '14px'
                   }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '12px'
+                      gap: '10px'
                     }}>
                       <div style={{
-                        width: '8px',
-                        height: '8px',
+                        width: '6px',
+                        height: '6px',
                         background: '#10B981',
                         borderRadius: '50%',
-                        boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
+                        boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.1)'
                       }}></div>
                       <span style={{
-                        fontSize: '13px',
+                        fontSize: '11px',
                         fontWeight: '600',
                         letterSpacing: '0.05em',
                         color: '#111827'
@@ -533,7 +562,7 @@ export default function NewFirstPage({ onContinue }) {
                   <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
-                    gap: '12px'
+                    gap: '10px'
                   }}>
                     {historicalEvents.map((event, i) => (
                       <div key={i} style={{
@@ -578,7 +607,7 @@ export default function NewFirstPage({ onContinue }) {
                 display: 'flex',
                 justifyContent: 'center',
                 gap: '6px',
-                marginTop: '16px'
+                marginTop: '12px'
               }}>
                 {[0, 1].map((index) => (
                   <button
@@ -586,7 +615,7 @@ export default function NewFirstPage({ onContinue }) {
                     onClick={() => scrollToCard(index)}
                     aria-label={`Go to card ${index + 1}`}
                     style={{
-                      width: currentCard === index ? '24px' : '6px',
+                      width: currentCard === index ? '20px' : '6px',
                       height: '6px',
                       borderRadius: '3px',
                       background: currentCard === index ? '#374151' : '#E5E7EB',
@@ -601,41 +630,6 @@ export default function NewFirstPage({ onContinue }) {
             </div>
           </div>
         </main>
-
-        {/* Back to Top Button */}
-        {showBackToTop && (
-          <button
-            onClick={scrollToTop}
-            aria-label="Back to top"
-            style={{
-              position: 'fixed',
-              bottom: '24px',
-              right: '24px',
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              background: '#FFFFFF',
-              border: '1px solid #E5E7EB',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.3s ease',
-              zIndex: 30
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            }}
-          >
-            ↑
-          </button>
-        )}
       </div>
     </>
   );
