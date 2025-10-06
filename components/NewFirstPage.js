@@ -5,13 +5,9 @@ export default function NewFirstPage({ onContinue }) {
   // STATE MANAGEMENT
   // ============================================================
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [expandedCard, setExpandedCard] = useState(null);
   const [currentCard, setCurrentCard] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(true);
-  const [touchStart, setTouchStart] = useState(null);
   const categoryScrollRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
@@ -63,11 +59,6 @@ export default function NewFirstPage({ onContinue }) {
   // EFFECTS
   // ============================================================
   
-  // Simulate loading
-  useEffect(() => {
-    setTimeout(() => setIsLoading(false), 800);
-  }, []);
-
   // Update time every minute
   useEffect(() => {
     const interval = setInterval(() => {
@@ -85,19 +76,6 @@ export default function NewFirstPage({ onContinue }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === '1') setCurrentCard(0);
-      if (e.key === '2') setCurrentCard(1);
-      if (e.key === 'd') setIsDarkMode(!isDarkMode);
-      if (e.key === 'ArrowLeft' && currentCard > 0) setCurrentCard(0);
-      if (e.key === 'ArrowRight' && currentCard < 1) setCurrentCard(1);
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentCard, isDarkMode]);
-
   // ============================================================
   // FUNCTIONS
   // ============================================================
@@ -107,13 +85,6 @@ export default function NewFirstPage({ onContinue }) {
     if (hour >= 5 && hour < 12) return 'Good morning';
     if (hour >= 12 && hour < 18) return 'Good afternoon';
     return 'Good evening';
-  };
-
-  const getTimeAgo = () => {
-    const minutes = Math.floor((new Date() - lastUpdated) / 60000);
-    if (minutes === 0) return 'Just now';
-    if (minutes === 1) return '1 minute ago';
-    return `${minutes} minutes ago`;
   };
 
   const scrollToTop = () => {
@@ -139,61 +110,6 @@ export default function NewFirstPage({ onContinue }) {
   };
 
   // ============================================================
-  // LOADING SKELETON
-  // ============================================================
-  
-  if (isLoading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: isDarkMode ? '#0F172A' : '#FAFBFC',
-        padding: '20px'
-      }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-          {/* Skeleton Categories */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', paddingTop: '16px' }}>
-            {[1,2,3,4,5].map(i => (
-              <div key={i} style={{
-                width: '80px',
-                height: '36px',
-                borderRadius: '8px',
-                background: isDarkMode ? '#1E293B' : '#E5E7EB',
-                animation: 'pulse 1.5s ease-in-out infinite'
-              }}></div>
-            ))}
-          </div>
-          
-          {/* Skeleton Content */}
-          <div style={{
-            height: '24px',
-            width: '150px',
-            borderRadius: '4px',
-            background: isDarkMode ? '#1E293B' : '#E5E7EB',
-            marginBottom: '20px',
-            animation: 'pulse 1.5s ease-in-out infinite'
-          }}></div>
-          
-          <div style={{
-            height: '48px',
-            width: '100%',
-            borderRadius: '4px',
-            background: isDarkMode ? '#1E293B' : '#E5E7EB',
-            marginBottom: '32px',
-            animation: 'pulse 1.5s ease-in-out infinite'
-          }}></div>
-          
-          <div style={{
-            height: '200px',
-            borderRadius: '16px',
-            background: isDarkMode ? '#1E293B' : '#E5E7EB',
-            animation: 'pulse 1.5s ease-in-out infinite'
-          }}></div>
-        </div>
-      </div>
-    );
-  }
-
-  // ============================================================
   // RENDER
   // ============================================================
   return (
@@ -201,8 +117,6 @@ export default function NewFirstPage({ onContinue }) {
       <style>{`
         * {
           box-sizing: border-box;
-          margin: 0;
-          padding: 0;
         }
 
         body {
@@ -333,9 +247,9 @@ export default function NewFirstPage({ onContinue }) {
                     style={{
                       padding: '8px 14px',
                       background: isSelected ? category.bgColor : 'transparent',
-                      border: isSelected ? 'none' : `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+                      border: isSelected ? 'none' : '1px solid #E5E7EB',
                       borderRadius: '8px',
-                      color: isSelected ? category.color : (isDarkMode ? '#94A3B8' : '#6B7280'),
+                      color: isSelected ? category.color : '#6B7280',
                       fontSize: '13px',
                       fontWeight: isSelected ? '500' : '400',
                       cursor: 'pointer',
@@ -351,14 +265,14 @@ export default function NewFirstPage({ onContinue }) {
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = isDarkMode ? '#1E293B' : '#F9FAFB';
-                        e.currentTarget.style.borderColor = isDarkMode ? '#475569' : '#D1D5DB';
+                        e.currentTarget.style.background = '#F9FAFB';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
                         e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.borderColor = isDarkMode ? '#334155' : '#E5E7EB';
+                        e.currentTarget.style.borderColor = '#E5E7EB';
                       }
                     }}
                   >
@@ -378,25 +292,6 @@ export default function NewFirstPage({ onContinue }) {
           padding: '16px 24px 24px 24px'
         }}
         className="mobile-compact">
-          {/* Update Timestamp */}
-          <div style={{
-            fontSize: '11px',
-            color: isDarkMode ? '#64748B' : '#9CA3AF',
-            marginBottom: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <div style={{
-              width: '4px',
-              height: '4px',
-              background: '#10B981',
-              borderRadius: '50%',
-              animation: 'pulse 2s infinite'
-            }}></div>
-            Updated {getTimeAgo()}
-          </div>
-
           {/* Greeting Section */}
           <div style={{ marginBottom: '20px' }} className="fade-in">
             <h2 style={{
@@ -405,7 +300,7 @@ export default function NewFirstPage({ onContinue }) {
               marginBottom: '20px',
               letterSpacing: '-0.02em',
               lineHeight: '1.2',
-              color: isDarkMode ? '#F1F5F9' : '#111827'
+              color: '#111827'
             }}>
               {getGreeting()}
             </h2>
@@ -426,7 +321,7 @@ export default function NewFirstPage({ onContinue }) {
               }}></div>
               
               <h1 className="slide-up headline-mobile" style={{
-                fontSize: 'clamp(28px, 5vw, 52px)',
+                fontSize: 'clamp(32px, 6vw, 56px)',
                 fontWeight: '800',
                 lineHeight: '1.1',
                 letterSpacing: '-0.04em',
@@ -443,13 +338,14 @@ export default function NewFirstPage({ onContinue }) {
                   background: 'linear-gradient(135deg, #991B1B 0%, #DC2626 50%, #EF4444 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
+                  backgroundClip: 'text',
+                  fontSize: '1.1em'
                 }}>Critical NATO-Russia tensions</span>
                 {' '}
                 <span style={{ 
-                  color: isDarkMode ? '#94A3B8' : '#374151', 
+                  color: '#374151', 
                   fontWeight: '400',
-                  fontSize: '0.85em',
+                  fontSize: '0.75em',
                   display: 'inline-block',
                   opacity: 0.9
                 }}>
@@ -467,69 +363,18 @@ export default function NewFirstPage({ onContinue }) {
               marginBottom: '16px',
               letterSpacing: '0.05em',
               textTransform: 'uppercase',
-              color: isDarkMode ? '#94A3B8' : '#6B7280'
+              color: '#6B7280'
             }}>
               Today's Briefing
             </h3>
 
-            {/* Swipeable Container with Arrows */}
+            {/* Swipeable Container */}
             <div style={{
               position: 'relative',
               width: '100%',
               overflow: 'hidden',
               borderRadius: '16px'
             }}>
-              {/* Desktop Arrow Left */}
-              <button
-                onClick={() => scrollToCard(0)}
-                aria-label="Previous card"
-                style={{
-                  position: 'absolute',
-                  left: '-20px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: isDarkMode ? '#1E293B' : '#FFFFFF',
-                  border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
-                  display: currentCard === 0 ? 'none' : 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 2,
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                ←
-              </button>
-
-              {/* Desktop Arrow Right */}
-              <button
-                onClick={() => scrollToCard(1)}
-                aria-label="Next card"
-                style={{
-                  position: 'absolute',
-                  right: '-20px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: isDarkMode ? '#1E293B' : '#FFFFFF',
-                  border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
-                  display: currentCard === 1 ? 'none' : 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 2,
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  animation: 'slideArrow 2s ease-in-out infinite'
-                }}
-              >
-                →
-              </button>
-
               <div 
                 ref={scrollContainerRef}
                 style={{
@@ -744,9 +589,7 @@ export default function NewFirstPage({ onContinue }) {
                       width: currentCard === index ? '24px' : '6px',
                       height: '6px',
                       borderRadius: '3px',
-                      background: currentCard === index 
-                        ? (isDarkMode ? '#F1F5F9' : '#374151')
-                        : (isDarkMode ? '#334155' : '#E5E7EB'),
+                      background: currentCard === index ? '#374151' : '#E5E7EB',
                       border: 'none',
                       cursor: 'pointer',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -771,8 +614,8 @@ export default function NewFirstPage({ onContinue }) {
               width: '48px',
               height: '48px',
               borderRadius: '50%',
-              background: isDarkMode ? '#1E293B' : '#FFFFFF',
-              border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+              background: '#FFFFFF',
+              border: '1px solid #E5E7EB',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
