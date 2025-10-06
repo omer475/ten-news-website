@@ -289,13 +289,13 @@ export default function NewFirstPage({ onContinue }) {
       {/* Main Container */}
       <div style={{
         minHeight: '100vh',
-        background: isDarkMode ? '#0F172A' : '#FAFBFC',
-        color: isDarkMode ? '#F1F5F9' : '#000000',
+        background: '#FFFFFF',
+        color: '#000000',
         transition: 'all 0.3s ease'
       }}>
         {/* Category Navigation with Shadow on Scroll */}
         <div style={{
-          background: isDarkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(250, 251, 252, 0.95)',
+          background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
           position: 'sticky',
           top: 0,
@@ -548,14 +548,15 @@ export default function NewFirstPage({ onContinue }) {
                 <div 
                   className="touch-feedback"
                   style={{
-                    background: isDarkMode ? '#1E293B' : '#FFFFFF',
+                    background: '#FFFFFF',
                     borderRadius: '16px',
                     padding: '20px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                    border: `1px solid ${isDarkMode ? '#334155' : 'rgba(0, 0, 0, 0.04)'}`,
+                    border: '1px solid rgba(0, 0, 0, 0.04)',
                     minWidth: '100%',
                     scrollSnapAlign: 'start',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    height: 'fit-content'
                   }}
                 >
                   <div style={{
@@ -580,7 +581,7 @@ export default function NewFirstPage({ onContinue }) {
                         fontSize: '13px',
                         fontWeight: '600',
                         letterSpacing: '0.05em',
-                        color: isDarkMode ? '#F1F5F9' : '#111827'
+                        color: '#111827'
                       }}>
                         BREAKING NEWS
                       </span>
@@ -594,13 +595,13 @@ export default function NewFirstPage({ onContinue }) {
                   }}>
                     {whatsHappening.map((item, i) => (
                       <div key={i} style={{
-                        paddingBottom: '12px',
-                        borderBottom: i < whatsHappening.length - 1 ? `1px solid ${isDarkMode ? '#334155' : '#F3F4F6'}` : 'none'
+                        paddingBottom: i < whatsHappening.length - 1 ? '12px' : '0',
+                        borderBottom: i < whatsHappening.length - 1 ? '1px solid #F3F4F6' : 'none'
                       }}>
                         <p style={{
                           fontSize: '14px',
                           lineHeight: '1.6',
-                          color: isDarkMode ? '#E2E8F0' : '#374151',
+                          color: '#374151',
                           margin: '0 0 6px 0'
                         }}>
                           {item.text}
@@ -643,14 +644,16 @@ export default function NewFirstPage({ onContinue }) {
                 <div 
                   className="touch-feedback"
                   style={{
-                    background: isDarkMode ? '#1E293B' : '#FFFFFF',
+                    background: '#FFFFFF',
                     borderRadius: '16px',
                     padding: '20px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                    border: `1px solid ${isDarkMode ? '#334155' : 'rgba(0, 0, 0, 0.04)'}`,
+                    border: '1px solid rgba(0, 0, 0, 0.04)',
                     minWidth: '100%',
                     scrollSnapAlign: 'start',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    height: 'fit-content',
+                    alignSelf: 'flex-start'
                   }}
                 >
                   <div style={{
@@ -675,7 +678,7 @@ export default function NewFirstPage({ onContinue }) {
                         fontSize: '13px',
                         fontWeight: '600',
                         letterSpacing: '0.05em',
-                        color: isDarkMode ? '#F1F5F9' : '#111827'
+                        color: '#111827'
                       }}>
                         TODAY IN HISTORY
                       </span>
@@ -689,8 +692,8 @@ export default function NewFirstPage({ onContinue }) {
                   }}>
                     {historicalEvents.map((event, i) => (
                       <div key={i} style={{
-                        paddingBottom: '12px',
-                        borderBottom: i < historicalEvents.length - 1 ? `1px solid ${isDarkMode ? '#334155' : '#F3F4F6'}` : 'none'
+                        paddingBottom: i < historicalEvents.length - 1 ? '12px' : '0',
+                        borderBottom: i < historicalEvents.length - 1 ? '1px solid #F3F4F6' : 'none'
                       }}>
                         <div style={{
                           display: 'flex',
@@ -712,7 +715,7 @@ export default function NewFirstPage({ onContinue }) {
                             <p style={{
                               fontSize: '14px',
                               lineHeight: '1.6',
-                              color: isDarkMode ? '#E2E8F0' : '#374151',
+                              color: '#374151',
                               margin: '0'
                             }}>
                               {event.event}
