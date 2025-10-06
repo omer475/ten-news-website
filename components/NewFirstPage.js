@@ -1,44 +1,107 @@
 import { useState, useEffect, useRef } from 'react';
 
 export default function NewFirstPage({ onContinue }) {
+  // ============================================================
+  // STATE MANAGEMENT
+  // ============================================================
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [expandedCard, setExpandedCard] = useState(null);
+  const [currentCard, setCurrentCard] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [touchStart, setTouchStart] = useState(null);
   const categoryScrollRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
-  // Categories with light, subtle colors inspired by modern platforms
+  // Categories with light, subtle colors and icons
   const categories = [
-    { name: 'All', color: '#6366F1', bgColor: '#EEF2FF' },
-    { name: 'Politics', color: '#DC2626', bgColor: '#FEF2F2' },
-    { name: 'Technology', color: '#3B82F6', bgColor: '#EFF6FF' },
-    { name: 'Business', color: '#059669', bgColor: '#ECFDF5' },
-    { name: 'Science', color: '#8B5CF6', bgColor: '#F5F3FF' },
-    { name: 'Health', color: '#EC4899', bgColor: '#FDF2F8' },
-    { name: 'Sports', color: '#F97316', bgColor: '#FFF7ED' },
-    { name: 'Entertainment', color: '#EAB308', bgColor: '#FEFCE8' },
-    { name: 'World', color: '#06B6D4', bgColor: '#F0FDFA' }
+    { name: 'All', color: '#6366F1', bgColor: '#EEF2FF', icon: '⊞', hasNew: false },
+    { name: 'Politics', color: '#DC2626', bgColor: '#FEF2F2', icon: '⚖', hasNew: true },
+    { name: 'Technology', color: '#3B82F6', bgColor: '#EFF6FF', icon: '◈', hasNew: false },
+    { name: 'Business', color: '#059669', bgColor: '#ECFDF5', icon: '◉', hasNew: false },
+    { name: 'Science', color: '#8B5CF6', bgColor: '#F5F3FF', icon: '◎', hasNew: true },
+    { name: 'Health', color: '#EC4899', bgColor: '#FDF2F8', icon: '✚', hasNew: false },
+    { name: 'Sports', color: '#F97316', bgColor: '#FFF7ED', icon: '◐', hasNew: false },
+    { name: 'Entertainment', color: '#EAB308', bgColor: '#FEFCE8', icon: '◆', hasNew: false },
+    { name: 'World', color: '#06B6D4', bgColor: '#F0FDFA', icon: '◍', hasNew: false }
   ];
 
+  // ============================================================
+  // DATA CONFIGURATION
+  // ============================================================
+  
   const whatsHappening = [
     { 
       text: 'NATO-Russia tensions escalate in Eastern Europe', 
-      category: 'Politics'
+      category: 'Politics',
+      source: 'Reuters',
+      important: true
     },
     { 
       text: 'Global markets surge 3% on trade deal optimism', 
-      category: 'Business'
+      category: 'Business',
+      source: 'Bloomberg',
+      important: false
     },
     { 
       text: 'Tech giants announce joint AI safety initiative', 
-      category: 'Technology'
+      category: 'Technology',
+      source: 'TechCrunch',
+      important: false
     },
   ];
 
   const historicalEvents = [
-    { year: '1789', event: 'U.S. Constitution ratified by required states' },
-    { year: '1957', event: 'Sputnik 1 launched, starting Space Age' },
-    { year: '1991', event: 'World Wide Web made publicly available' },
+    { year: '1789', event: 'U.S. Constitution ratified by required states', source: 'History.com' },
+    { year: '1957', event: 'Sputnik 1 launched, starting Space Age', source: 'NASA Archives' },
+    { year: '1991', event: 'World Wide Web made publicly available', source: 'CERN' },
   ];
 
+  // ============================================================
+  // EFFECTS
+  // ============================================================
+  
+  // Simulate loading
+  useEffect(() => {
+    setTimeout(() => setIsLoading(false), 800);
+  }, []);
+
+  // Update time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastUpdated(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Handle scroll for back to top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === '1') setCurrentCard(0);
+      if (e.key === '2') setCurrentCard(1);
+      if (e.key === 'd') setIsDarkMode(!isDarkMode);
+      if (e.key === 'ArrowLeft' && currentCard > 0) setCurrentCard(0);
+      if (e.key === 'ArrowRight' && currentCard < 1) setCurrentCard(1);
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentCard, isDarkMode]);
+
+  // ============================================================
+  // FUNCTIONS
+  // ============================================================
+  
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return 'Good morning';
@@ -46,6 +109,93 @@ export default function NewFirstPage({ onContinue }) {
     return 'Good evening';
   };
 
+  const getTimeAgo = () => {
+    const minutes = Math.floor((new Date() - lastUpdated) / 60000);
+    if (minutes === 0) return 'Just now';
+    if (minutes === 1) return '1 minute ago';
+    return `${minutes} minutes ago`;
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCardScroll = (e) => {
+    const container = e.target;
+    const scrollPosition = container.scrollLeft;
+    const cardWidth = container.offsetWidth;
+    const newIndex = Math.round(scrollPosition / cardWidth);
+    setCurrentCard(newIndex);
+  };
+
+  const scrollToCard = (index) => {
+    if (scrollContainerRef.current) {
+      const cardWidth = scrollContainerRef.current.offsetWidth;
+      scrollContainerRef.current.scrollTo({
+        left: cardWidth * index,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // ============================================================
+  // LOADING SKELETON
+  // ============================================================
+  
+  if (isLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: isDarkMode ? '#0F172A' : '#FAFBFC',
+        padding: '20px'
+      }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+          {/* Skeleton Categories */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', paddingTop: '16px' }}>
+            {[1,2,3,4,5].map(i => (
+              <div key={i} style={{
+                width: '80px',
+                height: '36px',
+                borderRadius: '8px',
+                background: isDarkMode ? '#1E293B' : '#E5E7EB',
+                animation: 'pulse 1.5s ease-in-out infinite'
+              }}></div>
+            ))}
+          </div>
+          
+          {/* Skeleton Content */}
+          <div style={{
+            height: '24px',
+            width: '150px',
+            borderRadius: '4px',
+            background: isDarkMode ? '#1E293B' : '#E5E7EB',
+            marginBottom: '20px',
+            animation: 'pulse 1.5s ease-in-out infinite'
+          }}></div>
+          
+          <div style={{
+            height: '48px',
+            width: '100%',
+            borderRadius: '4px',
+            background: isDarkMode ? '#1E293B' : '#E5E7EB',
+            marginBottom: '32px',
+            animation: 'pulse 1.5s ease-in-out infinite'
+          }}></div>
+          
+          <div style={{
+            height: '200px',
+            borderRadius: '16px',
+            background: isDarkMode ? '#1E293B' : '#E5E7EB',
+            animation: 'pulse 1.5s ease-in-out infinite'
+          }}></div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <>
       <style>{`
@@ -100,43 +250,59 @@ export default function NewFirstPage({ onContinue }) {
           animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
 
-        .gradient-text {
-          background: linear-gradient(135deg, #667EEA 0%, #764BA2 25%, #F093FB 50%, #667EEA 75%, #764BA2 100%);
-          background-size: 200% 200%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: gradientShift 8s ease infinite;
+        @keyframes slideArrow {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
         }
 
-        @media (max-width: 768px) {
-          .mobile-stack {
-            flex-direction: column !important;
+        .touch-feedback:active {
+          transform: scale(0.98);
+        }
+
+        @media (max-width: 480px) {
+          .mobile-compact {
+            padding: 12px !important;
           }
+          .headline-mobile {
+            font-size: 28px !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+
+        :focus-visible {
+          outline: 2px solid #3B82F6;
+          outline-offset: 2px;
         }
       `}</style>
       
       {/* Main Container */}
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(to bottom, #FAFAFA 0%, #F3F4F6 100%)',
-        color: '#000000'
+        background: isDarkMode ? '#0F172A' : '#FAFBFC',
+        color: isDarkMode ? '#F1F5F9' : '#000000',
+        transition: 'all 0.3s ease'
       }}>
-        {/* Category Navigation */}
+        {/* Category Navigation with Shadow on Scroll */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.8)',
+          background: isDarkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(250, 251, 252, 0.95)',
           backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          padding: '16px 0'
+          padding: '16px 0',
+          boxShadow: showBackToTop ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none',
+          transition: 'box-shadow 0.3s ease'
         }}>
           <div style={{
             maxWidth: '680px',
@@ -152,6 +318,8 @@ export default function NewFirstPage({ onContinue }) {
                 overflowX: 'auto',
                 paddingBottom: '2px'
               }}
+              role="tablist"
+              aria-label="News categories"
             >
               {categories.map((category) => {
                 const isSelected = selectedCategory === category.name;
@@ -159,12 +327,15 @@ export default function NewFirstPage({ onContinue }) {
                   <button
                     key={category.name}
                     onClick={() => setSelectedCategory(category.name)}
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-label={`${category.name} category`}
                     style={{
-                      padding: '8px 16px',
+                      padding: '8px 14px',
                       background: isSelected ? category.bgColor : 'transparent',
-                      border: isSelected ? 'none' : '1px solid #E5E7EB',
+                      border: isSelected ? 'none' : `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
                       borderRadius: '8px',
-                      color: isSelected ? category.color : '#6B7280',
+                      color: isSelected ? category.color : (isDarkMode ? '#94A3B8' : '#6B7280'),
                       fontSize: '13px',
                       fontWeight: isSelected ? '500' : '400',
                       cursor: 'pointer',
@@ -172,23 +343,26 @@ export default function NewFirstPage({ onContinue }) {
                       flexShrink: 0,
                       letterSpacing: '-0.01em',
                       outline: 'none',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      position: 'relative'
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = '#F9FAFB';
-                        e.currentTarget.style.borderColor = '#D1D5DB';
-                        e.currentTarget.style.color = '#374151';
+                        e.currentTarget.style.background = isDarkMode ? '#1E293B' : '#F9FAFB';
+                        e.currentTarget.style.borderColor = isDarkMode ? '#475569' : '#D1D5DB';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
                         e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.borderColor = '#E5E7EB';
-                        e.currentTarget.style.color = '#6B7280';
+                        e.currentTarget.style.borderColor = isDarkMode ? '#334155' : '#E5E7EB';
                       }
                     }}
                   >
+                    <span style={{ fontSize: '14px', opacity: 0.7 }}>{category.icon}</span>
                     {category.name}
                   </button>
                 );
@@ -201,73 +375,163 @@ export default function NewFirstPage({ onContinue }) {
         <main style={{
           maxWidth: '680px',
           margin: '0 auto',
-          padding: '24px'
-        }}>
+          padding: '16px 24px 24px 24px'
+        }}
+        className="mobile-compact">
+          {/* Update Timestamp */}
+          <div style={{
+            fontSize: '11px',
+            color: isDarkMode ? '#64748B' : '#9CA3AF',
+            marginBottom: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{
+              width: '4px',
+              height: '4px',
+              background: '#10B981',
+              borderRadius: '50%',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            Updated {getTimeAgo()}
+          </div>
+
           {/* Greeting Section */}
-          <div style={{ marginBottom: '32px' }} className="fade-in">
+          <div style={{ marginBottom: '20px' }} className="fade-in">
             <h2 style={{
               fontSize: '24px',
-              fontWeight: '500',
-              marginBottom: '32px',
+              fontWeight: '600',
+              marginBottom: '20px',
               letterSpacing: '-0.02em',
               lineHeight: '1.2',
-              background: 'linear-gradient(to right, #3B82F6 0%, #93C5FD 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
+              color: isDarkMode ? '#F1F5F9' : '#111827'
             }}>
               {getGreeting()}
             </h2>
 
-            {/* Main Headline - Visual Treatment */}
+            {/* Main Headline */}
             <div style={{
-              marginBottom: '48px',
+              marginBottom: '32px',
               position: 'relative'
             }}>
-              <h1 className="slide-up" style={{
-                fontSize: 'clamp(32px, 6vw, 48px)',
-                fontWeight: '700',
-                lineHeight: '1.15',
+              <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                width: '4px',
+                height: '100%',
+                background: 'linear-gradient(to bottom, #DC2626 0%, #FCA5A5 100%)',
+                borderRadius: '2px'
+              }}></div>
+              
+              <h1 className="slide-up headline-mobile" style={{
+                fontSize: 'clamp(28px, 5vw, 52px)',
+                fontWeight: '800',
+                lineHeight: '1.1',
                 letterSpacing: '-0.04em',
                 position: 'relative',
                 zIndex: 1,
-                color: '#111827'
-              }}>
+                paddingLeft: '16px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}>
                 <span style={{
-                  background: 'linear-gradient(to right, #DC2626 0%, #EF4444 100%)',
+                  display: 'inline-block',
+                  background: 'linear-gradient(135deg, #991B1B 0%, #DC2626 50%, #EF4444 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>Critical NATO-Russia tensions</span>
                 {' '}
-                <span style={{ color: '#6B7280', fontWeight: '500' }}>
+                <span style={{ 
+                  color: isDarkMode ? '#94A3B8' : '#374151', 
+                  fontWeight: '400',
+                  fontSize: '0.85em',
+                  display: 'inline-block',
+                  opacity: 0.9
+                }}>
                   dominate today's headlines
                 </span>
               </h1>
             </div>
           </div>
 
-          {/* Today's Briefing - Mobile Optimized with Swipeable Cards */}
-          <div style={{ marginBottom: '32px' }}>
+          {/* Today's Briefing with Swipeable Cards */}
+          <div style={{ marginBottom: '24px' }}>
             <h3 style={{
               fontSize: '14px',
               fontWeight: '600',
-              marginBottom: '20px',
+              marginBottom: '16px',
               letterSpacing: '0.05em',
               textTransform: 'uppercase',
-              color: '#6B7280'
+              color: isDarkMode ? '#94A3B8' : '#6B7280'
             }}>
               Today's Briefing
             </h3>
 
-            {/* Swipeable Container */}
+            {/* Swipeable Container with Arrows */}
             <div style={{
               position: 'relative',
               width: '100%',
               overflow: 'hidden',
               borderRadius: '16px'
             }}>
+              {/* Desktop Arrow Left */}
+              <button
+                onClick={() => scrollToCard(0)}
+                aria-label="Previous card"
+                style={{
+                  position: 'absolute',
+                  left: '-20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: isDarkMode ? '#1E293B' : '#FFFFFF',
+                  border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+                  display: currentCard === 0 ? 'none' : 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                ←
+              </button>
+
+              {/* Desktop Arrow Right */}
+              <button
+                onClick={() => scrollToCard(1)}
+                aria-label="Next card"
+                style={{
+                  position: 'absolute',
+                  right: '-20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: isDarkMode ? '#1E293B' : '#FFFFFF',
+                  border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+                  display: currentCard === 1 ? 'none' : 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  animation: 'slideArrow 2s ease-in-out infinite'
+                }}
+              >
+                →
+              </button>
+
               <div 
+                ref={scrollContainerRef}
                 style={{
                   display: 'flex',
                   gap: '16px',
@@ -278,15 +542,17 @@ export default function NewFirstPage({ onContinue }) {
                   WebkitOverflowScrolling: 'touch'
                 }}
                 className="scrollbar-hide"
+                onScroll={handleCardScroll}
               >
                 {/* Breaking Updates Card */}
                 <div 
+                  className="touch-feedback"
                   style={{
-                    background: '#FFFFFF',
+                    background: isDarkMode ? '#1E293B' : '#FFFFFF',
                     borderRadius: '16px',
                     padding: '20px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                    border: '1px solid rgba(0, 0, 0, 0.04)',
+                    border: `1px solid ${isDarkMode ? '#334155' : 'rgba(0, 0, 0, 0.04)'}`,
                     minWidth: '100%',
                     scrollSnapAlign: 'start',
                     transition: 'all 0.3s ease'
@@ -295,24 +561,30 @@ export default function NewFirstPage({ onContinue }) {
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
+                    justifyContent: 'space-between',
                     marginBottom: '20px'
                   }}>
                     <div style={{
-                      width: '8px',
-                      height: '8px',
-                      background: '#EF4444',
-                      borderRadius: '50%',
-                      boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.1)'
-                    }}></div>
-                    <span style={{
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      letterSpacing: '0.05em',
-                      color: '#111827'
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px'
                     }}>
-                      BREAKING NEWS
-                    </span>
+                      <div style={{
+                        width: '8px',
+                        height: '8px',
+                        background: '#EF4444',
+                        borderRadius: '50%',
+                        boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.1)'
+                      }}></div>
+                      <span style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        letterSpacing: '0.05em',
+                        color: isDarkMode ? '#F1F5F9' : '#111827'
+                      }}>
+                        BREAKING NEWS
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{ 
@@ -323,26 +595,45 @@ export default function NewFirstPage({ onContinue }) {
                     {whatsHappening.map((item, i) => (
                       <div key={i} style={{
                         paddingBottom: '12px',
-                        borderBottom: i < whatsHappening.length - 1 ? '1px solid #F3F4F6' : 'none'
+                        borderBottom: i < whatsHappening.length - 1 ? `1px solid ${isDarkMode ? '#334155' : '#F3F4F6'}` : 'none'
                       }}>
                         <p style={{
                           fontSize: '14px',
                           lineHeight: '1.6',
-                          color: '#374151',
+                          color: isDarkMode ? '#E2E8F0' : '#374151',
                           margin: '0 0 6px 0'
                         }}>
                           {item.text}
+                          {item.important && (
+                            <span style={{
+                              marginLeft: '8px',
+                              fontSize: '11px',
+                              padding: '2px 6px',
+                              background: '#FEF2F2',
+                              color: '#DC2626',
+                              borderRadius: '4px',
+                              fontWeight: '600'
+                            }}>
+                              IMPORTANT
+                            </span>
+                          )}
                         </p>
-                        <span style={{
-                          fontSize: '11px',
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          background: categories.find(c => c.name === item.category)?.bgColor || '#F3F4F6',
-                          color: categories.find(c => c.name === item.category)?.color || '#6B7280',
-                          fontWeight: '500'
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
                         }}>
-                          {item.category}
-                        </span>
+                          <span style={{
+                            fontSize: '11px',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            background: categories.find(c => c.name === item.category)?.bgColor || '#F3F4F6',
+                            color: categories.find(c => c.name === item.category)?.color || '#6B7280',
+                            fontWeight: '500'
+                          }}>
+                            {item.category}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -350,12 +641,13 @@ export default function NewFirstPage({ onContinue }) {
 
                 {/* Historical Events Card */}
                 <div 
+                  className="touch-feedback"
                   style={{
-                    background: '#FFFFFF',
+                    background: isDarkMode ? '#1E293B' : '#FFFFFF',
                     borderRadius: '16px',
                     padding: '20px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                    border: '1px solid rgba(0, 0, 0, 0.04)',
+                    border: `1px solid ${isDarkMode ? '#334155' : 'rgba(0, 0, 0, 0.04)'}`,
                     minWidth: '100%',
                     scrollSnapAlign: 'start',
                     transition: 'all 0.3s ease'
@@ -364,24 +656,30 @@ export default function NewFirstPage({ onContinue }) {
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
+                    justifyContent: 'space-between',
                     marginBottom: '20px'
                   }}>
                     <div style={{
-                      width: '8px',
-                      height: '8px',
-                      background: '#10B981',
-                      borderRadius: '50%',
-                      boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
-                    }}></div>
-                    <span style={{
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      letterSpacing: '0.05em',
-                      color: '#111827'
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px'
                     }}>
-                      TODAY IN HISTORY
-                    </span>
+                      <div style={{
+                        width: '8px',
+                        height: '8px',
+                        background: '#10B981',
+                        borderRadius: '50%',
+                        boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
+                      }}></div>
+                      <span style={{
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        letterSpacing: '0.05em',
+                        color: isDarkMode ? '#F1F5F9' : '#111827'
+                      }}>
+                        TODAY IN HISTORY
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{ 
@@ -392,7 +690,7 @@ export default function NewFirstPage({ onContinue }) {
                     {historicalEvents.map((event, i) => (
                       <div key={i} style={{
                         paddingBottom: '12px',
-                        borderBottom: i < historicalEvents.length - 1 ? '1px solid #F3F4F6' : 'none'
+                        borderBottom: i < historicalEvents.length - 1 ? `1px solid ${isDarkMode ? '#334155' : '#F3F4F6'}` : 'none'
                       }}>
                         <div style={{
                           display: 'flex',
@@ -410,15 +708,16 @@ export default function NewFirstPage({ onContinue }) {
                           }}>
                             {event.year}
                           </span>
-                          <p style={{
-                            fontSize: '14px',
-                            lineHeight: '1.6',
-                            color: '#374151',
-                            margin: 0,
-                            flex: 1
-                          }}>
-                            {event.event}
-                          </p>
+                          <div style={{ flex: 1 }}>
+                            <p style={{
+                              fontSize: '14px',
+                              lineHeight: '1.6',
+                              color: isDarkMode ? '#E2E8F0' : '#374151',
+                              margin: '0'
+                            }}>
+                              {event.event}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -426,31 +725,71 @@ export default function NewFirstPage({ onContinue }) {
                 </div>
               </div>
 
-              {/* Swipe Indicator Dots */}
+              {/* Enhanced Swipe Indicators */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 gap: '6px',
                 marginTop: '16px'
               }}>
-                <div style={{
-                  width: '24px',
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: '#374151',
-                  transition: 'all 0.3s'
-                }}></div>
-                <div style={{
-                  width: '6px',
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: '#E5E7EB',
-                  transition: 'all 0.3s'
-                }}></div>
+                {[0, 1].map((index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollToCard(index)}
+                    aria-label={`Go to card ${index + 1}`}
+                    style={{
+                      width: currentCard === index ? '24px' : '6px',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: currentCard === index 
+                        ? (isDarkMode ? '#F1F5F9' : '#374151')
+                        : (isDarkMode ? '#334155' : '#E5E7EB'),
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      padding: 0
+                    }}
+                  />
+                ))}
               </div>
             </div>
           </div>
         </main>
+
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <button
+            onClick={scrollToTop}
+            aria-label="Back to top"
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              right: '24px',
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: isDarkMode ? '#1E293B' : '#FFFFFF',
+              border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.3s ease',
+              zIndex: 30
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            }}
+          >
+            ↑
+          </button>
+        )}
       </div>
     </>
   );
