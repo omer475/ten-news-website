@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
 export default function NewFirstPage({ onContinue }) {
-  // ============================================================
-  // STATE MANAGEMENT
-  // ============================================================
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [expandedCard, setExpandedCard] = useState(null);
   const categoryScrollRef = useRef(null);
@@ -21,21 +18,17 @@ export default function NewFirstPage({ onContinue }) {
     { name: 'World', color: '#06B6D4', bgColor: '#F0FDFA' }
   ];
 
-  // ============================================================
-  // DATA CONFIGURATION
-  // ============================================================
-
   const whatsHappening = [
-    {
-      text: 'NATO-Russia tensions escalate in Eastern Europe',
+    { 
+      text: 'NATO-Russia tensions escalate in Eastern Europe', 
       category: 'Politics'
     },
-    {
-      text: 'Global markets surge 3% on trade deal optimism',
+    { 
+      text: 'Global markets surge 3% on trade deal optimism', 
       category: 'Business'
     },
-    {
-      text: 'Tech giants announce joint AI safety initiative',
+    { 
+      text: 'Tech giants announce joint AI safety initiative', 
       category: 'Technology'
     },
   ];
@@ -46,9 +39,6 @@ export default function NewFirstPage({ onContinue }) {
     { year: '1991', event: 'World Wide Web made publicly available' },
   ];
 
-  // ============================================================
-  // GREETING LOGIC
-  // ============================================================
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return 'Good morning';
@@ -56,9 +46,6 @@ export default function NewFirstPage({ onContinue }) {
     return 'Good evening';
   };
 
-  // ============================================================
-  // RENDER
-  // ============================================================
   return (
     <>
       <style>{`
@@ -224,7 +211,10 @@ export default function NewFirstPage({ onContinue }) {
               marginBottom: '32px',
               letterSpacing: '-0.02em',
               lineHeight: '1.2',
-              color: '#6B7280'
+              background: 'linear-gradient(to right, #3B82F6 0%, #93C5FD 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
             }}>
               {getGreeting()}
             </h2>
@@ -234,32 +224,30 @@ export default function NewFirstPage({ onContinue }) {
               marginBottom: '48px',
               position: 'relative'
             }}>
-              <div style={{
-                position: 'absolute',
-                top: '-20px',
-                left: '-20px',
-                right: '-20px',
-                bottom: '-20px',
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
-                borderRadius: '24px',
-                filter: 'blur(40px)',
-                zIndex: 0
-              }}></div>
-              
-              <h1 className="gradient-text slide-up" style={{
+              <h1 className="slide-up" style={{
                 fontSize: 'clamp(32px, 6vw, 48px)',
                 fontWeight: '700',
                 lineHeight: '1.15',
                 letterSpacing: '-0.04em',
                 position: 'relative',
-                zIndex: 1
+                zIndex: 1,
+                color: '#111827'
               }}>
-                Critical NATO-Russia tensions dominate today's headlines
+                <span style={{
+                  background: 'linear-gradient(to right, #DC2626 0%, #EF4444 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>Critical NATO-Russia tensions</span>
+                {' '}
+                <span style={{ color: '#6B7280', fontWeight: '500' }}>
+                  dominate today's headlines
+                </span>
               </h1>
             </div>
           </div>
 
-          {/* Today's Briefing - Mobile Optimized */}
+          {/* Today's Briefing - Mobile Optimized with Swipeable Cards */}
           <div style={{ marginBottom: '32px' }}>
             <h3 style={{
               fontSize: '14px',
@@ -272,209 +260,194 @@ export default function NewFirstPage({ onContinue }) {
               Today's Briefing
             </h3>
 
-            {/* Breaking Updates - Full Width Card */}
-            <div 
-              style={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '20px',
-                marginBottom: '16px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                border: '1px solid rgba(0, 0, 0, 0.04)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onClick={() => setExpandedCard(expandedCard === 'breaking' ? null : 'breaking')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: expandedCard === 'breaking' ? '16px' : '0'
-              }}>
-                <div style={{
+            {/* Swipeable Container */}
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              overflow: 'hidden',
+              borderRadius: '16px'
+            }}>
+              <div 
+                style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    background: '#EF4444',
-                    borderRadius: '50%',
-                    boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.1)'
-                  }}></div>
-                  <span style={{
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    letterSpacing: '0.05em',
-                    color: '#111827'
-                  }}>
-                    BREAKING NEWS
-                  </span>
-                </div>
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 20 20" 
-                  fill="none"
+                  gap: '16px',
+                  overflowX: 'auto',
+                  scrollSnapType: 'x mandatory',
+                  scrollBehavior: 'smooth',
+                  paddingBottom: '4px',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+                className="scrollbar-hide"
+              >
+                {/* Breaking Updates Card */}
+                <div 
                   style={{
-                    transform: expandedCard === 'breaking' ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.3s ease'
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0, 0, 0, 0.04)',
+                    minWidth: '100%',
+                    scrollSnapAlign: 'start',
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  <path d="M6 8L10 12L14 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-
-              {expandedCard === 'breaking' && (
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '12px',
-                  paddingTop: '4px'
-                }}>
-                  {whatsHappening.map((item, i) => (
-                    <div key={i} style={{
-                      paddingBottom: '12px',
-                      borderBottom: i < whatsHappening.length - 1 ? '1px solid #F3F4F6' : 'none'
-                    }}>
-                      <p style={{
-                        fontSize: '14px',
-                        lineHeight: '1.6',
-                        color: '#374151',
-                        margin: '0 0 6px 0'
-                      }}>
-                        {item.text}
-                      </p>
-                      <span style={{
-                        fontSize: '11px',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        background: categories.find(c => c.name === item.category)?.bgColor || '#F3F4F6',
-                        color: categories.find(c => c.name === item.category)?.color || '#6B7280',
-                        fontWeight: '500'
-                      }}>
-                        {item.category}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Historical Events - Full Width Card */}
-            <div 
-              style={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '20px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                border: '1px solid rgba(0, 0, 0, 0.04)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onClick={() => setExpandedCard(expandedCard === 'history' ? null : 'history')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.08)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: expandedCard === 'history' ? '16px' : '0'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
                   <div style={{
-                    width: '8px',
-                    height: '8px',
-                    background: '#10B981',
-                    borderRadius: '50%',
-                    boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
-                  }}></div>
-                  <span style={{
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    letterSpacing: '0.05em',
-                    color: '#111827'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '20px'
                   }}>
-                    TODAY IN HISTORY
-                  </span>
-                </div>
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 20 20" 
-                  fill="none"
-                  style={{
-                    transform: expandedCard === 'history' ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.3s ease'
-                  }}
-                >
-                  <path d="M6 8L10 12L14 8" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-
-              {expandedCard === 'history' && (
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '12px',
-                  paddingTop: '4px'
-                }}>
-                  {historicalEvents.map((event, i) => (
-                    <div key={i} style={{
-                      paddingBottom: '12px',
-                      borderBottom: i < historicalEvents.length - 1 ? '1px solid #F3F4F6' : 'none'
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      background: '#EF4444',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.1)'
+                    }}></div>
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      letterSpacing: '0.05em',
+                      color: '#111827'
                     }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '12px'
+                      BREAKING NEWS
+                    </span>
+                  </div>
+
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '12px'
+                  }}>
+                    {whatsHappening.map((item, i) => (
+                      <div key={i} style={{
+                        paddingBottom: '12px',
+                        borderBottom: i < whatsHappening.length - 1 ? '1px solid #F3F4F6' : 'none'
                       }}>
-                        <span style={{
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: '#10B981',
-                          background: '#ECFDF5',
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          minWidth: 'fit-content'
-                        }}>
-                          {event.year}
-                        </span>
                         <p style={{
                           fontSize: '14px',
                           lineHeight: '1.6',
                           color: '#374151',
-                          margin: 0,
-                          flex: 1
+                          margin: '0 0 6px 0'
                         }}>
-                          {event.event}
+                          {item.text}
                         </p>
+                        <span style={{
+                          fontSize: '11px',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          background: categories.find(c => c.name === item.category)?.bgColor || '#F3F4F6',
+                          color: categories.find(c => c.name === item.category)?.color || '#6B7280',
+                          fontWeight: '500'
+                        }}>
+                          {item.category}
+                        </span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              )}
+
+                {/* Historical Events Card */}
+                <div 
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(0, 0, 0, 0.04)',
+                    minWidth: '100%',
+                    scrollSnapAlign: 'start',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      background: '#10B981',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
+                    }}></div>
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      letterSpacing: '0.05em',
+                      color: '#111827'
+                    }}>
+                      TODAY IN HISTORY
+                    </span>
+                  </div>
+
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '12px'
+                  }}>
+                    {historicalEvents.map((event, i) => (
+                      <div key={i} style={{
+                        paddingBottom: '12px',
+                        borderBottom: i < historicalEvents.length - 1 ? '1px solid #F3F4F6' : 'none'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px'
+                        }}>
+                          <span style={{
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            color: '#10B981',
+                            background: '#ECFDF5',
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            minWidth: 'fit-content'
+                          }}>
+                            {event.year}
+                          </span>
+                          <p style={{
+                            fontSize: '14px',
+                            lineHeight: '1.6',
+                            color: '#374151',
+                            margin: 0,
+                            flex: 1
+                          }}>
+                            {event.event}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Swipe Indicator Dots */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '6px',
+                marginTop: '16px'
+              }}>
+                <div style={{
+                  width: '24px',
+                  height: '4px',
+                  borderRadius: '2px',
+                  background: '#374151',
+                  transition: 'all 0.3s'
+                }}></div>
+                <div style={{
+                  width: '6px',
+                  height: '4px',
+                  borderRadius: '2px',
+                  background: '#E5E7EB',
+                  transition: 'all 0.3s'
+                }}></div>
+              </div>
             </div>
           </div>
         </main>
