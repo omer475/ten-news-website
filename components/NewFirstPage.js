@@ -205,18 +205,24 @@ export default function NewFirstPage({ onContinue }) {
         minHeight: '100vh',
         background: '#FFFFFF',
         color: '#000000',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        {/* Category Navigation with Shadow on Scroll - Full Width */}
+        {/* Category Navigation with Shadow on Scroll - TRUE Full Width */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          padding: '16px 20px',
+          paddingTop: '16px',
+          paddingBottom: '16px',
+          paddingLeft: '20px',
+          paddingRight: '20px',
           boxShadow: showBackToTop ? '0 1px 3px rgba(0, 0, 0, 0.05)' : 'none',
-          transition: 'box-shadow 0.3s ease'
+          transition: 'box-shadow 0.3s ease',
+          width: '100%'
         }}>
           <div 
             ref={categoryScrollRef}
@@ -284,8 +290,9 @@ export default function NewFirstPage({ onContinue }) {
           maxWidth: '680px',
           margin: '0 auto',
           padding: '16px 20px 20px 20px',
-          height: 'calc(100vh - 80px)',
-          overflowY: 'auto'
+          flex: 1,
+          overflowY: 'auto',
+          width: '100%'
         }}
         className="mobile-compact scrollbar-hide">
           {/* Greeting Section */}
