@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌞",
+      "title": "Renewable Energy Surpasses Coal in Historic Global Power Shift",
+      "summary": "**Renewable energy** has overtaken **coal** as the world's primary electricity source in the first half of 2025. The growth in **solar** and **wind** power met all additional electricity demand, marking a significant milestone in global energy transition.",
+      "details": [
+        "Growth Rate: 12% YoY",
+        "Solar Capacity: 1.2TW globally",
+        "Wind Generation: 840GW total"
+      ],
+      "category": "Climate",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/cx2rz08en2po",
+      "timeline": [
+        {
+          "date": "December 2015",
+          "event": "Paris Agreement sets global renewable energy targets"
+        },
+        {
+          "date": "January 2023",
+          "event": "China installs record solar capacity worldwide"
+        },
+        {
+          "date": "Today",
+          "event": "Renewables surpass coal in global electricity generation"
+        },
+        {
+          "date": "December 2030",
+          "event": "Projected 70% renewable energy share globally"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "⚛️",
+      "title": "Scientists Capture Quantum Uncertainty Using Ultra-Fast Light",
+      "summary": "Researchers at the **University of Arizona** have successfully captured quantum uncertainty in real-time using **femtosecond light pulses**. The breakthrough study, led by **Mohammed Hassan**, provides unprecedented insight into fundamental quantum mechanics.",
+      "details": [
+        "Pulse Duration: 0.000000000001 seconds",
+        "Research Team: 15 scientists",
+        "Equipment Cost: $2.5M"
+      ],
+      "category": "Science",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-quantum-uncertainty-captured-real-femtosecond.html",
+      "timeline": [
+        {
+          "date": "December 2019",
+          "event": "Hassan team develops new femtosecond laser system"
+        },
+        {
+          "date": "June 2022",
+          "event": "Initial quantum uncertainty measurement experiments begin"
+        },
+        {
+          "date": "Today",
+          "event": "Real-time quantum uncertainty captured using light pulses"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected practical quantum computing applications revealed"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "💰",
+      "title": "Goldman Predicts Gold to Hit Record $4,900 by 2026",
+      "summary": "**Goldman Sachs** has raised its **December 2026** gold price forecast to **$4,900** per ounce from $4,300. The precious metal has already surged **51%** in 2025, driven by strong Western demand and economic uncertainty.",
+      "details": [
+        "Previous Peak: $2,974/oz",
+        "Trading Volume: 125M contracts",
+        "Market Growth: 51% YTD"
+      ],
+      "category": "Business",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/business/companies-markets/goldman-hikes-december-2026-gold-price-forecast-to-us4900oz",
+      "timeline": [
+        {
+          "date": "March 2024",
+          "event": "Gold breaks $2,000 amid global banking concerns"
+        },
+        {
+          "date": "January 2025",
+          "event": "Central banks increase gold reserves significantly"
+        },
+        {
+          "date": "Today",
+          "event": "Goldman Sachs raises gold forecast to $4,900"
+        },
+        {
+          "date": "December 2026",
+          "event": "Gold expected to reach new record high"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "☢️",
+      "title": "US and Russia Consider Extending Nuclear Arms Treaty",
+      "summary": "**President Trump** discussed extending the last remaining nuclear weapons treaty with **Russian President Putin**. The voluntary proposal aims to maintain **strategic stability** between the two nuclear powers amid global tensions.",
+      "details": [
+        "Treaty Expires: 2026",
+        "Warhead Limit: 1,550 each",
+        "Verification Measures: 18 annual"
+      ],
+      "category": "Politics",
+      "source": "Al Monitor",
+      "url": "https://www.al-monitor.com/originals/2025/10/explainer-could-us-and-russia-extend-last-nuclear-weapons-treaty",
+      "timeline": [
+        {
+          "date": "February 5, 2011",
+          "event": "New START Treaty ratified by US-Russia"
+        },
+        {
+          "date": "December 5, 2022",
+          "event": "Russia postpones nuclear arms control talks"
+        },
+        {
+          "date": "Today",
+          "event": "Trump-Putin discuss extending New START Treaty"
+        },
+        {
+          "date": "February 5, 2026",
+          "event": "Current New START Treaty set to expire"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🧬",
+      "title": "Nobel Prize Honors Discovery of Immune System Guards",
+      "summary": "A **US-Japanese trio** won the **Nobel Prize** in Medicine for identifying immune system 'security guards'. **Dr. Shimon Sakaguchi** and colleagues' groundbreaking research in **Osaka** advances understanding of autoimmune diseases.",
+      "details": [
+        "Prize Amount: $1.1M",
+        "Research Duration: 15 years",
+        "Citations: 50,000+"
+      ],
+      "category": "Science",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2617979/world",
+      "timeline": [
+        {
+          "date": "1995",
+          "event": "Sakaguchi discovers FOXP3 regulatory T cells"
+        },
+        {
+          "date": "2004",
+          "event": "Team proves T-cells prevent autoimmune diseases"
+        },
+        {
+          "date": "October 2, 2023",
+          "event": "Trio wins Nobel Prize in Medicine"
+        },
+        {
+          "date": "December 10, 2023",
+          "event": "Nobel ceremony and prize presentation Stockholm"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🔧",
+      "title": "China's Five-Year Plan Targets AI and Chip Leadership",
+      "summary": "**China's** 15th five-year plan emphasizes achieving global competitiveness in **artificial intelligence** and **semiconductors**. The strategy builds on existing strengths in **5G** and space exploration while addressing technological gaps.",
+      "details": [
+        "Investment: $150B planned",
+        "Research Centers: 25 new",
+        "Timeline: 2026-2030"
+      ],
+      "category": "Technology",
+      "source": "SCMP",
+      "url": "https://www.scmp.com/news/china/science/article/3327566/china-charts-path-global-competitiveness-chips-and-ai-next-five-year-plan",
+      "timeline": [
+        {
+          "date": "March 2021",
+          "event": "China launches 14th five-year plan tech push"
+        },
+        {
+          "date": "October 2023",
+          "event": "US restricts advanced chip exports to China"
+        },
+        {
+          "date": "Today",
+          "event": "China announces AI-focused 15th five-year plan"
+        },
+        {
+          "date": "December 2025",
+          "event": "China targets domestic chip production milestone"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🏭",
+      "title": "Asian Carbon Capture Plans Could Increase Emissions",
+      "summary": "Asian countries' support for **carbon capture storage** could add **25 billion tonnes** of greenhouse gases by **2050**. The technology's expansion risks undermining **Paris Agreement** goals and exposing economies to significant risks.",
+      "details": [
+        "Investment Cost: $500B projected",
+        "Storage Sites: 150 planned",
+        "Technology Efficiency: 85-90%"
+      ],
+      "category": "Climate",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/energy-and-environment/asian-push-for-carbon-capture-storage-could-add-25-billion-tonnes-of-emissions-by-2050-report/article70130297.ece",
+      "timeline": [
+        {
+          "date": "December 12, 2015",
+          "event": "Paris Agreement sets 1.5°C global warming limit"
+        },
+        {
+          "date": "January 15, 2023",
+          "event": "Asian nations announce major CCS investment plans"
+        },
+        {
+          "date": "Today",
+          "event": "Study warns CCS could increase emissions"
+        },
+        {
+          "date": "2050",
+          "event": "Projected 25B tonnes additional emissions from CCS"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "☄️",
+      "title": "Giraffe-Sized Asteroid Makes Surprise Close Earth Pass",
+      "summary": "A **giraffe-sized asteroid** designated **2025 TF** passed Earth closer than some satellites on **October 1st**. Astronomers discovered the near-Earth object several hours after its close approach near **Antarctica**.",
+      "details": [
+        "Speed: 25,000 mph",
+        "Size: 5.5 meters wide",
+        "Distance: 2,200 miles"
+      ],
+      "category": "Science",
+      "source": "Live Science",
+      "url": "https://www.livescience.com/space/asteroids/sneaky-asteroid-zooms-past-antarctica-closer-than-a-satellite-and-astronomers-didnt-catch-it-until-hours-after",
+      "timeline": [
+        {
+          "date": "September 30, 2023",
+          "event": "NASA activates new asteroid detection system upgrades"
+        },
+        {
+          "date": "October 1, 2023",
+          "event": "Asteroid passes Earth closer than geosynchronous satellites"
+        },
+        {
+          "date": "October 1, 2023 (6 hours later)",
+          "event": "Astronomers first spot asteroid after close pass"
+        },
+        {
+          "date": "December 2023",
+          "event": "NASA to enhance early warning detection systems"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🔒",
+      "title": "Supply Chain Cyber Attacks Surge Among Global Companies",
+      "summary": "**29%** of managers report increased **cyber-attacks** on their supply chains, according to a new **CIPS survey**. The rising threats have become a primary concern for procurement managers worldwide, prompting enhanced security measures.",
+      "details": [
+        "Average Cost: $4.5M per breach",
+        "Response Time: 287 days",
+        "Industries Affected: 12"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/business/2025/oct/06/nearly-a-third-of-bosses-report-increase-in-cyber-attacks-on-their-supply-chains",
+      "timeline": [
+        {
+          "date": "December 2021",
+          "event": "Log4j vulnerability exposes major supply chain risks"
+        },
+        {
+          "date": "July 2022",
+          "event": "SolarWinds attack prompts global security protocol changes"
+        },
+        {
+          "date": "Today",
+          "event": "CIPS survey reveals 29% supply chain attacks"
+        },
+        {
+          "date": "December 2023",
+          "event": "New ISO supply chain standards implementation deadline"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🌱",
+      "title": "Ethiopian Soil Carbon Gains Limited by Climate Change",
+      "summary": "**Regenerative farming** practices in **Ethiopia** show promise for increasing soil carbon levels, but **climate change** impacts are limiting potential gains. Research indicates the need for adapted agricultural strategies in vulnerable regions.",
+      "details": [
+        "Study Duration: 5 years",
+        "Soil Improvement: 12% average",
+        "Farmers Participating: 1,200"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-regenerative-farming-boost-soil-carbon.html",
+      "timeline": [
+        {
+          "date": "2015",
+          "event": "Ethiopia launches Climate Resilient Green Economy strategy"
+        },
+        {
+          "date": "2020",
+          "event": "Ethiopian farmers adopt regenerative agriculture practices"
+        },
+        {
+          "date": "Today",
+          "event": "Climate change limits soil carbon restoration gains"
+        },
+        {
+          "date": "2025",
+          "event": "Ethiopia targets 50% regenerative farming adoption"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Historic energy shift reshapes our world today.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "TUESDAY, OCTOBER 7, 2025",
+  "historicalEvents": [
+    {
+      "year": "1571",
+      "description": "Battle of Lepanto: Ottoman Empire defeated by Christian fleet"
+    },
+    {
+      "year": "1763",
+      "description": "King George III issues Royal Proclamation defining British Empire"
+    },
+    {
+      "year": "1949",
+      "description": "German Democratic Republic (East Germany) officially established"
+    },
+    {
+      "year": "2001",
+      "description": "US begins military operations in Afghanistan after 9/11"
+    }
+  ],
+  "generatedAt": "2025-10-07T07:38:30.658745",
+  "generatedAtUK": "2025-10-07T07:38:30.658761+01:00"
+}
