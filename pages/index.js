@@ -1661,13 +1661,13 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    {/* News Image - Full Screen Top, Behind Logo */}
+                    {/* News Image - Full Screen Top, Behind Logo - EDGE TO EDGE */}
                     <div style={{
-                      position: 'absolute',
+                      position: 'fixed',
                       top: '0',
                       left: '0',
                       right: '0',
-                      width: '100%',
+                      width: '100vw',
                       height: '30vh',
                       margin: 0,
                       padding: 0,
@@ -1708,42 +1708,18 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(30vh + 16px)',
+                      paddingTop: 'calc(30vh + 8px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
                     }}>
                       
-                      {/* Category Badge - Compact */}
-                      <div className="news-category" style={{
-                        background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
-                                   story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
-                                   story.category === 'MARKETS' ? 'rgba(6, 182, 212, 0.1)' :
-                                   story.category === 'TECH & AI' ? 'rgba(102, 126, 234, 0.1)' :
-                                   story.category === 'SCIENCE' ? 'rgba(14, 165, 233, 0.1)' :
-                                   story.category === 'HEALTH' ? 'rgba(0, 210, 160, 0.1)' :
-                                   story.category === 'CLIMATE' ? 'rgba(34, 197, 94, 0.1)' :
-                                   story.category === 'SPORTS' ? 'rgba(245, 158, 11, 0.1)' :
-                                   story.category === 'ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.1)' : 
-                                   'rgba(100, 116, 139, 0.1)',
-                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
-                               story.category === 'BUSINESS' ? '#FF6B35' :
-                               story.category === 'MARKETS' ? '#06b6d4' :
-                               story.category === 'TECH & AI' ? '#667EEA' :
-                               story.category === 'SCIENCE' ? '#0ea5e9' :
-                               story.category === 'HEALTH' ? '#00D2A0' :
-                               story.category === 'CLIMATE' ? '#22c55e' :
-                               story.category === 'SPORTS' ? '#f59e0b' :
-                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b',
-                        marginBottom: '8px'
-                      }}>
-                        <span className="news-category-icon">{story.emoji}</span>
-                        {story.category}
-                      </div>
+                      {/* Category Badge - HIDDEN */}
                       
                       {/* Title - Large and Prominent */}
                       <h3 className="news-title" style={{ 
-                        marginBottom: '12px',
+                        marginTop: '0',
+                        marginBottom: '10px',
                         fontSize: '26px',
                         fontWeight: '800',
                         lineHeight: '1.2',
@@ -1752,6 +1728,7 @@ export default function Home() {
                       
                       {/* Summary - Visible and Styled */}
                       <p className="news-summary" style={{ 
+                        marginTop: '0',
                         marginBottom: '16px',
                         fontSize: '15px',
                         lineHeight: '1.5',
@@ -1761,7 +1738,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
                         position: 'fixed',
-                          bottom: '80px',
+                          bottom: '20px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
