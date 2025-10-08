@@ -1746,7 +1746,7 @@ export default function Home() {
                         maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
-                        paddingBottom: '20px',
+                        paddingBottom: '0',
                         zIndex: '50',
                         display: 'flex',
                         flexDirection: 'column',
