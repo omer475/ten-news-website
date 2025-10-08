@@ -1711,7 +1711,6 @@ export default function Home() {
                       paddingTop: 'calc(30vh + 8px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
-                      paddingBottom: '180px',
                       zIndex: '2'
                     }}>
                       
@@ -1736,29 +1735,16 @@ export default function Home() {
                         opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Position Toggle and Content Area - Anchored to Bottom */}
-                      <div style={{
-                        position: 'fixed',
-                        bottom: '0',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '100%',
-                        maxWidth: '950px',
-                        paddingLeft: '15px',
-                        paddingRight: '15px',
-                        paddingBottom: '20px',
-                        zIndex: '50',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px'
-                      }}>
-                        {/* Modern Segmented Control - ON TOP */}
-                        {story.timeline && (
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            order: 1
-                          }}>
+                      {/* Modern Segmented Control - Floating Above Content */}
+                      {story.timeline && (
+                        <div style={{
+                          position: 'fixed',
+                          bottom: '130px',
+                          right: '30px',
+                          zIndex: '100',
+                          display: 'flex',
+                          justifyContent: 'flex-end'
+                        }}>
                           <div style={{
                             display: 'flex',
                             background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
@@ -1825,9 +1811,21 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
-                        )}
-                        
-                        {/* Details/Timeline Section - Below Switch */}
+                      )}
+                      
+                      {/* Fixed Position Details/Timeline Section - At Bottom */}
+                      <div style={{
+                        position: 'fixed',
+                        bottom: '0',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '100%',
+                        maxWidth: '950px',
+                        paddingLeft: '15px',
+                        paddingRight: '15px',
+                        paddingBottom: '20px',
+                        zIndex: '50'
+                      }}>
                         <div 
                           className="news-meta" 
                         style={{ 
@@ -1838,8 +1836,7 @@ export default function Home() {
                           height: '90px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
                           border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)',
-                          order: 2
+                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1998,7 +1995,7 @@ export default function Home() {
                           )
                         )}
                       </div>
-                      </div> {/* Close fixed position container */}
+                    </div> {/* Close fixed position container */}
                     </div>
                   </div>
                 </div>
