@@ -12,8 +12,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 # ==========================================
 # AI & NEWS GENERATION
 # ==========================================
-# Claude AI API Key (for news generation)
+# Claude AI API Key (for news generation & writing)
 CLAUDE_API_KEY=your_claude_api_key_here
+
+# Google Gemini API Key (for article selection & categorization)
+GOOGLE_API_KEY=your_google_api_key_here
+
+# Perplexity API Key (for research enhancement with web search)
+PERPLEXITY_API_KEY=your_perplexity_api_key_here
+
+# NewsAPI Key (for live news with images - optional)
+NEWSAPI_KEY=your_newsapi_key_here
 
 # ==========================================
 # EMAIL & NEWSLETTER

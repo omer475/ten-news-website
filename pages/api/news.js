@@ -12,7 +12,15 @@ export default function handler(req, res) {
   }
 
   try {
-    // Get today's date
+    // PRIORITY 1: Check for live news in public folder
+    const liveNewsPath = path.join(process.cwd(), 'public', 'livenews_data.json');
+    if (fs.existsSync(liveNewsPath)) {
+      const newsData = JSON.parse(fs.readFileSync(liveNewsPath, 'utf8'));
+      console.log(`✅ Serving LIVE news data with images from: public/livenews_data.json`);
+      return res.status(200).json(newsData);
+    }
+    
+    // PRIORITY 2: Get today's date and check for daily digest
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '_');
     
@@ -29,8 +37,22 @@ export default function handler(req, res) {
       console.log(`⚠️ Today's file not found: ${newsFileName}`);
     }
     
-    // If today's file doesn't exist, find the most recent one
+    // PRIORITY 3: Find the most recent live news file
     const files = fs.readdirSync(process.cwd());
+    const liveNewsFiles = files
+      .filter(file => file.startsWith('livenews_data_') && file.endsWith('.json'))
+      .sort()
+      .reverse();
+    
+    if (liveNewsFiles.length > 0) {
+      const latestLiveFile = liveNewsFiles[0];
+      const latestLivePath = path.join(process.cwd(), latestLiveFile);
+      const newsData = JSON.parse(fs.readFileSync(latestLivePath, 'utf8'));
+      console.log(`✅ Serving recent LIVE news from: ${latestLiveFile}`);
+      return res.status(200).json(newsData);
+    }
+    
+    // PRIORITY 4: Find the most recent daily digest
     const newsFiles = files
       .filter(file => file.startsWith('tennews_data_') && file.endsWith('.json'))
       .sort()

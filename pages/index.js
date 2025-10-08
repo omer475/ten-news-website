@@ -9,6 +9,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
   const [darkMode, setDarkMode] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState({});
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -107,10 +108,11 @@ export default function Home() {
               category: (article.category || 'WORLD NEWS').toUpperCase(),
               emoji: article.emoji || '📰',
               title: article.title || 'News Story',
-              summary: article.summary || 'News summary will appear here.',
+              summary: article.summary || article.rewritten_text || 'News summary will appear here.',
               details: article.details || [],
               source: article.source || 'Ten News',
-              url: article.url || '#'
+              url: article.url || '#',
+              images: article.images ? article.images : (article.urlToImage || article.image ? [article.urlToImage || article.image] : [])
               };
               
               // Add timeline data (from generator or create fallback)
@@ -1648,8 +1650,146 @@ export default function Home() {
                       height: '100%',
                       justifyContent: 'center',
                       alignItems: 'flex-start',
-                      paddingTop: '5vh'
+                      paddingTop: '3vh'
                     }}>
+                      {/* News Image Carousel - Full Width Mobile Optimized */}
+                      {story.images && story.images.length > 0 && (
+                        <div style={{
+                          width: '100vw',
+                          height: '260px',
+                          marginLeft: 'calc(-50vw + 50%)',
+                          marginBottom: '24px',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          background: '#000'
+                        }}>
+                          {/* Image Container */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              width: '100%',
+                              height: '100%',
+                              transform: `translateX(-${(currentImageIndex[index] || 0) * 100}%)`,
+                              transition: 'transform 0.3s ease-out'
+                            }}
+                            onTouchStart={(e) => {
+                              const startX = e.touches[0].clientX;
+                              const imgIndex = currentImageIndex[index] || 0;
+                              
+                              const handleTouchMove = (moveEvent) => {
+                                const currentX = moveEvent.touches[0].clientX;
+                                const diff = startX - currentX;
+                                
+                                // Only prevent default if horizontal swipe (prevents interfering with story navigation)
+                                if (Math.abs(diff) > 30) {
+                                  moveEvent.preventDefault();
+                                }
+                              };
+                              
+                              const handleTouchEnd = (endEvent) => {
+                                const endX = endEvent.changedTouches[0].clientX;
+                                const diff = startX - endX;
+                                
+                                // Swipe left (next image)
+                                if (diff > 50 && imgIndex < story.images.length - 1) {
+                                  setCurrentImageIndex(prev => ({
+                                    ...prev,
+                                    [index]: imgIndex + 1
+                                  }));
+                                }
+                                // Swipe right (previous image)
+                                else if (diff < -50 && imgIndex > 0) {
+                                  setCurrentImageIndex(prev => ({
+                                    ...prev,
+                                    [index]: imgIndex - 1
+                                  }));
+                                }
+                                
+                                document.removeEventListener('touchmove', handleTouchMove);
+                                document.removeEventListener('touchend', handleTouchEnd);
+                              };
+                              
+                              document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                              document.addEventListener('touchend', handleTouchEnd);
+                            }}
+                          >
+                            {story.images.map((imgUrl, imgIdx) => (
+                              <img 
+                                key={imgIdx}
+                                src={imgUrl} 
+                                alt={`${story.title} - Image ${imgIdx + 1}`}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  flexShrink: 0,
+                                  display: 'block'
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            ))}
+                          </div>
+                          
+                          {/* Image Counter & Dots - Only show if multiple images */}
+                          {story.images.length > 1 && (
+                            <>
+                              {/* Image Counter */}
+                              <div style={{
+                                position: 'absolute',
+                                top: '12px',
+                                right: '12px',
+                                background: 'rgba(0, 0, 0, 0.6)',
+                                color: 'white',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                backdropFilter: 'blur(4px)',
+                                WebkitBackdropFilter: 'blur(4px)',
+                                zIndex: 2
+                              }}>
+                                {(currentImageIndex[index] || 0) + 1} / {story.images.length}
+                              </div>
+                              
+                              {/* Dots Indicator */}
+                              <div style={{
+                                position: 'absolute',
+                                bottom: '12px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                display: 'flex',
+                                gap: '6px',
+                                zIndex: 2
+                              }}>
+                                {story.images.map((_, dotIdx) => (
+                                  <div
+                                    key={dotIdx}
+                                    onClick={() => {
+                                      setCurrentImageIndex(prev => ({
+                                        ...prev,
+                                        [index]: dotIdx
+                                      }));
+                                    }}
+                                    style={{
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      background: (currentImageIndex[index] || 0) === dotIdx 
+                                        ? 'white' 
+                                        : 'rgba(255, 255, 255, 0.4)',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.3s ease',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="news-category" style={{
                         background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
                                    story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :

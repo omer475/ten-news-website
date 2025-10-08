@@ -1,7 +1,14 @@
-# TEN NEWS - LIVE NEWS GENERATOR
-# Real-time news fetching using NewsAPI
+# TEN NEWS - LIVE NEWS GENERATOR (ENHANCED)
+# Real-time news fetching with full text extraction, AI scoring, and smart deduplication
 # This works ALONGSIDE the daily 10-news digest generator
-# Features: Live news updates, images included, multiple categories
+# 
+# NEW FEATURES:
+# 1. Full text extraction via web scraping
+# 2. Time-based filtering (fetch news since last run)
+# 3. Smart image selection from duplicates
+# 4. AI importance/world-relevance/interestingness scoring
+# 5. Unlimited emoji selection with AI
+# 6. Claude AI rewriting (40-50 words) before research enhancement
 
 import requests
 import json
@@ -10,50 +17,54 @@ import time
 import os
 import pytz
 import re
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+import google.generativeai as genai
 
 # ==================== API KEY CONFIGURATION ====================
 NEWSAPI_KEY = os.environ.get('NEWSAPI_KEY', 'your-newsapi-key-here')
 CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', 'your-api-key-here')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
-# Claude Model for article enhancement
+# Model Configuration
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
+GEMINI_MODEL = "gemini-1.5-flash-latest"  # Fast and cost-effective for scoring
 
-# ==================== NEWS CATEGORIES ====================
-# NewsAPI supports various categories
-NEWS_CATEGORIES = [
-    'general',
-    'business', 
-    'technology',
-    'science',
-    'health',
-    'sports',
-    'entertainment'
-]
+# Configure Gemini
+if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
+    genai.configure(api_key=GOOGLE_API_KEY)
 
-# Top news sources for quality content
+# ==================== TIMESTAMP TRACKING ====================
+TIMESTAMP_FILE = "livenews_last_run.json"
+
+def get_last_run_time():
+    """Get timestamp of last run"""
+    try:
+        if os.path.exists(TIMESTAMP_FILE):
+            with open(TIMESTAMP_FILE, 'r') as f:
+                data = json.load(f)
+                return datetime.fromisoformat(data['last_run'])
+    except Exception as e:
+        print(f"⚠️ Could not read last run time: {str(e)}")
+    
+    # Default to 15 minutes ago
+    return datetime.now() - timedelta(minutes=15)
+
+def save_last_run_time():
+    """Save current timestamp"""
+    try:
+        with open(TIMESTAMP_FILE, 'w') as f:
+            json.dump({'last_run': datetime.now().isoformat()}, f)
+    except Exception as e:
+        print(f"⚠️ Could not save run time: {str(e)}")
+
+# ==================== PREMIUM NEWS SOURCES ====================
 PREMIUM_SOURCES = [
-    'bbc-news',
-    'reuters',
-    'cnn',
-    'the-wall-street-journal',
-    'bloomberg',
-    'the-verge',
-    'techcrunch',
-    'wired',
-    'associated-press',
-    'abc-news',
-    'al-jazeera-english',
-    'ars-technica',
-    'axios',
-    'fortune',
-    'the-guardian-uk',
-    'national-geographic',
-    'newsweek',
-    'nbc-news',
-    'politico',
-    'time',
-    'usa-today',
-    'the-washington-post'
+    'bbc-news', 'reuters', 'cnn', 'the-wall-street-journal', 'bloomberg',
+    'the-verge', 'techcrunch', 'wired', 'associated-press', 'abc-news',
+    'al-jazeera-english', 'ars-technica', 'axios', 'fortune',
+    'the-guardian-uk', 'national-geographic', 'newsweek', 'nbc-news',
+    'politico', 'time', 'usa-today', 'the-washington-post'
 ]
 
 # ==================== UTILITY FUNCTIONS ====================
@@ -68,8 +79,6 @@ def clean_text_for_json(text):
     text = text.replace('\n', ' ')
     text = text.replace('\r', ' ')
     text = text.replace('\t', ' ')
-    
-    # Remove control characters
     text = ''.join(char for char in text if ord(char) >= 32 or char == '\n')
     text = text.strip()
     
@@ -81,29 +90,92 @@ def get_formatted_timestamp():
     uk_time = datetime.now(uk_tz)
     return uk_time.strftime("%A, %B %d, %Y at %H:%M %Z")
 
-# ==================== NEWSAPI FETCHING ====================
-def fetch_top_headlines(category=None, country='us', page_size=20):
-    """Fetch top headlines from NewsAPI"""
+# ==================== REQUIREMENT 1: FULL TEXT EXTRACTION ====================
+def extract_full_text(url, timeout=10):
+    """Extract full article text from URL"""
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=timeout)
+        
+        if response.status_code != 200:
+            return None
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Remove unwanted elements
+        for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside', 'iframe']):
+            tag.decompose()
+        
+        # Try common article content selectors
+        article_selectors = [
+            'article',
+            '[class*="article-content"]',
+            '[class*="article-body"]',
+            '[class*="story-content"]',
+            '[class*="post-content"]',
+            '[itemprop="articleBody"]',
+            '.content',
+            'main'
+        ]
+        
+        article_text = ""
+        for selector in article_selectors:
+            elements = soup.select(selector)
+            if elements:
+                # Get all paragraphs within the article
+                paragraphs = elements[0].find_all('p')
+                if paragraphs:
+                    article_text = ' '.join([p.get_text().strip() for p in paragraphs if p.get_text().strip()])
+                    break
+        
+        # Fallback: get all paragraphs
+        if not article_text or len(article_text) < 200:
+            paragraphs = soup.find_all('p')
+            article_text = ' '.join([p.get_text().strip() for p in paragraphs if len(p.get_text().strip()) > 30])
+        
+        # Clean up
+        article_text = ' '.join(article_text.split())  # Normalize whitespace
+        
+        # Validation: must be substantial
+        if len(article_text) < 300:  # Minimum 300 characters for valid article
+            return None
+        
+        return article_text[:5000]  # Limit to 5000 characters
+        
+    except Exception as e:
+        print(f"      ⚠️ Extraction failed: {str(e)[:50]}")
+        return None
+
+# ==================== REQUIREMENT 2: TIME-BASED FILTERING ====================
+def fetch_newsapi_since_last_run(last_run_time):
+    """Fetch news from NewsAPI since last run time"""
     if not NEWSAPI_KEY or NEWSAPI_KEY == 'your-newsapi-key-here':
         print("❌ NewsAPI key not configured!")
         return []
     
-    url = "https://newsapi.org/v2/top-headlines"
+    url = "https://newsapi.org/v2/everything"
+    
+    # Calculate time difference
+    now = datetime.now()
+    minutes_ago = int((now - last_run_time).total_seconds() / 60)
+    print(f"📅 Fetching news from last {minutes_ago} minutes...")
+    
+    # Format dates for API
+    from_date = last_run_time.strftime('%Y-%m-%dT%H:%M:%S')
+    
+    # Fetch from premium sources
+    sources_str = ','.join(PREMIUM_SOURCES[:20])  # API limit
     
     params = {
         'apiKey': NEWSAPI_KEY,
-        'pageSize': page_size,
-        'language': 'en'
+        'sources': sources_str,
+        'from': from_date,
+        'sortBy': 'publishedAt',
+        'language': 'en',
+        'pageSize': 100  # Maximum allowed
     }
-    
-    if category:
-        params['category'] = category
-        print(f"📰 Fetching {category} news...")
-    else:
-        print(f"📰 Fetching general headlines...")
-    
-    if country:
-        params['country'] = country
     
     try:
         response = requests.get(url, params=params, timeout=15)
@@ -111,14 +183,8 @@ def fetch_top_headlines(category=None, country='us', page_size=20):
         if response.status_code == 200:
             data = response.json()
             articles = data.get('articles', [])
-            print(f"   ✅ Found {len(articles)} articles")
+            print(f"   ✅ Found {len(articles)} articles since last run")
             return articles
-        elif response.status_code == 426:
-            print(f"   ⚠️ Upgrade required - using free tier limits")
-            return []
-        elif response.status_code == 429:
-            print(f"   ⚠️ Rate limit reached")
-            return []
         else:
             print(f"   ❌ Error {response.status_code}: {response.text[:200]}")
             return []
@@ -127,28 +193,26 @@ def fetch_top_headlines(category=None, country='us', page_size=20):
         print(f"   ❌ Error fetching news: {str(e)}")
         return []
 
-def fetch_everything_news(query, from_date=None, sort_by='publishedAt', page_size=20):
-    """Fetch news using everything endpoint with query"""
+def fetch_breaking_news_everywhere():
+    """Fetch breaking/important news regardless of time"""
     if not NEWSAPI_KEY or NEWSAPI_KEY == 'your-newsapi-key-here':
-        print("❌ NewsAPI key not configured!")
         return []
     
     url = "https://newsapi.org/v2/everything"
     
-    # Default to last 24 hours if no date provided
-    if not from_date:
-        from_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    # Search for breaking/important news from last 2 hours
+    from_date = (datetime.now() - timedelta(hours=2)).strftime('%Y-%m-%dT%H:%M:%S')
     
     params = {
         'apiKey': NEWSAPI_KEY,
-        'q': query,
+        'q': 'breaking OR urgent OR crisis OR major',
         'from': from_date,
-        'sortBy': sort_by,
+        'sortBy': 'publishedAt',
         'language': 'en',
-        'pageSize': page_size
+        'pageSize': 50
     }
     
-    print(f"🔍 Searching for: '{query}'...")
+    print(f"🚨 Searching for breaking news...")
     
     try:
         response = requests.get(url, params=params, timeout=15)
@@ -156,114 +220,264 @@ def fetch_everything_news(query, from_date=None, sort_by='publishedAt', page_siz
         if response.status_code == 200:
             data = response.json()
             articles = data.get('articles', [])
-            print(f"   ✅ Found {len(articles)} articles")
+            print(f"   ✅ Found {len(articles)} breaking news articles")
             return articles
         else:
-            print(f"   ❌ Error {response.status_code}")
             return []
             
     except Exception as e:
         print(f"   ❌ Error: {str(e)}")
         return []
 
-def fetch_from_premium_sources(page_size=50):
-    """Fetch news from premium sources"""
-    if not NEWSAPI_KEY or NEWSAPI_KEY == 'your-newsapi-key-here':
-        print("❌ NewsAPI key not configured!")
-        return []
+# ==================== REQUIREMENT 3: SMART IMAGE SELECTION ====================
+def smart_deduplicate_with_best_images(articles):
+    """
+    Deduplicate articles and select the best image from duplicates
+    Returns: unique articles with best available images
+    """
+    print(f"\n🔍 Smart deduplication with image optimization...")
     
-    url = "https://newsapi.org/v2/top-headlines"
-    
-    # Join sources with comma
-    sources_str = ','.join(PREMIUM_SOURCES[:20])  # NewsAPI limits to 20 sources
-    
-    params = {
-        'apiKey': NEWSAPI_KEY,
-        'sources': sources_str,
-        'pageSize': page_size
-    }
-    
-    print(f"🌟 Fetching from {len(PREMIUM_SOURCES[:20])} premium sources...")
-    
-    try:
-        response = requests.get(url, params=params, timeout=15)
-        
-        if response.status_code == 200:
-            data = response.json()
-            articles = data.get('articles', [])
-            print(f"   ✅ Found {len(articles)} articles from premium sources")
-            return articles
-        else:
-            print(f"   ❌ Error {response.status_code}")
-            return []
-            
-    except Exception as e:
-        print(f"   ❌ Error: {str(e)}")
-        return []
-
-# ==================== ARTICLE PROCESSING ====================
-def process_newsapi_article(article):
-    """Process and clean NewsAPI article"""
-    processed = {
-        'title': clean_text_for_json(article.get('title', '')),
-        'description': clean_text_for_json(article.get('description', '')),
-        'url': article.get('url', ''),
-        'image': article.get('urlToImage', ''),
-        'publishedAt': article.get('publishedAt', ''),
-        'source': article.get('source', {}).get('name', 'Unknown'),
-        'author': clean_text_for_json(article.get('author', '')),
-        'content': clean_text_for_json(article.get('content', ''))
-    }
-    
-    # Remove articles with missing critical data
-    if not processed['title'] or not processed['url']:
-        return None
-    
-    # Ensure image URL is valid
-    if processed['image'] and not processed['image'].startswith('http'):
-        processed['image'] = ''
-    
-    return processed
-
-def deduplicate_articles(articles):
-    """Remove duplicate articles based on URL and title similarity"""
-    seen_urls = set()
-    seen_titles = set()
-    unique_articles = []
+    # Group similar articles
+    article_groups = {}
     
     for article in articles:
-        url = article.get('url', '').lower()
         title = article.get('title', '').lower()
+        url = article.get('url', '').lower()
         
-        # Skip if URL already seen
-        if url in seen_urls:
-            continue
+        # Create a normalized title for grouping
+        # Remove common words and special chars
+        title_normalized = re.sub(r'[^a-z0-9\s]', '', title)
+        title_words = set(title_normalized.split())
         
-        # Skip if very similar title exists
-        title_unique = True
-        for seen_title in seen_titles:
-            # Simple similarity check
-            if title in seen_title or seen_title in title:
-                title_unique = False
-                break
+        # Find matching group
+        matched_group = None
+        for group_key, group_articles in article_groups.items():
+            group_words = set(group_key.split())
+            
+            # Check if titles have significant overlap (>60%)
+            if title_words and group_words:
+                overlap = len(title_words & group_words) / max(len(title_words), len(group_words))
+                if overlap > 0.6:
+                    matched_group = group_key
+                    break
         
-        if not title_unique:
-            continue
-        
-        seen_urls.add(url)
-        seen_titles.add(title)
-        unique_articles.append(article)
+        if matched_group:
+            article_groups[matched_group].append(article)
+        else:
+            article_groups[title_normalized] = [article]
     
+    # Select best article from each group
+    unique_articles = []
+    
+    for group_key, group in article_groups.items():
+        if len(group) == 1:
+            unique_articles.append(group[0])
+        else:
+            # Multiple articles - choose best
+            # Priority: 1) Has image, 2) Longer description, 3) More reputable source
+            
+            # First, collect all good images from group
+            available_images = [a.get('urlToImage', '') for a in group if a.get('urlToImage')]
+            best_image = available_images[0] if available_images else ''
+            
+            # Select best article by content quality
+            best_article = max(group, key=lambda a: (
+                len(a.get('description', '')),
+                len(a.get('content', '')),
+                1 if a.get('source', {}).get('name', '') in ['Reuters', 'BBC News', 'Bloomberg'] else 0
+            ))
+            
+            # If best article doesn't have image, use best available image
+            if not best_article.get('urlToImage') and best_image:
+                best_article['urlToImage'] = best_image
+                print(f"   📸 Enhanced image for: {best_article.get('title', '')[:50]}...")
+            
+            unique_articles.append(best_article)
+    
+    print(f"   ✅ Reduced from {len(articles)} to {len(unique_articles)} articles (kept best images)")
     return unique_articles
 
-# ==================== AI ENHANCEMENT ====================
-def call_claude_api(prompt, task_description):
-    """Call Claude API for article enhancement"""
-    if not CLAUDE_API_KEY or CLAUDE_API_KEY == 'your-api-key-here':
-        print("⚠️ Claude API key not configured - skipping AI enhancement")
+# ==================== REQUIREMENT 4 & 5: AI SCORING AND EMOJI ====================
+def score_articles_with_gemini(articles):
+    """
+    Use Gemini AI to score articles on:
+    - Importance (1-10)
+    - World Relevance (1-10)
+    - Interestingness (1-10)
+    Also select best emoji from ALL available emojis
+    """
+    if not GOOGLE_API_KEY or GOOGLE_API_KEY == 'your-google-api-key-here':
+        print("⚠️ Google API key not configured - using default scores")
         return None
     
-    print(f"🤖 {task_description}...")
+    print(f"\n🤖 Scoring {len(articles)} articles with Gemini AI...")
+    
+    # Prepare articles for AI (max 50 at a time for efficiency)
+    articles_batch = articles[:50]
+    
+    articles_info = []
+    for i, article in enumerate(articles_batch, 1):
+        articles_info.append({
+            'id': i,
+            'title': article.get('title', '')[:150],
+            'description': article.get('description', '')[:300],
+            'full_text_preview': article.get('full_text', '')[:500] if article.get('full_text') else '',
+            'source': article.get('source', {}).get('name', '')
+        })
+    
+    prompt = f"""Analyze these {len(articles_info)} news articles and score each one:
+
+SCORING CRITERIA:
+1. **Importance** (1-10): How significant is this news? Breaking events = 10, minor updates = 1-3
+2. **World Relevance** (1-10): How relevant to global audience? Major world events = 10, local news = 1-3
+3. **Interestingness** (1-10): How engaging/compelling? Fascinating stories = 10, mundane = 1-3
+
+EMOJI SELECTION:
+- Choose the SINGLE BEST emoji from ALL available emojis (not just category-based)
+- The emoji should perfectly capture the essence of the story
+- Examples: 🚨 breaking news, 🏆 achievements, 💰 finance, 🌍 global, ⚡ energy, 🎯 target, 🔥 trending, etc.
+
+QUALITY THRESHOLD:
+- Only articles scoring 7.0+ overall should be considered newsworthy
+
+Return ONLY valid JSON (no markdown):
+{{
+  "scored_articles": [
+    {{
+      "id": 1,
+      "importance": 9,
+      "world_relevance": 8,
+      "interestingness": 7,
+      "overall_score": 8.0,
+      "emoji": "🚨",
+      "category": "World News",
+      "brief_reasoning": "Why these scores - max 20 words"
+    }}
+  ]
+}}
+
+ARTICLES:
+{json.dumps(articles_info, indent=2)}"""
+    
+    try:
+        model = genai.GenerativeModel(GEMINI_MODEL)
+        response = model.generate_content(prompt)
+        
+        if response.text:
+            # Parse JSON from response
+            response_text = response.text.strip()
+            
+            # Remove markdown code blocks if present
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            parsed = json.loads(response_text)
+            
+            if 'scored_articles' in parsed:
+                scored = parsed['scored_articles']
+                print(f"   ✅ Successfully scored {len(scored)} articles")
+                return scored
+                
+    except Exception as e:
+        print(f"   ⚠️ Gemini API error: {str(e)[:100]}")
+    
+    return None
+
+def apply_ai_scores(articles, scores, score_threshold=7.0):
+    """
+    Apply AI scores to articles and filter by threshold
+    Returns: articles meeting quality threshold, sorted by score
+    """
+    if not scores:
+        # Fallback: assign default scores
+        for article in articles:
+            article['importance'] = 5
+            article['world_relevance'] = 5
+            article['interestingness'] = 5
+            article['overall_score'] = 5.0
+            article['emoji'] = '📰'
+            article['category'] = 'World News'
+        return articles
+    
+    # Create score map
+    score_map = {score['id']: score for score in scores}
+    
+    # Apply scores
+    scored_articles = []
+    for i, article in enumerate(articles[:50], 1):  # Match batch size
+        if i in score_map:
+            score_data = score_map[i]
+            
+            # Calculate weighted overall score
+            # Importance: 40%, World Relevance: 30%, Interestingness: 30%
+            overall = (
+                score_data.get('importance', 5) * 0.40 +
+                score_data.get('world_relevance', 5) * 0.30 +
+                score_data.get('interestingness', 5) * 0.30
+            )
+            
+            article['importance'] = score_data.get('importance', 5)
+            article['world_relevance'] = score_data.get('world_relevance', 5)
+            article['interestingness'] = score_data.get('interestingness', 5)
+            article['overall_score'] = round(overall, 2)
+            article['emoji'] = score_data.get('emoji', '📰')
+            article['category'] = score_data.get('category', 'World News')
+            article['ai_reasoning'] = score_data.get('brief_reasoning', '')
+            
+            # Filter by threshold
+            if overall >= score_threshold:
+                scored_articles.append(article)
+        else:
+            # Articles beyond batch - assign default
+            article['importance'] = 5
+            article['world_relevance'] = 5
+            article['interestingness'] = 5
+            article['overall_score'] = 5.0
+            article['emoji'] = '📰'
+            article['category'] = 'World News'
+    
+    # Sort by overall score (highest first)
+    scored_articles.sort(key=lambda x: x['overall_score'], reverse=True)
+    
+    print(f"   ✅ {len(scored_articles)} articles meet quality threshold ({score_threshold}+)")
+    
+    return scored_articles
+
+# ==================== REQUIREMENT 6: CLAUDE AI REWRITING ====================
+def rewrite_article_with_claude(article):
+    """
+    Rewrite article using Claude AI
+    Must be 40-50 words based on full text
+    """
+    if not CLAUDE_API_KEY or CLAUDE_API_KEY == 'your-api-key-here':
+        return None
+    
+    title = article.get('title', '')
+    full_text = article.get('full_text', '')
+    
+    if not full_text:
+        return None
+    
+    prompt = f"""You are a professional news writer. Rewrite this news article.
+
+REQUIREMENTS:
+1. **STRICT WORD COUNT: Exactly 40-50 words** (count every word)
+2. Read the FULL TEXT carefully to understand the complete story
+3. Write in clear, engaging news style
+4. Focus on the most important facts
+5. DO NOT add bold markup - plain text only
+
+ORIGINAL TITLE: {title}
+
+FULL ARTICLE TEXT:
+{full_text[:3000]}
+
+Return ONLY the rewritten article text (40-50 words, no title, no extra formatting)."""
     
     url = "https://api.anthropic.com/v1/messages"
     headers = {
@@ -274,8 +488,8 @@ def call_claude_api(prompt, task_description):
     
     data = {
         "model": CLAUDE_MODEL,
-        "max_tokens": 2000,
-        "temperature": 0.3,
+        "max_tokens": 500,
+        "temperature": 0.5,
         "messages": [{"role": "user", "content": prompt}]
     }
     
@@ -285,197 +499,214 @@ def call_claude_api(prompt, task_description):
         if response.status_code == 200:
             result = response.json()
             if 'content' in result and len(result['content']) > 0:
-                return result['content'][0]['text']
+                rewritten = result['content'][0]['text'].strip()
+                
+                # Validate word count
+                word_count = len(rewritten.split())
+                if 40 <= word_count <= 50:
+                    return rewritten
+                else:
+                    print(f"      ⚠️ Word count {word_count} outside range, skipping")
+                    return None
         else:
-            print(f"   ⚠️ Claude API error {response.status_code}")
+            print(f"      ⚠️ Claude API error {response.status_code}")
             
     except Exception as e:
-        print(f"   ⚠️ Claude API error: {str(e)}")
+        print(f"      ⚠️ Error: {str(e)[:50]}")
     
     return None
 
-def parse_json_response(response_text):
-    """Parse JSON from Claude response"""
-    if not response_text:
+def rewrite_articles_batch(articles):
+    """Rewrite multiple articles with Claude"""
+    print(f"\n✍️  Rewriting {len(articles)} articles with Claude AI (40-50 words)...")
+    
+    rewritten_count = 0
+    
+    for i, article in enumerate(articles, 1):
+        print(f"   [{i}/{len(articles)}] {article.get('title', '')[:60]}...")
+        
+        rewritten = rewrite_article_with_claude(article)
+        
+        if rewritten:
+            article['rewritten_text'] = rewritten
+            article['word_count'] = len(rewritten.split())
+            rewritten_count += 1
+            print(f"      ✅ Rewritten ({article['word_count']} words)")
+        else:
+            print(f"      ❌ Skipping - rewrite failed")
+        
+        time.sleep(1)  # Rate limiting
+    
+    print(f"\n   ✅ Successfully rewrote {rewritten_count}/{len(articles)} articles")
+    
+    # Filter: only keep articles with successful rewrites
+    articles_with_rewrites = [a for a in articles if 'rewritten_text' in a]
+    
+    return articles_with_rewrites
+
+# ==================== MAIN PROCESSING PIPELINE ====================
+def process_newsapi_article(article):
+    """Process and clean NewsAPI article"""
+    processed = {
+        'title': clean_text_for_json(article.get('title', '')),
+        'description': clean_text_for_json(article.get('description', '')),
+        'url': article.get('url', ''),
+        'urlToImage': article.get('urlToImage', ''),
+        'publishedAt': article.get('publishedAt', ''),
+        'source': article.get('source', {}),
+        'author': clean_text_for_json(article.get('author', '')),
+        'content': clean_text_for_json(article.get('content', ''))
+    }
+    
+    # Validation
+    if not processed['title'] or not processed['url']:
         return None
     
-    response_text = response_text.strip()
+    # Ensure image URL is valid
+    if processed['urlToImage'] and not processed['urlToImage'].startswith('http'):
+        processed['urlToImage'] = ''
     
-    # Remove markdown code blocks
-    if response_text.startswith('```json'):
-        response_text = response_text[7:]
-    if response_text.startswith('```'):
-        response_text = response_text[3:]
-    if response_text.endswith('```'):
-        response_text = response_text[:-3]
-    response_text = response_text.strip()
-    
-    try:
-        return json.loads(response_text)
-    except json.JSONDecodeError:
-        # Try to extract JSON from response
-        start_idx = response_text.find('{')
-        end_idx = response_text.rfind('}') + 1
-        if start_idx >= 0 and end_idx > start_idx:
-            try:
-                return json.loads(response_text[start_idx:end_idx])
-            except:
-                pass
-    
-    return None
+    return processed
 
-def categorize_articles_with_ai(articles):
-    """Use AI to categorize and enhance articles"""
-    if not articles:
-        return []
-    
-    # Prepare articles for AI
-    articles_info = []
-    for i, article in enumerate(articles[:30], 1):  # Process max 30 articles
-        articles_info.append({
-            'id': i,
-            'title': article.get('title', ''),
-            'description': article.get('description', ''),
-            'source': article.get('source', '')
-        })
-    
-    prompt = f"""Analyze these {len(articles_info)} live news articles and categorize them.
-
-For each article, assign ONE category:
-- World News (politics, international affairs, conflicts)
-- Business (markets, companies, economy, finance)
-- Technology (tech companies, innovations, gadgets, AI)
-- Science (research, discoveries, space, environment)
-- Health (medical, wellness, pandemics, treatments)
-- Sports (games, athletes, tournaments)
-- Entertainment (movies, music, celebrities, culture)
-
-Also rate each article's importance (1-10, where 10 is breaking major news).
-
-Return ONLY this JSON:
-{{
-  "categorized_articles": [
-    {{
-      "id": 1,
-      "category": "Technology",
-      "importance": 8,
-      "emoji": "💻",
-      "reasoning": "Brief reason for category"
-    }}
-  ]
-}}
-
-ARTICLES:
-{json.dumps(articles_info, indent=2)}"""
-    
-    response = call_claude_api(prompt, "Categorizing articles")
-    
-    if response:
-        parsed = parse_json_response(response)
-        if parsed and 'categorized_articles' in parsed:
-            return parsed['categorized_articles']
-    
-    return []
-
-# ==================== MAIN LIVE NEWS GENERATION ====================
-def generate_live_news(num_articles=30, use_categories=True, use_ai_enhancement=True):
-    """Generate live news feed"""
-    print("🔴 TEN NEWS - LIVE NEWS GENERATOR")
+def generate_live_news_enhanced():
+    """
+    Generate live news with ALL 6 requirements
+    """
+    print("🔴 TEN NEWS - LIVE NEWS GENERATOR (ENHANCED)")
     print("=" * 60)
     print(f"⏰ {get_formatted_timestamp()}")
     print("=" * 60)
     
-    all_articles = []
+    # REQUIREMENT 2: Get last run time
+    last_run = get_last_run_time()
+    print(f"📅 Last run: {last_run.strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # Strategy 1: Fetch from premium sources
-    premium_articles = fetch_from_premium_sources(page_size=50)
-    for article in premium_articles:
-        processed = process_newsapi_article(article)
-        if processed:
-            all_articles.append(processed)
+    # Fetch news since last run
+    time_based_articles = fetch_newsapi_since_last_run(last_run)
     
-    time.sleep(1)  # Rate limiting
+    # Also fetch breaking news
+    time.sleep(2)
+    breaking_articles = fetch_breaking_news_everywhere()
     
-    # Strategy 2: Fetch by categories
-    if use_categories:
-        for category in ['business', 'technology', 'science', 'health']:
-            category_articles = fetch_top_headlines(category=category, country=None, page_size=10)
-            for article in category_articles:
-                processed = process_newsapi_article(article)
-                if processed:
-                    all_articles.append(processed)
-            time.sleep(1)  # Rate limiting
+    # Combine all sources
+    all_articles = time_based_articles + breaking_articles
     
-    # Strategy 3: Search for trending topics
-    trending_queries = [
-        'breaking news',
-        'AI technology',
-        'stock market',
-        'climate change',
-        'election'
-    ]
+    print(f"\n📊 Total articles collected: {len(all_articles)}")
     
-    for query in trending_queries:
-        search_articles = fetch_everything_news(query, page_size=5)
-        for article in search_articles:
-            processed = process_newsapi_article(article)
-            if processed:
-                all_articles.append(processed)
-        time.sleep(1)  # Rate limiting
-    
-    print(f"\n📊 Collected {len(all_articles)} total articles")
-    
-    # Deduplicate
-    unique_articles = deduplicate_articles(all_articles)
-    print(f"📊 After deduplication: {len(unique_articles)} unique articles")
-    
-    if not unique_articles:
+    if not all_articles:
         print("❌ No articles found!")
+        print("📄 Saving empty result file...")
+        
+        empty_data = {
+            'generatedAt': datetime.now().isoformat(),
+            'displayTimestamp': get_formatted_timestamp(),
+            'totalArticles': 0,
+            'articles': []
+        }
+        
+        timestamp = datetime.now().strftime('%Y_%m_%d_%H%M')
+        filename = f"livenews_data_{timestamp}.json"
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(empty_data, f, ensure_ascii=False, indent=2)
+        
+        save_last_run_time()
+        return filename
+    
+    # Process articles
+    processed = []
+    for article in all_articles:
+        proc = process_newsapi_article(article)
+        if proc:
+            processed.append(proc)
+    
+    print(f"📊 After processing: {len(processed)} valid articles")
+    
+    # REQUIREMENT 3: Smart deduplication with image selection
+    unique_articles = smart_deduplicate_with_best_images(processed)
+    
+    # REQUIREMENT 1: Extract full text for each article
+    print(f"\n📖 Extracting full text from {len(unique_articles)} articles...")
+    
+    articles_with_text = []
+    for i, article in enumerate(unique_articles, 1):
+        print(f"   [{i}/{len(unique_articles)}] {article.get('title', '')[:60]}...")
+        
+        full_text = extract_full_text(article['url'])
+        
+        if full_text:
+            article['full_text'] = full_text
+            article['full_text_length'] = len(full_text)
+            articles_with_text.append(article)
+            print(f"      ✅ Extracted {len(full_text)} characters")
+        else:
+            print(f"      ❌ Skipping - extraction failed")
+        
+        time.sleep(0.5)  # Rate limiting
+    
+    print(f"\n   ✅ Successfully extracted text from {len(articles_with_text)}/{len(unique_articles)} articles")
+    
+    if not articles_with_text:
+        print("❌ No articles with full text!")
+        save_last_run_time()
         return None
     
-    # Sort by publication date (newest first)
-    unique_articles.sort(
-        key=lambda x: x.get('publishedAt', ''), 
-        reverse=True
-    )
+    # REQUIREMENT 4 & 5: AI scoring and emoji selection
+    scores = score_articles_with_gemini(articles_with_text)
     
-    # Take top N articles
-    selected_articles = unique_articles[:num_articles]
+    # Apply scores and filter by threshold (7.0+)
+    quality_articles = apply_ai_scores(articles_with_text, scores, score_threshold=7.0)
     
-    # AI Enhancement (optional)
-    if use_ai_enhancement and CLAUDE_API_KEY != 'your-api-key-here':
-        print(f"\n🤖 Enhancing {len(selected_articles)} articles with AI...")
-        categorized = categorize_articles_with_ai(selected_articles)
+    if not quality_articles:
+        print("❌ No articles meet quality threshold!")
+        print("📄 Saving empty result file...")
         
-        # Merge AI categorization with articles
-        if categorized:
-            category_map = {item['id']: item for item in categorized}
-            for i, article in enumerate(selected_articles, 1):
-                if i in category_map:
-                    ai_data = category_map[i]
-                    article['category'] = ai_data.get('category', 'World News')
-                    article['importance'] = ai_data.get('importance', 5)
-                    article['emoji'] = ai_data.get('emoji', '📰')
-                else:
-                    article['category'] = 'World News'
-                    article['importance'] = 5
-                    article['emoji'] = '📰'
-    else:
-        # Default categorization without AI
-        print(f"\n📋 Using default categorization for {len(selected_articles)} articles...")
-        for article in selected_articles:
-            article['category'] = 'World News'
-            article['importance'] = 5
-            article['emoji'] = '📰'
+        empty_data = {
+            'generatedAt': datetime.now().isoformat(),
+            'displayTimestamp': get_formatted_timestamp(),
+            'totalArticles': 0,
+            'articles': []
+        }
+        
+        timestamp = datetime.now().strftime('%Y_%m_%d_%H%M')
+        filename = f"livenews_data_{timestamp}.json"
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(empty_data, f, ensure_ascii=False, indent=2)
+        
+        save_last_run_time()
+        return filename
+    
+    print(f"\n📊 Articles meeting quality threshold: {len(quality_articles)}")
+    print(f"📊 Score range: {quality_articles[-1]['overall_score']:.1f} - {quality_articles[0]['overall_score']:.1f}")
+    
+    # REQUIREMENT 6: Claude AI rewriting
+    final_articles = rewrite_articles_batch(quality_articles)
+    
+    if not final_articles:
+        print("❌ No articles successfully rewritten!")
+        save_last_run_time()
+        return None
+    
+    print(f"\n✅ Final article count: {len(final_articles)}")
     
     # Prepare final data structure
     live_news_data = {
         'generatedAt': datetime.now().isoformat(),
         'generatedAtUK': datetime.now(pytz.timezone('Europe/London')).isoformat(),
         'displayTimestamp': get_formatted_timestamp(),
-        'totalArticles': len(selected_articles),
-        'source': 'NewsAPI Live Feed',
-        'articles': selected_articles
+        'totalArticles': len(final_articles),
+        'source': 'NewsAPI Live Feed (Enhanced)',
+        'quality_threshold': 7.0,
+        'features': [
+            'Full text extraction',
+            'Time-based filtering',
+            'Smart image selection',
+            'AI importance scoring',
+            'Unlimited emoji selection',
+            'Claude AI rewriting (40-50 words)'
+        ],
+        'articles': final_articles
     }
     
     # Save to file
@@ -486,13 +717,16 @@ def generate_live_news(num_articles=30, use_categories=True, use_ai_enhancement=
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(live_news_data, f, ensure_ascii=False, indent=2)
         
-        print(f"\n✅ SUCCESS! Saved: {filename}")
-        print(f"📰 Total articles: {len(selected_articles)}")
-        print(f"🖼️  Articles with images: {sum(1 for a in selected_articles if a.get('image'))}")
+        print(f"\n{'='*60}")
+        print(f"✅ SUCCESS! Saved: {filename}")
+        print(f"📰 Total articles: {len(final_articles)}")
+        print(f"🖼️  Articles with images: {sum(1 for a in final_articles if a.get('urlToImage'))}")
+        print(f"📖 All articles have full text extraction")
+        print(f"✍️  All articles rewritten by Claude AI (40-50 words)")
         
-        # Show category breakdown
+        # Show category and score breakdown
         categories = {}
-        for article in selected_articles:
+        for article in final_articles:
             cat = article.get('category', 'Unknown')
             categories[cat] = categories.get(cat, 0) + 1
         
@@ -500,54 +734,43 @@ def generate_live_news(num_articles=30, use_categories=True, use_ai_enhancement=
         for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
             print(f"   {cat}: {count} articles")
         
+        print(f"\n📊 Top 5 articles by score:")
+        for i, article in enumerate(final_articles[:5], 1):
+            print(f"   {i}. [{article['overall_score']}] {article['emoji']} {article['title'][:60]}...")
+        
+        # Update last run time
+        save_last_run_time()
+        
+        print(f"\n⏰ Next run will fetch news from: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 60)
+        
         return filename
         
     except Exception as e:
         print(f"❌ Error saving file: {str(e)}")
         return None
 
-# ==================== CONTINUOUS LIVE FEED ====================
-def run_continuous_live_feed(interval_minutes=15):
-    """Run live news generator continuously"""
-    print("🔴 STARTING CONTINUOUS LIVE NEWS FEED")
-    print(f"⏰ Will update every {interval_minutes} minutes")
-    print("⏹️  Press Ctrl+C to stop\n")
-    
-    while True:
-        try:
-            generate_live_news(num_articles=30, use_ai_enhancement=True)
-            print(f"\n⏳ Waiting {interval_minutes} minutes until next update...")
-            time.sleep(interval_minutes * 60)
-            
-        except KeyboardInterrupt:
-            print("\n⏹️  Stopping live feed...")
-            break
-        except Exception as e:
-            print(f"❌ Error in live feed: {str(e)}")
-            print(f"⏳ Waiting 5 minutes before retry...")
-            time.sleep(300)
-
 # ==================== MAIN ====================
 if __name__ == "__main__":
-    print("TEN NEWS - LIVE NEWS GENERATOR")
+    print("TEN NEWS - LIVE NEWS GENERATOR (ENHANCED)")
     print("=" * 60)
-    print("This generator works ALONGSIDE your daily 10-news digest")
-    print("It provides real-time news updates with images from NewsAPI")
+    print("NEW FEATURES:")
+    print("✅ Full text extraction via web scraping")
+    print("✅ Time-based filtering (only new news since last run)")
+    print("✅ Smart image selection from duplicate articles")
+    print("✅ AI scoring (importance + world relevance + interestingness)")
+    print("✅ Unlimited emoji selection (best emoji from all available)")
+    print("✅ Claude AI rewriting (40-50 words)")
     print("=" * 60)
-    print("\nOptions:")
-    print("1. Generate live news once (30 articles)")
-    print("2. Generate live news once (50 articles)")
-    print("3. Run continuous feed (updates every 15 min)")
-    print("4. Run continuous feed (updates every 30 min)")
+    print("\nStarting live news generation...")
+    print("This may take 8-10 minutes depending on article count.\n")
     
-    choice = input("\nEnter choice (1-4) or press Enter for option 1: ").strip()
+    result = generate_live_news_enhanced()
     
-    if choice == '2':
-        generate_live_news(num_articles=50)
-    elif choice == '3':
-        run_continuous_live_feed(interval_minutes=15)
-    elif choice == '4':
-        run_continuous_live_feed(interval_minutes=30)
+    if result:
+        print(f"\n🎉 Live news generation complete!")
+        print(f"📄 Output file: {result}")
+        print(f"\n💡 Next step: Run research enhancer to add bold, details, timeline, citations")
+        print(f"   Command: python3 news-research-enhancer.py {result}")
     else:
-        generate_live_news(num_articles=30)
-
+        print(f"\n⚠️ Live news generation completed with no articles or errors.")
