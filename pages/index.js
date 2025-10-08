@@ -1635,7 +1635,7 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden' }}>
                   
-                  <div className="news-item" onClick={() => {
+                  <div className="news-item" style={{ overflow: 'hidden' }} onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
@@ -1643,51 +1643,51 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    {/* News Image - Full Width Edge to Edge, NO GAP */}
+                    {/* News Image - Full Width, Right Under Header */}
                     <div style={{
                       position: 'absolute',
                       top: '0',
                       left: '0',
                       right: '0',
-                      height: '25vh',
+                      height: '24vh',
                       background: story.urlToImage ? 'transparent' : '#9CA3AF',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1'
                     }}>
-                        {story.urlToImage ? (
-                          <img 
-                            src={story.urlToImage}
-                            alt={story.title}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              objectPosition: 'center'
-                            }}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.parentElement.style.background = '#9CA3AF';
-                            }}
-                          />
-                        ) : (
-                          <div style={{
-                            color: '#ffffff',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            textAlign: 'center',
-                            padding: '20px'
-                          }}>
-                            📸 Image Area
-                          </div>
-                        )}
+                      {story.urlToImage ? (
+                        <img 
+                          src={story.urlToImage}
+                          alt={story.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: 'center'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.style.background = '#9CA3AF';
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          color: '#ffffff',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          textAlign: 'center',
+                          padding: '20px'
+                        }}>
+                          📸 Image Area
+                        </div>
+                      )}
                     </div>
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(25vh + 12px)',
+                      paddingTop: 'calc(24vh + 16px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
@@ -1723,21 +1723,18 @@ export default function Home() {
                       {/* Title - Smaller Font */}
                       <h3 className="news-title" style={{ 
                         marginBottom: '10px',
-                        fontSize: '20px',
+                        fontSize: '18px',
                         fontWeight: '700',
                         lineHeight: '1.3'
                       }}>{story.title}</h3>
                       
-                      {/* Summary - 40-50 words, Visible */}
+                      {/* Summary - Visible and Styled */}
                       <p className="news-summary" style={{ 
-                        marginBottom: '12px',
+                        marginBottom: '16px',
                         fontSize: '15px',
                         lineHeight: '1.5',
-                        color: darkMode ? '#e5e7eb' : '#374151',
-                        fontWeight: '400'
+                        opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
-                      
-                      </div> {/* Close Content Area */}
                       
                       {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
@@ -2009,10 +2006,11 @@ export default function Home() {
                           )
                         )}
                         
-                        </div>
+                  </div>
                       </div> {/* Close fixed position container */}
-                    </div> {/* Close news-item */}
-                </div> {/* Close news-grid */}
+                    </div>
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>
