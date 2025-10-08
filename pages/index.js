@@ -1568,7 +1568,7 @@ export default function Home() {
         {currentIndex > 0 && stories[currentIndex]?.type === 'news' ? (
           <div style={{
             position: 'fixed',
-            top: '20px',
+            top: '15px',
             left: '20px',
             zIndex: 1000,
             fontSize: '18px',
@@ -1668,7 +1668,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100%',
-                      height: '40vh',
+                      height: '35vh',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : '#9CA3AF',
@@ -1708,7 +1708,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(40vh + 16px)',
+                      paddingTop: 'calc(35vh + 16px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
@@ -2037,25 +2037,6 @@ export default function Home() {
             </div>
           </div>
         ))}
-
-        {/* Progress Indicator */}
-        <div className="progress-indicator">
-          {stories.map((_, index) => (
-            <div
-              key={index}
-              className={`progress-dot ${index === currentIndex ? 'active' : ''}`}
-              onClick={() => {
-                const isPaywallActive = !user && currentIndex >= 5;
-                const isForwardNavigation = index > currentIndex; // Clicking on a higher index (forward)
-
-                // Allow backward navigation, but prevent forward navigation when paywall is active
-                if (!(isPaywallActive && isForwardNavigation)) {
-                  goToStory(index);
-                }
-              }}
-            />
-          ))}
-        </div>
 
         {/* Authentication Modal */}
         {authModal && (
