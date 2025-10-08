@@ -855,7 +855,7 @@ export default function Home() {
 
         .news-item {
           display: block;
-          padding: 24px 15px;
+          padding: 0 15px 24px 15px;
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
@@ -1459,7 +1459,7 @@ export default function Home() {
           }
           
           .news-item {
-            padding: 20px 10px;
+            padding: 0 10px 20px 10px;
             max-width: 100%;
           }
           
@@ -1568,7 +1568,7 @@ export default function Home() {
         {currentIndex > 0 && stories[currentIndex]?.type === 'news' ? (
           <div style={{
             position: 'fixed',
-            top: '15px',
+            top: '10px',
             left: '20px',
             zIndex: 1000,
             fontSize: '18px',
