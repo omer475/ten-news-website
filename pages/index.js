@@ -107,7 +107,7 @@ export default function Home() {
               category: (article.category || 'WORLD NEWS').toUpperCase(),
               emoji: article.emoji || '📰',
               title: article.title || 'News Story',
-              summary: article.summary || 'News summary will appear here.',
+              summary: article.rewritten_text || article.summary || 'News summary will appear here.',
               details: article.details || [],
               source: article.source || 'Ten News',
               url: article.url || '#',
@@ -1633,9 +1633,9 @@ export default function Home() {
                   onContinue={nextStory}
                 />
               ) : story.type === 'news' ? (
-                <div className="news-grid" style={{ overflow: 'hidden' }}>
+                <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
-                  <div className="news-item" style={{ overflow: 'hidden' }} onClick={() => {
+                  <div className="news-item" style={{ overflow: 'hidden', padding: 0 }} onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
@@ -1643,13 +1643,16 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    {/* News Image - Full Width, Right Under Header */}
+                    {/* News Image - Full Width Edge-to-Edge, NO GAPS */}
                     <div style={{
                       position: 'absolute',
                       top: '0',
                       left: '0',
                       right: '0',
-                      height: '24vh',
+                      width: '100%',
+                      height: '30vh',
+                      margin: 0,
+                      padding: 0,
                       background: story.urlToImage ? 'transparent' : '#9CA3AF',
                       display: 'flex',
                       alignItems: 'center',
@@ -1687,7 +1690,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(24vh + 16px)',
+                      paddingTop: 'calc(30vh + 16px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
@@ -1720,10 +1723,10 @@ export default function Home() {
                         {story.category}
                       </div>
                       
-                      {/* Title - Smaller Font */}
+                      {/* Title - Readable Size */}
                       <h3 className="news-title" style={{ 
                         marginBottom: '10px',
-                        fontSize: '18px',
+                        fontSize: '20px',
                         fontWeight: '700',
                         lineHeight: '1.3'
                       }}>{story.title}</h3>
