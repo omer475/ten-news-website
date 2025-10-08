@@ -1729,35 +1729,32 @@ export default function Home() {
                       {/* Summary - Visible and Styled */}
                       <p className="news-summary" style={{ 
                         marginTop: '0',
-                        marginBottom: '150px',
-                        fontSize: '16px',
+                        marginBottom: '16px',
+                        fontSize: '17px',
                         lineHeight: '1.5',
-                        opacity: '0.9',
-                        paddingRight: '0'
+                        opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Position Toggle and Content Area - Anchored to Bottom */}
+                      {/* Fixed Position Toggle and Content Area - Aligned to Bottom */}
                       <div style={{
                         position: 'fixed',
-                        bottom: '0',
+                        bottom: '10px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
                         maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
-                        paddingBottom: '0',
                         zIndex: '50',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px'
+                        flexDirection: 'column-reverse'
                       }}>
-                        {/* Modern Segmented Control - At Top */}
+                        {/* Modern Segmented Control */}
                         {story.timeline && (
                           <div style={{
                             display: 'flex',
                             justifyContent: 'flex-end',
-                            order: 1
+                            marginTop: '16px'
                           }}>
                           <div style={{
                             display: 'flex',
@@ -1827,7 +1824,7 @@ export default function Home() {
                         </div>
                         )}
                         
-                        {/* Details/Timeline Section - Below Switch */}
+                        {/* Fixed Position Details/Timeline Section */}
                         <div 
                           className="news-meta" 
                         style={{ 
@@ -1838,8 +1835,7 @@ export default function Home() {
                           height: '90px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
                           border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)',
-                          order: 2
+                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1856,12 +1852,15 @@ export default function Home() {
                             if (diffX > 15 || diffY > 15) {
                               hasMoved = true;
                               
+                              // Determine swipe direction - be more strict
                               if (diffX > diffY && diffX > 30) {
                                 swipeDirection = 'horizontal';
+                                // ONLY prevent default for clear horizontal swipes
                                 moveEvent.preventDefault();
                                 moveEvent.stopPropagation();
                               } else if (diffY > diffX && diffY > 30) {
                                 swipeDirection = 'vertical';
+                                // Let vertical swipes pass through for story navigation
                               }
                             }
                           };
@@ -1872,32 +1871,40 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
+                            // Only handle horizontal swipes for timeline
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
                               console.log('Horizontal timeline swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
                               toggleTimeline(index);
                             } else if (!hasMoved) {
+                              // Single tap toggles timeline
                               console.log('Timeline tap detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
                               toggleTimeline(index);
                             }
+                            // If it's vertical swipe, let it pass through for story navigation
                             
+                            // Clean up listeners
                             document.removeEventListener('touchmove', handleTouchMove);
                             document.removeEventListener('touchend', handleTouchEnd);
                           };
                           
+                          // Use normal event listeners, let vertical swipes pass through
                           document.addEventListener('touchmove', handleTouchMove, { passive: false });
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
+                        {/* Content - Either Details OR Timeline (never both visible) */}
                         {!showTimeline[index] ? (
+                          // Show Details Only
                           story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
                           const cleanValue = value?.trim() || '';
                           
+                          // Extract main number/value and subtitle
                           const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
                           const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
@@ -1911,6 +1918,7 @@ export default function Home() {
                           );
                           })
                         ) : (
+                          // Show Timeline Only - Starts at same level, extends downward
                           story.timeline && (
                             <div 
                               className="timeline-container-desktop"
@@ -1977,6 +1985,7 @@ export default function Home() {
                       </div>
                                 ))}
                                 
+                                {/* Scroll hint at bottom */}
                                 {story.timeline.length > 3 && (
                                   <div style={{
                                     position: 'sticky',
@@ -1997,7 +2006,8 @@ export default function Home() {
                 </div>
                           )
                         )}
-                      </div>
+                        
+                  </div>
                       </div> {/* Close fixed position container */}
                     </div>
                   </div>
