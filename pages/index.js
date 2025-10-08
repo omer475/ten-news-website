@@ -1649,17 +1649,16 @@ export default function Home() {
                       height: '100%',
                       justifyContent: 'flex-start',
                       alignItems: 'flex-start',
-                      paddingTop: '2vh'
+                      paddingTop: '0'
                     }}>
-                      {/* News Image Placeholder - Always Visible */}
+                      {/* News Image - Full Width Edge to Edge */}
                       <div style={{
-                        width: '100%',
-                        height: '40vh',
-                        borderRadius: '16px',
+                        width: '100vw',
+                        marginLeft: 'calc(-50vw + 50%)',
+                        height: '25vh',
                         overflow: 'hidden',
-                        marginBottom: '12px',
+                        marginBottom: '16px',
                         background: story.urlToImage ? 'transparent' : '#9CA3AF',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -1691,6 +1690,13 @@ export default function Home() {
                           </div>
                         )}
                       </div>
+                      
+                      {/* Content Area with Padding */}
+                      <div style={{
+                        width: '100%',
+                        paddingLeft: '20px',
+                        paddingRight: '20px'
+                      }}>
                       
                       {/* Category Badge - Compact */}
                       <div className="news-category" style={{
@@ -1724,6 +1730,8 @@ export default function Home() {
                       
                       {/* Summary - Above timeline/details */}
                       <p className="news-summary" style={{ marginBottom: '12px' }}>{renderBoldText(story.summary, story.category)}</p>
+                      
+                      </div> {/* Close Content Area with Padding */}
                       
                       {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
