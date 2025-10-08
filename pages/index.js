@@ -1633,7 +1633,7 @@ export default function Home() {
                   onContinue={nextStory}
                 />
               ) : story.type === 'news' ? (
-                <div className="news-grid">
+                <div className="news-grid" style={{ overflow: 'hidden' }}>
                   
                   <div className="news-item" onClick={() => {
                     console.log('Clicked story URL:', story.url);
@@ -1643,26 +1643,19 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    <div className="news-content" style={{
+                    {/* News Image - Full Width Edge to Edge, NO GAP */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      height: '25vh',
+                      background: story.urlToImage ? 'transparent' : '#9CA3AF',
                       display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      justifyContent: 'flex-start',
-                      alignItems: 'flex-start',
-                      paddingTop: '0'
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: '1'
                     }}>
-                      {/* News Image - Full Width Edge to Edge */}
-                      <div style={{
-                        width: '100vw',
-                        marginLeft: 'calc(-50vw + 50%)',
-                        height: '25vh',
-                        overflow: 'hidden',
-                        marginBottom: '16px',
-                        background: story.urlToImage ? 'transparent' : '#9CA3AF',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
                         {story.urlToImage ? (
                           <img 
                             src={story.urlToImage}
@@ -1689,14 +1682,16 @@ export default function Home() {
                             📸 Image Area
                           </div>
                         )}
-                      </div>
-                      
-                      {/* Content Area with Padding */}
-                      <div style={{
-                        width: '100%',
-                        paddingLeft: '20px',
-                        paddingRight: '20px'
-                      }}>
+                    </div>
+                    
+                    {/* Content Area - Starts After Image */}
+                    <div className="news-content" style={{
+                      position: 'relative',
+                      paddingTop: 'calc(25vh + 12px)',
+                      paddingLeft: '20px',
+                      paddingRight: '20px',
+                      zIndex: '2'
+                    }}>
                       
                       {/* Category Badge - Compact */}
                       <div className="news-category" style={{
@@ -1725,13 +1720,24 @@ export default function Home() {
                         {story.category}
                       </div>
                       
-                      {/* Title - Compact */}
-                      <h3 className="news-title" style={{ marginBottom: '10px' }}>{story.title}</h3>
+                      {/* Title - Smaller Font */}
+                      <h3 className="news-title" style={{ 
+                        marginBottom: '10px',
+                        fontSize: '20px',
+                        fontWeight: '700',
+                        lineHeight: '1.3'
+                      }}>{story.title}</h3>
                       
-                      {/* Summary - Above timeline/details */}
-                      <p className="news-summary" style={{ marginBottom: '12px' }}>{renderBoldText(story.summary, story.category)}</p>
+                      {/* Summary - 40-50 words, Visible */}
+                      <p className="news-summary" style={{ 
+                        marginBottom: '12px',
+                        fontSize: '15px',
+                        lineHeight: '1.5',
+                        color: darkMode ? '#e5e7eb' : '#374151',
+                        fontWeight: '400'
+                      }}>{renderBoldText(story.summary, story.category)}</p>
                       
-                      </div> {/* Close Content Area with Padding */}
+                      </div> {/* Close Content Area */}
                       
                       {/* Fixed Position Toggle and Content Area - Very Bottom */}
                       <div style={{
@@ -2003,11 +2009,10 @@ export default function Home() {
                           )
                         )}
                         
-                  </div>
+                        </div>
                       </div> {/* Close fixed position container */}
-                    </div>
-                  </div>
-                </div>
+                    </div> {/* Close news-item */}
+                </div> {/* Close news-grid */}
               ) : null}
             </div>
           </div>
