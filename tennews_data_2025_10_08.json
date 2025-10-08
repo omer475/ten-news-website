@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "💰",
+      "title": "Gold Prices Shatter Records, Soaring Past $4,000 Per Ounce",
+      "summary": "**Gold** prices reached an unprecedented **$4,000** per ounce amid global economic uncertainty, marking the largest rally since the **1970s**. The precious metal has surged approximately one-third since **April** when President Trump announced new trade tariffs.",
+      "details": [
+        "Daily volume: 230,000 contracts traded",
+        "Previous record: $3,890/oz",
+        "Market cap: $12.5T globally"
+      ],
+      "category": "Business",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/c8ex3wgjlexo",
+      "timeline": [
+        {
+          "date": "April 15, 2023",
+          "event": "Trump announces 25% tariffs on Chinese imports"
+        },
+        {
+          "date": "August 3, 2023",
+          "event": "Federal Reserve signals continued high interest rates"
+        },
+        {
+          "date": "Today",
+          "event": "Gold hits record $4,000 per ounce"
+        },
+        {
+          "date": "June 2024",
+          "event": "Analysts predict gold reaching $4,500 mark"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🔓",
+      "title": "North Korean Hackers Set New Crypto Theft Record",
+      "summary": "**North Korean** hackers have stolen more than **$2 billion** in cryptocurrency this year, according to **Elliptic**. The record-breaking amount, stemming from over **30 hacks**, surpasses their previous high of **$1.35 billion** in 2022.",
+      "details": [
+        "Total since 2017: $5.5B",
+        "Average hack: $66M",
+        "Active hacker groups: 7"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/10/07/north-korean-hackers-stole-over-2-billion-in-crypto-so-far-in-2025-researchers-say/",
+      "timeline": [
+        {
+          "date": "April 2022",
+          "event": "Lazarus Group hacks Ronin Network for $620M"
+        },
+        {
+          "date": "December 2022",
+          "event": "North Korea reaches $1.35B crypto theft record"
+        },
+        {
+          "date": "Today",
+          "event": "2023 crypto thefts exceed $2B via hacks"
+        },
+        {
+          "date": "January 2024",
+          "event": "UN Security Council to discuss sanctions response"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "🌞",
+      "title": "Global Renewable Energy Growth Outpaces Electricity Demand",
+      "summary": "The world has reached a pivotal moment in renewable energy adoption as **solar** and **wind power** growth exceeds global electricity demand increases. This transition marks a significant shift away from traditional **fossil fuels**.",
+      "details": [
+        "Solar capacity: 1.2TW globally",
+        "Growth rate: 24% annually",
+        "Investment: $755B in 2024"
+      ],
+      "category": "Climate",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/news/business/renewable-energy-fossil-fuels-study-b2840683.html",
+      "timeline": [
+        {
+          "date": "December 2015",
+          "event": "Paris Agreement sets global renewable energy targets"
+        },
+        {
+          "date": "January 2023",
+          "event": "Solar installations hit record one terawatt globally"
+        },
+        {
+          "date": "Today",
+          "event": "Renewable growth surpasses worldwide electricity demand increase"
+        },
+        {
+          "date": "2025",
+          "event": "Renewables projected to supply 35% global power"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🔐",
+      "title": "Chinese Hackers Target Major US Law Firm",
+      "summary": "**Chinese** government-linked hackers have infiltrated **Williams & Connolly**, a prominent US law firm representing high-profile politicians. The breach is part of a broader **cyber espionage** campaign targeting multiple legal institutions.",
+      "details": [
+        "Client base: 500+ politicians",
+        "Duration: 3 months undetected",
+        "Data compromised: 1.2TB"
+      ],
+      "category": "Politics",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/10/08/politics/williams-and-connolly-law-firm-hack-chinese-hackers-suspected",
+      "timeline": [
+        {
+          "date": "October 2022",
+          "event": "China intensifies cyber campaigns against US firms"
+        },
+        {
+          "date": "January 2024",
+          "event": "Multiple US law firms report security breaches"
+        },
+        {
+          "date": "Today",
+          "event": "Williams & Connolly confirms Chinese hacking attack"
+        },
+        {
+          "date": "June 2024",
+          "event": "US cybersecurity summit to address legal sector"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🛰️",
+      "title": "China Develops Space Debris Removal Technology",
+      "summary": "**China's** space agency is developing technology to remove orbital debris, raising both environmental hopes and military concerns. The **CNSA** initiative aims to address the growing problem of **space junk** threatening satellite operations.",
+      "details": [
+        "Tracked debris: 27,000 pieces",
+        "Mission cost: $2.3B",
+        "Launch date: March 2026"
+      ],
+      "category": "Science",
+      "source": "Space.com",
+      "url": "https://www.space.com/space-exploration/satellites/china-is-developing-ways-to-de-orbit-space-junk-should-we-be-worried",
+      "timeline": [
+        {
+          "date": "April 2007",
+          "event": "China tests anti-satellite weapon, creates debris field"
+        },
+        {
+          "date": "September 2022",
+          "event": "CNSA announces space debris monitoring system launch"
+        },
+        {
+          "date": "Today",
+          "event": "China develops robotic arm for debris removal"
+        },
+        {
+          "date": "December 2024",
+          "event": "First debris removal mission planned for testing"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🏦",
+      "title": "China's Central Bank Extends Gold Buying Streak",
+      "summary": "The **People's Bank of China** continues its **11-month** gold purchasing streak, contributing to record-breaking prices. The bank's strategy reflects growing uncertainty about the **US dollar** and global economic stability.",
+      "details": [
+        "Monthly purchases: 12 tonnes",
+        "Total holdings: 2,230 tonnes",
+        "Investment value: $147B"
+      ],
+      "category": "Business",
+      "source": "SCMP",
+      "url": "https://www.scmp.com/economy/china-economy/article/3328200/chinas-central-bank-aids-golds-record-setting-run-11-month-buying-streak",
+      "timeline": [
+        {
+          "date": "December 2022",
+          "event": "China begins systematic monthly gold reserve purchases"
+        },
+        {
+          "date": "July 2023",
+          "event": "Gold reserves reach 2,137 tons worth"
+        },
+        {
+          "date": "Today",
+          "event": "China's eleventh straight month buying gold bullion"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected gold holdings to exceed 3,000 tons"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🤖",
+      "title": "AI Innovation Spreads Beyond Traditional Tech Sectors",
+      "summary": "The **AIQ 50** list reveals artificial intelligence leadership across **17 sectors** beyond traditional tech companies. This diversification shows how **AI adoption** is transforming industries from healthcare to manufacturing.",
+      "details": [
+        "Companies ranked: 50",
+        "Industries represented: 17",
+        "Growth rate: 156% YoY"
+      ],
+      "category": "Technology",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/10/07/artificial-intelligence-industry-sector-microsoft-alphabet-meta-amazon/",
+      "timeline": [
+        {
+          "date": "November 30, 2022",
+          "event": "ChatGPT launch sparks widespread corporate AI interest"
+        },
+        {
+          "date": "March 15, 2023",
+          "event": "GPT-4 release accelerates non-tech AI adoption"
+        },
+        {
+          "date": "Today",
+          "event": "AIQ 50 shows AI leadership across industries"
+        },
+        {
+          "date": "December 2024",
+          "event": "70% of Fortune 500 implementing AI solutions"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "💊",
+      "title": "UK Plans NHS Drug Spending Boost to Avoid Tariffs",
+      "summary": "British officials presented new proposals to the **Trump administration** regarding **NHS** pharmaceutical pricing. The plan aims to prevent potential **US tariffs** by adjusting how the health service prices medicines.",
+      "details": [
+        "Annual spending: £18B",
+        "Price increase: 15%",
+        "Affected medicines: 2,300"
+      ],
+      "category": "Health",
+      "source": "Politico",
+      "url": "https://www.politico.eu/article/britain-eyes-nhs-drug-spending-hike-to-stave-off-trump-tariffs/",
+      "timeline": [
+        {
+          "date": "July 24, 2019",
+          "event": "Trump criticizes NHS drug pricing system"
+        },
+        {
+          "date": "January 31, 2020",
+          "event": "UK-US trade negotiations begin after Brexit"
+        },
+        {
+          "date": "Today",
+          "event": "UK proposes NHS pricing changes to US"
+        },
+        {
+          "date": "December 2020",
+          "event": "Expected UK-US trade deal completion deadline"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🇪🇺",
+      "title": "EU Nations Near Agreement on Russian Diplomat Restrictions",
+      "summary": "**European Union** member states are approaching consensus on new measures to restrict **Russian diplomat** movements within the bloc. The pending agreement aims to enhance security while maintaining essential diplomatic channels.",
+      "details": [
+        "Affected diplomats: 400",
+        "Implementation date: January 2026",
+        "Countries involved: 27"
+      ],
+      "category": "Politics",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/world/europe/EU-states-edge-towards-deal-to-curb-Russian-diplomat-movements",
+      "timeline": [
+        {
+          "date": "March 4, 2022",
+          "event": "EU expelled 200 Russian diplomats after Ukraine invasion"
+        },
+        {
+          "date": "October 12, 2023",
+          "event": "Belgium detected Russian spy network in Brussels"
+        },
+        {
+          "date": "Today",
+          "event": "EU nations discuss new diplomat movement restrictions"
+        },
+        {
+          "date": "January 2024",
+          "event": "Expected implementation of new monitoring system"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🌡️",
+      "title": "Inhalers' Carbon Footprint Equals 500,000 Cars Annually",
+      "summary": "A new study reveals that **inhalers** produce carbon emissions equivalent to **500,000 cars** annually. The research highlights the environmental impact of medical devices and calls for more **sustainable alternatives** in healthcare.",
+      "details": [
+        "Annual emissions: 5.5M tons",
+        "Users worldwide: 262M",
+        "Green alternatives: 12"
+      ],
+      "category": "Health",
+      "source": "CBS News",
+      "url": "https://www.cbsnews.com/news/inhalers-produce-carbon-emissions-study/",
+      "timeline": [
+        {
+          "date": "1956",
+          "event": "First metered-dose inhalers introduced by Riker Labs"
+        },
+        {
+          "date": "1987",
+          "event": "Montreal Protocol bans CFC-based inhaler propellants"
+        },
+        {
+          "date": "Today",
+          "event": "Study reveals inhalers' massive carbon footprint impact"
+        },
+        {
+          "date": "2025",
+          "event": "Dry powder inhalers expected to dominate market"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Markets shake as gold hits historic peak.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "WEDNESDAY, OCTOBER 8, 2025",
+  "historicalEvents": [
+    {
+      "year": "1871",
+      "description": "Great Chicago Fire begins, destroying much of city"
+    },
+    {
+      "year": "1918",
+      "description": "US Sergeant York captures 132 German soldiers in WW1"
+    },
+    {
+      "year": "1967",
+      "description": "Marxist revolutionary Che Guevara captured in Bolivia"
+    },
+    {
+      "year": "2001",
+      "description": "US begins Operation Enduring Freedom in Afghanistan"
+    }
+  ],
+  "generatedAt": "2025-10-08T07:39:03.677147",
+  "generatedAtUK": "2025-10-08T07:39:03.677164+01:00"
+}
