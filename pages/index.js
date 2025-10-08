@@ -1564,29 +1564,47 @@ export default function Home() {
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
-        {/* Header */}
-        <div className="header">
-          <div className="logo">
-            <span className="logo-ten">TEN</span> NEWS
+        {/* Logo - Always Visible, On Top of Image for News Pages */}
+        {currentIndex > 0 && stories[currentIndex]?.type === 'news' ? (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            zIndex: 1000,
+            fontSize: '18px',
+            fontWeight: '900',
+            letterSpacing: '-0.5px',
+            color: '#ffffff',
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.5)',
+            mixBlendMode: 'difference'
+          }}>
+            <span style={{ fontWeight: '900' }}>TEN</span> NEWS
           </div>
-          
-          <div style={{ flex: 1 }}></div>
-          
-          <div className="header-right">
-            <span className="time">{currentTime}</span>
-            {user ? (
-              <>
-                <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
-                <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
-              </>
-            ) : (
-              <>
-                <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
-                <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
-              </>
-            )}
+        ) : (
+          /* Full Header for First Page */
+          <div className="header">
+            <div className="logo">
+              <span className="logo-ten">TEN</span> NEWS
+            </div>
+            
+            <div style={{ flex: 1 }}></div>
+            
+            <div className="header-right">
+              <span className="time">{currentTime}</span>
+              {user ? (
+                <>
+                  <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
+                  <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
+                </>
+              ) : (
+                <>
+                  <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
+                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
 
         {/* Stories */}
@@ -1643,14 +1661,14 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    {/* News Image - Full Width Edge-to-Edge, NO GAPS */}
+                    {/* News Image - Full Screen Top, Behind Logo */}
                     <div style={{
                       position: 'absolute',
                       top: '0',
                       left: '0',
                       right: '0',
                       width: '100%',
-                      height: '30vh',
+                      height: '40vh',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : '#9CA3AF',
@@ -1690,7 +1708,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(30vh + 16px)',
+                      paddingTop: 'calc(40vh + 16px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
@@ -1723,12 +1741,13 @@ export default function Home() {
                         {story.category}
                       </div>
                       
-                      {/* Title - Readable Size */}
+                      {/* Title - Large and Prominent */}
                       <h3 className="news-title" style={{ 
-                        marginBottom: '10px',
-                        fontSize: '20px',
-                        fontWeight: '700',
-                        lineHeight: '1.3'
+                        marginBottom: '12px',
+                        fontSize: '26px',
+                        fontWeight: '800',
+                        lineHeight: '1.2',
+                        letterSpacing: '-0.5px'
                       }}>{story.title}</h3>
                       
                       {/* Summary - Visible and Styled */}
