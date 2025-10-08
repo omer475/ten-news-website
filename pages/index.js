@@ -697,7 +697,7 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 70px 24px 40px;
+          padding: 0 24px 40px;
           background: ${darkMode ? '#000000' : '#fff'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
@@ -1455,7 +1455,7 @@ export default function Home() {
           /* Show arrows on mobile/tablet - hide on desktop */
           
           .story-container {
-            padding: 60px 12px 40px;
+            padding: 0 12px 40px;
           }
           
           .news-item {
@@ -1668,7 +1668,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100%',
-                      height: '35vh',
+                      height: '30vh',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : '#9CA3AF',
@@ -1708,7 +1708,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(35vh + 16px)',
+                      paddingTop: 'calc(30vh + 16px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
