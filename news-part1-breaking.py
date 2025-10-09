@@ -498,6 +498,118 @@ Return ONLY the optimized headline (4-10 words, no quotes, no extra text)."""
     
     return title
 
+# ==================== RESEARCH ENHANCEMENT (Timeline, Details, Bold) ====================
+def enhance_article_with_research(article, article_num, total_articles):
+    """Add timeline, details, and bold markup using Claude AI"""
+    print(f"   📚 [{article_num}/{total_articles}] Researching: {article.get('title', '')[:50]}...")
+    
+    title = article.get('title', '')
+    summary = article.get('summary', '')
+    full_text = article.get('full_text', '')[:2000]  # First 2000 chars
+    url = article.get('url', '')
+    source = article.get('source', 'Unknown')
+    
+    prompt = f"""You are a research assistant for a news platform. Enhance this article with verified information.
+
+**ARTICLE:**
+Title: {title}
+Summary: {summary}
+Source: {source}
+URL: {url}
+
+Full Text Context:
+{full_text}
+
+**YOUR TASKS:**
+
+1. **BOLD MARKUP**: Add **bold** markdown around 3-6 key terms in the summary (names, numbers, places, organizations). 
+   - DO NOT change any words in the summary
+   - ONLY add ** markers around important terms
+   - Example: "Apple announced new iPhone" → "**Apple** announced new **iPhone**"
+
+2. **3 DETAILS**: Extract or infer 3 specific facts with numbers/dates from the article. Format: "Label: Value"
+   - Each detail must start with a NUMBER or DATE
+   - Max 7 words per detail
+   - Examples: "Deaths: 142 confirmed", "Revenue: $89.5B in Q3", "Launch date: March 15, 2026"
+
+3. **TIMELINE**: Create 2-4 chronological events with dates. Each event ≤8 words.
+   - Use format: {{"date": "YYYY-MM-DD or Month YYYY", "event": "Brief event description"}}
+   - Events should be in chronological order
+   - Focus on key moments related to this story
+
+**RETURN ONLY THIS JSON (no other text):**
+{{
+  "summary_with_bold": "Summary with **bold** markup added",
+  "details": [
+    "Label: Number/date value",
+    "Label: Number/date value", 
+    "Label: Number/date value"
+  ],
+  "timeline": [
+    {{"date": "Date", "event": "Event description (≤8 words)"}},
+    {{"date": "Date", "event": "Event description (≤8 words)"}}
+  ]
+}}
+
+Important: Return ONLY valid JSON. No markdown code blocks, no explanations."""
+    
+    url_api = "https://api.anthropic.com/v1/messages"
+    headers = {
+        "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
+    
+    data = {
+        "model": CLAUDE_MODEL,
+        "max_tokens": 1500,
+        "temperature": 0.3,
+        "messages": [{"role": "user", "content": prompt}]
+    }
+    
+    try:
+        response = requests.post(url_api, headers=headers, json=data, timeout=45)
+        
+        if response.status_code == 200:
+            result = response.json()
+            response_text = result['content'][0]['text'].strip()
+            
+            # Parse JSON response
+            # Remove markdown code blocks if present
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+            
+            try:
+                parsed = json.loads(response_text)
+                
+                # Merge research into article
+                enhanced = article.copy()
+                if parsed.get('summary_with_bold'):
+                    enhanced['summary'] = parsed['summary_with_bold']
+                if parsed.get('details') and len(parsed['details']) >= 3:
+                    enhanced['details'] = parsed['details'][:3]
+                if parsed.get('timeline') and len(parsed['timeline']) >= 2:
+                    enhanced['timeline'] = parsed['timeline']
+                
+                print(f"      ✅ Added: {len(enhanced.get('details', []))} details, {len(enhanced.get('timeline', []))} timeline events")
+                return enhanced
+                
+            except json.JSONDecodeError as e:
+                print(f"      ⚠️ JSON parse error: {e}")
+                return article
+        else:
+            print(f"      ⚠️ API error: {response.status_code}")
+            return article
+            
+    except Exception as e:
+        print(f"      ❌ Research error: {str(e)}")
+        return article
+
 # ==================== MAIN GENERATION ====================
 def generate_part1_breaking_news():
     """Generate Part 1: Breaking News (every 5 minutes)"""
@@ -599,6 +711,20 @@ def generate_part1_breaking_news():
         print("❌ No articles after rewriting!")
         save_last_run_time()
         return None
+    
+    # Research enhancement (timeline, details, bold text)
+    print(f"\n📚 RESEARCH ENHANCEMENT")
+    print("=" * 60)
+    print(f"   Adding timeline, details, and bold markup to {len(final_articles)} articles...")
+    
+    enhanced_articles = []
+    for i, article in enumerate(final_articles, 1):
+        enhanced = enhance_article_with_research(article, i, len(final_articles))
+        enhanced_articles.append(enhanced)
+        time.sleep(1)  # Rate limiting
+    
+    print(f"\n   ✅ Research enhancement complete!")
+    final_articles = enhanced_articles
     
     # LIVE UPDATE: Append to existing tennews_data_live.json
     live_filename = "tennews_data_live.json"
