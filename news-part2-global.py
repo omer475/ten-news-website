@@ -20,7 +20,7 @@ CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', 'your-api-key-here')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-GEMINI_MODEL = "gemini-1.5-flash-002"
+GEMINI_MODEL = "gemini-1.5-flash"
 
 if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
     genai.configure(api_key=GOOGLE_API_KEY)
@@ -931,27 +931,11 @@ if __name__ == "__main__":
     print("=" * 60)
     print()
     
-    # Run continuously
-    while True:
-        try:
-            result = generate_part2_global_news()
-            
-            if result:
-                print(f"\n🎉 Part 2 complete!")
-                print(f"📄 Output: {result}")
-            else:
-                print(f"\n⚠️ Part 2 completed with no articles.")
-            
-            # Wait 50 minutes before next run
-            print(f"\n⏰ Sleeping for 50 minutes... (next run at {(datetime.now() + timedelta(minutes=50)).strftime('%H:%M:%S')})")
-            print("=" * 60)
-            time.sleep(3000)  # 50 minutes = 3000 seconds
-            
-        except KeyboardInterrupt:
-            print("\n\n🛑 Part 2 stopped by user")
-            break
-        except Exception as e:
-            print(f"\n❌ Error in Part 2: {e}")
-            print("⏰ Waiting 50 minutes before retry...")
-            time.sleep(3000)
+    result = generate_part2_global_news()
+    
+    if result:
+        print(f"\n🎉 Part 2 complete!")
+        print(f"📄 Output: {result}")
+    else:
+        print(f"\n⚠️ Part 2 completed with no articles.")
 

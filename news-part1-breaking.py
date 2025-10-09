@@ -22,7 +22,7 @@ GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
 # Model Configuration
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-GEMINI_MODEL = "gemini-1.5-flash-002"
+GEMINI_MODEL = "gemini-1.5-flash"
 
 # Configure Gemini
 if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
@@ -808,27 +808,11 @@ if __name__ == "__main__":
     print("=" * 60)
     print()
     
-    # Run continuously
-    while True:
-        try:
-            result = generate_part1_breaking_news()
-            
-            if result:
-                print(f"\n🎉 Part 1 complete!")
-                print(f"📄 Output: {result}")
-            else:
-                print(f"\n⚠️ Part 1 completed with no articles.")
-            
-            # Wait 5 minutes before next run
-            print(f"\n⏰ Sleeping for 5 minutes... (next run at {(datetime.now() + timedelta(minutes=5)).strftime('%H:%M:%S')})")
-            print("=" * 60)
-            time.sleep(300)  # 5 minutes = 300 seconds
-            
-        except KeyboardInterrupt:
-            print("\n\n🛑 Part 1 stopped by user")
-            break
-        except Exception as e:
-            print(f"\n❌ Error in Part 1: {e}")
-            print("⏰ Waiting 5 minutes before retry...")
-            time.sleep(300)
+    result = generate_part1_breaking_news()
+    
+    if result:
+        print(f"\n🎉 Part 1 complete!")
+        print(f"📄 Output: {result}")
+    else:
+        print(f"\n⚠️ Part 1 completed with no articles.")
 
