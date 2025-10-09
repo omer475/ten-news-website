@@ -930,7 +930,7 @@ export default function Home() {
         }
 
         .news-summary {
-          font-size: 17px;
+          font-size: 20px;
           color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
           line-height: 1.6;
           margin-bottom: 16px;
@@ -1761,14 +1761,14 @@ export default function Home() {
                             borderRadius: '999vw',
                             padding: '2px',
                             boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
-                            width: '100px'
+                            width: '75px'
                           }}>
                             {/* Details Button - Icons Only */}
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '8px 16px',
+                              padding: '6px 10px',
                               borderRadius: '999vw',
                               background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
@@ -1781,7 +1781,7 @@ export default function Home() {
                               }
                             }}>
                               {/* Details Icon - Grid/Chart */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
                                 <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
                                 <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
@@ -1794,7 +1794,7 @@ export default function Home() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '8px 16px',
+                              padding: '6px 10px',
                               borderRadius: '999vw',
                               background: showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
                               cursor: 'pointer',
@@ -1807,7 +1807,7 @@ export default function Home() {
                               }
                             }}>
                               {/* Timeline Icon - Connected Dots */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
                                 <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
                                 <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
