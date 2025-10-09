@@ -175,13 +175,25 @@ def fetch_from_source(source_id, minutes_ago=5):
         if response.status_code == 200:
             data = response.json()
             articles = data.get('articles', [])
+            
+            # DEBUG: Show what we got
+            if articles:
+                print(f"   ✅ {source_id}: {len(articles)} articles")
+            else:
+                print(f"   ⚠️ {source_id}: 0 articles (status: {data.get('status')}, total: {data.get('totalResults', 0)})")
+            
             return articles
         else:
-            print(f"   ⚠️ {source_id}: API error {response.status_code}")
+            # Show full error
+            try:
+                error_data = response.json()
+                print(f"   ❌ {source_id}: {response.status_code} - {error_data}")
+            except:
+                print(f"   ❌ {source_id}: {response.status_code} - {response.text[:200]}")
             return []
             
     except Exception as e:
-        print(f"   ⚠️ {source_id}: {str(e)[:50]}")
+        print(f"   ❌ {source_id}: EXCEPTION - {str(e)}")
         return []
 
 # ==================== SMART DEDUPLICATION ====================
