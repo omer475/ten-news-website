@@ -690,13 +690,13 @@ def generate_part1_breaking_news():
         save_last_run_time()
         return None
     
-    # AI scoring (UNIFIED: 70+ threshold)
+    # AI scoring (UNIFIED: 60+ threshold)
     scores = score_articles_unified(articles_with_text, GOOGLE_API_KEY, part_name="Part 1: Breaking")
-    quality_articles = apply_unified_scores(articles_with_text, scores, score_threshold=70)
+    quality_articles = apply_unified_scores(articles_with_text, scores, score_threshold=60)
     
     if not quality_articles:
-        print("❌ No articles meet STRICT quality threshold (70+ points) in THIS RUN!")
-        print("   ✅ This is COMPLETELY NORMAL - many 5-minute windows have no major news.")
+        print("❌ No articles meet quality threshold (60+ points) in THIS RUN!")
+        print("   ✅ This is NORMAL - many 5-minute windows have no major news.")
         print("   💡 Users see accumulated articles from ALL successful runs.")
         save_last_run_time()
         return None
