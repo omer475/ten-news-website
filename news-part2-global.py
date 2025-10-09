@@ -12,6 +12,7 @@ import pytz
 import re
 from bs4 import BeautifulSoup
 import google.generativeai as genai
+from unified_news_scoring import score_articles_unified, apply_unified_scores
 
 # ==================== API KEY CONFIGURATION ====================
 NEWSAPI_KEY = os.environ.get('NEWSAPI_KEY', 'your-newsapi-key-here')
@@ -675,12 +676,13 @@ def generate_part2_global_news():
         save_last_run_time()
         return None
     
-    # AI scoring (7.5+ threshold)
-    scores = score_articles_with_gemini(articles_with_text)
-    quality_articles = apply_ai_scores(articles_with_text, scores, score_threshold=7.5)
+    # AI scoring (UNIFIED: 70+ threshold)
+    scores = score_articles_unified(articles_with_text, GOOGLE_API_KEY, part_name="Part 2: Global")
+    quality_articles = apply_unified_scores(articles_with_text, scores, score_threshold=70)
     
     if not quality_articles:
-        print("❌ No articles meet quality threshold (7.5+)!")
+        print("❌ No articles meet STRICT quality threshold (70+ points)!")
+        print("   This is NORMAL - most cycles will have few or ZERO qualifying articles.")
         save_last_run_time()
         return None
     
