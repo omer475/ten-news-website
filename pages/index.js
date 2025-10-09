@@ -930,7 +930,7 @@ export default function Home() {
         }
 
         .news-summary {
-          font-size: 22px;
+          font-size: 17px;
           color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
           line-height: 1.6;
           margin-bottom: 16px;
@@ -1728,7 +1728,7 @@ export default function Home() {
                       <p className="news-summary" style={{ 
                         marginTop: '0',
                         marginBottom: '16px',
-                        fontSize: '15px',
+                        fontSize: '18px',
                         lineHeight: '1.5',
                         opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
@@ -1761,7 +1761,7 @@ export default function Home() {
                             borderRadius: '999vw',
                             padding: '2px',
                             boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
-                            width: '100px'
+                            width: '85px'
                           }}>
                             {/* Details Button - Icons Only */}
                             <div style={{
