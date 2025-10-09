@@ -1,0 +1,16 @@
+node_modules/
+.next/
+*.log
+*.md
+public/
+components/
+pages/
+styles/
+livenews_data_*.json
+part1_breaking_*.json
+part2_global_*.json
+tennews_data_2025_*.json
+*.html
+.git/
+.vercel/
+
