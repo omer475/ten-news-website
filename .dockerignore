@@ -1,0 +1,28 @@
+# Ignore Next.js and Node files
+node_modules/
+.next/
+package.json
+package-lock.json
+next.config.js
+vercel.json
+
+# Ignore frontend files
+pages/
+components/
+styles/
+public/
+lib/
+
+# Ignore docs and configs
+*.md
+*.html
+.git/
+.gitignore
+.vercel/
+
+# Ignore data files
+*.json
+!requirements.txt
+
+# Keep only Python files
+
