@@ -1,6 +1,6 @@
 # TEN NEWS - UNIFIED SCORING SYSTEM (0-100 Points)
 # Used by both Part 1 (Breaking) and Part 2 (Global)
-# Minimum threshold: 70 points
+# Minimum threshold: 60 points
 
 import json
 import google.generativeai as genai
@@ -15,14 +15,14 @@ def score_articles_unified(articles, google_api_key, part_name="Unknown"):
     Stage 1: Instant rejection (celebrity, local, sports, clickbait)
     Stage 2: AI scoring 0-100 across 5 dimensions
     
-    MINIMUM THRESHOLD: 70 points
+    MINIMUM THRESHOLD: 60 points
     """
     if not google_api_key or google_api_key == 'your-google-api-key-here':
         print("⚠️ Google API key not configured")
         return None
     
     print(f"\n🤖 [{part_name}] Scoring {len(articles)} articles (UNIFIED 0-100 SYSTEM)...")
-    print("   📊 Minimum threshold: 70 points")
+    print("   📊 Minimum threshold: 60 points")
     
     # Prepare articles for AI (max 30 at a time for quality)
     articles_batch = articles[:30]
@@ -101,9 +101,9 @@ FINAL SCORE CALCULATION
 
 FINAL_SCORE = Global_Impact + Scientific_Significance + Novelty + Credibility + Engagement
 
-**MINIMUM TO PUBLISH: 70 POINTS**
+**MINIMUM TO PUBLISH: 60 POINTS**
 
-Most articles will score 40-60. Only exceptional articles reach 70+.
+Most articles will score 40-60. Only exceptional articles reach 60+.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EMOJI & CATEGORY SELECTION
@@ -143,8 +143,8 @@ Return ONLY valid JSON (no markdown, no explanations):
   ]
 }}
 
-BE EXTREMELY STRICT. Reject 90-95% of articles.
-Only truly exceptional, globally significant news should score 70+.
+BE EXTREMELY STRICT. Reject 85-90% of articles.
+Only truly important, globally significant news should score 60+.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ARTICLES TO EVALUATE ({len(articles_info)} total):
@@ -189,10 +189,10 @@ ARTICLES TO EVALUATE ({len(articles_info)} total):
     return None
 
 
-def apply_unified_scores(articles, scores, score_threshold=70):
+def apply_unified_scores(articles, scores, score_threshold=60):
     """
     Apply unified 0-100 scores to articles
-    Filter by STRICT 70-point threshold
+    Filter by STRICT 60-point threshold
     
     Returns: List of articles meeting threshold, sorted by score (highest first)
     """
