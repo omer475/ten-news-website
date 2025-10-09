@@ -1728,7 +1728,7 @@ export default function Home() {
                       <p className="news-summary" style={{ 
                         marginTop: '0',
                         marginBottom: '16px',
-                        fontSize: '18px',
+                        fontSize: '15px',
                         lineHeight: '1.5',
                         opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
@@ -1931,15 +1931,14 @@ export default function Home() {
                         
                   </div>
                       
-                      {/* Navigation Dots - Positioned under the content */}
+                      {/* Minimal Navigation Dots */}
                       {story.timeline && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          gap: '8px',
-                          marginTop: '12px',
-                          paddingTop: '8px'
+                          gap: '10px',
+                          marginTop: '14px'
                         }}>
                           {/* Details Dot */}
                           <div
@@ -1948,20 +1947,14 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }}
                             style={{
-                              width: '8px',
-                              height: '8px',
+                              width: '6px',
+                              height: '6px',
                               borderRadius: '50%',
                               background: !showTimeline[index] 
-                                ? 'rgba(59, 130, 246, 0.8)' 
-                                : 'rgba(255, 255, 255, 0.4)',
-                              border: !showTimeline[index] 
-                                ? '2px solid rgba(59, 130, 246, 1)' 
-                                : '2px solid rgba(255, 255, 255, 0.6)',
+                                ? 'rgba(0, 0, 0, 0.75)' 
+                                : 'rgba(255, 255, 255, 0.35)',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: !showTimeline[index] 
-                                ? '0 2px 8px rgba(59, 130, 246, 0.4)' 
-                                : 'none'
+                              transition: 'all 0.25s ease'
                             }}
                           />
                           
@@ -1972,20 +1965,14 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }}
                             style={{
-                              width: '8px',
-                              height: '8px',
+                              width: '6px',
+                              height: '6px',
                               borderRadius: '50%',
                               background: showTimeline[index] 
-                                ? 'rgba(139, 92, 246, 0.8)' 
-                                : 'rgba(255, 255, 255, 0.4)',
-                              border: showTimeline[index] 
-                                ? '2px solid rgba(139, 92, 246, 1)' 
-                                : '2px solid rgba(255, 255, 255, 0.6)',
+                                ? 'rgba(0, 0, 0, 0.75)' 
+                                : 'rgba(255, 255, 255, 0.35)',
                               cursor: 'pointer',
-                              transition: 'all 0.3s ease',
-                              boxShadow: showTimeline[index] 
-                                ? '0 2px 8px rgba(139, 92, 246, 0.4)' 
-                                : 'none'
+                              transition: 'all 0.25s ease'
                             }}
                           />
                         </div>
