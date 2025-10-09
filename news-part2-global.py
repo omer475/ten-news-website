@@ -931,11 +931,27 @@ if __name__ == "__main__":
     print("=" * 60)
     print()
     
-    result = generate_part2_global_news()
-    
-    if result:
-        print(f"\n🎉 Part 2 complete!")
-        print(f"📄 Output: {result}")
-    else:
-        print(f"\n⚠️ Part 2 completed with no articles.")
+    # Run continuously in a loop
+    while True:
+        try:
+            result = generate_part2_global_news()
+            
+            if result:
+                print(f"\n🎉 Part 2 complete!")
+                print(f"📄 Output: {result}")
+            else:
+                print(f"\n⚠️ Part 2 completed with no articles.")
+            
+            # Wait 50 minutes before next run
+            print(f"\n⏰ Waiting 50 minutes until next run...")
+            print("=" * 60)
+            time.sleep(3000)  # 50 minutes = 3000 seconds
+            
+        except KeyboardInterrupt:
+            print("\n\n🛑 Part 2 stopped by user")
+            break
+        except Exception as e:
+            print(f"\n❌ Error in Part 2: {e}")
+            print("⏰ Waiting 50 minutes before retry...")
+            time.sleep(3000)
 
