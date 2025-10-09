@@ -2,12 +2,12 @@
 # FORCE Python-only detection, NO Node.js
 
 [phases.setup]
-nixPkgs = ["python310"]
+nixPkgs = ["python310", "python310Packages.pip"]
 
 [phases.install]
 cmds = [
-  "pip install --upgrade pip",
-  "pip install -r requirements.txt"
+  "python3 -m pip install --upgrade pip",
+  "python3 -m pip install -r requirements.txt"
 ]
 
 [phases.build]
