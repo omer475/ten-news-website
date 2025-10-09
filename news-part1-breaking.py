@@ -22,7 +22,7 @@ GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
 # Model Configuration
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-1.5-flash-002"
 
 # Configure Gemini
 if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
@@ -35,7 +35,7 @@ BREAKING_NEWS_SOURCES = [
     'bbc-news',
     'cnn',
     'bloomberg',
-    'the-guardian-au',
+    'the-guardian-uk',
     'al-jazeera-english',
     'abc-news',
     'the-washington-post',
