@@ -1745,80 +1745,6 @@ export default function Home() {
                         paddingRight: '15px',
                         zIndex: '50'
                       }}>
-                        {/* Modern Segmented Control */}
-                        {story.timeline && (
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            marginBottom: '16px'
-                          }}>
-                          <div style={{
-                            display: 'flex',
-                            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                            backdropFilter: 'blur(2px)',
-                            WebkitBackdropFilter: 'blur(2px)',
-                            border: '1px solid rgba(255, 255, 255, 0.5)',
-                            borderRadius: '999vw',
-                            padding: '2px',
-                            boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
-                            width: '100px'
-                          }}>
-                            {/* Details Button - Icons Only */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '999vw',
-                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-                              cursor: 'pointer',
-                              transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-                              boxShadow: !showTimeline[index] ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
-                            }} onClick={(e) => {
-                              e.stopPropagation();
-                              if (showTimeline[index]) {
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                              }
-                            }}>
-                              {/* Details Icon - Grid/Chart */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="14" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                              </svg>
-                            </div>
-                            
-                            {/* Timeline Button - Icons Only */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '999vw',
-                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-                              cursor: 'pointer',
-                              transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-                              boxShadow: showTimeline[index] ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
-                            }} onClick={(e) => {
-                              e.stopPropagation();
-                              if (!showTimeline[index]) {
-                                setShowTimeline(prev => ({ ...prev, [index]: true }));
-                              }
-                            }}>
-                              {/* Timeline Icon - Connected Dots */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <line x1="6" y1="4" x2="20" y2="4" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                                <line x1="6" y1="12" x2="20" y2="12" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                                <line x1="6" y1="20" x2="20" y2="20" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                        )}
                         
                         {/* Fixed Position Details/Timeline Section */}
                         <div 
@@ -1914,13 +1840,13 @@ export default function Home() {
                           );
                           })
                         ) : (
-                          // Show Timeline Only - Starts at same level, extends downward
+                          // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
                             <div 
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
-                                top: '0',
+                                bottom: '0',
                                 left: '0',
                                 right: '0',
                                 background: 'rgba(255, 255, 255, 0.15)',
@@ -1931,8 +1857,6 @@ export default function Home() {
                                 padding: '12px 20px',
                                 boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                                 minHeight: '90px',
-                                maxHeight: '110px',
-                                overflowY: 'auto',
                                 zIndex: '10'
                               }}>
                               <div style={{
@@ -1986,6 +1910,54 @@ export default function Home() {
                         )}
                         
                   </div>
+                      
+                      {/* Minimal Navigation Dots */}
+                      {story.timeline && (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          gap: '10px',
+                          marginTop: '14px'
+                        }}>
+                          {/* Details Dot */}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowTimeline(prev => ({ ...prev, [index]: false }));
+                            }}
+                            style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              background: !showTimeline[index] 
+                                ? 'rgba(0, 0, 0, 0.75)' 
+                                : 'rgba(255, 255, 255, 0.35)',
+                              cursor: 'pointer',
+                              transition: 'all 0.25s ease'
+                            }}
+                          />
+                          
+                          {/* Timeline Dot */}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowTimeline(prev => ({ ...prev, [index]: true }));
+                            }}
+                            style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              background: showTimeline[index] 
+                                ? 'rgba(0, 0, 0, 0.75)' 
+                                : 'rgba(255, 255, 255, 0.35)',
+                              cursor: 'pointer',
+                              transition: 'all 0.25s ease'
+                            }}
+                          />
+                        </div>
+                      )}
+                      
                       </div> {/* Close fixed position container */}
                     </div>
                   </div>
