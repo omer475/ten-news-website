@@ -35,7 +35,7 @@ BREAKING_NEWS_SOURCES = [
     'bbc-news',
     'cnn',
     'bloomberg',
-    'the-guardian-uk',
+    'the-guardian-au',
     'al-jazeera-english',
     'abc-news',
     'the-washington-post',
