@@ -1894,13 +1894,13 @@ export default function Home() {
                                       zIndex: '2'
                                     }}></div>
                                     <div style={{
-                                      fontSize: '10px',
+                                      fontSize: '12px',
                                       fontWeight: '600',
                                       color: '#3b82f6',
                                       marginBottom: '3px'
                                     }}>{event.date}</div>
                                     <div style={{
-                                      fontSize: '12px',
+                                      fontSize: '14px',
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
                                       lineHeight: '1.3'
                                     }}>{event.event}</div>
