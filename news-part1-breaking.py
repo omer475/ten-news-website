@@ -146,27 +146,19 @@ def extract_full_text(url, timeout=10):
 # ==================== NEWSAPI FETCHING BY SOURCE ====================
 def fetch_from_source(source_id, minutes_ago=5):
     """
-    Fetch articles from a specific source
-    Only articles from the last X minutes
+    Fetch recent articles from NewsAPI for a specific source
+    Uses /v2/top-headlines for breaking news (fresher results)
+    Then filters by timestamp ourselves
     """
     if not NEWSAPI_KEY or NEWSAPI_KEY == 'your-newsapi-key-here':
         return []
     
-    # Calculate time range
-    now = datetime.now()
-    from_time = now - timedelta(minutes=minutes_ago)
-    
-    # Format for NewsAPI (ISO 8601)
-    from_param = from_time.strftime('%Y-%m-%dT%H:%M:%S')
-    
-    url = "https://newsapi.org/v2/everything"
+    # Use top-headlines for breaking news (much fresher!)
+    url = "https://newsapi.org/v2/top-headlines"
     params = {
         'apiKey': NEWSAPI_KEY,
         'sources': source_id,
-        'from': from_param,
-        'language': 'en',
-        'sortBy': 'publishedAt',
-        'pageSize': 10  # Max 10 per source
+        'pageSize': 100  # Get maximum recent articles
     }
     
     try:
@@ -174,15 +166,33 @@ def fetch_from_source(source_id, minutes_ago=5):
         
         if response.status_code == 200:
             data = response.json()
-            articles = data.get('articles', [])
+            all_articles = data.get('articles', [])
+            
+            # Filter by timestamp (only last X minutes)
+            cutoff_time = datetime.now() - timedelta(minutes=minutes_ago)
+            
+            filtered_articles = []
+            for article in all_articles:
+                try:
+                    pub_date_str = article.get('publishedAt', '')
+                    if pub_date_str:
+                        # Parse ISO 8601 format: 2025-10-09T15:30:00Z
+                        pub_date = datetime.fromisoformat(pub_date_str.replace('Z', '+00:00'))
+                        pub_date = pub_date.replace(tzinfo=None)  # Make naive for comparison
+                        
+                        if pub_date >= cutoff_time:
+                            filtered_articles.append(article)
+                except:
+                    # If date parsing fails, include it anyway
+                    filtered_articles.append(article)
             
             # DEBUG: Show what we got
-            if articles:
-                print(f"   ✅ {source_id}: {len(articles)} articles")
+            if filtered_articles:
+                print(f"   ✅ {source_id}: {len(filtered_articles)} articles (from {len(all_articles)} total)")
             else:
-                print(f"   ⚠️ {source_id}: 0 articles (status: {data.get('status')}, total: {data.get('totalResults', 0)})")
+                print(f"   ⚠️ {source_id}: 0 articles in last {minutes_ago} min (had {len(all_articles)} total)")
             
-            return articles
+            return filtered_articles
         else:
             # Show full error
             try:
