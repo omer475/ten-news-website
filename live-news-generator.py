@@ -501,12 +501,12 @@ Return ONLY the rewritten article text (35-40 words, no title, no extra formatti
             if 'content' in result and len(result['content']) > 0:
                 rewritten = result['content'][0]['text'].strip()
                 
-                # Validate word count
+                # Validate word count (35-40 words, +/-2 tolerance = 33-42)
                 word_count = len(rewritten.split())
-                if 40 <= word_count <= 50:
+                if 33 <= word_count <= 42:
                     return rewritten
                 else:
-                    print(f"      ⚠️ Word count {word_count} outside range, skipping")
+                    print(f"      ⚠️ Word count {word_count} outside range (33-42), skipping")
                     return None
         else:
             print(f"      ⚠️ Claude API error {response.status_code}")
