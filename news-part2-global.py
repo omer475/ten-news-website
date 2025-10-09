@@ -20,7 +20,7 @@ CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', 'your-api-key-here')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-1.5-flash-latest"
 
 if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
     genai.configure(api_key=GOOGLE_API_KEY)
@@ -289,20 +289,16 @@ def extract_full_text(url, timeout=10):
 
 # ==================== NEWSAPI FETCHING BY SOURCE ====================
 def fetch_from_source(source_id, minutes_ago=50):
-    """
-    Fetch recent articles from NewsAPI for a specific source
-    Uses /v2/top-headlines for fresher results
-    Then filters by timestamp ourselves
-    """
+    """Fetch articles from a specific source (last X minutes)"""
     if not NEWSAPI_KEY or NEWSAPI_KEY == 'your-newsapi-key-here':
         return []
     
-    # Use top-headlines for fresher news
+    # Use top-headlines for freshest articles
     url = "https://newsapi.org/v2/top-headlines"
     params = {
         'apiKey': NEWSAPI_KEY,
         'sources': source_id,
-        'pageSize': 100  # Get maximum recent articles
+        'pageSize': 100  # Max articles per source
     }
     
     try:
@@ -314,8 +310,8 @@ def fetch_from_source(source_id, minutes_ago=50):
             
             # Filter by timestamp (only last X minutes)
             cutoff_time = datetime.now() - timedelta(minutes=minutes_ago)
-            
             filtered_articles = []
+            
             for article in all_articles:
                 try:
                     pub_date_str = article.get('publishedAt', '')
@@ -327,14 +323,14 @@ def fetch_from_source(source_id, minutes_ago=50):
                         if pub_date >= cutoff_time:
                             filtered_articles.append(article)
                 except:
-                    # If date parsing fails, include it anyway
-                    filtered_articles.append(article)
+                    # If date parsing fails, skip it
+                    pass
             
             # DEBUG: Show what we got
             if filtered_articles:
                 print(f"   ✅ {source_id}: {len(filtered_articles)} articles (from {len(all_articles)} total)")
             else:
-                print(f"   ⚠️ {source_id}: 0 articles in last {minutes_ago} min (had {len(all_articles)} total)")
+                print(f"   ⚠️ {source_id}: 0 articles in last {minutes_ago}min (status: {data.get('status')}, total: {len(all_articles)})")
             
             return filtered_articles
         else:
