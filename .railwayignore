@@ -6,6 +6,8 @@ public/
 components/
 pages/
 styles/
+lib/
+middleware.js.backup
 livenews_data_*.json
 part1_breaking_*.json
 part2_global_*.json
@@ -13,4 +15,8 @@ tennews_data_2025_*.json
 *.html
 .git/
 .vercel/
+package.json
+package-lock.json
+next.config.js
+vercel.json
 

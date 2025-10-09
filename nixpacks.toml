@@ -1,0 +1,12 @@
+# Railway/Nixpacks Configuration
+# Tell Railway this is a PYTHON project, not Node.js
+
+[phases.setup]
+nixPkgs = ["python310", "pip"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[start]
+cmd = "echo 'News generation cron jobs configured. Check individual services for schedules.'"
+
