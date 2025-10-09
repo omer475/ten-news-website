@@ -20,7 +20,7 @@ CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY', 'your-api-key-here')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-GEMINI_MODEL = "gemini-1.5-flash-latest"
+GEMINI_MODEL = "gemini-2.0-flash-exp"  # Latest Gemini 2.0 (faster & smarter)
 
 if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
     genai.configure(api_key=GOOGLE_API_KEY)

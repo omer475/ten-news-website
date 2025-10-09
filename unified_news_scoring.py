@@ -5,7 +5,7 @@
 import json
 import google.generativeai as genai
 
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash-exp"  # Latest Gemini 2.0 (faster & smarter)
 
 def score_articles_unified(articles, google_api_key, part_name="Unknown"):
     """
