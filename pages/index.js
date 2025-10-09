@@ -1728,7 +1728,7 @@ export default function Home() {
                       <p className="news-summary" style={{ 
                         marginTop: '0',
                         marginBottom: '16px',
-                        fontSize: '15px',
+                        fontSize: '18px',
                         lineHeight: '1.5',
                         opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
