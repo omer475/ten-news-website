@@ -338,21 +338,67 @@ No scoring needed.
 - Multiple breaking stories, major discoveries
 
 **Extremely Slow Day:**
-- **ZERO articles pass threshold**
+- **ZERO articles across ALL runs**
 - Website shows: "No significant news today"
-- Expected 5-10 days per year
+- Expected: EXTREMELY RARE (maybe 1-2 days per year)
 
 ---
 
-## 🚨 THE ZERO ARTICLES SCENARIO
+## 📍 ZERO ARTICLE RUNS vs ZERO ARTICLE DAYS
 
-**Yes, sometimes the website will show NOTHING. This is by design.**
+### ✅ Zero Article RUNS = VERY NORMAL
 
-### When This Happens:
-- No major global events
-- No significant scientific breakthroughs
-- No important developments
-- Only routine, boring news
+**Individual runs finding zero articles is EXPECTED and COMMON:**
+
+- **Part 1 (every 5 minutes):** ~30-50% of runs may find zero qualifying articles
+- **Part 2 (every 50 minutes):** ~20-40% of runs may find zero qualifying articles
+
+**Daily Run Statistics:**
+- Part 1: 288 runs/day → Maybe 100-150 produce articles, 140-190 produce zero
+- Part 2: 29 runs/day → Maybe 15-20 produce articles, 10-15 produce zero
+
+**This is CORRECT behavior!** Most 5-minute windows and 50-minute windows won't have groundbreaking news.
+
+### 🌟 Website Shows Accumulated Articles
+
+**Users see ALL articles from ALL successful runs**, sorted by score.
+
+**Example Daily Timeline:**
+```
+09:00 - Part 1 run → 0 articles (normal)
+09:05 - Part 1 run → 2 articles added ✅
+09:10 - Part 1 run → 0 articles (normal)
+09:15 - Part 1 run → 1 article added ✅
+09:20 - Part 1 run → 0 articles (normal)
+...
+10:00 - Part 2 run → 8 articles added ✅
+...
+
+By end of day: 35 articles accumulated from successful runs
+Website shows: All 35 articles, sorted by score (highest first)
+```
+
+### ⚠️ Zero Article DAYS = EXTREMELY RARE
+
+**An ENTIRE DAY with zero articles across ALL runs would be EXTREMELY rare:**
+
+- Requires ALL 288 Part 1 runs + ALL 29 Part 2 runs to find nothing
+- Total 317 runs per day, all producing zero
+- Expected: Maybe 1-2 days per YEAR (if ever)
+- On such days, world genuinely has no major news
+
+---
+
+## 🚨 THE ZERO ARTICLE DAY SCENARIO
+
+**Yes, VERY RARELY the website might show NOTHING for an entire day. This is by design, but extremely uncommon.**
+
+### When This Happens (EXTREMELY RARE):
+- Literally NO major global events across entire day
+- NO significant scientific breakthroughs
+- NO important developments
+- World genuinely has a quiet day
+- Expected: 1-2 days per year maximum
 
 ### What Users See:
 ```

@@ -681,8 +681,9 @@ def generate_part2_global_news():
     quality_articles = apply_unified_scores(articles_with_text, scores, score_threshold=70)
     
     if not quality_articles:
-        print("❌ No articles meet STRICT quality threshold (70+ points)!")
-        print("   This is NORMAL - most cycles will have few or ZERO qualifying articles.")
+        print("❌ No articles meet STRICT quality threshold (70+ points) in THIS RUN!")
+        print("   ✅ This is COMPLETELY NORMAL - many 50-minute windows have no exceptional news.")
+        print("   💡 Users see accumulated articles from ALL successful runs.")
         save_last_run_time()
         return None
     
