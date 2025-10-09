@@ -179,37 +179,70 @@ pip install schedule
 
 ---
 
-## 📊 OUTPUT FILES
+## 📊 OUTPUT FILE (LIVE UPDATES)
 
-### Part 1 Output:
-- **Filename:** `part1_breaking_YYYY_MM_DD_HHMM.json`
-- **Structure:**
+### ✨ NEW: Immediate Website Updates
+
+**Both parts update the SAME file immediately:**
+
+- **Filename:** `tennews_data_live.json`
+- **Update Method:** Each part appends new articles and re-sorts by score
+- **Website Behavior:** Always reads the latest live file
+
+### How It Works:
+
+```
+Part 1 completes (every 5 min):
+├── Finds ANY number of 70+ scored articles
+├── Reads existing tennews_data_live.json
+├── Appends new articles
+├── Sorts ALL by score (highest first)
+└── Saves → Website updates immediately ✨
+
+Part 2 completes (every 50 min):
+├── Finds ANY number of 70+ scored articles  
+├── Reads existing tennews_data_live.json
+├── Appends new articles
+├── Sorts ALL by score (highest first)
+└── Saves → Website updates immediately ✨
+```
+
+### File Structure:
 ```json
 {
-  "generatedAt": "2025-10-09T...",
-  "displayTimestamp": "Thursday, October 09, 2025 at 14:30 BST",
-  "part": 1,
-  "description": "Breaking News (Every 5 minutes)",
-  "sources_count": 12,
-  "totalArticles": 8,
-  "articles": [...]
+  "generatedAt": "2025-10-09T14:35:00Z",
+  "displayTimestamp": "Thursday, October 09, 2025 at 14:35 BST",
+  "lastUpdate": {
+    "part": 1,
+    "timestamp": "2025-10-09T14:35:00Z",
+    "articlesAdded": 5
+  },
+  "totalArticles": 48,
+  "articles": [
+    {
+      "title": "Article with highest score",
+      "final_score": 92.5,
+      "source_part": 2,
+      "added_at": "2025-10-09T14:20:00Z",
+      ...
+    },
+    {
+      "title": "Second highest score",
+      "final_score": 85.3,
+      "source_part": 1,
+      "added_at": "2025-10-09T14:35:00Z",
+      ...
+    }
+  ]
 }
 ```
 
-### Part 2 Output:
-- **Filename:** `part2_global_YYYY_MM_DD_HHMM.json`
-- **Structure:**
-```json
-{
-  "generatedAt": "2025-10-09T...",
-  "displayTimestamp": "Thursday, October 09, 2025 at 14:30 BST",
-  "part": 2,
-  "description": "Science, Research & Global News (Every 50 minutes)",
-  "sources_count": 123,
-  "totalArticles": 15,
-  "articles": [...]
-}
-```
+### Key Features:
+- ✅ **Real-Time**: Website updates as soon as each part completes
+- ✅ **Score-Sorted**: All articles sorted by final_score (highest first)
+- ✅ **Unified**: No separate files, no merger needed
+- ✅ **Trackable**: Each article tagged with `source_part` (1 or 2) and `added_at`
+- ✅ **Cumulative**: New articles added to existing ones, always sorted
 
 ---
 
@@ -226,11 +259,14 @@ export GOOGLE_API_KEY="your-key-here"
 
 **In `news-part1-breaking.py`:**
 - Line 72-84: `BREAKING_NEWS_SOURCES` - Modify breaking news sources
-- Line 419: `score_threshold=8.0` - Adjust quality threshold (higher = stricter)
+- Uses unified scoring (70+ points threshold via `unified_news_scoring.py`)
 
 **In `news-part2-global.py`:**
 - Line 36-157: `GLOBAL_NEWS_SOURCES` - Modify global sources
-- Line 514: `score_threshold=7.5` - Adjust quality threshold
+- Uses unified scoring (70+ points threshold via `unified_news_scoring.py`)
+
+**⚠️ UNIFIED THRESHOLD:**
+Both parts now use the same strict 70-point minimum (see `UNIFIED_SCORING_SYSTEM.md`)
 
 ---
 
@@ -240,18 +276,20 @@ export GOOGLE_API_KEY="your-key-here"
 - **Input:** 12 sources × ~10 articles each = ~120 articles
 - **After Deduplication:** ~80 articles
 - **After Full Text:** ~70 articles
-- **After AI Scoring (8.0+):** ~5-15 articles
-- **After Rewriting:** ~5-15 articles
+- **After AI Scoring (70+ points):** ~0-10 articles (STRICT)
+- **After Rewriting:** ~0-10 articles
 - **Runtime:** ~2-3 minutes
+- **Zero-article runs:** 30-50% of runs (NORMAL)
 
 ### Part 2 (Global News):
 - **Input:** 123 sources × ~5 articles each = ~600 articles
 - **After Deduplication:** ~400 articles
 - **Top 100 Processed:** 100 articles
 - **After Full Text:** ~80 articles
-- **After AI Scoring (7.5+):** ~15-30 articles
-- **After Rewriting:** ~15-30 articles
+- **After AI Scoring (70+ points):** ~0-20 articles (STRICT)
+- **After Rewriting:** ~0-20 articles
 - **Runtime:** ~15-20 minutes
+- **Zero-article runs:** 30-50% of runs (NORMAL)
 
 ---
 
@@ -261,12 +299,13 @@ export GOOGLE_API_KEY="your-key-here"
 |---------|------------------|----------------|
 | **Frequency** | Every 5 minutes | Every 50 minutes |
 | **Sources** | 12 premium | 123 global |
-| **Threshold** | 8.0+ (STRICT) | 7.5+ (Balanced) |
+| **Threshold** | 70+ points (UNIFIED) | 70+ points (UNIFIED) |
 | **Focus** | Breaking events | Deep dive, research |
 | **Time Window** | Last 5 minutes | Last 50 minutes |
 | **Articles/Source** | 10 max | 5 max |
-| **Expected Output** | 5-15 articles | 15-30 articles |
+| **Expected Output** | 0-10 articles/run | 0-20 articles/run |
 | **Runtime** | 2-3 minutes | 15-20 minutes |
+| **Zero Runs** | 30-50% (NORMAL) | 30-50% (NORMAL) |
 
 ---
 

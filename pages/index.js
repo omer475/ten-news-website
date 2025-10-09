@@ -891,7 +891,7 @@ export default function Home() {
         .news-content {
           padding-top: 0px;
           padding-left: 0;
-          padding-right: 12px;
+          padding-right: 30px;
           padding-bottom: 0;
           margin: 0 auto;
           max-width: 900px;
@@ -1464,8 +1464,8 @@ export default function Home() {
           }
           
           .news-content {
-            margin: 0 4px;
-            padding-right: 12px;
+            margin: 0 8px;
+            padding-right: 20px;
           }
           
           .news-number {
@@ -1709,8 +1709,8 @@ export default function Home() {
                     <div className="news-content" style={{
                       position: 'relative',
                       paddingTop: 'calc(30vh + 12px)',
-                      paddingLeft: '12px',
-                      paddingRight: '12px',
+                      paddingLeft: '10px',
+                      paddingRight: '10px',
                       zIndex: '2'
                     }}>
                       

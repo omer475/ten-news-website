@@ -600,31 +600,58 @@ def generate_part1_breaking_news():
         save_last_run_time()
         return None
     
-    # Save output
+    # LIVE UPDATE: Append to existing tennews_data_live.json
+    live_filename = "tennews_data_live.json"
+    existing_articles = []
+    
+    # Read existing articles from live file
+    if os.path.exists(live_filename):
+        try:
+            with open(live_filename, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+                existing_articles = existing_data.get('articles', [])
+                print(f"\n📖 Found {len(existing_articles)} existing articles in live feed")
+        except Exception as e:
+            print(f"\n⚠️ Could not read existing live file: {e}")
+    
+    # Add source tag to new articles
+    for article in final_articles:
+        article['source_part'] = 1
+        article['added_at'] = datetime.now().isoformat()
+    
+    # Combine with existing articles
+    all_articles = existing_articles + final_articles
+    
+    # Sort by final_score (highest first)
+    all_articles.sort(key=lambda x: x.get('final_score', 0), reverse=True)
+    
+    # Create updated live data
     output_data = {
         'generatedAt': datetime.now().isoformat(),
         'displayTimestamp': get_formatted_timestamp(),
-        'part': 1,
-        'description': 'Breaking News (Every 5 minutes)',
-        'sources_count': len(BREAKING_NEWS_SOURCES),
-        'totalArticles': len(final_articles),
-        'articles': final_articles
+        'lastUpdate': {
+            'part': 1,
+            'timestamp': datetime.now().isoformat(),
+            'articlesAdded': len(final_articles)
+        },
+        'totalArticles': len(all_articles),
+        'articles': all_articles
     }
     
-    timestamp = datetime.now().strftime('%Y_%m_%d_%H%M')
-    filename = f"part1_breaking_{timestamp}.json"
-    
-    with open(filename, 'w', encoding='utf-8') as f:
+    # Save to live file
+    with open(live_filename, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=2)
     
     print(f"\n{'='*60}")
-    print(f"✅ SUCCESS! Saved: {filename}")
-    print(f"📰 Total articles: {len(final_articles)}")
-    print(f"📊 Score range: {min(a['overall_score'] for a in final_articles):.1f} - {max(a['overall_score'] for a in final_articles):.1f}")
+    print(f"✅ LIVE UPDATE SUCCESS!")
+    print(f"📰 Added {len(final_articles)} new articles from Part 1")
+    print(f"📊 Total articles in live feed: {len(all_articles)}")
+    if final_articles:
+        print(f"📈 New articles score range: {min(a['final_score'] for a in final_articles):.1f} - {max(a['final_score'] for a in final_articles):.1f}")
     print("=" * 60)
     
     save_last_run_time()
-    return filename
+    return live_filename
 
 # ==================== MAIN ====================
 if __name__ == "__main__":

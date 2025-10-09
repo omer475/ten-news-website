@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌞",
+      "title": "Renewable Energy Surpasses Coal in Historic Global Power Shift",
+      "summary": "**Renewable energy** has overtaken **coal** as the world's primary electricity source in the first half of 2025, according to think tank **Ember**. The growth in **solar** and **wind** power met all additional electricity demand while reducing fossil fuel dependence.",
+      "details": [
+        "Growth Rate: 12% YoY",
+        "Solar Capacity: 1.2TW globally",
+        "Coal Decline: 8.3% since 2024"
+      ],
+      "category": "Climate",
+      "source": "BBC",
+      "url": "https://www.bbc.com/news/articles/cx2rz08en2po",
+      "timeline": [
+        {
+          "date": "December 2015",
+          "event": "Paris Agreement sets global renewable energy targets"
+        },
+        {
+          "date": "January 2021",
+          "event": "China launches world's largest carbon trading market"
+        },
+        {
+          "date": "Today",
+          "event": "Renewables surpass coal in global electricity generation"
+        },
+        {
+          "date": "December 2030",
+          "event": "Expected 40% renewable energy global market share"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "⚛️",
+      "title": "Three Scientists Share Nobel Prize for Quantum Mechanics Breakthrough",
+      "summary": "**John Clarke**, **Michel Devoret**, and **John Martinis** have been awarded the **2025 Nobel Prize** in physics for discovering quantum mechanical tunneling in electrical circuits, representing a major advancement in quantum science.",
+      "details": [
+        "Prize Amount: $1.1M",
+        "Research Duration: 15 years",
+        "Citations: 2,500+ academic papers"
+      ],
+      "category": "Science",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/10/07/science/nobel-prize-physics-clarke-devoret-martinis-quantum-mechanics-intl",
+      "timeline": [
+        {
+          "date": "December 10, 1980",
+          "event": "First quantum tunneling circuit experiments begin"
+        },
+        {
+          "date": "March 15, 2019",
+          "event": "Team demonstrates quantum tunneling control breakthrough"
+        },
+        {
+          "date": "Today",
+          "event": "Scientists awarded Nobel Prize for quantum research"
+        },
+        {
+          "date": "January 2026",
+          "event": "Quantum computing applications expected from discovery"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "💰",
+      "title": "Gold Prices Hit All-Time High Amid Economic Uncertainty",
+      "summary": "**Gold prices** have reached unprecedented levels as investors seek safe-haven assets amid **US government shutdown** concerns. The **precious metal** surge reflects growing economic uncertainty and market volatility in global financial markets.",
+      "details": [
+        "Price: $2,350 per ounce",
+        "Weekly Gain: 5.2%",
+        "Trading Volume: 125M contracts"
+      ],
+      "category": "Business",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/business/2025/oct/07/gold-futures-prices-economy",
+      "timeline": [
+        {
+          "date": "August 15, 2023",
+          "event": "Gold prices begin rising amid inflation fears"
+        },
+        {
+          "date": "September 30, 2023",
+          "event": "US Congress fails to pass funding bill"
+        },
+        {
+          "date": "Today",
+          "event": "Gold reaches record $2,135 per ounce"
+        },
+        {
+          "date": "January 19, 2024",
+          "event": "Next US government funding deadline approaches"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🔓",
+      "title": "North Korean Hackers Set New Record in Crypto Theft",
+      "summary": "**North Korean** hackers have stolen over **$2 billion** in cryptocurrency during 2025, according to **Elliptic**. This record-breaking amount, achieved through more than **30 hacks**, surpasses their previous record of $1.35 billion in 2022.",
+      "details": [
+        "Total Hacks: 30+",
+        "Average Theft: $66M per hack",
+        "Recovery Rate: 12% of stolen funds"
+      ],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/10/07/north-korean-hackers-stole-over-2-billion-in-crypto-so-far-in-2025-researchers-say/",
+      "timeline": [
+        {
+          "date": "April 2022",
+          "event": "Lazarus Group hacks Ronin Network for $620M"
+        },
+        {
+          "date": "December 2022",
+          "event": "North Korea reaches $1.35B crypto theft record"
+        },
+        {
+          "date": "Today",
+          "event": "New $2B crypto theft record set"
+        },
+        {
+          "date": "March 2026",
+          "event": "G7 cryptocurrency security summit addressing threats"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🌊",
+      "title": "UN Plastics Treaty Faces Setback as Chair Resigns",
+      "summary": "**Luis Vayas Valdivieso** has announced his resignation as chair of the **UN plastics treaty** negotiations, citing personal and professional reasons. His departure comes amid mounting pressure and challenges in the treaty-making process.",
+      "details": [
+        "Treaty Timeline: 2026 deadline",
+        "Participating Nations: 175",
+        "Plastic Reduction Goal: 40%"
+      ],
+      "category": "Environment",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/environment/2025/oct/07/un-plastics-treaty-chair-to-step-down-with-process-in-turmoil",
+      "timeline": [
+        {
+          "date": "March 2022",
+          "event": "UN launches global plastic pollution treaty talks"
+        },
+        {
+          "date": "November 2023",
+          "event": "Kenya negotiations end without clear agreement"
+        },
+        {
+          "date": "Today",
+          "event": "UN plastics treaty chair Vayas Valdivieso resigns"
+        },
+        {
+          "date": "April 2024",
+          "event": "Next treaty negotiations scheduled in Canada"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🌡️",
+      "title": "Scientists Analyze Record-Breaking 2023 Ocean Heat Wave",
+      "summary": "A new study by the **University of Exeter** reveals the unprecedented nature of the **June 2023** ocean heat wave. Research shows the event was predictable based on existing **climate models** and rising global temperatures.",
+      "details": [
+        "Temperature Rise: 2.5°C above normal",
+        "Affected Area: 40M square kilometers",
+        "Duration: 45 days"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-unprecedented-unexpected-ocean.html",
+      "timeline": [
+        {
+          "date": "March 14, 2023",
+          "event": "NOAA predicts extreme ocean warming for 2023"
+        },
+        {
+          "date": "June 1, 2023",
+          "event": "North Atlantic temperatures reach record 23°C levels"
+        },
+        {
+          "date": "Today",
+          "event": "Exeter study confirms unprecedented ocean heat wave"
+        },
+        {
+          "date": "December 2024",
+          "event": "Further marine ecosystem impacts expected globally"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🛡️",
+      "title": "Ukraine's Cyber Defense Praised by Former UK Intel Chief",
+      "summary": "**Ukraine's** cyber defense strategy against **Russian** attacks has been highly successful, according to former **UK intelligence** leadership. The country's digital infrastructure protection measures have become a model for modern cyber warfare.",
+      "details": [
+        "Attacks Prevented: 1,500+",
+        "Success Rate: 95%",
+        "Defense Budget: $2.5B"
+      ],
+      "category": "Technology",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/ukraine-russia-cyberattacks-cyber-defence-successful-model-experts-5387936",
+      "timeline": [
+        {
+          "date": "February 24, 2022",
+          "event": "Russia launches major cyber attacks with invasion"
+        },
+        {
+          "date": "March 15, 2022",
+          "event": "Ukraine moves critical infrastructure to cloud systems"
+        },
+        {
+          "date": "Today",
+          "event": "UK intelligence praises Ukraine's cyber defense success"
+        },
+        {
+          "date": "December 2023",
+          "event": "NATO to adopt Ukraine's cyber defense model"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🏆",
+      "title": "Taiwan President Suggests Nobel Prize for Trump Peace Effort",
+      "summary": "**Taiwan's** President **Lai Ching-te** stated that **Donald Trump** would deserve a **Nobel Peace Prize** if he successfully convinces **China** to abandon the use of force against Taiwan, highlighting ongoing regional tensions.",
+      "details": [
+        "Military Tensions: Weekly incursions",
+        "Defense Budget: $19B",
+        "Diplomatic Relations: 13 countries"
+      ],
+      "category": "Politics",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/east-asia/china-takeover-taiwan-threaten-us-taiwan-president-lai-ching-te-5387446",
+      "timeline": [
+        {
+          "date": "August 2022",
+          "event": "China conducts major military drills around Taiwan"
+        },
+        {
+          "date": "January 13, 2024",
+          "event": "Lai Ching-te wins Taiwan presidential election"
+        },
+        {
+          "date": "Today",
+          "event": "Lai suggests Nobel Prize for Trump"
+        },
+        {
+          "date": "May 20, 2024",
+          "event": "Lai Ching-te takes office as Taiwan President"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🌱",
+      "title": "Ethiopian Farming Study Shows Climate Impact on Soil Carbon",
+      "summary": "Research reveals **regenerative farming** practices in **Ethiopia** can increase soil carbon levels, but **climate change** effects are limiting potential gains. The study highlights the complex relationship between agricultural methods and environmental conditions.",
+      "details": [
+        "Study Duration: 5 years",
+        "Soil Improvement: 23%",
+        "Farmer Participants: 1,200"
+      ],
+      "category": "Science",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-regenerative-farming-boost-soil-carbon.html",
+      "timeline": [
+        {
+          "date": "2015",
+          "event": "Ethiopia launches Climate Resilient Green Economy strategy"
+        },
+        {
+          "date": "2020",
+          "event": "Ethiopian farmers begin large-scale regenerative practices"
+        },
+        {
+          "date": "Today",
+          "event": "Study shows climate limiting soil carbon gains"
+        },
+        {
+          "date": "2025",
+          "event": "Ethiopia targets 50% farmland using regenerative methods"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🔍",
+      "title": "China's Information Campaign Against US Interests Exposed",
+      "summary": "**InfinitUs Marketing Solutions** has been accused of conducting a **Chinese**-funded cyber campaign to undermine support for **Philippine** government policy, revealing sophisticated information warfare tactics in the **South China Sea** region.",
+      "details": [
+        "Campaign Duration: 18 months",
+        "Posts Generated: 50,000+",
+        "Reach: 15M users"
+      ],
+      "category": "Politics",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/asia/se-asia/how-china-waged-an-infowar-against-us-interests-in-the-philippines",
+      "timeline": [
+        {
+          "date": "July 12, 2016",
+          "event": "UN tribunal rejects China's South China claims"
+        },
+        {
+          "date": "March 23, 2023",
+          "event": "Philippines grants US expanded military base access"
+        },
+        {
+          "date": "Today",
+          "event": "InfinitUs exposed running Chinese information warfare campaign"
+        },
+        {
+          "date": "January 2024",
+          "event": "US-Philippines joint naval exercises planned"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Historic energy shift reshapes our world today.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "TUESDAY, OCTOBER 7, 2025",
+  "historicalEvents": [
+    {
+      "year": "1571",
+      "description": "Battle of Lepanto: Ottoman Empire suffers major naval defeat"
+    },
+    {
+      "year": "1949",
+      "description": "German Democratic Republic (East Germany) officially established"
+    },
+    {
+      "year": "1959",
+      "description": "Soviet Luna 3 takes first photos of Moon's far side"
+    },
+    {
+      "year": "2001",
+      "description": "US begins military operations in Afghanistan after 9/11"
+    }
+  ],
+  "generatedAt": "2025-10-07T18:42:51.585194",
+  "generatedAtUK": "2025-10-07T18:42:51.585247+01:00"
+}
