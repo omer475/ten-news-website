@@ -8,7 +8,7 @@
 # 3. Smart image selection from duplicates
 # 4. AI importance/world-relevance/interestingness scoring
 # 5. Unlimited emoji selection with AI
-# 6. Claude AI rewriting (40-50 words) before research enhancement
+# 6. Claude AI rewriting (35-40 words) + title optimization (4-10 words)
 
 import requests
 import json
@@ -28,7 +28,7 @@ GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', 'your-google-api-key-here')
 
 # Model Configuration
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-GEMINI_MODEL = "gemini-1.5-flash-latest"  # Fast and cost-effective for scoring
+GEMINI_MODEL = "gemini-1.5-flash"  # Fast and cost-effective for scoring
 
 # Configure Gemini
 if GOOGLE_API_KEY and GOOGLE_API_KEY != 'your-google-api-key-here':
@@ -452,7 +452,7 @@ def apply_ai_scores(articles, scores, score_threshold=7.0):
 def rewrite_article_with_claude(article):
     """
     Rewrite article using Claude AI
-    Must be 40-50 words based on full text
+    Must be 35-40 words based on full text
     """
     if not CLAUDE_API_KEY or CLAUDE_API_KEY == 'your-api-key-here':
         return None
@@ -466,7 +466,7 @@ def rewrite_article_with_claude(article):
     prompt = f"""You are a professional news writer. Rewrite this news article.
 
 REQUIREMENTS:
-1. **STRICT WORD COUNT: Exactly 40-50 words** (count every word)
+1. **STRICT WORD COUNT: Exactly 35-40 words** (count every word carefully - tolerance +/- 2 words max)
 2. Read the FULL TEXT carefully to understand the complete story
 3. Write in clear, engaging news style
 4. Focus on the most important facts
@@ -477,7 +477,7 @@ ORIGINAL TITLE: {title}
 FULL ARTICLE TEXT:
 {full_text[:3000]}
 
-Return ONLY the rewritten article text (40-50 words, no title, no extra formatting)."""
+Return ONLY the rewritten article text (35-40 words, no title, no extra formatting)."""
     
     url = "https://api.anthropic.com/v1/messages"
     headers = {
@@ -516,15 +516,83 @@ Return ONLY the rewritten article text (40-50 words, no title, no extra formatti
     
     return None
 
+def optimize_title_with_claude(title, full_text):
+    """
+    Optimize title to be 4-10 words using Claude AI
+    """
+    if not CLAUDE_API_KEY or CLAUDE_API_KEY == 'your-api-key-here':
+        return title
+    
+    word_count = len(title.split())
+    
+    # If title is already good length, keep it
+    if 4 <= word_count <= 10:
+        return title
+    
+    prompt = f"""You are a professional headline writer. Create a concise, impactful news headline.
+
+REQUIREMENTS:
+1. **STRICT WORD COUNT: Exactly 4-10 words** (count carefully)
+2. Capture the main point of the story
+3. Be clear and engaging
+4. Use active voice
+5. No clickbait
+
+ORIGINAL TITLE: {title}
+
+ARTICLE CONTEXT:
+{full_text[:500]}
+
+Return ONLY the optimized headline (4-10 words, no quotes, no extra text)."""
+    
+    url = "https://api.anthropic.com/v1/messages"
+    headers = {
+        "x-api-key": CLAUDE_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
+    
+    data = {
+        "model": CLAUDE_MODEL,
+        "max_tokens": 100,
+        "temperature": 0.5,
+        "messages": [{"role": "user", "content": prompt}]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            optimized_title = result['content'][0]['text'].strip()
+            optimized_title = clean_text_for_json(optimized_title)
+            
+            # Verify word count
+            optimized_word_count = len(optimized_title.split())
+            if 4 <= optimized_word_count <= 10:
+                return optimized_title
+            else:
+                print(f"      ⚠️ Title word count out of range ({optimized_word_count} words), keeping original")
+                return title
+        else:
+            return title
+            
+    except Exception as e:
+        print(f"      ⚠️ Title optimization error: {str(e)[:50]}")
+        return title
+
 def rewrite_articles_batch(articles):
     """Rewrite multiple articles with Claude"""
-    print(f"\n✍️  Rewriting {len(articles)} articles with Claude AI (40-50 words)...")
+    print(f"\n✍️  Rewriting {len(articles)} articles with Claude AI (35-40 words)...")
     
     rewritten_count = 0
+    title_optimized_count = 0
     
     for i, article in enumerate(articles, 1):
-        print(f"   [{i}/{len(articles)}] {article.get('title', '')[:60]}...")
+        original_title = article.get('title', '')
+        print(f"   [{i}/{len(articles)}] {original_title[:60]}...")
         
+        # First, rewrite the article summary
         rewritten = rewrite_article_with_claude(article)
         
         if rewritten:
@@ -532,12 +600,22 @@ def rewrite_articles_batch(articles):
             article['word_count'] = len(rewritten.split())
             rewritten_count += 1
             print(f"      ✅ Rewritten ({article['word_count']} words)")
+            
+            # Then, optimize the title
+            optimized_title = optimize_title_with_claude(original_title, article.get('full_text', ''))
+            if optimized_title != original_title:
+                article['title'] = optimized_title
+                article['original_title'] = original_title
+                title_optimized_count += 1
+                print(f"      ✅ Title optimized ({len(optimized_title.split())} words)")
+            
         else:
             print(f"      ❌ Skipping - rewrite failed")
         
-        time.sleep(1)  # Rate limiting
+        time.sleep(1.5)  # Slightly longer rate limiting for two API calls
     
     print(f"\n   ✅ Successfully rewrote {rewritten_count}/{len(articles)} articles")
+    print(f"   ✅ Optimized {title_optimized_count} titles to 4-10 words")
     
     # Filter: only keep articles with successful rewrites
     articles_with_rewrites = [a for a in articles if 'rewritten_text' in a]
@@ -704,7 +782,7 @@ def generate_live_news_enhanced():
             'Smart image selection',
             'AI importance scoring',
             'Unlimited emoji selection',
-            'Claude AI rewriting (40-50 words)'
+            'Claude AI rewriting (35-40 words) + title optimization (4-10 words)'
         ],
         'articles': final_articles
     }
@@ -722,7 +800,7 @@ def generate_live_news_enhanced():
         print(f"📰 Total articles: {len(final_articles)}")
         print(f"🖼️  Articles with images: {sum(1 for a in final_articles if a.get('urlToImage'))}")
         print(f"📖 All articles have full text extraction")
-        print(f"✍️  All articles rewritten by Claude AI (40-50 words)")
+        print(f"✍️  All articles rewritten by Claude AI (35-40 words) with optimized titles (4-10 words)")
         
         # Show category and score breakdown
         categories = {}
@@ -760,7 +838,7 @@ if __name__ == "__main__":
     print("✅ Smart image selection from duplicate articles")
     print("✅ AI scoring (importance + world relevance + interestingness)")
     print("✅ Unlimited emoji selection (best emoji from all available)")
-    print("✅ Claude AI rewriting (40-50 words)")
+    print("✅ Claude AI rewriting (35-40 words) + title optimization (4-10 words)")
     print("=" * 60)
     print("\nStarting live news generation...")
     print("This may take 8-10 minutes depending on article count.\n")
