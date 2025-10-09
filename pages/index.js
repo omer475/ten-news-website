@@ -1653,7 +1653,7 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
-                  <div className="news-item" style={{ overflow: 'hidden', padding: 0 }} onClick={() => {
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                     console.log('Clicked story URL:', story.url);
                     if (story.url && story.url !== '#') {
                       window.open(story.url, '_blank');
@@ -1661,7 +1661,7 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    {/* News Image - Full Screen Top, Behind Logo - EDGE TO EDGE */}
+                    {/* News Image - TRULY Edge-to-Edge */}
                     <div style={{
                       position: 'fixed',
                       top: '0',
@@ -1708,15 +1708,13 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(30vh + 8px)',
+                      paddingTop: 'calc(30vh + 12px)',
                       paddingLeft: '20px',
                       paddingRight: '20px',
                       zIndex: '2'
                     }}>
                       
-                      {/* Category Badge - HIDDEN */}
-                      
-                      {/* Title - Large and Prominent */}
+                      {/* Title - Large and Prominent, Higher Position */}
                       <h3 className="news-title" style={{ 
                         marginTop: '0',
                         marginBottom: '10px',
@@ -1730,31 +1728,29 @@ export default function Home() {
                       <p className="news-summary" style={{ 
                         marginTop: '0',
                         marginBottom: '16px',
-                        fontSize: '17px',
+                        fontSize: '15px',
                         lineHeight: '1.5',
                         opacity: '0.9'
                       }}>{renderBoldText(story.summary, story.category)}</p>
                       
-                      {/* Fixed Position Toggle and Content Area - Aligned to Bottom */}
+                      {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
                         position: 'fixed',
-                        bottom: '10px',
+                        bottom: '60px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
                         maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
-                        zIndex: '50',
-                        display: 'flex',
-                        flexDirection: 'column-reverse'
+                        zIndex: '50'
                       }}>
                         {/* Modern Segmented Control */}
                         {story.timeline && (
                           <div style={{
                             display: 'flex',
                             justifyContent: 'flex-end',
-                            marginTop: '16px'
+                            marginBottom: '16px'
                           }}>
                           <div style={{
                             display: 'flex',
