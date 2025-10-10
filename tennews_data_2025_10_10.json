@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌍",
+      "title": "China Expands Restrictions on Critical Rare Earth Exports",
+      "summary": "**China** has intensified controls on **rare earth exports**, expanding restrictions to include production technologies and overseas applications. The new measures specifically target materials used in **military equipment** and **semiconductor manufacturing**, affecting global supply chains.",
+      "details": [
+        "Export Value: $12.5B annually",
+        "Market Share: Controls 85% production",
+        "Key Elements: 17 rare metals"
+      ],
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/10/09/business/china-tightens-rare-earth-export-controls-intl-hnk",
+      "timeline": [
+        {
+          "date": "July 1, 2019",
+          "event": "China threatens rare earth export cuts"
+        },
+        {
+          "date": "February 15, 2023",
+          "event": "Initial export controls on gallium, germanium"
+        },
+        {
+          "date": "Today",
+          "event": "China expands restrictions to production technologies"
+        },
+        {
+          "date": "December 2024",
+          "event": "US rare earth processing facilities operational"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🤖",
+      "title": "OpenAI Raises Alarm Over Big Tech Data Control",
+      "summary": "**OpenAI** has expressed concerns to **European Union** antitrust regulators about major technology companies' dominance in data control. The AI company warns of potential harm to innovation and competition in the **artificial intelligence** sector.",
+      "details": [
+        "Filing Date: October 9, 2025",
+        "Companies Named: 5 tech giants",
+        "Market Impact: $2.3T industry"
+      ],
+      "category": "Technology",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-10-09/openai-warns-eu-antitrust-watchdogs-of-big-tech-s-data-dominance",
+      "timeline": [
+        {
+          "date": "November 30, 2022",
+          "event": "OpenAI launches ChatGPT, sparking AI race"
+        },
+        {
+          "date": "July 25, 2023",
+          "event": "EU passes Digital Markets Act regulations"
+        },
+        {
+          "date": "Today",
+          "event": "OpenAI warns EU about Big Tech data"
+        },
+        {
+          "date": "December 2024",
+          "event": "EU expected to implement AI Act rules"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "⚡",
+      "title": "Renewable Energy Surpasses Coal in Historic Power Shift",
+      "summary": "In a historic milestone, **renewable energy** has overtaken **coal** as the world's primary electricity source. This shift marks a significant transition in global power generation, with **wind** and **solar** leading the renewable surge.",
+      "details": [
+        "Growth Rate: 25% year-over-year",
+        "Coal Decline: 18% since 2020",
+        "Jobs Created: 12M worldwide"
+      ],
+      "category": "Climate",
+      "source": "NPR",
+      "url": "https://www.npr.org/2025/10/09/nx-s1-5564746/renewable-energy-coal-electricity-first",
+      "timeline": [
+        {
+          "date": "December 2015",
+          "event": "Paris Agreement sets global renewable energy targets"
+        },
+        {
+          "date": "January 2021",
+          "event": "China launches world's largest carbon trading market"
+        },
+        {
+          "date": "Today",
+          "event": "Renewables surpass coal in global electricity generation"
+        },
+        {
+          "date": "2025",
+          "event": "Solar costs expected to fall 50%"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "💎",
+      "title": "Silver Prices Soar Past $50 in Historic Rally",
+      "summary": "**Silver** prices have surged beyond **$50** per ounce for the first time, marking a **69%** increase this year. The precious metal's rise is driven by global economic uncertainty and growing supply shortages.",
+      "details": [
+        "Trading Volume: 2.5M contracts",
+        "Industrial Demand: Up 35%",
+        "ETF Holdings: $12B increase"
+      ],
+      "category": "Business",
+      "source": "Fox Business",
+      "url": "https://www.foxbusiness.com/economy/silver-surpasses-50-ounce-first-time-amid-geopolitical-economic-uncertainty",
+      "timeline": [
+        {
+          "date": "January 15",
+          "event": "Global mining production drops amid labor strikes"
+        },
+        {
+          "date": "March 1",
+          "event": "Industrial demand surges from tech manufacturers"
+        },
+        {
+          "date": "Today",
+          "event": "Silver breaks $50 mark, highest ever"
+        },
+        {
+          "date": "December 2023",
+          "event": "Analysts predict $60 silver price target"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🕊️",
+      "title": "Israel and Hamas Agree to Hostage Release Deal",
+      "summary": "A breakthrough ceasefire agreement between **Israel** and **Hamas** could see hostages released as early as **Saturday**. The deal includes partial **Israeli** withdrawal from Gaza and prisoner exchanges between both sides.",
+      "details": [
+        "Duration: 5-day ceasefire",
+        "Hostages: 50 initial release",
+        "Mediator: United States"
+      ],
+      "category": "Politics",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/world/israel-hostages-gaza-ceasefire-release-saturday-trump-hamas-5391441",
+      "timeline": [
+        {
+          "date": "October 7, 2023",
+          "event": "Hamas attacks Israel, takes 240 hostages"
+        },
+        {
+          "date": "November 22, 2023",
+          "event": "Israel-Hamas agree to four-day ceasefire deal"
+        },
+        {
+          "date": "November 24, 2023",
+          "event": "First group of hostages expected released"
+        },
+        {
+          "date": "November 27, 2023",
+          "event": "Ceasefire scheduled to end if not extended"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🌊",
+      "title": "Powerful Earthquake Strikes Philippines, Triggers Tsunami Warning",
+      "summary": "A **7.4-magnitude** earthquake hit off the **Philippines** coast, killing at least **two people**. The powerful tremor damaged hospitals and schools, caused power outages, and prompted coastal evacuations due to tsunami risks.",
+      "details": [
+        "Depth: 63km below surface",
+        "Aftershocks: 25 recorded",
+        "Evacuation: 10,000 residents"
+      ],
+      "category": "Science",
+      "source": "CBS News",
+      "url": "https://www.cbsnews.com/news/7-point-4-magnitude-earthquake-strikes-off-coast-of-philippines/",
+      "timeline": [
+        {
+          "date": "October 2019",
+          "event": "6.6 earthquake hits Mindanao, killing seven"
+        },
+        {
+          "date": "December 2, 2023",
+          "event": "7.4 quake strikes Surigao Del Sur region"
+        },
+        {
+          "date": "Today",
+          "event": "Two dead, tsunami alerts across Pacific"
+        },
+        {
+          "date": "December 31, 2023",
+          "event": "Infrastructure damage assessment and rebuilding begins"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🦅",
+      "title": "Bird Flu Cases Rise Again After Summer Lull",
+      "summary": "**Bird flu** cases are increasing following a summer decline, with **poultry farms** reporting earlier-than-expected outbreaks. State officials prepare for a challenging autumn as **water fowl migration** drives virus spread.",
+      "details": [
+        "Affected States: 12",
+        "Culled Birds: 150,000",
+        "Economic Impact: $500M"
+      ],
+      "category": "Health",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/science/rcna235519",
+      "timeline": [
+        {
+          "date": "January 2022",
+          "event": "Record H5N1 bird flu outbreak begins worldwide"
+        },
+        {
+          "date": "June 2023",
+          "event": "Summer temperatures temporarily reduced virus transmission rates"
+        },
+        {
+          "date": "Today",
+          "event": "Fall migration triggers new outbreak wave"
+        },
+        {
+          "date": "December 2023",
+          "event": "Peak migration expected to intensify virus spread"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🌪️",
+      "title": "Weak La Nina Returns, May Impact Hurricane Season",
+      "summary": "**La Nina** has returned but appears weaker than usual and potentially brief. Scientists are monitoring its effects on the **Atlantic hurricane** season, though its impact may be less severe than typical patterns.",
+      "details": [
+        "Duration: 3-6 months expected",
+        "Temperature Change: 0.5°C below normal",
+        "Previous Impact: 30% more storms"
+      ],
+      "category": "Climate",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-la-nina-weak-amp-atlantic.html",
+      "timeline": [
+        {
+          "date": "August 2021",
+          "event": "Strong La Nina develops in Pacific Ocean"
+        },
+        {
+          "date": "January 2022",
+          "event": "Previous La Nina pattern officially ends"
+        },
+        {
+          "date": "Today",
+          "event": "Weak La Nina returns with minimal strength"
+        },
+        {
+          "date": "September 2022",
+          "event": "Peak hurricane season expected with moderate activity"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🏝️",
+      "title": "Caribbean Nations Sign Historic Free Movement Agreement",
+      "summary": "**Barbados**, **Belize**, **Dominica**, and **St. Vincent** have signed a landmark agreement allowing citizens to live and work freely across their borders, marking a significant step toward Caribbean economic integration.",
+      "details": [
+        "Population Affected: 1.2M people",
+        "Implementation Date: January 2026",
+        "Economic Impact: $2B annually"
+      ],
+      "category": "Politics",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/richardfowler/2025/10/09/barbados-belize-dominica-and-st-vincent-sign-historic-pact-allowing-citizens-to-live-and-work-freely-across-borders/",
+      "timeline": [
+        {
+          "date": "July 4, 1973",
+          "event": "CARICOM established for Caribbean economic cooperation"
+        },
+        {
+          "date": "January 1, 2006",
+          "event": "CARICOM Single Market Economy launched"
+        },
+        {
+          "date": "Today",
+          "event": "Four nations sign free movement agreement"
+        },
+        {
+          "date": "July 1, 2024",
+          "event": "Free movement implementation begins across territories"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "📡",
+      "title": "Russia's GPS Interference Threatens European Navigation",
+      "summary": "**Russian** GPS interference has become increasingly common across **Europe**, affecting multiple countries. The jamming poses significant risks to **aviation** and **shipping**, with signals reaching deep into the continent.",
+      "details": [
+        "Affected Range: 500km radius",
+        "Countries Impacted: 6 nations",
+        "Duration: Ongoing since March"
+      ],
+      "category": "Technology",
+      "source": "Politico",
+      "url": "https://www.politico.eu/article/russia-gps-swedish-finnish-polish-jamming-tech-risks/",
+      "timeline": [
+        {
+          "date": "January 2022",
+          "event": "Russia begins GPS jamming during Ukraine invasion"
+        },
+        {
+          "date": "October 2023",
+          "event": "Finland reports widespread GPS disruptions near Russia"
+        },
+        {
+          "date": "Today",
+          "event": "GPS interference affects multiple European countries daily"
+        },
+        {
+          "date": "June 2024",
+          "event": "NATO plans countermeasures against Russian signal jamming"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Critical minerals shake global markets today.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "FRIDAY, OCTOBER 10, 2025",
+  "historicalEvents": [
+    {
+      "year": "1911",
+      "description": "Chinese Revolution begins, ending imperial rule in China"
+    },
+    {
+      "year": "1935",
+      "description": "First Porsche 911 sports car debuts in Germany"
+    },
+    {
+      "year": "1967",
+      "description": "Outer Space Treaty enters into force internationally"
+    },
+    {
+      "year": "1845",
+      "description": "US Naval Academy opens in Annapolis, Maryland"
+    }
+  ],
+  "generatedAt": "2025-10-10T07:39:26.659285",
+  "generatedAtUK": "2025-10-10T07:39:26.659301+01:00"
+}
