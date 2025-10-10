@@ -1,166 +1,212 @@
 """
-TEN NEWS LIVE - AI FILTER
-Uses Claude Sonnet 4 to score and filter articles
-45-60 point thresholds by category
+TEN NEWS - AI FILTER
+Processes RSS articles with AI scoring, timeline, and details generation
+Runs every 5 minutes
+Integrates with existing Claude AI logic
 """
 
 import sqlite3
-from datetime import datetime
 import time
+import logging
+from datetime import datetime
 import json
 import os
-import anthropic
+import requests
+import google.generativeai as genai
+from rss_sources import get_source_credibility
 
 class AINewsFilter:
-    def __init__(self, db_path='news.db', api_key=None):
-        self.db_path = db_path
-        self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
-        if not self.api_key:
-            raise ValueError("Claude API key required!")
+    def __init__(self):
+        self.db_path = 'ten_news.db'
+        self.batch_size = 30  # Process 30 articles at a time
+        self.filter_interval = 300  # 5 minutes
+        self.min_score = 60  # Minimum score to publish
         
-        self.client = anthropic.Anthropic(api_key=self.api_key)
+        # API Configuration
+        self.claude_api_key = os.getenv('CLAUDE_API_KEY')
+        self.google_api_key = os.getenv('GOOGLE_API_KEY')
+        self.perplexity_api_key = os.getenv('PERPLEXITY_API_KEY')
         
-        # Category thresholds
-        self.thresholds = {
-            'breaking': 55,
-            'science': 45,
-            'technology': 45,
-            'data': 45,
-            'environment': 45,
-            'business': 50,
-            'politics': 50,
-            'health': 50,
-            'international': 50,
-        }
+        # Models
+        self.claude_model = "claude-3-5-sonnet-20241022"
+        self.gemini_model = "gemini-2.0-flash-exp"
+        
+        # Configure Gemini
+        if self.google_api_key:
+            genai.configure(api_key=self.google_api_key)
+        
+        self.setup_logging()
     
-    def get_unprocessed_articles(self, limit=100):
-        """Get articles waiting for AI processing"""
+    def setup_logging(self):
+        """Configure logging"""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('ai_filter.log'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger(__name__)
+    
+    def run_forever(self):
+        """Run AI filter every 5 minutes"""
+        self.logger.info("🤖 AI Filter started - running every 5 minutes")
+        
+        while True:
+            try:
+                self.logger.info(f"\n{'='*60}")
+                self.logger.info(f"🤖 AI Filter cycle starting at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                self.logger.info(f"{'='*60}\n")
+                
+                # Get unprocessed articles
+                articles = self._get_unprocessed_articles()
+                
+                if articles:
+                    self.logger.info(f"📊 Processing {len(articles)} unprocessed articles")
+                    
+                    # Process in batches
+                    for i in range(0, len(articles), self.batch_size):
+                        batch = articles[i:i+self.batch_size]
+                        self._process_batch(batch)
+                        time.sleep(2)  # Rate limiting between batches
+                    
+                    self.logger.info(f"✅ AI processing complete")
+                else:
+                    self.logger.info("ℹ️  No unprocessed articles found")
+                
+                # Sleep until next cycle
+                self.logger.info(f"😴 Sleeping for {self.filter_interval}s (5 minutes)...\n")
+                time.sleep(self.filter_interval)
+                
+            except KeyboardInterrupt:
+                self.logger.info("🛑 AI Filter stopped by user")
+                break
+            except Exception as e:
+                self.logger.error(f"❌ AI Filter error: {e}", exc_info=True)
+                time.sleep(60)
+    
+    def _get_unprocessed_articles(self):
+        """Get articles that haven't been AI processed yet"""
         conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn.row_factory = sqlite3.Row  # Access columns by name
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT id, url, source, title, description, category, source_credibility
-            FROM articles
+            SELECT * FROM articles
             WHERE ai_processed = FALSE
             ORDER BY fetched_at DESC
             LIMIT ?
-        ''', (limit,))
+        ''', (self.batch_size * 3,))  # Get more than one batch
         
         articles = [dict(row) for row in cursor.fetchall()]
         conn.close()
         
         return articles
     
-    def score_articles_batch(self, articles):
-        """Score multiple articles in one AI call"""
-        if not articles:
-            return []
+    def _process_batch(self, articles):
+        """Process a batch of articles"""
+        self.logger.info(f"   🔄 Processing batch of {len(articles)} articles...")
         
-        # Prepare articles for AI
-        articles_text = []
-        for i, article in enumerate(articles, 1):
-            articles_text.append(f"""
-Article {i}:
-ID: {article['id']}
-Source: {article['source']} (Credibility: {article['source_credibility']}/10)
-Category: {article['category']}
-Title: {article['title']}
-Description: {article['description'][:500]}
-""")
+        for article in articles:
+            try:
+                # STEP 1: Score the article with Gemini
+                score, category, emoji, reasoning = self._score_article(article)
+                
+                # Apply source credibility adjustment
+                source_credibility = get_source_credibility(article['source'])
+                final_score = score + (source_credibility - 6)  # Adjust based on source
+                final_score = max(0, min(100, final_score))  # Clamp to 0-100
+                
+                self.logger.info(f"   📊 {article['title'][:50]}... → Score: {final_score:.1f}")
+                
+                # STEP 2: Decide if it should be published
+                should_publish = final_score >= self.min_score
+                
+                if should_publish:
+                    # STEP 3: Generate summary with Claude (35-40 words)
+                    summary = self._generate_summary(article)
+                    
+                    # STEP 4: Optimize title with Claude (4-10 words)
+                    optimized_title = self._optimize_title(article)
+                    
+                    # STEP 5: Generate timeline with Claude
+                    timeline = self._generate_timeline(article)
+                    
+                    # STEP 6: Generate details section with Claude
+                    details = self._generate_details(article)
+                    
+                    # STEP 7: Publish
+                    self._publish_article(
+                        article['id'], final_score, category, emoji, reasoning,
+                        summary, optimized_title, timeline, details
+                    )
+                    
+                    self.logger.info(f"      ✅ Published (score: {final_score:.1f})")
+                else:
+                    # Mark as processed but not published
+                    self._mark_processed_only(
+                        article['id'], final_score, category, reasoning
+                    )
+                    self.logger.info(f"      ❌ Rejected (score: {final_score:.1f} < {self.min_score})")
+                
+            except Exception as e:
+                self.logger.error(f"   ❌ Error processing article {article['id']}: {e}")
+                # Mark as processed to avoid infinite loops
+                self._mark_processed_only(article['id'], 0, 'error', str(e))
+    
+    def _score_article(self, article):
+        """
+        Score article using Gemini (0-100 scale)
+        Returns: (score, category, emoji, reasoning)
+        """
+        if not self.google_api_key:
+            return 50, 'general', '📰', 'No API key'
         
-        prompt = f"""You are an elite news curator for Ten News Live. Score these {len(articles)} articles using a strict 0-100 point system.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SCORING SYSTEM (0-100 POINTS)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. GLOBAL IMPACT (0-35 points)
-   - 30-35: World-changing events (pandemics, wars, major disasters)
-   - 20-29: Nationally/regionally significant
-   - 10-19: Notable but limited impact
-   - 0-9: Minor/local
-
-2. SCIENTIFIC/TECH SIGNIFICANCE (0-30 points)
-   - 25-30: Revolutionary breakthrough
-   - 15-24: Significant advancement
-   - 5-14: Incremental progress
-   - 0-4: Not scientific
-
-3. NOVELTY & URGENCY (0-20 points)
-   - 18-20: Breaking right now
-   - 12-17: Fresh & timely (last 3 hours)
-   - 6-11: Recent (last 24 hours)
-   - 0-5: Old news
-
-4. CREDIBILITY (0-10 points)
-   - Use source_credibility score provided
-   
-5. ENGAGEMENT (0-15 points)
-   - 13-15: Extremely engaging, fascinating
-   - 8-12: Quite interesting
-   - 3-7: Moderately interesting
-   - 0-2: Boring
-
-FINAL SCORE = Global Impact + Scientific Significance + Novelty + Credibility + Engagement
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STAGE 1: INSTANT REJECTION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Immediately reject (stage1_pass = false):
-❌ Celebrity gossip, entertainment news
-❌ Local news without global significance
-❌ Routine sports (scores, transfers, injuries)
-❌ Clickbait, listicles, "10 ways to..."
-❌ Product reviews, shopping deals
-❌ Opinion pieces without news value
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ARTICLES TO EVALUATE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-{chr(10).join(articles_text)}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESPONSE FORMAT (JSON)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Return a JSON array with one object per article:
-
-[
-  {{
-    "id": 123,
-    "stage1_pass": true or false,
-    "global_impact": 0-35,
-    "scientific_significance": 0-30,
-    "novelty": 0-20,
-    "credibility": 0-10,
-    "engagement": 0-15,
-    "final_score": sum of above,
-    "emoji": "🔥" (single best emoji),
-    "reasoning": "2-3 sentence explanation"
-  }},
-  ...
-]
-
-BE STRICT. Most articles should score 30-50. Only exceptional news reaches 60+.
-"""
-
         try:
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=8000,
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }]
-            )
+            model = genai.GenerativeModel(self.gemini_model)
             
-            # Parse response
-            response_text = response.content[0].text.strip()
+            prompt = f"""
+You are an elite news curator. Score this article on a 0-100 scale.
+
+ARTICLE:
+Title: {article['title']}
+Source: {article['source']}
+Description: {article['description'][:500]}
+
+SCORING CRITERIA (0-100 points):
+- Global Impact (0-35): Affects how many people? Internationally significant?
+- Scientific Significance (0-30): Breakthrough or incremental?
+- Novelty & Urgency (0-20): Breaking now? Time-critical?
+- Credibility (0-8): Source quality
+- Engagement (0-7): Fascinating to intelligent readers?
+
+MINIMUM TO PUBLISH: 60 POINTS
+
+CATEGORIES:
+- breaking: Breaking news, urgent events
+- science: Scientific discoveries, research
+- technology: Tech innovations, AI, software
+- business: Finance, markets, economics
+- environment: Climate, sustainability, conservation
+- politics: Government, policy, international relations
+- general: Everything else
+
+EMOJI: Choose the single best emoji that represents this story.
+
+Return ONLY this JSON:
+{{
+  "score": <0-100>,
+  "category": "<category>",
+  "emoji": "<single emoji>",
+  "reasoning": "<2 sentences explaining the score>"
+}}
+"""
             
-            # Remove markdown code blocks if present
+            response = model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Parse JSON (remove markdown if present)
             if response_text.startswith('```json'):
                 response_text = response_text[7:]
             if response_text.startswith('```'):
@@ -169,164 +215,306 @@ BE STRICT. Most articles should score 30-50. Only exceptional news reaches 60+.
                 response_text = response_text[:-3]
             response_text = response_text.strip()
             
-            scores = json.loads(response_text)
-            return scores
+            data = json.loads(response_text)
             
-        except Exception as e:
-            print(f"❌ AI scoring error: {str(e)[:200]}")
-            return []
-    
-    def apply_scores_to_database(self, scores):
-        """Update articles in database with AI scores"""
-        if not scores:
-            return 0, 0
-        
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        published_count = 0
-        rejected_count = 0
-        
-        for score in scores:
-            article_id = score['id']
-            
-            # Get article category to check threshold
-            cursor.execute('SELECT category FROM articles WHERE id = ?', (article_id,))
-            result = cursor.fetchone()
-            if not result:
-                continue
-            
-            category = result[0]
-            threshold = self.thresholds.get(category, 50)
-            
-            # Determine if should publish
-            should_publish = (
-                score.get('stage1_pass', False) and 
-                score.get('final_score', 0) >= threshold
+            return (
+                float(data['score']),
+                data['category'],
+                data['emoji'],
+                data['reasoning']
             )
             
-            # Update article
-            cursor.execute('''
-                UPDATE articles SET
-                    ai_processed = TRUE,
-                    ai_stage1_pass = ?,
-                    ai_global_impact = ?,
-                    ai_scientific_significance = ?,
-                    ai_novelty = ?,
-                    ai_credibility = ?,
-                    ai_engagement = ?,
-                    ai_final_score = ?,
-                    ai_emoji = ?,
-                    ai_reasoning = ?,
-                    published = ?,
-                    published_at = ?,
-                    processed_at = ?
-                WHERE id = ?
-            ''', (
-                score.get('stage1_pass', False),
-                score.get('global_impact', 0),
-                score.get('scientific_significance', 0),
-                score.get('novelty', 0),
-                score.get('credibility', 0),
-                score.get('engagement', 0),
-                score.get('final_score', 0),
-                score.get('emoji', '📰'),
-                score.get('reasoning', ''),
-                should_publish,
-                datetime.now().isoformat() if should_publish else None,
-                datetime.now().isoformat(),
-                article_id
-            ))
+        except Exception as e:
+            self.logger.error(f"Gemini scoring error: {e}")
+            return 50, 'general', '📰', 'Scoring failed'
+    
+    def _generate_summary(self, article):
+        """Generate 35-40 word summary with Claude"""
+        if not self.claude_api_key:
+            return article['description'][:200]
+        
+        try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
             
-            if should_publish:
-                published_count += 1
-            else:
-                rejected_count += 1
-        
-        conn.commit()
-        conn.close()
-        
-        return published_count, rejected_count
+            prompt = f"""
+Rewrite this news article as a concise, engaging summary.
+
+STRICT REQUIREMENTS:
+- MUST be between 35-40 words (tolerance: +/- 2 words)
+- Must be a single paragraph
+- Must capture the key facts and significance
+- Use bold markdown (**text**) to emphasize 2-3 key terms
+
+Article Title: {article['title']}
+Article: {article['description']}
+{article['content'][:1000] if article['content'] else ''}
+
+Write the 35-40 word summary now:
+"""
+            
+            data = {
+                "model": self.claude_model,
+                "max_tokens": 200,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                summary = result['content'][0]['text'].strip()
+                word_count = len(summary.split())
+                
+                # Validate word count
+                if 33 <= word_count <= 42:
+                    return summary
+            
+            return article['description'][:200]
+            
+        except Exception as e:
+            self.logger.error(f"Summary generation error: {e}")
+            return article['description'][:200]
     
-    def run_filter_cycle(self, batch_size=100):
-        """Run one AI filtering cycle"""
-        print(f"\n🤖 AI FILTER STARTING")
-        print("=" * 70)
-        print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    def _optimize_title(self, article):
+        """Optimize title to 4-10 words with Claude"""
+        title = article['title']
         
-        start_time = time.time()
+        # If already 4-10 words, return as-is
+        word_count = len(title.split())
+        if 4 <= word_count <= 10:
+            return title
         
-        # Get unprocessed articles
-        articles = self.get_unprocessed_articles(limit=batch_size)
+        if not self.claude_api_key:
+            # Simple truncation fallback
+            words = title.split()[:10]
+            return ' '.join(words)
         
-        if not articles:
-            print("✅ No articles to process!")
-            print("=" * 70 + "\n")
-            return 0
-        
-        print(f"📊 Processing {len(articles)} articles...")
-        print()
-        
-        # Score articles
-        scores = self.score_articles_batch(articles)
-        
-        if not scores:
-            print("❌ AI scoring failed!")
-            return 0
-        
-        # Apply scores
-        published, rejected = self.apply_scores_to_database(scores)
-        
-        duration = time.time() - start_time
-        
-        # Log cycle
-        self._log_filter_cycle(len(articles), published, rejected, duration, scores)
-        
-        # Print results
-        print()
-        print("=" * 70)
-        print(f"📊 AI FILTER COMPLETE")
-        print(f"   📰 Processed: {len(articles)} articles")
-        print(f"   ✅ Published: {published} articles")
-        print(f"   ❌ Rejected: {rejected} articles")
-        print(f"   📈 Acceptance rate: {(published/len(articles)*100):.1f}%")
-        if scores:
-            avg_score = sum(s.get('final_score', 0) for s in scores) / len(scores)
-            print(f"   📊 Avg score: {avg_score:.1f}/100")
-        print(f"   ⏱️  Duration: {duration:.1f}s")
-        print("=" * 70 + "\n")
-        
-        return published
+        try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
+            prompt = f"""
+Optimize this news title to 4-10 words while keeping the key information.
+
+Original title: {title}
+
+Requirements:
+- MUST be 4-10 words
+- Keep the most important information
+- Make it clear and compelling
+- No clickbait
+
+Write the optimized title now (4-10 words):
+"""
+            
+            data = {
+                "model": self.claude_model,
+                "max_tokens": 100,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                optimized = result['content'][0]['text'].strip()
+                word_count = len(optimized.split())
+                
+                if 4 <= word_count <= 10:
+                    return optimized
+            
+            # Fallback: truncate
+            words = title.split()[:10]
+            return ' '.join(words)
+            
+        except Exception as e:
+            self.logger.error(f"Title optimization error: {e}")
+            words = title.split()[:10]
+            return ' '.join(words)
     
-    def _log_filter_cycle(self, processed, published, rejected, duration, scores):
-        """Log filter cycle to database"""
+    def _generate_timeline(self, article):
+        """Generate timeline with Claude (YOUR EXISTING LOGIC)"""
+        if not self.claude_api_key:
+            return None
+        
+        try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
+            prompt = f"""
+Create a chronological timeline of key events for this news story.
+
+Article: {article['title']}
+Description: {article['description']}
+{article['content'][:1500] if article['content'] else ''}
+
+Requirements:
+- 2-4 key events in chronological order
+- Each event: date/time + brief description (1 sentence)
+- Use bold markdown (**text**) for dates and key terms
+- Include relevant context
+
+Return JSON array:
+[
+  {{"date": "October 2024", "event": "Description with **bold** terms"}},
+  {{"date": "October 9, 2024", "event": "Another event"}}
+]
+"""
+            
+            data = {
+                "model": self.claude_model,
+                "max_tokens": 500,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=45)
+            
+            if response.status_code == 200:
+                result = response.json()
+                timeline_text = result['content'][0]['text'].strip()
+                
+                # Parse JSON
+                if timeline_text.startswith('```json'):
+                    timeline_text = timeline_text[7:]
+                if timeline_text.startswith('```'):
+                    timeline_text = timeline_text[3:]
+                if timeline_text.endswith('```'):
+                    timeline_text = timeline_text[:-3]
+                timeline_text = timeline_text.strip()
+                
+                timeline = json.loads(timeline_text)
+                return json.dumps(timeline)
+            
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Timeline generation error: {e}")
+            return None
+    
+    def _generate_details(self, article):
+        """Generate details section with Claude (YOUR EXISTING LOGIC)"""
+        if not self.claude_api_key:
+            return None
+        
+        try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
+            prompt = f"""
+Write a detailed analysis section for this news article.
+
+Article: {article['title']}
+Description: {article['description']}
+{article['content'][:1500] if article['content'] else ''}
+
+Requirements:
+- 3-5 paragraphs of in-depth analysis
+- Include context, background, and implications
+- Use bold markdown (**text**) for key terms and numbers
+- Cite specific facts, figures, and dates
+- Explain significance and impact
+
+Write the detailed analysis now:
+"""
+            
+            data = {
+                "model": self.claude_model,
+                "max_tokens": 800,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            response = requests.post(url, headers=headers, json=data, timeout=45)
+            
+            if response.status_code == 200:
+                result = response.json()
+                details = result['content'][0]['text'].strip()
+                return details
+            
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Details generation error: {e}")
+            return None
+    
+    def _publish_article(self, article_id, final_score, category, emoji, reasoning,
+                        summary, optimized_title, timeline, details):
+        """Mark article as published with all generated content"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        avg_score = sum(s.get('final_score', 0) for s in scores) / len(scores) if scores else 0
-        stage1_rejected = sum(1 for s in scores if not s.get('stage1_pass', False))
-        stage2_rejected = rejected - stage1_rejected
-        
         cursor.execute('''
-            INSERT INTO ai_filter_cycles (
-                started_at, duration_seconds, articles_processed,
-                articles_published, stage1_rejected, stage2_rejected,
-                avg_score, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'completed')
+            UPDATE articles SET
+                ai_processed = TRUE,
+                ai_final_score = ?,
+                ai_category = ?,
+                emoji = ?,
+                ai_reasoning = ?,
+                summary = ?,
+                title = ?,
+                timeline = ?,
+                details_section = ?,
+                timeline_generated = ?,
+                details_generated = ?,
+                published = TRUE,
+                published_at = ?,
+                category = ?
+            WHERE id = ?
         ''', (
+            final_score,
+            category,
+            emoji,
+            reasoning,
+            summary,
+            optimized_title,
+            timeline,
+            details,
+            timeline is not None,
+            details is not None,
             datetime.now().isoformat(),
-            duration,
-            processed,
-            published,
-            stage1_rejected,
-            stage2_rejected,
-            avg_score
+            category,
+            article_id
         ))
         
         conn.commit()
         conn.close()
+    
+    def _mark_processed_only(self, article_id, score, category, reasoning):
+        """Mark article as processed but NOT published"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE articles SET
+                ai_processed = TRUE,
+                ai_final_score = ?,
+                ai_category = ?,
+                ai_reasoning = ?,
+                published = FALSE
+            WHERE id = ?
+        ''', (score, category, reasoning, article_id))
+        
+        conn.commit()
+        conn.close()
 
+# Run if executed directly
 if __name__ == '__main__':
-    filter_engine = AINewsFilter()
-    filter_engine.run_filter_cycle()
+    ai_filter = AINewsFilter()
+    ai_filter.run_forever()
 

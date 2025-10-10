@@ -1,258 +1,265 @@
 """
-TEN NEWS LIVE - REST API
-Flask API for frontend to fetch articles
+TEN NEWS - REST API
+Provides published articles to frontend
+Compatible with existing frontend format
 """
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
-from datetime import datetime, timedelta
-from config import DATABASE_PATH, API_HOST, API_PORT, API_DEBUG
+from datetime import datetime
+import json
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
 
-def get_db():
+DB_PATH = 'ten_news.db'
+
+def get_db_connection():
     """Get database connection"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/api/articles', methods=['GET'])
-def get_articles():
+@app.route('/api/news', methods=['GET'])
+def get_news():
     """
     Get published articles
-    
     Query params:
-    - category: Filter by category (breaking, science, technology, etc.)
-    - limit: Number of articles (default: 50)
-    - offset: Pagination offset (default: 0)
-    - hours: Articles from last X hours (default: 24)
+    - limit: number of articles (default 50)
+    - offset: pagination offset (default 0)
+    - category: filter by category (optional)
     """
-    category = request.args.get('category')
-    limit = int(request.args.get('limit', 50))
-    offset = int(request.args.get('offset', 0))
-    hours = int(request.args.get('hours', 24))
+    limit = request.args.get('limit', 50, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    category = request.args.get('category', None)
     
-    conn = get_db()
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Build query
     query = '''
-        SELECT id, url, source, title, description, image_url, 
-               author, published_date, category, ai_final_score,
-               ai_emoji, published_at, view_count
+        SELECT 
+            id, url, source, title, description, content,
+            image_url, author, published_date, published_at,
+            category, emoji, ai_final_score, summary,
+            timeline, details_section, view_count
         FROM articles
         WHERE published = TRUE
-        AND published_at >= datetime('now', ?)
     '''
-    params = [f'-{hours} hours']
+    
+    params = []
     
     if category:
         query += ' AND category = ?'
         params.append(category)
     
-    query += ' ORDER BY ai_final_score DESC, published_at DESC LIMIT ? OFFSET ?'
+    query += ' ORDER BY ai_final_score DESC, published_at DESC'
+    query += ' LIMIT ? OFFSET ?'
     params.extend([limit, offset])
     
     cursor.execute(query, params)
-    articles = [dict(row) for row in cursor.fetchall()]
+    rows = cursor.fetchall()
+    
+    # Format articles for frontend (compatible with existing format)
+    articles = []
+    for row in rows:
+        article = {
+            'id': row['id'],
+            'title': row['title'],
+            'url': row['url'],
+            'source': row['source'],
+            'description': row['description'],
+            'content': row['content'],
+            'urlToImage': row['image_url'],  # Frontend expects 'urlToImage'
+            'author': row['author'],
+            'publishedAt': row['published_date'] or row['published_at'],
+            'category': row['category'],
+            'emoji': row['emoji'],
+            'final_score': row['ai_final_score'],
+            
+            # Enhanced content
+            'summary': row['summary'],
+            'timeline': json.loads(row['timeline']) if row['timeline'] else None,
+            'details': row['details_section'],
+            
+            # Stats
+            'views': row['view_count']
+        }
+        articles.append(article)
     
     # Get total count
-    count_query = '''
-        SELECT COUNT(*) as total
-        FROM articles
-        WHERE published = TRUE
-        AND published_at >= datetime('now', ?)
-    '''
-    count_params = [f'-{hours} hours']
-    
+    count_query = 'SELECT COUNT(*) as total FROM articles WHERE published = TRUE'
     if category:
         count_query += ' AND category = ?'
-        count_params.append(category)
+        cursor.execute(count_query, [category])
+    else:
+        cursor.execute(count_query)
     
-    cursor.execute(count_query, count_params)
     total = cursor.fetchone()['total']
     
     conn.close()
     
+    # Response format compatible with existing frontend
     return jsonify({
+        'status': 'ok',
+        'totalResults': total,
         'articles': articles,
-        'total': total,
-        'limit': limit,
-        'offset': offset,
-        'has_more': (offset + limit) < total
+        'generatedAt': datetime.now().isoformat(),
+        'displayTimestamp': datetime.now().strftime('%A, %B %d, %Y at %H:%M %Z')
     })
 
-@app.route('/api/categories', methods=['GET'])
-def get_categories():
-    """Get article counts by category"""
-    hours = int(request.args.get('hours', 24))
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT category, 
-               COUNT(*) as count,
-               MAX(published_at) as latest,
-               AVG(ai_final_score) as avg_score
-        FROM articles
-        WHERE published = TRUE
-        AND published_at >= datetime('now', ?)
-        GROUP BY category
-        ORDER BY count DESC
-    ''', (f'-{hours} hours',))
-    
-    categories = [dict(row) for row in cursor.fetchall()]
-    conn.close()
-    
-    return jsonify({'categories': categories})
-
-@app.route('/api/article/<int:article_id>', methods=['GET'])
+@app.route('/api/news/<int:article_id>', methods=['GET'])
 def get_article(article_id):
-    """Get single article and increment view count"""
-    conn = get_db()
+    """Get single article by ID"""
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
-        SELECT id, url, source, title, description,
-               image_url, author, published_date, category,
-               ai_final_score, ai_emoji, published_at, view_count
+        SELECT 
+            id, url, source, title, description, content,
+            image_url, author, published_date, published_at,
+            category, emoji, ai_final_score, summary,
+            timeline, details_section, view_count
         FROM articles
         WHERE id = ? AND published = TRUE
     ''', (article_id,))
     
-    article = cursor.fetchone()
+    row = cursor.fetchone()
     
-    if not article:
+    if not row:
         conn.close()
         return jsonify({'error': 'Article not found'}), 404
     
     # Increment view count
     cursor.execute('''
-        UPDATE articles
-        SET view_count = view_count + 1
+        UPDATE articles SET view_count = view_count + 1
         WHERE id = ?
     ''', (article_id,))
-    
     conn.commit()
+    
+    article = {
+        'id': row['id'],
+        'title': row['title'],
+        'url': row['url'],
+        'source': row['source'],
+        'description': row['description'],
+        'content': row['content'],
+        'urlToImage': row['image_url'],
+        'author': row['author'],
+        'publishedAt': row['published_date'] or row['published_at'],
+        'category': row['category'],
+        'emoji': row['emoji'],
+        'final_score': row['ai_final_score'],
+        'summary': row['summary'],
+        'timeline': json.loads(row['timeline']) if row['timeline'] else None,
+        'details': row['details_section'],
+        'views': row['view_count'] + 1
+    }
+    
     conn.close()
     
-    return jsonify({'article': dict(article)})
+    return jsonify(article)
+
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    """Get all categories with article counts"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT category, COUNT(*) as count
+        FROM articles
+        WHERE published = TRUE
+        GROUP BY category
+        ORDER BY count DESC
+    ''')
+    
+    categories = [{'name': row['category'], 'count': row['count']} 
+                  for row in cursor.fetchall()]
+    
+    conn.close()
+    
+    return jsonify(categories)
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get system statistics"""
-    conn = get_db()
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Total published
-    cursor.execute('SELECT COUNT(*) as total FROM articles WHERE published = TRUE')
-    total_published = cursor.fetchone()['total']
+    # Published articles
+    cursor.execute('SELECT COUNT(*) as count FROM articles WHERE published = TRUE')
+    published_count = cursor.fetchone()['count']
     
-    # Published today
-    cursor.execute('''
-        SELECT COUNT(*) as today
-        FROM articles
-        WHERE published = TRUE
-        AND date(published_at) = date('now')
-    ''')
-    today_count = cursor.fetchone()['today']
+    # Total fetched
+    cursor.execute('SELECT COUNT(*) as count FROM articles')
+    total_count = cursor.fetchone()['count']
     
-    # Last fetch cycle
+    # Articles with images
+    cursor.execute('SELECT COUNT(*) as count FROM articles WHERE published = TRUE AND image_url IS NOT NULL')
+    with_images = cursor.fetchone()['count']
+    
+    # Latest fetch cycle
     cursor.execute('''
-        SELECT *
-        FROM fetch_cycles
+        SELECT * FROM fetch_cycles
         ORDER BY started_at DESC
         LIMIT 1
     ''')
-    last_fetch_row = cursor.fetchone()
-    last_fetch = dict(last_fetch_row) if last_fetch_row else None
+    latest_cycle = cursor.fetchone()
     
-    # Last AI filter cycle
+    # Source stats
     cursor.execute('''
-        SELECT *
-        FROM ai_filter_cycles
-        ORDER BY started_at DESC
-        LIMIT 1
+        SELECT 
+            COUNT(*) as total_sources,
+            SUM(consecutive_failures) as total_failures,
+            AVG(average_articles_per_fetch) as avg_articles
+        FROM source_stats
     ''')
-    last_filter_row = cursor.fetchone()
-    last_filter = dict(last_filter_row) if last_filter_row else None
-    
-    # Top sources today
-    cursor.execute('''
-        SELECT source, COUNT(*) as count
-        FROM articles
-        WHERE published = TRUE
-        AND date(published_at) = date('now')
-        GROUP BY source
-        ORDER BY count DESC
-        LIMIT 10
-    ''')
-    top_sources = [dict(row) for row in cursor.fetchall()]
-    
-    # Articles waiting for AI
-    cursor.execute('SELECT COUNT(*) as waiting FROM articles WHERE ai_processed = FALSE')
-    waiting_for_ai = cursor.fetchone()['waiting']
+    source_stats = cursor.fetchone()
     
     conn.close()
     
-    return jsonify({
-        'total_published': total_published,
-        'published_today': today_count,
-        'waiting_for_ai': waiting_for_ai,
-        'last_fetch_cycle': last_fetch,
-        'last_filter_cycle': last_filter,
-        'top_sources_today': top_sources
-    })
-
-@app.route('/api/search', methods=['GET'])
-def search_articles():
-    """
-    Search published articles
+    stats = {
+        'published_articles': published_count,
+        'total_fetched': total_count,
+        'articles_with_images': with_images,
+        'image_percentage': round(with_images / published_count * 100, 1) if published_count > 0 else 0,
+        'total_sources': source_stats['total_sources'],
+        'avg_articles_per_source': round(source_stats['avg_articles'], 2) if source_stats['avg_articles'] else 0,
+        'last_fetch': {
+            'started_at': latest_cycle['started_at'] if latest_cycle else None,
+            'duration': latest_cycle['duration_seconds'] if latest_cycle else None,
+            'new_articles': latest_cycle['new_articles_found'] if latest_cycle else 0,
+        } if latest_cycle else None
+    }
     
-    Query params:
-    - q: Search query
-    - limit: Number of results (default: 50)
-    """
-    query = request.args.get('q', '')
-    limit = int(request.args.get('limit', 50))
-    
-    if not query:
-        return jsonify({'error': 'Query parameter required'}), 400
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT id, url, source, title, description, image_url,
-               category, published_at, ai_final_score, ai_emoji
-        FROM articles
-        WHERE published = TRUE
-        AND (title LIKE ? OR description LIKE ?)
-        ORDER BY ai_final_score DESC, published_at DESC
-        LIMIT ?
-    ''', (f'%{query}%', f'%{query}%', limit))
-    
-    results = [dict(row) for row in cursor.fetchall()]
-    conn.close()
-    
-    return jsonify({
-        'query': query,
-        'results': results,
-        'count': len(results)
-    })
+    return jsonify(stats)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({
-        'status': 'ok',
-        'timestamp': datetime.now().isoformat()
-    })
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM articles')
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'articles_count': count,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 if __name__ == '__main__':
-    print(f"🚀 Ten News Live API starting on http://{API_HOST}:{API_PORT}")
-    app.run(host=API_HOST, port=API_PORT, debug=API_DEBUG)
+    # For development
+    app.run(host='0.0.0.0', port=5000, debug=True)
 

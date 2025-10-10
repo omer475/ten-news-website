@@ -1,7 +1,11 @@
 """
-TEN NEWS LIVE - RSS FETCHER
-Parallel RSS fetching with 30 workers
-Runs every 10 minutes
+TEN NEWS - RSS FETCHER
+Fetches articles from 200+ RSS sources every 10 minutes
+Features:
+- 30 parallel workers
+- Duplicate detection
+- 7-method image extraction
+- Complete error handling
 """
 
 import feedparser
@@ -9,247 +13,487 @@ import sqlite3
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
-from rss_sources import get_all_sources
-import hashlib
+import logging
+from bs4 import BeautifulSoup
+import requests
+import json
+from rss_sources import ALL_SOURCES, get_source_credibility
 
-class RSSFetcher:
-    def __init__(self, db_path='news.db', max_workers=30):
+class OptimizedRSSFetcher:
+    def __init__(self, db_path='ten_news.db'):
         self.db_path = db_path
-        self.max_workers = max_workers
-        self.sources = get_all_sources()
-        
-    def create_article_hash(self, url, title):
-        """Create unique hash for deduplication"""
-        content = f"{url}{title}".lower()
-        return hashlib.md5(content.encode()).hexdigest()
+        self.max_workers = 30  # Parallel fetching
+        self.fetch_interval = 600  # 10 minutes in seconds
+        self.sources = ALL_SOURCES
+        self.setup_logging()
+        self.init_database()
     
-    def fetch_single_source(self, source):
-        """Fetch articles from single RSS feed"""
-        try:
-            feed = feedparser.parse(source['url'])
-            
-            if feed.bozo and not feed.entries:
-                # Feed has errors and no entries
-                return {
-                    'source': source['name'],
-                    'category': source['category'],
-                    'status': 'error',
-                    'articles': [],
-                    'error': str(feed.bozo_exception) if hasattr(feed, 'bozo_exception') else 'Unknown error'
-                }
-            
-            articles = []
-            for entry in feed.entries[:20]:  # Max 20 articles per source
-                try:
-                    # Extract article data
-                    article = {
-                        'url': entry.get('link', ''),
-                        'title': entry.get('title', ''),
-                        'description': entry.get('description', '') or entry.get('summary', ''),
-                        'source': source['name'],
-                        'category': source['category'],
-                        'credibility': source['credibility'],
-                        'author': entry.get('author', ''),
-                        'image_url': self._extract_image(entry),
-                        'published_date': self._parse_date(entry),
-                        'fetched_at': datetime.now().isoformat()
-                    }
-                    
-                    # Only add if has title and URL
-                    if article['title'] and article['url']:
-                        article['hash'] = self.create_article_hash(article['url'], article['title'])
-                        articles.append(article)
-                        
-                except Exception as e:
-                    continue  # Skip problematic entries
-            
-            return {
-                'source': source['name'],
-                'category': source['category'],
-                'status': 'success',
-                'articles': articles,
-                'error': None
-            }
-            
-        except Exception as e:
-            return {
-                'source': source['name'],
-                'category': source['category'],
-                'status': 'error',
-                'articles': [],
-                'error': str(e)
-            }
+    def setup_logging(self):
+        """Configure logging"""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('rss_fetcher.log'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger = logging.getLogger(__name__)
     
-    def _extract_image(self, entry):
-        """Extract image URL from feed entry"""
-        # Try multiple fields
-        if hasattr(entry, 'media_content') and entry.media_content:
-            return entry.media_content[0].get('url', '')
-        if hasattr(entry, 'media_thumbnail') and entry.media_thumbnail:
-            return entry.media_thumbnail[0].get('url', '')
-        if 'enclosures' in entry and entry.enclosures:
-            for enc in entry.enclosures:
-                if enc.get('type', '').startswith('image/'):
-                    return enc.get('href', '')
-        return ''
-    
-    def _parse_date(self, entry):
-        """Parse publication date from entry"""
-        try:
-            if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                return datetime(*entry.published_parsed[:6]).isoformat()
-            elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                return datetime(*entry.updated_parsed[:6]).isoformat()
-        except:
-            pass
-        return datetime.now().isoformat()
-    
-    def fetch_all_parallel(self):
-        """Fetch all sources in parallel"""
-        print(f"\n🔄 RSS FETCHER STARTING")
-        print("=" * 70)
-        print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"📡 Fetching {len(self.sources)} sources with {self.max_workers} workers...")
-        print()
-        
-        start_time = time.time()
-        all_articles = []
-        success_count = 0
-        error_count = 0
-        
-        # Parallel fetching
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_source = {executor.submit(self.fetch_single_source, source): source for source in self.sources}
-            
-            for i, future in enumerate(as_completed(future_to_source), 1):
-                result = future.result()
-                
-                if result['status'] == 'success':
-                    success_count += 1
-                    all_articles.extend(result['articles'])
-                    if result['articles']:
-                        print(f"✅ [{i:3}/{len(self.sources)}] {result['source']:40} {len(result['articles']):3} articles")
-                    else:
-                        print(f"⚪ [{i:3}/{len(self.sources)}] {result['source']:40}   0 articles")
-                else:
-                    error_count += 1
-                    print(f"❌ [{i:3}/{len(self.sources)}] {result['source']:40} ERROR: {result['error'][:30]}")
-        
-        duration = time.time() - start_time
-        
-        print()
-        print("=" * 70)
-        print(f"📊 FETCH COMPLETE")
-        print(f"   ✅ Successful: {success_count}/{len(self.sources)}")
-        print(f"   ❌ Failed: {error_count}/{len(self.sources)}")
-        print(f"   📰 Total articles: {len(all_articles)}")
-        print(f"   ⏱️  Duration: {duration:.1f}s")
-        print("=" * 70)
-        
-        return all_articles, {
-            'sources_total': len(self.sources),
-            'sources_success': success_count,
-            'sources_failed': error_count,
-            'articles_found': len(all_articles),
-            'duration_seconds': duration
-        }
-    
-    def save_to_database(self, articles):
-        """Save articles to SQLite database"""
-        if not articles:
-            print("⚠️  No articles to save")
-            return 0
-        
-        print(f"\n💾 Saving {len(articles)} articles to database...")
-        
+    def init_database(self):
+        """Initialize database with schema"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        saved_count = 0
-        duplicate_count = 0
-        
-        for article in articles:
-            try:
-                # Check if already exists
-                cursor.execute('SELECT id FROM articles WHERE hash = ?', (article['hash'],))
-                if cursor.fetchone():
-                    duplicate_count += 1
-                    continue
-                
-                # Insert new article
-                cursor.execute('''
-                    INSERT INTO articles (
-                        url, hash, source, title, description, image_url,
-                        author, published_date, category, source_credibility,
-                        fetched_at, ai_processed, published
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, FALSE)
-                ''', (
-                    article['url'],
-                    article['hash'],
-                    article['source'],
-                    article['title'],
-                    article['description'],
-                    article['image_url'],
-                    article['author'],
-                    article['published_date'],
-                    article['category'],
-                    article['credibility'],
-                    article['fetched_at']
-                ))
-                saved_count += 1
-                
-            except Exception as e:
-                print(f"⚠️  Error saving article: {str(e)[:50]}")
-                continue
+        # Execute schema from database_schema.sql
+        with open('database_schema.sql', 'r') as f:
+            schema = f.read()
+            cursor.executescript(schema)
         
         conn.commit()
         conn.close()
-        
-        print(f"   ✅ Saved: {saved_count} new articles")
-        print(f"   ⏭️  Skipped: {duplicate_count} duplicates")
-        
-        return saved_count
+        self.logger.info("✅ Database initialized")
     
-    def log_fetch_cycle(self, stats, new_articles_saved):
-        """Log fetch cycle to database"""
+    def run_forever(self):
+        """Main loop - run every 10 minutes"""
+        self.logger.info("🚀 RSS Fetcher started - running every 10 minutes")
+        self.logger.info(f"📰 Monitoring {len(self.sources)} RSS sources")
+        
+        while True:
+            try:
+                cycle_start = datetime.now()
+                self.logger.info(f"\n{'='*60}")
+                self.logger.info(f"🔄 Starting new fetch cycle at {cycle_start.strftime('%Y-%m-%d %H:%M:%S')}")
+                self.logger.info(f"{'='*60}\n")
+                
+                # Start fetch cycle
+                cycle_id = self._start_fetch_cycle()
+                
+                # Parallel fetch all sources
+                results = self._parallel_fetch_all_sources()
+                
+                # Complete cycle
+                self._complete_fetch_cycle(cycle_id, results, cycle_start)
+                
+                # Summary
+                self.logger.info(f"\n{'='*60}")
+                self.logger.info(f"✅ Fetch cycle complete!")
+                self.logger.info(f"   📊 Sources fetched: {results['sources_fetched']}/{len(self.sources)}")
+                self.logger.info(f"   📰 Total articles found: {results['total_articles']}")
+                self.logger.info(f"   ✨ New articles: {results['new_articles']}")
+                self.logger.info(f"   ❌ Failed sources: {results['failed_sources']}")
+                duration = (datetime.now() - cycle_start).total_seconds()
+                self.logger.info(f"   ⏱️  Duration: {duration:.1f}s")
+                self.logger.info(f"{'='*60}\n")
+                
+                # Sleep until next cycle
+                self.logger.info(f"😴 Sleeping for {self.fetch_interval}s (10 minutes)...")
+                time.sleep(self.fetch_interval)
+                
+            except KeyboardInterrupt:
+                self.logger.info("🛑 RSS Fetcher stopped by user")
+                break
+            except Exception as e:
+                self.logger.error(f"❌ Critical error in main loop: {e}", exc_info=True)
+                time.sleep(60)  # Wait 1 minute before retrying
+    
+    def _start_fetch_cycle(self):
+        """Start a new fetch cycle in database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO fetch_cycles (started_at, status)
+            VALUES (?, 'running')
+        ''', (datetime.now().isoformat(),))
+        cycle_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return cycle_id
+    
+    def _complete_fetch_cycle(self, cycle_id, results, start_time):
+        """Mark fetch cycle as complete"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        duration = (datetime.now() - start_time).total_seconds()
+        
         cursor.execute('''
-            INSERT INTO fetch_cycles (
-                started_at, duration_seconds, sources_total,
-                sources_success, sources_failed, articles_found,
-                new_articles_saved, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'completed')
+            UPDATE fetch_cycles SET
+                completed_at = ?,
+                duration_seconds = ?,
+                status = 'completed',
+                sources_fetched = ?,
+                failed_sources = ?,
+                new_articles_found = ?,
+                total_articles_fetched = ?,
+                errors = ?
+            WHERE id = ?
         ''', (
             datetime.now().isoformat(),
-            stats['duration_seconds'],
-            stats['sources_total'],
-            stats['sources_success'],
-            stats['sources_failed'],
-            stats['articles_found'],
-            new_articles_saved
+            duration,
+            results['sources_fetched'],
+            results['failed_sources'],
+            results['new_articles'],
+            results['total_articles'],
+            json.dumps(results['errors']),
+            cycle_id
         ))
         
         conn.commit()
         conn.close()
     
-    def run_fetch_cycle(self):
-        """Run complete fetch cycle"""
-        # Fetch all articles
-        articles, stats = self.fetch_all_parallel()
+    def _parallel_fetch_all_sources(self):
+        """Fetch all sources in parallel using ThreadPoolExecutor"""
+        results = {
+            'total_articles': 0,
+            'new_articles': 0,
+            'sources_fetched': 0,
+            'failed_sources': 0,
+            'errors': []
+        }
         
-        # Save to database
-        new_articles = self.save_to_database(articles)
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all fetch tasks
+            future_to_source = {
+                executor.submit(self._fetch_single_source, source_name, url): source_name
+                for source_name, url in self.sources
+            }
+            
+            # Process results as they complete
+            for future in as_completed(future_to_source):
+                source_name = future_to_source[future]
+                try:
+                    result = future.result()
+                    results['total_articles'] += result['articles_found']
+                    results['new_articles'] += result['new_articles']
+                    results['sources_fetched'] += 1
+                    
+                    if result['success']:
+                        if result['new_articles'] > 0:
+                            self.logger.info(f"✅ {source_name}: {result['new_articles']} new articles")
+                    else:
+                        results['failed_sources'] += 1
+                        results['errors'].append({
+                            'source': source_name,
+                            'error': result['error']
+                        })
+                        self.logger.warning(f"⚠️  {source_name}: {result['error']}")
+                        
+                except Exception as e:
+                    results['failed_sources'] += 1
+                    results['errors'].append({
+                        'source': source_name,
+                        'error': str(e)
+                    })
+                    self.logger.error(f"❌ {source_name}: {e}")
         
-        # Log cycle
-        self.log_fetch_cycle(stats, new_articles)
+        return results
+    
+    def _fetch_single_source(self, source_name, feed_url):
+        """Fetch articles from a single RSS source"""
+        result = {
+            'success': False,
+            'articles_found': 0,
+            'new_articles': 0,
+            'error': None
+        }
         
-        print(f"\n✅ Fetch cycle complete! {new_articles} new articles added.\n")
+        try:
+            # Parse RSS feed
+            feed = feedparser.parse(feed_url, timeout=30)
+            
+            if feed.bozo:  # Feed parsing error
+                result['error'] = f"Feed parsing error: {feed.bozo_exception}"
+                self._update_source_stats_failure(source_name, result['error'])
+                return result
+            
+            result['articles_found'] = len(feed.entries)
+            
+            # Process each article
+            conn = sqlite3.connect(self.db_path)
+            
+            for entry in feed.entries:
+                # Check if we should process this article
+                should_process, reason = self._should_process_article(entry, source_name, conn)
+                
+                if not should_process:
+                    continue
+                
+                # Extract article data
+                article_data = self._extract_article_data(entry, source_name)
+                
+                # Insert into database
+                if self._insert_article(article_data, conn):
+                    result['new_articles'] += 1
+            
+            conn.commit()
+            conn.close()
+            
+            # Update source statistics
+            self._update_source_stats_success(source_name, result)
+            
+            result['success'] = True
+            
+        except Exception as e:
+            result['error'] = str(e)
+            self._update_source_stats_failure(source_name, str(e))
         
-        return new_articles
+        return result
+    
+    def _should_process_article(self, entry, source_name, conn):
+        """Check if article should be processed (duplicate detection)"""
+        
+        # Extract URL
+        url = entry.get('link', '')
+        if not url:
+            return False, "No URL found"
+        
+        # Check 1: URL already exists?
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM articles WHERE url = ?', (url,))
+        if cursor.fetchone():
+            return False, "URL already exists"
+        
+        # Check 2: GUID check (if available)
+        guid = entry.get('id', '')
+        if guid:
+            cursor.execute('SELECT id FROM articles WHERE guid = ?', (guid,))
+            if cursor.fetchone():
+                return False, "GUID already exists"
+        
+        # Check 3: Published date check
+        if hasattr(entry, 'published_parsed') and entry.published_parsed:
+            try:
+                pub_date = datetime(*entry.published_parsed[:6])
+                last_fetch = self._get_last_fetch_time(source_name, conn)
+                
+                if last_fetch and pub_date <= last_fetch:
+                    return False, "Article older than last fetch"
+            except:
+                pass  # If date parsing fails, continue processing
+        
+        return True, "New article"
+    
+    def _get_last_fetch_time(self, source_name, conn):
+        """Get the last successful fetch time for this source"""
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT last_fetch_at FROM source_stats 
+            WHERE source = ?
+        ''', (source_name,))
+        result = cursor.fetchone()
+        if result and result[0]:
+            try:
+                return datetime.fromisoformat(result[0])
+            except:
+                pass
+        return None
+    
+    def _extract_article_data(self, entry, source_name):
+        """Extract all article data from RSS entry"""
+        
+        # Basic fields
+        url = entry.get('link', '')
+        guid = entry.get('id', '')
+        title = entry.get('title', '')
+        description = entry.get('description', '') or entry.get('summary', '')
+        author = entry.get('author', '')
+        
+        # Clean HTML from description
+        if description:
+            soup = BeautifulSoup(description, 'html.parser')
+            description = soup.get_text().strip()
+        
+        # Published date
+        published_date = None
+        if hasattr(entry, 'published_parsed') and entry.published_parsed:
+            try:
+                published_date = datetime(*entry.published_parsed[:6]).isoformat()
+            except:
+                pass
+        
+        # Extract content (some feeds provide full content)
+        content = ''
+        if hasattr(entry, 'content'):
+            content = entry.content[0].get('value', '')
+            # Clean HTML from content
+            soup = BeautifulSoup(content, 'html.parser')
+            content = soup.get_text().strip()
+        
+        # Extract image
+        image_url, extraction_method = self._extract_image_url(entry, url)
+        
+        return {
+            'url': url,
+            'guid': guid,
+            'source': source_name,
+            'title': title,
+            'description': description,
+            'content': content,
+            'image_url': image_url,
+            'author': author,
+            'published_date': published_date,
+            'image_extraction_method': extraction_method
+        }
+    
+    def _extract_image_url(self, entry, article_url):
+        """
+        Extract image from RSS entry with multiple fallback methods
+        Returns: (image_url: str or None, method: str)
+        """
+        
+        # METHOD 1: RSS Enclosure tag (most common for images)
+        if hasattr(entry, 'enclosures') and entry.enclosures:
+            for enclosure in entry.enclosures:
+                if enclosure.get('type', '').startswith('image/'):
+                    return enclosure.get('href'), 'enclosure'
+        
+        # METHOD 2: Media Content tag (common in feeds)
+        if hasattr(entry, 'media_content') and entry.media_content:
+            for media in entry.media_content:
+                if media.get('medium') == 'image' or media.get('type', '').startswith('image/'):
+                    return media.get('url'), 'media_content'
+        
+        # METHOD 3: Media Thumbnail tag
+        if hasattr(entry, 'media_thumbnail') and entry.media_thumbnail:
+            return entry.media_thumbnail[0].get('url'), 'media_thumbnail'
+        
+        # METHOD 4: Look in description HTML
+        if hasattr(entry, 'description'):
+            soup = BeautifulSoup(entry.description, 'html.parser')
+            img = soup.find('img')
+            if img and img.get('src'):
+                return img.get('src'), 'description_html'
+        
+        # METHOD 5: Content HTML
+        if hasattr(entry, 'content'):
+            for content in entry.content:
+                soup = BeautifulSoup(content.get('value', ''), 'html.parser')
+                img = soup.find('img')
+                if img and img.get('src'):
+                    return img.get('src'), 'content_html'
+        
+        # METHOD 6: Parse full article page for og:image (expensive, limit usage)
+        # Only use for high-priority sources to avoid slowdowns
+        # Uncomment if needed:
+        # try:
+        #     response = requests.get(article_url, timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
+        #     soup = BeautifulSoup(response.text, 'html.parser')
+        #     og_image = soup.find('meta', property='og:image')
+        #     if og_image and og_image.get('content'):
+        #         return og_image.get('content'), 'og_image'
+        # except:
+        #     pass
+        
+        # METHOD 7: No image found
+        return None, 'none'
+    
+    def _insert_article(self, article_data, conn):
+        """Insert article into database"""
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT OR IGNORE INTO articles (
+                    url, guid, source, title, description, content,
+                    image_url, author, published_date, 
+                    image_extraction_method, fetched_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                article_data['url'],
+                article_data['guid'],
+                article_data['source'],
+                article_data['title'],
+                article_data['description'],
+                article_data['content'],
+                article_data['image_url'],
+                article_data['author'],
+                article_data['published_date'],
+                article_data['image_extraction_method'],
+                datetime.now().isoformat()
+            ))
+            return cursor.rowcount > 0
+        except Exception as e:
+            self.logger.error(f"Error inserting article: {e}")
+            return False
+    
+    def _update_source_stats_success(self, source_name, result):
+        """Update source statistics after successful fetch"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get or create source stats
+        cursor.execute('SELECT * FROM source_stats WHERE source = ?', (source_name,))
+        existing = cursor.fetchone()
+        
+        if existing:
+            total_fetches = existing[3] + 1
+            successful_fetches = existing[4] + 1
+            total_articles = existing[6] + result['new_articles']
+            avg_articles = total_articles / successful_fetches if successful_fetches > 0 else 0
+            
+            cursor.execute('''
+                UPDATE source_stats SET
+                    last_fetch_at = ?,
+                    total_fetches = ?,
+                    successful_fetches = ?,
+                    total_articles_found = ?,
+                    average_articles_per_fetch = ?,
+                    consecutive_failures = 0
+                WHERE source = ?
+            ''', (
+                datetime.now().isoformat(),
+                total_fetches,
+                successful_fetches,
+                total_articles,
+                avg_articles,
+                source_name
+            ))
+        else:
+            cursor.execute('''
+                INSERT INTO source_stats (
+                    source, last_fetch_at, total_fetches, successful_fetches,
+                    total_articles_found, average_articles_per_fetch
+                ) VALUES (?, ?, 1, 1, ?, ?)
+            ''', (
+                source_name,
+                datetime.now().isoformat(),
+                result['new_articles'],
+                result['new_articles']
+            ))
+        
+        conn.commit()
+        conn.close()
+    
+    def _update_source_stats_failure(self, source_name, error):
+        """Update source statistics after failed fetch"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get or create source stats
+        cursor.execute('SELECT * FROM source_stats WHERE source = ?', (source_name,))
+        existing = cursor.fetchone()
+        
+        if existing:
+            cursor.execute('''
+                UPDATE source_stats SET
+                    total_fetches = total_fetches + 1,
+                    failed_fetches = failed_fetches + 1,
+                    last_error = ?,
+                    consecutive_failures = consecutive_failures + 1
+                WHERE source = ?
+            ''', (error, source_name))
+        else:
+            cursor.execute('''
+                INSERT INTO source_stats (
+                    source, total_fetches, failed_fetches, last_error, consecutive_failures
+                ) VALUES (?, 1, 1, ?, 1)
+            ''', (source_name, error))
+        
+        conn.commit()
+        conn.close()
 
+# Run if executed directly
 if __name__ == '__main__':
-    fetcher = RSSFetcher()
-    fetcher.run_fetch_cycle()
+    fetcher = OptimizedRSSFetcher()
+    fetcher.run_forever()
 
