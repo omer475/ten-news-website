@@ -1,7 +1,6 @@
-/**
- * TEN NEWS - Next.js API Proxy
- * Fetches news from Flask API (SQLite database) or falls back to local JSON
- */
+import path from 'path';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -14,57 +13,75 @@ export default async function handler(req, res) {
   }
 
   try {
-    // TRY 1: Fetch from Flask API (RSS System with images)
-    try {
-      const flaskApiUrl = process.env.FLASK_API_URL || 'http://localhost:5000/api/news';
-      const response = await fetch(flaskApiUrl);
+    // Connect to SQLite database
+    const dbPath = path.join(process.cwd(), 'ten_news.db');
+    
+    const db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database
+    });
+
+    // Get published articles with images
+    const articles = await db.all(`
+      SELECT 
+        id, title, url, source, description, content,
+        image_url, author, published_date, published_at,
+        category, emoji, ai_final_score, summary,
+        timeline, details_section, view_count
+      FROM articles
+      WHERE published = TRUE
+      ORDER BY ai_final_score DESC, published_at DESC
+      LIMIT 50
+    `);
+
+    await db.close();
+
+    if (articles && articles.length > 0) {
+      console.log(`✅ Serving ${articles.length} articles from database (ten_news.db)`);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`✅ Serving RSS news from Flask API: ${data.articles.length} articles`);
-        
-        // Transform to match frontend format
-        const transformed = {
-          digest_date: data.displayTimestamp || new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          }),
-          articles: data.articles.map((article, index) => ({
-            rank: index + 1,
-            emoji: article.emoji || '📰',
-            title: article.title || 'News Story',
-            summary: article.summary || article.description || 'News summary will appear here.',
-            details: article.details ? [article.details] : (article.timeline || []),
-            category: (article.category || 'WORLD NEWS').toUpperCase(),
-            source: article.source || 'Ten News',
-            url: article.url || '#',
-            urlToImage: article.urlToImage || article.image_url || null, // ✅ IMAGE!
-            image_url: article.urlToImage || article.image_url || null, // ✅ IMAGE!
-            timeline: article.timeline || null,
-            rewritten_text: article.summary || article.description,
-            published_at: article.publishedAt || article.published_at,
-            final_score: article.final_score
-          })),
-          dailyGreeting: "Today's Essential Global News",
-          readingTime: `${Math.ceil(data.articles.length * 1.5)} minute read`,
-          displayDate: new Date().toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }).toUpperCase(),
-          generatedAt: data.generatedAt || new Date().toISOString(),
-          totalArticles: data.totalResults || data.articles.length
-        };
-        
-        return res.status(200).json(transformed);
-      }
-    } catch (flaskError) {
-      console.log('⚠️ Flask API not available:', flaskError.message);
+      // Format for frontend (compatible with old format)
+      const formattedArticles = articles.map((article, index) => ({
+        rank: index + 1,
+        id: article.id,
+        emoji: article.emoji || '📰',
+        title: article.title,
+        summary: article.summary || article.description,
+        details: article.details_section ? [article.details_section] : [],
+        timeline: article.timeline ? JSON.parse(article.timeline) : [],
+        category: article.category || 'News',
+        source: article.source || 'Ten News',
+        url: article.url || '#',
+        urlToImage: article.image_url,  // ⭐ THIS IS THE KEY FIELD!
+        author: article.author,
+        publishedAt: article.published_date || article.published_at,
+        final_score: article.ai_final_score,
+        views: article.view_count
+      }));
+
+      return res.status(200).json({
+        status: 'ok',
+        totalResults: formattedArticles.length,
+        articles: formattedArticles,
+        digest_date: new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }),
+        dailyGreeting: `📰 ${formattedArticles.length} Top Stories Today`,
+        readingTime: `${Math.ceil(formattedArticles.length * 0.5)} minute read`,
+        displayDate: new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).toUpperCase(),
+        generatedAt: new Date().toISOString()
+      });
+    } else {
+      console.log('⚠️ No published articles in database yet');
     }
     
-    // TRY 2: Fall back to local JSON files (old system)
+    // No news files found - return sample data
     const sampleData = {
       "digest_date": new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 
