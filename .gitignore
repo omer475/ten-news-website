@@ -45,11 +45,6 @@ Thumbs.db
 # tennews_data_*.json
 # historical_events_*.json
 
-# Runtime timestamp files (Railway should start fresh)
-part1_last_run.json
-part2_last_run.json
-tennews_data_live.json
-
 # Processing logs will be committed to track the process
 
 # Temporary files

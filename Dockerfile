@@ -1,5 +1,4 @@
 # Dockerfile for Railway Deployment - Python News Generator
-# Build timestamp: 2025-10-09 18:30 (force rebuild)
 FROM python:3.10-slim
 
 # Set working directory
@@ -17,8 +16,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy all Python files (includes unified_news_scoring.py, supabase_storage.py, etc.)
+# Copy only Python files (not Next.js)
 COPY *.py .
+COPY unified_news_scoring.py .
+COPY supabase_storage.py .
 
 # Default command (will be overridden by Procfile)
 CMD ["python3", "news-part1-breaking.py"]
