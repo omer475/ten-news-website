@@ -199,8 +199,16 @@ class OptimizedRSSFetcher:
         }
         
         try:
-            # Parse RSS feed
-            feed = feedparser.parse(feed_url, timeout=30)
+            # FIX: Use requests first (which supports timeout), then parse
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(feed_url, timeout=10, headers=headers)
+            response.raise_for_status()  # Raise error for bad status codes
+            
+            # Parse the fetched content
+            feed = feedparser.parse(response.content)
             
             if feed.bozo:  # Feed parsing error
                 result['error'] = f"Feed parsing error: {feed.bozo_exception}"
