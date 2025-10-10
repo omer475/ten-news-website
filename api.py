@@ -267,6 +267,6 @@ def health_check():
         }), 500
 
 if __name__ == '__main__':
-    # For development
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # For development (port 5001 because 5000 is used by macOS)
+    app.run(host='0.0.0.0', port=5001, debug=True)
 

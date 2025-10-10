@@ -101,6 +101,16 @@ export default function Home() {
           
           // Convert news generator articles to website format
           newsData.articles.forEach((article, index) => {
+              const imageUrl = article.urlToImage || article.image || null;
+              
+              // DEBUG: Log image info for first 3 articles
+              if (index < 3) {
+                console.log(`📰 Article ${index + 1}: "${article.title?.substring(0, 50)}..."`);
+                console.log(`   Image URL: ${imageUrl || 'NO IMAGE'}`);
+                console.log(`   Has urlToImage: ${!!article.urlToImage}`);
+                console.log(`   Has image: ${!!article.image}`);
+              }
+              
               const storyData = {
               type: 'news',
               number: article.rank || (index + 1),
@@ -111,7 +121,7 @@ export default function Home() {
               details: article.details || [],
               source: article.source || 'News+',
               url: article.url || '#',
-              urlToImage: article.urlToImage || article.image || null
+              urlToImage: imageUrl
               };
               
               // Add timeline data (from generator or create fallback)
@@ -1671,7 +1681,7 @@ export default function Home() {
                       height: '30vh',
                       margin: 0,
                       padding: 0,
-                      background: story.urlToImage ? 'transparent' : '#9CA3AF',
+                      background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1687,20 +1697,36 @@ export default function Home() {
                             objectFit: 'cover',
                             objectPosition: 'center'
                           }}
+                          onLoad={() => {
+                            console.log('✅ Image loaded successfully:', story.urlToImage);
+                          }}
                           onError={(e) => {
+                            console.error('❌ Image failed to load:', story.urlToImage);
+                            console.error('   Story title:', story.title);
                             e.target.style.display = 'none';
-                            e.target.parentElement.style.background = '#9CA3AF';
+                            e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                            e.target.parentElement.innerHTML = `
+                              <div style="
+                                font-size: 72px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                width: 100%;
+                                height: 100%;
+                              ">${story.emoji || '📰'}</div>
+                            `;
                           }}
                         />
                       ) : (
                         <div style={{
-                          color: '#ffffff',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          textAlign: 'center',
-                          padding: '20px'
+                          fontSize: '72px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '100%',
+                          height: '100%'
                         }}>
-                          📸 Image Area
+                          {story.emoji || '📰'}
                         </div>
                       )}
                     </div>

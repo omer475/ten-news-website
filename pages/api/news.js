@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
@@ -12,24 +12,41 @@ export default function handler(req, res) {
   }
 
   try {
-    // Get today's date
+    // FIRST: Try to fetch from Flask API (live RSS news with images!)
+    console.log('🔄 Attempting to fetch from Flask API...');
+    const flaskApiUrl = 'http://localhost:5001/api/news';
+    const flaskResponse = await fetch(flaskApiUrl, { 
+      signal: AbortSignal.timeout(5000) // 5 second timeout
+    });
+    
+    if (flaskResponse.ok) {
+      const flaskData = await flaskResponse.json();
+      console.log(`✅ Serving LIVE RSS news from Flask API (${flaskData.articles?.length || 0} articles with images!)`);
+      return res.status(200).json(flaskData);
+    }
+  } catch (fetchError) {
+    console.log(`⚠️  Flask API not available: ${fetchError.message}`);
+  }
+
+  // FALLBACK 1: Try to read today's news file
+  try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '_');
     
-    // Try to read today's news file
     const newsFileName = `tennews_data_${dateStr}.json`;
     const newsFilePath = path.join(process.cwd(), newsFileName);
     
-    // Check if today's file exists
     if (fs.existsSync(newsFilePath)) {
       const newsData = JSON.parse(fs.readFileSync(newsFilePath, 'utf8'));
-      console.log(`✅ Serving real news data from: ${newsFileName}`);
+      console.log(`✅ Serving news data from file: ${newsFileName}`);
       return res.status(200).json(newsData);
-    } else {
-      console.log(`⚠️ Today's file not found: ${newsFileName}`);
     }
+  } catch (error) {
+    console.log(`⚠️  Error reading today's file: ${error.message}`);
+  }
     
-    // If today's file doesn't exist, find the most recent one
+  // FALLBACK 2: Find most recent news file
+  try {
     const files = fs.readdirSync(process.cwd());
     const newsFiles = files
       .filter(file => file.startsWith('tennews_data_') && file.endsWith('.json'))
@@ -40,11 +57,12 @@ export default function handler(req, res) {
       const latestNewsFile = newsFiles[0];
       const latestNewsPath = path.join(process.cwd(), latestNewsFile);
       const newsData = JSON.parse(fs.readFileSync(latestNewsPath, 'utf8'));
-      console.log(`✅ Serving recent news data from: ${latestNewsFile}`);
+      console.log(`✅ Serving recent news data from file: ${latestNewsFile}`);
       return res.status(200).json(newsData);
-    } else {
-      console.log('⚠️ No news data files found, using sample data');
     }
+  } catch (error) {
+    console.log(`⚠️  Error finding recent files: ${error.message}`);
+  }
     
     // No news files found - return sample data
     const sampleData = {
