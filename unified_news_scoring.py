@@ -1,6 +1,6 @@
 # TEN NEWS - UNIFIED SCORING SYSTEM (0-100 Points)
 # Used by both Part 1 (Breaking) and Part 2 (Global)
-# Minimum threshold: 60 points
+# Minimum threshold: 70 points
 
 import json
 import google.generativeai as genai
@@ -13,16 +13,16 @@ def score_articles_unified(articles, google_api_key, part_name="Unknown"):
     
     2-STAGE FILTERING:
     Stage 1: Instant rejection (celebrity, local, sports, clickbait)
-    Stage 2: AI scoring 0-100 across 5 dimensions
+    Stage 2: AI scoring 0-100 across 4 dimensions
     
-    MINIMUM THRESHOLD: 60 points
+    MINIMUM THRESHOLD: 70 points
     """
     if not google_api_key or google_api_key == 'your-google-api-key-here':
         print("⚠️ Google API key not configured")
         return None
     
     print(f"\n🤖 [{part_name}] Scoring {len(articles)} articles (UNIFIED 0-100 SYSTEM)...")
-    print("   📊 Minimum threshold: 60 points")
+    print("   📊 Minimum threshold: 70 points")
     
     # Prepare articles for AI (max 30 at a time for quality)
     articles_batch = articles[:30]
@@ -65,45 +65,50 @@ STAGE 2: SCORING (0-100 POINTS) - Only for articles that passed Stage 1
 
 Score EACH dimension carefully:
 
-**1. GLOBAL IMPACT & IMPORTANCE (0-35 points)**
-   30-35: World-changing (pandemics, wars, major disasters, revolutionary discoveries, economic crises)
-   20-29: Nationally/regionally significant (major elections, court decisions, corporate mega-deals, significant findings)
-   10-19: Notable but limited impact (sector developments, regional news with broader interest)
-   0-9: Minor/local
+**1. GLOBAL RELEVANCE (0-35 points)**
+Would people in multiple countries care about this?
 
-**2. SCIENTIFIC/TECHNOLOGICAL BREAKTHROUGH (0-30 points)**
-   25-30: Revolutionary breakthrough (disease cures, paradigm shifts, game-changing tech)
-   15-24: Significant advancement (important research, notable progress, meaningful innovations)
-   5-14: Incremental progress (small improvements, confirmatory studies)
-   0-4: Not scientific/tech or obvious findings
+   30-35: Universal impact (tech everyone uses, major geopolitical shifts, breakthrough discoveries)
+   22-29: Wide international interest (major country developments, global industry changes)
+   12-21: Regional but significant (important but limited geography/sector)
+   0-11: Too local/niche
 
-**3. NOVELTY & URGENCY (0-20 points)**
-   18-20: Breaking/urgent (happening now, rapidly developing, time-critical)
-   12-17: Fresh & timely (last 3 hours, new significant development)
-   6-11: Recent (last 24 hours, still relevant)
-   0-5: Old (>24 hours, rehashed, updates without new info)
+**2. SURPRISE FACTOR / "DID YOU KNOW?" (0-30 points)**
+Is this unexpected, counterintuitive, or mind-blowing?
 
-**4. SOURCE CREDIBILITY (0-10 points)**
-   9-10: Gold standard (Reuters, AP, BBC, Nature, Science, Cell, Lancet, NEJM, NYT, WaPo, FT, Economist)
-   7-8: Highly credible (major national papers, established science outlets, major broadcasters)
-   5-6: Credible (regional quality newspapers, specialized publications)
-   0-4: Lower credibility (tabloids, blogs, unverified sources)
+   25-30: "Wait, WHAT?" moment (bumblebees shouldn't fly, octopuses have 3 hearts, honey never expires)
+   18-24: Very surprising (unexpected partnerships, dramatic pivots, counterintuitive findings)
+   10-17: Somewhat unexpected (new tech reveals, unusual developments)
+   5-9: Predictable but notable
+   0-4: "Yeah, we knew that" - completely expected
 
-**5. ENGAGEMENT & INTEREST FACTOR (0-15 points)**
-   13-15: Extremely engaging (mind-blowing, clear life-changing implications, fascinating insights)
-   8-12: Quite interesting (educational, surprising findings, important implications)
-   3-7: Moderately interesting (somewhat interesting, niche appeal)
-   0-2: Boring (dry, no clear implications, uninteresting)
+**3. UNIVERSAL UNDERSTANDING (0-20 points)**
+Can anyone grasp why this matters without specialized knowledge?
+
+   17-20: Instantly clear to everyone (anyone can understand the significance immediately)
+   12-16: Easy to explain in one sentence (simple concept with obvious implications)
+   6-11: Requires some context (explainable but needs brief background)
+   0-5: Too technical/specialized (requires expert knowledge to appreciate)
+
+**4. DATA/SCIENTIFIC INTEREST (0-15 points)**
+For data/science stories: Is the finding fascinating?
+
+   13-15: Mind-bending fact (counterintuitive physics, shocking statistics, nature surprises)
+   9-12: Very interesting data (meaningful trends, compelling research findings)
+   5-8: Useful information (incremental findings, expected correlations)
+   0-4: Boring data (obvious findings, dry statistics, predictable results)
+
+Note: Non-science/data stories can score 0-4 in this category without penalty
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FINAL SCORE CALCULATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-FINAL_SCORE = Global_Impact + Scientific_Significance + Novelty + Credibility + Engagement
+FINAL_SCORE = Global_Relevance + Surprise_Factor + Universal_Understanding + Data_Scientific_Interest
 
-**MINIMUM TO PUBLISH: 60 POINTS**
+**MINIMUM TO PUBLISH: 70 POINTS**
 
-Most articles will score 40-60. Only exceptional articles reach 60+.
+Most articles will score 40-70. Only exceptional articles reach 70+.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EMOJI & CATEGORY SELECTION
@@ -123,12 +128,11 @@ Return ONLY valid JSON (no markdown, no explanations):
     {{
       "id": 1,
       "stage1_reject": false,
-      "global_impact": 32,
-      "scientific_significance": 28,
-      "novelty": 18,
-      "credibility": 10,
-      "engagement": 14,
-      "final_score": 102,
+      "global_relevance": 32,
+      "surprise_factor": 28,
+      "universal_understanding": 18,
+      "data_scientific_interest": 14,
+      "final_score": 92,
       "verdict": "PUBLISH",
       "emoji": "🔬",
       "category": "Science",
@@ -189,10 +193,10 @@ ARTICLES TO EVALUATE ({len(articles_info)} total):
     return None
 
 
-def apply_unified_scores(articles, scores, score_threshold=60):
+def apply_unified_scores(articles, scores, score_threshold=70):
     """
     Apply unified 0-100 scores to articles
-    Filter by STRICT 60-point threshold
+    Filter by STRICT 70-point threshold
     
     Returns: List of articles meeting threshold, sorted by score (highest first)
     """
@@ -220,11 +224,10 @@ def apply_unified_scores(articles, scores, score_threshold=60):
             # Extract scores
             final_score = score_data.get('final_score', 0)
             
-            article['global_impact'] = score_data.get('global_impact', 0)
-            article['scientific_significance'] = score_data.get('scientific_significance', 0)
-            article['novelty'] = score_data.get('novelty', 0)
-            article['credibility'] = score_data.get('credibility', 0)
-            article['engagement'] = score_data.get('engagement', 0)
+            article['global_relevance'] = score_data.get('global_relevance', 0)
+            article['surprise_factor'] = score_data.get('surprise_factor', 0)
+            article['universal_understanding'] = score_data.get('universal_understanding', 0)
+            article['data_scientific_interest'] = score_data.get('data_scientific_interest', 0)
             article['final_score'] = final_score
             article['verdict'] = score_data.get('verdict', 'REJECT')
             article['emoji'] = score_data.get('emoji', '📰')
