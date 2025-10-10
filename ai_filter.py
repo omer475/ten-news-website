@@ -30,10 +30,21 @@ class AINewsFilter:
         # Models
         self.claude_model = "claude-3-5-sonnet-20241022"
         self.gemini_model = "gemini-2.0-flash-exp"
+        self.perplexity_model = "sonar"
         
         # Configure Gemini
         if self.google_api_key:
             genai.configure(api_key=self.google_api_key)
+        
+        # Configure Perplexity (uses OpenAI SDK)
+        if self.perplexity_api_key:
+            from openai import OpenAI
+            self.perplexity_client = OpenAI(
+                api_key=self.perplexity_api_key,
+                base_url="https://api.perplexity.ai"
+            )
+        else:
+            self.perplexity_client = None
         
         self.setup_logging()
     
@@ -354,112 +365,112 @@ Write the optimized title now (4-10 words):
             return ' '.join(words)
     
     def _generate_timeline(self, article):
-        """Generate timeline with Claude (YOUR EXISTING LOGIC)"""
-        if not self.claude_api_key:
+        """Generate timeline with Perplexity (WITH INTERNET SEARCH)"""
+        if not self.perplexity_client:
+            self.logger.warning("⚠️ Perplexity API not configured - skipping timeline")
             return None
         
         try:
-            url = "https://api.anthropic.com/v1/messages"
-            headers = {
-                "x-api-key": self.claude_api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            }
-            
             prompt = f"""
-Create a chronological timeline of key events for this news story.
+Search the internet for accurate information about this news story and create a chronological timeline.
 
 Article: {article['title']}
 Description: {article['description']}
 {article['content'][:1500] if article['content'] else ''}
 
 Requirements:
+- Search for accurate dates and facts from reliable sources
 - 2-4 key events in chronological order
-- Each event: date/time + brief description (1 sentence)
+- Each event: specific date/time + brief description (1 sentence)
 - Use bold markdown (**text**) for dates and key terms
 - Include relevant context
 
-Return JSON array:
+Return ONLY JSON array:
 [
   {{"date": "October 2024", "event": "Description with **bold** terms"}},
   {{"date": "October 9, 2024", "event": "Another event"}}
 ]
 """
             
-            data = {
-                "model": self.claude_model,
-                "max_tokens": 500,
-                "messages": [{"role": "user", "content": prompt}]
-            }
+            response = self.perplexity_client.chat.completions.create(
+                model=self.perplexity_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a factual news researcher with internet access. Search for accurate information and return cited facts in the requested format."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=800,
+                temperature=0.2
+            )
             
-            response = requests.post(url, headers=headers, json=data, timeout=45)
+            timeline_text = response.choices[0].message.content.strip()
             
-            if response.status_code == 200:
-                result = response.json()
-                timeline_text = result['content'][0]['text'].strip()
-                
-                # Parse JSON
-                if timeline_text.startswith('```json'):
-                    timeline_text = timeline_text[7:]
-                if timeline_text.startswith('```'):
-                    timeline_text = timeline_text[3:]
-                if timeline_text.endswith('```'):
-                    timeline_text = timeline_text[:-3]
-                timeline_text = timeline_text.strip()
-                
-                timeline = json.loads(timeline_text)
-                return json.dumps(timeline)
+            # Parse JSON
+            if timeline_text.startswith('```json'):
+                timeline_text = timeline_text[7:]
+            if timeline_text.startswith('```'):
+                timeline_text = timeline_text[3:]
+            if timeline_text.endswith('```'):
+                timeline_text = timeline_text[:-3]
+            timeline_text = timeline_text.strip()
             
-            return None
+            timeline = json.loads(timeline_text)
+            self.logger.info(f"   📅 Generated timeline with {len(timeline)} events (Perplexity + Web Search)")
+            return json.dumps(timeline)
             
         except Exception as e:
             self.logger.error(f"Timeline generation error: {e}")
             return None
     
     def _generate_details(self, article):
-        """Generate details section with Claude (YOUR EXISTING LOGIC)"""
-        if not self.claude_api_key:
+        """Generate details section with Perplexity (WITH INTERNET SEARCH)"""
+        if not self.perplexity_client:
+            self.logger.warning("⚠️ Perplexity API not configured - skipping details")
             return None
         
         try:
-            url = "https://api.anthropic.com/v1/messages"
-            headers = {
-                "x-api-key": self.claude_api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            }
-            
             prompt = f"""
-Write a detailed analysis section for this news article.
+Search the internet for comprehensive information about this news story and write a detailed analysis.
 
 Article: {article['title']}
 Description: {article['description']}
 {article['content'][:1500] if article['content'] else ''}
 
 Requirements:
-- 3-5 paragraphs of in-depth analysis
-- Include context, background, and implications
-- Use bold markdown (**text**) for key terms and numbers
-- Cite specific facts, figures, and dates
-- Explain significance and impact
+- Search for facts, background, context, and implications from reliable sources
+- Write 3-5 paragraphs of in-depth analysis
+- Include specific facts, figures, dates, and citations
+- Use bold markdown (**text**) for key terms, numbers, and dates
+- Explain significance, impact, and future implications
+- Provide historical context where relevant
 
 Write the detailed analysis now:
 """
             
-            data = {
-                "model": self.claude_model,
-                "max_tokens": 800,
-                "messages": [{"role": "user", "content": prompt}]
-            }
+            response = self.perplexity_client.chat.completions.create(
+                model=self.perplexity_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert news analyst with internet access. Search for comprehensive, cited information and provide in-depth analysis with proper context."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=1200,
+                temperature=0.3
+            )
             
-            response = requests.post(url, headers=headers, json=data, timeout=45)
-            
-            if response.status_code == 200:
-                result = response.json()
-                details = result['content'][0]['text'].strip()
-                return details
-            
-            return None
+            details = response.choices[0].message.content.strip()
+            self.logger.info(f"   📄 Generated details section ({len(details)} chars, Perplexity + Web Search)")
+            return details
             
         except Exception as e:
             self.logger.error(f"Details generation error: {e}")
