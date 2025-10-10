@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
 
@@ -112,7 +111,7 @@ export default function Home() {
               details: article.details || [],
               source: article.source || 'Ten News',
               url: article.url || '#',
-              urlToImage: article.urlToImage || article.image || null
+              urlToImage: article.urlToImage || article.image_url || article.image || null
               };
               
               // Add timeline data (from generator or create fallback)
@@ -1664,7 +1663,7 @@ export default function Home() {
                   }}>
                     {/* News Image - TRULY Edge-to-Edge */}
                     <div style={{
-                      position: 'relative',
+                      position: 'fixed',
                       top: '0',
                       left: '0',
                       right: '0',
@@ -1679,11 +1678,12 @@ export default function Home() {
                       zIndex: '1'
                     }}>
                       {story.urlToImage ? (
-                        <Image 
+                        <img 
                           src={story.urlToImage}
                           alt={story.title}
-                          fill
                           style={{
+                            width: '100%',
+                            height: '100%',
                             objectFit: 'cover',
                             objectPosition: 'center'
                           }}
@@ -1691,7 +1691,6 @@ export default function Home() {
                             e.target.style.display = 'none';
                             e.target.parentElement.style.background = '#9CA3AF';
                           }}
-                          unoptimized={true}
                         />
                       ) : (
                         <div style={{

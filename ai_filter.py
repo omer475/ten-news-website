@@ -20,7 +20,7 @@ class AINewsFilter:
         self.db_path = 'ten_news.db'
         self.batch_size = 30  # Process 30 articles at a time
         self.filter_interval = 300  # 5 minutes
-        self.min_score = 70  # Minimum score to publish
+        self.min_score = 60  # Minimum score to publish
         
         # API Configuration
         self.claude_api_key = os.getenv('CLAUDE_API_KEY')
@@ -198,39 +198,13 @@ Source: {article['source']}
 Description: {article['description'][:500]}
 
 SCORING CRITERIA (0-100 points):
+- Global Impact (0-35): Affects how many people? Internationally significant?
+- Scientific Significance (0-30): Breakthrough or incremental?
+- Novelty & Urgency (0-20): Breaking now? Time-critical?
+- Credibility (0-8): Source quality
+- Engagement (0-7): Fascinating to intelligent readers?
 
-1. GLOBAL RELEVANCE (0-35 points)
-Would people in multiple countries care about this?
-- 30-35: Universal impact (tech everyone uses, major geopolitical shifts, breakthrough discoveries)
-- 22-29: Wide international interest (major country developments, global industry changes)
-- 12-21: Regional but significant (important but limited geography/sector)
-- 0-11: Too local/niche
-
-2. SURPRISE FACTOR / "DID YOU KNOW?" (0-30 points)
-Is this unexpected, counterintuitive, or mind-blowing?
-- 25-30: "Wait, WHAT?" moment (bumblebees shouldn't fly, octopuses have 3 hearts, honey never expires)
-- 18-24: Very surprising (unexpected partnerships, dramatic pivots, counterintuitive findings)
-- 10-17: Somewhat unexpected (new tech reveals, unusual developments)
-- 5-9: Predictable but notable
-- 0-4: "Yeah, we knew that" - completely expected
-
-3. UNIVERSAL UNDERSTANDING (0-20 points)
-Can anyone grasp why this matters without specialized knowledge?
-- 17-20: Instantly clear to everyone (anyone can understand the significance immediately)
-- 12-16: Easy to explain in one sentence (simple concept with obvious implications)
-- 6-11: Requires some context (explainable but needs brief background)
-- 0-5: Too technical/specialized (requires expert knowledge to appreciate)
-
-4. DATA/SCIENTIFIC INTEREST (0-15 points)
-For data/science stories: Is the finding fascinating?
-- 13-15: Mind-bending fact (counterintuitive physics, shocking statistics, nature surprises)
-- 9-12: Very interesting data (meaningful trends, compelling research findings)
-- 5-8: Useful information (incremental findings, expected correlations)
-- 0-4: Boring data (obvious findings, dry statistics, predictable results)
-
-Note: Non-science/data stories can score 0-4 in this category without penalty
-
-MINIMUM TO PUBLISH: 70 POINTS
+MINIMUM TO PUBLISH: 60 POINTS
 
 CATEGORIES:
 - breaking: Breaking news, urgent events

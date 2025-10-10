@@ -1,7 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+/**
+ * TEN NEWS - Next.js API Proxy
+ * Fetches news from Flask API (SQLite database) or falls back to local JSON
+ */
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
@@ -12,41 +14,57 @@ export default function handler(req, res) {
   }
 
   try {
-    // Get today's date
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '_');
-    
-    // Try to read today's news file
-    const newsFileName = `tennews_data_${dateStr}.json`;
-    const newsFilePath = path.join(process.cwd(), newsFileName);
-    
-    // Check if today's file exists
-    if (fs.existsSync(newsFilePath)) {
-      const newsData = JSON.parse(fs.readFileSync(newsFilePath, 'utf8'));
-      console.log(`✅ Serving real news data from: ${newsFileName}`);
-      return res.status(200).json(newsData);
-    } else {
-      console.log(`⚠️ Today's file not found: ${newsFileName}`);
+    // TRY 1: Fetch from Flask API (RSS System with images)
+    try {
+      const flaskApiUrl = process.env.FLASK_API_URL || 'http://localhost:5000/api/news';
+      const response = await fetch(flaskApiUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Serving RSS news from Flask API: ${data.articles.length} articles`);
+        
+        // Transform to match frontend format
+        const transformed = {
+          digest_date: data.displayTimestamp || new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          articles: data.articles.map((article, index) => ({
+            rank: index + 1,
+            emoji: article.emoji || '📰',
+            title: article.title || 'News Story',
+            summary: article.summary || article.description || 'News summary will appear here.',
+            details: article.details ? [article.details] : (article.timeline || []),
+            category: (article.category || 'WORLD NEWS').toUpperCase(),
+            source: article.source || 'Ten News',
+            url: article.url || '#',
+            urlToImage: article.urlToImage || article.image_url || null, // ✅ IMAGE!
+            image_url: article.urlToImage || article.image_url || null, // ✅ IMAGE!
+            timeline: article.timeline || null,
+            rewritten_text: article.summary || article.description,
+            published_at: article.publishedAt || article.published_at,
+            final_score: article.final_score
+          })),
+          dailyGreeting: "Today's Essential Global News",
+          readingTime: `${Math.ceil(data.articles.length * 1.5)} minute read`,
+          displayDate: new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }).toUpperCase(),
+          generatedAt: data.generatedAt || new Date().toISOString(),
+          totalArticles: data.totalResults || data.articles.length
+        };
+        
+        return res.status(200).json(transformed);
+      }
+    } catch (flaskError) {
+      console.log('⚠️ Flask API not available:', flaskError.message);
     }
     
-    // If today's file doesn't exist, find the most recent one
-    const files = fs.readdirSync(process.cwd());
-    const newsFiles = files
-      .filter(file => file.startsWith('tennews_data_') && file.endsWith('.json'))
-      .sort()
-      .reverse();
-    
-    if (newsFiles.length > 0) {
-      const latestNewsFile = newsFiles[0];
-      const latestNewsPath = path.join(process.cwd(), latestNewsFile);
-      const newsData = JSON.parse(fs.readFileSync(latestNewsPath, 'utf8'));
-      console.log(`✅ Serving recent news data from: ${latestNewsFile}`);
-      return res.status(200).json(newsData);
-    } else {
-      console.log('⚠️ No news data files found, using sample data');
-    }
-    
-    // No news files found - return sample data
+    // TRY 2: Fall back to local JSON files (old system)
     const sampleData = {
       "digest_date": new Date().toLocaleDateString('en-US', { 
         year: 'numeric', 

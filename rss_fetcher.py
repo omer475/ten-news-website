@@ -210,13 +210,7 @@ class OptimizedRSSFetcher:
                     
                     if result['success']:
                         if result['new_articles'] > 0:
-                            img_found = result.get('images_found', 0)
-                            img_missing = result.get('images_missing', 0)
-                            total_imgs = img_found + img_missing
-                            img_pct = (img_found / total_imgs * 100) if total_imgs > 0 else 0
-                            
-                            img_status = f"🖼️  {img_found}/{total_imgs} images ({img_pct:.0f}%)"
-                            self.logger.info(f"✅ {source_name}: {result['new_articles']} new articles | {img_status}")
+                            self.logger.info(f"✅ {source_name}: {result['new_articles']} new articles")
                     else:
                         results['failed_sources'] += 1
                         results['errors'].append({
@@ -285,10 +279,6 @@ class OptimizedRSSFetcher:
             # Track the newest article for updating marker
             newest_article = None
             
-            # Track image extraction statistics
-            images_found = 0
-            images_missing = 0
-            
             # Process each article (RSS feeds are newest first)
             for entry in feed.entries:
                 article_url = entry.get('link', '')
@@ -326,13 +316,6 @@ class OptimizedRSSFetcher:
                 
                 # NEW ARTICLE - Extract and insert
                 article_data = self._extract_article_data(entry, source_name)
-                
-                # Track image extraction
-                if article_data.get('image_url'):
-                    images_found += 1
-                else:
-                    images_missing += 1
-                
                 if self._insert_article(article_data, conn):
                     result['new_articles'] += 1
                     
@@ -363,10 +346,6 @@ class OptimizedRSSFetcher:
             
             conn.commit()
             conn.close()
-            
-            # Store image statistics in result
-            result['images_found'] = images_found
-            result['images_missing'] = images_missing
             
             # Update source statistics
             self._update_source_stats_success(source_name, result)
@@ -512,26 +491,11 @@ class OptimizedRSSFetcher:
                 if img and img.get('src'):
                     return img.get('src'), 'content_html'
         
-        # METHOD 6: Summary HTML (some feeds use this)
-        if hasattr(entry, 'summary'):
-            soup = BeautifulSoup(entry.summary, 'html.parser')
-            img = soup.find('img')
-            if img and img.get('src'):
-                return img.get('src'), 'summary_html'
-        
-        # METHOD 7: Parse full article page for og:image
-        # DISABLED during RSS fetching for performance
-        # Use image_enhancer.py to backfill missing images instead
-        # This keeps RSS fetching fast while still getting images for all articles
-        #
-        # Uncomment if you want to scrape during fetching (will slow down):
+        # METHOD 6: Parse full article page for og:image (expensive, limit usage)
+        # Only use for high-priority sources to avoid slowdowns
+        # Uncomment if needed:
         # try:
-        #     response = requests.get(
-        #         article_url, 
-        #         timeout=5, 
-        #         headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
-        #         verify=True
-        #     )
+        #     response = requests.get(article_url, timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
         #     soup = BeautifulSoup(response.text, 'html.parser')
         #     og_image = soup.find('meta', property='og:image')
         #     if og_image and og_image.get('content'):
@@ -539,7 +503,7 @@ class OptimizedRSSFetcher:
         # except:
         #     pass
         
-        # No image found
+        # METHOD 7: No image found
         return None, 'none'
     
     def _insert_article(self, article_data, conn):
