@@ -37,6 +37,18 @@ class AINewsFilter:
         
         self.setup_logging()
     
+    def _get_db_connection(self):
+        """Get a database connection with proper settings for concurrent access"""
+        conn = sqlite3.connect(
+            self.db_path,
+            timeout=30.0,
+            isolation_level=None,
+            check_same_thread=False
+        )
+        conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA busy_timeout=30000')
+        return conn
+    
     def setup_logging(self):
         """Configure logging"""
         logging.basicConfig(
@@ -88,7 +100,7 @@ class AINewsFilter:
     
     def _get_unprocessed_articles(self):
         """Get articles that haven't been AI processed yet"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         conn.row_factory = sqlite3.Row  # Access columns by name
         cursor = conn.cursor()
         
@@ -456,7 +468,7 @@ Write the detailed analysis now:
     def _publish_article(self, article_id, final_score, category, emoji, reasoning,
                         summary, optimized_title, timeline, details):
         """Mark article as published with all generated content"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -497,7 +509,7 @@ Write the detailed analysis now:
     
     def _mark_processed_only(self, article_id, score, category, reasoning):
         """Mark article as processed but NOT published"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute('''

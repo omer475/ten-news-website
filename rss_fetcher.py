@@ -42,7 +42,7 @@ class OptimizedRSSFetcher:
     
     def init_database(self):
         """Initialize database with schema"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         
         # Execute schema from database_schema.sql
@@ -53,6 +53,19 @@ class OptimizedRSSFetcher:
         conn.commit()
         conn.close()
         self.logger.info("✅ Database initialized")
+    
+    def _get_db_connection(self):
+        """Get a database connection with proper settings for concurrent access"""
+        conn = sqlite3.connect(
+            self.db_path,
+            timeout=30.0,  # Wait up to 30 seconds for locks
+            isolation_level=None,  # Enable autocommit mode
+            check_same_thread=False
+        )
+        # Enable WAL mode for better concurrency
+        conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA busy_timeout=30000')  # 30 second timeout
+        return conn
     
     def run_forever(self):
         """Main loop - run every 10 minutes"""
@@ -99,7 +112,7 @@ class OptimizedRSSFetcher:
     
     def _start_fetch_cycle(self):
         """Start a new fetch cycle in database"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO fetch_cycles (started_at, status)
@@ -112,7 +125,7 @@ class OptimizedRSSFetcher:
     
     def _complete_fetch_cycle(self, cycle_id, results, start_time):
         """Mark fetch cycle as complete"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         
         duration = (datetime.now() - start_time).total_seconds()
@@ -204,21 +217,35 @@ class OptimizedRSSFetcher:
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
             
-            response = requests.get(feed_url, timeout=10, headers=headers)
+            # SSL problem sources - bypass verification
+            ssl_problem_sources = ['Uber Engineering', 'Netflix Tech Blog', 'Airbnb Engineering']
+            verify_ssl = source_name not in ssl_problem_sources
+            
+            response = requests.get(
+                feed_url, 
+                timeout=10, 
+                headers=headers,
+                verify=verify_ssl
+            )
             response.raise_for_status()  # Raise error for bad status codes
             
             # Parse the fetched content
             feed = feedparser.parse(response.content)
             
-            if feed.bozo:  # Feed parsing error
+            # Check for parsing errors - but allow if we have entries
+            if feed.bozo and not feed.entries:
+                # If parsing failed AND no entries, it's a real error
                 result['error'] = f"Feed parsing error: {feed.bozo_exception}"
                 self._update_source_stats_failure(source_name, result['error'])
                 return result
             
+            # If we have entries despite bozo flag, continue
+            # (Some feeds set bozo for minor issues but still work)
+            
             result['articles_found'] = len(feed.entries)
             
             # Process each article
-            conn = sqlite3.connect(self.db_path)
+            conn = self._get_db_connection()
             
             for entry in feed.entries:
                 # Check if we should process this article
@@ -426,7 +453,7 @@ class OptimizedRSSFetcher:
     
     def _update_source_stats_success(self, source_name, result):
         """Update source statistics after successful fetch"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         
         # Get or create source stats
@@ -474,7 +501,7 @@ class OptimizedRSSFetcher:
     
     def _update_source_stats_failure(self, source_name, error):
         """Update source statistics after failed fetch"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_db_connection()
         cursor = conn.cursor()
         
         # Get or create source stats
