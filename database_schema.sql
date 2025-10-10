@@ -73,6 +73,16 @@ CREATE TABLE IF NOT EXISTS source_stats (
     consecutive_failures INTEGER DEFAULT 0
 );
 
+-- OPTIMIZATION: Source markers for fast duplicate detection
+CREATE TABLE IF NOT EXISTS source_markers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT UNIQUE NOT NULL,
+    last_article_url TEXT,
+    last_article_guid TEXT,
+    last_fetch_timestamp TEXT,
+    last_published_date TEXT
+);
+
 -- Index for performance
 CREATE INDEX IF NOT EXISTS idx_published ON articles(published, published_at);
 CREATE INDEX IF NOT EXISTS idx_category ON articles(category);

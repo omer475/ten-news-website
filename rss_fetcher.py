@@ -67,6 +67,33 @@ class OptimizedRSSFetcher:
         conn.execute('PRAGMA busy_timeout=30000')  # 30 second timeout
         return conn
     
+    def _get_source_marker(self, source_name, conn):
+        """Get the marker showing where we left off with this source"""
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT last_article_url, last_article_guid, last_published_date
+            FROM source_markers
+            WHERE source = ?
+        ''', (source_name,))
+        result = cursor.fetchone()
+        if result:
+            return {
+                'last_url': result[0],
+                'last_guid': result[1],
+                'last_date': result[2]
+            }
+        return None
+    
+    def _update_source_marker(self, source_name, latest_url, latest_guid, latest_date, conn):
+        """Update the marker for where we left off with this source"""
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO source_markers 
+            (source, last_article_url, last_article_guid, last_fetch_timestamp, last_published_date)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (source_name, latest_url, latest_guid, datetime.now().isoformat(), latest_date))
+        conn.commit()
+    
     def run_forever(self):
         """Main loop - run every 10 minutes"""
         self.logger.info("🚀 RSS Fetcher started - running every 10 minutes")
@@ -203,16 +230,19 @@ class OptimizedRSSFetcher:
         return results
     
     def _fetch_single_source(self, source_name, feed_url):
-        """Fetch articles from a single RSS source"""
+        """Fetch articles from a single RSS source - OPTIMIZED VERSION"""
         result = {
             'success': False,
             'articles_found': 0,
             'new_articles': 0,
-            'error': None
+            'error': None,
+            'skipped_marker': 0,  # Stopped early via marker
+            'skipped_date': 0,     # Skipped via date check
+            'skipped_db': 0        # Skipped via DB check
         }
         
         try:
-            # FIX: Use requests first (which supports timeout), then parse
+            # Fetch and parse feed
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
@@ -227,39 +257,92 @@ class OptimizedRSSFetcher:
                 headers=headers,
                 verify=verify_ssl
             )
-            response.raise_for_status()  # Raise error for bad status codes
+            response.raise_for_status()
             
             # Parse the fetched content
             feed = feedparser.parse(response.content)
             
             # Check for parsing errors - but allow if we have entries
             if feed.bozo and not feed.entries:
-                # If parsing failed AND no entries, it's a real error
                 result['error'] = f"Feed parsing error: {feed.bozo_exception}"
                 self._update_source_stats_failure(source_name, result['error'])
                 return result
             
-            # If we have entries despite bozo flag, continue
-            # (Some feeds set bozo for minor issues but still work)
-            
             result['articles_found'] = len(feed.entries)
             
-            # Process each article
+            # Get database connection
             conn = self._get_db_connection()
             
+            # OPTIMIZATION: Get source marker (last processed article)
+            marker = self._get_source_marker(source_name, conn)
+            
+            # Track the newest article for updating marker
+            newest_article = None
+            
+            # Process each article (RSS feeds are newest first)
             for entry in feed.entries:
-                # Check if we should process this article
-                should_process, reason = self._should_process_article(entry, source_name, conn)
+                article_url = entry.get('link', '')
+                article_guid = entry.get('id', '')
                 
-                if not should_process:
+                if not article_url:
                     continue
                 
-                # Extract article data
-                article_data = self._extract_article_data(entry, source_name)
+                # LAYER 1: Marker Check (Fastest - stops processing immediately)
+                if marker:
+                    if (article_url == marker['last_url'] or 
+                        (article_guid and article_guid == marker['last_guid'])):
+                        # Hit the last article we processed - everything after is old
+                        result['skipped_marker'] = len(feed.entries) - feed.entries.index(entry)
+                        break  # STOP PROCESSING - no need to check older articles
                 
-                # Insert into database
+                # LAYER 2: Date Check (Fast - avoids DB lookup)
+                if marker and marker['last_date']:
+                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                        try:
+                            pub_date = datetime(*entry.published_parsed[:6])
+                            last_date = datetime.fromisoformat(marker['last_date'])
+                            if pub_date < last_date:
+                                result['skipped_date'] += 1
+                                continue  # Skip old article
+                        except:
+                            pass  # If parsing fails, continue to DB check
+                
+                # LAYER 3: Database Lookup (Slowest - final safety check)
+                cursor = conn.cursor()
+                cursor.execute('SELECT id FROM articles WHERE url = ?', (article_url,))
+                if cursor.fetchone():
+                    result['skipped_db'] += 1
+                    continue  # Already have this article
+                
+                # NEW ARTICLE - Extract and insert
+                article_data = self._extract_article_data(entry, source_name)
                 if self._insert_article(article_data, conn):
                     result['new_articles'] += 1
+                    
+                    # Track the newest article (first in feed)
+                    if not newest_article:
+                        pub_date = None
+                        if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                            try:
+                                pub_date = datetime(*entry.published_parsed[:6]).isoformat()
+                            except:
+                                pass
+                        
+                        newest_article = {
+                            'url': article_url,
+                            'guid': article_guid,
+                            'date': pub_date
+                        }
+            
+            # Update source marker with newest article
+            if newest_article:
+                self._update_source_marker(
+                    source_name,
+                    newest_article['url'],
+                    newest_article['guid'],
+                    newest_article['date'],
+                    conn
+                )
             
             conn.commit()
             conn.close()
