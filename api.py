@@ -88,6 +88,13 @@ def get_news():
         }
         articles.append(article)
     
+    # DEBUG: Log sample article with image info
+    if articles:
+        sample = articles[0]
+        app.logger.info(f"📸 Sample article image_url: {sample.get('urlToImage')}")
+        app.logger.info(f"   Title: {sample['title'][:50]}")
+        app.logger.info(f"   Image present: {bool(sample.get('urlToImage'))}")
+    
     # Get total count
     count_query = 'SELECT COUNT(*) as total FROM articles WHERE published = TRUE'
     if category:

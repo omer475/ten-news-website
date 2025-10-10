@@ -20,7 +20,7 @@ class AINewsFilter:
         self.db_path = 'ten_news.db'
         self.batch_size = 30  # Process 30 articles at a time
         self.filter_interval = 300  # 5 minutes
-        self.min_score = 70  # Minimum score to publish
+        self.min_score = 60  # Minimum score to publish
         
         # API Configuration
         self.claude_api_key = os.getenv('CLAUDE_API_KEY')
@@ -30,21 +30,10 @@ class AINewsFilter:
         # Models
         self.claude_model = "claude-3-5-sonnet-20241022"
         self.gemini_model = "gemini-2.0-flash-exp"
-        self.perplexity_model = "sonar"
         
         # Configure Gemini
         if self.google_api_key:
             genai.configure(api_key=self.google_api_key)
-        
-        # Configure Perplexity (uses OpenAI SDK)
-        if self.perplexity_api_key:
-            from openai import OpenAI
-            self.perplexity_client = OpenAI(
-                api_key=self.perplexity_api_key,
-                base_url="https://api.perplexity.ai"
-            )
-        else:
-            self.perplexity_client = None
         
         self.setup_logging()
     
@@ -198,39 +187,13 @@ Source: {article['source']}
 Description: {article['description'][:500]}
 
 SCORING CRITERIA (0-100 points):
+- Global Impact (0-35): Affects how many people? Internationally significant?
+- Scientific Significance (0-30): Breakthrough or incremental?
+- Novelty & Urgency (0-20): Breaking now? Time-critical?
+- Credibility (0-8): Source quality
+- Engagement (0-7): Fascinating to intelligent readers?
 
-1. GLOBAL RELEVANCE (0-35 points)
-Would people in multiple countries care about this?
-- 30-35: Universal impact (tech everyone uses, major geopolitical shifts, breakthrough discoveries)
-- 22-29: Wide international interest (major country developments, global industry changes)
-- 12-21: Regional but significant (important but limited geography/sector)
-- 0-11: Too local/niche
-
-2. SURPRISE FACTOR / "DID YOU KNOW?" (0-30 points)
-Is this unexpected, counterintuitive, or mind-blowing?
-- 25-30: "Wait, WHAT?" moment (bumblebees shouldn't fly, octopuses have 3 hearts, honey never expires)
-- 18-24: Very surprising (unexpected partnerships, dramatic pivots, counterintuitive findings)
-- 10-17: Somewhat unexpected (new tech reveals, unusual developments)
-- 5-9: Predictable but notable
-- 0-4: "Yeah, we knew that" - completely expected
-
-3. UNIVERSAL UNDERSTANDING (0-20 points)
-Can anyone grasp why this matters without specialized knowledge?
-- 17-20: Instantly clear to everyone (anyone can understand the significance immediately)
-- 12-16: Easy to explain in one sentence (simple concept with obvious implications)
-- 6-11: Requires some context (explainable but needs brief background)
-- 0-5: Too technical/specialized (requires expert knowledge to appreciate)
-
-4. DATA/SCIENTIFIC INTEREST (0-15 points)
-For data/science stories: Is the finding fascinating?
-- 13-15: Mind-bending fact (counterintuitive physics, shocking statistics, nature surprises)
-- 9-12: Very interesting data (meaningful trends, compelling research findings)
-- 5-8: Useful information (incremental findings, expected correlations)
-- 0-4: Boring data (obvious findings, dry statistics, predictable results)
-
-Note: Non-science/data stories can score 0-4 in this category without penalty
-
-MINIMUM TO PUBLISH: 70 POINTS
+MINIMUM TO PUBLISH: 60 POINTS
 
 CATEGORIES:
 - breaking: Breaking news, urgent events
@@ -391,112 +354,125 @@ Write the optimized title now (4-10 words):
             return ' '.join(words)
     
     def _generate_timeline(self, article):
-        """Generate timeline with Perplexity (WITH INTERNET SEARCH)"""
-        if not self.perplexity_client:
-            self.logger.warning("⚠️ Perplexity API not configured - skipping timeline")
-            return None
+        """Generate timeline with Claude (YOUR EXISTING LOGIC)"""
+        if not self.claude_api_key:
+            return json.dumps({"events": []})
         
         try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
             prompt = f"""
-Search the internet for accurate information about this news story and create a chronological timeline.
+Create a chronological timeline of key events for this news story.
 
 Article: {article['title']}
 Description: {article['description']}
 {article['content'][:1500] if article['content'] else ''}
 
 Requirements:
-- Search for accurate dates and facts from reliable sources
 - 2-4 key events in chronological order
-- Each event: specific date/time + brief description (1 sentence)
+- Each event: date/time + brief description (1 sentence)
 - Use bold markdown (**text**) for dates and key terms
 - Include relevant context
 
-Return ONLY JSON array:
+Return JSON array:
 [
   {{"date": "October 2024", "event": "Description with **bold** terms"}},
   {{"date": "October 9, 2024", "event": "Another event"}}
 ]
 """
             
-            response = self.perplexity_client.chat.completions.create(
-                model=self.perplexity_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a factual news researcher with internet access. Search for accurate information and return cited facts in the requested format."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                max_tokens=800,
-                temperature=0.2
-            )
+            data = {
+                "model": self.claude_model,
+                "max_tokens": 500,
+                "messages": [{"role": "user", "content": prompt}]
+            }
             
-            timeline_text = response.choices[0].message.content.strip()
+            response = requests.post(url, headers=headers, json=data, timeout=45)
             
-            # Parse JSON
-            if timeline_text.startswith('```json'):
-                timeline_text = timeline_text[7:]
-            if timeline_text.startswith('```'):
-                timeline_text = timeline_text[3:]
-            if timeline_text.endswith('```'):
-                timeline_text = timeline_text[:-3]
-            timeline_text = timeline_text.strip()
+            if response.status_code == 200:
+                result = response.json()
+                timeline_text = result['content'][0]['text'].strip()
+                
+                # Strip markdown code blocks
+                import re
+                
+                # Remove markdown code blocks
+                timeline_text = re.sub(r'^```(?:json)?\s*', '', timeline_text)
+                timeline_text = re.sub(r'\s*```$', '', timeline_text)
+                timeline_text = timeline_text.strip()
+                
+                # Try to extract JSON if it's embedded in text
+                json_match = re.search(r'\[[\s\S]*\]', timeline_text)
+                if json_match:
+                    timeline_text = json_match.group(0)
+                
+                try:
+                    timeline = json.loads(timeline_text)
+                    # Validate structure
+                    if isinstance(timeline, list):
+                        return json.dumps(timeline)
+                    else:
+                        self.logger.warning(f"Timeline not a list, got: {type(timeline)}")
+                        return json.dumps({"events": []})
+                except json.JSONDecodeError as je:
+                    self.logger.error(f"Timeline JSON parse error: {je}\nText: {timeline_text[:200]}")
+                    return json.dumps({"events": []})
             
-            timeline = json.loads(timeline_text)
-            self.logger.info(f"   📅 Generated timeline with {len(timeline)} events (Perplexity + Web Search)")
-            return json.dumps(timeline)
+            return json.dumps({"events": []})
             
         except Exception as e:
-            self.logger.error(f"Timeline generation error: {e}")
-            return None
+            self.logger.error(f"Timeline generation error: {e}", exc_info=True)
+            return json.dumps({"events": []})
     
     def _generate_details(self, article):
-        """Generate details section with Perplexity (WITH INTERNET SEARCH)"""
-        if not self.perplexity_client:
-            self.logger.warning("⚠️ Perplexity API not configured - skipping details")
+        """Generate details section with Claude (YOUR EXISTING LOGIC)"""
+        if not self.claude_api_key:
             return None
         
         try:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": self.claude_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            }
+            
             prompt = f"""
-Search the internet for comprehensive information about this news story and write a detailed analysis.
+Write a detailed analysis section for this news article.
 
 Article: {article['title']}
 Description: {article['description']}
 {article['content'][:1500] if article['content'] else ''}
 
 Requirements:
-- Search for facts, background, context, and implications from reliable sources
-- Write 3-5 paragraphs of in-depth analysis
-- Include specific facts, figures, dates, and citations
-- Use bold markdown (**text**) for key terms, numbers, and dates
-- Explain significance, impact, and future implications
-- Provide historical context where relevant
+- 3-5 paragraphs of in-depth analysis
+- Include context, background, and implications
+- Use bold markdown (**text**) for key terms and numbers
+- Cite specific facts, figures, and dates
+- Explain significance and impact
 
 Write the detailed analysis now:
 """
             
-            response = self.perplexity_client.chat.completions.create(
-                model=self.perplexity_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert news analyst with internet access. Search for comprehensive, cited information and provide in-depth analysis with proper context."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                max_tokens=1200,
-                temperature=0.3
-            )
+            data = {
+                "model": self.claude_model,
+                "max_tokens": 800,
+                "messages": [{"role": "user", "content": prompt}]
+            }
             
-            details = response.choices[0].message.content.strip()
-            self.logger.info(f"   📄 Generated details section ({len(details)} chars, Perplexity + Web Search)")
-            return details
+            response = requests.post(url, headers=headers, json=data, timeout=45)
+            
+            if response.status_code == 200:
+                result = response.json()
+                details = result['content'][0]['text'].strip()
+                return details
+            
+            return None
             
         except Exception as e:
             self.logger.error(f"Details generation error: {e}")

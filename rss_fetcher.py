@@ -18,6 +18,10 @@ from bs4 import BeautifulSoup
 import requests
 import json
 from rss_sources import ALL_SOURCES, get_source_credibility
+import urllib3
+
+# Suppress SSL warnings for specific sources
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class OptimizedRSSFetcher:
     def __init__(self, db_path='ten_news.db'):

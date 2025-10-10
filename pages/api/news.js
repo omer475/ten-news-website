@@ -1,8 +1,7 @@
+import fs from 'fs';
 import path from 'path';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
 
-export default async function handler(req, res) {
+export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
@@ -13,72 +12,38 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Connect to SQLite database
-    const dbPath = path.join(process.cwd(), 'ten_news.db');
+    // Get today's date
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '_');
     
-    const db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database
-    });
-
-    // Get published articles with images
-    const articles = await db.all(`
-      SELECT 
-        id, title, url, source, description, content,
-        image_url, author, published_date, published_at,
-        category, emoji, ai_final_score, summary,
-        timeline, details_section, view_count
-      FROM articles
-      WHERE published = TRUE
-      ORDER BY ai_final_score DESC, published_at DESC
-      LIMIT 50
-    `);
-
-    await db.close();
-
-    if (articles && articles.length > 0) {
-      console.log(`✅ Serving ${articles.length} articles from database (ten_news.db)`);
-      
-      // Format for frontend (compatible with old format)
-      const formattedArticles = articles.map((article, index) => ({
-        rank: index + 1,
-        id: article.id,
-        emoji: article.emoji || '📰',
-        title: article.title,
-        summary: article.summary || article.description,
-        details: article.details_section ? [article.details_section] : [],
-        timeline: article.timeline ? JSON.parse(article.timeline) : [],
-        category: article.category || 'News',
-        source: article.source || 'Ten News',
-        url: article.url || '#',
-        urlToImage: article.image_url,  // ⭐ THIS IS THE KEY FIELD!
-        author: article.author,
-        publishedAt: article.published_date || article.published_at,
-        final_score: article.ai_final_score,
-        views: article.view_count
-      }));
-
-      return res.status(200).json({
-        status: 'ok',
-        totalResults: formattedArticles.length,
-        articles: formattedArticles,
-        digest_date: new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        }),
-        dailyGreeting: `📰 ${formattedArticles.length} Top Stories Today`,
-        readingTime: `${Math.ceil(formattedArticles.length * 0.5)} minute read`,
-        displayDate: new Date().toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }).toUpperCase(),
-        generatedAt: new Date().toISOString()
-      });
+    // Try to read today's news file
+    const newsFileName = `tennews_data_${dateStr}.json`;
+    const newsFilePath = path.join(process.cwd(), newsFileName);
+    
+    // Check if today's file exists
+    if (fs.existsSync(newsFilePath)) {
+      const newsData = JSON.parse(fs.readFileSync(newsFilePath, 'utf8'));
+      console.log(`✅ Serving real news data from: ${newsFileName}`);
+      return res.status(200).json(newsData);
     } else {
-      console.log('⚠️ No published articles in database yet');
+      console.log(`⚠️ Today's file not found: ${newsFileName}`);
+    }
+    
+    // If today's file doesn't exist, find the most recent one
+    const files = fs.readdirSync(process.cwd());
+    const newsFiles = files
+      .filter(file => file.startsWith('tennews_data_') && file.endsWith('.json'))
+      .sort()
+      .reverse();
+    
+    if (newsFiles.length > 0) {
+      const latestNewsFile = newsFiles[0];
+      const latestNewsPath = path.join(process.cwd(), latestNewsFile);
+      const newsData = JSON.parse(fs.readFileSync(latestNewsPath, 'utf8'));
+      console.log(`✅ Serving recent news data from: ${latestNewsFile}`);
+      return res.status(200).json(newsData);
+    } else {
+      console.log('⚠️ No news data files found, using sample data');
     }
     
     // No news files found - return sample data

@@ -13,11 +13,12 @@ def test_environment_variables():
     
     required = [
         'CLAUDE_API_KEY',
-        'GOOGLE_API_KEY',
-        'PERPLEXITY_API_KEY'
+        'GOOGLE_API_KEY'
     ]
     
-    optional = []
+    optional = [
+        'PERPLEXITY_API_KEY'
+    ]
     
     all_good = True
     
@@ -204,10 +205,7 @@ def main():
         print("\n⚠️  SOME TESTS FAILED. Please fix issues before running.")
         print("\nCommon fixes:")
         print("  • Install missing packages: pip install -r requirements.txt")
-        print("  • Set environment variables:")
-        print("    export CLAUDE_API_KEY='...'")
-        print("    export GOOGLE_API_KEY='...'")
-        print("    export PERPLEXITY_API_KEY='...'")
+        print("  • Set environment variables: export CLAUDE_API_KEY='...'")
         print("  • Check file permissions")
         return 1
 

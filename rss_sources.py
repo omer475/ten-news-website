@@ -7,9 +7,10 @@ Organized by category
 # BREAKING NEWS & WORLD NEWS (25 sources)
 BREAKING_NEWS_SOURCES = [
     # Tier 1 - Highest Priority
-    ('Reuters World', 'https://www.reuters.com/rssfeed/worldNews'),
-    ('Reuters Breaking News', 'https://www.reuters.com/rssfeed/topNews'),
-    ('Associated Press', 'https://feeds.apnews.com/rss/apf-topnews'),
+    # DISABLED - DNS/Connection errors
+    # ('Reuters World', 'https://www.reuters.com/rssfeed/worldNews'),
+    # ('Reuters Breaking News', 'https://www.reuters.com/rssfeed/topNews'),
+    # ('Associated Press', 'https://feeds.apnews.com/rss/apf-topnews'),
     ('BBC World News', 'http://feeds.bbci.co.uk/news/world/rss.xml'),
     ('BBC Breaking News', 'http://feeds.bbci.co.uk/news/rss.xml'),
     ('Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml'),
@@ -74,7 +75,6 @@ SCIENCE_SOURCES = [
     ('PLOS Biology', 'https://journals.plos.org/plosbiology/feed/atom'),
     ('PLOS ONE', 'https://journals.plos.org/plosone/feed/atom'),
     ('BMJ', 'https://www.bmj.com/rss/recent.xml'),
-    ('eLife', 'https://elifesciences.org/rss/recent.xml'),
     
     # Popular Science
     ('Scientific American', 'http://rss.sciam.com/ScientificAmerican-Global'),
@@ -87,11 +87,12 @@ SCIENCE_SOURCES = [
     ('ESA', 'https://www.esa.int/rssfeed/Our_Activities/Space_Science'),
     
     # Medical
-    # DISABLED - 404 errors
+    # DISABLED - 404/Malformed XML errors
     # ('Medical News Today', 'https://www.medicalnewstoday.com/rss'),
     # ('WebMD', 'https://rssfeeds.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC'),
     # ('Johns Hopkins Medicine', 'https://www.hopkinsmedicine.org/news/feed'),
     # ('Mayo Clinic', 'https://newsnetwork.mayoclinic.org/feed/'),
+    # ('eLife', 'https://elifesciences.org/rss/recent.xml'),
     
     # Climate & Environment Science
     # DISABLED - 403/404 errors
@@ -124,11 +125,11 @@ TECHNOLOGY_SOURCES = [
     ('Mashable Tech', 'https://mashable.com/feeds/rss/tech'),
     
     # AI & Machine Learning
-    # DISABLED - 403 error
+    # DISABLED - 403/Connection errors
     # ('OpenAI Blog', 'https://openai.com/blog/rss/'),
+    # ('AI News', 'https://artificialintelligence-news.com/feed/'),
     ('Google AI Blog', 'http://feeds.feedburner.com/blogspot/gJZg'),
     ('DeepMind Blog', 'https://deepmind.com/blog/feed/basic/'),
-    ('AI News', 'https://artificialintelligence-news.com/feed/'),
     ('Machine Learning Mastery', 'https://machinelearningmastery.com/feed/'),
     
     # Developer & Coding
@@ -143,9 +144,10 @@ TECHNOLOGY_SOURCES = [
     ('AWS News', 'https://aws.amazon.com/blogs/aws/feed/'),
     ('Apple Newsroom', 'https://www.apple.com/newsroom/rss-feed.rss'),
     ('Meta Engineering', 'https://engineering.fb.com/feed/'),
-    ('Netflix Tech Blog', 'https://netflixtechblog.com/feed'),
-    ('Uber Engineering', 'https://eng.uber.com/feed/'),
-    ('Airbnb Engineering', 'https://medium.com/feed/airbnb-engineering'),
+    # DISABLED - 404/SSL errors
+    # ('Netflix Tech Blog', 'https://netflixtechblog.com/feed'),
+    # ('Uber Engineering', 'https://eng.uber.com/feed/'),
+    # ('Airbnb Engineering', 'https://medium.com/feed/airbnb-engineering'),
     ('Spotify Engineering', 'https://engineering.atspotify.com/feed/'),
     ('Dropbox Tech Blog', 'https://dropbox.tech/feed'),
 ]
@@ -153,7 +155,8 @@ TECHNOLOGY_SOURCES = [
 # BUSINESS & FINANCE (30 sources)
 BUSINESS_SOURCES = [
     # Major Business News
-    ('Reuters Business', 'https://www.reuters.com/rssfeed/businessNews'),
+    # DISABLED - DNS/401 errors
+    # ('Reuters Business', 'https://www.reuters.com/rssfeed/businessNews'),
     ('CNBC', 'https://www.cnbc.com/id/100003114/device/rss/rss.html'),
     ('MarketWatch', 'http://feeds.marketwatch.com/marketwatch/topstories/'),
     ('Forbes', 'https://www.forbes.com/real-time/feed2/'),
@@ -177,11 +180,11 @@ BUSINESS_SOURCES = [
     ('Fintech News', 'https://www.fintechnews.org/feed/'),
     
     # Economics
-    # DISABLED - 404 error
+    # DISABLED - 403/404 errors
     # ('The World Bank', 'https://www.worldbank.org/en/news/rss'),
+    # ('Trading Economics', 'https://tradingeconomics.com/rss/news.aspx'),
     ('IMF', 'https://www.imf.org/en/News/RSS'),
     ('Federal Reserve', 'https://www.federalreserve.gov/feeds/press_all.xml'),
-    ('Trading Economics', 'https://tradingeconomics.com/rss/news.aspx'),
     
     # Industry News
     ('TechCrunch Startups', 'https://techcrunch.com/startups/feed/'),
@@ -218,13 +221,12 @@ ENVIRONMENT_SOURCES = [
     
     # Energy & Sustainability
     ('Renewable Energy World', 'https://www.renewableenergyworld.com/feeds/all/'),
-    # DISABLED - 403 error
+    # DISABLED - 403/404 errors
     # ('Clean Technica', 'https://cleantechnica.com/feed/'),
+    # ('Mongabay', 'https://news.mongabay.com/feed/'),
+    # ('Environmental Health News', 'https://www.ehn.org/rss-articles'),
     ('Green Tech Media', 'https://www.greentechmedia.com/rss/all'),
     ('Energy News Network', 'https://energynews.us/feed/'),
-    # DISABLED - 403 error
-    # ('Mongabay', 'https://news.mongabay.com/feed/'),
-    ('Environmental Health News', 'https://www.ehn.org/rss-articles'),
     ('DeSmog', 'https://www.desmog.com/feed/'),
     # DISABLED - 404 error
     # ('TreeHugger', 'https://www.treehugger.com/feeds/rss'),
@@ -234,10 +236,10 @@ ENVIRONMENT_SOURCES = [
 # DATA SCIENCE & STATISTICS (15 sources)
 DATA_SOURCES = [
     # Data Science
-    # DISABLED - 403 error
+    # DISABLED - 403 errors
     # ('Towards Data Science', 'https://towardsdatascience.com/feed'),
+    # ('Data Science Central', 'https://www.datasciencecentral.com/feed/'),
     ('KDnuggets', 'https://www.kdnuggets.com/feed'),
-    ('Data Science Central', 'https://www.datasciencecentral.com/feed/'),
     ('Analytics Vidhya', 'https://www.analyticsvidhya.com/feed/'),
     ('R-bloggers', 'https://www.r-bloggers.com/feed/'),
     ('Real Python', 'https://realpython.com/atom.xml'),
@@ -251,19 +253,20 @@ DATA_SOURCES = [
     
     # Big Data
     ('Data Innovation', 'https://www.datainnovation.org/feed/'),
-    # DISABLED - 404 error
+    # DISABLED - 404/DNS errors
     # ('Data Science Weekly', 'https://www.datascienceweekly.org/feed'),
+    # ('Big Data Analytics News', 'https://bigdata-madesimple.com/feed/'),
     ('Data Informed', 'https://data-informed.com/feed/'),
-    ('Big Data Analytics News', 'https://bigdata-madesimple.com/feed/'),
 ]
 
 # POLITICS (20 sources)
 POLITICS_SOURCES = [
     # US Politics
-    ('Politico', 'https://www.politico.com/rss/politicopicks.xml'),
+    # DISABLED - 403 errors
+    # ('Politico', 'https://www.politico.com/rss/politicopicks.xml'),
+    # ('Axios Politics', 'https://www.axios.com/politics/feed'),
     ('The Hill', 'https://thehill.com/feed/'),
     ('Roll Call', 'https://www.rollcall.com/feed/'),
-    ('Axios Politics', 'https://www.axios.com/politics/feed'),
     ('RealClearPolitics', 'http://www.realclearpolitics.com/index.xml'),
     ('The Atlantic Politics', 'https://www.theatlantic.com/feed/channel/politics/'),
     ('VOX Politics', 'https://www.vox.com/rss/policy-and-politics/index.xml'),
@@ -279,7 +282,8 @@ POLITICS_SOURCES = [
     # ('CSIS', 'https://www.csis.org/analysis/feed'),
     
     # EU & UK
-    ('Euronews', 'https://www.euronews.com/rss'),
+    # DISABLED - Redirect loop
+    # ('Euronews', 'https://www.euronews.com/rss'),
     ('EUobserver', 'https://euobserver.com/rss.xml'),
     # DISABLED - 403 error
     # ('UK Parliament', 'https://www.parliament.uk/site-information/rss-feeds/'),
