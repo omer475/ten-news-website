@@ -64,41 +64,42 @@ def push_to_supabase():
                 continue
             
             # Prepare article data (matching Supabase schema)
+            # Use bracket notation for SQLite Row objects
             article_data = {
                 'url': article['url'],
-                'guid': article.get('guid'),
+                'guid': article['guid'] if 'guid' in article.keys() else None,
                 'source': article['source'],
                 'title': article['title'],
-                'description': article.get('description', ''),
-                'content': article.get('content', ''),
-                'image_url': article.get('image_url'),
-                'author': article.get('author'),
-                'published_date': article.get('published_date'),
-                'fetched_at': article.get('fetched_at'),
+                'description': article['description'] if article['description'] else '',
+                'content': article['content'] if article['content'] else '',
+                'image_url': article['image_url'],
+                'author': article['author'],
+                'published_date': article['published_date'],
+                'fetched_at': article['fetched_at'],
                 
                 # AI Processing
                 'ai_processed': True,
-                'ai_score_raw': article.get('ai_score_raw'),
-                'ai_category': article.get('ai_category'),
-                'ai_reasoning': article.get('ai_reasoning'),
-                'ai_final_score': article.get('ai_final_score'),
+                'ai_score_raw': article['ai_score_raw'] if 'ai_score_raw' in article.keys() else None,
+                'ai_category': article['ai_category'] if 'ai_category' in article.keys() else article['category'],
+                'ai_reasoning': article['ai_reasoning'] if 'ai_reasoning' in article.keys() else None,
+                'ai_final_score': article['ai_final_score'],
                 
                 # Publishing
                 'published': True,
-                'published_at': article.get('published_at'),
-                'category': article.get('category'),
-                'emoji': article.get('emoji', '📰'),
+                'published_at': article['published_at'],
+                'category': article['category'],
+                'emoji': article['emoji'] if article['emoji'] else '📰',
                 
                 # Enhanced content
-                'timeline': article.get('timeline'),
-                'details_section': article.get('details_section'),
-                'summary': article.get('summary', ''),
-                'timeline_generated': bool(article.get('timeline')),
-                'details_generated': bool(article.get('details_section')),
+                'timeline': article['timeline'],
+                'details_section': article['details_section'],
+                'summary': article['summary'] if article['summary'] else '',
+                'timeline_generated': bool(article['timeline']),
+                'details_generated': bool(article['details_section']),
                 
                 # Engagement
                 'view_count': 0,
-                'image_extraction_method': article.get('image_extraction_method')
+                'image_extraction_method': article['image_extraction_method'] if 'image_extraction_method' in article.keys() else None
             }
             
             # Push to Supabase
