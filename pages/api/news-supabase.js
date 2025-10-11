@@ -39,24 +39,37 @@ export default async function handler(req, res) {
     console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
 
     // Format for frontend
-    const formattedArticles = articles.map(article => ({
-      id: article.id,
-      title: article.title,
-      url: article.url,
-      source: article.source,
-      description: article.description,
-      content: article.content,
-      urlToImage: article.image_url,  // Frontend expects 'urlToImage'
-      author: article.author,
-      publishedAt: article.published_date || article.published_at,
-      category: article.category,
-      emoji: article.emoji || '📰',
-      final_score: article.ai_final_score,
-      summary: article.summary,
-      timeline: article.timeline ? JSON.parse(article.timeline) : null,
-      details: article.details_section,
-      views: article.view_count || 0
-    }))
+    const formattedArticles = articles.map(article => {
+      let timelineData = null;
+      if (article.timeline) {
+        try {
+          timelineData = typeof article.timeline === 'string' 
+            ? JSON.parse(article.timeline) 
+            : article.timeline;
+        } catch (e) {
+          console.error('Error parsing timeline:', e);
+        }
+      }
+
+      return {
+        id: article.id,
+        title: article.title,
+        url: article.url,
+        source: article.source,
+        description: article.description,
+        content: article.content,
+        urlToImage: article.image_url,  // Frontend expects 'urlToImage'
+        author: article.author,
+        publishedAt: article.published_date || article.published_at,
+        category: article.category,
+        emoji: article.emoji || '📰',
+        final_score: article.ai_final_score,
+        summary: article.summary,
+        timeline: timelineData,
+        details: article.details_section ? article.details_section.split('\n') : [],
+        views: article.view_count || 0
+      };
+    })
 
     return res.status(200).json({
       status: 'ok',

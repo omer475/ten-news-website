@@ -63,24 +63,42 @@ def push_to_supabase():
                 skipped_count += 1
                 continue
             
-            # Prepare article data
+            # Prepare article data (matching Supabase schema)
             article_data = {
                 'url': article['url'],
+                'guid': article.get('guid'),
                 'source': article['source'],
                 'title': article['title'],
-                'description': article['description'] or '',
-                'content': article['content'] or '',
-                'image_url': article['image_url'],
-                'author': article['author'],
-                'published_date': article['published_date'],
-                'category': article['category'],
+                'description': article.get('description', ''),
+                'content': article.get('content', ''),
+                'image_url': article.get('image_url'),
+                'author': article.get('author'),
+                'published_date': article.get('published_date'),
+                'fetched_at': article.get('fetched_at'),
+                
+                # AI Processing
+                'ai_processed': True,
+                'ai_score_raw': article.get('ai_score_raw'),
+                'ai_category': article.get('ai_category'),
+                'ai_reasoning': article.get('ai_reasoning'),
+                'ai_final_score': article.get('ai_final_score'),
+                
+                # Publishing
+                'published': True,
+                'published_at': article.get('published_at'),
+                'category': article.get('category'),
                 'emoji': article.get('emoji', '📰'),
-                'ai_final_score': article['ai_final_score'],
-                'summary': article.get('summary', ''),
+                
+                # Enhanced content
                 'timeline': article.get('timeline'),
                 'details_section': article.get('details_section'),
-                'published_at': article['published_at'],
-                'view_count': 0
+                'summary': article.get('summary', ''),
+                'timeline_generated': bool(article.get('timeline')),
+                'details_generated': bool(article.get('details_section')),
+                
+                # Engagement
+                'view_count': 0,
+                'image_extraction_method': article.get('image_extraction_method')
             }
             
             # Push to Supabase
