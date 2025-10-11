@@ -1,0 +1,351 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "💰",
+      "title": "Trump Announces Massive 100% Tariffs on Chinese Imports",
+      "summary": "**President Trump** announced a **100% tariff** increase on **Chinese imports** starting **November 1st**, alongside new export controls on critical software. The move comes as retaliation against China's recent restrictions on rare earth exports.",
+      "details": [
+        "Implementation: Starting November 1st",
+        "Current tariffs: Average 19.3%",
+        "Trade deficit: $382B with China"
+      ],
+      "category": "Business",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/10/10/trump-trade-tariffs-china-software.html",
+      "timeline": [
+        {
+          "date": "August 15, 2023",
+          "event": "China restricts gallium and germanium rare earth exports"
+        },
+        {
+          "date": "September 20, 2023",
+          "event": "US-China trade talks break down in Washington"
+        },
+        {
+          "date": "Today",
+          "event": "Trump announces 100% tariffs on Chinese imports"
+        },
+        {
+          "date": "November 1, 2023",
+          "event": "New tariffs and software controls take effect"
+        },
+        {
+          "date": "December 15, 2023",
+          "event": "WTO expected to review US tariff action"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🤖",
+      "title": "Silicon Valley Experts Warn of Potential AI Bubble Burst",
+      "summary": "**OpenAI CEO Sam Altman** addressed concerns about an **artificial intelligence bubble** during the company's **DevDay** event. Industry experts express growing anxiety about inflated valuations and unsustainable growth in Silicon Valley's AI sector.",
+      "details": [
+        "Market valuation: $3.2T AI sector",
+        "Startup funding: 156% YoY increase",
+        "Industry jobs: 89,000 new positions"
+      ],
+      "category": "Technology",
+      "source": "BBC",
+      "url": "https://www.bbc.com/news/articles/cz69qy760weo",
+      "timeline": [
+        {
+          "date": "November 30, 2022",
+          "event": "ChatGPT launch sparks massive AI investment surge"
+        },
+        {
+          "date": "March 14, 2023",
+          "event": "GPT-4 release drives AI startup valuations higher"
+        },
+        {
+          "date": "November 6, 2023",
+          "event": "Altman warns of AI bubble at DevDay"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "Expected market correction in AI sector valuations"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "☀️",
+      "title": "Solar and Wind Power Overtake Coal Globally",
+      "summary": "**Solar** and **wind energy** have surpassed **coal** as the world's primary electricity source, according to new analysis. This historic shift marks a significant milestone in the global transition toward renewable energy sources.",
+      "details": [
+        "Solar capacity: 1,250GW globally",
+        "Wind growth: 23% year-over-year",
+        "Coal decline: 15% since 2020"
+      ],
+      "category": "Climate",
+      "source": "Euronews",
+      "url": "https://es.euronews.com/green/2025/10/10/la-energia-solar-y-eolica-superan-al-carbon-como-principal-fuente-de-electricidad-mundial-",
+      "timeline": [
+        {
+          "date": "December 2015",
+          "event": "Paris Agreement sets global renewable energy targets"
+        },
+        {
+          "date": "January 2021",
+          "event": "Coal power hits peak global capacity"
+        },
+        {
+          "date": "Today",
+          "event": "Solar and wind surpass coal electricity generation"
+        },
+        {
+          "date": "2025",
+          "event": "Renewable costs expected 40% below coal globally"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🕊️",
+      "title": "Venezuelan Opposition Leader Wins Nobel Peace Prize",
+      "summary": "**María Corina Machado**, Venezuelan opposition leader in hiding since last year's disputed election, has been awarded the **2025 Nobel Peace Prize** for preserving democracy amid political turmoil in **Venezuela**.",
+      "details": [
+        "Prize value: $1.1M",
+        "Previous awards: 4 human rights",
+        "Support base: 2.3M followers"
+      ],
+      "category": "Politics",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/10/10/world/maria-corina-machado-nobel-peace-prize-intl",
+      "timeline": [
+        {
+          "date": "January 23, 2024",
+          "event": "Machado wins opposition primary despite government ban"
+        },
+        {
+          "date": "March 15, 2024",
+          "event": "Venezuelan Supreme Court blocks Machado's candidacy"
+        },
+        {
+          "date": "Today",
+          "event": "Machado awarded Nobel Peace Prize in exile"
+        },
+        {
+          "date": "December 10, 2025",
+          "event": "Nobel ceremony planned without Machado's attendance"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🌊",
+      "title": "UN Chief Optimistic About Global Plastic Treaty Progress",
+      "summary": "The **UN environment chief** remains confident about reaching a landmark **global plastic treaty**, despite challenges. Negotiations continue as nations work to address **plastic pollution** through comprehensive international regulations.",
+      "details": [
+        "Nations involved: 175 countries",
+        "Deadline: December 2025",
+        "Plastic waste: 400M tons annually"
+      ],
+      "category": "Environment",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-plastic-pollution-treaty-dead-environment.html",
+      "timeline": [
+        {
+          "date": "February 28, 2022",
+          "event": "UN Environment Assembly votes for plastic treaty"
+        },
+        {
+          "date": "November 13, 2023",
+          "event": "Third round negotiations begin in Nairobi"
+        },
+        {
+          "date": "Today",
+          "event": "UN chief expresses optimism for treaty success"
+        },
+        {
+          "date": "April 2024",
+          "event": "Fourth negotiation round scheduled in Canada"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "💊",
+      "title": "Trump Announces Major Drug Price Deal with AstraZeneca",
+      "summary": "**President Trump** has revealed a groundbreaking prescription drug agreement with **AstraZeneca**, citing his recent **100% tariff** threat as leverage. The deal aims to reduce pharmaceutical costs for American consumers.",
+      "details": [
+        "Price reduction: 35% average",
+        "Affected medications: 127 drugs",
+        "Annual savings: $4.2B estimated"
+      ],
+      "category": "Health",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/10/10/trump-reveals-prescription-drug-deal-with-pharmaceutical-giant-astrazeneca",
+      "timeline": [
+        {
+          "date": "July 24, 2023",
+          "event": "Trump threatens 100% tariffs on foreign pharmaceuticals"
+        },
+        {
+          "date": "September 15, 2023",
+          "event": "AstraZeneca stock drops 8% on tariff fears"
+        },
+        {
+          "date": "Today",
+          "event": "Trump announces drug pricing deal with AstraZeneca"
+        },
+        {
+          "date": "January 1, 2024",
+          "event": "New AstraZeneca pricing structure takes effect nationwide"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🌌",
+      "title": "Scientists Capture First Image of Orbiting Black Holes",
+      "summary": "Astronomers have achieved a historic breakthrough by capturing the first-ever image of **two supermassive black holes** orbiting each other in **quasar OJ287**, marking a significant advancement in space observation.",
+      "details": [
+        "Distance: 3.5B light-years away",
+        "Combined mass: 18B suns",
+        "Orbit period: 12 years"
+      ],
+      "category": "Science",
+      "source": "Space.com",
+      "url": "https://www.space.com/astronomy/black-holes/astronomers-capture-first-ever-image-of-two-black-holes-orbiting-each-other",
+      "timeline": [
+        {
+          "date": "1969",
+          "event": "Quasar OJ287 first discovered by astronomers"
+        },
+        {
+          "date": "2015",
+          "event": "Scientists predict binary black hole orbital pattern"
+        },
+        {
+          "date": "Today",
+          "event": "First image captured of orbiting black holes"
+        },
+        {
+          "date": "2024",
+          "event": "Next major orbital alignment expected for observation"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🌪️",
+      "title": "US Weather Damage Hits Record $100B by Mid-2025",
+      "summary": "Extreme weather events caused unprecedented **$100 billion** in damages across the **United States** by June **2025**. Wildfires in LA, tornadoes, and floods contributed to record-breaking destruction in the first half of the year.",
+      "details": [
+        "Insurance claims: 2.1M filed",
+        "Affected states: 32",
+        "Displaced residents: 180,000"
+      ],
+      "category": "Climate",
+      "source": "Live Science",
+      "url": "https://www.livescience.com/planet-earth/climate-change/extreme-weather-caused-more-than-usd100-billion-in-damage-by-june-smashing-us-records",
+      "timeline": [
+        {
+          "date": "August 2024",
+          "event": "NOAA predicts record-breaking extreme weather patterns"
+        },
+        {
+          "date": "January 2025",
+          "event": "California wildfires cause $30B initial damages"
+        },
+        {
+          "date": "June 2025",
+          "event": "US weather damage surpasses $100B milestone"
+        },
+        {
+          "date": "December 2025",
+          "event": "Congress expected to pass climate resilience bill"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🔒",
+      "title": "Investigation Reveals ChatGPT Security Flaws for Weapons Info",
+      "summary": "**NBC News** investigation reveals **ChatGPT's** safety systems can be circumvented to obtain instructions for chemical and biological weapons, despite **OpenAI's** attempts to control dangerous content generation.",
+      "details": [
+        "Vulnerabilities found: 8 major",
+        "Response time: 4ms average",
+        "Security updates: Monthly basis"
+      ],
+      "category": "Technology",
+      "source": "NBC News",
+      "url": "https://www.nbcnews.com/tech/security/chatgpt-safety-systems-can-bypassed-weapons-instructions-rcna225788",
+      "timeline": [
+        {
+          "date": "November 30, 2022",
+          "event": "ChatGPT launches with content safety restrictions"
+        },
+        {
+          "date": "March 14, 2023",
+          "event": "OpenAI releases GPT-4 with enhanced safety features"
+        },
+        {
+          "date": "Today",
+          "event": "NBC reveals ChatGPT security flaws for weapons"
+        },
+        {
+          "date": "December 2023",
+          "event": "OpenAI expected to strengthen content filtering systems"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🏠",
+      "title": "Workers Would Accept 25% Pay Cut for Remote Work",
+      "summary": "A new **Harvard-Brown-UCLA study** reveals workers are willing to accept up to a **25% salary reduction** for **remote work** opportunities, indicating a stronger preference for flexibility than previously understood.",
+      "details": [
+        "Study participants: 12,000",
+        "Average savings: $4,000 annually",
+        "Productivity increase: 13%"
+      ],
+      "category": "Business",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/10/10/value-of-remote-work-underplayed-workers-take-pay-cuts-to-work-from-home-harvard-brown-ucla-study/",
+      "timeline": [
+        {
+          "date": "March 2020",
+          "event": "COVID-19 forces global shift to remote work"
+        },
+        {
+          "date": "January 2023",
+          "event": "Harvard-Brown-UCLA researchers begin remote work salary study"
+        },
+        {
+          "date": "Today",
+          "event": "Study shows workers accept 25% cut remotely"
+        },
+        {
+          "date": "December 2024",
+          "event": "Companies expected to revise compensation policies nationwide"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Global trade tensions shake markets today.",
+  "readingTime": "1.2 minute read",
+  "displayDate": "SATURDAY, OCTOBER 11, 2025",
+  "historicalEvents": [
+    {
+      "year": "1531",
+      "description": "Huldrych Zwingli killed in battle during Swiss Reformation"
+    },
+    {
+      "year": "1811",
+      "description": "First steam-powered ferry begins operation in New York"
+    },
+    {
+      "year": "1962",
+      "description": "Vatican II Council opens under Pope John XXIII"
+    },
+    {
+      "year": "1984",
+      "description": "Space shuttle Challenger astronaut Kathryn Sullivan's first spacewalk"
+    }
+  ],
+  "generatedAt": "2025-10-11T07:35:00.618878",
+  "generatedAtUK": "2025-10-11T07:35:00.618896+01:00"
+}
