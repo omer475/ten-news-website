@@ -44,8 +44,7 @@ export default function NewFirstPage({ onContinue }) {
     <>
       <style jsx>{`
         .first-page-container {
-          max-width: 430px;
-          margin: 0 auto;
+          width: 100%;
           background: #f9fafb;
           min-height: 100vh;
           padding-top: 60px;
