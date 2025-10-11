@@ -48,6 +48,7 @@ export default function NewFirstPage({ onContinue }) {
           margin: 0 auto;
           background: #f9fafb;
           min-height: 100vh;
+          padding-top: 60px;
           padding-bottom: 40px;
         }
 
