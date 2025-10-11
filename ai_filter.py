@@ -20,7 +20,7 @@ class AINewsFilter:
         self.db_path = 'ten_news.db'
         self.batch_size = 30  # Process 30 articles at a time
         self.filter_interval = 300  # 5 minutes
-        self.min_score = 60  # Minimum score to publish
+        self.min_score = 80  # Minimum score to publish
         
         # API Configuration
         self.claude_api_key = os.getenv('CLAUDE_API_KEY')
@@ -354,32 +354,32 @@ Write the optimized title now (4-10 words):
             return ' '.join(words)
     
     def _generate_timeline(self, article):
-        """Generate timeline with Claude (YOUR EXISTING LOGIC)"""
-        if not self.claude_api_key:
-            return json.dumps({"events": []})
+        """Generate timeline with Perplexity (internet search + citations)"""
+        if not self.perplexity_api_key:
+            self.logger.warning("Perplexity API key not set, skipping timeline")
+            return json.dumps([])
         
         try:
-            url = "https://api.anthropic.com/v1/messages"
+            url = "https://api.perplexity.ai/chat/completions"
             headers = {
-                "x-api-key": self.claude_api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
+                "Authorization": f"Bearer {self.perplexity_api_key}",
+                "Content-Type": "application/json"
             }
             
             prompt = f"""
-Create a chronological timeline of key events for this news story.
+Search the internet and create a chronological timeline of key events for this news story.
 
 Article: {article['title']}
 Description: {article['description']}
-{article['content'][:1500] if article['content'] else ''}
 
 Requirements:
+- Search for the latest information about this topic
 - 2-4 key events in chronological order
 - Each event: date/time + brief description (1 sentence)
 - Use bold markdown (**text**) for dates and key terms
-- Include relevant context
+- ONLY include verified information from reliable sources
 
-Return JSON array:
+Return ONLY a JSON array (no explanation):
 [
   {{"date": "October 2024", "event": "Description with **bold** terms"}},
   {{"date": "October 9, 2024", "event": "Another event"}}
@@ -387,92 +387,94 @@ Return JSON array:
 """
             
             data = {
-                "model": self.claude_model,
-                "max_tokens": 500,
-                "messages": [{"role": "user", "content": prompt}]
+                "model": "llama-3.1-sonar-large-128k-online",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "max_tokens": 500
             }
             
             response = requests.post(url, headers=headers, json=data, timeout=45)
             
             if response.status_code == 200:
                 result = response.json()
-                timeline_text = result['content'][0]['text'].strip()
+                timeline_text = result['choices'][0]['message']['content'].strip()
                 
                 # Strip markdown code blocks
                 import re
-                
-                # Remove markdown code blocks
                 timeline_text = re.sub(r'^```(?:json)?\s*', '', timeline_text)
                 timeline_text = re.sub(r'\s*```$', '', timeline_text)
                 timeline_text = timeline_text.strip()
                 
-                # Try to extract JSON if it's embedded in text
+                # Extract JSON array
                 json_match = re.search(r'\[[\s\S]*\]', timeline_text)
                 if json_match:
                     timeline_text = json_match.group(0)
                 
                 try:
                     timeline = json.loads(timeline_text)
-                    # Validate structure
                     if isinstance(timeline, list):
                         return json.dumps(timeline)
                     else:
                         self.logger.warning(f"Timeline not a list, got: {type(timeline)}")
-                        return json.dumps({"events": []})
+                        return json.dumps([])
                 except json.JSONDecodeError as je:
                     self.logger.error(f"Timeline JSON parse error: {je}\nText: {timeline_text[:200]}")
-                    return json.dumps({"events": []})
-            
-            return json.dumps({"events": []})
+                    return json.dumps([])
+            else:
+                self.logger.error(f"Perplexity API error: {response.status_code} - {response.text[:200]}")
+                return json.dumps([])
             
         except Exception as e:
             self.logger.error(f"Timeline generation error: {e}", exc_info=True)
-            return json.dumps({"events": []})
+            return json.dumps([])
     
     def _generate_details(self, article):
-        """Generate details section with Claude (YOUR EXISTING LOGIC)"""
-        if not self.claude_api_key:
+        """Generate details section with Perplexity (internet search + citations)"""
+        if not self.perplexity_api_key:
+            self.logger.warning("Perplexity API key not set, skipping details")
             return None
         
         try:
-            url = "https://api.anthropic.com/v1/messages"
+            url = "https://api.perplexity.ai/chat/completions"
             headers = {
-                "x-api-key": self.claude_api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
+                "Authorization": f"Bearer {self.perplexity_api_key}",
+                "Content-Type": "application/json"
             }
             
             prompt = f"""
-Write a detailed analysis section for this news article.
+Search the internet and write a detailed analysis section for this news article.
 
 Article: {article['title']}
 Description: {article['description']}
-{article['content'][:1500] if article['content'] else ''}
 
 Requirements:
-- 3-5 paragraphs of in-depth analysis
+- Search for the latest verified information about this topic
+- Write 3-5 paragraphs of in-depth analysis
 - Include context, background, and implications
 - Use bold markdown (**text**) for key terms and numbers
-- Cite specific facts, figures, and dates
+- Cite specific facts, figures, and dates from reliable sources
 - Explain significance and impact
+- ONLY include information you can verify through internet search
 
 Write the detailed analysis now:
 """
             
             data = {
-                "model": self.claude_model,
-                "max_tokens": 800,
-                "messages": [{"role": "user", "content": prompt}]
+                "model": "llama-3.1-sonar-large-128k-online",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "max_tokens": 800
             }
             
             response = requests.post(url, headers=headers, json=data, timeout=45)
             
             if response.status_code == 200:
                 result = response.json()
-                details = result['content'][0]['text'].strip()
+                details = result['choices'][0]['message']['content'].strip()
                 return details
-            
-            return None
+            else:
+                self.logger.error(f"Perplexity API error: {response.status_code} - {response.text[:200]}")
+                return None
             
         except Exception as e:
             self.logger.error(f"Details generation error: {e}")
