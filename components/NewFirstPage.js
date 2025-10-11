@@ -4,14 +4,26 @@ export default function NewFirstPage({ onContinue }) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
 
+  // Categories data
   const categories = ['All', 'News', 'Exclusives', 'Guides', 'Recommended'];
-  
+
+  // History events data
   const historyEvents = [
-    { year: '1492', event: 'Christopher Columbus discovers America' },
-    { year: '1968', event: 'Apollo 7 launched, first crewed Apollo mission' },
-    { year: '2001', event: 'iPod was first introduced by Apple Inc.' }
+    {
+      year: '1492',
+      event: 'Christopher Columbus discovers America'
+    },
+    {
+      year: '1968',
+      event: 'Apollo 7 launched, first crewed Apollo mission'
+    },
+    {
+      year: '2001',
+      event: 'iPod was first introduced by Apple Inc.'
+    }
   ];
 
+  // Trending topics data
   const trendingTopics = [
     { title: 'Climate Summit', count: '234 articles' },
     { title: 'Tech Innovation', count: '189 articles' },
@@ -24,63 +36,22 @@ export default function NewFirstPage({ onContinue }) {
     const interval = setInterval(() => {
       setCurrentHistoryIndex((prev) => (prev + 1) % historyEvents.length);
     }, 3000);
+
     return () => clearInterval(interval);
   }, [historyEvents.length]);
 
   return (
     <>
       <style jsx>{`
-        .container {
+        .first-page-container {
           max-width: 430px;
           margin: 0 auto;
           background: #f9fafb;
           min-height: 100vh;
-          padding-bottom: 80px;
+          padding-bottom: 40px;
         }
 
-        .header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 10px 12px;
-          background: white;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        .logo-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .logo {
-          width: 24px;
-          height: 24px;
-          background: linear-gradient(to bottom right, #4f46e5, #7c3aed);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 12px;
-        }
-
-        .logo-text {
-          font-weight: bold;
-          font-size: 16px;
-        }
-
-        .lang-btn {
-          font-size: 12px;
-          color: #4b5563;
-          padding: 4px 10px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          background: white;
-          cursor: pointer;
-        }
-
+        /* Categories */
         .categories {
           padding: 12px 12px 8px;
           background: white;
@@ -121,6 +92,7 @@ export default function NewFirstPage({ onContinue }) {
           color: #dc2626;
         }
 
+        /* Hero Section */
         .hero {
           padding: 12px 12px 8px;
         }
@@ -179,6 +151,7 @@ export default function NewFirstPage({ onContinue }) {
         .hero-btn {
           background: rgba(255, 255, 255, 0.2);
           backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           color: white;
           font-weight: 600;
           padding: 10px 20px;
@@ -196,6 +169,7 @@ export default function NewFirstPage({ onContinue }) {
           background: rgba(255, 255, 255, 0.3);
         }
 
+        /* Sections */
         .section {
           padding: 8px 12px;
         }
@@ -213,6 +187,7 @@ export default function NewFirstPage({ onContinue }) {
           display: flex;
           align-items: center;
           gap: 6px;
+          color: #111827;
         }
 
         .icon {
@@ -240,6 +215,7 @@ export default function NewFirstPage({ onContinue }) {
           border-radius: 3px;
         }
 
+        /* History Carousel */
         .history-carousel {
           display: flex;
           gap: 8px;
@@ -288,6 +264,7 @@ export default function NewFirstPage({ onContinue }) {
           font-weight: 500;
         }
 
+        /* Trending Topics */
         .trending-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -312,67 +289,9 @@ export default function NewFirstPage({ onContinue }) {
           font-size: 12px;
           color: #6b7280;
         }
-
-        .bottom-nav {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          border-top: 1px solid #e5e7eb;
-          padding: 8px 16px;
-          max-width: 430px;
-          margin: 0 auto;
-        }
-
-        .nav-items {
-          display: flex;
-          align-items: center;
-          justify-content: space-around;
-        }
-
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2px;
-          background: none;
-          border: none;
-          cursor: pointer;
-        }
-
-        .nav-icon {
-          width: 20px;
-          height: 20px;
-          border-radius: 8px;
-          background: #d1d5db;
-        }
-
-        .nav-icon.active {
-          background: #4f46e5;
-        }
-
-        .nav-label {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .nav-label.active {
-          color: #4f46e5;
-          font-weight: 500;
-        }
       `}</style>
 
-      <div className="container">
-        {/* Header */}
-        <header className="header">
-          <div className="logo-wrapper">
-            <div className="logo">+</div>
-            <span className="logo-text">News+</span>
-          </div>
-          <button className="lang-btn">EN</button>
-        </header>
-
+      <div className="first-page-container">
         {/* Categories */}
         <div className="categories">
           <div className="categories-scroll">
@@ -420,7 +339,7 @@ export default function NewFirstPage({ onContinue }) {
               {historyEvents.map((_, index) => (
                 <div
                   key={index}
-                  className={`dot ${currentHistoryIndex === index ? 'active' : ''}`}
+                  className={`dot ${index === currentHistoryIndex ? 'active' : ''}`}
                 ></div>
               ))}
             </div>
@@ -458,28 +377,6 @@ export default function NewFirstPage({ onContinue }) {
             ))}
           </div>
         </div>
-
-        {/* Bottom Navigation */}
-        <nav className="bottom-nav">
-          <div className="nav-items">
-            <button className="nav-item">
-              <div className="nav-icon active"></div>
-              <span className="nav-label active">Home</span>
-            </button>
-            <button className="nav-item">
-              <div className="nav-icon"></div>
-              <span className="nav-label">Explore</span>
-            </button>
-            <button className="nav-item">
-              <div className="nav-icon"></div>
-              <span className="nav-label">Saved</span>
-            </button>
-            <button className="nav-item">
-              <div className="nav-icon"></div>
-              <span className="nav-label">Profile</span>
-            </button>
-          </div>
-        </nav>
       </div>
     </>
   );
