@@ -1,149 +1,437 @@
-import React from 'react';
-import { ChevronRight, Clock, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function NewFirstPage({ onContinue }) {
-  const scrollRef = React.useRef(null);
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [activeCategory, setActiveCategory] = React.useState('All');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
 
   const categories = ['All', 'News', 'Exclusives', 'Guides', 'Recommended'];
-
-  const todayInHistory = [
+  
+  const historyEvents = [
     { year: '1492', event: 'Christopher Columbus discovers America' },
     { year: '1968', event: 'Apollo 7 launched, first crewed Apollo mission' },
     { year: '2001', event: 'iPod was first introduced by Apple Inc.' }
   ];
 
   const trendingTopics = [
-    { title: 'Climate Summit', articles: 234 },
-    { title: 'Tech Innovation', articles: 189 },
-    { title: 'Space Exploration', articles: 156 },
-    { title: 'Global Economy', articles: 142 }
+    { title: 'Climate Summit', count: '234 articles' },
+    { title: 'Tech Innovation', count: '189 articles' },
+    { title: 'Space Exploration', count: '156 articles' },
+    { title: 'Global Economy', count: '142 articles' }
   ];
 
-  React.useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const cardWidth = 256; // w-64 = 256px
-    const gap = 8; // gap-2 = 8px
-    const totalWidth = cardWidth + gap;
-
-    const autoScroll = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const nextIndex = (prev + 1) % todayInHistory.length;
-        scrollContainer.scrollTo({
-          left: nextIndex * totalWidth,
-          behavior: 'smooth'
-        });
-        return nextIndex;
-      });
-    }, 3000); // Scroll every 3 seconds
-
-    return () => clearInterval(autoScroll);
-  }, [todayInHistory.length]);
-
-  // Handle manual scroll to update currentIndex
-  React.useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const handleScroll = () => {
-      const cardWidth = 256;
-      const gap = 8;
-      const totalWidth = cardWidth + gap;
-      const scrollLeft = scrollContainer.scrollLeft;
-      const newIndex = Math.round(scrollLeft / totalWidth);
-      setCurrentIndex(newIndex);
-    };
-
-    scrollContainer.addEventListener('scroll', handleScroll);
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Auto-scroll history carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHistoryIndex((prev) => (prev + 1) % historyEvents.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [historyEvents.length]);
 
   return (
-    <div className="min-h-screen bg-gray-50 max-w-[430px] mx-auto">
-      {/* Header */}
-      <header className="px-3 py-2.5 flex items-center justify-between bg-white border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs">+</span>
-          </div>
-          <span className="font-bold">News+</span>
-        </div>
-        <button className="text-xs text-gray-600 px-2.5 py-1 border border-gray-200 rounded-lg">EN</button>
-      </header>
+    <>
+      <style jsx>{`
+        .container {
+          max-width: 430px;
+          margin: 0 auto;
+          background: #f9fafb;
+          min-height: 100vh;
+          padding-bottom: 80px;
+        }
 
-      <div className="pb-16">
-        {/* Category Navigation */}
-        <div className="px-3 pt-3 pb-2 bg-white border-b border-gray-100">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {categories.map((cat) => (
+        .header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 12px;
+          background: white;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .logo-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .logo {
+          width: 24px;
+          height: 24px;
+          background: linear-gradient(to bottom right, #4f46e5, #7c3aed);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 12px;
+        }
+
+        .logo-text {
+          font-weight: bold;
+          font-size: 16px;
+        }
+
+        .lang-btn {
+          font-size: 12px;
+          color: #4b5563;
+          padding: 4px 10px;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background: white;
+          cursor: pointer;
+        }
+
+        .categories {
+          padding: 12px 12px 8px;
+          background: white;
+          border-bottom: 1px solid #f3f4f6;
+        }
+
+        .categories-scroll {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .categories-scroll::-webkit-scrollbar {
+          display: none;
+        }
+
+        .category-btn {
+          flex-shrink: 0;
+          padding: 6px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s;
+          background: white;
+          color: #4b5563;
+        }
+
+        .category-btn:hover {
+          background: #f3f4f6;
+        }
+
+        .category-btn.active {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+
+        .hero {
+          padding: 12px 12px 8px;
+        }
+
+        .hero-card {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          height: 176px;
+          cursor: pointer;
+        }
+
+        .hero-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom right, #4f46e5, #7c3aed, #ec4899);
+        }
+
+        .hero-blur {
+          position: absolute;
+          inset: 0;
+          opacity: 0.1;
+        }
+
+        .blur-circle-1 {
+          position: absolute;
+          top: 40px;
+          right: 40px;
+          width: 128px;
+          height: 128px;
+          background: white;
+          border-radius: 50%;
+          filter: blur(60px);
+        }
+
+        .blur-circle-2 {
+          position: absolute;
+          bottom: 40px;
+          left: 40px;
+          width: 96px;
+          height: 96px;
+          background: #c084fc;
+          border-radius: 50%;
+          filter: blur(40px);
+        }
+
+        .hero-content {
+          position: relative;
+          height: 100%;
+          display: flex;
+          align-items: flex-end;
+          justify-content: flex-end;
+          padding: 16px;
+        }
+
+        .hero-btn {
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(12px);
+          color: white;
+          font-weight: 600;
+          padding: 10px 20px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .hero-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .section {
+          padding: 8px 12px;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .section-title {
+          font-weight: bold;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .icon {
+          width: 16px;
+          height: 16px;
+          color: #4f46e5;
+        }
+
+        .dots {
+          display: flex;
+          gap: 4px;
+        }
+
+        .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #d1d5db;
+          transition: all 0.3s;
+        }
+
+        .dot.active {
+          background: #4f46e5;
+          width: 16px;
+          border-radius: 3px;
+        }
+
+        .history-carousel {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          scroll-snap-type: x mandatory;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding-bottom: 8px;
+        }
+
+        .history-carousel::-webkit-scrollbar {
+          display: none;
+        }
+
+        .history-card {
+          flex-shrink: 0;
+          width: 256px;
+          background: white;
+          border-radius: 8px;
+          border: 1px solid #f3f4f6;
+          overflow: hidden;
+          scroll-snap-align: center;
+        }
+
+        .history-image {
+          height: 128px;
+          background: linear-gradient(to bottom right, #818cf8, #a78bfa);
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+        }
+
+        .history-year {
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          margin-bottom: 6px;
+        }
+
+        .history-event {
+          color: white;
+          font-size: 14px;
+          line-height: 1.3;
+          font-weight: 500;
+        }
+
+        .trending-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 6px;
+        }
+
+        .trending-card {
+          background: white;
+          border-radius: 8px;
+          padding: 10px;
+          border: 1px solid #f3f4f6;
+        }
+
+        .trending-title {
+          font-weight: 600;
+          font-size: 12px;
+          color: #111827;
+          margin-bottom: 2px;
+        }
+
+        .trending-count {
+          font-size: 12px;
+          color: #6b7280;
+        }
+
+        .bottom-nav {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: white;
+          border-top: 1px solid #e5e7eb;
+          padding: 8px 16px;
+          max-width: 430px;
+          margin: 0 auto;
+        }
+
+        .nav-items {
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+        }
+
+        .nav-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+
+        .nav-icon {
+          width: 20px;
+          height: 20px;
+          border-radius: 8px;
+          background: #d1d5db;
+        }
+
+        .nav-icon.active {
+          background: #4f46e5;
+        }
+
+        .nav-label {
+          font-size: 12px;
+          color: #6b7280;
+        }
+
+        .nav-label.active {
+          color: #4f46e5;
+          font-weight: 500;
+        }
+      `}</style>
+
+      <div className="container">
+        {/* Header */}
+        <header className="header">
+          <div className="logo-wrapper">
+            <div className="logo">+</div>
+            <span className="logo-text">News+</span>
+          </div>
+          <button className="lang-btn">EN</button>
+        </header>
+
+        {/* Categories */}
+        <div className="categories">
+          <div className="categories-scroll">
+            {categories.map((category) => (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  activeCategory === cat
-                    ? 'bg-red-100 text-red-600'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                key={category}
+                className={`category-btn ${activeCategory === category ? 'active' : ''}`}
+                onClick={() => setActiveCategory(category)}
               >
-                {cat}
+                {category}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Hero CTA */}
-        <div className="px-3 pt-3 pb-2">
-          <div 
-            className="relative rounded-xl overflow-hidden h-44 cursor-pointer group"
-            onClick={onContinue}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-300 rounded-full blur-2xl"></div>
+        {/* Hero Section */}
+        <div className="hero">
+          <div className="hero-card" onClick={onContinue}>
+            <div className="hero-gradient">
+              <div className="hero-blur">
+                <div className="blur-circle-1"></div>
+                <div className="blur-circle-2"></div>
               </div>
             </div>
-            
-            <div className="relative h-full flex items-end justify-end p-4">
-              <button className="bg-white/20 backdrop-blur-md text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm border border-white/30 group-hover:bg-white/30 transition-all">
+            <div className="hero-content">
+              <button className="hero-btn">
                 Read 10 News for Today
-                <ChevronRight className="w-4 h-4" />
+                <span>→</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Today in History */}
-        <div className="px-3 py-2">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-sm flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-indigo-600" />
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title">
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
               Today in History
             </h3>
-            <div className="flex gap-1">
-              {todayInHistory.map((_, index) => (
+            <div className="dots">
+              {historyEvents.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-1.5 h-1.5 rounded-full transition-all ${
-                    index === currentIndex ? 'bg-indigo-600 w-4' : 'bg-gray-300'
-                  }`}
-                />
+                  className={`dot ${currentHistoryIndex === index ? 'active' : ''}`}
+                ></div>
               ))}
             </div>
           </div>
           
-          <div 
-            ref={scrollRef} 
-            className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide scroll-smooth snap-x snap-mandatory"
-          >
-            {todayInHistory.map((item, index) => (
-              <div key={index} className="flex-shrink-0 w-64 bg-white rounded-lg border border-gray-100 overflow-hidden snap-center">
-                <div className="h-32 bg-gradient-to-br from-indigo-400 to-purple-500 p-3 flex flex-col justify-end">
-                  <span className="inline-block text-white font-bold text-sm mb-1.5">{item.year}</span>
-                  <p className="text-sm text-white leading-snug font-medium">{item.event}</p>
+          <div className="history-carousel">
+            {historyEvents.map((event, index) => (
+              <div key={index} className="history-card">
+                <div className="history-image">
+                  <span className="history-year">{event.year}</span>
+                  <p className="history-event">{event.event}</p>
                 </div>
               </div>
             ))}
@@ -151,46 +439,48 @@ export default function NewFirstPage({ onContinue }) {
         </div>
 
         {/* Trending Topics */}
-        <div className="px-3 py-2">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-sm flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-indigo-600" />
+        <div className="section">
+          <div className="section-header">
+            <h3 className="section-title">
+              <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
               Trending Topics
             </h3>
           </div>
           
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="trending-grid">
             {trendingTopics.map((topic, index) => (
-              <div key={index} className="bg-white rounded-lg p-2.5 border border-gray-100">
-                <h4 className="font-semibold text-xs text-gray-900 mb-0.5">{topic.title}</h4>
-                <p className="text-xs text-gray-500">{topic.articles} articles</p>
+              <div key={index} className="trending-card">
+                <h4 className="trending-title">{topic.title}</h4>
+                <p className="trending-count">{topic.count}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 max-w-[430px] mx-auto">
-        <div className="flex items-center justify-around">
-          <button className="flex flex-col items-center gap-0.5">
-            <div className="w-5 h-5 bg-indigo-600 rounded-lg"></div>
-            <span className="text-xs font-medium text-indigo-600">Home</span>
-          </button>
-          <button className="flex flex-col items-center gap-0.5">
-            <div className="w-5 h-5 bg-gray-300 rounded-lg"></div>
-            <span className="text-xs text-gray-500">Explore</span>
-          </button>
-          <button className="flex flex-col items-center gap-0.5">
-            <div className="w-5 h-5 bg-gray-300 rounded-lg"></div>
-            <span className="text-xs text-gray-500">Saved</span>
-          </button>
-          <button className="flex flex-col items-center gap-0.5">
-            <div className="w-5 h-5 bg-gray-300 rounded-lg"></div>
-            <span className="text-xs text-gray-500">Profile</span>
-          </button>
-        </div>
-      </nav>
-    </div>
+        {/* Bottom Navigation */}
+        <nav className="bottom-nav">
+          <div className="nav-items">
+            <button className="nav-item">
+              <div className="nav-icon active"></div>
+              <span className="nav-label active">Home</span>
+            </button>
+            <button className="nav-item">
+              <div className="nav-icon"></div>
+              <span className="nav-label">Explore</span>
+            </button>
+            <button className="nav-item">
+              <div className="nav-icon"></div>
+              <span className="nav-label">Saved</span>
+            </button>
+            <button className="nav-item">
+              <div className="nav-icon"></div>
+              <span className="nav-label">Profile</span>
+            </button>
+          </div>
+        </nav>
+      </div>
+    </>
   );
 }
