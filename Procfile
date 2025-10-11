@@ -1,3 +1,2 @@
-part1: python3 news-part1-breaking.py
-part2: python3 news-part2-global.py
-
+web: python3 api.py
+worker: python3 main.py
