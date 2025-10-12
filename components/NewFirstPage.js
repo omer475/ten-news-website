@@ -53,7 +53,7 @@ export default function NewFirstPage({ onContinue }) {
 
         /* Categories */
         .categories {
-          padding: 12px 12px 8px;
+          padding: 12px 0 8px 0;
           background: white;
           border-bottom: 1px solid #f3f4f6;
         }
@@ -64,6 +64,7 @@ export default function NewFirstPage({ onContinue }) {
           overflow-x: auto;
           scrollbar-width: none;
           -ms-overflow-style: none;
+          padding: 0 12px;
         }
 
         .categories-scroll::-webkit-scrollbar {
@@ -94,12 +95,12 @@ export default function NewFirstPage({ onContinue }) {
 
         /* Hero Section */
         .hero {
-          padding: 12px 12px 8px;
+          padding: 12px 0 8px 0;
         }
 
         .hero-card {
           position: relative;
-          border-radius: 12px;
+          border-radius: 0;
           overflow: hidden;
           height: 176px;
           cursor: pointer;
@@ -171,7 +172,7 @@ export default function NewFirstPage({ onContinue }) {
 
         /* Sections */
         .section {
-          padding: 8px 12px;
+          padding: 8px 0;
         }
 
         .section-header {
@@ -179,6 +180,7 @@ export default function NewFirstPage({ onContinue }) {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 8px;
+          padding: 0 12px;
         }
 
         .section-title {
@@ -224,7 +226,7 @@ export default function NewFirstPage({ onContinue }) {
           scroll-snap-type: x mandatory;
           scrollbar-width: none;
           -ms-overflow-style: none;
-          padding-bottom: 8px;
+          padding: 0 12px 8px 12px;
         }
 
         .history-carousel::-webkit-scrollbar {
@@ -269,6 +271,7 @@ export default function NewFirstPage({ onContinue }) {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 6px;
+          padding: 0 12px;
         }
 
         .trending-card {
