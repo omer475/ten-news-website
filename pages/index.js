@@ -1465,7 +1465,7 @@ export default function Home() {
           /* Show arrows on mobile/tablet - hide on desktop */
           
           .story-container {
-            padding: 0 12px 40px;
+            padding: 0 0 40px;
           }
           
           .news-item {
