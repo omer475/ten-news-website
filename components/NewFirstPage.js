@@ -89,7 +89,7 @@ export default function NewFirstPage({ onContinue }) {
         }
 
         .category-btn.active {
-          background: #ff4940;
+          background: #000000;
           color: #ffffff;
         }
 
