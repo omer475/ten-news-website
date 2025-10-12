@@ -53,7 +53,7 @@ export default function NewFirstPage({ onContinue }) {
 
         /* Categories */
         .categories {
-          padding: 12px 12px 8px;
+          padding: 12px 0 8px;
           background: white;
           border-bottom: 1px solid #f3f4f6;
         }
@@ -64,6 +64,7 @@ export default function NewFirstPage({ onContinue }) {
           overflow-x: auto;
           scrollbar-width: none;
           -ms-overflow-style: none;
+          padding: 0 12px;
         }
 
         .categories-scroll::-webkit-scrollbar {
