@@ -89,8 +89,8 @@ export default function NewFirstPage({ onContinue }) {
         }
 
         .category-btn.active {
-          background: #fee2e2;
-          color: #dc2626;
+          background: #000000;
+          color: #ffffff;
         }
 
         /* Hero Section */
