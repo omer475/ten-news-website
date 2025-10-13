@@ -1715,30 +1715,39 @@ export default function Home() {
                     <div className="news-content" style={{
                       position: 'relative',
                       paddingTop: 'calc(30vh + 12px)',
+                      paddingBottom: '152px',
                       paddingLeft: '10px',
                       paddingRight: '10px',
-                      zIndex: '2'
+                      zIndex: '2',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      minHeight: 'calc(70vh - 152px)'
                     }}>
                       
-                      {/* Title - Large and Prominent, Higher Position */}
-                      <h3 className="news-title" style={{ 
-                        marginTop: '0',
-                        marginBottom: '10px',
-                        fontSize: '26px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        letterSpacing: '-0.5px'
-                      }}>{story.title}</h3>
+                      <div>
+                        {/* Title - Large and Prominent, Higher Position */}
+                        <h3 className="news-title" style={{ 
+                          marginTop: '0',
+                          marginBottom: '10px',
+                          fontSize: '26px',
+                          fontWeight: '800',
+                          lineHeight: '1.2',
+                          letterSpacing: '-0.5px'
+                        }}>{story.title}</h3>
+                      </div>
                       
-                      {/* Summary - Visible and Styled */}
+                      {/* Summary - Centered between title and details */}
                       <p className="news-summary" style={{ 
-                        marginTop: '0',
-                        marginBottom: '16px',
+                        marginTop: 'auto',
+                        marginBottom: 'auto',
                         fontSize: '18px',
                         lineHeight: '1.5',
                         opacity: '1',
                         color: '#2c2c2c'
                       }}>{renderBoldText(story.summary, story.category)}</p>
+                      
+                      <div style={{ minHeight: '0' }}></div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
