@@ -566,6 +566,41 @@
       ]
     },
     {
+      "title": "Fragments of 2003 Cable Detail Torture in a Secret C.I.A.",
+      "url": "https://www.nytimes.com/2025/10/13/us/politics/cia-torture-black-sites.html",
+      "source": "New York Times",
+      "description": "An interrogator covertly used a power drill and handgun to menace a prisoner, without permission from the agency\u2019s headquarters.",
+      "content": "The document offers some insight into the way Abd al-Rahim al-Nashiri was tortured.",
+      "urlToImage": "https://static01.nyt.com/images/2025/10/06/multimedia/00dc-torture-gfjm/00dc-torture-gfjm-mediumSquareAt3X.jpg",
+      "author": "Carol Rosenberg",
+      "publishedAt": "2025-10-13T18:27:08.811131",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 940.0,
+      "summary": "A newly revealed 2003 cable exposes how a CIA interrogator unauthorized used a **power drill** and **handgun** to threaten detainee Abd al-Rahim al-Nashiri at a **secret prison**, highlighting disturbing interrogation tactics used without agency approval.",
+      "timeline": [
+        {
+          "date": "August 1, 2002",
+          "event": "DOJ approves use of enhanced interrogation techniques on Abu Zubaydah in CIA custody"
+        },
+        {
+          "date": "August 4, 2002",
+          "event": "CIA begins aggressive torture of Abu Zubaydah, including waterboarding and confinement boxes"
+        },
+        {
+          "date": "2003",
+          "event": "CIA interrogator menaces prisoner with power drill and handgun without headquarters' permission"
+        },
+        {
+          "date": "February 5, 2008",
+          "event": "CIA Director confirms waterboarding used in 2002 and 2003 on three detainees"
+        }
+      ],
+      "details": [
+        "Detainees tortured: At least 39[1]  \nMistaken identity cases: Dozens detained[1]  \nMental harm: Dementia, paranoia, insomnia[1]"
+      ]
+    },
+    {
       "title": "Biden receiving radiation therapy for prostate cancer",
       "url": "https://www.bbc.com/news/articles/c1ede670jnyo?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -725,6 +760,103 @@
       ]
     },
     {
+      "title": "They Helped Topple Roe v. Wade. Now Their Sights Are",
+      "url": "https://www.nytimes.com/2025/10/13/world/europe/uk-abortion-farage.html",
+      "source": "New York Times",
+      "description": "An organization that fought abortion rights in the United States is now an unlikely conduit between MAGA Republicans and Britain\u2019s ascendant Reform U.K. party.",
+      "content": "Demonstrators at the March for Life in London last month. The event attracted religious and anti-abortion groups from around the world, including the U.S.-based Alliance Defending Freedom.",
+      "urlToImage": "https://static01.nyt.com/images/2025/09/25/multimedia/00uk-abortion-fzpl/00uk-abortion-fzpl-mediumSquareAt3X-v2.jpg",
+      "author": "Jane Bradley and Elizabeth Dias",
+      "publishedAt": "2025-10-13T18:28:16.074006",
+      "category": "politics",
+      "emoji": "\u2696\ufe0f",
+      "final_score": 930.0,
+      "summary": "The **Alliance Defending Freedom**, a key player in overturning Roe v. Wade, is expanding its anti-abortion campaign to Britain by forming connections with the **Reform U.K. party**, signaling a growing transatlantic conservative alliance.",
+      "timeline": [
+        {
+          "date": "June 2024",
+          "event": "Nigel Farage resumes Reform UK leadership and party wins five seats in general election"
+        },
+        {
+          "date": "November 28, 2024",
+          "event": "Farage teams up with US anti-abortion group ADF, calls for UK abortion debate"
+        }
+      ],
+      "details": [
+        "Defections: 6 ex-Conservative MPs joined Reform UK[2]  \nDebate: Farage called for stricter abortion limits[1]  \nPolicy: Reform UK opposes at-home abortion pills[2]"
+      ]
+    },
+    {
+      "title": "Ukraine Targets Russian Oil Refineries with Drone Strikes",
+      "url": "https://www.nytimes.com/2025/10/13/world/europe/ukraine-drones-russia-oil-refineries.html",
+      "source": "New York Times",
+      "description": "With Russian forces gaining slowly on the battlefield, Ukraine hopes its long-range drone campaign will help persuade Vladimir V. Putin to change course.",
+      "content": "Even though they are far from the front lines, drone teams wear protective gear for fear of being detected and targeted by Russia.",
+      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13int-ukraine-oil-04-lthc-promo/13int-ukraine-oil-04-lthc-mediumSquareAt3X-v2.jpg",
+      "author": "Maria Varenikova and Brendan Hoffman",
+      "publishedAt": "2025-10-13T18:27:53.814004",
+      "category": "politics",
+      "emoji": "\u2694\ufe0f",
+      "final_score": 930.0,
+      "summary": "With Russian forces gaining slowly on the battlefield, Ukraine hopes its long-range drone campaign will help persuade Vladimir V. Putin to change course.",
+      "timeline": [
+        {
+          "date": "January 2024",
+          "event": "Ukraine launches drone strikes on Russian refineries"
+        },
+        {
+          "date": "August 26, 2024",
+          "event": "Omsk refinery attacked, major unit destroyed"
+        },
+        {
+          "date": "September 12, 2024",
+          "event": "Bashneft-Novoyl refinery in Ufa hit"
+        },
+        {
+          "date": "October 11, 2024",
+          "event": "Ufa oil refinery struck by SBU drones"
+        }
+      ],
+      "details": [
+        "Strikes: 61 refineries hit since 2024[3]  \nExport drop: 10% seaborne oil exports[3]  \nFuel shortage: 20% of Russian demand[4]"
+      ]
+    },
+    {
+      "title": "Why Ukraine Is Betting on Strikes Deep Inside Russia",
+      "url": "https://www.nytimes.com/2025/10/13/world/europe/ukraine-long-range-strikes-russia.html",
+      "source": "New York Times",
+      "description": "The Kremlin will only negotiate if missiles and drones bring the pain of war home to Russians, Ukrainian officials say.",
+      "content": "A satellite image overview of destroyed ammunition depots at Engels airfield in Russia\u2019s Saratov region in March after a Ukrainian drone attack.",
+      "urlToImage": "https://static01.nyt.com/images/2025/10/12/multimedia/13int-ukraine-long-range-1-gzxw/13int-ukraine-long-range-1-gzxw-mediumSquareAt3X.jpg",
+      "author": "Andrew E. Kramer",
+      "publishedAt": "2025-10-13T18:27:37.988085",
+      "category": "politics",
+      "emoji": "\ud83c\uddfa\ud83c\udde6",
+      "final_score": 930.0,
+      "summary": "Ukrainian forces are launching **deep-strike attacks** inside Russia, targeting military facilities like ammunition depots at Engels airfield, as part of a strategy to force the Kremlin into **negotiations** by bringing the war's impact home to Russians.",
+      "timeline": [
+        {
+          "date": "September 1, 2024",
+          "event": "Ukraine launched over 100 drones at Russian targets, including Moscow Refinery and Konakovo Power Station"
+        },
+        {
+          "date": "September 10, 2024",
+          "event": "Ukraine launched 144 drones at Moscow in largest drone attack of the war"
+        },
+        {
+          "date": "September 18, 2024",
+          "event": "Ukrainian drone struck GRAU 107th Ammunition Depot in Toropets, causing massive explosions"
+        },
+        {
+          "date": "October 9, 2024",
+          "event": "Ukraine reportedly struck Shahed drone storage facility in Krasnodar Krai and ammunition warehouse in Adygea"
+        }
+      ],
+      "details": [
+        "Refinery outages: 40% capacity idle[2]  \nGasoline shortage: 20% nationwide[2]  \nStrikes on refineries: 24 since August[2]"
+      ]
+    },
+    {
       "title": "Minister: China Spy Case Not Linked to Starmer's Adviser",
       "url": "https://www.bbc.com/news/articles/cg424d712q7o?at_medium=RSS&at_campaign=rss",
       "source": "BBC Breaking News",
@@ -819,6 +951,72 @@
       ],
       "details": [
         "Death toll: 41  \nFlood depth: 12+ feet  \nVehicles displaced: Lodged in treetops"
+      ]
+    },
+    {
+      "title": "Coal Miners With Black Lung Say They Are \u2018Cast Aside",
+      "url": "https://www.nytimes.com/2025/10/13/climate/coal-miners-black-lung-protest-trump.html",
+      "source": "New York Times",
+      "description": "President Trump has been a cheerleader for coal miners. But these miners say his administration is failing to enforce limits on a lethal workplace hazard.",
+      "content": "",
+      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13cli-miners-promo-vwzk/13cli-miners-promo-vwzk-mediumSquareAt3X.jpg",
+      "author": "Lisa Friedman",
+      "publishedAt": "2025-10-13T18:28:35.965732",
+      "category": "politics",
+      "emoji": "\ud83e\udd15",
+      "final_score": 920.0,
+      "summary": "Despite **Trump's pro-coal stance**, miners suffering from **black lung disease** claim his administration has neglected workplace safety by failing to enforce dust exposure limits, leaving sick workers feeling abandoned and unprotected in dangerous mining conditions.",
+      "timeline": [
+        {
+          "date": "April 2024",
+          "event": "Trump administration pauses enforcement of new silica dust protections for coal miners."
+        },
+        {
+          "date": "April 9, 2025",
+          "event": "MSHA announces temporary halt to enforcement of silica dust safety measures for miners."
+        },
+        {
+          "date": "May 13, 2025",
+          "event": "Federal judge orders reinstatement of NIOSH surveillance program employees for black lung screenings."
+        },
+        {
+          "date": "May 14, 2025",
+          "event": "Trump administration reverses NIOSH layoffs and restores mine safety office closures."
+        }
+      ],
+      "details": [
+        "Prevalence: 13.88% of coal miners[6]  \nMonthly benefit: $1,178 in 2025[5]  \nPMF cases (2017\u20132023): 1,177 diagnosed[1]"
+      ]
+    },
+    {
+      "title": "Originalist \u2018Bombshell\u2019 Complicates Case on Trump\u2019s Power to Fire Officials",
+      "url": "https://www.nytimes.com/2025/10/13/us/politics/originalism-trump-supreme-court-unitary-executive.html",
+      "source": "New York Times",
+      "description": "As the Supreme Court seems poised to expand the president\u2019s power, a leading scholar whose work the justices have often cited issued a provocative dissent.",
+      "content": "One of Chief Justice John G. Roberts Jr.\u2019s signature projects since he joined the court 20 years ago has been to grant the president more and more power to fire executive officers.",
+      "urlToImage": "https://static01.nyt.com/images/2025/10/07/multimedia/13-dc-bar/13-dc-bar-mediumSquareAt3X.jpg",
+      "author": "Adam Liptak",
+      "publishedAt": "2025-10-13T18:28:24.673909",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 920.0,
+      "summary": "A leading **originalist scholar** has challenged efforts to expand **presidential powers** over firing officials, complicating Chief Justice Roberts's long-standing mission to increase executive authority as the Supreme Court prepares to rule on the matter.",
+      "timeline": [
+        {
+          "date": "May 9, 2025",
+          "event": "Supreme Court pauses orders reinstating fired agency heads Wilcox and Harris pending appeal"
+        },
+        {
+          "date": "September 15, 2025",
+          "event": "Supreme Court agrees to hear Trump\u2019s case on firing FTC Commissioner Rebecca Slaughter"
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "Supreme Court begins new term, including cases on Trump\u2019s power to fire officials"
+        }
+      ],
+      "details": [
+        "Case name: Trump v. Wilcox  \nStay granted: May 22, 2025  \nAgencies involved: NLRB, MSPB"
       ]
     },
     {
@@ -1461,6 +1659,138 @@
       ]
     },
     {
+      "title": "NASA will say goodbye to the International Space Station in",
+      "url": "https://www.space.com/space-exploration/international-space-station/nasa-will-say-goodbye-to-the-international-space-station-in-2030-and-welcome-in-the-age-of-commercial-space-stations",
+      "source": "Space.com",
+      "description": "In 2030, the International Space Station will be deorbited: driven into a remote area of the Pacific Ocean.",
+      "content": "",
+      "urlToImage": "https://cdn.mos.cms.futurecdn.net/cRRqZguM2iX38GsQppG3q6-1280-80.jpg",
+      "author": "John M. Horack",
+      "publishedAt": "2025-10-13T18:28:05.316432",
+      "category": "science",
+      "emoji": "\ud83d\ude80",
+      "final_score": 900.0,
+      "summary": "The **International Space Station** will conclude its historic mission in 2030 when NASA plans to deliberately crash it into a remote part of the **Pacific Ocean**, marking the end of humanity's longest-running space habitat.",
+      "timeline": [
+        {
+          "date": "June 26, 2024",
+          "event": "NASA selects SpaceX to develop the ISS U.S. Deorbit Vehicle."
+        },
+        {
+          "date": "2028",
+          "event": "Planned completion of the ISS Deorbit Vehicle for NASA by SpaceX."
+        },
+        {
+          "date": "End of 2030",
+          "event": "International Space Station scheduled to end operations and begin deorbit process."
+        },
+        {
+          "date": "January 2031",
+          "event": "ISS planned to re-enter atmosphere and splash down in the Pacific Ocean."
+        }
+      ],
+      "details": [
+        "Contract value: $843 million[3]  \nCrewed experiments: 3,300+[3]  \nRussia commitment: Through 2028[3][6]"
+      ]
+    },
+    {
+      "title": "A Hostage and Prisoner Exchange",
+      "url": "https://www.nytimes.com/2025/10/13/briefing/a-hostage-and-prisoner-exchange.html",
+      "source": "New York Times",
+      "description": "We\u2019re covering the release of hostages in Gaza and of Palestinian prisoners. We\u2019re also covering President Trump\u2019s visit to Israel.",
+      "content": "In Hostages Square, in Tel Aviv.",
+      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13themorning-nl-hostage-hvlq/13themorning-nl-hostage-hvlq-mediumSquareAt3X-v2.jpg",
+      "author": "Jodi Rudoren",
+      "publishedAt": "2025-10-13T18:27:46.118212",
+      "category": "politics",
+      "emoji": "\ud83e\udd1d",
+      "final_score": 900.0,
+      "summary": "In a significant development, Israel and Hamas conducted a **prisoner swap**, exchanging Palestinian detainees for Israeli **hostages** held in Gaza. The exchange occurred amid heightened tensions, coinciding with President Trump's diplomatic visit to Israel.",
+      "timeline": [
+        {
+          "date": "October 12, 2025",
+          "event": "Hamas releases hostages in Gaza as part of a negotiated exchange agreement"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Palestinian prisoners released by Israel in exchange for hostages from Gaza"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "President Trump visits Israel following the hostage and prisoner exchange"
+        }
+      ],
+      "details": [
+        "Hostages released: 4\nPrisoners freed: 39\nTrump visit date: June 25, 2025"
+      ]
+    },
+    {
+      "title": "New South China Sea clash videos capture Chinese water cannon",
+      "url": "https://www.businessinsider.com/video-shows-china-spraying-water-cannons-ramming-philippine-ships-2025-10",
+      "source": "Business Insider",
+      "description": "The Philippines said Chinese coast guard and maritime militia vessels engaged in aggressive actions against its ships in the South China Sea.",
+      "content": "TKPhilippine Coast GuardChinese coast guard ships sprayed water cannons at and rammed into Philippine vessels on Sunday.China has continuously been accused of employing aggressive tactics to exert control.There have already been serious accidents.New video footage captures some of the weaponry and tactics that the China Coast Guard is using in the South China Sea, with ships firing water cannons at and ramming Philippine vessels in the hotly contested waters.The Philippines has repeatedly accused China of increasingly aggressive actions against government ships and fishermen as Beijing pushes to secure its control over the South China Sea, a major strategic waterway rich in natural resources and trade.On Sunday, Philippine fishing and coast guard vessels were in waters off Philippine-controlled Pag-asa Island, also called Thitu Island, located among the Spratly Islands west of Manila.Chinese coast guard and maritime militia ships then entered the area, with one firing a water cannon at a Philippine government vessel. Minutes later, the same Chinese ship rammed into the stern of the Philippine ship, causing minor structural damage. No injuries were reported.PCG and BFAR Stand Firm Against Chinese Bullying and Aggressive Actions in Pag-asaThe Philippine Coast Guard (PCG) and the Bureau of Fisheries and Aquatic Resources (BFAR) have reaffirmed their strong commitment to protecting Filipino fishermen in the Kalayaan Island Group,\u2026 pic.twitter.com/okA55L9oWs\u2014 Jay Tarriela (@jaytaryela) October 12, 2025 Philippine Coast Guard spokesperson Jay Tarriela posted video footage of the incidents. He called China's tactics \"bullying tactics and aggressive actions,\" adding the Philippines would \"not be intimidated or driven away.\"PCG and BFAR Stand Firm Against Chinese Bullying and Aggressive Actions in Pag-asaThe Philippine Coast Guard (PCG) and the Bureau of Fisheries and Aquatic Resources (BFAR) have reaffirmed their strong commitment to protecting Filipino fishermen in the Kalayaan Island Group,\u2026 pic.twitter.com/okA55L9oWs\u2014 Jay Tarriela (@jaytaryela) October 12, 2025 The Chinese coast guard has long used water cannons in its engagements with Philippine vessels. The powerful cannons are far more than an annoyance. They have injured personnel and damaged equipment. Ramming is also common.There have been boarding incidents that the Philippines have characterized as piracy. Chinese personnel in those incidents even carried bladed weapons. China has also employed dazzlers and acoustic devices in confrontations.The majority of engagements are gray zone aggression below the threshold of war, but these still carry risks.Maneuvers like ramming, blocking, and chasing run a risk of causing a major accident that could, intentional or otherwise, prove fatal. A recent incident came at the expense of China's own ships.TKCourtesy of Jay Tarriela, Philippine Coast Guard SpokespersonIn August, while a Chinese destroyer and a Chinese coast guard vessel were chasing a Philippine patrol boat at high speeds east of the Scarborough Shoal, the destroyer crossed into the path of the coast guard vessel, resulting in a catastrophic collision. Video footage from the incident showed significant damage to the hull of the coast guard ship.Regarding this Sunday's clash, China blamed the Philippines for entering waters that it claims without permission and said a Philippine vessel dangerously approached a Chinese coast guard ship, causing a scrape. China continues to exert its territorial claims over the majority of the South China Sea, which have been called repeatedly into question.China has also had run-ins and confrontations with other militaries in the South China Sea, both at sea and in the air. China routinely dismisses complaints, arguing its actions are lawful and necessary to protect its sovereignty.Read the original article on Business Insider",
+      "urlToImage": "https://i.insider.com/68ed2e7d5dbc4fd10daabbe7?format=jpeg",
+      "author": "Chris Panella (cpanella@businessinsider.com)",
+      "publishedAt": "2025-10-13T18:27:19.487470",
+      "category": "politics",
+      "emoji": "\u2694\ufe0f",
+      "final_score": 900.0,
+      "summary": "**Chinese coast guard** vessels fired water cannons and rammed Philippine ships near Pag-asa Island in the **South China Sea**, escalating tensions as China continues aggressive tactics to assert control over this strategic waterway.",
+      "timeline": [
+        {
+          "date": "August 31, 2024",
+          "event": "Chinese and Philippine coast guard vessels collided at Sabina Shoal, ramming reported."
+        },
+        {
+          "date": "October 11, 2024",
+          "event": "Chinese maritime militia vessel sideswiped Philippine fisheries vessel near Thitu Island."
+        },
+        {
+          "date": "October 12, 2024",
+          "event": "Philippine vessel collided with China Coast Guard ship near Spratly Islands at 09:19 am."
+        }
+      ],
+      "details": [
+        "Outposts: China has 27 in disputed islands  \nTrade flow: $5.3 trillion annually  \nUS project: $975,000 upgrade in Palawan"
+      ]
+    },
+    {
+      "title": "Americans\u2019 income growth has been strong for decades \u2014 and",
+      "url": "https://www.marketwatch.com/story/americans-income-growth-has-been-strong-for-decades-and-not-just-for-the-rich-4a9321ba?mod=mw_rss_topstories",
+      "source": "MarketWatch",
+      "description": "Misguided populist policies are threatening the American dream.",
+      "content": "",
+      "urlToImage": "https://images.mktw.net/im-69936809",
+      "author": "Norbert Michel",
+      "publishedAt": "2025-10-13T18:26:36.841829",
+      "category": "business",
+      "emoji": "\ud83d\udcc8",
+      "final_score": 900.0,
+      "summary": "Misguided populist policies are threatening the American dream.",
+      "timeline": [
+        {
+          "date": "1962-2024",
+          "event": "Males ages 25-44 saw real income growth of around 45% over decades"
+        },
+        {
+          "date": "2023",
+          "event": "U.S. real median household income was $82,690, nearly unchanged from pre-pandemic 2019"
+        },
+        {
+          "date": "2024",
+          "event": "U.S. real median household income reached $83,730, showing no significant year-over-year change"
+        },
+        {
+          "date": "September 2025",
+          "event": "Census Bureau reports continued flat median household income, with notable gains for Hispanic households"
+        }
+      ],
+      "details": [
+        "Median income: $83,730 (2024)[2]  \nReal GDP growth: 3.8% (Q2 2025)[3]  \nHourly earnings: +1.1% (Aug 2024-25)[5]"
+      ]
+    },
+    {
       "title": "Russia is unleashing a new surge of exploding drone attacks",
       "url": "https://www.businessinsider.com/russia-unleashed-new-surge-drone-attacks-on-ukraines-rail-network-2025-10",
       "source": "Business Insider",
@@ -1970,6 +2300,60 @@
       ],
       "details": [
         "Hostages released: 20  \nPalestinian prisoners freed: 60  \nRelease location: Rafah crossing"
+      ]
+    },
+    {
+      "title": "Nor'easter Threatens New York with Floods and Strong Winds",
+      "url": "https://www.nytimes.com/2025/10/13/nyregion/noreaster-storm-forecast-damage.html",
+      "source": "New York Times",
+      "description": "The storm has been moving up the East Coast since the weekend, dumping heavy rain and flooding roads on its way toward New England.",
+      "content": "A downed tree in the Park Slope neighborhood of Brooklyn, New York, on Monday.",
+      "urlToImage": "https://static01.nyt.com/images/2025/11/12/multimedia/13xp-noreaster2/13xp-noreaster2-mediumSquareAt3X-v3.jpg",
+      "author": "Mark Walker",
+      "publishedAt": "2025-10-13T18:27:29.141004",
+      "category": "breaking",
+      "emoji": "\ud83d\udea8",
+      "final_score": 890.0,
+      "summary": "A powerful **nor'easter** storm is moving up the East Coast toward New England, prompting **flood warnings** across New York. The system has already caused significant rainfall, flooding, and damage including downed trees in Brooklyn.",
+      "timeline": [
+        {
+          "date": "October 12, 2025",
+          "event": "Nor'easter approaches East Coast bringing forecast of heavy rain and winds"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Storm impacts New York with heavy rain, strong winds, and coastal flooding"
+        }
+      ],
+      "details": [
+        "Wind gusts: 50+ mph forecasted  \nPower outages: 20,000+ reported  \nTravel delays: 200+ flights canceled"
+      ]
+    },
+    {
+      "title": "Social Security\u2019s COLA announcement is back on, as some furloughed",
+      "url": "https://www.marketwatch.com/story/social-securitys-cola-announcement-is-back-on-as-some-furloughed-workers-return-to-produce-september-inflation-report-1351d05f?mod=mw_rss_topstories",
+      "source": "MarketWatch",
+      "description": "Some furloughed government workers will return to work to produce a key inflation report for September, allowing for the calculation of Social Security\u2019s cost-of-living adjustment for 2026.",
+      "content": "",
+      "urlToImage": "https://images.mktw.net/im-64735984",
+      "author": "Jessica Hall",
+      "publishedAt": "2025-10-13T18:26:57.726833",
+      "category": "business",
+      "emoji": "\ud83d\udcb0",
+      "final_score": 890.0,
+      "summary": "Some furloughed government workers will return to work to produce a key inflation report for September, allowing for the calculation of Social Security\u2019s cost-of-living adjustment for 2026.",
+      "timeline": [
+        {
+          "date": "October 2024",
+          "event": "Some furloughed workers return to produce September inflation report for COLA calculation."
+        },
+        {
+          "date": "October 2025",
+          "event": "Social Security announces 2026 COLA percentage based on September 2024 inflation report."
+        }
+      ],
+      "details": [
+        "Beneficiaries: 72.5 million Americans[1]  \nMax earnings: $176,100 for 2025[2]  \nTax rate: 7.65% employee payroll[2]"
       ]
     },
     {
@@ -2834,389 +3218,9 @@
       "details": [
         "No confidence votes: 2 this week  \nRepublicans expelled: 6 ministers  \nPrime ministers in 2025: 4"
       ]
-    },
-    {
-      "title": "What Americans Think Of The Biden Impeachment Inquiry",
-      "url": "https://fivethirtyeight.com/features/americans-oppose-biden-impeachment-house-republicans/",
-      "source": "FiveThirtyEight",
-      "description": "Welcome to Pollapalooza, our weekly-ish polling roundup. It\u2019s officially impeachment season again. On Tuesday, House Majority Leader Kevin McCarthy announced that he\u2019s directing three House committees to start investigating whether President Biden benefited from his son Hunter\u2019s business dealings overseas. McCarthy accused the Biden family of \u201ca culture of corruption,\u201d saying that the Biden administration [\u2026]",
-      "content": "Impeachment\nWhat Americans Think Of The Biden Impeachment Inquiry\nMost aren't convinced President Biden is implicated in his son's wrongdoing.\n\n\n\nBy Amelia Thomson-DeVeaux\n\n\n\t\t\t\t\t\t\t\t\tSep. 14, 2023, at 3:41 PM\t\t\t\t\t\t\t\t\n\n\n\n \n\n\n\n\n\n\n\n\n\n\n\nPhoto Illustration by ABC News / Getty Images\n\n\n\n\nWelcome to Pollapalooza, our weekly-ish polling roundup.\n\nIt\u2019s officially impeachment season again. On Tuesday, House Majority Leader Kevin McCarthy announced that he\u2019s directing three House committees to start investigating whether President Biden benefited from his son Hunter\u2019s business dealings overseas. McCarthy accused the Biden family of \u201ca culture of corruption,\u201d saying that the Biden administration gave Hunter \u201cspecial treatment\u201d in a criminal tax and gun investigation, and that Biden himself had lied about his knowledge of his son\u2019s financial dealings.\nThe good news for McCarthy and the right-wing supporters of an impeachment investigation is that Americans do seem to believe, overall, that Hunter Biden\u2019s business dealings were sketchy at best and illegal at worst.\nBut Hunter Biden isn\u2019t the subject of the impeachment inquiry \u2014 his father is. So far, Republicans haven\u2019t provided any concrete evidence tying the president to his son\u2019s overseas business, although the impeachment inquiry may allow House Republicans to obtain bank records and other financial documents from Biden and his son. Right now, Republicans are most firmly convinced that Biden is implicated in Hunter\u2019s wrongdoing, while Americans overall are more inclined to see former President Donald Trump\u2019s family as corrupt, compared to the Bidens. And there isn\u2019t a broad consensus that an impeachment inquiry is warranted, signaling that Republicans have some convincing to do if they want the public to support their investigation.\nAmericans think Hunter Biden profited from his father\u2019s position\nAll of the allegations of a broader web of corruption within the Biden family have yet to be proven. What is less disputed, though, is the fact that Hunter Biden has personally made a significant amount of money through overseas business deals, and is the subject of a long-running criminal investigation. Earlier this summer, he agreed to plead guilty to two misdemeanor counts of failing to pay taxes on millions of dollars of income in 2017 and 2018, with an additional agreement that could allow him to avoid a conviction on a separate illegal gun ownership charge, but the plea deal fell apart after the judge, a Trump appointee, said she refused to \u201crubber-stamp\u201d the agreement, which she said wasn\u2019t standard. Republicans accused the Biden administration of giving Hunter a \u201csweetheart\u201d deal and in August, Attorney General Merrick Garland appointed a special counsel to continue probing Hunter Biden\u2019s finances.\nNone of this is a great look for the president\u2019s son, and recent polling shows that Americans are unhappy about Hunter Biden\u2019s behavior. A YouGov/The Economist poll conducted in August, after the plea deal collapsed, found that 72 percent of Americans think Hunter Biden personally profited from his father\u2019s positions in government, including a slim majority (53 percent) of Democrats. The same poll found that two-thirds (66 percent) of Americans have an unfavorable view of Hunter Biden, while only 17 percent have a favorable view (an additional 17 percent said they didn\u2019t know). According to a Yahoo News survey conducted by YouGov in August, 59 percent of Americans think Hunter Biden traded on his family name and proximity to power to get millions of dollars from foreign business associates. The same poll found that 51 percent of Americans believe that Hunter Biden improperly claimed tens of thousands of dollars in tax deductions. And an Ipsos/Politico Magazine poll conducted in August found, similarly, that 59 percent of Americans think that Hunter Biden is guilty of the alleged crimes in the tax non-payment case, including 51 percent of Democrats. Notably, only 2 percent of respondents said they thought he wasn\u2019t guilty, and 38 percent said they didn\u2019t know.\nThe YouGov/Economist poll\u2019s findings suggest, though, that Americans think most presidents\u2019 children get some level of special treatment. The survey found that 84 percent of respondents think children of U.S. presidents get away with things that other people do not because of their parents\u2019 jobs, and a similar share (85 percent) say that adult children personally profit from their parents\u2019 positions in government at least sometimes. So while Americans do seem convinced, overall, that Hunter Biden has profited financially from his father\u2019s jobs, and even a slim majority of Democrats think he likely committed crimes, the behavior may not be shocking or unexpected.\nRepublicans are more convinced that Biden is implicated in Hunter\u2019s wrongdoing\nRepublicans don\u2019t really have to convince Americans that Hunter Biden deserves investigation, or even a criminal trial. But that\u2019s not the question that matters for impeaching his father. To justify impeaching the president, Republicans will have to prove that he was involved in financial wrongdoing or corruption that rises to the level of an impeachable offense. And so far, Republicans are making claims without facts to back them up. When he announced the inquiry, McCarthy asserted \u2014 without evidence \u2014 that the millions Hunter Biden earned through overseas deals were also improperly shared with Biden family members, and that Biden used his official role as vice president to help get business for Hunter. \nMore findings that tie Biden and his family to Hunter Biden\u2019s business dealings could, of course, emerge. But right now, Americans haven\u2019t fully bought into the idea that the Biden family is involved in a broader influence-peddling scheme. Less than half (41 percent) of respondents in the Yahoo poll said they believe that Hunter Biden funneled millions of dollars to his father in a long-running scheme to help Joe Biden profit off his position, while 26 percent said they didn\u2019t believe it and 33 percent said they didn\u2019t know. A similar share (44 percent) believe that Biden definitely or probably did something illegal regarding Hunter Biden, while 32 percent believe he definitely or probably did not and 32 percent said they don\u2019t know.\nMany Americans are not very tuned in to the allegations against the Bidens, which is probably why these questions result in such a high share of people who say they don\u2019t know. And another recent poll found a slightly higher share of people who say that even if Joe Biden didn\u2019t do something illegal, he may have acted unethically. According to an SSRS/CNN poll conducted in August, 61 percent of Americans agreed that Biden had at least some involvement in Hunter Biden\u2019s business dealings, although less than half (42 percent) said he acted illegally and 18 percent said he acted unethically but not illegally. Similarly, a Quinnipiac University poll conducted in September found that 35 percent of Americans thought Biden was involved and did something illegal in Hunter Biden\u2019s business dealings with Ukraine and China, while 14 percent think he was involved and did something unethical but not illegal, and 37 percent think he wasn\u2019t involved.\n\n  Republicans are most convinced of the Bidens\u2019 wrongdoing Share of respondents who said they believe that Hunter Biden did each of the following things, by party affiliation      All Democrats Republicans Independents     Traded on his family name and proximity to power to get millions of dollars from foreign business associates 59 37 88 63   Failed to meet tax filing deadlines 59 50 78 57   Improperly claimed tens of thousands of dollars in tax deductions 51 31 81 51   Got preferential treatment from federal prosecutors when striking a plea deal 51 22 86 56   Funneled millions of dollars to his father in a long-running scheme to help Joe Biden profit off of his position 41 10 84 41     Source: YouGov/Yahoo News \n\nBut as the table above shows, the people who really believe that the Biden family is corrupt are Republicans. Unsurprisingly, Democrats are much less convinced that the president did something wrong, and independents are also pretty divided. Of course, it\u2019s possible that more coverage of the allegations motivating the impeachment inquiry \u2014 and any concrete evidence that might get turned up along the way \u2014 could change people\u2019s minds, or at least persuade\u00a0 some of the ones who are undecided.\u00a0\nAnd notably, the Yahoo News survey found that while the share of Americans \u2014 including the share of Democrats \u2014 who think Hunter Biden did something illegal has increased since last fall, the share of respondents who think Joe Biden broke the law has remained functionally unchanged, despite a drumbeat of Republican accusations to the contrary. Polling by Beacon Research/Shaw & Co. Research for Fox News has found a similar trend: The share of Americans who think Hunter Biden did something illegal rose from 39 percent last December to 50 percent in August, but the share of Americans who think Joe Biden did something illegal related to his son\u2019s business dealings hasn\u2019t really moved. (The survey found it at 35 percent in December versus 38 percent in August.)\nAmericans aren\u2019t convinced impeachment is warranted\nPerhaps most worryingly for Republicans, most Americans don\u2019t think an impeachment inquiry into Biden is warranted right now. A GBAO/Fabrizio, Lee & Associates poll for The Wall Street Journal conducted in late August found that 52 percent of Americans oppose impeaching Biden, and only 41 percent are in favor. More recently, a YouGov poll conducted on September 13 found that 41 percent of Americans oppose impeaching Biden, 44 percent are in support and 15 percent don\u2019t know. In early October 2019, when Trump\u2019s first impeachment was getting underway, Americans were more closely divided, according to our polling tracker. And in the wake of the Jan. 6 attack on the U.S. Capitol, majorities of Americans supported Trump\u2019s impeachment; a slim majority of Americans even consistently supported removing Trump from office before the end of his term.\nIn fact, allegations of corruption are stickier when it comes to the Trump family than the Bidens. According to the Yahoo News survey, 46 percent of Americans think that Trump and his family are more corrupt than the Bidens, while 36 percent think the Bidens are more corrupt than the Trumps. And a recent AP-NORC poll found that Americans were more likely to describe Trump as \u201ccorrupt\u201d than Biden. Meanwhile, that September YouGov poll found that Americans are more likely to describe the impeachment inquiry as motivated by politics in an attempt to embarrass Biden (41 percent) rather than a serious effort to find out the truth (28 percent).\nThat doesn\u2019t mean that Hunter Biden\u2019s legal troubles aren\u2019t a liability for Biden, particularly after a grand jury just indicted him on federal gun charges. A recent Emerson College poll found that while 47 of voters say that the indictments against Trump make them less likely to vote for him for president, 46 percent say the Hunter Biden tax and felony gun charges make them less likely to vote for Joe Biden in 2024. So it\u2019s possible that as Hunter Biden\u2019s investigation continues to unfold, his father could take political damage. But right now, Republicans aren\u2019t just missing evidence that Biden is connected to his son\u2019s wrongdoing in ways that could be impeachable \u2014 they also don\u2019t have the public on their side.\nOther polling bites:\n\nAmericans are concerned about aging political leaders, and a significant chunk want to see age limits for high-profile national politicians, according to a new poll from Civiqs for Daily Kos. The survey found that 74 percent want a mandatory retirement age for U.S. senators, 67 percent want a retirement age for Supreme Court justices, and 58 percent want a retirement age for presidents.\nAfter the Food & Drug Administration approved two new boosters for COVID-19, a CivicScience poll found that a majority (52 percent) of Americans said they\u2019re at least somewhat likely to get the new COVID vaccine, while 59 percent said they\u2019re at least somewhat likely to get a flu vaccine.\nFertility treatments are getting more common \u2013 according to a newly released April poll from the Pew Research Center, 42 percent of adults say they have either gotten fertility treatments or know someone who has, up from 33 percent just five years ago.\n\nBiden approval\n\nAccording to FiveThirtyEight\u2019s presidential approval tracker,1 40.9 percent of Americans approve of the job Biden is doing as president, while 54.4 percent disapprove (a net approval rating of -13.5 points). At this time last week, 40.0 percent approved and 56.0 percent disapproved (a net approval rating of -16.0 points). One month ago, Biden had an approval rating of 40.8 percent and a disapproval rating of 54.5 percent, for a net approval rating of -13.8 points.\nCORRECTION (Sept. 18, 2023, 11:20 a.m.): A previous version of this article stated that House Speaker Kevin McCarthy asserted, without evidence, that Hunter Biden shared some of the money he received through foreign deals with his family. In fact, there is evidence that Hunter Biden\u2019s family members also received money through these deals, but in his announcement, McCarthy did not offer evidence that it was illegal or corrupt.",
-      "urlToImage": "https://fivethirtyeight.com/wp-content/uploads/2023/09/538_Hunter_Joe_Biden_091423_POLLA_v01_ks-4x3-1.jpg?w=916",
-      "author": "Amelia Thomson-DeVeaux (Amelia.Thomson-DeVeaux@abc.com)",
-      "publishedAt": "2025-10-13T14:32:29.757536",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 870.0,
-      "summary": "House Speaker **Kevin McCarthy** launched an **impeachment inquiry** into President Biden, investigating potential benefits from his son Hunter's overseas business dealings. However, polls indicate most Americans remain skeptical of direct presidential involvement in any wrongdoing.",
-      "timeline": [
-        {
-          "date": "September 12, 2023",
-          "event": "Speaker McCarthy announces House impeachment inquiry into President Joe Biden."
-        },
-        {
-          "date": "September 28, 2023",
-          "event": "House impeachment inquiry holds its first public hearing."
-        },
-        {
-          "date": "December 13, 2023",
-          "event": "House votes 221\u2013212 to formalize the Biden impeachment inquiry."
-        },
-        {
-          "date": "August 19, 2024",
-          "event": "House committees release 300-page report alleging 'impeachable conduct,' no articles recommended."
-        }
-      ],
-      "details": [
-        "Awareness: 55% heard about inquiry[2]  \nHunter impact: 46% less likely to vote Biden[3]  \nGOP support drop: 76% to 70% since Sept[4]"
-      ]
-    },
-    {
-      "title": "Putin is taking his hybrid warfare to the sea",
-      "url": "https://www.japantimes.co.jp/commentary/2025/10/13/world/putin-takes-hybrid-warfare-to-the-sea/",
-      "source": "The Japan Times",
-      "description": "Russian President Vladimir Putin intends to contest the Baltic, make no mistake.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/498981.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T12:44:25.137810",
-      "category": "politics",
-      "emoji": "\ud83d\udea2",
-      "final_score": 870.0,
-      "summary": "**Russian President Putin** appears to be expanding his strategy of **hybrid warfare** into maritime domains, specifically targeting the Baltic region, signaling an escalation of Russia's military and political influence in northern European waters.",
-      "timeline": [
-        {
-          "date": "September 10, 2024",
-          "event": "Putin launches Okean 2024 naval exercise, testing Russian fleet readiness in Baltic Sea"
-        },
-        {
-          "date": "September 16, 2024",
-          "event": "Okean 2024 exercise ends after week-long operations by Russian naval and air units"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Russia\u2019s Baltic Fleet conducts Bastion missile drill simulating strikes near NATO members"
-        }
-      ],
-      "details": [
-        "Maritime law: New baselines adopted June 2025[2]  \nOil transit: 700,000 barrels daily[3]  \nSanctions: 560 ships blacklisted September 2025[3]"
-      ]
-    },
-    {
-      "title": "US Senate pushes for Taiwan to attend Rimpac drill in",
-      "url": "https://www.scmp.com/news/china/politics/article/3328835/us-senate-pushes-taiwan-attend-rimpac-drill-latest-defence-bill?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "The US Senate has approved its defence policy bill for the 2026 financial year, which for the first time \u201cstrongly encourages\u201d inviting Taiwan\u2019s navy to take part in the Rim of the Pacific (Rimpac) military exercise.\nThe 2026 National Defense Authorisation Act (NDAA), which passed late on Thursday, also authorises the executive branch to allocate US$1 billion for the Taiwan Security Cooperation Initiative, expanding the mechanism\u2019s use to include combat casualty care and medical equipment.\nThe...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/02a09de8-e6b8-4725-8058-ea4a275024bf_0123ec6f.jpg",
-      "author": "Lawrence Chung",
-      "publishedAt": "2025-10-13T12:36:09.130919",
-      "category": "politics",
-      "emoji": "\ud83d\udee1\ufe0f",
-      "final_score": 870.0,
-      "summary": "The US Senate's **2026 defense bill** encourages Taiwan's first-ever participation in **Rimpac military exercises** and authorizes $1 billion for the Taiwan Security Cooperation Initiative, strengthening medical support and combat casualty care capabilities between the allies.",
-      "timeline": [
-        {
-          "date": "July 9, 2025",
-          "event": "Senate Armed Services Committee advances NDAA"
-        },
-        {
-          "date": "October 9, 2025",
-          "event": "US Senate passes FY26 NDAA with Taiwan provisions"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Bill encourages Taiwan's RIMPAC participation"
-        }
-      ],
-      "details": [
-        "Drone collaboration: Joint U.S.-Taiwan drone project[2][4][5]  \nCyber defense: Assess Taiwan\u2019s digital infrastructure[2][4][5]  \nPrioritization: Taiwan in defense supply chain[2]"
-      ]
-    },
-    {
-      "title": "New California Privacy Law Will Require Chrome/Edge/Safari to Offer Easy",
-      "url": "https://yro.slashdot.org/story/25/10/11/0513252/new-california-privacy-law-will-require-chromeedgesafari-to-offer-easy-opt-outs-for-data-sharing?utm_source=rss1.0mainlinkanon&utm_medium=feed",
-      "source": "Slashdot",
-      "description": "\"California Governor Gavin Newsom signed the 'California Opt Me Out Act', which will require web browsers to include an easy, universal way for users to opt out of data collection and sales,\" reports the blog 9to5Mac:\n\n\n[The law] requires browsers to provide a clear, one-click mechanism for Californians to opt out of data sharing across websites. The bill reads: \"A business shall not develop or maintain a browser that does not include functionality configurable by a consumer that enables the browser to send an opt-out preference signal to businesses with which the consumer interacts through the browser....\"\nCalifornians will need patience, though, as the law doesn't take effect until January 1, 2027.\n \n\nAmericans in some states \u2014 including California, Texas, Colorado, New Jersey and Maryland \u2014 \"have the option to make those opt-out demands automatic whenever they surf the web,\" reports the Washington Post. \"But they can only do so if they use small browsers that voluntarily offer that option, such as DuckDuckGo, Firefox and Brave. What's new in California's law is that all browsers must give people the same option.\"\n That means soon in California, just using Google's Chrome, Apple's Safari and Microsoft's Edge can command companies not to sell your data or pass it along for ad targeting... It's an imperfect but potent and simple way to flex privacy rights \u2014 and becomes even more powerful with another simple privacy measure in California. Starting on January 1, California residents can fill out an online form once to completely and repeatedly wipe their data from hundreds of data brokers that package your personal information for sale. \nBut their article also suggests other ways readers can \"try a one-click privacy option now.\"\n\n\"[S]ome national companies respect one-click privacy opt-out requests from everyone... This happens automatically if you use DuckDuckGo and Brave. You need to change a setting with Firefox.\"\n\"Download Privacy Badger: The software from the Electronic Frontier Foundation, a consumer privacy advocacy group, works in the background to order websites not to sell information they're collecting about you.\"\n\"Use Permission Slip from Consumer Reports. Give the app basic information, and it will help you do much of the legwork to tell companies not to sell your information or to delete it, if you have the right to do so.\"\n\n\nRead more of this story at Slashdot.",
-      "content": "",
-      "urlToImage": "https://a.fsdn.com/sd/twitter_icon_large.png",
-      "author": "EditorDavid",
-      "publishedAt": "2025-10-13T16:07:09.114066",
-      "category": "technology",
-      "emoji": "\ud83d\udee1\ufe0f",
-      "final_score": 865.0,
-      "summary": "California's new **Opt Me Out Act** requires major web browsers like Chrome and Safari to provide simple, universal data-sharing opt-out options by 2027. The law expands **privacy rights** previously available only through smaller, privacy-focused browsers like DuckDuckGo.",
-      "timeline": [
-        {
-          "date": "September 10, 2025",
-          "event": "California Senate passes AB 566, the California Opt Me Out Act."
-        },
-        {
-          "date": "October 8, 2025",
-          "event": "Governor Newsom signs the California Opt Me Out Act into law."
-        },
-        {
-          "date": "January 1, 2027",
-          "event": "California Opt Me Out Act requiring browser opt-out takes effect statewide."
-        }
-      ],
-      "details": [
-        "Bill number: AB 566  \nSponsor: California Privacy Protection Agency  \nMobile browsers: Included in requirements"
-      ]
-    },
-    {
-      "title": "'Was working to rebuild terror infra': IDF eliminates Hezbollah operative",
-      "url": "https://timesofindia.indiatimes.com/world/middle-east/was-working-to-rebuild-terror-infra-israel-eliminates-hezbollah-operative-in-lebanon-video-shows-precision-strike/articleshow/124495172.cms",
-      "source": "Times of India",
-      "description": "Israeli forces conducted drone strikes in southern Lebanon, eliminating a Hezbollah operative involved in rebuilding the group's military infrastructure. An engineering vehicle was also targeted. These actions occur amidst escalating border tensions. Meanwhile, in Gaza, hundreds of thousands have returned to northern areas post-Israeli troop withdrawal, with a ceasefire and hostage release deal nearing finalization at an upcoming Egypt summit.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124499025,imgsize-4451728.cms",
-      "author": "TOI WORLD DESK",
-      "publishedAt": "2025-10-13T17:04:53.567193",
-      "category": "politics",
-      "emoji": "\ud83d\udea8",
-      "final_score": 860.0,
-      "summary": "The **Israeli Defense Forces** eliminated a Hezbollah operative in southern Lebanon via drone strike, targeting military infrastructure rebuilding efforts. The operation comes amid rising border tensions and potential **ceasefire negotiations** regarding the Gaza conflict.",
-      "timeline": [
-        {
-          "date": "August 4, 2025",
-          "event": "Israeli drone strike in Khiam killed Hezbollah operative Ali Suleiman Abu Abbas."
-        },
-        {
-          "date": "August 5, 2025",
-          "event": "Israeli drone targeted engineering vehicle in Meiss Al Jabal, southern Lebanon."
-        },
-        {
-          "date": "August 5, 2025",
-          "event": "IDF dropped leaflets in Khiam, accusing slain operative of rebuilding Hezbollah infrastructure."
-        }
-      ],
-      "details": [
-        "Operative killed: Hassan Atwi[2]  \nCivilian deaths since truce: 103[2]  \nUN peacekeeper wounded: 1[3]"
-      ]
-    },
-    {
-      "title": "Silent layoffs surge in Indian IT; why it\u2019s happening; subtle",
-      "url": "https://timesofindia.indiatimes.com/education/careers/news/silent-layoffs-on-the-rise-in-indian-tech-sector-subtle-signs-employees-should-watch-out-for/articleshow/124498098.cms",
-      "source": "Times of India",
-      "description": "Indian IT firms are undergoing major workforce shifts in 2025. Over 50,000 tech jobs face potential cuts as companies integrate AI and automation. Major players like TCS, Infosys, and Wipro are restructuring teams. This trend reflects evolving skill demands and global economic pressures. Employees are experiencing attrition, contract non-renewals, and silent layoffs.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124498115,imgsize-33290.cms",
-      "author": "TOI Education",
-      "publishedAt": "2025-10-13T17:04:29.025219",
-      "category": "business",
-      "emoji": "\ud83d\udcbc",
-      "final_score": 860.0,
-      "summary": "Indian **tech companies** are quietly reducing their workforce, with over 50,000 jobs at risk due to **AI integration** and automation. Major firms like TCS, Infosys, and Wipro are restructuring teams amid changing skill requirements and economic pressures.",
-      "timeline": [
-        {
-          "date": "January 2025",
-          "event": "Indian IT sector begins major workforce shifts; 16,000 tech jobs cut this month"
-        },
-        {
-          "date": "June 2025",
-          "event": "Cumulative Indian tech layoffs reach 41,000; TCS, Infosys, Wipro lead reductions"
-        },
-        {
-          "date": "July 28, 2025",
-          "event": "TCS announces plan to release 12,261 employees globally, nearly 2% of workforce"
-        },
-        {
-          "date": "August 2025",
-          "event": "Indian IT layoffs surpass 46,000; projections indicate over 50,000 by year-end"
-        }
-      ],
-      "details": [
-        "Reskilling: Infosys increased training programs[1]  \nBench utilization: TCS reduced non-billable staff[1]  \nStartups: 30,000+ layoffs since 2024[5]"
-      ]
-    },
-    {
-      "title": "Would-be homebuyers are getting cold feet and backing out of",
-      "url": "https://fortune.com/2025/10/13/housing-market-homebuyers-contract-cancelations-inspection-repairs-home-prices/",
-      "source": "Fortune",
-      "description": "About 56,000 U.S. purchase agreements were canceled in August, representing 15.1% of homes that went under contract that month, Redfin said.",
-      "content": "It\u2019s a buyer\u2019s market, and that means house hunters are walking away from contracts more frequently, according to data from Redfin. Sellers outnumber buyers in the housing market by about 500,000, the real-estate firm said, as it found that buyers are wielding more negotiating leverage and asking sellers to cover the cost of any repairs that need to be done and demanding price cuts.\nAt the same time, many sellers are not accommodating the concerns of would-be buyers, who have become pickier and are seeking more concessions.\nAbout 56,000 U.S. purchase agreements were canceled in August, representing 15.1% of homes that went under contract. That\u2019s the highest share for August deals falling through in records dating back to 2017. It\u2019s also up from 14.3% in August 2024 and well above the post-pandemic housing frenzy\u2019s rate of 11.4% in August 2021.\n\u201cHome purchases are falling through more frequently because buyers and sellers oftentimes aren\u2019t on the same page and aren\u2019t willing to compromise,\u201d Redfin said in its report.\nIn a survey of Redfin\u2019s real estate agents, 70.4% said home inspection or repair issues were the cause of canceled contracts\u2014by far the top reason.\nThat was followed by 27.8% who said buyer financing fell through, 21% who said buyers were unable to sell their current homes, 14.9% who cited changes in a buyer\u2019s financial situation, and 12.9% who said a buyer had found another house they preferred.\nRedfin\nIn addition, many of the cities with the highest cancelation rates were in Florida and Texas, which have seen a surge in housing supply after a pandemic-era exodus to those states triggered a building boom.\nMeanwhile, sellers still think their homes will command high asking prices like they did during the housing bonanza in 2020 and 2021, or they paid so much for their properties and aren\u2019t not willing to budge on the price.\nA new reality for sellers\n\u201cSome are having a hard time adjusting to the reality that it\u2019s no longer a seller\u2019s market because it seems like just yesterday that homes were getting dozens of offers and fetching tens of thousands of dollars over the asking price,\u201d Redfin said. \nThe report also pointed out that lower-priced homes are in greater demand because overall homeownership costs have jumped in recent years, and those homes are more likely to have issues come up during inspections.\nInsurance premiums have surged in states like Florida and California that have seen more natural disasters, contributing to the increase in ownership costs.\nMeanwhile, mortgage rates remain high despite coming down since the Federal Reserve lowered benchmark borrowing costs.\nIn fact, pending home sales actually fell in September, the first time in nearly three months, even as the weekly average mortgage rate dropped for nine consecutive weeks.\nAmid the weak demand, home sales are headed for their worst year since 1995 as economic concerns spread from buyers to sellers. A\u00a0Fannie Mae\u00a0survey earlier this month showed nearly 70% of Americans believe the economy is headed in the wrong direction, and 73% think it\u2019s a bad time to buy a house.\u00a0\nGiven all the anxiety, sometimes sellers who are willing to accommodate buyers\u2019 demands still can\u2019t overcome their cold feet.\n\u201cI worked with one seller who received 78 repair requests from a buyer following the inspection, and that was after the seller had already agreed to lower their $375,000 asking price by $25,000 because the house needed some improvements,\u201d said\u00a0Dawn Liedtke, a Redfin real estate agent in Tampa. \u201cThe buyer came back and said they would handle the cost of the repairs, but only if the seller was willing to lower the price by another $100,000. The deal didn\u2019t work out.\u201d\nThis story was originally featured on Fortune.com",
-      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/GettyImages-1347125156-e1760362744481.jpg?w=2048",
-      "author": "Jason Ma",
-      "publishedAt": "2025-10-13T16:47:25.545317",
-      "category": "business",
-      "emoji": "\ud83c\udfd8\ufe0f",
-      "final_score": 860.0,
-      "summary": "**Home purchase cancellations** hit record levels in August, with 56,000 deals terminated representing 15.1% of contracts. In this **buyer's market**, house hunters are demanding more concessions while sellers struggle to adapt to shifting market dynamics.",
-      "timeline": [
-        {
-          "date": "August 2025",
-          "event": "About 56,000 U.S. home purchase agreements canceled, 15.1% of contracts that month"
-        },
-        {
-          "date": "October 7, 2025",
-          "event": "Redfin releases report confirming August cancellations are highest August rate since 2017"
-        }
-      ],
-      "details": [
-        "San Antonio cancellations: 22.7%[3][5]  \nSan Jose cancellation increase: +5.3 points[4]  \nNassau County cancellations: 4.5%[4]"
-      ]
-    },
-    {
-      "title": "Will Peru\u2019s Chancay Port be the next \u2018Panama moment\u2019 for",
-      "url": "https://www.scmp.com/news/china/diplomacy/article/3328845/will-perus-chancay-port-be-next-panama-moment-china?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Observers are optimistic that China and Peru will be able to avoid a \u201cPanama moment\u201d over the joint Chancay Port project, despite further political turmoil in the Latin American country.\nDina Boluarte\u2019s presidency came to an end after less than three years last week with a landslide 122-0 impeachment vote in the legislature, following public discontent over her handling of security and corruption scandals.\nJos\u00e9 Jer\u00ed, former president of the Congress, will take over as interim president until a...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/e6e300c9-51bb-41b9-bf7d-ff93fc240f2c_8c49ea90.jpg",
-      "author": "Zhao Ziwen",
-      "publishedAt": "2025-10-13T15:21:23.726006",
-      "category": "politics",
-      "emoji": "\ud83d\udea2",
-      "final_score": 860.0,
-      "summary": "Despite **political instability** in Peru, including President Boluarte's impeachment, experts remain optimistic about the future of the **Chancay Port** project with China, avoiding potential complications similar to those experienced with **Panama's** maritime partnerships.",
-      "timeline": [
-        {
-          "date": "November 14, 2024",
-          "event": "Chancay Port officially inaugurated as China's gateway to South America."
-        },
-        {
-          "date": "December 2024",
-          "event": "First shipment from Chancay Port arrives in Shanghai, carrying Peruvian exports."
-        },
-        {
-          "date": "June 2025",
-          "event": "Chancay Port begins regular commercial operations, transforming regional maritime trade."
-        },
-        {
-          "date": "July 2025",
-          "event": "Brazil and China sign agreement for bi-oceanic railway corridor connecting Brazil to Chancay."
-        }
-      ],
-      "details": [
-        "Launch date: June 1, 2025  \nCapacity: 24,000+ TEUs vessels  \nTrade volume: $777M in 5 months"
-      ]
-    },
-    {
-      "title": "The politics premium is punishing bonds from Paris to Tokyo",
-      "url": "https://www.japantimes.co.jp/business/2025/10/13/markets/political-premium-bonds-japan/",
-      "source": "The Japan Times",
-      "description": "Investors are demanding fiscal consolidation, while anything resembling austerity can prove politically contentious and toxic at the ballot box.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/499321.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T12:43:48.906336",
-      "category": "business",
-      "emoji": "\ud83d\udcc9",
-      "final_score": 860.0,
-      "summary": "Growing tensions between **fiscal responsibility** and political survival are creating market pressures, as investors push for reduced government spending while politicians avoid **austerity measures** that could hurt their electoral chances from Paris to Tokyo.",
-      "timeline": [
-        {
-          "date": "April 2, 2025",
-          "event": "Tariffs announced, causing market volatility"
-        },
-        {
-          "date": "May 2025",
-          "event": "Tax reform bill passes House"
-        },
-        {
-          "date": "July 2025",
-          "event": "Yield curve inversion persists"
-        }
-      ],
-      "details": [
-        "Term premium: Highest in 10+ years[6]  \nUS 10s/30s spread: 70 basis points[4]  \nAPAC issuance: Up 47% year-on-year[3]"
-      ]
-    },
-    {
-      "title": "Trump may approve Tomahawks for Ukraine if Russia continues war",
-      "url": "https://www.japantimes.co.jp/news/2025/10/13/world/politics/trump-putin-us-tomahawks-ukraine/",
-      "source": "The Japan Times",
-      "description": "U.S. President Donald Trump\u2019s comments signal an openness to expanding the range of weaponry provided to Ukraine but also that he remains focused on a ceasefire.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/499271.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T12:35:57.305859",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 860.0,
-      "summary": "U.S. President Donald Trump\u2019s comments signal an openness to expanding the range of weaponry provided to Ukraine but also that he remains focused on a ceasefire.",
-      "timeline": [
-        {
-          "date": "October 13, 2025",
-          "event": "Trump says he may send Tomahawk missiles to Ukraine if Russia continues war"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Trump states he discussed Tomahawks with Zelensky and plans to talk to Putin"
-        }
-      ],
-      "details": [
-        "Missile Range: 1,600 km\nEscalation Risk: High\nDecision Status: Pending"
-      ]
-    },
-    {
-      "title": "'No deliberate exclusion': Muttaqi holds another presser; women journos present",
-      "url": "https://timesofindia.indiatimes.com/india/no-deliberate-exclusion-taliban-foreign-minister-amir-khan-muttaqi-holds-another-presser-women-journalists-present/articleshow/124498291.cms",
-      "source": "Times of India",
-      "description": "Taliban's Foreign Minister Amir Khan Muttaqi addressed a press conference in Delhi with both male and female journalists present, following criticism for excluding women from a previous event. Muttaqi stated the earlier exclusion was due to short notice, not deliberate intent. This visit marks the first by a senior Taliban minister to India since the group's takeover.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124498394,imgsize-514163.cms",
-      "author": "TOI NEWS DESK",
-      "publishedAt": "2025-10-13T17:04:41.802071",
-      "category": "politics",
-      "emoji": "\ud83c\udde6\ud83c\uddeb",
-      "final_score": 850.0,
-      "summary": "The **Taliban's Foreign Minister** Muttaqi addressed media in Delhi, including female journalists, after controversy over women's exclusion from a prior event. His visit marks the first **high-level Taliban delegation** to India since Afghanistan's takeover.",
-      "timeline": [
-        {
-          "date": "October 9, 2025",
-          "event": "Amir Khan Muttaqi arrives in India for a week-long official visit."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Muttaqi holds first Delhi press conference; only male journalists are present."
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Muttaqi holds second press conference in Delhi, women journalists are included."
-        }
-      ],
-      "details": [
-        "Travel exemption: UN granted October 2025[1]  \nGirls in school: 2.8 million[3]  \nEmbassy upgrade: India plans Kabul embassy[3][4]"
-      ]
-    },
-    {
-      "title": "US, China leaders will avoid \u2018race to the bottom\u2019: Alibaba\u2019s",
-      "url": "https://www.scmp.com/tech/article/3328866/us-china-leaders-will-avoid-race-bottom-trade-alibabas-joe-tsai-says?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Alibaba Group Holding chairman Joe Tsai has expressed optimism about US-China trade tensions.\n\u201cI\u2019m actually quite optimistic that we\u2019re not going to devolve into kind of a race to the bottom\u201d, he said during an interview with CNBC dated October 10 and published on Monday. \u201cThe two countries\u2019 leaders have the wisdom to come to a point where they recognise that this is a hugely symbiotic relationship,\u201d he added.\nTsai, who owns the Brooklyn Nets basketball team, spoke on the sidelines of an NBA...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/82346091-1305-4c39-a66a-6dee3d406e12_570ffcdd.jpg",
-      "author": "Coco Feng",
-      "publishedAt": "2025-10-13T16:30:17.735843",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 850.0,
-      "summary": "**Alibaba's chairman** Joe Tsai expressed optimism about **US-China relations**, stating leaders will avoid a \"race to the bottom\" and recognize their symbiotic relationship. Tsai shared these views during a CNBC interview on the NBA sidelines.",
-      "timeline": [
-        {
-          "date": "February 4, 2025",
-          "event": "US imposes 10% tariff on all Chinese imports, citing national emergency."
-        },
-        {
-          "date": "February 4, 2025",
-          "event": "China retaliates with 15% tariffs on US coal and LNG, 10% on other goods."
-        },
-        {
-          "date": "April 9, 2025",
-          "event": "US increases tariffs on Chinese goods to 145% amid escalating tensions."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Trump announces 100% additional tariffs on Chinese imports, effective November 1."
-        }
-      ],
-      "details": [
-        "Tariff rate: 30% US on China[1]  \nImpact: 85% US firms affected[2]  \nSoybean licenses: 3 US firms revoked[1]"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T18:23:51.119599",
+  "generatedAt": "2025-10-13T18:28:52.359725",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
