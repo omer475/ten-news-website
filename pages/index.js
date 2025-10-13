@@ -1671,23 +1671,6 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
-                    
-                    {/* Blur Backdrop - Only shows when timeline is open */}
-                    {showTimeline[index] && (
-                      <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backdropFilter: 'blur(8px)',
-                        WebkitBackdropFilter: 'blur(8px)',
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        zIndex: 5,
-                        pointerEvents: 'none'
-                      }} />
-                    )}
-                    
                     {/* News Image - TRULY Edge-to-Edge */}
                     <div style={{
                       position: 'fixed',
@@ -1798,11 +1781,10 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.75)',
-                          backdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
-                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
-                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
+                          background: showTimeline[index] ? 'transparent' : (darkMode ? '#1a1a1a' : '#f5f5f7'),
+                          borderRadius: '12px',
+                          border: 'none',
+                          boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1894,15 +1876,13 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'rgba(255, 255, 255, 0.95)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                borderRadius: '16px',
+                                background: darkMode ? '#1a1a1a' : '#f5f5f7',
+                                borderRadius: '12px',
+                                border: 'none',
+                                boxShadow: 'none',
                                 padding: '12px 20px',
-                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                                 minHeight: '90px',
-                                zIndex: '100'
+                                zIndex: '10'
                               }}>
                               <div style={{
                                 position: 'relative',
@@ -1963,9 +1943,7 @@ export default function Home() {
                           justifyContent: 'center',
                           alignItems: 'center',
                           gap: '10px',
-                          marginTop: '14px',
-                          position: 'relative',
-                          zIndex: '100'
+                          marginTop: '14px'
                         }}>
                           {/* Details Dot */}
                           <div
