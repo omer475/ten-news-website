@@ -1792,11 +1792,12 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.75)',
-                          backdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
-                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
-                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
+                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
+                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
+                          border: showTimeline[index] ? 'none' : '1.5px solid rgba(0, 0, 0, 0.08)',
+                          borderRadius: showTimeline[index] ? '0' : '16px',
+                          boxShadow: showTimeline[index] ? 'none' : '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1888,13 +1889,13 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'rgba(255, 255, 255, 0.75)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                background: 'rgba(255, 255, 255, 0.95)',
+                                backdropFilter: 'blur(16px)',
+                                WebkitBackdropFilter: 'blur(16px)',
+                                border: '1.5px solid rgba(0, 0, 0, 0.08)',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)',
                                 minHeight: '90px',
                                 zIndex: '10'
                               }}>
