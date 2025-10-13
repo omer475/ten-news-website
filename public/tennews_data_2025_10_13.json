@@ -1377,6 +1377,37 @@
       ]
     },
     {
+      "title": "Government Shutdown Day 13: Betting Odds Now Favor Longest Shutdown",
+      "url": "https://www.forbes.com/sites/saradorn/2025/10/13/government-shutdown-day-13-betting-odds-now-favor-longest-government-shutdown-in-history/",
+      "source": "Forbes",
+      "description": "The government shutdown began at midnight on Oct. 1 as Democrats and Republicans appeared to be nowhere close to reaching a funding deal.",
+      "content": "The government shutdown began at midnight on Oct. 1 as Democrats and Republicans appeared to be nowhere close to reaching a funding deal.",
+      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68d6c32f1206fc8b2f99b507/0x0.jpg?width=960",
+      "author": "Sara Dorn, Forbes Staff",
+      "publishedAt": "2025-10-13T18:58:03.916253",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 910.0,
+      "summary": "The **government shutdown** entered its 13th day with **Democrats** and **Republicans** still deadlocked over funding negotiations. The closure, which began October 1st, appears likely to become the longest federal shutdown in U.S. history.",
+      "timeline": [
+        {
+          "date": "September 30, 2025",
+          "event": "Last-ditch White House meeting fails to prevent government shutdown."
+        },
+        {
+          "date": "October 1, 2025",
+          "event": "Federal government shuts down at 12:01 a.m. after Senate fails to pass funding."
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "Trump administration pauses or cancels $28 billion in federal funding during shutdown."
+        }
+      ],
+      "details": [
+        "Furloughed workers: 900,000  \nGDP loss weekly: $15 billion  \nEconomic data: Suspended releases"
+      ]
+    },
+    {
       "title": "Denmark to boost Arctic defence with new ships, jets and",
       "url": "https://www.bbc.com/news/articles/cy9n790j878o?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -3163,36 +3194,9 @@
       "details": [
         "Popular vote: 17,015,756 Trump[1]  \nHaley wins: 2 primaries[1]  \nTrump favorability: 44.1%[4]"
       ]
-    },
-    {
-      "title": "Jailed founder of Tren de Aragua gang calls for peace",
-      "url": "https://www.france24.com/en/americas/20251012-jailed-founder-of-tren-de-aragua-gang-calls-for-peace-talks-with-colombian-government",
-      "source": "France 24",
-      "description": "Larry Alvarez, a jailed founder of the notorious Tren de Aragua gang known by his alias \"Larry Changa\", has published a letter asking Colombian President Gustavo Petro to open peace talks leading to the transnational group's \"demobilisation\".",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/fea5fda2-a730-11f0-96e0-005056a97e36/w:1024/p:16x9/AP25037802454019.jpg",
-      "author": "FRANCE 24",
-      "publishedAt": "2025-10-13T17:23:22.400345",
-      "category": "politics",
-      "emoji": "\ud83d\udde3\ufe0f",
-      "final_score": 870.0,
-      "summary": "Larry Alvarez, a jailed founder of the notorious Tren de Aragua gang known by his alias \"Larry Changa\", has published a letter asking Colombian President Gustavo Petro to open peace talks leading to t",
-      "timeline": [
-        {
-          "date": "July 2024",
-          "event": "Larry Alvarez, alias Larry Changa, arrested by Colombian police."
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Alvarez publishes letter requesting peace talks with Colombian government and demobilisation."
-        }
-      ],
-      "details": [
-        "Extradition status: Awaiting transfer to Chile[1]  \nCriminal charges: Terrorism, arms trafficking, extortion, kidnapping[1]  \nPeace letter: Verified by Colombian Peace Commissioner[1]"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T18:54:35.877658",
+  "generatedAt": "2025-10-13T18:59:37.061740",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
