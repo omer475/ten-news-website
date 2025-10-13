@@ -3,6 +3,33 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Vance confirms that Hamas has 20 living hostages, expected release",
+      "url": "https://abcnews.go.com/Politics/vance-confirms-abc-hamas-20-living-hostages-released/story?id=126445163",
+      "source": "ABC News",
+      "description": "He spoke with ABC's George Stephanopoulos on \"This Week.\"",
+      "content": "",
+      "urlToImage": "https://s.abcnews.com/images/US/jd-vance-1-abc-gmh-251012_1760274961111_hpMain_4x3t_384.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:39:43.981027",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 1000.0,
+      "summary": "UN Secretary-General Vance revealed in an interview with **ABC News** that **Hamas** currently holds 20 living hostages, with their anticipated **release** expected within the next 24 hours, according to his conversation with George Stephanopoulos.",
+      "timeline": [
+        {
+          "date": "October 12, 2025",
+          "event": "Hamas confirms 20 living hostages remain, expected release within 24 hours"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Hamas releases all 20 remaining hostages under Gaza ceasefire agreement"
+        }
+      ],
+      "details": [
+        "Hostages returned: 147 as of Feb 2025[3]  \nHostages killed: 75 confirmed by Israel[2]  \nHostages remaining: 59 in Gaza[3]"
+      ]
+    },
+    {
       "title": "Drone strike in besieged Sudan city kills dozens",
       "url": "https://www.bbc.com/news/articles/c3rvrn8req4o?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -500,6 +527,37 @@
       ]
     },
     {
+      "title": "Drone video shows extent of destruction in Gaza City",
+      "url": "https://www.nbcnews.com/video/shorts/drone-video-shows-extent-of-destruction-in-gaza-city-249704517577",
+      "source": "NBC News",
+      "description": "Drone video shows extent of destruction in Gaza City",
+      "content": "Drone video shows extent of destruction in Gaza City",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/f_vert_brk_gazadrone-wirxm0.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:41:00.329969",
+      "category": "politics",
+      "emoji": "\ud83d\udc94",
+      "final_score": 950.0,
+      "summary": "Drone video shows extent of destruction in Gaza City",
+      "timeline": [
+        {
+          "date": "October 4, 2024",
+          "event": "Israel launches new military operation in North Gaza, orders mass civilian evacuation"
+        },
+        {
+          "date": "October 29, 2024",
+          "event": "Israeli airstrike hits Bayt Lahiya shelter, killing over 90 displaced Palestinians"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Drone video shows Gaza City largely reduced to rubble after two years of war"
+        }
+      ],
+      "details": [
+        "Buildings destroyed: 197,000[2]  \nPopulation killed: 67,075[1]  \nTowns erased: 3[2][3]"
+      ]
+    },
+    {
       "title": "Afghanistan says it has killed 58 Pakistani soldiers in overnight",
       "url": "https://www.npr.org/2025/10/12/nx-s1-5572402/afghanistan-killed-58-pakistani-soldiers-overnight-border-operations",
       "source": "NPR News",
@@ -760,6 +818,76 @@
       ]
     },
     {
+      "title": "Vance says Trump is 'looking at all his options' as",
+      "url": "https://www.nbcnews.com/politics/white-house/vance-trump-options-invoke-insurrection-act-national-guard-rcna237060",
+      "source": "NBC News",
+      "description": "Vice President JD Vance said that President Donald Trump is \"looking at all his options\" in regards to invoking the Insurrection Act.",
+      "content": "Vice President JD Vance speaks with reporters in the James Brady Press Briefing Room at the White House, Wednesday, Oct. 1, 2025.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/rockcms/2025-10/251012-jd-vance-rb-a98a84.jpg",
+      "author": "Megan Lebowitz",
+      "publishedAt": "2025-10-13T18:41:59.752386",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 930.0,
+      "summary": "Vice President JD Vance said that President Donald Trump is \"looking at all his options\" in regards to invoking the Insurrection Act.",
+      "timeline": [
+        {
+          "date": "Fall 2024",
+          "event": "Donald Trump wins presidential election, returns to office"
+        },
+        {
+          "date": "January 20, 2025",
+          "event": "Trump sworn in as president for second term"
+        },
+        {
+          "date": "October 2025",
+          "event": "Trump suggests invoking Insurrection Act as policy option"
+        },
+        {
+          "date": "October 2025",
+          "event": "VP Vance confirms Trump administration considering Insurrection Act deployment"
+        }
+      ],
+      "details": [
+        "Invocation status: Not yet enacted  \nTrump statement: \"If necessary\" only  \nAct purpose: Domestic unrest response"
+      ]
+    },
+    {
+      "title": "Trump says he will impose a 100% tariff on China",
+      "url": "https://www.nbcnews.com/video/shorts/trump-says-he-will-impose-a-100-tariff-on-china-249702981940",
+      "source": "NBC News",
+      "description": "President Trump said Friday that he would be hitting goods from China with a 100% tariff \u201cover and above any tariff that they are currently paying,\u201d a move that reinvigorates a once-cooling trade war between the world\u2019s largest economies.",
+      "content": "President Trump said Friday that he would be hitting goods from China with a 100% tariff \u201cover and above any tariff that they are currently paying,\u201d a move that reinvigorates a once-cooling trade war between the world\u2019s largest economies.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/julie_china-amz0fx.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:40:39.813523",
+      "category": "politics",
+      "emoji": "\ud83d\udcc8",
+      "final_score": 930.0,
+      "summary": "President Trump announced plans to impose a **100% tariff** on Chinese imports, beyond existing duties, escalating the **trade war** between the world's largest economies. This dramatic shift reverses previous progress in easing economic tensions.",
+      "timeline": [
+        {
+          "date": "November 5, 2024",
+          "event": "Trump says tariffs may cause 'some pain' but are necessary after election."
+        },
+        {
+          "date": "April 2, 2025",
+          "event": "Trump declares national emergency, announces reciprocal tariffs on most imports including China."
+        },
+        {
+          "date": "April 5, 2025",
+          "event": "Minimum 10% tariff on almost all US imports takes effect."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Trump announces additional 100% tariff on Chinese goods, effective November 1, 2025."
+        }
+      ],
+      "details": [
+        "Export controls: Newly added  \nAnnouncement date: October 10, 2025  \nApplies to: All China imports"
+      ]
+    },
+    {
       "title": "Why Ukraine Is Betting on Strikes Deep Inside Russia",
       "url": "https://www.nytimes.com/2025/10/13/world/europe/ukraine-long-range-strikes-russia.html",
       "source": "New York Times",
@@ -889,6 +1017,95 @@
       ],
       "details": [
         "Death toll: 41  \nFlood depth: 12+ feet  \nVehicles displaced: Lodged in treetops"
+      ]
+    },
+    {
+      "title": "JD Vance says Israeli hostages could be released \u2018any moment",
+      "url": "https://www.nbcnews.com/meet-the-press/video/jd-vance-says-israeli-hostages-could-be-released-any-moment-now-249727045659",
+      "source": "NBC News",
+      "description": "Vice President JD Vance tells Meet the Press to expect the remaining Israeli hostages to be released by Sunday night or Monday morning as President Trump heads to the Middle East to sign a ceasefire deal between Israel and Hamas.",
+      "content": "Vice President JD Vance tells Meet the Press to expect the remaining Israeli hostages to be released by Sunday night or Monday morning as President Trump heads to the Middle East to sign a ceasefire deal between Israel and Hamas.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/1760274003369_mtp_clip_vancehostage_251012_1920x1080-hnt8gp.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:42:11.048339",
+      "category": "politics",
+      "emoji": "\ud83d\udcf0",
+      "final_score": 920.0,
+      "summary": "Vice President **JD Vance** announced on Meet the Press that remaining **Israeli hostages** are expected to be freed by Monday, coinciding with President Trump's Middle East visit to sign a **ceasefire agreement** with Hamas.",
+      "timeline": [
+        {
+          "date": "October 12, 2025",
+          "event": "JD Vance says Israeli hostages could be released from Gaza at any moment"
+        },
+        {
+          "date": "October 1, 2025",
+          "event": "JD Vance confirms no US boots on the ground in Gaza or Israel"
+        }
+      ],
+      "details": [
+        "Hamas confirmation: 20 living hostages held\nExpected release: Within 24 hours\nDiplomats involved: Rubio Kushner Witkoff"
+      ]
+    },
+    {
+      "title": "Vance says Israeli hostages may be released 'any moment'",
+      "url": "https://www.nbcnews.com/video/shorts/vance-says-israeli-hostages-may-be-released-any-moment-249725509748",
+      "source": "NBC News",
+      "description": "Vice President JD Vance on Sunday morning told \u201cMeet the Press\u201d that the remaining Israeli hostages in Gaza could be released at \u201cany moment now,\u201d ahead of a Monday deadline, as part of the first phase of a peace plan between Israel and Hamas.",
+      "content": "Vice President JD Vance on Sunday morning told \u201cMeet the Press\u201d that the remaining Israeli hostages in Gaza could be released at \u201cany moment now,\u201d ahead of a Monday deadline, as part of the first phase of a peace plan between Israel and Hamas.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/vance_thumb-yn4pyq.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:41:18.400375",
+      "category": "politics",
+      "emoji": "\u23f3",
+      "final_score": 920.0,
+      "summary": "Vice President JD Vance announced on \"**Meet the Press**\" that remaining **Israeli hostages** in Gaza may be freed imminently, before Monday's deadline, as part of the initial phase of an **Israel-Hamas peace agreement**.",
+      "timeline": [
+        {
+          "date": "October 12, 2025",
+          "event": "Ceasefire takes effect in Gaza under breakthrough Israel-Hamas deal."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Hamas expected to release 20 living Israeli hostages as part of peace plan."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Israel to release about 2,000 Palestinian detainees in exchange for hostages."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "US President Trump arrives in Israel ahead of expected hostage release."
+        }
+      ],
+      "details": [
+        "Hostages remaining: 120\nRelease deadline: October 14, 2025\nCeasefire duration: 72 hours"
+      ]
+    },
+    {
+      "title": "White House begins laying off workers during shutdown",
+      "url": "https://www.nbcnews.com/video/shorts/white-house-begins-laying-off-workers-during-shutdown-249660997972",
+      "source": "NBC News",
+      "description": "White House begins laying off workers during shutdown",
+      "content": "White House begins laying off workers during shutdown",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/layoffs_begin-fwibzz.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:40:47.836922",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 920.0,
+      "summary": "Due to the ongoing **government shutdown**, the **White House** has initiated staff layoffs, impacting various federal employees and operations. This marks a significant escalation in the consequences of Congress's failure to reach a funding agreement.",
+      "timeline": [
+        {
+          "date": "October 1, 2024",
+          "event": "Federal government enters shutdown after Congress fails to pass funding bill."
+        },
+        {
+          "date": "October 2, 2024",
+          "event": "White House announces plan to begin laying off workers if shutdown continues."
+        }
+      ],
+      "details": [
+        "Layoffs initiated: 4,200+ workers[2][3]  \nAgencies affected: At least seven[2]  \nTreasury layoffs: 1,000+ workers[3]"
       ]
     },
     {
@@ -1528,6 +1745,114 @@
       ],
       "details": [
         "GDP forecast 2025: 0.6%\nCapital flight 2024: $14B\nInflation rate: 42.4%"
+      ]
+    },
+    {
+      "title": "Sen. Lindsey Graham pans negotiations on Obamacare subsidies as government",
+      "url": "https://www.nbcnews.com/politics/congress/lindsey-graham-pans-negotiations-aca-subsidies-government-shutdown-rcna237116",
+      "source": "NBC News",
+      "description": "Sen. Lindsey Graham, R-S.C. said that he was in favor of the Senate voting to reopen the federal government but that he would not negotiate with Senate Democrats on their plan to extend Affordable Care Act subsidies",
+      "content": "Sen. Mark Kelly, D-Ariz.; Sen. Lindsey Graham, R-S.C.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/rockcms/2025-10/251012-mark-kelly-lindsey-graham-vl-954p-a3cae9.jpg",
+      "author": "Alexandra Marquez",
+      "publishedAt": "2025-10-13T18:42:22.528470",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 900.0,
+      "summary": "**Sen. Lindsey Graham** expressed support for reopening the federal government through a Senate vote but firmly rejected **negotiations with Democrats** regarding their proposal to extend **Affordable Care Act** subsidies during the ongoing shutdown.",
+      "timeline": [
+        {
+          "date": "October 1, 2024",
+          "event": "Federal government shutdown begins as Congress fails to pass funding bill."
+        },
+        {
+          "date": "October 7, 2024",
+          "event": "Senate fails to end shutdown; both parties deadlocked over ACA subsidies."
+        },
+        {
+          "date": "October 9, 2024",
+          "event": "Sen. Lindsey Graham reiterates opposition to negotiating ACA subsidies during shutdown."
+        }
+      ],
+      "details": [
+        "Shutdown duration: 8 days  \nFederal employees: First missed paycheck Friday  \nFAA delays: 6 major airports affected"
+      ]
+    },
+    {
+      "title": "Are deepfakes of dead people rewriting the past?",
+      "url": "https://www.nbcnews.com/tech/tech-news/are-deepfakes-dead-people-rewriting-rcna235982",
+      "source": "NBC News",
+      "description": "While Sora has some guardrails around the likenesses of living people, protections around the likenesses of those who have died appear to be an afterthought.",
+      "content": "OpenAI's Sora app logo on a smartphone in Creteil, France, on Oct.\u00a0 1.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/rockcms/2025-10/251006-Sora-2-openai-aa-237-1e9e42.jpg",
+      "author": "Jared Perlo",
+      "publishedAt": "2025-10-13T18:41:44.983735",
+      "category": "technology",
+      "emoji": "\ud83e\udd16",
+      "final_score": 900.0,
+      "summary": "**OpenAI's Sora** technology raises ethical concerns about the use of **deepfake technology** to manipulate images of deceased individuals, as the platform lacks robust protections for the likenesses of the dead compared to living persons.",
+      "timeline": [
+        {
+          "date": "October 2024",
+          "event": "Robin Williams' daughter receives deepfake videos of her deceased father, raising ethical concerns"
+        }
+      ],
+      "details": [
+        "Market size: $1.3B China digital humans 2022  \nFraud losses: $200M Q1 2025 deepfakes  \nCalifornia law: Estate consent required 2025"
+      ]
+    },
+    {
+      "title": "How Trump's indictment of James is unprecedented",
+      "url": "https://www.nbcnews.com/video/shorts/how-trump-s-indictment-of-james-is-unprecedented-249665093701",
+      "source": "NBC News",
+      "description": "NBC News' David Rohde spoke to \"Here's the Scoop\" co-host Brian Cheung about how President Trump's decision to indict his political opponents is unprecedented. To hear their full conversation, listen to today\u2019s episode wherever you get your podcasts.",
+      "content": "NBC News' David Rohde spoke to \"Here's the Scoop\" co-host Brian Cheung about how President Trump's decision to indict his political opponents is unprecedented. To hear their full conversation, listen to today\u2019s episode wherever you get your podcasts.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/vert_social.00_00_35_29.Still002-r15xv8.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:41:09.730768",
+      "category": "politics",
+      "emoji": "\u2696\ufe0f",
+      "final_score": 900.0,
+      "summary": "NBC News contributor David Rohde discussed with host Brian Cheung the **unprecedented nature** of former President Trump's decision to **indict political opponents**, raising concerns about the implications for democracy in their podcast \"Here's the Scoop.\"",
+      "timeline": [
+        {
+          "date": "October 9, 2024",
+          "event": "Letitia James indicted on bank fraud and false statement charges after Trump pressured DOJ"
+        },
+        {
+          "date": "October 24, 2024",
+          "event": "Letitia James scheduled to appear in court to formally face the charges"
+        }
+      ],
+      "details": [
+        "Charges: Bank fraud, false statements[1][2]  \nLoan amount: $109,600[1]  \nCourt date: October 24, 2025[2]"
+      ]
+    },
+    {
+      "title": "New Jersey declares state of emergency as nor'easter approaches",
+      "url": "https://abcnews.go.com/US/wireStory/new-jersey-declares-state-emergency-noreaster-approaches-126448554",
+      "source": "ABC News",
+      "description": "A nor'easter is churning up the East Coast, prompting New Jersey to declare a state of emergency",
+      "content": "",
+      "urlToImage": "https://s.abcnews.com/images/US/wirestory_264fd8abd6b02714d9cd9ac6c7a07631_4x3_384.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:39:33.290138",
+      "category": "environment",
+      "emoji": "\ud83d\udea8",
+      "final_score": 900.0,
+      "summary": "New Jersey has declared a **state of emergency** as a powerful **nor'easter** storm system moves up the East Coast, threatening to bring severe weather conditions that could impact travel and safety across the region.",
+      "timeline": [
+        {
+          "date": "October 12, 2024",
+          "event": "New Jersey Office of Emergency Management activated its Operations Center ahead of nor'easter"
+        },
+        {
+          "date": "October 13, 2024, 10:00 PM",
+          "event": "State of emergency declared in New Jersey takes effect as storm approaches"
+        }
+      ],
+      "details": [
+        "Wind gusts: 60 mph forecasted[1]  \nRainfall: Up to 5 inches expected[1]  \nAirports: Delays and cancellations reported[4]"
       ]
     },
     {
@@ -2840,37 +3165,6 @@
       ]
     },
     {
-      "title": "National Guard Deploys in Chicago Despite Local Resistance",
-      "url": "https://abcnews.go.com/US/video/national-guard-now-duty-chicago-area-despite-local-126371677",
-      "source": "ABC News",
-      "description": "In two courthouses on opposite sides of the country, President Donald Trump\u2019s attempt to send troops into Democratic-led Chicago and Portland, Oregon, will face a critical legal test on Thursday.",
-      "content": "",
-      "urlToImage": "https://s.abcnews.com/images/US/251009_abc_social_troops_chicago_hpMain_4x3_384.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T18:39:25.675491",
-      "category": "politics",
-      "emoji": "\ud83d\udea8",
-      "final_score": 870.0,
-      "summary": "In two courthouses on opposite sides of the country, President Donald Trump\u2019s attempt to send troops into Democratic-led Chicago and Portland, Oregon, will face a critical legal test on Thursday.",
-      "timeline": [
-        {
-          "date": "September 8, 2025",
-          "event": "ICE launches Operation Midway Blitz, arresting alleged undocumented immigrants in Chicago."
-        },
-        {
-          "date": "October 1, 2025",
-          "event": "ICE raid on Chicago's South Side results in 37 undocumented people arrested."
-        },
-        {
-          "date": "October 9, 2025",
-          "event": "Federal judge issues restraining order blocking National Guard deployment in Illinois through October 23."
-        }
-      ],
-      "details": [
-        "Troops replaced: Small group swapped out[1]  \nDeployment status: Blocked from Chicago streets[2]  \nTroop origin: Texas, California, Illinois[2]"
-      ]
-    },
-    {
       "title": "Jailed founder of Tren de Aragua gang calls for peace",
       "url": "https://www.france24.com/en/americas/20251012-jailed-founder-of-tren-de-aragua-gang-calls-for-peace-talks-with-colombian-government",
       "source": "France 24",
@@ -2896,327 +3190,9 @@
       "details": [
         "Extradition status: Awaiting transfer to Chile[1]  \nCriminal charges: Terrorism, arms trafficking, extortion, kidnapping[1]  \nPeace letter: Verified by Colombian Peace Commissioner[1]"
       ]
-    },
-    {
-      "title": "China envoy vows deeper Brazil ties, denounces US \u2018jungle\u2019 law",
-      "url": "https://www.scmp.com/news/china/diplomacy/article/3328867/china-envoy-vows-deeper-brazil-ties-denounces-us-jungle-law-tariff-showdown?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "China\u2019s ambassador to Brazil used a keynote speech in S\u00e3o Paulo on Monday to reaffirm Beijing\u2019s support for investment and export certifications aimed at helping South America\u2019s largest economy weather US President Donald Trump\u2019s tariff offensive.\nSpeaking at the opening of the annual Brazil-China Business Council meeting, Ambassador Zhu Qingqiao told business leaders, senior Brazilian officials and diplomats that Beijing was committed to sustainable development and building a \u201cworld-class\u201d...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/3e91daae-36b1-4685-8bfd-81c36a87f29b_cb76db8c.jpg",
-      "author": "Igor Patrick",
-      "publishedAt": "2025-10-13T16:29:49.756179",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 870.0,
-      "summary": "China\u2019s ambassador to Brazil used a keynote speech in S\u00e3o Paulo on Monday to reaffirm Beijing\u2019s support for investment and export certifications aimed at helping South America\u2019s largest economy weathe",
-      "timeline": [
-        {
-          "date": "April 12-15, 2024",
-          "event": "Brazilian President Lula visits China; 15 bilateral agreements worth $10 billion signed"
-        },
-        {
-          "date": "May 2025",
-          "event": "Brazil secures $5 billion in new Chinese investment; 30 agreements signed in Beijing"
-        },
-        {
-          "date": "July 2025",
-          "event": "Brazil hosts 17th BRICS summit; announces bi-oceanic railway with China and Peru"
-        },
-        {
-          "date": "May 2025",
-          "event": "TikTok launches Brazilian marketplace amid deepening China-Brazil economic ties"
-        }
-      ],
-      "details": [
-        "Oil exports: 40% sent to China[3]  \nCopper exports: 180% annual increase[3]  \nChinese investment: $70B in Brazil[7]"
-      ]
-    },
-    {
-      "title": "Trump\u2019s dealmaking diplomacy grows fragile as China fires back",
-      "url": "https://www.japantimes.co.jp/business/2025/10/12/economy/trump-dealmaking-china-focus/",
-      "source": "The Japan Times",
-      "description": "The sudden, and unexpected, back-and-forth between the world\u2019s two largest economies came just weeks ahead of a consequential meeting between the U.S. and Chinese leaders.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499096.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:09:56.269405",
-      "category": "politics",
-      "emoji": "\ud83c\udf0e",
-      "final_score": 870.0,
-      "summary": "The sudden, and unexpected, back-and-forth between the world\u2019s two largest economies came just weeks ahead of a consequential meeting between the U.S. and Chinese leaders.",
-      "timeline": [
-        {
-          "date": "May 2025",
-          "event": "U.S. and China agree to temporary tariff truce after escalating trade tensions"
-        },
-        {
-          "date": "June 5, 2025",
-          "event": "Xi and Trump hold phone call, discuss trade and rare earth export restrictions"
-        },
-        {
-          "date": "September 18, 2025",
-          "event": "U.S. and China in final stage of talks for Trump state visit to Beijing"
-        }
-      ],
-      "details": [
-        "Port fees: New charges on US vessels[2]  \nSoybeans: China halts US purchases[2]  \nQualcomm shares: Down 5% post-probe[2]"
-      ]
-    },
-    {
-      "title": "After ruling bloc collapses, LDP and opposition scramble to find",
-      "url": "https://www.japantimes.co.jp/news/2025/10/12/japan/politics/japan-pm-vote-uncertain/",
-      "source": "The Japan Times",
-      "description": "New LDP President Sanae Takaichi faces a higher hurdle in finding the votes needed to become Japan\u2019s next leader as opposition forces discuss a unified candidate.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499121.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:09:36.611829",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 870.0,
-      "summary": "Japan's **Liberal Democratic Party** faces new challenges as president Sanae Takaichi struggles to secure sufficient votes to become the next **prime minister**, while opposition parties explore the possibility of presenting a unified candidate against the ruling bloc.",
-      "timeline": [
-        {
-          "date": "October 4, 2025",
-          "event": "Sanae Takaichi elected LDP president after runoff against Shinjir\u014d Koizumi."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Komeito withdraws from LDP coalition, jeopardizing Takaichi's path to prime minister."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Diet confirmation vote for Takaichi as PM delayed until October 20 after coalition collapse."
-        }
-      ],
-      "details": [
-        "Lower house seats: LDP 221  \nKomeito seats: 32  \nPM vote date: October 15"
-      ]
-    },
-    {
-      "title": "Bitcoin and Other Cryptocurrencies Had Double-Digit Drops Friday, Largest Liquidation",
-      "url": "https://slashdot.org/story/25/10/11/1936222/bitcoin-and-other-cryptocurrencies-had-double-digit-drops-friday-largest-liquidation-event-ever?utm_source=rss1.0mainlinkanon&utm_medium=feed",
-      "source": "Slashdot",
-      "description": "An anonymous reader shared this report from the Independent:\n\n\nBitcoin and Ethereum both saw record liquidations as investors reacted to fears over a trade war, which saw many crypto investors move their money to stablecoins or safer assets... Bitcoin fell by more than 10 per cent to below $110,000, before recovering to $113,096 on Saturday morning. The value of Ethereum slumped by 11.2 per cent to $3,878. Other cryptocurrencies, including XRP, Doge and Ada, fell around 19 per cent, 27 per cent, and 25 per cent in the last 24 hours, respectively.\n \n\nLiveMint shares some statistics from Bloomberg:\n\nCiting 24-hour data from Coinglass, the report noted that more than $19 billion has been wiped out in the \"largest liquidation event in crypto history\", which impacted more than 1.6 million traders. It added that more than $7 billion of those positions were sold in less than one hour of trading on October 10. According to data on CoinMarketCap, the cryptocurrency market cap has dived to $3.74 trillion from the record-high $4.30 trillion level, the previous day. Trading volumes as of the market close were recorded at $490.23 billion. \n\nBitcoin retreated on Friday, as US-China trade tensions reignited, after racing to record highs earlier in the week as persistent rate-cut bets and signs of some cooling in geopolitical tensions helped boost risk. Bitcoin was trading at $105,505.4 on Friday, down 13.15% on the day.\n\n\n\nRead more of this story at Slashdot.",
-      "content": "",
-      "urlToImage": "https://a.fsdn.com/sd/twitter_icon_large.png",
-      "author": "EditorDavid",
-      "publishedAt": "2025-10-13T16:06:52.037284",
-      "category": "business",
-      "emoji": "\ud83d\udcc9",
-      "final_score": 870.0,
-      "summary": "An anonymous reader shared this report from the Independent:\n\n\nBitcoin and Ethereum both saw record liquidations as investors reacted to fears over a trade war, which saw many crypto investors move th",
-      "timeline": [
-        {
-          "date": "October 10, 2025",
-          "event": "Crypto market suffers record $19\u201320 billion liquidation after US tariffs on Chinese imports."
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Bitcoin and Ethereum prices begin partial recovery after historic single-day crash."
-        }
-      ],
-      "details": [
-        "Institutional buying: Signaled recovery  \nSupport level: ETH $4,100 buyers emerged  \nLeverage reset: 2022 bear market levels"
-      ]
-    },
-    {
-      "title": "Crypto\u2019s Black Friday: Inside The $19B Market Meltdown",
-      "url": "https://www.forbes.com/sites/digital-assets/2025/10/13/cryptos-black-friday-inside-the-19b-market-meltdown/",
-      "source": "Forbes",
-      "description": "The October 10 crypto market flash crash exposed how leverage, thin liquidity, and exchange flaws can turn a minor shock into a global crypto selloff.",
-      "content": "The October 10 crypto market flash crash exposed how leverage, thin liquidity, and exchange flaws can turn a minor shock into a global crypto selloff.",
-      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68ed020935a58cfdc8712537/0x0.jpg?width=960",
-      "author": "Marie Poteriaieva, Contributor",
-      "publishedAt": "2025-10-13T15:20:50.497347",
-      "category": "business",
-      "emoji": "\ud83d\udcc9",
-      "final_score": 870.0,
-      "summary": "A sudden **flash crash** in cryptocurrency markets on October 10 triggered a devastating $19 billion **market meltdown**, highlighting how excessive leverage and inadequate exchange liquidity can rapidly amplify minor disruptions into systemic cryptocurrency crises.",
-      "timeline": [
-        {
-          "date": "October 8, 2025",
-          "event": "Binance rolls out oracle-based pricing to address internal collateral valuation vulnerabilities."
-        },
-        {
-          "date": "October 10, 2025, 23:00",
-          "event": "Crypto crash begins; Bitcoin, Ethereum, and altcoins plunge as forced liquidations cascade."
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Bitcoin drops 10%, triggering $19 billion in leveraged liquidations across major exchanges."
-        }
-      ],
-      "details": [
-        "Traders liquidated: 1.6 million  \nBitcoin low: $104,000  \nAltcoin losses: 60\u201390%"
-      ]
-    },
-    {
-      "title": "France's president unveils new cabinet lineup",
-      "url": "https://www.france24.com/en/video/20251013-france-s-president-unveils-new-cabinet-lineup",
-      "source": "France 24",
-      "description": "President Macron unveiled a new 35-member government Sunday after talks to break a political deadlock. Prime Minister Sebastien Lecornu\u2019s second cabinet includes key figures like Jean-Noel Barrot (foreign affairs), Catherine Vautrin (defense), and Laurent Nunez (interior). New faces like Monique Barbut join, while Gerald Darmanin and Rachida Dati keep their posts despite controversies.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/b5153fe0-a839-11f0-9a38-005056bfb2b6/w:1024/p:16x9/EN-20251013-020150-020340-CS.jpg",
-      "author": "FRANCE24",
-      "publishedAt": "2025-10-13T15:20:09.218370",
-      "category": "politics",
-      "emoji": "\ud83c\uddeb\ud83c\uddf7",
-      "final_score": 870.0,
-      "summary": "**President Macron** announced a new 35-member French cabinet following political deadlock negotiations. **Prime Minister Lecornu's** lineup features both fresh appointments and retained ministers, including Jean-Noel Barrot in foreign affairs and Catherine Vautrin handling **defense** responsibilities.",
-      "timeline": [
-        {
-          "date": "October 6, 2025",
-          "event": "Lecornu appoints first cabinet, resigns after 14 hours amid coalition protests"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Macron reappoints Lecornu as prime minister after days of political uncertainty"
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Lecornu unveils new 35-member cabinet after meeting with Macron"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Opposition parties announce votes of no confidence against new government"
-        }
-      ],
-      "details": [
-        "No confidence votes: 2 this week  \nRepublicans expelled: 6 ministers  \nPrime ministers in 2025: 4"
-      ]
-    },
-    {
-      "title": "What Americans Think Of The Biden Impeachment Inquiry",
-      "url": "https://fivethirtyeight.com/features/americans-oppose-biden-impeachment-house-republicans/",
-      "source": "FiveThirtyEight",
-      "description": "Welcome to Pollapalooza, our weekly-ish polling roundup. It\u2019s officially impeachment season again. On Tuesday, House Majority Leader Kevin McCarthy announced that he\u2019s directing three House committees to start investigating whether President Biden benefited from his son Hunter\u2019s business dealings overseas. McCarthy accused the Biden family of \u201ca culture of corruption,\u201d saying that the Biden administration [\u2026]",
-      "content": "Impeachment\nWhat Americans Think Of The Biden Impeachment Inquiry\nMost aren't convinced President Biden is implicated in his son's wrongdoing.\n\n\n\nBy Amelia Thomson-DeVeaux\n\n\n\t\t\t\t\t\t\t\t\tSep. 14, 2023, at 3:41 PM\t\t\t\t\t\t\t\t\n\n\n\n \n\n\n\n\n\n\n\n\n\n\n\nPhoto Illustration by ABC News / Getty Images\n\n\n\n\nWelcome to Pollapalooza, our weekly-ish polling roundup.\n\nIt\u2019s officially impeachment season again. On Tuesday, House Majority Leader Kevin McCarthy announced that he\u2019s directing three House committees to start investigating whether President Biden benefited from his son Hunter\u2019s business dealings overseas. McCarthy accused the Biden family of \u201ca culture of corruption,\u201d saying that the Biden administration gave Hunter \u201cspecial treatment\u201d in a criminal tax and gun investigation, and that Biden himself had lied about his knowledge of his son\u2019s financial dealings.\nThe good news for McCarthy and the right-wing supporters of an impeachment investigation is that Americans do seem to believe, overall, that Hunter Biden\u2019s business dealings were sketchy at best and illegal at worst.\nBut Hunter Biden isn\u2019t the subject of the impeachment inquiry \u2014 his father is. So far, Republicans haven\u2019t provided any concrete evidence tying the president to his son\u2019s overseas business, although the impeachment inquiry may allow House Republicans to obtain bank records and other financial documents from Biden and his son. Right now, Republicans are most firmly convinced that Biden is implicated in Hunter\u2019s wrongdoing, while Americans overall are more inclined to see former President Donald Trump\u2019s family as corrupt, compared to the Bidens. And there isn\u2019t a broad consensus that an impeachment inquiry is warranted, signaling that Republicans have some convincing to do if they want the public to support their investigation.\nAmericans think Hunter Biden profited from his father\u2019s position\nAll of the allegations of a broader web of corruption within the Biden family have yet to be proven. What is less disputed, though, is the fact that Hunter Biden has personally made a significant amount of money through overseas business deals, and is the subject of a long-running criminal investigation. Earlier this summer, he agreed to plead guilty to two misdemeanor counts of failing to pay taxes on millions of dollars of income in 2017 and 2018, with an additional agreement that could allow him to avoid a conviction on a separate illegal gun ownership charge, but the plea deal fell apart after the judge, a Trump appointee, said she refused to \u201crubber-stamp\u201d the agreement, which she said wasn\u2019t standard. Republicans accused the Biden administration of giving Hunter a \u201csweetheart\u201d deal and in August, Attorney General Merrick Garland appointed a special counsel to continue probing Hunter Biden\u2019s finances.\nNone of this is a great look for the president\u2019s son, and recent polling shows that Americans are unhappy about Hunter Biden\u2019s behavior. A YouGov/The Economist poll conducted in August, after the plea deal collapsed, found that 72 percent of Americans think Hunter Biden personally profited from his father\u2019s positions in government, including a slim majority (53 percent) of Democrats. The same poll found that two-thirds (66 percent) of Americans have an unfavorable view of Hunter Biden, while only 17 percent have a favorable view (an additional 17 percent said they didn\u2019t know). According to a Yahoo News survey conducted by YouGov in August, 59 percent of Americans think Hunter Biden traded on his family name and proximity to power to get millions of dollars from foreign business associates. The same poll found that 51 percent of Americans believe that Hunter Biden improperly claimed tens of thousands of dollars in tax deductions. And an Ipsos/Politico Magazine poll conducted in August found, similarly, that 59 percent of Americans think that Hunter Biden is guilty of the alleged crimes in the tax non-payment case, including 51 percent of Democrats. Notably, only 2 percent of respondents said they thought he wasn\u2019t guilty, and 38 percent said they didn\u2019t know.\nThe YouGov/Economist poll\u2019s findings suggest, though, that Americans think most presidents\u2019 children get some level of special treatment. The survey found that 84 percent of respondents think children of U.S. presidents get away with things that other people do not because of their parents\u2019 jobs, and a similar share (85 percent) say that adult children personally profit from their parents\u2019 positions in government at least sometimes. So while Americans do seem convinced, overall, that Hunter Biden has profited financially from his father\u2019s jobs, and even a slim majority of Democrats think he likely committed crimes, the behavior may not be shocking or unexpected.\nRepublicans are more convinced that Biden is implicated in Hunter\u2019s wrongdoing\nRepublicans don\u2019t really have to convince Americans that Hunter Biden deserves investigation, or even a criminal trial. But that\u2019s not the question that matters for impeaching his father. To justify impeaching the president, Republicans will have to prove that he was involved in financial wrongdoing or corruption that rises to the level of an impeachable offense. And so far, Republicans are making claims without facts to back them up. When he announced the inquiry, McCarthy asserted \u2014 without evidence \u2014 that the millions Hunter Biden earned through overseas deals were also improperly shared with Biden family members, and that Biden used his official role as vice president to help get business for Hunter. \nMore findings that tie Biden and his family to Hunter Biden\u2019s business dealings could, of course, emerge. But right now, Americans haven\u2019t fully bought into the idea that the Biden family is involved in a broader influence-peddling scheme. Less than half (41 percent) of respondents in the Yahoo poll said they believe that Hunter Biden funneled millions of dollars to his father in a long-running scheme to help Joe Biden profit off his position, while 26 percent said they didn\u2019t believe it and 33 percent said they didn\u2019t know. A similar share (44 percent) believe that Biden definitely or probably did something illegal regarding Hunter Biden, while 32 percent believe he definitely or probably did not and 32 percent said they don\u2019t know.\nMany Americans are not very tuned in to the allegations against the Bidens, which is probably why these questions result in such a high share of people who say they don\u2019t know. And another recent poll found a slightly higher share of people who say that even if Joe Biden didn\u2019t do something illegal, he may have acted unethically. According to an SSRS/CNN poll conducted in August, 61 percent of Americans agreed that Biden had at least some involvement in Hunter Biden\u2019s business dealings, although less than half (42 percent) said he acted illegally and 18 percent said he acted unethically but not illegally. Similarly, a Quinnipiac University poll conducted in September found that 35 percent of Americans thought Biden was involved and did something illegal in Hunter Biden\u2019s business dealings with Ukraine and China, while 14 percent think he was involved and did something unethical but not illegal, and 37 percent think he wasn\u2019t involved.\n\n  Republicans are most convinced of the Bidens\u2019 wrongdoing Share of respondents who said they believe that Hunter Biden did each of the following things, by party affiliation      All Democrats Republicans Independents     Traded on his family name and proximity to power to get millions of dollars from foreign business associates 59 37 88 63   Failed to meet tax filing deadlines 59 50 78 57   Improperly claimed tens of thousands of dollars in tax deductions 51 31 81 51   Got preferential treatment from federal prosecutors when striking a plea deal 51 22 86 56   Funneled millions of dollars to his father in a long-running scheme to help Joe Biden profit off of his position 41 10 84 41     Source: YouGov/Yahoo News \n\nBut as the table above shows, the people who really believe that the Biden family is corrupt are Republicans. Unsurprisingly, Democrats are much less convinced that the president did something wrong, and independents are also pretty divided. Of course, it\u2019s possible that more coverage of the allegations motivating the impeachment inquiry \u2014 and any concrete evidence that might get turned up along the way \u2014 could change people\u2019s minds, or at least persuade\u00a0 some of the ones who are undecided.\u00a0\nAnd notably, the Yahoo News survey found that while the share of Americans \u2014 including the share of Democrats \u2014 who think Hunter Biden did something illegal has increased since last fall, the share of respondents who think Joe Biden broke the law has remained functionally unchanged, despite a drumbeat of Republican accusations to the contrary. Polling by Beacon Research/Shaw & Co. Research for Fox News has found a similar trend: The share of Americans who think Hunter Biden did something illegal rose from 39 percent last December to 50 percent in August, but the share of Americans who think Joe Biden did something illegal related to his son\u2019s business dealings hasn\u2019t really moved. (The survey found it at 35 percent in December versus 38 percent in August.)\nAmericans aren\u2019t convinced impeachment is warranted\nPerhaps most worryingly for Republicans, most Americans don\u2019t think an impeachment inquiry into Biden is warranted right now. A GBAO/Fabrizio, Lee & Associates poll for The Wall Street Journal conducted in late August found that 52 percent of Americans oppose impeaching Biden, and only 41 percent are in favor. More recently, a YouGov poll conducted on September 13 found that 41 percent of Americans oppose impeaching Biden, 44 percent are in support and 15 percent don\u2019t know. In early October 2019, when Trump\u2019s first impeachment was getting underway, Americans were more closely divided, according to our polling tracker. And in the wake of the Jan. 6 attack on the U.S. Capitol, majorities of Americans supported Trump\u2019s impeachment; a slim majority of Americans even consistently supported removing Trump from office before the end of his term.\nIn fact, allegations of corruption are stickier when it comes to the Trump family than the Bidens. According to the Yahoo News survey, 46 percent of Americans think that Trump and his family are more corrupt than the Bidens, while 36 percent think the Bidens are more corrupt than the Trumps. And a recent AP-NORC poll found that Americans were more likely to describe Trump as \u201ccorrupt\u201d than Biden. Meanwhile, that September YouGov poll found that Americans are more likely to describe the impeachment inquiry as motivated by politics in an attempt to embarrass Biden (41 percent) rather than a serious effort to find out the truth (28 percent).\nThat doesn\u2019t mean that Hunter Biden\u2019s legal troubles aren\u2019t a liability for Biden, particularly after a grand jury just indicted him on federal gun charges. A recent Emerson College poll found that while 47 of voters say that the indictments against Trump make them less likely to vote for him for president, 46 percent say the Hunter Biden tax and felony gun charges make them less likely to vote for Joe Biden in 2024. So it\u2019s possible that as Hunter Biden\u2019s investigation continues to unfold, his father could take political damage. But right now, Republicans aren\u2019t just missing evidence that Biden is connected to his son\u2019s wrongdoing in ways that could be impeachable \u2014 they also don\u2019t have the public on their side.\nOther polling bites:\n\nAmericans are concerned about aging political leaders, and a significant chunk want to see age limits for high-profile national politicians, according to a new poll from Civiqs for Daily Kos. The survey found that 74 percent want a mandatory retirement age for U.S. senators, 67 percent want a retirement age for Supreme Court justices, and 58 percent want a retirement age for presidents.\nAfter the Food & Drug Administration approved two new boosters for COVID-19, a CivicScience poll found that a majority (52 percent) of Americans said they\u2019re at least somewhat likely to get the new COVID vaccine, while 59 percent said they\u2019re at least somewhat likely to get a flu vaccine.\nFertility treatments are getting more common \u2013 according to a newly released April poll from the Pew Research Center, 42 percent of adults say they have either gotten fertility treatments or know someone who has, up from 33 percent just five years ago.\n\nBiden approval\n\nAccording to FiveThirtyEight\u2019s presidential approval tracker,1 40.9 percent of Americans approve of the job Biden is doing as president, while 54.4 percent disapprove (a net approval rating of -13.5 points). At this time last week, 40.0 percent approved and 56.0 percent disapproved (a net approval rating of -16.0 points). One month ago, Biden had an approval rating of 40.8 percent and a disapproval rating of 54.5 percent, for a net approval rating of -13.8 points.\nCORRECTION (Sept. 18, 2023, 11:20 a.m.): A previous version of this article stated that House Speaker Kevin McCarthy asserted, without evidence, that Hunter Biden shared some of the money he received through foreign deals with his family. In fact, there is evidence that Hunter Biden\u2019s family members also received money through these deals, but in his announcement, McCarthy did not offer evidence that it was illegal or corrupt.",
-      "urlToImage": "https://fivethirtyeight.com/wp-content/uploads/2023/09/538_Hunter_Joe_Biden_091423_POLLA_v01_ks-4x3-1.jpg?w=916",
-      "author": "Amelia Thomson-DeVeaux (Amelia.Thomson-DeVeaux@abc.com)",
-      "publishedAt": "2025-10-13T14:32:29.757536",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 870.0,
-      "summary": "House Speaker **Kevin McCarthy** launched an **impeachment inquiry** into President Biden, investigating potential benefits from his son Hunter's overseas business dealings. However, polls indicate most Americans remain skeptical of direct presidential involvement in any wrongdoing.",
-      "timeline": [
-        {
-          "date": "September 12, 2023",
-          "event": "Speaker McCarthy announces House impeachment inquiry into President Joe Biden."
-        },
-        {
-          "date": "September 28, 2023",
-          "event": "House impeachment inquiry holds its first public hearing."
-        },
-        {
-          "date": "December 13, 2023",
-          "event": "House votes 221\u2013212 to formalize the Biden impeachment inquiry."
-        },
-        {
-          "date": "August 19, 2024",
-          "event": "House committees release 300-page report alleging 'impeachable conduct,' no articles recommended."
-        }
-      ],
-      "details": [
-        "Awareness: 55% heard about inquiry[2]  \nHunter impact: 46% less likely to vote Biden[3]  \nGOP support drop: 76% to 70% since Sept[4]"
-      ]
-    },
-    {
-      "title": "Putin is taking his hybrid warfare to the sea",
-      "url": "https://www.japantimes.co.jp/commentary/2025/10/13/world/putin-takes-hybrid-warfare-to-the-sea/",
-      "source": "The Japan Times",
-      "description": "Russian President Vladimir Putin intends to contest the Baltic, make no mistake.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/498981.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T12:44:25.137810",
-      "category": "politics",
-      "emoji": "\ud83d\udea2",
-      "final_score": 870.0,
-      "summary": "**Russian President Putin** appears to be expanding his strategy of **hybrid warfare** into maritime domains, specifically targeting the Baltic region, signaling an escalation of Russia's military and political influence in northern European waters.",
-      "timeline": [
-        {
-          "date": "September 10, 2024",
-          "event": "Putin launches Okean 2024 naval exercise, testing Russian fleet readiness in Baltic Sea"
-        },
-        {
-          "date": "September 16, 2024",
-          "event": "Okean 2024 exercise ends after week-long operations by Russian naval and air units"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Russia\u2019s Baltic Fleet conducts Bastion missile drill simulating strikes near NATO members"
-        }
-      ],
-      "details": [
-        "Maritime law: New baselines adopted June 2025[2]  \nOil transit: 700,000 barrels daily[3]  \nSanctions: 560 ships blacklisted September 2025[3]"
-      ]
-    },
-    {
-      "title": "US Senate pushes for Taiwan to attend Rimpac drill in",
-      "url": "https://www.scmp.com/news/china/politics/article/3328835/us-senate-pushes-taiwan-attend-rimpac-drill-latest-defence-bill?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "The US Senate has approved its defence policy bill for the 2026 financial year, which for the first time \u201cstrongly encourages\u201d inviting Taiwan\u2019s navy to take part in the Rim of the Pacific (Rimpac) military exercise.\nThe 2026 National Defense Authorisation Act (NDAA), which passed late on Thursday, also authorises the executive branch to allocate US$1 billion for the Taiwan Security Cooperation Initiative, expanding the mechanism\u2019s use to include combat casualty care and medical equipment.\nThe...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/02a09de8-e6b8-4725-8058-ea4a275024bf_0123ec6f.jpg",
-      "author": "Lawrence Chung",
-      "publishedAt": "2025-10-13T12:36:09.130919",
-      "category": "politics",
-      "emoji": "\ud83d\udee1\ufe0f",
-      "final_score": 870.0,
-      "summary": "The US Senate's **2026 defense bill** encourages Taiwan's first-ever participation in **Rimpac military exercises** and authorizes $1 billion for the Taiwan Security Cooperation Initiative, strengthening medical support and combat casualty care capabilities between the allies.",
-      "timeline": [
-        {
-          "date": "July 9, 2025",
-          "event": "Senate Armed Services Committee advances NDAA"
-        },
-        {
-          "date": "October 9, 2025",
-          "event": "US Senate passes FY26 NDAA with Taiwan provisions"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Bill encourages Taiwan's RIMPAC participation"
-        }
-      ],
-      "details": [
-        "Drone collaboration: Joint U.S.-Taiwan drone project[2][4][5]  \nCyber defense: Assess Taiwan\u2019s digital infrastructure[2][4][5]  \nPrioritization: Taiwan in defense supply chain[2]"
-      ]
-    },
-    {
-      "title": "New California Privacy Law Will Require Chrome/Edge/Safari to Offer Easy",
-      "url": "https://yro.slashdot.org/story/25/10/11/0513252/new-california-privacy-law-will-require-chromeedgesafari-to-offer-easy-opt-outs-for-data-sharing?utm_source=rss1.0mainlinkanon&utm_medium=feed",
-      "source": "Slashdot",
-      "description": "\"California Governor Gavin Newsom signed the 'California Opt Me Out Act', which will require web browsers to include an easy, universal way for users to opt out of data collection and sales,\" reports the blog 9to5Mac:\n\n\n[The law] requires browsers to provide a clear, one-click mechanism for Californians to opt out of data sharing across websites. The bill reads: \"A business shall not develop or maintain a browser that does not include functionality configurable by a consumer that enables the browser to send an opt-out preference signal to businesses with which the consumer interacts through the browser....\"\nCalifornians will need patience, though, as the law doesn't take effect until January 1, 2027.\n \n\nAmericans in some states \u2014 including California, Texas, Colorado, New Jersey and Maryland \u2014 \"have the option to make those opt-out demands automatic whenever they surf the web,\" reports the Washington Post. \"But they can only do so if they use small browsers that voluntarily offer that option, such as DuckDuckGo, Firefox and Brave. What's new in California's law is that all browsers must give people the same option.\"\n That means soon in California, just using Google's Chrome, Apple's Safari and Microsoft's Edge can command companies not to sell your data or pass it along for ad targeting... It's an imperfect but potent and simple way to flex privacy rights \u2014 and becomes even more powerful with another simple privacy measure in California. Starting on January 1, California residents can fill out an online form once to completely and repeatedly wipe their data from hundreds of data brokers that package your personal information for sale. \nBut their article also suggests other ways readers can \"try a one-click privacy option now.\"\n\n\"[S]ome national companies respect one-click privacy opt-out requests from everyone... This happens automatically if you use DuckDuckGo and Brave. You need to change a setting with Firefox.\"\n\"Download Privacy Badger: The software from the Electronic Frontier Foundation, a consumer privacy advocacy group, works in the background to order websites not to sell information they're collecting about you.\"\n\"Use Permission Slip from Consumer Reports. Give the app basic information, and it will help you do much of the legwork to tell companies not to sell your information or to delete it, if you have the right to do so.\"\n\n\nRead more of this story at Slashdot.",
-      "content": "",
-      "urlToImage": "https://a.fsdn.com/sd/twitter_icon_large.png",
-      "author": "EditorDavid",
-      "publishedAt": "2025-10-13T16:07:09.114066",
-      "category": "technology",
-      "emoji": "\ud83d\udee1\ufe0f",
-      "final_score": 865.0,
-      "summary": "California's new **Opt Me Out Act** requires major web browsers like Chrome and Safari to provide simple, universal data-sharing opt-out options by 2027. The law expands **privacy rights** previously available only through smaller, privacy-focused browsers like DuckDuckGo.",
-      "timeline": [
-        {
-          "date": "September 10, 2025",
-          "event": "California Senate passes AB 566, the California Opt Me Out Act."
-        },
-        {
-          "date": "October 8, 2025",
-          "event": "Governor Newsom signs the California Opt Me Out Act into law."
-        },
-        {
-          "date": "January 1, 2027",
-          "event": "California Opt Me Out Act requiring browser opt-out takes effect statewide."
-        }
-      ],
-      "details": [
-        "Bill number: AB 566  \nSponsor: California Privacy Protection Agency  \nMobile browsers: Included in requirements"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T18:39:30.828257",
+  "generatedAt": "2025-10-13T18:44:32.103468",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
