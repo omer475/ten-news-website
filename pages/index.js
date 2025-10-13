@@ -1792,25 +1792,25 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : (() => {
-                            const categoryColors = {
-                              'WORLD NEWS': 'rgba(254, 226, 226, 0.95)',
-                              'BUSINESS': 'rgba(255, 247, 237, 0.95)',
-                              'MARKETS': 'rgba(236, 254, 255, 0.95)',
-                              'TECH & AI': 'rgba(238, 242, 255, 0.95)',
-                              'SCIENCE': 'rgba(224, 242, 254, 0.95)',
-                              'HEALTH': 'rgba(236, 253, 245, 0.95)',
-                              'CLIMATE': 'rgba(240, 253, 244, 0.95)',
-                              'SPORTS': 'rgba(255, 251, 235, 0.95)',
-                              'ENTERTAINMENT': 'rgba(253, 242, 248, 0.95)'
-                            };
-                            return categoryColors[story.category] || 'rgba(248, 250, 252, 0.95)';
-                          })(),
+                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           border: showTimeline[index] ? 'none' : '1.5px solid rgba(0, 0, 0, 0.08)',
                           borderRadius: showTimeline[index] ? '0' : '16px',
-                          boxShadow: showTimeline[index] ? 'none' : '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)'
+                          boxShadow: showTimeline[index] ? 'none' : (() => {
+                            const categoryShadows = {
+                              'WORLD NEWS': '0 4px 16px rgba(220, 38, 38, 0.15), 0 2px 4px rgba(220, 38, 38, 0.1)',
+                              'BUSINESS': '0 4px 16px rgba(234, 88, 12, 0.15), 0 2px 4px rgba(234, 88, 12, 0.1)',
+                              'MARKETS': '0 4px 16px rgba(8, 145, 178, 0.15), 0 2px 4px rgba(8, 145, 178, 0.1)',
+                              'TECH & AI': '0 4px 16px rgba(79, 70, 229, 0.15), 0 2px 4px rgba(79, 70, 229, 0.1)',
+                              'SCIENCE': '0 4px 16px rgba(2, 132, 199, 0.15), 0 2px 4px rgba(2, 132, 199, 0.1)',
+                              'HEALTH': '0 4px 16px rgba(5, 150, 105, 0.15), 0 2px 4px rgba(5, 150, 105, 0.1)',
+                              'CLIMATE': '0 4px 16px rgba(22, 163, 74, 0.15), 0 2px 4px rgba(22, 163, 74, 0.1)',
+                              'SPORTS': '0 4px 16px rgba(217, 119, 6, 0.15), 0 2px 4px rgba(217, 119, 6, 0.1)',
+                              'ENTERTAINMENT': '0 4px 16px rgba(219, 39, 119, 0.15), 0 2px 4px rgba(219, 39, 119, 0.1)'
+                            };
+                            return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
+                          })()
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1902,26 +1902,26 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                background: (() => {
-                                  const categoryColors = {
-                                    'WORLD NEWS': 'rgba(254, 226, 226, 0.95)',
-                                    'BUSINESS': 'rgba(255, 247, 237, 0.95)',
-                                    'MARKETS': 'rgba(236, 254, 255, 0.95)',
-                                    'TECH & AI': 'rgba(238, 242, 255, 0.95)',
-                                    'SCIENCE': 'rgba(224, 242, 254, 0.95)',
-                                    'HEALTH': 'rgba(236, 253, 245, 0.95)',
-                                    'CLIMATE': 'rgba(240, 253, 244, 0.95)',
-                                    'SPORTS': 'rgba(255, 251, 235, 0.95)',
-                                    'ENTERTAINMENT': 'rgba(253, 242, 248, 0.95)'
-                                  };
-                                  return categoryColors[story.category] || 'rgba(248, 250, 252, 0.95)';
-                                })(),
+                                background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: '1.5px solid rgba(0, 0, 0, 0.08)',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)',
+                                boxShadow: (() => {
+                                  const categoryShadows = {
+                                    'WORLD NEWS': '0 4px 16px rgba(220, 38, 38, 0.15), 0 2px 4px rgba(220, 38, 38, 0.1)',
+                                    'BUSINESS': '0 4px 16px rgba(234, 88, 12, 0.15), 0 2px 4px rgba(234, 88, 12, 0.1)',
+                                    'MARKETS': '0 4px 16px rgba(8, 145, 178, 0.15), 0 2px 4px rgba(8, 145, 178, 0.1)',
+                                    'TECH & AI': '0 4px 16px rgba(79, 70, 229, 0.15), 0 2px 4px rgba(79, 70, 229, 0.1)',
+                                    'SCIENCE': '0 4px 16px rgba(2, 132, 199, 0.15), 0 2px 4px rgba(2, 132, 199, 0.1)',
+                                    'HEALTH': '0 4px 16px rgba(5, 150, 105, 0.15), 0 2px 4px rgba(5, 150, 105, 0.1)',
+                                    'CLIMATE': '0 4px 16px rgba(22, 163, 74, 0.15), 0 2px 4px rgba(22, 163, 74, 0.1)',
+                                    'SPORTS': '0 4px 16px rgba(217, 119, 6, 0.15), 0 2px 4px rgba(217, 119, 6, 0.1)',
+                                    'ENTERTAINMENT': '0 4px 16px rgba(219, 39, 119, 0.15), 0 2px 4px rgba(219, 39, 119, 0.1)'
+                                  };
+                                  return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
+                                })(),
                                 minHeight: '90px',
                                 zIndex: '10'
                               }}>
