@@ -1792,7 +1792,20 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
+                          background: showTimeline[index] ? 'transparent' : (() => {
+                            const categoryColors = {
+                              'WORLD NEWS': 'rgba(254, 226, 226, 0.95)',
+                              'BUSINESS': 'rgba(255, 247, 237, 0.95)',
+                              'MARKETS': 'rgba(236, 254, 255, 0.95)',
+                              'TECH & AI': 'rgba(238, 242, 255, 0.95)',
+                              'SCIENCE': 'rgba(224, 242, 254, 0.95)',
+                              'HEALTH': 'rgba(236, 253, 245, 0.95)',
+                              'CLIMATE': 'rgba(240, 253, 244, 0.95)',
+                              'SPORTS': 'rgba(255, 251, 235, 0.95)',
+                              'ENTERTAINMENT': 'rgba(253, 242, 248, 0.95)'
+                            };
+                            return categoryColors[story.category] || 'rgba(248, 250, 252, 0.95)';
+                          })(),
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           border: showTimeline[index] ? 'none' : '1.5px solid rgba(0, 0, 0, 0.08)',
@@ -1889,7 +1902,20 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'rgba(255, 255, 255, 0.95)',
+                                background: (() => {
+                                  const categoryColors = {
+                                    'WORLD NEWS': 'rgba(254, 226, 226, 0.95)',
+                                    'BUSINESS': 'rgba(255, 247, 237, 0.95)',
+                                    'MARKETS': 'rgba(236, 254, 255, 0.95)',
+                                    'TECH & AI': 'rgba(238, 242, 255, 0.95)',
+                                    'SCIENCE': 'rgba(224, 242, 254, 0.95)',
+                                    'HEALTH': 'rgba(236, 253, 245, 0.95)',
+                                    'CLIMATE': 'rgba(240, 253, 244, 0.95)',
+                                    'SPORTS': 'rgba(255, 251, 235, 0.95)',
+                                    'ENTERTAINMENT': 'rgba(253, 242, 248, 0.95)'
+                                  };
+                                  return categoryColors[story.category] || 'rgba(248, 250, 252, 0.95)';
+                                })(),
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: '1.5px solid rgba(0, 0, 0, 0.08)',
