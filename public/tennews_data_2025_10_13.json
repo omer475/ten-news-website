@@ -3,6 +3,41 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Hamas and Israel complete prisoner swap in major Gaza conflict breakthrough",
+      "url": "https://www.bbc.com/news/articles/c740jx07vz0o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "A major hostage and prisoner exchange marks a significant step towards ending two years of war in Gaza.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/18f7/live/f0d48700-a877-11f0-928c-71dbb8619e94.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T23:17:03.250727",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 1000.0,
+      "summary": "A major hostage and prisoner exchange marks a significant step towards ending two years of war in Gaza.",
+      "timeline": [
+        {
+          "date": "November 22, 2023",
+          "event": "Israel and Hamas agree to ceasefire and exchange of hostages and prisoners"
+        },
+        {
+          "date": "November 24, 2023",
+          "event": "Hamas begins releasing 50 women and children hostages over four days"
+        },
+        {
+          "date": "January 15, 2025",
+          "event": "Ceasefire and major hostage-prisoner exchange agreement announced after renewed negotiations"
+        },
+        {
+          "date": "January 19, 2025",
+          "event": "First exchange: three Israeli hostages and ninety Palestinian prisoners released"
+        }
+      ],
+      "details": [
+        "Aid trucks: 400+ entered Gaza  \nCeasefire start: 19 January 2025  \nHostages released: 3 women first round"
+      ]
+    },
+    {
       "title": "Vance confirms that Hamas has 20 living hostages, expected release",
       "url": "https://abcnews.go.com/Politics/vance-confirms-abc-hamas-20-living-hostages-released/story?id=126445163",
       "source": "ABC News",
@@ -1020,6 +1055,33 @@
       ]
     },
     {
+      "title": "Israel booby-trap claims in Gaza proven false by fact-checking investigation",
+      "url": "https://www.france24.com/en/tv-shows/truth-or-fake/20251013-did-israel-leave-behind-booby-trapped-dolls-and-food-cans-in-gaza",
+      "source": "France 24",
+      "description": "A viral post claims that Israeli forces have left behind booby-trapped dolls and food cans in Gaza, allegedly to harm returning civilians. The truth is quite different: the cans are actually metal containers, and the purple Teletubby doll was filmed in Yemen a few years ago.\u00a0We take a closer look in this edition of Truth or Fake.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/09548b94-a874-11f0-8d05-005056a97e36/w:1024/p:16x9/Francais-2025-10-13T19-08-34-222Z.jpg",
+      "author": "Maya YATAGHENE",
+      "publishedAt": "2025-10-13T23:17:11.440954",
+      "category": "general",
+      "emoji": "\u26a0\ufe0f",
+      "final_score": 920.0,
+      "summary": "A viral post claims that Israeli forces have left behind booby-trapped dolls and food cans in Gaza, allegedly to harm returning civilians. The truth is quite different: the cans are actually metal con",
+      "timeline": [
+        {
+          "date": "October 2024",
+          "event": "Viral claims spread that Israel left booby-trapped dolls and food cans in Gaza."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Fact-checkers confirm cans are metal containers; doll video filmed in Yemen years ago."
+        }
+      ],
+      "details": [
+        "Fuze type: M603 mine fuzes  \nForce needed: 140\u2013750 pounds  \nAid trucks delayed: 852 in Egypt"
+      ]
+    },
+    {
       "title": "JD Vance says Israeli hostages could be released \u2018any moment",
       "url": "https://www.nbcnews.com/meet-the-press/video/jd-vance-says-israeli-hostages-could-be-released-any-moment-now-249727045659",
       "source": "NBC News",
@@ -1374,6 +1436,72 @@
       ],
       "details": [
         "Countries affected: 83+\nGreat Barrier Reef events: 6 since 2016\nBleaching alert levels: Now up to Level 5"
+      ]
+    },
+    {
+      "title": "Madagascar's president Rajoelina hides in secret location amid military uprising",
+      "url": "https://www.france24.com/en/tv-shows/eye-on-africa/20251013-malagasy-president-rajoelina-says-he-fled-to-a-secure-location-to-protect-his-life",
+      "source": "France 24",
+      "description": "The current location of Madagascar\u2019s president remains unclear. However, Andry Rajoelina has addressed the nation from an undisclosed location, stating that he is currently in hiding and was forced to flee for his own safety. There are unconfirmed reports that Rajoelina fled in a French military aircraft. Calls for his resignation have intensified after an elite military unit turned against the government at the weekend in support of weeks of youth-led protests. French President Emmanuel Macron said he could not immediately confirm reports that France had helped Rajoelina to flee. In his speech on Monday night, Rajoelina called for the constitution to be invoked to resolve the crisis surrounding his leadership. We speak to opposition MP Mamy Rabenirina to get his perspective on what the military\u2019s support for the protests could mean for Madagascar\u2019s political future.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/ac84a046-a87a-11f0-85cb-005056a90284/w:1024/p:16x9/FR-NW-HAB-RAJOELINA-CARACENA-Celia-transfer.jpg",
+      "author": "Georja CALVIN-SMITH",
+      "publishedAt": "2025-10-13T23:17:28.543356",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 910.0,
+      "summary": "The current location of Madagascar\u2019s president remains unclear. However, Andry Rajoelina has addressed the nation from an undisclosed location, stating that he is currently in hiding and was forced to",
+      "timeline": [
+        {
+          "date": "September 25, 2025",
+          "event": "Youth-led protests erupt over electricity and water outages in Antananarivo."
+        },
+        {
+          "date": "September 29, 2025",
+          "event": "President Rajoelina fires entire government, including the prime minister, to appease protests."
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Elite CAPSAT military unit joins protests, claims control of armed forces, installs new army chief."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "President Rajoelina says a coup is underway and his whereabouts become unknown."
+        }
+      ],
+      "details": [
+        "Protests began: September 25, 2025[2]  \nPopulation: 31 million[2]  \nCAPSAT unit: Appointed new army chief[2]"
+      ]
+    },
+    {
+      "title": "California enacts landmark AI chatbot regulations requiring user safety measures",
+      "url": "https://www.france24.com/en/americas/20251013-california-us-law-regulating-ai-chatbots",
+      "source": "France 24",
+      "description": "California Governor Gavin Newsom on Monday signed the nation\u2019s first law regulating artificial intelligence chatbots, defying White House calls for a hands-off approach. The measure requires chatbot operators to implement safeguards for user interactions and allows lawsuits if failures cause harm, state senator Steve Padilla, the bill\u2019s sponsor, said.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/69d1fdbe-77ee-11f0-872b-005056a90284/w:1024/p:16x9/1540644b2cdee89bd1a4eb1106899eb487e7abb1.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T23:15:51.476740",
+      "category": "technology",
+      "emoji": "\ud83e\udd16",
+      "final_score": 910.0,
+      "summary": "California Governor Gavin Newsom on Monday signed the nation\u2019s first law regulating artificial intelligence chatbots, defying White House calls for a hands-off approach. The measure requires chatbot o",
+      "timeline": [
+        {
+          "date": "September 12, 2025",
+          "event": "California Legislature passes SB 243, regulating AI chatbots, sends bill to governor"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Governor Gavin Newsom signs SB 243 into law, first US AI chatbot regulation"
+        },
+        {
+          "date": "January 1, 2026",
+          "event": "California AI chatbot law takes effect, requiring safeguards and transparency for operators"
+        }
+      ],
+      "details": [
+        "Notification interval: Every 3 hours for minors[2][3]  \nAnnual reports: Required to Office of Suicide Prevention[1]  \nCrisis referral: Mandatory for suicidal ideation[2][3]"
       ]
     },
     {
@@ -1776,6 +1904,37 @@
       ],
       "details": [
         "GDP forecast 2025: 0.6%\nCapital flight 2024: $14B\nInflation rate: 42.4%"
+      ]
+    },
+    {
+      "title": "Madagascar president flees to secure location amid widespread protest demands",
+      "url": "https://www.france24.com/en/video/20251013-madagascar-president-rajoelina-says-he-had-to-leave-for-a-secure-location-to-protect-his-life",
+      "source": "France 24",
+      "description": "Madagascar's president Andry Rajoelina said on Monday that he had to move to a safe place to protect his life, following weeks of youth protests calling for his resignation. Speaking on FRANCE 24, Dr Luke Freeman of University College London says that Rajoelina, despite first coming to power by championing reform, 'hasn't been able to address the root problems' of Madagascar, instead focusing on 'vanity projects'.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/91e30876-a871-11f0-a27a-005056a90284/w:1024/p:16x9/EN-20251013-213106-214016-CS.jpg",
+      "author": "FRANCE24",
+      "publishedAt": "2025-10-13T23:16:55.821597",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 905.0,
+      "summary": "Madagascar's president Andry Rajoelina said on Monday that he had to move to a safe place to protect his life, following weeks of youth protests calling for his resignation. Speaking on FRANCE 24, Dr ",
+      "timeline": [
+        {
+          "date": "Late September 2025",
+          "event": "Youth-led protests begin over power cuts, expanding to calls for Rajoelina's resignation"
+        },
+        {
+          "date": "October 11-12, 2025",
+          "event": "Elite military unit backs protesters; president loses army support, coup attempt reported"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "President Rajoelina announces he fled to a safe location after attempt on his life"
+        }
+      ],
+      "details": [
+        "Military chief replaced: General Demosthene Pikulas  \nFlights suspended: Air France, Emirates  \nUK travel advisory: Essential travel only"
       ]
     },
     {
@@ -2531,34 +2690,131 @@
       ]
     },
     {
-      "title": "Weakened Hamas maintains influence as Gaza ceasefire remains fragile",
-      "url": "https://www.forbes.com/sites/natashalindstaedt/2025/10/13/hamas-is-weakened-but-not-defeated---what-this-means-for-gazas-fragile-ceasefire/",
-      "source": "Forbes",
-      "description": "Hamas is weakened but still influential and is unlikely to disarm.  How powerful is Hamas and what other violent non-state actors pose a threat to the ceasefire?",
-      "content": "Hamas is weakened but still influential and is unlikely to disarm.  How powerful is Hamas and what other violent non-state actors pose a threat to the ceasefire?",
-      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68ed62fa983c0a7fe226d311/0x0.jpg?width=960",
-      "author": "Natasha Lindstaedt, Contributor",
-      "publishedAt": "2025-10-13T23:09:46.307662",
+      "title": "China's new five-year economic plan targets increased industrial ties with Taiwan",
+      "url": "https://www.scmp.com/news/china/politics/article/3328849/what-will-beijings-next-5-year-plan-mean-taiwan?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "As China drafts its 15th five-year plan \u2013 the next entry in a line of expansive blueprints that have set the tone for the country\u2019s development over more than seven decades \u2013 we examine the implications and opportunities for industrial collaboration across the Taiwan Strait.\nFor more stories in this ongoing series, click here.\nLast month on the outskirts of Beijing, a delegation of Taiwanese executives inspected gleaming new electric vehicles at a leading mainland Chinese manufacturer as they...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/6dd99d52-6ace-4468-82ad-535dcec2817b_09f8b9e7.jpg",
+      "author": "Amber Wang,Lawrence Chung",
+      "publishedAt": "2025-10-13T23:16:23.897861",
       "category": "politics",
-      "emoji": "\ud83d\udea8",
+      "emoji": "\ud83c\udf0d",
       "final_score": 890.0,
-      "summary": "Hamas is weakened but still influential and is unlikely to disarm.  How powerful is Hamas and what other violent non-state actors pose a threat to the ceasefire?",
+      "summary": "As China drafts its 15th five-year plan \u2013 the next entry in a line of expansive blueprints that have set the tone for the country\u2019s development over more than seven decades \u2013 we examine the implicatio",
       "timeline": [
         {
-          "date": "May 5, 2024",
-          "event": "Hamas accepts Egyptian-Qatari mediated three-stage ceasefire proposal in Cairo talks"
+          "date": "December 17-18, 2023",
+          "event": "Preliminary study for 15th Five-Year Plan by National Development and Reform Commission"
         },
         {
-          "date": "January 17, 2025",
-          "event": "Israel and Hamas sign 42-day ceasefire and hostages-prisoners exchange agreement"
+          "date": "April 2025",
+          "event": "Xi Jinping holds symposium on priorities for the 15th Five-Year Plan period"
         },
         {
-          "date": "January 19, 2025",
-          "event": "Ceasefire and exchange deal between Israel and Hamas takes effect in Gaza"
+          "date": "October 20-23, 2025",
+          "event": "CPC Central Committee fifth plenum to consider and discuss 15th Five-Year Plan"
         }
       ],
       "details": [
-        "Fighter losses: 17,000 killed since October 2023[2][3]  \nRocket arsenal: 10-15% prewar stock remains[1]  \nAnti-Hamas militia: Active in Rafah[3]"
+        "GDP growth target: 4\u20135% annually[2]\nPlan period: 2026\u20132030[1]\nTech focus: Semiconductors, AI, aerospace[2]"
+      ]
+    },
+    {
+      "title": "Madagascar president flees country after military backs protest movement",
+      "url": "https://www.scmp.com/news/world/africa/article/3328873/address-nation-madagascar-president-says-safe-place-after-attempt-life?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Madagascar\u2019s President Andry Rajoelina said on Monday he was in a \u201csafe place\u201d after an attempt on his life, following weeks of youth protests calling for his resignation.\nIn an address to the nation, Rajoelina did not disclose his whereabouts, which remain unknown, but a military source and other officials told Reuters he had fled the country on a French army aircraft on Sunday after Malagasy troops announced their support for the protesters.\n\u201cI was forced to find a safe place to protect my...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/14/f05f9d23-c0d1-4b6c-bc40-933577c49f92_b9202945.jpg",
+      "author": "Agence France-Presse",
+      "publishedAt": "2025-10-13T23:16:16.064155",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 890.0,
+      "summary": "Madagascar\u2019s President Andry Rajoelina said on Monday he was in a \u201csafe place\u201d after an attempt on his life, following weeks of youth protests calling for his resignation.\nIn an address to the nation,",
+      "timeline": [
+        {
+          "date": "June 26, 2025",
+          "event": "Gendarmerie announces foiled assassination attempt on General Richard Ravalomanana during Independence Day."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "President Rajoelina flees Madagascar after troops back youth protests demanding his resignation."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "President Rajoelina addresses nation, confirms he is in a safe place after attempt on life."
+        }
+      ],
+      "details": [
+        "Location: Undisclosed\nProtests: Weeks-long\nMilitary Support: Elite unit"
+      ]
+    },
+    {
+      "title": "MI5 alerts British lawmakers about Chinese and Russian espionage threats",
+      "url": "https://www.scmp.com/news/world/europe/article/3328872/uks-mi5-warns-politicians-they-are-targets-chinese-and-russian-spying?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Britain\u2019s domestic spy agency MI5 issued a rare public warning to members of parliament on Monday that they are being targeted by spies from China, Russia and Iran in an attempt to undermine the country\u2019s democracy.\nThe warning comes a week after prosecutors said they had to abandon the trial of two British men charged with spying on members of parliament for China because the British government had not provided evidence showing China was a threat to its national security.\nMI5 warned politicians...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/14/57952dc3-5d88-443c-bb1d-97df56f839da_da94ac8e.jpg",
+      "author": "Reuters",
+      "publishedAt": "2025-10-13T23:16:08.004994",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 890.0,
+      "summary": "Britain\u2019s domestic spy agency MI5 issued a rare public warning to members of parliament on Monday that they are being targeted by spies from China, Russia and Iran in an attempt to undermine the count",
+      "timeline": [
+        {
+          "date": "January 2022",
+          "event": "MI5 alerts MPs about Christine Lee's alleged Chinese political interference activities."
+        },
+        {
+          "date": "September 2025",
+          "event": "Trial of two men accused of spying for China collapses due to lack of evidence."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "MI5 issues public warning to UK MPs about Chinese, Russian, and Iranian espionage threats."
+        }
+      ],
+      "details": [
+        "Attack methods: Blackmail, phishing, donations  \nPast alert: Christine Lee interference, 2022  \nTrial outcome: Two suspects, case abandoned"
+      ]
+    },
+    {
+      "title": "Israel and Arab leaders sign US-brokered Gaza ceasefire declaration at regional summit",
+      "url": "https://www.scmp.com/news/world/middle-east/article/3328871/trump-hails-tremendous-day-middle-east-leaders-sign-gaza-declaration?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "US President Donald Trump hailed a \u201ctremendous day for the Middle East\u201d as he and regional leaders signed a declaration on Monday meant to cement a ceasefire in Gaza, hours after Israel and Hamas exchanged hostages and prisoners.\nTrump made a lightning visit to Israel, where he lauded Prime Minister Benjamin Netanyahu in an address to parliament, before flying to Egypt for a Gaza summit where he and the leaders of Egypt, Qatar and Turkey signed the declaration as guarantors to the Gaza...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/14/bcfbc6d6-73b9-47d8-9c6b-800c908add24_a68124be.jpg",
+      "author": "Agence France-Presse",
+      "publishedAt": "2025-10-13T23:16:00.622834",
+      "category": "politics",
+      "emoji": "\ud83d\udcdc",
+      "final_score": 890.0,
+      "summary": "US President Donald Trump hailed a \u201ctremendous day for the Middle East\u201d as he and regional leaders signed a declaration on Monday meant to cement a ceasefire in Gaza, hours after Israel and Hamas exch",
+      "timeline": [
+        {
+          "date": "Late September 2025",
+          "event": "Trump announces 20-point Gaza plan to help bring about a ceasefire"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Hamas frees last 20 surviving hostages after two years of captivity in Gaza"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Israel releases 1,968 mostly Palestinian prisoners in exchange for hostages"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Trump and regional leaders sign Gaza declaration to cement ceasefire at Egypt summit"
+        }
+      ],
+      "details": [
+        "Ceasefire deadline: October 5, 2025[1]  \nHostage release: Within 72 hours[1]  \nDemilitarization: Required for Gaza reconstruction[2]"
       ]
     },
     {
@@ -2934,269 +3190,9 @@
       "details": [
         "Global emissions share: One-third total\nClean energy target: 30% by 2035\nSolar/wind capacity: 3,600 gigawatts goal"
       ]
-    },
-    {
-      "title": "Trump\u2019s China tariffs: Billions wiped out of crypto market; biggest",
-      "url": "https://timesofindia.indiatimes.com/technology/tech-news/donald-trumps-china-tariff-announcement-wipes-billions-from-crypto-market-sees-biggest-ever-single-day-fall/articleshow/124497748.cms",
-      "source": "Times of India",
-      "description": "Bitcoin experienced a significant 8.4% drop, leading a $19 billion market wipeout. This downturn was triggered by President Trump's escalation of the US-China trade war, including new tariffs and export controls. The crypto market saw massive liquidations, with over 1.6 million traders affected, raising concerns about broader market contagion.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124497739,imgsize-807342.cms",
-      "author": "TOI TECH DESK",
-      "publishedAt": "2025-10-13T17:27:10.327416",
-      "category": "business",
-      "emoji": "\ud83d\udcc9",
-      "final_score": 885.0,
-      "summary": "Bitcoin experienced a significant 8.4% drop, leading a $19 billion market wipeout. This downturn was triggered by President Trump's escalation of the US-China trade war, including new tariffs and expo",
-      "timeline": [
-        {
-          "date": "Early October 2025",
-          "event": "Bitcoin hits all-time highs"
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "China tightens rare earth export controls"
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Trump announces 100% tariffs on China"
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Bitcoin price drops significantly"
-        }
-      ],
-      "details": [
-        "Liquidations: $9.55B\nTariff rate: 100%\nLosses: $400B"
-      ]
-    },
-    {
-      "title": "'Have other options if ...': Afghanistan warns Pak amid deadly",
-      "url": "https://timesofindia.indiatimes.com/world/south-asia/if-peace-efforts-dont-succeed-afghanistans-big-warning-for-pakistan-torkham-border-crossing-closed/articleshow/124498956.cms",
-      "source": "Times of India",
-      "description": "Afghanistan's Foreign Minister warned of \"other options\" if peace talks with Pakistan fail, following intense border clashes. Kabul claims retaliatory operations achieved objectives with no civilian harm, accusing \"elements in Pakistan\" of seeking instability. Pakistan, however, labelled the strikes \"unprovoked\" and a \"blatant violation of international laws.\"",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124499011,imgsize-1223294.cms",
-      "author": "TOI WORLD DESK",
-      "publishedAt": "2025-10-13T17:25:57.709165",
-      "category": "general",
-      "emoji": "\ud83d\udea8",
-      "final_score": 880.0,
-      "summary": "Afghanistan's Foreign Minister warned of \"other options\" if peace talks with Pakistan fail, following intense border clashes. Kabul claims retaliatory operations achieved objectives with no civilian h",
-      "timeline": [
-        {
-          "date": "October 8, 2025",
-          "event": "TTP ambush in Kurram district kills 11 Pakistani soldiers, sparking border conflict"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Pakistan launches airstrikes on TTP camps in Paktika and Khost, Afghanistan"
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Afghan Taliban retaliate, attacking Pakistani posts with artillery and drones"
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Both sides halt major operations after intense clashes and international calls for restraint"
-        }
-      ],
-      "details": [
-        "Border posts: 19 captured by Pakistan[1]\nSaudi pact: Defense deal signed with Pakistan[2]\nTaliban deaths: 20+ Afghan soldiers killed[1]"
-      ]
-    },
-    {
-      "title": "Japan declares nationwide flu outbreak; over 4,000 hospitalised amid concerns",
-      "url": "https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/new-pandemic-coming-japan-declares-nationwide-flu-outbreak-over-4000-hospitalised/articleshow/124484790.cms",
-      "source": "Times of India",
-      "description": "Japan is facing a nationwide flu outbreak. Cases have surged significantly, leading to hospitalizations and school closures. This epidemic has arrived nearly five weeks earlier than expected. Health officials are urging immediate vaccination for vulnerable groups. Experts suggest this early start may become more common due to global environmental changes. Precautions like mask-wearing and handwashing are advised. Read more below!",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124485089,imgsize-26014.cms",
-      "author": "TOI LIFESTYLE DESK",
-      "publishedAt": "2025-10-13T17:04:13.381665",
-      "category": "breaking",
-      "emoji": "\ud83d\ude37",
-      "final_score": 880.0,
-      "summary": "A **nationwide flu outbreak** has struck Japan earlier than expected, resulting in over 4,000 hospitalizations and multiple school closures. Health officials recommend **urgent vaccination**, while experts link the early epidemic to environmental changes.",
-      "timeline": [
-        {
-          "date": "October 3, 2025",
-          "event": "Japan declares nationwide flu epidemic after cases surge five weeks earlier than usual"
-        },
-        {
-          "date": "October 3, 2025",
-          "event": "Over 4,000 people hospitalized and more than 100 schools closed across Japan"
-        },
-        {
-          "date": "October 8, 2025",
-          "event": "Health officials urge immediate vaccination and preventive measures for vulnerable groups"
-        }
-      ],
-      "details": [
-        "Schools closed: 135+\nPrefectures affected: 28 of 47\nPeak region: Okinawa highest cases[1][5]"
-      ]
-    },
-    {
-      "title": "EU Under Fire From European Business Leaders Over Looming CS3D",
-      "url": "https://www.forbes.com/sites/davidblackmon/2025/10/13/eu-under-fire-from-european-business-leaders-over-looming-cs3d-rules/",
-      "source": "Forbes",
-      "description": "CEOs from 46 leading French and German corporations recently urged the European Commission to drop its proposed CS3D reporting rules entirely.",
-      "content": "CEOs from 46 leading French and German corporations recently urged the European Commission to drop its proposed CS3D reporting rules entirely.",
-      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68ed06e107dc9dd1cd65ea12/0x0.jpg?width=960",
-      "author": "David Blackmon, Senior Contributor",
-      "publishedAt": "2025-10-13T16:17:22.193477",
-      "category": "business",
-      "emoji": "\ud83c\uddea\ud83c\uddfa",
-      "final_score": 880.0,
-      "summary": "**Business leaders** from 46 major French and German companies have united to oppose the European Union's proposed **CS3D reporting regulations**, calling on the **European Commission** to completely abandon the controversial sustainability disclosure rules.",
-      "timeline": [
-        {
-          "date": "April 24, 2024",
-          "event": "European Parliament adopts CS3D directive on corporate sustainability due diligence."
-        },
-        {
-          "date": "July 5, 2024",
-          "event": "CS3D directive published in the Official Journal of the European Union."
-        },
-        {
-          "date": "July 25, 2024",
-          "event": "CS3D directive enters into force across the European Union."
-        },
-        {
-          "date": "April 14, 2025",
-          "event": "EU adopts 'Stop-the-Clock' Directive, delaying CS3D compliance for largest companies by one year."
-        }
-      ],
-      "details": [
-        "Threshold: 5,000 employees, \u20ac1.5B turnover[1]  \nDeadline: July 26, 2028[1][2]  \nDisclosure cut: 50% datapoints reduced[1]"
-      ]
-    },
-    {
-      "title": "Drug Trafficking Scandal Hits Milei's Government Before Elections",
-      "url": "https://www.forbes.com/sites/afontevecchia/2025/10/13/javier-mileis-government-rocked-by-drug-trafficking-scandal-ahead-of-consequential-elections/",
-      "source": "Forbes",
-      "description": "Javier Milei's leading candidate in upcoming midterm elections, Jos\u00e9 Luis Espert, was forced to resign after ties to drug traffickers were confirmed.",
-      "content": "Javier Milei's leading candidate in upcoming midterm elections, Jos\u00e9 Luis Espert, was forced to resign after ties to drug traffickers were confirmed.",
-      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68ed0a849ef061d649ca54c5/0x0.jpg?width=960",
-      "author": "Agustino Fontevecchia, Contributor",
-      "publishedAt": "2025-10-13T16:17:09.927945",
-      "category": "politics",
-      "emoji": "\u2696\ufe0f",
-      "final_score": 880.0,
-      "summary": "**Jos\u00e9 Luis Espert**, the leading candidate for **Javier Milei's** party in Argentina's upcoming midterm elections, has been forced to step down following revelations of confirmed connections to drug trafficking organizations, dealing a blow to Milei's administration.",
-      "timeline": [
-        {
-          "date": "October 3, 2024",
-          "event": "Documents reveal Espert received $200,000 from accused drug trafficker Fred Machado."
-        },
-        {
-          "date": "October 10, 2024",
-          "event": "Espert admits receiving money, claims it was for consulting, denies wrongdoing."
-        },
-        {
-          "date": "October 13, 2024",
-          "event": "Espert withdraws candidacy for Buenos Aires Province midterm elections amid scandal."
-        }
-      ],
-      "details": [
-        "Extradition order: Supreme Court approved  \nCampaign funding: Over $200,000 received  \nFlights taken: 35 on Machado\u2019s planes"
-      ]
-    },
-    {
-      "title": "'Dawn of new Middle East': Trump paints golden future -",
-      "url": "https://timesofindia.indiatimes.com/world/middle-east/historic-dawn-of-a-new-middle-east-donald-trump-declares-end-of-gaza-war-says-painful-nightmare-finally-over-calls-for-netanyahus-pardon/articleshow/124527673.cms",
-      "source": "Times of India",
-      "description": "US President Donald Trump declared a \"long and painful nightmare\" over for Israel, announcing a Gaza ceasefire and Hamas disarmament. He hailed the unprecedented regional endorsement of the plan, marking a \"historic dawn of a new Middle East.\" Trump also praised Prime Minister Netanyahu, calling for his pardon amid legal challenges and celebrating the return of Israeli hostages.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124529060,imgsize-1083013.cms",
-      "author": "TOI WORLD DESK",
-      "publishedAt": "2025-10-13T15:20:21.796179",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 880.0,
-      "summary": "In a landmark **Knesset speech**, Trump announced an Israel-Gaza **ceasefire** agreement requiring Hamas disarmament, declaring an end to regional conflict. He endorsed Netanyahu's leadership and celebrated the return of hostages, heralding a \"new Middle East.\"",
-      "timeline": [
-        {
-          "date": "October 13, 2025",
-          "event": "Trump addresses Knesset after Gaza ceasefire and release of 20 Israeli hostages"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Trump declares 'historic dawn of a new Middle East' in Knesset speech"
-        }
-      ],
-      "details": [
-        "Hostages released: 20\nIsraeli withdrawal: 24 hours completed\nCeasefire start: October 10, 2025"
-      ]
-    },
-    {
-      "title": "S&P 500 faces 11% pullback if China-U.S. trade tensions don\u2019t",
-      "url": "https://www.marketwatch.com/story/s-p-500-faces-11-pullback-if-china-u-s-trade-tensions-dont-cool-morgan-stanley-analyst-e73813e3?mod=mw_rss_topstories",
-      "source": "MarketWatch",
-      "description": "Morgan Stanley warned that a fresh round of trade tensions,  if not resolved, will cause a bigger drop for stocks than expected.",
-      "content": "",
-      "urlToImage": "https://images.mktw.net/im-09053909",
-      "author": "Barbara Kollmeyer",
-      "publishedAt": "2025-10-13T15:19:10.496231",
-      "category": "business",
-      "emoji": "\ud83d\udcc8",
-      "final_score": 880.0,
-      "summary": "**Trade tensions** between China and the U.S. could trigger an 11% decline in the **S&P 500** index, according to Morgan Stanley analysts. The investment bank warns that unresolved disputes may lead to steeper market losses than anticipated.",
-      "timeline": [
-        {
-          "date": "February 4, 2025",
-          "event": "US imposes 10% tariffs on all Chinese imports; China retaliates with new tariffs"
-        },
-        {
-          "date": "April 2, 2025",
-          "event": "Trump announces additional 34% tariffs on Chinese goods, raising total to 54%"
-        },
-        {
-          "date": "May 12, 2025",
-          "event": "US and China agree to 90-day tariff truce, lowering some tariffs temporarily"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Trump announces 100% tariffs on Chinese imports; China imposes retaliatory port fees"
-        }
-      ],
-      "details": [
-        "Market cap: $55.4T[1]\nRecord high: 6,753.76[2]\nLargest stock: Nvidia 7.2%[2]"
-      ]
-    },
-    {
-      "title": "Cap on international students projected to cost Dutch economy up",
-      "url": "https://phys.org/news/2025-10-cap-international-students-dutch-economy.html",
-      "source": "Phys.org",
-      "description": "A cap on the number of international students at the five comprehensive Randstad universities will have a significantly negative impact on the Dutch economy. The gross domestic product (GDP) is expected to decline by approximately 4 to 5 billion euros. Regions, businesses, and society as a whole will feel the substantial economic consequences.",
-      "content": "",
-      "urlToImage": "https://scx1.b-cdn.net/csz/news/tmb/2025/billions-in-societal-l.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T15:12:46.033254",
-      "category": "business",
-      "emoji": "\ud83d\udcc8",
-      "final_score": 880.0,
-      "summary": "The proposed **cap on international students** at five major Dutch universities is projected to reduce the country's **GDP** by \u20ac4-5 billion, with widespread economic impacts affecting regional businesses and broader society throughout the Netherlands.",
-      "timeline": [
-        {
-          "date": "February 2024",
-          "event": "Dutch cabinet introduces cap on international students at five Randstad universities."
-        },
-        {
-          "date": "September 2024",
-          "event": "Cap takes effect for 2024\u201325 academic year at Randstad universities."
-        },
-        {
-          "date": "October 9, 2024",
-          "event": "SEO Economic Research study projects \u20ac4\u20135 billion annual GDP loss due to cap."
-        }
-      ],
-      "details": [
-        "Retention rate: 57% after 1 year[1]  \nSector loss: 39% business services[2]  \nCompanies relocating: 30% considering move[1]"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T23:15:04.190450",
+  "generatedAt": "2025-10-13T23:20:05.573938",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
