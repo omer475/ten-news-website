@@ -1711,12 +1711,28 @@ export default function Home() {
                       {/* Category Badge */}
                       <div style={{
                         display: 'inline-block',
-                        fontSize: '13px',
+                        fontSize: '11px',
                         fontWeight: '700',
-                        letterSpacing: '0.8px',
+                        letterSpacing: '0.5px',
                         color: '#1d1d1f',
                         marginBottom: '8px',
-                        textTransform: 'uppercase'
+                        textTransform: 'uppercase',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        background: (() => {
+                          const categoryColors = {
+                            'WORLD NEWS': '#fee2e2',
+                            'BUSINESS': '#fff7ed',
+                            'MARKETS': '#ecfeff',
+                            'TECH & AI': '#eef2ff',
+                            'SCIENCE': '#e0f2fe',
+                            'HEALTH': '#ecfdf5',
+                            'CLIMATE': '#f0fdf4',
+                            'SPORTS': '#fffbeb',
+                            'ENTERTAINMENT': '#fdf2f8'
+                          };
+                          return categoryColors[story.category] || '#f8fafc';
+                        })()
                       }}>
                         {story.emoji} {story.category}
                       </div>
