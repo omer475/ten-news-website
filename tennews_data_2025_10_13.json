@@ -3,6 +3,41 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "What does wording of Gaza ceasefire agreement tell us?",
+      "url": "https://www.bbc.com/news/articles/ckgyr8e0gl2o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "The text of the agreement lacks details and in some cases is vague and ambiguous - perhaps on purpose.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/3fad/live/2ef94db0-a5fb-11f0-92db-77261a15b9d2.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:00:22.464782",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 1000.0,
+      "summary": "The newly released **Gaza ceasefire agreement** has drawn scrutiny for its deliberately **ambiguous language** and lack of specific details, suggesting negotiators may have intentionally left room for interpretation to help secure initial approval from both sides.",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "Israel and Hamas agreed to first stage of US-mediated hostage-truce plan"
+        },
+        {
+          "date": "October 9, 2025",
+          "event": "Israeli cabinet ratified the hostage agreement, setting a truce in Gaza"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Hostage-truce agreement between Israel and Hamas went into effect at noon local time"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "All remaining Israeli hostages released by Hamas; hundreds of Palestinian prisoners released"
+        }
+      ],
+      "details": [
+        "Hostages released: 33 Israelis  \nPrisoners released: 1,904 Palestinians  \nAid trucks: 600 per day"
+      ]
+    },
+    {
       "title": "All living Israeli hostages have been released from Gaza",
       "url": "https://www.nbcnews.com/video/shorts/all-living-israeli-hostages-have-been-released-from-gaza-249766981517",
       "source": "NBC News",
@@ -73,34 +108,131 @@
       ]
     },
     {
-      "title": "Palestinians welcome released prisoners as part of Gaza ceasefire agreement",
-      "url": "https://www.france24.com/en/video/20251013-palestinians-welcome-released-prisoners-as-part-of-gaza-ceasefire-agreement",
-      "source": "France 24",
-      "description": "Cheers erupted in Ramallah, West Bank, as Israel released nearly 2,000 prisoners under the Gaza ceasefire deal in exchange for Israeli hostages freed by Hamas. Freed prisoners were warmly welcomed by crowds, but celebrations remained restrained due to restrictions imposed by nearby Israeli settlers, as FRANCE 24's Claire Paccalin details from the crowd.",
+      "title": "Hostage families celebrate in Tel Aviv after Gaza breakthrough",
+      "url": "https://www.bbc.com/news/videos/c5y4nnpvqw2o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "Relatives of Israeli hostages celebrated in Tel Aviv after the announcement that Israel and Hamas had signed the first phase of a peace deal.",
       "content": "",
-      "urlToImage": "https://s.france24.com/media/display/28d6dbac-a842-11f0-b5dd-005056a90284/w:1024/p:16x9/EN-20251013-161005-161110-CS.jpg",
-      "author": "FRANCE24",
-      "publishedAt": "2025-10-13T16:18:57.962004",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/a7c7/live/e16f7a10-a4c4-11f0-928c-71dbb8619e94.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T16:53:15.004437",
       "category": "politics",
-      "emoji": "\ud83d\udd4a\ufe0f",
-      "final_score": 960.0,
-      "summary": "Cheers erupted in Ramallah, West Bank, as Israel released nearly 2,000 prisoners under the Gaza ceasefire deal in exchange for Israeli hostages freed by Hamas. Freed prisoners were warmly welcomed by ",
+      "emoji": "\ud83d\udea8",
+      "final_score": 970.0,
+      "summary": "Families of **Israeli hostages** gathered in celebration in Tel Aviv following news of a historic **peace agreement** between Israel and Hamas, marking the first phase of negotiations to secure their loved ones' release.",
       "timeline": [
         {
-          "date": "October 11, 2025",
-          "event": "Ceasefire agreement reached; Israel and Hamas finalize terms for prisoner-hostage swap"
+          "date": "October 3, 2025",
+          "event": "Hamas agrees to release remaining hostages and transfer Gaza administration to technocrats."
         },
         {
-          "date": "October 12, 2025",
-          "event": "Hundreds of aid trucks enter Gaza as part of ceasefire implementation"
+          "date": "October 8, 2025",
+          "event": "Trump announces Israel and Hamas have signed the first phase of a peace deal."
         },
         {
-          "date": "October 13, 2025",
-          "event": "Hamas releases last 20 living Israeli hostages; Israel begins releasing nearly 2,000 prisoners"
+          "date": "October 9, 2025",
+          "event": "Agreement signed in Egypt; hostages to be freed in exchange for Palestinian prisoners."
         }
       ],
       "details": [
-        "Release date: 19 January 2025  \nLife sentences: 195 prisoners  \nAid trucks: Hundreds entered Gaza"
+        "Hostages released: 20  \nPrisoners freed: Hundreds  \nDeal signed: Monday"
+      ]
+    },
+    {
+      "title": "Russian attacks on Ukraine\u2019s power grid intensify as winter approaches",
+      "url": "https://www.scmp.com/news/world/russia-central-asia/article/3328716/russian-attacks-ukraines-power-grid-intensify-winter-approaches?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Russia attacked Ukraine\u2019s power grid overnight into Sunday, part of an ongoing campaign to cripple Ukrainian energy infrastructure before winter.\nThis came as Moscow expressed \u201cextreme concern\u201d over the United States potentially providing Tomahawk cruise missiles to Ukraine.\nKyiv regional Governor Mykola Kalashnyk said two employees of Ukraine\u2019s largest private energy company, DTEK, were wounded in Russian strikes on a substation in the region.\nUkraine\u2019s Energy Ministry said energy...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/12/ad98873f-9951-45fe-b575-b95fc09b5dfa_2172bb81.jpg",
+      "author": "Associated Press",
+      "publishedAt": "2025-10-13T16:41:32.314656",
+      "category": "politics",
+      "emoji": "\ud83d\udca5",
+      "final_score": 960.0,
+      "summary": "Russian forces launched **overnight attacks** on Ukraine's power infrastructure, wounding two DTEK employees and escalating efforts to **cripple energy systems** before winter. Moscow separately voiced concerns about potential US Tomahawk missile support for Ukraine.",
+      "timeline": [
+        {
+          "date": "October 3, 2025",
+          "event": "Massive Russian attacks hit Kharkiv and Poltava energy facilities, causing major damage"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Russian missile and drone strikes cause blackouts and injuries in Kyiv and other cities"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Russia intensifies attacks on Ukraine\u2019s power grid; DTEK workers wounded near Kyiv"
+        }
+      ],
+      "details": [
+        "Thermal capacity lost: 80%[2]  \nPower restored Kyiv: 800,000+[6]  \nGas imports increase: 30% planned[1]"
+      ]
+    },
+    {
+      "title": "Mutiny in Madagascar: Army unit claims control of military; president",
+      "url": "https://timesofindia.indiatimes.com/world/rest-of-world/mutiny-in-madagascar-army-unit-claims-control-of-military-president-says-coup-underway/articleshow/124498484.cms",
+      "source": "Times of India",
+      "description": "A mutinied army unit in Madagascar, CAPSAT, announced it has taken control of the military, challenging President Rajoelina's authority. This development follows weeks of anti-government protests fueled by shortages, with CAPSAT officers refusing to fire on demonstrators. The group's statement asserts all military orders will now come from their headquarters, escalating the political crisis.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124498570,imgsize-72122.cms",
+      "author": "TOI WORLD DESK",
+      "publishedAt": "2025-10-13T17:03:50.933576",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 950.0,
+      "summary": "A **mutinous army unit** in Madagascar has declared control over the military, defying President Rajoelina amid ongoing **anti-government protests**. The CAPSAT group refuses to suppress demonstrators and claims authority over all military operations during this escalating crisis.",
+      "timeline": [
+        {
+          "date": "September 25, 2025",
+          "event": "Protests begin in Antananarivo over water and power shortages."
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "CAPSAT military unit mutinies and joins protesters in central Antananarivo."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "CAPSAT declares control of military; President Rajoelina warns of coup attempt."
+        }
+      ],
+      "details": [
+        "Evacuation: President flown to France  \nProtests: 12,000+ demonstrators in Antananarivo  \nCapsat role: Led 2009 coup for Rajoelina"
+      ]
+    },
+    {
+      "title": "'Revenge op': Taliban says 58 Pak troops killed in border",
+      "url": "https://timesofindia.indiatimes.com/world/south-asia/revenge-op-taliban-claims-58-pakistani-soldiers-killed-in-border-clash-issues-stern-warning/articleshow/124496638.cms",
+      "source": "Times of India",
+      "description": "",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124496914,imgsize-1401845.cms",
+      "author": "TOI WORLD DESK",
+      "publishedAt": "2025-10-13T17:04:02.964718",
+      "category": "politics",
+      "emoji": "\ud83d\udca5",
+      "final_score": 940.0,
+      "summary": "Since there appears to be no article text provided, I cannot create a summary. To write an accurate, engaging 35-40 word summary that captures the key facts and significance, I would need the actual article content beyond just the title.",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "TTP ambush in Kurram killed 11 Pakistani soldiers, sparking border conflict"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Pakistan launched airstrikes on TTP camps in Paktika and Khost, Afghanistan"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Taliban retaliated with artillery and drone attacks on Pakistani border posts"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Both sides halted major operations; thousands displaced, civilian areas damaged"
+        }
+      ],
+      "details": [
+        "Casualties: 58 killed\nBorder posts: 19 captured\nTensions: Escalating clashes"
       ]
     },
     {
@@ -364,34 +496,131 @@
       ]
     },
     {
-      "title": "Dow jumps 413 points in 5 minutes as Trump reassures",
-      "url": "https://fortune.com/2025/10/13/trump-markets-dow-413-points-it-will-all-be-fine-depression/",
-      "source": "Fortune",
-      "description": "He also said that China\u2019s leader, Xi Jinping, \u201cdoesn\u2019t want Depression for his country, and neither do I. The U.S.A. wants to help China, not hurt it!!!\u201d",
-      "content": "And back up goes Wall Street. U.S. stocks are rallying Monday after President Donald Trump said \u201cit will all be fine,\u201d just days after he\u00a0sent the market reeling\u00a0by\u00a0threatening much higher tariffs on China.\nThe S&P 500 jumped 1.1% to recover a little less than half of its drop from Friday, which was its worst since April. The Dow Jones Industrial Average was up 413 points, or 0.9%, as of 9:35 a.m. Eastern time, and the Nasdaq composite was 1.3% higher.\n\u201cDon\u2019t worry about China,\u201d Trump said on his social media platform Sunday. He also said that China\u2019s leader, Xi Jinping, \u201cdoesn\u2019t want Depression for his country, and neither do I. The U.S.A. wants to help China, not hurt it!!!\u201d\nIt was a sharp turnaround from the anger Trump displayed on Friday, when he accused China of \u201c\u00a0a moral disgrace\u00a0in dealing with other Nations.\u201d He pointed to \u201can extremely hostile letter\u201d describing curbs to\u00a0exports of rare earths, which are materials used in the manufacturing of everything from personal electronics to jet engines. Trump said at the time that he may place an additional 100% tax on imports from China starting on Nov. 1.\nTrump\u2019s backtrack in anger raised hopes that the world\u2019s two largest economies may find a working relationship that allows global trade to continue.\nThe market\u2019s big moves the last two days echo\u00a0its manic swings\u00a0in\u00a0April, when Trump shocked investors with his \u201cLiberation Day\u201d announcement of worldwide tariffs, only to\u00a0eventually relent on many\u00a0to give time to negotiate trade deals with other countries.\nIf this time ends up similarly, with trade tensions and uncertainty subsiding, potentially even after a sharp drop for stock prices, conditions could allow for a rolling recovery to continue into 2026, according to Morgan Stanley strategists led by Michael Wilson.\nTo be sure, the U.S. stock market may have been primed for a drop and was just looking for a potential trigger.\nIt was already facing criticism that prices had shot too high following the S&P 500\u2019s nearly relentless 35% run from a low in April. The index, which dictates the movements for many 401(k) accounts, is still near its\u00a0all-time high\u00a0set last week.\nNot only did Trump\u2019s backdown from tariffs in April help launch stock prices, so did expectations for several cuts to interest rates by the Federal Reserve to help the economy.\nCritics say\u00a0the market looks too expensive\u00a0now after prices rose much faster than corporate profits. Worries are\u00a0particularly high about companies in the artificial-intelligence industry, where pessimists see echoes of the 2000 dot-com bubble that imploded. For stocks to look less expensive, either their prices need to fall, or companies\u2019 profits need to rise.\nThat\u2019s raising the stakes in the upcoming earnings reporting season for U.S. companies, which are set to say how much profit they made during the summer. JPMorgan Chase, Johnson & Johnson and United Airlines are some of the big names on the calendar for this week.\nFastenal tumbled 4.5% for one of the biggest losses in the S&P 500 after reporting profit for the latest quarter that was slightly weaker than analysts expected.\nIn stock markets abroad, indexes were mixed in Europe following sharp losses in Asia.\nStocks fell 1.5% in Hong Kong and 0.2% in Shanghai.\u00a0China reported\u00a0its global exports rose 8.3% in September from a year earlier, the strongest growth in six months and further evidence that its manufacturers are shifting sales from the U.S. to other markets.\n___\nAP Business Writers Matt Ott and Elaine Kurtenbach contributed.\nThis story was originally featured on Fortune.com",
-      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/AP25286455392435-e1760365898817.jpg?w=2048",
-      "author": "Stan Choe, The Associated Press",
-      "publishedAt": "2025-10-13T16:18:49.569796",
-      "category": "business",
-      "emoji": "\ud83d\udcc8",
+      "title": "Lake Powell Shrinks in Both Water Level and Capacity",
+      "url": "https://www.cnn.com/2022/03/21/us/lake-powell-capacity-shrinking-drought-climate/index.html",
+      "source": "CNN World",
+      "description": "Lake Powell, the second-largest human-made reservoir in the US, has lost nearly 7% of its potential storage capacity since 1963, when Glen Canyon Dam was built, a new report shows.",
+      "content": "",
+      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/220321144911-lake-powell-utah-062421-file-super-169.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:06:50.218901",
+      "category": "environment",
+      "emoji": "\ud83d\udca7",
       "final_score": 910.0,
-      "summary": "**Wall Street rallied** after President Trump's reassuring social media messages about China, causing the **Dow Jones** to surge 413 points. His statements marked a dramatic shift from Friday's hostile rhetoric about Chinese trade relations and **export restrictions**.",
+      "summary": "**Lake Powell**, America's second-largest artificial reservoir, has experienced a significant decline in water storage capability, losing nearly **7% of its capacity** since the construction of Glen Canyon Dam in **1963**, new research reveals.",
       "timeline": [
         {
-          "date": "October 10, 2025",
-          "event": "Trump threatens 100% tariffs on Chinese imports; Dow drops nearly 900 points."
+          "date": "1963",
+          "event": "Glen Canyon Dam completed; Lake Powell begins filling and sedimentation starts."
         },
         {
-          "date": "October 12, 2025",
-          "event": "Trump reassures markets, saying 'it will all be fine' on social media."
+          "date": "1986",
+          "event": "First major sediment survey shows storage capacity loss since dam completion."
         },
         {
-          "date": "October 13, 2025",
-          "event": "Dow jumps 413 points in 5 minutes after Trump's reassuring comments."
+          "date": "March 21, 2022",
+          "event": "USGS/USBR report: Lake Powell lost 6.79% storage capacity since 1963."
+        },
+        {
+          "date": "July 1, 2022",
+          "event": "Bureau of Reclamation updates storage data, showing 443,000 acre-feet capacity drop."
         }
       ],
       "details": [
-        "Index close: 45,479.60[2][3]  \n1 Yr return: 7.13%[3]  \nMarket cap: $21.96T[3]"
+        "Capacity: 27.62% full  \nElevation: 3,544.21 feet  \nAnnual drop: 33.14 feet"
+      ]
+    },
+    {
+      "title": "'It's going to be really bad': Fears over AI bubble",
+      "url": "https://www.bbc.com/news/articles/cz69qy760weo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "Some are worried that the rapid rise in the value of AI tech companies may be a bubble waiting to burst.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/bf9b/live/ff11e480-a5e2-11f0-920e-cb66ee1d5eb0.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:00:35.364691",
+      "category": "technology",
+      "emoji": "\ud83d\udcc9",
+      "final_score": 910.0,
+      "summary": "Growing concerns in **Silicon Valley** suggest the soaring valuations of **artificial intelligence** companies could represent a dangerous market bubble, drawing parallels to previous tech crashes and raising fears of significant economic fallout among industry experts.",
+      "timeline": [
+        {
+          "date": "2024",
+          "event": "AI enterprise contract sizes rise from $143k to $530k amid soaring investment"
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "LA Times reports growing fears of a trillion-dollar AI bubble in Silicon Valley"
+        },
+        {
+          "date": "October 9, 2025",
+          "event": "Bank of England warns tech equity valuations, especially AI, appear stretched"
+        }
+      ],
+      "details": [
+        "Unicorns added: 20x increase since 2014[2]  \nCombined market cap: $27.23T[5]  \nNvidia data center revenue: 400% YoY growth[5]"
+      ]
+    },
+    {
+      "title": "Dozens killed in firefights between Pakistani, Afghan forces along border",
+      "url": "https://www.scmp.com/news/asia/south-asia/article/3328669/firefights-erupt-between-pakistani-and-afghan-forces-along-border?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Afghanistan said on Sunday it had killed 58 Pakistani soldiers in overnight border operations, in response to what it called repeated violations of its territory and airspace.\nPakistan\u2019s army gave far lower casualty figures, saying 23 troops were killed.\nEarlier in the week, Afghan authorities accused Pakistan of bombing the capital, Kabul, and a market in the country\u2019s east. Pakistan did not claim responsibility for the assault.\nThe two countries share a 2,611-km (1,622-mile) border known as...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/12/ecfa5607-ea05-45f2-a7f2-fc82f332483d_ce3aab95.jpg",
+      "author": "Reuters",
+      "publishedAt": "2025-10-13T16:30:47.462358",
+      "category": "politics",
+      "emoji": "\u2694\ufe0f",
+      "final_score": 910.0,
+      "summary": "In an escalating **border conflict**, Afghanistan claims to have killed 58 Pakistani soldiers during overnight operations, while Pakistan reports 23 casualties. The clash follows accusations of Pakistani **airstrikes** on Afghan territory, including Kabul.",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "TTP ambush in Kurram district kills 11 Pakistani soldiers"
+        },
+        {
+          "date": "October 9, 2025",
+          "event": "Pakistan conducts airstrikes in Kabul, Khost, Jalalabad, and Paktika"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Afghan authorities accuse Pakistan of bombing Kabul and a market in the east"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Afghan Taliban retaliate, attacking Pakistani posts across five provinces"
+        }
+      ],
+      "details": [
+        "Border length: 2,611 km\nClashes location: Seven border points\nCrossings status: Closed"
+      ]
+    },
+    {
+      "title": "Holiday Hiring Hits 16-Year Low Amid Retail Slowdown",
+      "url": "https://fortune.com/2025/10/13/tariffs-trump-holiday-hiring-shopping-inflation-shrinks-retailers/",
+      "source": "Fortune",
+      "description": "Deloitte Services forecasts holiday retail sales to be up between 2.9% to 3.4% from Nov. 1 through Jan. 31, a slowdown from 2024.",
+      "content": "Uncertainty over the economy and tariffs is forcing retailers to pull back or delay plans to hire seasonal workers who pack orders at distribution centers, serve shoppers at stores and build holiday displays during the most important selling season of the year.\nAmerican Christmas LLC, which creates elaborate holiday installations for commercial properties such as New York\u2019s Rockefeller Center and Radio City Music Hall, plans to hire 220 temporary workers and is ramping up recruitment nearly two months later than usual, CEO Dan Casterella said. Last year, the company took on 300 people during its busy period.\nThe main reason? The company wants to offset its tariff bill, which Casterella expects to be as big as $1.5 million this year, more than double last year\u2019s $600,000.\n\u201cThe issue is if you overstaff and then you underperform, it\u2019s too late,\u201d Casterella said. \u201dI think everyone\u2019s more mindful now than ever. \u201d\nHoliday hiring could fall to the lowest level since 2009\nJob placement firm Challenger, Gray & Christmas forecasts hiring for the last three months of the year will likely fall under 500,000 positions. That\u2019s fewer than last year\u2019s 543,000 level and also marks the smallest seasonal gain in 16 years when retailers hired 495,800 temporary workers, the firm said. The average seasonal gain since 2005 has been 653,363 workers, the firm said.\nAmong other companies cutting holiday payrolls: Radial, which powers deliveries for roughly 120 brands like Lands\u2019 End and Cole Haan and operates 20 fulfillment sites. It plans to hire 6,500 workers, fewer than last year\u2019s 7,000, and is waiting to the last minute to ramp up hiring for some of its clients, chief human resources officer Sabrina Wnorowski, said.\nBath & Body Works, based in Reynoldsburg, Ohio, said it plans to hire 32,000 workers, lower than the 32,700 a year ago.\nAmong the bright spots: Online behemoth Amazon Inc. said Monday it intends to hire 250,000 full-, part-time and seasonal workers for the crucial shopping period, the same level as a year ago.\n\u201cWe saw real strong signals that there\u2019s been a cooling in the labor market, even beyond what our expectations were in the first nine months of the year,\u201d Challenger\u2019s senior vice president Andy Challenger said. \u201cWe are having lots of regular conversations with companies about pending layoffs and changes they\u2019re making to their workforce.\u201d\nIn addition to overall economic uncertainty, Challenger noted companies are using\u00a0artificial intelligence\u00a0bots to replace some workers, particularly those working in call centers. And he\u2019s also seeing companies hiring workers closer to when they need them.\nMeanwhile, the list of companies staying mum about their specific holiday hiring goals keeps growing. Target Corp., UPS and Macy\u2019s are declining to offer figures, a departure from the past. UPS had hired 125,000 seasonal hires last year, while Target announced last year it planned to hire 100,000 workers. Macy\u2019s last year said it would hire 31,500 seasonal workers.\nHoliday hiring: the first clues to what\u2019s in store for spending\nRetailers\u2019 hiring plans mark the first clues to what\u2019s in store for the U.S. holiday shopping season and come as the U.S. job market has\u00a0lost momentum this year, partly because\u00a0Trump\u2019s trade wars\u00a0have created uncertainty that\u2019s paralyzing managers trying to make hiring decisions.\nThe\u00a0Labor Department\u00a0reported in early September that U.S. employers \u2014 companies, government agencies and nonprofits \u2014 added just 22,000 jobs in August, down from 79,000 in July and well below the 80,000 that economists had expected.\nThe government shutdown, which started Oct. 1 and has delayed the release of economic reports, could worsen the job picture.\nIn an attempt to exert more pressure on Democratic lawmakers as the government shutdown continues, the White House budget office said Friday that\u00a0mass firings of federal workers have started.\nThe firings are happening as hundreds of thousands are already furloughed and still others are being required to report to duty without pay.\nAnalysts will be closely monitoring the shutdown\u2019s impact on spending. For now, many retailers say that consumers, while resilient, are choosy about what they buying. Analysts will also be closely watching how shoppers will react as retailers push through price increases as a result of high tariff costs in the next few months, experts said.\nGiven an economic slowdown, holiday spending growth is expected to be smaller than a year ago, according to several forecasts.\nMastercard SpendingPulse, which tracks spending across all payment methods including cash, predicts that holiday sales will be up 3.6% from Nov. 1 through Dec. 24. That compares with a 4.1% increase during the year-ago period.\nDeloitte Services LP forecasts holiday retail sales to be up between 2.9% to 3.4% from Nov. 1 through Jan. 31. That\u2019s compared to the same year-ago period when retail sales increased 4.2% from the year before.\nAdobe expects U.S. online sales to hit $253.4 billion this holiday season from Nov. 1 to Dec. 31, representing a 5.3% growth. That\u2019s smaller than last year\u2019s 8.7% growth.\nA more flexible approach\nGiven the uncertainty, companies increasingly want to hire workers closer to when they need them, experts said.\n\u201cIn today\u2019s environment, brands are really looking for us to be agile,\u201d Radial\u2019s Wnorowski said. \u201cRadial is meeting that need of the customer and the consumer with a more flexible and disciplined approach to hiring.\u201d\nSo for some of its clients, Radial will now be hiring two weeks before Thanksgiving weekend, the traditional start for the holiday shopping season, instead of four weeks before the kickoff, she said. Radial is also speeding up training of holiday hires due to new technology that\u2019s simplifying their tasks. It used to take a couple of days to train a worker, but now it only takes a couple of hours, she said.\nMeanwhile, Target said it\u2019s again embracing a three-prong approach. It starts first by offering current workers additional hours and then taps into a separate pool of workers\u2014 43,000\u2014 who pick up shifts that work for their schedules. The Minneapolis-based company also hires seasonal workers across its nearly 2,000 stores and more than 60 distribution facilities to meet demand, it said.\nFor the past few years, Walmart, the nation\u2019s largest retailer and the largest private employer, has been offering the extra hours available during the holidays to its workers, a Walmart spokesperson said, noting it\u2019s worked well and the feedback from customers and workers has been \u201coverwhelmingly positive.\u201d\nThe Bentonville, Arkansas-based retailer said there may be some seasonal hiring on a store-by-store basis, but the majority of stores will dole out those hours to current workers.\nLate start plus no economic data could create challenges\nWaiting until the last minute to hire workers could mean a mad scramble to find talent, but companies say that due to the slowing economy, they don\u2019t anticipate having a hard time finding the needed pool.\nMeanwhile, the temporary halting of the release of economic reports leaves retailers in the dark about forecasting sales and the workers they need to meet the demand.\n\u201cCertainly, for our customers not having access to data will put more of a challenge on their ability to forecast,\u201d Wnorowski of Radial said. \u201cBut we\u2019ll stay very close to them as we go into peak and we\u2019ll adjust as soon we see things changing.\u201d\nThis story was originally featured on Fortune.com",
+      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/AP25283640550432-e1760367126820.jpg?w=2048",
+      "author": "Anne D'Innocenzio, The Associated Press",
+      "publishedAt": "2025-10-13T16:30:03.622173",
+      "category": "business",
+      "emoji": "\ud83d\udcc8",
+      "final_score": 910.0,
+      "summary": "**Holiday retail hiring** is projected to hit a 16-year low as companies grapple with economic uncertainty and rising **tariff costs**. Businesses like American Christmas LLC are reducing seasonal workers and delaying recruitment to offset growing expenses.",
+      "timeline": [
+        {
+          "date": "September 10, 2025",
+          "event": "Deloitte forecasts 2025 holiday retail sales to rise 2.9% to 3.4% over 2024."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Holiday hiring projected to hit 16-year low as tariffs and uncertainty force retailer cutbacks."
+        }
+      ],
+      "details": [
+        "E-commerce sales: $305B\u2013$310.7B  \nDisposable income growth: 3.1%\u20135.4%  \nHoliday hiring: Under 500,000 positions"
       ]
     },
     {
@@ -604,6 +833,72 @@
       ],
       "details": [
         "GDP forecast 2025: 0.6%\nCapital flight 2024: $14B\nInflation rate: 42.4%"
+      ]
+    },
+    {
+      "title": "Retail spending fell in March as consumers pull back",
+      "url": "https://www.cnn.com/2023/04/14/economy/march-retail-sales/index.html",
+      "source": "CNN World",
+      "description": "Spending at US retailers fell in March as consumers pulled back amid recessionary fears fueled by the banking crisis.",
+      "content": "",
+      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/230412211243-grocery-store-california-230412-super-169.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:07:17.739985",
+      "category": "business",
+      "emoji": "\ud83d\udcc9",
+      "final_score": 900.0,
+      "summary": "**Retail spending** in the United States declined during March as worried consumers reduced their purchases. The downturn comes as **banking sector turmoil** sparked concerns about a potential recession, dampening overall consumer confidence and expenditure.",
+      "timeline": [
+        {
+          "date": "March 23, 2025",
+          "event": "Clothing and accessories spending fell 3.9% year-over-year through this date"
+        },
+        {
+          "date": "March 31, 2025",
+          "event": "US retail sales rose 1.4% from February, but consumer apprehension remained high"
+        },
+        {
+          "date": "April 2025",
+          "event": "Retail sales slowed after March jump as consumers pulled purchases forward before tariffs"
+        }
+      ],
+      "details": [
+        "Retail sales: $625.12B March 2025[7]  \nAuto sales growth: 5.3% March 2025[1]  \nCore retail sales YoY: +3.6%[2]"
+      ]
+    },
+    {
+      "title": "Will China\u2019s next 5-year plan rewrite its infrastructure playbook?",
+      "url": "https://www.scmp.com/economy/china-economy/article/3328549/will-chinas-next-5-year-plan-rewrite-its-infrastructure-playbook?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "As China drafts its 15th five-year plan \u2013 the next entry in a line of expansive blueprints that have set the tone for the country\u2019s development over more than seven decades \u2013 we examine how these documents inform and reflect high-level policy priorities, what to expect in the coming iteration and how infrastructure spending and investment could evolve to meet the demands of a new era.\nFor more stories in this ongoing series, click here. To view SCMP Plus Factsheets on the 15th five-year-plan and...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/10/d1fe6e1d-e7c0-4d97-bfe9-c1b55678163e_02d685d6.jpg",
+      "author": "Ji Siqi",
+      "publishedAt": "2025-10-13T16:36:58.365928",
+      "category": "politics",
+      "emoji": "\ud83c\udde8\ud83c\uddf3",
+      "final_score": 900.0,
+      "summary": "China is drafting its **15th five-year plan**, continuing a tradition that has guided national development for over 70 years. The new blueprint is expected to reshape **infrastructure spending** to align with modern economic priorities.",
+      "timeline": [
+        {
+          "date": "December 17-18, 2023",
+          "event": "NDRC held preliminary study meetings for the 15th Five-Year Plan"
+        },
+        {
+          "date": "May 20, 2025",
+          "event": "CPC began soliciting public opinions online for 15th Five-Year Plan drafting"
+        },
+        {
+          "date": "July 30, 2025",
+          "event": "Politburo confirmed Fourth Plenum in October to deliberate 15th Five-Year Plan proposals"
+        },
+        {
+          "date": "October 20-23, 2025",
+          "event": "Fifth Plenum scheduled to assess 14th plan and consider 15th Five-Year Plan"
+        }
+      ],
+      "details": [
+        "Planning start: December 2023  \nRural funding 2025: 177 billion yuan  \nEconomy goal: Double by 2035"
       ]
     },
     {
@@ -983,30 +1278,38 @@
       ]
     },
     {
-      "title": "Wild honeybees now officially listed as endangered in the EU",
-      "url": "https://phys.org/news/2025-10-wild-honeybees-endangered-eu.html",
-      "source": "Phys.org",
-      "description": "You might think honeybees are thriving\u2014after all, the honey industry is growing and its bees are well looked after by beekeepers. But not all honeybees live in hives. Across Europe, colonies still live in the wild, nesting in tree cavities and other natural spaces, just as their ancestors did for millions of years.",
+      "title": "Coming home? Israel expects last hostages to be released early",
+      "url": "https://www.scmp.com/news/world/middle-east/article/3328717/israel-expects-last-hostages-be-released-monday?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Israel expects all hostages held in Gaza to be freed early on Monday, a spokeswoman for the prime minister\u2019s office said, adding that all surviving captives are to be released simultaneously.\n\u201cThe release of our hostages will begin early Monday morning. We are expecting all 20 of our living hostages to be released together at one time to the Red Cross and transported among six to eight vehicles,\u201d Shosh Bedrosian told journalists on Sunday.\nIsrael will begin releasing Palestinian prisoners once...",
       "content": "",
-      "urlToImage": "https://scx1.b-cdn.net/csz/news/tmb/2025/honeybee.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:20:07.615165",
-      "category": "environment",
-      "emoji": "\ud83d\udc1d",
-      "final_score": 890.0,
-      "summary": "**Wild honeybees** in Europe have been officially classified as **endangered** by the EU, despite the honey industry's growth. Unlike managed hive populations, these natural colonies nest freely in tree cavities, continuing their ancestral behavior.",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/12/4033d1f3-b960-4b46-9e79-ad04dc65c0c3_f73b1595.jpg",
+      "author": "Bloomberg",
+      "publishedAt": "2025-10-13T16:41:45.394332",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 895.0,
+      "summary": "The **Israeli government** expects all remaining **hostages** in Gaza to be freed early Monday, with 20 captives to be released simultaneously to the **Red Cross** and transported in multiple vehicles, followed by Palestinian prisoner releases.",
       "timeline": [
         {
-          "date": "2014",
-          "event": "Wild honeybee populations listed as 'data deficient' in Europe by IUCN Red List"
+          "date": "October 8, 2025",
+          "event": "Israel and Hamas agreed to first stage of US-mediated hostage-truce plan"
         },
         {
-          "date": "October 11, 2025",
-          "event": "IUCN updates Red List; wild honeybees now endangered within the European Union"
+          "date": "October 9, 2025",
+          "event": "Israeli cabinet ratified hostage agreement with Hamas, setting a truce in Gaza"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Hostage-truce agreement between Israel and Hamas went into effect at noon"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "All 20 living Israeli hostages released by Hamas; Israel freed Palestinian prisoners"
         }
       ],
       "details": [
-        "Population decline: 56% per decade[2]  \nWild colonies: 16\u201320% of total[2]  \nEU pollination value: \u20ac5 billion/year[3]"
+        "Hostages released: 20  \nPalestinian prisoners freed: 60  \nRelease location: Rafah crossing"
       ]
     },
     {
@@ -1299,119 +1602,34 @@
       ]
     },
     {
-      "title": "AI Spots Hidden Fault Triggering Italy's Volcanic Earthquakes",
-      "url": "https://www.livescience.com/planet-earth/volcanos/ai-reveals-hidden-ring-fault-that-is-unleashing-earthquakes-at-italys-campi-flegrei-volcano",
-      "source": "Live Science",
-      "description": "A new AI tool reveals that Campi Flegrei experienced more than 54,000 earthquakes between 2022 and 2025. By mapping these events, researchers discovered a huge, crisp, ring-shaped fault.",
+      "title": "Japan declares nationwide flu outbreak; over 4,000 hospitalised amid concerns",
+      "url": "https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/new-pandemic-coming-japan-declares-nationwide-flu-outbreak-over-4000-hospitalised/articleshow/124484790.cms",
+      "source": "Times of India",
+      "description": "Japan is facing a nationwide flu outbreak. Cases have surged significantly, leading to hospitalizations and school closures. This epidemic has arrived nearly five weeks earlier than expected. Health officials are urging immediate vaccination for vulnerable groups. Experts suggest this early start may become more common due to global environmental changes. Precautions like mask-wearing and handwashing are advised. Read more below!",
       "content": "",
-      "urlToImage": "https://cdn.mos.cms.futurecdn.net/E4BvfkecbNtgANg7L2FxNK-1280-80.jpg",
-      "author": "Sascha Pare",
-      "publishedAt": "2025-10-13T16:20:19.984053",
-      "category": "science",
-      "emoji": "\ud83c\udf0b",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124485089,imgsize-26014.cms",
+      "author": "TOI LIFESTYLE DESK",
+      "publishedAt": "2025-10-13T17:04:13.381665",
+      "category": "breaking",
+      "emoji": "\ud83d\ude37",
       "final_score": 880.0,
-      "summary": "Scientists used **artificial intelligence** to analyze over 54,000 earthquakes at Italy's **Campi Flegrei** volcano, revealing a previously unknown ring-shaped fault structure that's triggering seismic activity in the volcanic region between 2022 and 2025.",
+      "summary": "A **nationwide flu outbreak** has struck Japan earlier than expected, resulting in over 4,000 hospitalizations and multiple school closures. Health officials recommend **urgent vaccination**, while experts link the early epidemic to environmental changes.",
       "timeline": [
         {
-          "date": "2022",
-          "event": "AI analysis begins, revealing thousands of previously undetected earthquakes at Campi Flegrei."
+          "date": "October 3, 2025",
+          "event": "Japan declares nationwide flu epidemic after cases surge five weeks earlier than usual"
         },
         {
-          "date": "October 2024",
-          "event": "Cumulative ground uplift at Campi Flegrei reaches about 1.35 meters."
+          "date": "October 3, 2025",
+          "event": "Over 4,000 people hospitalized and more than 100 schools closed across Japan"
         },
         {
-          "date": "September 4, 2025",
-          "event": "Study published in Science reveals hidden ring fault and over 54,000 earthquakes."
+          "date": "October 8, 2025",
+          "event": "Health officials urge immediate vaccination and preventive measures for vulnerable groups"
         }
       ],
       "details": [
-        "Population at risk: 500,000 residents[3]  \nQuakes above magnitude 4: 5 in 2025[7]  \nUnrest onset: 2018[7]"
-      ]
-    },
-    {
-      "title": "In West Bank, Palestinian prisoners come home under celebration ban",
-      "url": "https://www.france24.com/en/video/20251013-in-west-bank-palestinian-prisoners-come-home-under-celebration-ban",
-      "source": "France 24",
-      "description": "Over 1,900 Palestinians have been freed as part of the Gaza peace deal on October 13, but strict conditions in the West Bank imposed by Israeli prevent families from celebrating the return of loved ones, as FRANCE 24's Claire Paccalin reports. She also ponders on how the Palestinians react to the peace deal agreement.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/e40ad7bc-a837-11f0-a64d-005056bfb2b6/w:1024/p:16x9/EN-20251013-143114-143553-CS.jpg",
-      "author": "FRANCE24",
-      "publishedAt": "2025-10-13T16:19:17.733797",
-      "category": "politics",
-      "emoji": "\ud83c\uddf5\ud83c\uddf8",
-      "final_score": 880.0,
-      "summary": "**Palestinian prisoners** return home amid Israel's **celebration ban** in the West Bank, as over 1,900 are released under the Gaza peace deal. Families must refrain from public festivities while welcoming their loved ones back.",
-      "timeline": [
-        {
-          "date": "October 13, 2025",
-          "event": "Israel releases nearly 2,000 Palestinian prisoners under Gaza ceasefire agreement."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Celebrations in West Bank restricted by Israeli ban on large gatherings for released prisoners."
-        }
-      ],
-      "details": [
-        "Life sentences: 250 prisoners  \nRelease date: February 8, 2025  \nTotal detainees (Dec 2024): 9,619"
-      ]
-    },
-    {
-      "title": "Main takeaways of Trump's speech to the Israeli parliament",
-      "url": "https://www.france24.com/en/middle-east/20251013-main-takeaways-of-trump-s-speech-to-the-israeli-parliament",
-      "source": "France 24",
-      "description": "US President Donald Trump hailed an end to Israel's \"painful nightmare\" in a speech to the Israeli knesset on Monday as the last surviving hostages returned from Gaza and the first Palestinian prisoners were freed under a US-brokered ceasefire. His lightning visit came ahead of a Gaza peace summit in Egypt's Sharm El-Sheikh.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/38852da4-a82b-11f0-a262-005056bf30b7/w:1024/p:16x9/2025-10-13T114608Z-1020287023-RC2ZAHABKUMQ-RTRMADP-3-ISRAEL-PALESTINIANS-TRUMP.jpg",
-      "author": "FRANCE 24",
-      "publishedAt": "2025-10-13T16:19:08.976259",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 880.0,
-      "summary": "US President Donald Trump hailed an end to Israel's \"painful nightmare\" in a speech to the Israeli knesset on Monday as the last surviving hostages returned from Gaza and the first Palestinian prisone",
-      "timeline": [
-        {
-          "date": "October 7, 2023",
-          "event": "Hamas attacks Israel; hundreds killed and hostages taken from Israel."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Trump addresses Israeli Knesset after last surviving hostages return from Gaza."
-        }
-      ],
-      "details": [
-        "Hostages released: 20 Israelis[2][3]  \nPrisoners freed: 2,000 Palestinians[2][3]  \nWar duration: 12 days with Iran[3][4]"
-      ]
-    },
-    {
-      "title": "China calls for Trump to drop 100% tariff threat, urges",
-      "url": "https://fortune.com/2025/10/13/china-trump-tariffs-rare-earths-erroneous-practices/",
-      "source": "Fortune",
-      "description": "Ministry of Foreign Affairs spokesman Lin Jian said \"China will certainly take resolute measures to safeguard its legitimate rights and interests.\u201d",
-      "content": "China did not back down Monday in a back-and-forth with the U.S. over trade, calling for U.S. President Donald Trump to withdraw his latest threat of a 100% tariff and other export control measures announced over the weekend.\nIn the latest escalation of the trade war between the two nations, Trump issued the\u00a0tariff threat on all Chinese imports\u00a0into the U.S. after China placed stricter restrictions Thursday on rare earths, a vital resource used in electronics.\nThe Chinese announcement was an apparent surprise to Trump, who called it an \u201cout of the blue\u201d move. While Trump did not withdraw the economic threat, he sounded\u00a0more conciliatory\u00a0than in the past, saying in a Truth Social post Sunday, \u201cThe U.S.A. wants to help China, not hurt it!!!\u201d\nChina\u2019s Ministry of Commerce issued a lengthy response Sunday saying the U.S. was \u201cseverely damaging the atmosphere of trade negotiations.\u201d\n\u201cChina urges the U.S. to promptly correct its erroneous practices,\u201d Chinese Ministry of Foreign Affairs spokesman Lin Jian said Monday. \u201cIf the U.S. insists on going its own way, China will certainly take resolute measures to safeguard its legitimate rights and interests.\u201d\nBoth nations have leveraged multiple dimensions of the trade relationship in the trade war, with actions ranging from U.S. restrictions on China\u2019s ability to import advanced computer chips, China ending purchases of\u00a0American soybeans\u00a0and an exchange of\u00a0tit-for-tat port fees.\nEconomic indicators show the retaliatory actions and uncertainty are impacting trade between the countries. Chinese\u00a0trade data release Monday\u00a0showed exports to the U.S. have fallen for six straight months, dropping 27% in September from the year before.\nThis story was originally featured on Fortune.com",
-      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/GettyImages-1212971284-e1760365436852.jpg?w=2048",
-      "author": "Huizhong Wu, The Associated Press",
-      "publishedAt": "2025-10-13T16:18:33.979777",
-      "category": "politics",
-      "emoji": "\ud83d\udde3\ufe0f",
-      "final_score": 880.0,
-      "summary": "**China-US trade tensions** escalated after China restricted **rare earth** exports, prompting Trump to threaten 100% tariffs on Chinese imports. China demands withdrawal of the threat, vowing to protect its interests despite Trump's conciliatory tone.",
-      "timeline": [
-        {
-          "date": "August 12, 2025",
-          "event": "US extends tariff truce with China by 90 days, halting planned escalation."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Trump announces 100% tariffs on Chinese imports, escalating trade tensions."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "China announces retaliatory port fees on US vessels after new US tariff threat."
-        }
-      ],
-      "details": [
-        "Tariff effective date: November 1, 2025[1]  \nSummit status: Cancelled[1]  \nRare earths: China tightened export controls[1]"
+        "Schools closed: 135+\nPrefectures affected: 28 of 47\nPeak region: Okinawa highest cases[1][5]"
       ]
     },
     {
@@ -1637,6 +1855,41 @@
       ],
       "details": [
         "Popular vote: 17,015,756 Trump[1]  \nHaley wins: 2 primaries[1]  \nTrump favorability: 44.1%[4]"
+      ]
+    },
+    {
+      "title": "China envoy vows deeper Brazil ties, denounces US \u2018jungle\u2019 law",
+      "url": "https://www.scmp.com/news/china/diplomacy/article/3328867/china-envoy-vows-deeper-brazil-ties-denounces-us-jungle-law-tariff-showdown?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "China\u2019s ambassador to Brazil used a keynote speech in S\u00e3o Paulo on Monday to reaffirm Beijing\u2019s support for investment and export certifications aimed at helping South America\u2019s largest economy weather US President Donald Trump\u2019s tariff offensive.\nSpeaking at the opening of the annual Brazil-China Business Council meeting, Ambassador Zhu Qingqiao told business leaders, senior Brazilian officials and diplomats that Beijing was committed to sustainable development and building a \u201cworld-class\u201d...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/3e91daae-36b1-4685-8bfd-81c36a87f29b_cb76db8c.jpg",
+      "author": "Igor Patrick",
+      "publishedAt": "2025-10-13T16:29:49.756179",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 870.0,
+      "summary": "China\u2019s ambassador to Brazil used a keynote speech in S\u00e3o Paulo on Monday to reaffirm Beijing\u2019s support for investment and export certifications aimed at helping South America\u2019s largest economy weathe",
+      "timeline": [
+        {
+          "date": "April 12-15, 2024",
+          "event": "Brazilian President Lula visits China; 15 bilateral agreements worth $10 billion signed"
+        },
+        {
+          "date": "May 2025",
+          "event": "Brazil secures $5 billion in new Chinese investment; 30 agreements signed in Beijing"
+        },
+        {
+          "date": "July 2025",
+          "event": "Brazil hosts 17th BRICS summit; announces bi-oceanic railway with China and Peru"
+        },
+        {
+          "date": "May 2025",
+          "event": "TikTok launches Brazilian marketplace amid deepening China-Brazil economic ties"
+        }
+      ],
+      "details": [
+        "Oil exports: 40% sent to China[3]  \nCopper exports: 180% annual increase[3]  \nChinese investment: $70B in Brazil[7]"
       ]
     },
     {
@@ -1923,34 +2176,96 @@
       ]
     },
     {
-      "title": "Australian airline Qantas says millions of customers' data leaked online",
-      "url": "https://www.japantimes.co.jp/business/2025/10/12/tech/qantas-data-leak/",
-      "source": "The Japan Times",
-      "description": "Most of the data leaked was names, email addresses and frequent flyer details, the firm said.",
+      "title": "'Was working to rebuild terror infra': IDF eliminates Hezbollah operative",
+      "url": "https://timesofindia.indiatimes.com/world/middle-east/was-working-to-rebuild-terror-infra-israel-eliminates-hezbollah-operative-in-lebanon-video-shows-precision-strike/articleshow/124495172.cms",
+      "source": "Times of India",
+      "description": "Israeli forces conducted drone strikes in southern Lebanon, eliminating a Hezbollah operative involved in rebuilding the group's military infrastructure. An engineering vehicle was also targeted. These actions occur amidst escalating border tensions. Meanwhile, in Gaza, hundreds of thousands have returned to northern areas post-Israeli troop withdrawal, with a ceasefire and hostage release deal nearing finalization at an upcoming Egypt summit.",
       "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499182.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:19:57.776039",
-      "category": "technology",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124499025,imgsize-4451728.cms",
+      "author": "TOI WORLD DESK",
+      "publishedAt": "2025-10-13T17:04:53.567193",
+      "category": "politics",
       "emoji": "\ud83d\udea8",
       "final_score": 860.0,
-      "summary": "**Qantas Airways** has disclosed a significant data breach affecting millions of customers, with personal information including names, email addresses, and **frequent flyer details** exposed online, raising concerns about customer privacy and data security.",
+      "summary": "The **Israeli Defense Forces** eliminated a Hezbollah operative in southern Lebanon via drone strike, targeting military infrastructure rebuilding efforts. The operation comes amid rising border tensions and potential **ceasefire negotiations** regarding the Gaza conflict.",
       "timeline": [
         {
-          "date": "Early July 2025",
-          "event": "Qantas customer data stolen via third-party platform; breach first detected and contained"
+          "date": "August 4, 2025",
+          "event": "Israeli drone strike in Khiam killed Hezbollah operative Ali Suleiman Abu Abbas."
         },
         {
-          "date": "July 2025",
-          "event": "Qantas notifies impacted customers and begins investigation with authorities"
+          "date": "August 5, 2025",
+          "event": "Israeli drone targeted engineering vehicle in Meiss Al Jabal, southern Lebanon."
         },
         {
-          "date": "October 12, 2025",
-          "event": "Qantas confirms hackers released stolen customer data online after ransom deadline passes"
+          "date": "August 5, 2025",
+          "event": "IDF dropped leaflets in Khiam, accusing slain operative of rebuilding Hezbollah infrastructure."
         }
       ],
       "details": [
-        "Address leaked: Residential and business  \nDate leaked: June 30, 2025  \nMeal preferences: Data compromised"
+        "Operative killed: Hassan Atwi[2]  \nCivilian deaths since truce: 103[2]  \nUN peacekeeper wounded: 1[3]"
+      ]
+    },
+    {
+      "title": "Silent layoffs surge in Indian IT; why it\u2019s happening; subtle",
+      "url": "https://timesofindia.indiatimes.com/education/careers/news/silent-layoffs-on-the-rise-in-indian-tech-sector-subtle-signs-employees-should-watch-out-for/articleshow/124498098.cms",
+      "source": "Times of India",
+      "description": "Indian IT firms are undergoing major workforce shifts in 2025. Over 50,000 tech jobs face potential cuts as companies integrate AI and automation. Major players like TCS, Infosys, and Wipro are restructuring teams. This trend reflects evolving skill demands and global economic pressures. Employees are experiencing attrition, contract non-renewals, and silent layoffs.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124498115,imgsize-33290.cms",
+      "author": "TOI Education",
+      "publishedAt": "2025-10-13T17:04:29.025219",
+      "category": "business",
+      "emoji": "\ud83d\udcbc",
+      "final_score": 860.0,
+      "summary": "Indian **tech companies** are quietly reducing their workforce, with over 50,000 jobs at risk due to **AI integration** and automation. Major firms like TCS, Infosys, and Wipro are restructuring teams amid changing skill requirements and economic pressures.",
+      "timeline": [
+        {
+          "date": "January 2025",
+          "event": "Indian IT sector begins major workforce shifts; 16,000 tech jobs cut this month"
+        },
+        {
+          "date": "June 2025",
+          "event": "Cumulative Indian tech layoffs reach 41,000; TCS, Infosys, Wipro lead reductions"
+        },
+        {
+          "date": "July 28, 2025",
+          "event": "TCS announces plan to release 12,261 employees globally, nearly 2% of workforce"
+        },
+        {
+          "date": "August 2025",
+          "event": "Indian IT layoffs surpass 46,000; projections indicate over 50,000 by year-end"
+        }
+      ],
+      "details": [
+        "Reskilling: Infosys increased training programs[1]  \nBench utilization: TCS reduced non-billable staff[1]  \nStartups: 30,000+ layoffs since 2024[5]"
+      ]
+    },
+    {
+      "title": "Would-be homebuyers are getting cold feet and backing out of",
+      "url": "https://fortune.com/2025/10/13/housing-market-homebuyers-contract-cancelations-inspection-repairs-home-prices/",
+      "source": "Fortune",
+      "description": "About 56,000 U.S. purchase agreements were canceled in August, representing 15.1% of homes that went under contract that month, Redfin said.",
+      "content": "It\u2019s a buyer\u2019s market, and that means house hunters are walking away from contracts more frequently, according to data from Redfin. Sellers outnumber buyers in the housing market by about 500,000, the real-estate firm said, as it found that buyers are wielding more negotiating leverage and asking sellers to cover the cost of any repairs that need to be done and demanding price cuts.\nAt the same time, many sellers are not accommodating the concerns of would-be buyers, who have become pickier and are seeking more concessions.\nAbout 56,000 U.S. purchase agreements were canceled in August, representing 15.1% of homes that went under contract. That\u2019s the highest share for August deals falling through in records dating back to 2017. It\u2019s also up from 14.3% in August 2024 and well above the post-pandemic housing frenzy\u2019s rate of 11.4% in August 2021.\n\u201cHome purchases are falling through more frequently because buyers and sellers oftentimes aren\u2019t on the same page and aren\u2019t willing to compromise,\u201d Redfin said in its report.\nIn a survey of Redfin\u2019s real estate agents, 70.4% said home inspection or repair issues were the cause of canceled contracts\u2014by far the top reason.\nThat was followed by 27.8% who said buyer financing fell through, 21% who said buyers were unable to sell their current homes, 14.9% who cited changes in a buyer\u2019s financial situation, and 12.9% who said a buyer had found another house they preferred.\nRedfin\nIn addition, many of the cities with the highest cancelation rates were in Florida and Texas, which have seen a surge in housing supply after a pandemic-era exodus to those states triggered a building boom.\nMeanwhile, sellers still think their homes will command high asking prices like they did during the housing bonanza in 2020 and 2021, or they paid so much for their properties and aren\u2019t not willing to budge on the price.\nA new reality for sellers\n\u201cSome are having a hard time adjusting to the reality that it\u2019s no longer a seller\u2019s market because it seems like just yesterday that homes were getting dozens of offers and fetching tens of thousands of dollars over the asking price,\u201d Redfin said. \nThe report also pointed out that lower-priced homes are in greater demand because overall homeownership costs have jumped in recent years, and those homes are more likely to have issues come up during inspections.\nInsurance premiums have surged in states like Florida and California that have seen more natural disasters, contributing to the increase in ownership costs.\nMeanwhile, mortgage rates remain high despite coming down since the Federal Reserve lowered benchmark borrowing costs.\nIn fact, pending home sales actually fell in September, the first time in nearly three months, even as the weekly average mortgage rate dropped for nine consecutive weeks.\nAmid the weak demand, home sales are headed for their worst year since 1995 as economic concerns spread from buyers to sellers. A\u00a0Fannie Mae\u00a0survey earlier this month showed nearly 70% of Americans believe the economy is headed in the wrong direction, and 73% think it\u2019s a bad time to buy a house.\u00a0\nGiven all the anxiety, sometimes sellers who are willing to accommodate buyers\u2019 demands still can\u2019t overcome their cold feet.\n\u201cI worked with one seller who received 78 repair requests from a buyer following the inspection, and that was after the seller had already agreed to lower their $375,000 asking price by $25,000 because the house needed some improvements,\u201d said\u00a0Dawn Liedtke, a Redfin real estate agent in Tampa. \u201cThe buyer came back and said they would handle the cost of the repairs, but only if the seller was willing to lower the price by another $100,000. The deal didn\u2019t work out.\u201d\nThis story was originally featured on Fortune.com",
+      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/GettyImages-1347125156-e1760362744481.jpg?w=2048",
+      "author": "Jason Ma",
+      "publishedAt": "2025-10-13T16:47:25.545317",
+      "category": "business",
+      "emoji": "\ud83c\udfd8\ufe0f",
+      "final_score": 860.0,
+      "summary": "**Home purchase cancellations** hit record levels in August, with 56,000 deals terminated representing 15.1% of contracts. In this **buyer's market**, house hunters are demanding more concessions while sellers struggle to adapt to shifting market dynamics.",
+      "timeline": [
+        {
+          "date": "August 2025",
+          "event": "About 56,000 U.S. home purchase agreements canceled, 15.1% of contracts that month"
+        },
+        {
+          "date": "October 7, 2025",
+          "event": "Redfin releases report confirming August cancellations are highest August rate since 2017"
+        }
+      ],
+      "details": [
+        "San Antonio cancellations: 22.7%[3][5]  \nSan Jose cancellation increase: +5.3 points[4]  \nNassau County cancellations: 4.5%[4]"
       ]
     },
     {
@@ -2044,6 +2359,72 @@
       ],
       "details": [
         "Missile Range: 1,600 km\nEscalation Risk: High\nDecision Status: Pending"
+      ]
+    },
+    {
+      "title": "'No deliberate exclusion': Muttaqi holds another presser; women journos present",
+      "url": "https://timesofindia.indiatimes.com/india/no-deliberate-exclusion-taliban-foreign-minister-amir-khan-muttaqi-holds-another-presser-women-journalists-present/articleshow/124498291.cms",
+      "source": "Times of India",
+      "description": "Taliban's Foreign Minister Amir Khan Muttaqi addressed a press conference in Delhi with both male and female journalists present, following criticism for excluding women from a previous event. Muttaqi stated the earlier exclusion was due to short notice, not deliberate intent. This visit marks the first by a senior Taliban minister to India since the group's takeover.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124498394,imgsize-514163.cms",
+      "author": "TOI NEWS DESK",
+      "publishedAt": "2025-10-13T17:04:41.802071",
+      "category": "politics",
+      "emoji": "\ud83c\udde6\ud83c\uddeb",
+      "final_score": 850.0,
+      "summary": "The **Taliban's Foreign Minister** Muttaqi addressed media in Delhi, including female journalists, after controversy over women's exclusion from a prior event. His visit marks the first **high-level Taliban delegation** to India since Afghanistan's takeover.",
+      "timeline": [
+        {
+          "date": "October 9, 2025",
+          "event": "Amir Khan Muttaqi arrives in India for a week-long official visit."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Muttaqi holds first Delhi press conference; only male journalists are present."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Muttaqi holds second press conference in Delhi, women journalists are included."
+        }
+      ],
+      "details": [
+        "Travel exemption: UN granted October 2025[1]  \nGirls in school: 2.8 million[3]  \nEmbassy upgrade: India plans Kabul embassy[3][4]"
+      ]
+    },
+    {
+      "title": "US, China leaders will avoid \u2018race to the bottom\u2019: Alibaba\u2019s",
+      "url": "https://www.scmp.com/tech/article/3328866/us-china-leaders-will-avoid-race-bottom-trade-alibabas-joe-tsai-says?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Alibaba Group Holding chairman Joe Tsai has expressed optimism about US-China trade tensions.\n\u201cI\u2019m actually quite optimistic that we\u2019re not going to devolve into kind of a race to the bottom\u201d, he said during an interview with CNBC dated October 10 and published on Monday. \u201cThe two countries\u2019 leaders have the wisdom to come to a point where they recognise that this is a hugely symbiotic relationship,\u201d he added.\nTsai, who owns the Brooklyn Nets basketball team, spoke on the sidelines of an NBA...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/82346091-1305-4c39-a66a-6dee3d406e12_570ffcdd.jpg",
+      "author": "Coco Feng",
+      "publishedAt": "2025-10-13T16:30:17.735843",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 850.0,
+      "summary": "**Alibaba's chairman** Joe Tsai expressed optimism about **US-China relations**, stating leaders will avoid a \"race to the bottom\" and recognize their symbiotic relationship. Tsai shared these views during a CNBC interview on the NBA sidelines.",
+      "timeline": [
+        {
+          "date": "February 4, 2025",
+          "event": "US imposes 10% tariff on all Chinese imports, citing national emergency."
+        },
+        {
+          "date": "February 4, 2025",
+          "event": "China retaliates with 15% tariffs on US coal and LNG, 10% on other goods."
+        },
+        {
+          "date": "April 9, 2025",
+          "event": "US increases tariffs on Chinese goods to 145% amid escalating tensions."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Trump announces 100% additional tariffs on Chinese imports, effective November 1."
+        }
+      ],
+      "details": [
+        "Tariff rate: 30% US on China[1]  \nImpact: 85% US firms affected[2]  \nSoybean licenses: 3 US firms revoked[1]"
       ]
     },
     {
@@ -2264,6 +2645,68 @@
       ]
     },
     {
+      "title": "Big-box stores could help slash emissions and save millions by",
+      "url": "https://www.cnn.com/2022/03/20/us/solar-power-on-big-box-store-rooftops-climate/index.html",
+      "source": "CNN World",
+      "description": "As the US attempts to wean itself off its heavy reliance on fossil fuels and shift to cleaner energy sources, many experts are eyeing a promising solution: your neighborhood big-box stores and shopping malls.",
+      "content": "",
+      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/220309154435-02-big-box-rooftop-solar-climate-super-169.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:07:05.216371",
+      "category": "environment",
+      "emoji": "\u2600\ufe0f",
+      "final_score": 800.0,
+      "summary": "**Big-box retailers** and shopping centers could play a crucial role in America's **clean energy transition** by installing rooftop solar panels, yet most aren't utilizing this opportunity despite its potential to reduce emissions and generate savings.",
+      "timeline": [
+        {
+          "date": "2017",
+          "event": "Home Depot launches pilot solar farm program on rooftops at four stores[3]."
+        },
+        {
+          "date": "End of 2018",
+          "event": "Home Depot expands rooftop solar program to 45 stores nationwide[3]."
+        },
+        {
+          "date": "September-December 2020",
+          "event": "IKEA Baltimore cuts purchased energy by 84% after installing solar panels[4]."
+        },
+        {
+          "date": "May 21, 2025",
+          "event": "Report highlights Indiana's big-box solar potential and slow adoption by retailers[2]."
+        }
+      ],
+      "details": [
+        "Annual energy use: 189,000 kWh per store[2]  \nIKEA solar adoption: 90% of locations[2]  \nCommercial solar Q1 2025 growth: 108%[1]"
+      ]
+    },
+    {
+      "title": "Niti Aayog forecasts 4mn AI jobs by 2030: What roles",
+      "url": "https://timesofindia.indiatimes.com/education/news/niti-aayog-says-ai-could-create-4-million-jobs-by-2030-what-jobs-can-ai-actually-create/articleshow/124499699.cms",
+      "source": "Times of India",
+      "description": "NITI Aayog\u2019s Roadmap for Job Creation in the AI Economy outlines how Artificial Intelligence could create up to 4 million new jobs in India by 2030. While warning of displacement in routine tech roles, the report identifies emerging careers in AI engineering, ethics, training, and human-AI collaboration. It advocates for a National AI Talent Mission to drive education and reskilling. The roadmap positions India as a global hub for AI talent and innovation by 2035.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124499712,imgsize-154282.cms",
+      "author": "SANJAY SHARMA",
+      "publishedAt": "2025-10-13T17:05:07.288116",
+      "category": "technology",
+      "emoji": "\ud83e\udd16",
+      "final_score": 800.0,
+      "summary": "**NITI Aayog** predicts **Artificial Intelligence** will generate 4 million jobs in India by 2030, spanning engineering, ethics, and human-AI collaboration roles. A National AI Talent Mission aims to establish India as a global AI hub by 2035.",
+      "timeline": [
+        {
+          "date": "October 9, 2024",
+          "event": "NITI Aayog unveils Roadmap for Job Creation in the AI Economy report"
+        },
+        {
+          "date": "October 10, 2024",
+          "event": "NITI Aayog proposes National AI Talent Mission to boost AI skills and jobs"
+        }
+      ],
+      "details": [
+        "Automation risk: 60% formal jobs by 2030  \nAI talent gap: 50% supply vs demand  \nJob loss risk: 1.5 million by 2031"
+      ]
+    },
+    {
       "title": "China and Philippines trade blame over boat collision in disputed",
       "url": "https://www.japantimes.co.jp/news/2025/10/12/asia-pacific/china-philippines-south-china-sea-clash/",
       "source": "The Japan Times",
@@ -2323,6 +2766,41 @@
       ],
       "details": [
         "Butterfly extinction risk: 15% species  \nHoverfly extinction risk: 37% species  \nPollinator-dependent crops: 80% EU species"
+      ]
+    },
+    {
+      "title": "'Girls have to protect themselves': Mamata's shocker in student rape",
+      "url": "https://timesofindia.indiatimes.com/india/girls-have-to-protect-themselves-mamatas-shocker-in-mbbs-student-rape-case-vows-strict-action-against-guilty/articleshow/124498031.cms",
+      "source": "Times of India",
+      "description": "",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124498210,imgsize-1278233.cms",
+      "author": "TOI NEWS DESK",
+      "publishedAt": "2025-10-13T17:05:21.064274",
+      "category": "politics",
+      "emoji": "\ud83d\udde3\ufe0f",
+      "final_score": 790.0,
+      "summary": "I notice you haven't actually shared the article text that needs to be summarized. If you provide the article content, I'll create a concise 35-40 word summary following your requirements, including bold keywords and capturing the main points and significance.",
+      "timeline": [
+        {
+          "date": "August 9, 2024",
+          "event": "31-year-old doctor found raped and murdered at RG Kar Medical College."
+        },
+        {
+          "date": "August 10, 2024",
+          "event": "Kolkata Police arrest sole accused Sanjay Roy in the case."
+        },
+        {
+          "date": "August 13, 2024",
+          "event": "Calcutta High Court transfers investigation to CBI for further probe."
+        },
+        {
+          "date": "August 20, 2024",
+          "event": "Supreme Court criticizes Mamata Banerjee government over investigation delays."
+        }
+      ],
+      "details": [
+        "Arrests: 3 suspects detained  \nIncident time: 12:30 AM  \nWest Bengal 2022 rapes: 1,069 cases"
       ]
     },
     {
@@ -2559,6 +3037,41 @@
       ]
     },
     {
+      "title": "CCTV drama Silent Honour marks rare salute to Communist Party",
+      "url": "https://www.scmp.com/news/china/article/3328657/silent-honour-cctv-series-marks-rare-salute-communist-party-spies-taiwan?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Patriotic films in mainland China have long celebrated undercover agents of the Communist Party, their operations portrayed as pivotal to securing victory in the 1940s civil war against the Kuomintang and the founding of the People\u2019s Republic.\nLess known are the clandestine activities carried out by these agents in Taiwan, where their efforts met with a harsh fate. Covert operations there were systematically crushed by the KMT, resulting in the capture and execution of many operatives.\nBut...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/11/105c2a25-787a-4b64-af34-4f4e92f34888_2536de37.jpg",
+      "author": "Alcott Wei",
+      "publishedAt": "2025-10-13T16:37:50.018803",
+      "category": "politics",
+      "emoji": "\ud83d\udcfa",
+      "final_score": 740.0,
+      "summary": "China's new drama **Silent Honour** spotlights previously untold stories of **Communist Party spies** who operated in Taiwan during the 1940s civil war, many of whom were executed by the **Kuomintang** government during covert operations.",
+      "timeline": [
+        {
+          "date": "June 1949",
+          "event": "KMT retreats to Taiwan; Communist Party begins espionage operations on the island"
+        },
+        {
+          "date": "1950",
+          "event": "Wu Shi case: highest-level Communist spy case in Taiwan's history uncovered"
+        },
+        {
+          "date": "May 19, 1949",
+          "event": "Martial law declared, starting White Terror era of anti-communist purges"
+        },
+        {
+          "date": "September 30, 2024",
+          "event": "CCTV drama Silent Honour premieres, marking rare salute to Party spies in Taiwan"
+        }
+      ],
+      "details": [
+        "Espionage prosecutions 2024: 64 individuals[2][3][4]  \nMilitary background: 66% of indicted spies[1][3]  \nTemple-linked spy ring: 10 indicted October 2024[4]"
+      ]
+    },
+    {
       "title": "Hidankyo and others hold event 80 years after atomic bombings",
       "url": "https://www.japantimes.co.jp/news/2025/10/12/japan/politics/nihon-hidankyo-event-to-mark-80-year-atomic-bombings/",
       "source": "The Japan Times",
@@ -2664,501 +3177,42 @@
       ]
     },
     {
-      "title": "Completed Plato spacecraft is ready for final tests",
-      "url": "https://www.esa.int/Science_Exploration/Space_Science/Plato/Completed_Plato_spacecraft_is_ready_for_final_tests",
-      "source": "ESA",
-      "description": "By fitting its sunshield and solar panels, engineers have completed the construction of Plato, the European Space Agency\u2019s mission to discover Earth-like exoplanets. Plato is on track for the final key tests to confirm that it is fit for launch.",
+      "title": "Is the universe infinite, or does it have a limit?",
+      "url": "https://www.space.com/astronomy/is-the-universe-infinite-or-does-it-have-a-limit",
+      "source": "Space.com",
+      "description": "If the universe is expanding, then what is it expanding into, and what is it expanding from? Where's the edge of the universe, and where is its center?",
       "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/10/plato_s_spacecraft_is_complete/26902658-1-eng-GB/Plato_s_spacecraft_is_complete_card_full.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:12:57.705970",
+      "urlToImage": "https://cdn.mos.cms.futurecdn.net/GezhNbtcp2rX98sSdCaDYB-1280-80.jpg",
+      "author": "Paul Sutter",
+      "publishedAt": "2025-10-13T17:07:18.939234",
       "category": "science",
-      "emoji": "\ud83d\ude80",
+      "emoji": "\ud83c\udf0c",
       "final_score": 100.0,
-      "summary": "The **European Space Agency** has finished building Plato, their new spacecraft designed to find **Earth-like exoplanets**. With its sunshield and solar panels now attached, the mission is entering final testing before its anticipated launch.\n\n(37 words)",
+      "summary": "Scientists continue to debate whether the **universe** is truly infinite or has boundaries. While we know it's **expanding**, fundamental questions remain about what lies beyond its edges, where its center is located, and what drives this cosmic growth.\n\n(37 words)",
       "timeline": [
         {
-          "date": "September 1, 2025",
-          "event": "Plato spacecraft arrived at ESTEC in the Netherlands for final assembly and testing"
+          "date": "1998",
+          "event": "Astronomers discover universe's expansion is accelerating, introducing concept of dark energy."
         },
         {
-          "date": "September 9, 2025",
-          "event": "Plato completed at ESTEC with sunshield and solar panels installed"
+          "date": "May 27, 2024",
+          "event": "James Webb Space Telescope data suggests no conflict in universe's expansion rate."
         },
         {
-          "date": "October 9, 2025",
-          "event": "Plato spacecraft fully assembled and ready for final environmental tests"
+          "date": "March 2025",
+          "event": "DESI data shows dark energy may be evolving, challenging previous cosmological assumptions."
         },
         {
-          "date": "December 2026",
-          "event": "Plato scheduled to launch on Ariane 6 to search for Earth-like exoplanets"
+          "date": "October 6, 2025",
+          "event": "DESI releases new cosmic map, hinting dark energy might not be constant after all."
         }
       ],
       "details": [
-        "Launch date: December 2026[1][3][5]  \nCameras: 26 onboard[1][2][5]  \nMission duration: Up to 8.5 years[2]"
-      ]
-    },
-    {
-      "title": "ESA observations of interstellar comet 3I/ATLAS",
-      "url": "https://www.esa.int/Science_Exploration/Space_Science/ESA_observations_of_interstellar_comet_3I_ATLAS",
-      "source": "ESA",
-      "description": "The European Space Agency (ESA) reacted promptly to the discovery of comet 3I/ATLAS on 1 July 2025. Soon after they were alerted to its existence by automated detection systems, ESA astronomers began using ground-based telescopes in\u00a0Hawaii, Chile, and Australia to monitor its progress.Since then, the comet has been observed by space telescopes close to Earth, including the NASA/ESA Hubble Space Telescope and the NASA/ESA/CSA James Webb Space Telescope.In the coming months, ESA will turn interplanetary voyagers such as Mars Express, ExoMars Trace Gas Orbiter and the Jupiter Icy Moons Explorer (Juice) in the direction of the comet to make further observations from excellent vantage points.Follow the links below for more information.",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/08/hubble_sizes_up_rare_interstellar_comet/26828252-1-eng-GB/Hubble_sizes_up_rare_interstellar_comet_card_full.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:12:47.527494",
-      "category": "science",
-      "emoji": "\u2604\ufe0f",
-      "final_score": 100.0,
-      "summary": "After discovering **interstellar comet** 3I/ATLAS in 2025, ESA tracked it using ground-based telescopes across three continents and space telescopes including **Hubble** and Webb. Future observations will utilize Mars Express and other **interplanetary missions**.\n\n(38 words)",
-      "timeline": [
-        {
-          "date": "June 14, 2025",
-          "event": "Earliest pre-discovery images of comet 3I/ATLAS by ATLAS telescopes."
-        },
-        {
-          "date": "July 1, 2025",
-          "event": "Comet 3I/ATLAS officially discovered by ATLAS survey telescope in Chile."
-        },
-        {
-          "date": "October 3, 2025",
-          "event": "3I/ATLAS makes closest approach to Mars; observed by ESA's Trace Gas Orbiter."
-        },
-        {
-          "date": "October 30, 2025",
-          "event": "3I/ATLAS reaches closest point to the Sun, about 1.4 astronomical units away."
-        }
-      ],
-      "details": [
-        "Velocity: 130,000 miles per hour[2]  \nClosest Mars approach: 17 million miles[1]  \nWater loss: Fire hose rate[5]"
-      ]
-    },
-    {
-      "title": "Dancing dust devils trace raging winds on Mars",
-      "url": "https://www.esa.int/Science_Exploration/Space_Science/Mars_Express/Dancing_dust_devils_trace_raging_winds_on_Mars",
-      "source": "ESA",
-      "description": "",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/10/mars_express_sees_a_dust_devil_dancing_across_mars/26900419-1-eng-GB/Mars_Express_sees_a_dust_devil_dancing_across_Mars_card_full.gif",
-      "author": "",
-      "publishedAt": "2025-10-13T16:12:14.600122",
-      "category": "science",
-      "emoji": "\ud83e\ude90",
-      "final_score": 100.0,
-      "summary": "I don't see the article text provided to summarize. If you share the article about dust devils on Mars, I'll be happy to create a concise 35-40 word summary following your requirements, including bold emphasis on key terms.",
-      "timeline": [
-        {
-          "date": "May 2025",
-          "event": "Study published mapping global dust devil tracks on Mars using satellite imagery"
-        },
-        {
-          "date": "October 23, 2024",
-          "event": "NASA Mars orbiter images InSight lander, tracks dust movement and dust devil activity"
-        },
-        {
-          "date": "December 2022",
-          "event": "NASA retires InSight lander after dust accumulation ends its mission"
-        }
-      ],
-      "details": [
-        "Image count: 50,000+\nPeak speed: 160 km/h\nContribution: 9% atmospheric dust"
-      ]
-    },
-    {
-      "title": "ESA\u2019s ExoMars and Mars Express observe comet 3I/ATLAS",
-      "url": "https://www.esa.int/Science_Exploration/Space_Science/ESA_s_ExoMars_and_Mars_Express_observe_comet_3I_ATLAS",
-      "source": "ESA",
-      "description": "Between 1 and 7 October, ESA\u2019s ExoMars Trace Gas Orbiter (TGO) and Mars Express spacecraft turned their eyes towards interstellar comet 3I/ATLAS, as it passed close to Mars.",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/10/exomars_trace_gas_orbiter_observes_comet_3i_atlas_gif/26909471-1-eng-GB/ExoMars_Trace_Gas_Orbiter_observes_comet_3I_ATLAS_GIF_card_full.gif",
-      "author": "",
-      "publishedAt": "2025-10-13T16:11:19.261451",
-      "category": "science",
-      "emoji": "\ud83d\ude80",
-      "final_score": 100.0,
-      "summary": "The **European Space Agency's** orbiters ExoMars TGO and Mars Express conducted observations of **interstellar comet** 3I/ATLAS during its close approach to Mars in early October, marking a significant opportunity to study an extrasolar visitor.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "October 1\u20137, 2024",
-          "event": "ESA\u2019s ExoMars TGO and Mars Express observe interstellar comet 3I/ATLAS near Mars."
-        },
-        {
-          "date": "October 3, 2024",
-          "event": "Comet 3I/ATLAS makes closest approach to Mars, 18.6 million miles away."
-        },
-        {
-          "date": "October 30, 2024",
-          "event": "Comet 3I/ATLAS scheduled for close encounter with the Sun."
-        }
-      ],
-      "details": [
-        "Closest approach: 30 million kilometers  \nSpeed: 210,000 km/h  \nNucleus visibility: Not resolved"
-      ]
-    },
-    {
-      "title": "Fly over Xanthe Terra with Mars Express",
-      "url": "https://www.esa.int/ESA_Multimedia/Videos/2025/10/Fly_over_Xanthe_Terra_with_Mars_Express",
-      "source": "ESA",
-      "description": "Video: \n\t\t\t00:03:16\n\t\t\t\tESA\u2019s\u00a0Mars Express\u00a0takes us on another mesmerising flight over curving channels carved by water, islands that have resisted erosion, and a maze of hilly terrain.Central to the tour is a 1300 km-long outflow channel called Shalbatana Vallis. It cascades down from the highland region of Xanthe Terra to the smoother lowlands of Chryse Planitia.Billions of years ago, water surged through this channel, creating many of the features we see today.The tour culminates in a spectacular view of a 100 km-wide impact crater, smashed out of Mars\u2019s surface when it collided with a space rock.Enjoy the flight, and be sure to turn up the volume for the full audio guide experience.Processing notes:This film was created using the Mars Express High Resolution Stereo Camera Mars Chart (HMC30) data, an image mosaic made from single orbit observations of the mission\u2019s High Resolution Stereo Camera (HRSC). The mosaic image, centred at 5\u00b0N/320\u00b0E, is combined with topography information from the digital terrain model to generate a three-dimensional landscape.For every second of the movie, 50 separate frames are rendered following a predefined camera path in the scene. The vertical exaggeration used for the animation is three-fold. Atmospheric effects, like clouds and haze, have been added to conceal the limits of the terrain model. The haze starts building up at a distance of 250 km.The HRSC camera on Mars Express is operated by the German Aerospace Center (DLR). The systematic processing of the camera data took place at the DLR Institute for Planetary Research in Berlin-Adlershof. The working group of Planetary Science and Remote Sensing at Freie Universit\u00e4t Berlin used the data to create the film.Access the related broadcast quality footage.",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/videos/2025/10/fly_over_xanthe_terra_with_mars_express/26897957-1-eng-GB/Fly_over_Xanthe_Terra_with_Mars_Express_card_full.png",
-      "author": "",
-      "publishedAt": "2025-10-13T16:11:01.536382",
-      "category": "science",
-      "emoji": "\ud83d\ude80",
-      "final_score": 100.0,
-      "summary": "**ESA's Mars Express** captured stunning footage of Mars' **Xanthe Terra** region, showcasing a 1,300km water-carved channel called Shalbatana Vallis. The video reveals ancient waterways, eroded terrain, and a massive 100km-wide **impact crater** in the Martian landscape.",
-      "timeline": [
-        {
-          "date": "October 8, 2025",
-          "event": "ESA Mars Express releases new flyover video of Xanthe Terra and Shalbatana Vallis"
-        },
-        {
-          "date": "Approximately 3.5 billion years ago",
-          "event": "Massive water flow erodes Shalbatana Vallis in Xanthe Terra on Mars"
-        }
-      ],
-      "details": [
-        "Discovery: Da Vinci crater contains a smaller crater[1]  \nFlood age: 3.5 billion years ago[1]  \nCamera: HRSC by German Aerospace Center[1]"
-      ]
-    },
-    {
-      "title": "Cassini proves complex chemistry in Enceladus ocean",
-      "url": "https://www.esa.int/Science_Exploration/Space_Science/Cassini-Huygens/Cassini_proves_complex_chemistry_in_Enceladus_ocean",
-      "source": "ESA",
-      "description": "Scientists digging through data collected by the Cassini spacecraft have found new complex organic molecules spewing from Saturn\u2019s moon Enceladus. This is a clear sign that complex chemical reactions are taking place within its underground ocean. Some of these reactions could be part of chains that lead to even more complex, potentially biologically relevant molecules.Published today in Nature Astronomy, this discovery further strengthens the case for a dedicated European Space Agency (ESA) mission to orbit and land on Enceladus.",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2018/06/enceladus_jets_and_shadows/17568049-1-eng-GB/Enceladus_jets_and_shadows_card_full.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:10:29.601842",
-      "category": "science",
-      "emoji": "\ud83e\ude90",
-      "final_score": 100.0,
-      "summary": "During analysis of **Cassini spacecraft** data, scientists discovered **complex organic molecules** erupting from Saturn's moon Enceladus, indicating sophisticated chemical processes in its subsurface ocean. This finding bolsters support for future **ESA exploration missions** to the moon.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "March 9, 2005",
-          "event": "Cassini discovers water plumes, indicating a hidden ocean beneath Enceladus's surface"
-        },
-        {
-          "date": "October 2017",
-          "event": "Cassini mission ends, but data continues to be analyzed for organic molecules"
-        },
-        {
-          "date": "October 2024",
-          "event": "Scientists publish discovery of new complex organic molecules in Enceladus's ocean"
-        },
-        {
-          "date": "October 2024",
-          "event": "ESA announces studies for a future mission to land on Enceladus"
-        }
-      ],
-      "details": [
-        "Ice shell thickness: 16-19 miles[1]  \nFlyby speed: 10\u201312 km/s[2]  \nE ring origin: Enceladus plume material[1]"
-      ]
-    },
-    {
-      "title": "Blue Planet Red is wrong about Mars \u2013 but it's",
-      "url": "https://www.newscientist.com/article/mg26735640-500-blue-planet-red-is-wrong-about-mars-but-its-surprisingly-poignant/?utm_campaign=RSS%7CNSNS&utm_source=NSNS&utm_medium=RSS&utm_content=home",
-      "source": "New Scientist",
-      "description": "Brian Cory Dobbs's documentary promotes the baseless idea that Mars was once inhabited by an advanced civilisation. But there's some value in how it inadvertently documents a generation of otherwise-sensible scientists, says Simon Ings",
-      "content": "",
-      "urlToImage": "https://images.newscientist.com/wp-content/uploads/2025/10/07165432/SEI_268640703.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:10:19.975948",
-      "category": "science",
-      "emoji": "\ud83d\ude80",
-      "final_score": 100.0,
-      "summary": "Documentary \"**Blue Planet Red**\" promotes unfounded claims about ancient **Martian civilization**, yet inadvertently provides valuable insight by showing how even credible scientists can be drawn into controversial theories about extraterrestrial life on the red planet.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "November 20, 2023",
-          "event": "Blue Planet Red documentary first released in the United States."
-        },
-        {
-          "date": "August 22, 2025",
-          "event": "Blue Planet Red premieres digitally on Amazon Prime Video and other platforms."
-        },
-        {
-          "date": "November 28, 2025",
-          "event": "Blue Planet Red released on additional international streaming platforms."
-        }
-      ],
-      "details": [
-        "I apologize, but I cannot provide the requested data points. The search results do not contain information about the documentary \"Blue Planet Red\" by Brian Cory Dobbs, nor do they include verified data points related to this specific film or its claims about Mars colonization by an advanced civilization.",
-        "The search results focus on legitimate scientific discussions about future human colonization of Mars, NASA missions, and the challenges of establishing human settlements on the red planet. They do not address the documentary mentioned in your query or provide relevant data points that would meet your requirements.",
-        "To provide accurate information about this documentary, I would need search results that specifically discuss the film, its production details, scientific reception, or related verified facts."
-      ]
-    },
-    {
-      "title": "Gaia discovers our galaxy\u2019s great wave",
-      "url": "https://www.esa.int/Science_Exploration/Space_Science/Gaia/Gaia_discovers_our_galaxy_s_great_wave",
-      "source": "ESA",
-      "description": "Our Milky Way galaxy never sits still: it rotates and wobbles. And now, data from the European Space Agency\u2019s Gaia space telescope reveal that our galaxy also has a giant wave rippling outwards from its centre.",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/09/gaia_discovers_our_galaxy_s_great_wave_edge-on/26891597-1-eng-GB/Gaia_discovers_our_galaxy_s_great_wave_edge-on_card_full.png",
-      "author": "",
-      "publishedAt": "2025-10-13T16:09:03.080667",
-      "category": "science",
-      "emoji": "\ud83d\udd2d",
-      "final_score": 100.0,
-      "summary": "Data from the **ESA's Gaia telescope** reveals a massive **galactic wave** emanating from the Milky Way's center, adding to our understanding of our galaxy's dynamic nature beyond its known rotational and wobbling movements.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "2020",
-          "event": "Gaia reveals Milky Way's warped disk wobbles over time"
-        },
-        {
-          "date": "July 14, 2024",
-          "event": "Study published showing giant wave rippling outward from galaxy's center"
-        },
-        {
-          "date": "October 2024",
-          "event": "ESA publicly disseminates Gaia images showing the wave pattern in the Milky Way"
-        }
-      ],
-      "details": [
-        "Wave span: 30,000\u201365,000 light-years[1][2][3]  \nStars mapped: 2 billion+[4]  \nMission end: March 27, 2025[4]"
-      ]
-    },
-    {
-      "title": "Physicists are uncovering when nature\u2019s strongest force falters",
-      "url": "https://www.newscientist.com/article/2499424-physicists-are-uncovering-when-natures-strongest-force-falters/?utm_campaign=RSS%7CNSNS&utm_source=NSNS&utm_medium=RSS&utm_content=home",
-      "source": "New Scientist",
-      "description": "The strong nuclear force may abruptly loosen its grip on the fundamental particles that make up matter at a special \u201ccritical point\u201d \u2013 researchers are now getting a clearer picture of when that point is reached",
-      "content": "",
-      "urlToImage": "https://images.newscientist.com/wp-content/uploads/2025/10/10162233/SEI_269502660.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:08:42.458615",
-      "category": "science",
-      "emoji": "\u269b\ufe0f",
-      "final_score": 100.0,
-      "summary": "Scientists are discovering when the **strong nuclear force**, which holds atomic particles together, dramatically weakens at a specific **critical point**. This breakthrough research helps explain fundamental behavior of matter at extreme conditions in the universe.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "2019-2022",
-          "event": "STAR team at RHIC collects data on gold-gold collisions to study strong force[2]."
-        },
-        {
-          "date": "October 2024",
-          "event": "STAR team analyzes new lower-energy collision data for critical point evidence[2]."
-        }
-      ],
-      "details": [
-        "QGP temperature: 4 trillion kelvin  \nSTAR upgrade: 2023 completed  \nALICE location: CERN, Switzerland"
-      ]
-    },
-    {
-      "title": "Mars\u2019s atmospheric mille-feuille",
-      "url": "https://www.esa.int/ESA_Multimedia/Images/2025/09/Mars_s_atmospheric_mille-feuille",
-      "source": "ESA",
-      "description": "Image:\n\t\t\tMars\u2019s atmospheric mille-feuille",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/09/mars_s_atmospheric_mille-feuille/26874563-3-eng-GB/Mars_s_atmospheric_mille-feuille_card_full.png",
-      "author": "",
-      "publishedAt": "2025-10-13T16:08:34.541560",
-      "category": "science",
-      "emoji": "\ud83e\ude90",
-      "final_score": 100.0,
-      "summary": "Image:\n\t\t\tMars\u2019s atmospheric mille-feuille",
-      "timeline": [
-        {
-          "date": "January 21, 2024",
-          "event": "ExoMars Trace Gas Orbiter captures high-resolution images of Mars's layered atmosphere."
-        },
-        {
-          "date": "September 19, 2025",
-          "event": "Science Advances publishes study revealing Mars's atmospheric mille-feuille structure."
-        },
-        {
-          "date": "September 26, 2025",
-          "event": "ESA highlights Mars's delicately layered atmosphere as 'mille-feuille' in new images."
-        }
-      ],
-      "details": [
-        "Resolution: 18 meters per pixel[1]  \nAltitude range: 15\u201355 kilometers[1]  \nMonthly imaging: Planned for atmosphere[1]"
-      ]
-    },
-    {
-      "title": "Webb observations of interstellar comet 3I/ATLAS",
-      "url": "https://www.esa.int/ESA_Multimedia/Images/2025/08/Webb_observations_of_interstellar_comet_3I_ATLAS",
-      "source": "ESA",
-      "description": "Image:\n\t\t\tWebb observations of interstellar comet 3I/ATLAS",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/08/webb_observations_of_interstellar_comet_3i_atlas/26851511-1-eng-GB/Webb_observations_of_interstellar_comet_3I_ATLAS_card_full.png",
-      "author": "",
-      "publishedAt": "2025-10-13T16:07:38.619977",
-      "category": "science",
-      "emoji": "\ud83d\udd2d",
-      "final_score": 100.0,
-      "summary": "Image:\n\t\t\tWebb observations of interstellar comet 3I/ATLAS",
-      "timeline": [
-        {
-          "date": "June 14, 2025",
-          "event": "Earliest pre-discovery images of 3I/ATLAS captured by ATLAS telescopes."
-        },
-        {
-          "date": "July 1, 2025",
-          "event": "Comet 3I/ATLAS officially discovered by ATLAS survey in Chile."
-        },
-        {
-          "date": "October 3, 2025",
-          "event": "3I/ATLAS makes closest approach to Mars at 17 million miles."
-        },
-        {
-          "date": "October 30, 2025",
-          "event": "3I/ATLAS reaches closest point to the Sun (perihelion)."
-        }
-      ],
-      "details": [
-        "Closest Sun approach: 1.4 au  \nDiscovery date: July 1, 2025  \nOrigin: Constellation Sagittarius"
-      ]
-    },
-    {
-      "title": "Evolution of intelligence in our ancestors may have come at",
-      "url": "https://www.newscientist.com/article/2499487-evolution-of-intelligence-in-our-ancestors-may-have-come-at-a-cost/?utm_campaign=RSS%7CNSNS&utm_source=NSNS&utm_medium=RSS&utm_content=home",
-      "source": "New Scientist",
-      "description": "By tracing when variations in the human genome first appeared, researchers have found that advances in cognitive abilities may have led to our vulnerability to mental illness",
-      "content": "",
-      "urlToImage": "https://images.newscientist.com/wp-content/uploads/2025/10/08175321/SEI_269374393.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:07:16.439474",
-      "category": "science",
-      "emoji": "\ud83e\udde0",
-      "final_score": 100.0,
-      "summary": "**Genetic research** reveals that the evolution of advanced cognitive abilities in human ancestors likely came with an unexpected trade-off: increased **mental illness susceptibility**. Scientists made this discovery by tracking historical changes in the human genome over time.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "May 9, 2024",
-          "event": "Study links gene expression changes to psychiatric disorder development over human lifespan"
-        },
-        {
-          "date": "October 2024",
-          "event": "Researchers trace cognitive evolution to increased vulnerability to mental illness in human genome"
-        }
-      ],
-      "details": [
-        "Cortical morphology variants: 300,000 years old[1]  \nDepression-linked variants: 24,000 years old[1]  \nPsychiatric disorder variants: 475,000 years old[1]"
-      ]
-    },
-    {
-      "title": "The most accurate 3D map of stellar nurseries in the",
-      "url": "https://www.esa.int/ESA_Multimedia/Videos/2025/09/The_most_accurate_3D_map_of_stellar_nurseries_in_the_Milky_Way",
-      "source": "ESA",
-      "description": "Video: \n\t\t\t00:02:28\n\t\t\t\tScientists created the most accurate three-dimensional map of star-formation regions in our Milky Way galaxy, based on data from the European Space Agency\u2019s Gaia space telescope. This map will teach us more about these obscure cloudy areas, and the hot young stars that shape them.It is notoriously difficult to map and study regions in space where stars form because they are usually hidden from view by thick clouds of gas and dust, whose distances cannot be directly measured.Gaia can\u2019t see these clouds directly, but it can measure stellar positions and the so-called \u2018extinction\u2019 of stars. This means it can see how much light from stars is blocked by dust. From this, scientists can create 3D maps showing where the dust is, and use those maps to figure out how much ionised hydrogen gas is present \u2013 a telltale sign of star formation.The new 3D map of star-forming regions in the Milky Way is based on Gaia observations of 44 million \u2018ordinary\u2019 stars and 87 O-type stars. The map extends to a distance of 4000 light-years from us, with the Sun at the centre.Read more.Click here to download the animation flying around Gaia's 3D map.Click here to download the animation flying through Gaia's 3D map.Click here to download the animation showing the location of Gaia's 3D map in the Milky Way.",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/videos/2025/09/the_most_accurate_3d_map_of_stellar_nurseries_in_the_milky_way/26868349-7-eng-GB/The_most_accurate_3D_map_of_stellar_nurseries_in_the_Milky_Way_card_full.png",
-      "author": "",
-      "publishedAt": "2025-10-13T16:07:05.128590",
-      "category": "science",
-      "emoji": "\ud83d\udd2d",
-      "final_score": 100.0,
-      "summary": "Scientists have created the most detailed **3D map** of the Milky Way's **stellar nurseries**, using data from ESA's Gaia telescope. The map tracks 44 million regular stars and 87 O-type stars within 4,000 light-years of Earth.",
-      "timeline": [
-        {
-          "date": "Pre-2023",
-          "event": "ESA's Gaia space telescope collects data on millions of stars"
-        },
-        {
-          "date": "2023",
-          "event": "Scientists analyze data from 44 million ordinary stars and 87 O-type stars"
-        },
-        {
-          "date": "2023",
-          "event": "Researchers create 3D map showing star formation regions within 4000 light-years"
-        }
-      ],
-      "details": [
-        "Camera resolution: 1 billion pixels  \nTallest spire: 5.4 light-years  \nGaia mission end: January 15, 2024"
-      ]
-    },
-    {
-      "title": "Immense stellar jet in Milky Way outskirts",
-      "url": "https://www.esa.int/ESA_Multimedia/Images/2025/09/Immense_stellar_jet_in_Milky_Way_outskirts",
-      "source": "ESA",
-      "description": "Image:\n\t\t\tImmense stellar jet in Milky Way outskirts",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/09/immense_stellar_jet_in_milky_way_outskirts/26862444-2-eng-GB/Immense_stellar_jet_in_Milky_Way_outskirts_card_full.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:06:39.042736",
-      "category": "science",
-      "emoji": "\ud83d\udd2d",
-      "final_score": 100.0,
-      "summary": "Image:\n\t\t\tImmense stellar jet in Milky Way outskirts",
-      "timeline": [
-        {
-          "date": "October 8, 2024",
-          "event": "James Webb Space Telescope images immense stellar jet in Milky Way's Sh2-284 region"
-        },
-        {
-          "date": "October 9, 2024",
-          "event": "NASA publicly announces discovery of 8 light-year stellar jet on Milky Way outskirts"
-        }
-      ],
-      "details": [
-        "Distance: 15,000 light-years\nMass: 10 solar masses\nSpeed: Hundreds km/s"
-      ]
-    },
-    {
-      "title": "Glittering glimpse of star birth",
-      "url": "https://www.esa.int/ESA_Multimedia/Images/2025/09/Glittering_glimpse_of_star_birth",
-      "source": "ESA",
-      "description": "Image:\n\t\t\tWebb image of a glittering glimpse of star birth",
-      "content": "",
-      "urlToImage": "https://www.esa.int/var/esa/storage/images/esa_multimedia/images/2025/09/glittering_glimpse_of_star_birth/26854361-2-eng-GB/Glittering_glimpse_of_star_birth_card_full.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:06:04.043610",
-      "category": "science",
-      "emoji": "\ud83d\udd2d",
-      "final_score": 100.0,
-      "summary": "Image:\n\t\t\tWebb image of a glittering glimpse of star birth",
-      "timeline": [
-        {
-          "date": "June 2024",
-          "event": "Webb captures Serpens Nebula jets, revealing newborn stars spinning in same direction"
-        },
-        {
-          "date": "October 18, 2024",
-          "event": "Webb releases 4K image of star birth in Pismis 24, Lobster Nebula"
-        }
-      ],
-      "details": [
-        "Distance: 5,500 light-years\nTemperature: 8x Sun's\nLocation: Scorpius constellation"
-      ]
-    },
-    {
-      "title": "Stunning images highlight fight to save Earth\u2019s rich biodiversity",
-      "url": "https://www.newscientist.com/article/2498939-stunning-images-highlight-fight-to-save-earths-rich-biodiversity/?utm_campaign=RSS%7CNSNS&utm_source=NSNS&utm_medium=RSS&utm_content=home",
-      "source": "New Scientist",
-      "description": "From an alien-looking flat-faced longhorn beetle to an abandoned baby rhino, images at London\u2019s Natural History Museum show what we stand to lose from the decimation of global biodiversity",
-      "content": "",
-      "urlToImage": "https://images.newscientist.com/wp-content/uploads/2025/10/06123428/SEI_2683407831.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:03:23.806217",
-      "category": "environment",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 100.0,
-      "summary": "A new exhibition at London's **Natural History Museum** showcases compelling wildlife photography, from exotic beetles to orphaned rhinos, highlighting the critical need to protect Earth's rapidly declining **biodiversity** before more species are lost forever.\n\n[Word count: 37]",
-      "timeline": [
-        {
-          "date": "September 10, 2024",
-          "event": "Smithsonian opens Dazzling Diversity insect exhibition highlighting biodiversity research and conservation"
-        },
-        {
-          "date": "September 15, 2024",
-          "event": "Natural History Museum launches Reframing Dioramas exhibit on biodiversity and conservation"
-        },
-        {
-          "date": "November 17, 2024",
-          "event": "Natural History Museum of Los Angeles opens NHM Commons with biodiversity-focused exhibitions"
-        }
-      ],
-      "details": [
-        "Species at risk: 1 million[3]  \nWildlife decline: 73% since 1970[1]  \nCritical loss driver: 70% land altered[7]"
+        "Age: 13.8 billion years[3]  \nExpansion: Accelerating over time[2]  \nDark energy: 70% of universe[4]"
       ]
     }
   ],
-  "generatedAt": "2025-10-13T16:20:29.828896",
+  "generatedAt": "2025-10-13T17:07:59.306654",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
