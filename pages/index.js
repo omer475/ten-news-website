@@ -1714,24 +1714,37 @@ export default function Home() {
                         fontSize: '11px',
                         fontWeight: '700',
                         letterSpacing: '0.5px',
-                        color: '#1d1d1f',
                         marginBottom: '8px',
                         textTransform: 'uppercase',
                         padding: '4px 8px',
                         borderRadius: '6px',
                         background: (() => {
                           const categoryColors = {
-                            'WORLD NEWS': '#fee2e2',
-                            'BUSINESS': '#fff7ed',
-                            'MARKETS': '#ecfeff',
-                            'TECH & AI': '#eef2ff',
-                            'SCIENCE': '#e0f2fe',
-                            'HEALTH': '#ecfdf5',
-                            'CLIMATE': '#f0fdf4',
-                            'SPORTS': '#fffbeb',
-                            'ENTERTAINMENT': '#fdf2f8'
+                            'WORLD NEWS': { bg: '#fee2e2', text: '#dc2626' },
+                            'BUSINESS': { bg: '#fff7ed', text: '#ea580c' },
+                            'MARKETS': { bg: '#ecfeff', text: '#0891b2' },
+                            'TECH & AI': { bg: '#eef2ff', text: '#4f46e5' },
+                            'SCIENCE': { bg: '#e0f2fe', text: '#0284c7' },
+                            'HEALTH': { bg: '#ecfdf5', text: '#059669' },
+                            'CLIMATE': { bg: '#f0fdf4', text: '#16a34a' },
+                            'SPORTS': { bg: '#fffbeb', text: '#d97706' },
+                            'ENTERTAINMENT': { bg: '#fdf2f8', text: '#db2777' }
                           };
-                          return categoryColors[story.category] || '#f8fafc';
+                          return categoryColors[story.category]?.bg || '#f8fafc';
+                        })(),
+                        color: (() => {
+                          const categoryColors = {
+                            'WORLD NEWS': { bg: '#fee2e2', text: '#dc2626' },
+                            'BUSINESS': { bg: '#fff7ed', text: '#ea580c' },
+                            'MARKETS': { bg: '#ecfeff', text: '#0891b2' },
+                            'TECH & AI': { bg: '#eef2ff', text: '#4f46e5' },
+                            'SCIENCE': { bg: '#e0f2fe', text: '#0284c7' },
+                            'HEALTH': { bg: '#ecfdf5', text: '#059669' },
+                            'CLIMATE': { bg: '#f0fdf4', text: '#16a34a' },
+                            'SPORTS': { bg: '#fffbeb', text: '#d97706' },
+                            'ENTERTAINMENT': { bg: '#fdf2f8', text: '#db2777' }
+                          };
+                          return categoryColors[story.category]?.text || '#64748b';
                         })()
                       }}>
                         {story.emoji} {story.category}
