@@ -3,6 +3,33 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Madagascar presidency says attempt to seize power under way",
+      "url": "https://www.bbc.com/news/articles/cd070pn4g07o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "An army unit claimed it had taken over leadership of the military command and was now in control of all the armed forces.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/b46b/live/e1628320-a774-11f0-928c-71dbb8619e94.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:29:40.287533",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 1000.0,
+      "summary": "A **military faction** in Madagascar attempted to seize power by declaring control over the country's armed forces, prompting concerns of a potential **coup d'\u00e9tat** against the current government leadership and destabilizing the island nation.",
+      "timeline": [
+        {
+          "date": "January 25, 2024",
+          "event": "Army unit announces takeover of military command in Madagascar"
+        },
+        {
+          "date": "January 25, 2024",
+          "event": "Madagascar presidency publicly warns of attempted power seizure"
+        }
+      ],
+      "details": [
+        "Protest deaths: At least 22 killed[1]  \nElite unit: CAPSAT joined protesters[1]  \nPresident status: Possibly left country[1]"
+      ]
+    },
+    {
       "title": "Drone strike in besieged Sudan city kills dozens",
       "url": "https://www.bbc.com/news/articles/c3rvrn8req4o?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -299,6 +326,41 @@
       ],
       "details": [
         "Hostage count: 20 living, 28 deceased  \nRelease timing: 7:00 AM local  \nPrisoner exchange: 150 Palestinians freed"
+      ]
+    },
+    {
+      "title": "Pakistan closes border with Afghanistan after dozens killed in overnight",
+      "url": "https://www.france24.com/en/asia-pacific/20251012-pakistan-closes-afghanistan-border-kabul-claims-killed-58-soldiers-overnight-clashes",
+      "source": "France 24",
+      "description": "Pakistan closed all border crossings with Afghanistan on Sunday after deadly overnight clashes in which both sides claimed to have killed dozens of troops. Islamabad regularly accuses the Taliban administration in Kabul of harbouring militants who\u00a0attack\u00a0Pakistan, a charge Afghan officials deny.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/6e85a6e0-a74a-11f0-8221-005056a90284/w:1024/p:16x9/2025-10-12T082942Z-795607846-RC28AHA1THVQ-RTRMADP-3-PAKISTAN-AFGHANISTAN.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T17:28:09.458384",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 975.0,
+      "summary": "Pakistan has **closed its borders** with Afghanistan following deadly overnight clashes where both nations reported **significant casualties**. The closure stems from Pakistan's ongoing accusations that Taliban-led Afghanistan harbors militants who conduct cross-border attacks.",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "TTP ambush in Kurram district kills 11 Pakistani soldiers, sparking border clashes"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Pakistan launches airstrikes on TTP camps in Paktika and Khost, Kabul reports explosions"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Afghan Taliban retaliate, attacking Pakistani posts across five provinces with artillery and drones"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Pakistan closes all border crossings with Afghanistan after deadly overnight clashes"
+        }
+      ],
+      "details": [
+        "Border crossings: Closed for 2nd day[1]  \nPakistan casualties: 23 confirmed by Islamabad[1]  \nTaliban claims: 58 Pakistani soldiers killed[1]"
       ]
     },
     {
@@ -795,6 +857,76 @@
       ]
     },
     {
+      "title": "Trump directs Pentagon to 'use all available funds' to pay",
+      "url": "https://www.bbc.com/news/articles/ce808gvp56mo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "The president's directive would ensure US military personnel don't miss a scheduled paycheque next week.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/28b1/live/0a753390-a70a-11f0-b741-177e3e2c2fc7.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:28:45.073957",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 920.0,
+      "summary": "The president's directive would ensure US military personnel don't miss a scheduled paycheque next week.",
+      "timeline": [
+        {
+          "date": "October 1, 2025",
+          "event": "Federal government shutdown begins after budget impasse between Congress"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Trump orders Pentagon to pay troops using available funds"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Pentagon identifies 8 billion from research development for troop pay"
+        },
+        {
+          "date": "October 15, 2025",
+          "event": "Military paychecks scheduled to go out to 1.3 million troops"
+        }
+      ],
+      "details": [
+        "Shutdown duration: 11 days\nAffected troops: 1.3 million\nPayment date: October 15"
+      ]
+    },
+    {
+      "title": "Surge in Winter Viruses: Covid, Flu Cases Rise",
+      "url": "https://www.bbc.com/news/articles/c1jz608l9l4o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "Why coughs and colds seem to be taking hold currently - and what you can do to protect yourself.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/d262/live/c2050750-a6bb-11f0-a356-d3fc7522eb5a.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:27:01.761081",
+      "category": "health",
+      "emoji": "\ud83e\udd27",
+      "final_score": 920.0,
+      "summary": "A surge in **respiratory illnesses** including cold, flu and **COVID-19** is affecting many people this winter season. Health experts attribute this to reduced immunity from social distancing and recommend vaccines and proper hygiene to stay healthy.",
+      "timeline": [
+        {
+          "date": "August 10, 2024",
+          "event": "COVID-19 summer wave peaked in United States hospitalization data"
+        },
+        {
+          "date": "October 8, 2024",
+          "event": "COVID-19 infections declining in most US states, influenza growing"
+        },
+        {
+          "date": "October 11, 2024",
+          "event": "Overall respiratory virus activity remains low nationally across US"
+        },
+        {
+          "date": "October 16, 2024",
+          "event": "UK influenza positivity increased to 2.3 percent from previous week"
+        }
+      ],
+      "details": [
+        "COVID hospitalizations: 11,529 in 28 days\nFlu positivity rate: 3.3% weekly\nXFG variant dominance: 85% cases"
+      ]
+    },
+    {
       "title": "Man Charged for Stalking Ed Davey and Family",
       "url": "https://www.bbc.com/news/articles/c77d702znm4o?at_medium=RSS&at_campaign=rss",
       "source": "BBC Breaking News",
@@ -990,6 +1122,41 @@
       ],
       "details": [
         "Countries affected: 83+\nGreat Barrier Reef events: 6 since 2016\nBleaching alert levels: Now up to Level 5"
+      ]
+    },
+    {
+      "title": "Universities must tackle antisemitism, says education secretary",
+      "url": "https://www.bbc.com/news/articles/cly9y7gg6eqo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "Education Secretary Bridget Phillipson says Jewish students do not feel safe, as she sets out measures to tackle antisemitism.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/477b/live/80a29800-a75a-11f0-92db-77261a15b9d2.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:29:06.781921",
+      "category": "politics",
+      "emoji": "\ud83d\udde3\ufe0f",
+      "final_score": 915.0,
+      "summary": "Education Secretary **Bridget Phillipson** has announced new measures to combat **antisemitism** in universities, responding to growing concerns about Jewish students feeling unsafe on campus. The initiative aims to protect students' wellbeing and ensure inclusive learning environments.",
+      "timeline": [
+        {
+          "date": "October 7, 2024",
+          "event": "Bridget Phillipson states antisemitism in universities will not be tolerated, announces new measures."
+        },
+        {
+          "date": "October 8, 2024",
+          "event": "Government confirms \u00a37 million funding to tackle antisemitism in education, including universities."
+        },
+        {
+          "date": "June 9, 2025",
+          "event": "Education Secretary meets university leaders and Jewish students to discuss campus antisemitism."
+        },
+        {
+          "date": "June 21, 2025",
+          "event": "UK government urges universities to act after Manchester synagogue attack and rising campus incidents."
+        }
+      ],
+      "details": [
+        "Incident decline: 64% drop in 2025[1]  \nOnline incidents: 13 cases in 2025[1]  \nReporting systems: Mandatory since August 2025[3]"
       ]
     },
     {
@@ -2196,6 +2363,41 @@
       ]
     },
     {
+      "title": "Trump\u2019s China tariffs: Billions wiped out of crypto market; biggest",
+      "url": "https://timesofindia.indiatimes.com/technology/tech-news/donald-trumps-china-tariff-announcement-wipes-billions-from-crypto-market-sees-biggest-ever-single-day-fall/articleshow/124497748.cms",
+      "source": "Times of India",
+      "description": "Bitcoin experienced a significant 8.4% drop, leading a $19 billion market wipeout. This downturn was triggered by President Trump's escalation of the US-China trade war, including new tariffs and export controls. The crypto market saw massive liquidations, with over 1.6 million traders affected, raising concerns about broader market contagion.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124497739,imgsize-807342.cms",
+      "author": "TOI TECH DESK",
+      "publishedAt": "2025-10-13T17:27:10.327416",
+      "category": "business",
+      "emoji": "\ud83d\udcc9",
+      "final_score": 885.0,
+      "summary": "Bitcoin experienced a significant 8.4% drop, leading a $19 billion market wipeout. This downturn was triggered by President Trump's escalation of the US-China trade war, including new tariffs and expo",
+      "timeline": [
+        {
+          "date": "Early October 2025",
+          "event": "Bitcoin hits all-time highs"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "China tightens rare earth export controls"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Trump announces 100% tariffs on China"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Bitcoin price drops significantly"
+        }
+      ],
+      "details": [
+        "Liquidations: $9.55B\nTariff rate: 100%\nLosses: $400B"
+      ]
+    },
+    {
       "title": "'Have other options if ...': Afghanistan warns Pak amid deadly",
       "url": "https://timesofindia.indiatimes.com/world/south-asia/if-peace-efforts-dont-succeed-afghanistans-big-warning-for-pakistan-torkham-border-crossing-closed/articleshow/124498956.cms",
       "source": "Times of India",
@@ -2832,6 +3034,41 @@
       ]
     },
     {
+      "title": "US Tech Firm Hit by China Tensions Before Trump Tariffs",
+      "url": "https://timesofindia.indiatimes.com/technology/tech-news/american-technology-company-that-faced-chinas-anger-hours-before-donald-trump-said-will-impose-extra-100-tariffs-on-chinese-imports/articleshow/124494725.cms",
+      "source": "Times of India",
+      "description": "Escalating US-China trade tensions saw President Trump announce a 100% tariff on Chinese imports, effective November 1. In response, China launched an antitrust probe into US chip giant Qualcomm over its acquisition of Autotalks. This move, alongside other retaliatory measures targeting US interests, signals a significant escalation in the ongoing trade dispute.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124494714,imgsize-43794.cms",
+      "author": "TOI TECH DESK",
+      "publishedAt": "2025-10-13T17:28:57.920620",
+      "category": "business",
+      "emoji": "\ud83d\udcb0",
+      "final_score": 860.0,
+      "summary": "The **trade war** intensifies as Trump declares **100% tariffs** on Chinese imports, prompting China to launch an antitrust investigation into Qualcomm's Autotalks acquisition. This latest exchange marks a serious escalation in US-China economic tensions.",
+      "timeline": [
+        {
+          "date": "May 12, 2025",
+          "event": "US and China agreed to reduce tariffs for 90 days"
+        },
+        {
+          "date": "August 12, 2025",
+          "event": "Trump extended tariff truce with China by another 90 days"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Trump announced 100% tariff on Chinese imports starting November 1"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "China announced retaliatory port fees on US vessels"
+        }
+      ],
+      "details": [
+        "Investigation announced: October 10, 2025\nAcquisition completed: June 2025\nPrior SAMR instruction: March 2024"
+      ]
+    },
+    {
       "title": "'Was working to rebuild terror infra': IDF eliminates Hezbollah operative",
       "url": "https://timesofindia.indiatimes.com/world/middle-east/was-working-to-rebuild-terror-infra-israel-eliminates-hezbollah-operative-in-lebanon-video-shows-precision-strike/articleshow/124495172.cms",
       "source": "Times of India",
@@ -2989,226 +3226,9 @@
       "details": [
         "Term premium: Highest in 10+ years[6]  \nUS 10s/30s spread: 70 basis points[4]  \nAPAC issuance: Up 47% year-on-year[3]"
       ]
-    },
-    {
-      "title": "Trump may approve Tomahawks for Ukraine if Russia continues war",
-      "url": "https://www.japantimes.co.jp/news/2025/10/13/world/politics/trump-putin-us-tomahawks-ukraine/",
-      "source": "The Japan Times",
-      "description": "U.S. President Donald Trump\u2019s comments signal an openness to expanding the range of weaponry provided to Ukraine but also that he remains focused on a ceasefire.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/499271.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T12:35:57.305859",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 860.0,
-      "summary": "U.S. President Donald Trump\u2019s comments signal an openness to expanding the range of weaponry provided to Ukraine but also that he remains focused on a ceasefire.",
-      "timeline": [
-        {
-          "date": "October 13, 2025",
-          "event": "Trump says he may send Tomahawk missiles to Ukraine if Russia continues war"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Trump states he discussed Tomahawks with Zelensky and plans to talk to Putin"
-        }
-      ],
-      "details": [
-        "Missile Range: 1,600 km\nEscalation Risk: High\nDecision Status: Pending"
-      ]
-    },
-    {
-      "title": "'No deliberate exclusion': Muttaqi holds another presser; women journos present",
-      "url": "https://timesofindia.indiatimes.com/india/no-deliberate-exclusion-taliban-foreign-minister-amir-khan-muttaqi-holds-another-presser-women-journalists-present/articleshow/124498291.cms",
-      "source": "Times of India",
-      "description": "Taliban's Foreign Minister Amir Khan Muttaqi addressed a press conference in Delhi with both male and female journalists present, following criticism for excluding women from a previous event. Muttaqi stated the earlier exclusion was due to short notice, not deliberate intent. This visit marks the first by a senior Taliban minister to India since the group's takeover.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124498394,imgsize-514163.cms",
-      "author": "TOI NEWS DESK",
-      "publishedAt": "2025-10-13T17:04:41.802071",
-      "category": "politics",
-      "emoji": "\ud83c\udde6\ud83c\uddeb",
-      "final_score": 850.0,
-      "summary": "The **Taliban's Foreign Minister** Muttaqi addressed media in Delhi, including female journalists, after controversy over women's exclusion from a prior event. His visit marks the first **high-level Taliban delegation** to India since Afghanistan's takeover.",
-      "timeline": [
-        {
-          "date": "October 9, 2025",
-          "event": "Amir Khan Muttaqi arrives in India for a week-long official visit."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Muttaqi holds first Delhi press conference; only male journalists are present."
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Muttaqi holds second press conference in Delhi, women journalists are included."
-        }
-      ],
-      "details": [
-        "Travel exemption: UN granted October 2025[1]  \nGirls in school: 2.8 million[3]  \nEmbassy upgrade: India plans Kabul embassy[3][4]"
-      ]
-    },
-    {
-      "title": "US, China leaders will avoid \u2018race to the bottom\u2019: Alibaba\u2019s",
-      "url": "https://www.scmp.com/tech/article/3328866/us-china-leaders-will-avoid-race-bottom-trade-alibabas-joe-tsai-says?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Alibaba Group Holding chairman Joe Tsai has expressed optimism about US-China trade tensions.\n\u201cI\u2019m actually quite optimistic that we\u2019re not going to devolve into kind of a race to the bottom\u201d, he said during an interview with CNBC dated October 10 and published on Monday. \u201cThe two countries\u2019 leaders have the wisdom to come to a point where they recognise that this is a hugely symbiotic relationship,\u201d he added.\nTsai, who owns the Brooklyn Nets basketball team, spoke on the sidelines of an NBA...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/82346091-1305-4c39-a66a-6dee3d406e12_570ffcdd.jpg",
-      "author": "Coco Feng",
-      "publishedAt": "2025-10-13T16:30:17.735843",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 850.0,
-      "summary": "**Alibaba's chairman** Joe Tsai expressed optimism about **US-China relations**, stating leaders will avoid a \"race to the bottom\" and recognize their symbiotic relationship. Tsai shared these views during a CNBC interview on the NBA sidelines.",
-      "timeline": [
-        {
-          "date": "February 4, 2025",
-          "event": "US imposes 10% tariff on all Chinese imports, citing national emergency."
-        },
-        {
-          "date": "February 4, 2025",
-          "event": "China retaliates with 15% tariffs on US coal and LNG, 10% on other goods."
-        },
-        {
-          "date": "April 9, 2025",
-          "event": "US increases tariffs on Chinese goods to 145% amid escalating tensions."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Trump announces 100% additional tariffs on Chinese imports, effective November 1."
-        }
-      ],
-      "details": [
-        "Tariff rate: 30% US on China[1]  \nImpact: 85% US firms affected[2]  \nSoybean licenses: 3 US firms revoked[1]"
-      ]
-    },
-    {
-      "title": "Trump layoffs and broken trust harden Democrats\u2019 shutdown stand",
-      "url": "https://www.japantimes.co.jp/news/2025/10/12/world/politics/trump-trust-democrats-shutdown/",
-      "source": "The Japan Times",
-      "description": "Democrats have expressed doubts that the administration of U.S. President Donald Trump will deliver a health care fix unless forced to do so.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499090.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:08:16.643495",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 850.0,
-      "summary": "Democrats have expressed doubts that the administration of U.S. President Donald Trump will deliver a health care fix unless forced to do so.",
-      "timeline": [
-        {
-          "date": "February 25, 2025",
-          "event": "House passes budget resolution cutting $880 billion from Medicaid over decade"
-        },
-        {
-          "date": "May 2025",
-          "event": "Republicans pass One Big Beautiful Bill with $1 trillion health care cuts"
-        },
-        {
-          "date": "October 1, 2025",
-          "event": "Federal government partial shutdown begins over ACA tax credit dispute"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Shutdown enters day 13 as Democrats demand permanent ACA relief"
-        }
-      ],
-      "details": [
-        "Layoffs announced: 300,000 federal workers[1]  \nCDC cuts: 10% workforce reduction[2]  \nUSDA layoffs: 5,600 employees fired[3]"
-      ]
-    },
-    {
-      "title": "The UK government will pay you $120K to convince the",
-      "url": "https://fortune.com/2025/10/13/uk-government-will-pay-you-120k-to-convince-the-public-that-its-tackling-illegal-immigrants-arriving-on-its-shore-by-boat-careers-employment-hiring/",
-      "source": "Fortune",
-      "description": "The UK Government has quietly posted a six-figure job ad not for a policy expert or border agent, but for a communications lead whose main mission is to make the public believe Labour is tackling immigration.",
-      "content": "The UK Government has quietly posted a six-figure job ad not for a policy expert or border agent, but for a communications lead whose main mission is to make the public believe Labour is tackling immigration. Think: Less Border Force, more brand management.\nAs per the job advert, which was posted two weeks ago on LinkedIn, the Deputy Director Migration Communications role is key to \u201ckeeping the streets safe and borders secure.\u201d\u00a0\nFor up to $120,000 (\u00a391,000) the candidate will be expected to help \u201cthe department to spot and mitigate risks and deliver attitude and behaviour change that ultimately supports the security and economic prosperity of the UK.\u201d\nThe successful candidate will also see a generous employer contribution to their pension of 28.97%. But they\u2019ll need to come equipt with an ability to navigate crises, influence Ministers, and drive behaviour change across a highly complex, controversial, and high-stakes area of public service.\nA big\u2014and controversial\u2014job awaits the government\u2019s new hire\nFrom brands to billionaires, storytellers are still in demand\u2014despite what the headlines say about AI taking over all marketing and copywriting jobs.\nAnd one of the key messages, whoever lands the migration communications role will have to drive home, is that the government is reducing the number of illegal immigrants, including those crossing the Channel in small boats.\nThey\u2019ll have their work cut out for them. The Telegraph reports that more than 1,000 migrants arrived on 15 small boats within a single day last week, pushing this year\u2019s total to 35,476\u2014up 33% from the same period in 2024. That pace mirrors the record-breaking levels of 2022, when roughly 45,000 people crossed the Channel under the Conservative government.\nA Home Office source stressed to The Telegraph that the position was not newly created, and posted due to a staff change\u2014rather than a change in approach. However, in the report, the Conservatives have questioned whether the position will actually make a difference, while suggesting that the new hire is a PR stunt.\n\u201cInstead of stopping illegal immigration they are hiring people to try cover it up,\u201d Shadow Home Secretary Chris Philp said.\nThe successful candidate will also have to face the public court of approval. Some social media users were quick to slam the job listing as a waste of taxpayer money and government \u201cpropaganda.\u201d\n\u201cIn other words to create misinformation as \u2018truth\u2019 and calm you down,\u201d one person wrote on X.\n\u201cInstead of fixing an issue they\u2019d rather spend \u00a390k to gaslight you into believing they\u2019ve fixed it,\u201d another added.\nThis story was originally featured on Fortune.com",
-      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/GettyImages-2189954484.jpg?w=2048",
-      "author": "Orianna Rosa Royle",
-      "publishedAt": "2025-10-13T14:37:31.491551",
-      "category": "politics",
-      "emoji": "\ud83c\uddec\ud83c\udde7",
-      "final_score": 840.0,
-      "summary": "The UK government is offering a **\u00a391,000 salary** for a new communications director to convince the public of its success in tackling **illegal immigration**. The role focuses on managing public perception rather than direct border enforcement.",
-      "timeline": [
-        {
-          "date": "September 29, 2025",
-          "event": "UK government posts $120K Deputy Director Migration Communications job ad on LinkedIn"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "News outlets report on controversial communications role to promote Labour's immigration efforts"
-        }
-      ],
-      "details": [
-        "Pension contribution: 28.97% employer-paid[1]  \nMigrant arrivals: 35,476 this year[1]  \nJob grade: SCS Pay Band 1[5]"
-      ]
-    },
-    {
-      "title": "Speaker of Israeli Knesset removes hostage pin following release",
-      "url": "https://www.nbcnews.com/video/shorts/speaker-of-israeli-knesset-removes-hostage-pin-following-release-249764933720",
-      "source": "NBC News",
-      "description": "Speaker of the Israeli Knesset removes a pin given to him by the father of a released hostage before praising President Trump for the U.S. role in the ceasefire deal that secured the release of 20 living hostages by Hamas in Gaza.",
-      "content": "Speaker of the Israeli Knesset removes a pin given to him by the father of a released hostage before praising President Trump for the U.S. role in the ceasefire deal that secured the release of 20 living hostages by Hamas in Gaza.",
-      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/speakerknessetthumb-pnrgvk.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T15:23:45.623481",
-      "category": "politics",
-      "emoji": "\ud83c\uddee\ud83c\uddf1",
-      "final_score": 830.0,
-      "summary": "The **Israeli Knesset Speaker** removed a hostage pin after acknowledging the successful **ceasefire agreement** with Hamas, which led to the release of 20 hostages from Gaza, while crediting former President Trump for U.S. involvement in negotiations.",
-      "timeline": [
-        {
-          "date": "October 11, 2025",
-          "event": "Ceasefire between Israel and Hamas goes into effect at noon local time."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Hamas releases final 20 living Israeli hostages as part of U.S.-brokered deal."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Speaker of Israeli Knesset removes hostage pin after release, praises President Trump."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "President Trump addresses Israeli Knesset following the hostages' release."
-        }
-      ],
-      "details": [
-        "Standing ovations: 22 for Trump  \nHostages released: 20 total  \nNobel nomination: Knesset to recommend Trump"
-      ]
-    },
-    {
-      "title": "U.S. Insurance Companies Use Aesthetics Stigma To Deny Lipedema Care",
-      "url": "https://www.forbes.com/sites/jessicaourisman/2025/10/13/us-insurance-companies-use-aesthetics-stigma-to-deny-lipedema-care/",
-      "source": "Forbes",
-      "description": "Health insurance companies are using plastic surgery stigma to deny medically-necessary treatment of lipedema. A closer look reveals greater ills within US healthcare.",
-      "content": "Health insurance companies are using plastic surgery stigma to deny medically-necessary treatment of lipedema. A closer look reveals greater ills within US healthcare.",
-      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68e68c396aff635007e2e107/0x0.jpg?width=960",
-      "author": "Jessica Ourisman, Contributor",
-      "publishedAt": "2025-10-13T15:19:22.690668",
-      "category": "health",
-      "emoji": "\ud83c\udfe5",
-      "final_score": 830.0,
-      "summary": "U.S. **health insurance companies** are exploiting plastic surgery stigma to refuse coverage for **lipedema** treatments, despite their medical necessity. This practice highlights broader systemic problems within America's healthcare system and insurance coverage policies.",
-      "timeline": [
-        {
-          "date": "May 16, 2024",
-          "event": "Lawsuit filed against Kaiser Foundation Health for denying lipedema surgery coverage."
-        },
-        {
-          "date": "May 20, 2024",
-          "event": "United Healthcare agreed to settle class action over lipedema treatment denials."
-        }
-      ],
-      "details": [
-        "Coverage rate: Under 10% insured patients[1][3]  \nOut-of-pocket cost: $20,720\u2013$65,200[4]  \nAffected US women: 11% estimated prevalence[3]"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T17:26:47.028236",
+  "generatedAt": "2025-10-13T17:46:36.766945",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
