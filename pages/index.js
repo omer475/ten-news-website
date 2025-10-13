@@ -1713,50 +1713,32 @@ export default function Home() {
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
-                      position: 'absolute',
-                      top: 'calc(30vh + 12px)',
-                      bottom: '152px',
-                      left: '0',
-                      right: '0',
+                      position: 'relative',
+                      paddingTop: 'calc(30vh + 12px)',
                       paddingLeft: '10px',
                       paddingRight: '10px',
-                      zIndex: '2',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
+                      zIndex: '2'
                     }}>
                       
-                      {/* Title - At the top */}
+                      {/* Title - Large and Prominent, Higher Position */}
                       <h3 className="news-title" style={{ 
                         marginTop: '0',
-                        marginBottom: '0',
+                        marginBottom: '10px',
                         fontSize: '26px',
                         fontWeight: '800',
                         lineHeight: '1.2',
-                        letterSpacing: '-0.5px',
-                        flexShrink: 0,
-                        color: '#1d1d1f'
+                        letterSpacing: '-0.5px'
                       }}>{story.title}</h3>
                       
-                      {/* Summary - Centered in the middle */}
-                      <div style={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px 0'
-                      }}>
-                        <p className="news-summary" style={{ 
-                          margin: '0',
-                          fontSize: '18px',
-                          lineHeight: '1.5',
-                          color: '#2c2c2c',
-                          textAlign: 'center'
-                        }}>{renderBoldText(story.summary, story.category)}</p>
-                      </div>
-                      
-                      {/* Spacer for fixed bottom section */}
-                      <div style={{ flexShrink: 0, height: '0' }}></div>
+                      {/* Summary - Visible and Styled */}
+                      <p className="news-summary" style={{ 
+                        marginTop: '0',
+                        marginBottom: '16px',
+                        fontSize: '18px',
+                        lineHeight: '1.5',
+                        color: '#1a1a1a',
+                        opacity: '1'
+                      }}>{renderBoldText(story.summary, story.category)}</p>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
