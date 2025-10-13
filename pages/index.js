@@ -1781,10 +1781,11 @@ export default function Home() {
                           cursor: 'pointer',
                           minHeight: '90px',
                           height: '90px',
-                          background: showTimeline[index] ? 'transparent' : (darkMode ? '#1a1a1a' : '#f5f5f7'),
-                          borderRadius: '12px',
-                          border: 'none',
-                          boxShadow: 'none'
+                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.75)',
+                          backdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
+                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
+                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
+                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1876,11 +1877,13 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                background: darkMode ? '#1a1a1a' : '#f5f5f7',
-                                borderRadius: '12px',
-                                border: 'none',
-                                boxShadow: 'none',
+                                background: 'rgba(255, 255, 255, 0.75)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                borderRadius: '16px',
                                 padding: '12px 20px',
+                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
                                 minHeight: '90px',
                                 zIndex: '10'
                               }}>
@@ -1891,41 +1894,45 @@ export default function Home() {
                               }}>
                                 <div style={{
                                   position: 'absolute',
-                                  left: '6px',
+                                  left: '5.5px',
                                   top: '8px',
                                   bottom: '8px',
-                                  width: '2px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)',
-                                  zIndex: '0'
+                                  width: '3px',
+                                  background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
+                                  zIndex: '0',
+                                  borderRadius: '2px'
                                 }}></div>
                                 {story.timeline.map((event, idx) => (
                                   <div key={idx} style={{
                                     position: 'relative',
-                                    marginBottom: '8px',
+                                    marginBottom: '12px',
                                     paddingLeft: '20px',
-                                    minHeight: '32px'
+                                    minHeight: '36px'
                                   }}>
                                     <div style={{
                                       position: 'absolute',
-                                      left: '-14px',
+                                      left: '-15px',
                                       top: '6px',
-                                      width: '10px',
-                                      height: '10px',
+                                      width: '12px',
+                                      height: '12px',
                                       borderRadius: '50%',
                                       background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
-                                      border: '2px solid #3b82f6',
-                                      zIndex: '2'
+                                      border: '2.5px solid #3b82f6',
+                                      zIndex: '2',
+                                      boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
-                                      fontSize: '12px',
-                                      fontWeight: '600',
+                                      fontSize: '14px',
+                                      fontWeight: '700',
                                       color: '#3b82f6',
-                                      marginBottom: '3px'
+                                      marginBottom: '4px',
+                                      letterSpacing: '0.3px'
                                     }}>{event.date}</div>
                                     <div style={{
-                                      fontSize: '14px',
+                                      fontSize: '16px',
+                                      fontWeight: '500',
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
-                                      lineHeight: '1.3'
+                                      lineHeight: '1.4'
                                     }}>{event.event}</div>
                       </div>
                                 ))}
