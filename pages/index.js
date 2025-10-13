@@ -1718,8 +1718,8 @@ export default function Home() {
                         textTransform: 'uppercase',
                         padding: '4px 8px',
                         borderRadius: '6px',
-                        background: '#fee2e2',
-                        color: '#b91c1c'
+                        background: '#f1f5f9',
+                        color: '#475569'
                       }}>
                         {story.emoji} {story.category}
                       </div>
@@ -1769,9 +1769,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
-                          border: showTimeline[index] ? 'none' : '2px solid rgba(220, 38, 38, 0.3)',
+                          border: showTimeline[index] ? 'none' : '2px solid rgba(148, 163, 184, 0.25)',
                           borderRadius: showTimeline[index] ? '0' : '16px',
-                          boxShadow: showTimeline[index] ? 'none' : '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)'
+                          boxShadow: showTimeline[index] ? 'none' : '0 4px 20px rgba(148, 163, 184, 0.2), 0 2px 8px rgba(148, 163, 184, 0.12)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1866,10 +1866,10 @@ export default function Home() {
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
-                                border: '2px solid rgba(220, 38, 38, 0.3)',
+                                border: '2px solid rgba(148, 163, 184, 0.25)',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)',
+                                boxShadow: '0 4px 20px rgba(148, 163, 184, 0.2), 0 2px 8px rgba(148, 163, 184, 0.12)',
                                 minHeight: '90px',
                                 zIndex: '10'
                               }}>
