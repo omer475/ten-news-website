@@ -135,6 +135,41 @@
       ]
     },
     {
+      "title": "More than 500,000 Palestinians return to ruined Gaza City as",
+      "url": "https://www.france24.com/en/middle-east/20251011-more-than-500-000-palestinians-return-to-ruined-gaza-city-as-truce-holds",
+      "source": "France 24",
+      "description": "More than half a million displaced Palestinians have returned to Gaza City since a ceasefire came into effect Friday, Gaza's civil defence agency said on Saturday.\u00a0Many displaced Palestinians returning home were left stunned by the destruction while others were amazed to find their homes still standing.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/b3e00f96-a6af-11f0-88b7-005056a90284/w:1024/p:16x9/AP25284466698625.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T17:13:54.205056",
+      "category": "politics",
+      "emoji": "\ud83c\udfe0",
+      "final_score": 970.0,
+      "summary": "During the ongoing **ceasefire** in Gaza, over **500,000 displaced Palestinians** have begun returning to Gaza City, confronting a landscape of widespread destruction while some discover their homes miraculously intact, according to civil defence officials.",
+      "timeline": [
+        {
+          "date": "May 5, 2024",
+          "event": "Hamas accepts Egyptian-Qatari three-stage Gaza ceasefire proposal after negotiations in Cairo"
+        },
+        {
+          "date": "January 15, 2025",
+          "event": "Israel and Hamas agree to a variation of the ceasefire proposal"
+        },
+        {
+          "date": "January 17, 2025",
+          "event": "Ceasefire deal signed and approved by Israeli security cabinet"
+        },
+        {
+          "date": "January 19, 2025",
+          "event": "Ceasefire takes effect; over 500,000 Palestinians begin returning to Gaza City"
+        }
+      ],
+      "details": [
+        "Deaths: 67,075 killed in Gaza[1]\nInjuries: 169,430 injured in Gaza[1]\nPopulation loss: 100,000 Gazans exiled[1]"
+      ]
+    },
+    {
       "title": "Hostage families celebrate in Tel Aviv after Gaza breakthrough",
       "url": "https://www.bbc.com/news/videos/c5y4nnpvqw2o?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -163,6 +198,37 @@
       ],
       "details": [
         "Hostages released: 20  \nPrisoners freed: Hundreds  \nDeal signed: Monday"
+      ]
+    },
+    {
+      "title": "'We are inventing captivity medicine': Hospital prepares for freed Israeli",
+      "url": "https://www.bbc.com/news/articles/c4gvg8jx7gmo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "Several of the hostages will be brought from Gaza to the Rabin Medical Center in Petah Tikva.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/167b/live/252b1e00-a6cb-11f0-bf22-9df87c17cee5.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:14:05.146656",
+      "category": "politics",
+      "emoji": "\ud83c\udfe5",
+      "final_score": 960.0,
+      "summary": "The Rabin Medical Center in **Petah Tikva** is preparing specialized care for **Israeli hostages** set to be released from Gaza, developing what doctors describe as \"captivity medicine\" to address their unique physical and psychological needs.",
+      "timeline": [
+        {
+          "date": "October 13, 2025",
+          "event": "All remaining living hostages freed from Gaza by Hamas as part of ceasefire deal"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Convoy carrying released hostages arrives in Reim, southern Israel"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Freed hostages arrive at Rabin Medical Center in Petah Tikva for treatment"
+        }
+      ],
+      "details": [
+        "Hostages freed: All living hostages  \nArrival site: Reim, southern Israel  \nRelease date: October 13, 2025"
       ]
     },
     {
@@ -360,6 +426,41 @@
       ]
     },
     {
+      "title": "Mexico floods leave at least 27 dead and more missing",
+      "url": "https://www.bbc.com/news/articles/c89d9vp1djyo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "Heavy rainfall has caused river banks to burst and triggered landslides, carrying away homes and cars.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/1e83/live/5e9d9f80-a678-11f0-ba4e-07314604aac8.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:15:25.552031",
+      "category": "environment",
+      "emoji": "\ud83c\udf0a",
+      "final_score": 930.0,
+      "summary": "**Devastating floods** in Mexico have resulted in at least 27 deaths, with additional people missing, after intense rainfall caused rivers to overflow. **Landslides** have swept away homes and vehicles in the affected regions.",
+      "timeline": [
+        {
+          "date": "September 24, 2024",
+          "event": "Hurricane John made landfall in Guerrero, causing deadly flooding and mudslides."
+        },
+        {
+          "date": "October 1-3, 2024",
+          "event": "Unnamed tropical storm caused heavy rains and flooding in southeastern Mexico, killing 2."
+        },
+        {
+          "date": "October 18-20, 2024",
+          "event": "Tropical Storm Nadine brought floods and landslides, resulting in at least 13 deaths."
+        },
+        {
+          "date": "October 28, 2024",
+          "event": "Heavy rains in Veracruz caused Papaloapan river to overflow, displacing hundreds."
+        }
+      ],
+      "details": [
+        "Death toll: 41  \nFlood depth: 12+ feet  \nVehicles displaced: Lodged in treetops"
+      ]
+    },
+    {
       "title": "Kids who use social media score lower on reading and",
       "url": "https://www.npr.org/sections/shots-health-news/2025/10/13/nx-s1-5571050/social-media-teens-brains-reading-memory",
       "source": "NPR News",
@@ -520,6 +621,72 @@
       ],
       "details": [
         "Countries affected: 83+\nGreat Barrier Reef events: 6 since 2016\nBleaching alert levels: Now up to Level 5"
+      ]
+    },
+    {
+      "title": "Denmark to boost Arctic defence with new ships, jets and",
+      "url": "https://www.bbc.com/news/articles/cy9n790j878o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "Denmark will buy US F-35 fighter jets and new ships to defend the Arctic, including Greenland.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/f381/live/df5bf250-a643-11f0-968a-efb7a719b7f7.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:15:35.820996",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 910.0,
+      "summary": "Denmark plans to strengthen its **Arctic defense capabilities** by acquiring **F-35 fighter jets** from the United States and adding new naval vessels, demonstrating a strategic commitment to protecting its territories, including Greenland, in the far north.",
+      "timeline": [
+        {
+          "date": "January 2025",
+          "event": "Denmark signs First Agreement on Arctic and North Atlantic to boost regional defense."
+        },
+        {
+          "date": "July 4, 2025",
+          "event": "Denmark agrees to strengthen Arctic surveillance and build facilities for larger ships."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Denmark approves purchase of 16 more F-35 jets and new Arctic defense investments."
+        }
+      ],
+      "details": [
+        "Total investment: $4.2 billion[1]  \nArctic fleet size: 5 vessels[1]  \nRadar installation: East Greenland[1]"
+      ]
+    },
+    {
+      "title": "Leaders gather around Donald Trump in Sharm El-Sheikh for Middle",
+      "url": "https://www.france24.com/en/video/20251013-leaders-gather-around-donald-trump-in-sharm-el-sheikh-for-middle-east-peace-summit",
+      "source": "France 24",
+      "description": "World leaders, led by President Donald Trump and Egyptian President Abdel-Fattah el-Sissi, gathered in Sharm El-Sheikh for a crucial Middle East peace summit. The meeting aims to build on the recent US-brokered ceasefire between Israel and Hamas and pave the way for lasting stability in the region. FRANCE 24's journalist analyse Trump's speech and the stakes of the summit.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/db522356-a84a-11f0-9f57-005056a90284/w:1024/p:16x9/EN-20251013-170935-171413-CS.jpg",
+      "author": "FRANCE24",
+      "publishedAt": "2025-10-13T17:13:42.657462",
+      "category": "politics",
+      "emoji": "\ud83e\udd1d",
+      "final_score": 910.0,
+      "summary": "World leaders, including **Donald Trump** and Egyptian President el-Sissi, convened in Sharm El-Sheikh for a pivotal **Middle East peace summit**, seeking to strengthen the US-brokered **ceasefire** between Israel and Hamas for regional stability.",
+      "timeline": [
+        {
+          "date": "October 5, 2025",
+          "event": "Israeli and Hamas delegations arrive in Sharm El-Sheikh for peace summit talks"
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "Indirect talks begin in Sharm El-Sheikh, mediated by Egypt, Qatar, Turkey, and US"
+        },
+        {
+          "date": "October 8, 2025",
+          "event": "Trump announces Israel and Hamas reached agreement; first phase of deal signed"
+        },
+        {
+          "date": "October 9, 2025",
+          "event": "Israel and Hamas sign Trump's Gaza war peace plan in Sharm El-Sheikh"
+        }
+      ],
+      "details": [
+        "Hostages released: 17 individuals  \nSummit attendees: 12 world leaders  \nCeasefire duration: 10 days"
       ]
     },
     {
@@ -825,6 +992,72 @@
       ],
       "details": [
         "GDP forecast 2025: 0.6%\nCapital flight 2024: $14B\nInflation rate: 42.4%"
+      ]
+    },
+    {
+      "title": "Russia is unleashing a new surge of exploding drone attacks",
+      "url": "https://www.businessinsider.com/russia-unleashed-new-surge-drone-attacks-on-ukraines-rail-network-2025-10",
+      "source": "Business Insider",
+      "description": "A representative of Ukraine's state-owned rail company said the attacks coincide with Russia's \"dramatic increase\" in drone production.",
+      "content": "Russia has ramped up its attacks on Ukraine's rail network since August.NATIONAL POLICE OF UKRAINE/via REUTERSRussia has ramped up its drone attacks on Ukraine's rail network since early August.An official said Russia has launched nearly 300 strikes on the Ukrainian railway system since then.The new campaign appears linked to Russia's increase in long-range drone production.Russia has been ramping up its exploding drone strikes on Ukraine's rail network, officials say, targeting trains, stations, and other infrastructure in a deadly new campaign.A representative of Ukraine's state-owned rail company told Business Insider that the surge in attacks coincides with Russia's \"dramatic increase\" in long-range drone production. This has afforded Moscow more weapons for hunting down trains.Russia has been carrying out attacks against Ukraine's rail network since the early days of the war. However, it began increasing the frequency of strikes in early August, focusing on \"disrupting critical connections,\" Yulia Svyrydenko, Ukraine's prime minister, said earlier this month.Since August, Russia has launched nearly 300 strikes on the Ukrainian railway system, said Oleksii Kuleba, Ukraine's deputy prime minister for restoration, on Sunday in his latest tally of attacks. Officials have said that targets include trains, stations, and other infrastructure.Since the start of the war, 221 railway workers have been wounded and 37 have died while performing their duties by Russian strikes. They have also caused civilian casualties. With the increase in attacks, those numbers could spike. An October 4 strike on a train station left one person dead and 30 more injured.The representative of Ukrzaliznytsia, Ukraine's state-owned railway company, said their understanding is that Moscow's goals are to sow panic among passengers and to disrupt the economy. The recent uptick in attacks has been linked to a rise in Russian drone production, they said.The aftermath of a Russian attack on a Ukrainian train earlier this month.Pavlo Zarva/Kordon.Media/Global Images Ukraine via Getty Images\"Previously, they simply did not have sufficient resources for a single combat drone, such as a Shahed, to hunt down a locomotive,\" the railway representative told Business Insider. \"Now they can afford to use Shaheds to hit individual locomotives rather than strategic targets.\"Neither Russia's embassy in the US nor its defense ministry immediately responded to a request for comment from Business Insider on the strike campaign.Russia has significantly scaled up its drone operations this year. The country now produces around 4,000 a month at its factories, and it has been able to attack Ukraine with hundreds of them in its nightly strikes. Western intelligence has warned this could eventually become thousands.Russia has also notably expanded its drone bases and launch sites in recent months in a sign that it is investing heavily in cheap long-range strike capabilities.In an October 4 social media post, Svyrydenko said that Moscow also uses missiles to \"systematically\" attack Ukraine's rail network. \"Alongside their strikes on energy facilities ahead of the winter season, Russia now seeks to sever the very arteries of life in Ukraine \u2014 the routes that carry people, enable medical evacuation, and deliver hope across our country,\" she said.Kuleba said in a statement on the Telegram messaging platform that Ukrzaliznytsia tends to restore infrastructure within just a few hours of attacks and usually gets operations going again later that day.Russia's new campaign against Ukraine's rail network comes as part of the broader expansion of its drone attacks against the country. Over the past several months, it has regularly targeted cities and civilian infrastructure with hundreds of armed and decoy drones, the latter of which are designed to exhaust Kyiv's already strained air defenses.Ukraine, meanwhile, has ramped up its own strike campaign since early August, using long-range drones in attacks on Russian energy infrastructure, including oil refineries. The goal has been to disrupt a key source of revenue that fuels Moscow's war efforts and apply pressure on the Kremlin.Read the original article on Business Insider",
+      "urlToImage": "https://i.insider.com/68ecffffcc993f9955d00efc?format=jpeg",
+      "author": "Jake Epstein (jepstein@businessinsider.com)",
+      "publishedAt": "2025-10-13T17:13:20.603212",
+      "category": "general",
+      "emoji": "\ud83d\udca5",
+      "final_score": 900.0,
+      "summary": "Russia has launched nearly **300 drone strikes** on Ukraine's railway system since August, intensifying attacks on trains, stations, and infrastructure. The surge coincides with Moscow's **increased drone production**, enabling more frequent assaults on critical transportation.",
+      "timeline": [
+        {
+          "date": "August 19, 2025",
+          "event": "Ukrainian drone strike wrecks Russian fuel convoy, crippling Zaporizhzhia railway."
+        },
+        {
+          "date": "September 1, 2025",
+          "event": "Drone debris sets fire to Krasnodar railway substation, disrupting Black Sea rail network."
+        },
+        {
+          "date": "October 1, 2025",
+          "event": "Russian drone strikes electrical substation in Slavutych, Kyiv Oblast, causing power outage."
+        },
+        {
+          "date": "October 8, 2025",
+          "event": "Russia launches overnight drone attack, hitting Poltava railway infrastructure and energy facilities."
+        }
+      ],
+      "details": [
+        "Attack frequency: 40 major strikes since August[1]  \nDrone output: 5,000 Shaheds per month[2]  \nSpike: 38% rise in attacks September[2]"
+      ]
+    },
+    {
+      "title": "Air traffic controllers were already some of the most stressed",
+      "url": "https://fortune.com/2025/10/13/why-government-shutdown-air-traffic-control-work-unpaid-sean-duffy/",
+      "source": "Fortune",
+      "description": "Transportation Secretary Sean Duffy said around 10% of the controller workforce is engaging in \"sickouts\" and threatened to fire these \u201cproblem children.\u201d",
+      "content": "Airports across the United States have been experiencing significant flight delays recently because of a shortage of air traffic controllers, who have been required to work without pay since a government shutdown began on Oct. 1, 2025. Reports suggest employees have been calling in sick in increased numbers. And since there was already a shortage of controllers before the shutdown, the impact has been severe, with thousands of flights delayed or canceled since the shutdown began.\nThe Conversation U.S. asked Brian Strzempkowski and Melanie Dickman, aviation experts at The Ohio State University, to explain how the shutdown is affecting air travel, what that means for passengers and air safety, as well as the air traffic controller shortage that has been plaguing U.S. airports for years.\nHow is the shutdown affecting air traffic controllers?\nAir traffic controllers are deemed essential workers, meaning they are still required to work while not receiving compensation \u2013 which they would typically then receive in a lump sum after the shutdown ends. President Donald Trump created some uncertainty around this by suggesting workers may not get their back pay without explicit authorization from Congress, despite having signed a law in his first term that makes it a legal requirement.\nWorking without regular pay, combined with the possibility that they won\u2019t get paid at all, is resulting in real financial stress for air traffic controllers, who perform one of the most stressful jobs there is.\nAs a result, there have been reports of air traffic controllers calling in sick in large numbers. This happened in previous shutdowns as well. During the 2018-2019 shutdown, for example, sickouts started to happen around the two-week mark, roughly when the first paycheck was missed. Controllers, airport security employees, and other essential workers were calling in sick often so they could work another part-time job to pay their bills.\nIn the current shutdown, this appears to be happening sooner, less than a week after it began. Transportation Secretary Sean Duffy said around 10% of the controller workforce is engaging in this practice and threatened to fire these \u201cproblem children.\u201d\nWhat does this mean for people about to take a flight?\nBefore the shutdown, there was already a critical shortage of air traffic controllers. Coupled with workers calling in sick in recent days, this has led to severe travel delays at many major airports, such as those in Atlanta and Denver, and regional ones, like those serving Burbank, California, and Daytona Beach, Florida.\nA big question on travelers\u2019 minds is whether this will affect air safety.\nThe air traffic control system is multi-layered and has redundancies built into it to ensure an incredibly safe environment. While controller shortages do begin to erode some of those redundancies, contingency plans are in place to help protect the system. For example, air traffic can be diverted away from affected locations or delayed, or the flight may even be be canceled before the plane leaves the gate.\nAs an example, Newark Liberty International Airport can accommodate approximately 80 aircraft departing or arriving per hour when the airport and airspace is fully operational. However, due to technical failures, staffing shortages and construction at the airport, capacity was limited to between 28 and 34 aircraft per hour in June 2025. Due to technology upgrades and procedural changes, that number was recently increased to between 68 and 72 aircraft per hour. By regulating the amount of traffic, the system can be protected to ensure the safety of every aircraft.\nThis was an example of high-level oversight in which the secretary of transportation was personally involved in seeking a solution to ensure air travel remained safe while trying to increase capacity.\nHow does the U.S. keep air travel safe?\nOn a more day-to-day level, the Federal Aviation Administration relies on the Air Traffic Control System Command Center, located about 40 miles away from Washington, D.C. This facility oversees the entire national airspace system and essentially \u201ccontrols\u201d the controllers. Air traffic professionals monitor staffing at air traffic facilities, weather conditions, equipment failures and unexpected disruptions to the system.\nWhen an incident arises, such as Burbank Airport recently reporting that no controllers were available, the command center issues an alert stating that any aircraft inbound to Burbank must divert to an alternate airport, and any aircraft that has not yet taken off will be held on the ground.\nStaffing shortages at other air traffic control facilities may require alternate plans, such as transitioning workloads from one facility with fewer controllers, to another that is appropriately staffed. There is a wide range of tools that the Air Traffic Control System Command Center can utilize to protect the system, but it all stems from the idea of managing the capacity. Flight delays and cancellations, while disruptive to individual travelers, are actually good from a system perspective, because they prevent congestion in the airspace.\nWhy was there an air traffic controller shortage in the first place?\nThere has been a systemic problem with hiring of air traffic controllers for more than a decade.\nOver the years, the FAA has fallen behind on training enough controllers to replace those who retire each year. In May 2025, we wrote about the FAA\u2019s plan to utilize colleges across the country to provide the professional training for this career field. While it will take a little time for the students to matriculate through college and into the workforce, this plan will be a significant contributor to solving the controller shortage problem.\nMeanwhile, the FAA Academy, which trains U.S. air traffic controllers, only has limited funding from the previous federal budget for current students. The shutdown means no new students can begin training. Depending on the length of the shutdown, the funding may run out as additional employees are furloughed. The ripple effects of a shutdown can remain for many months after the government reopens.\nWhat\u2019s the government doing to end the shortage?\nIn July, Congress authorized over US$12 billion in funding to help modernize the air traffic control system.\nSecretary Duffy is currently leading an effort to identify a contractor to implement the technology upgrades needed to modernize the system and make it more robust. Duffy has said an additional $19 billion investment will be needed to complete the task.\nBrian Strzempkowski, Assistant Director, Center for Aviation Studies, The Ohio State University and Melanie Dickman, Lecturer in Aviation Studies, The Ohio State University\nThis article is republished from The Conversation under a Creative Commons license. Read the original article.\n\n\nThis story was originally featured on Fortune.com",
+      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/GettyImages-2239205851-e1760371267432.jpg?w=2048",
+      "author": "Brian Strzempkowski, Melanie Dickman, The Conversation",
+      "publishedAt": "2025-10-13T17:13:08.334277",
+      "category": "politics",
+      "emoji": "\u2708\ufe0f",
+      "final_score": 900.0,
+      "summary": "**Air traffic controllers**, already facing workforce shortages, are staging **\"sickouts\"** during the 2025 government shutdown while working without pay. This has caused widespread flight delays, prompting threats from Transportation Secretary Duffy to fire protesting controllers.",
+      "timeline": [
+        {
+          "date": "October 1, 2024",
+          "event": "Federal government shutdown begins; air traffic controllers required to work without pay."
+        },
+        {
+          "date": "October 3, 2024",
+          "event": "Transportation Secretary Duffy threatens to fire air traffic controllers participating in sickouts."
+        },
+        {
+          "date": "October 7, 2024",
+          "event": "FAA reduces air traffic at major airports due to staffing shortages and sickouts."
+        }
+      ],
+      "details": [
+        "Towers understaffed: Over 90%  \nFAA funding: $12B authorized July 2025  \nControllers represented: 20,000+"
       ]
     },
     {
@@ -2513,6 +2746,72 @@
       ]
     },
     {
+      "title": "D\u00e9j\u00e0 vu as French President reappoints S\u00e9bastien LeCornu Prime Minister",
+      "url": "https://www.france24.com/en/tv-shows/a-week-in-france/20251011-d%C3%A9j%C3%A0-vu-as-french-president-reappoints-s%C3%A9bastien-lecornu-prime-minister",
+      "source": "France 24",
+      "description": "It's been quite a week in French Politics. \u00a0S\u00e9bastien LeCornu stepped down from his post as Prime Minister on Monday, on Friday President Emmanuel Macron reappointed him. In between, there have been meetings with the various political parties. The National Assembly remains in gridlock and time to pass a budget before the end of the year is running out.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/8d0276ea-a6b7-11f0-a0ad-005056bf30b7/w:1024/p:16x9/capture-192775193368ea78a3e5ee58-53656958.jpg",
+      "author": "Catherine VIETTE",
+      "publishedAt": "2025-10-13T17:14:47.337499",
+      "category": "politics",
+      "emoji": "\ud83c\uddeb\ud83c\uddf7",
+      "final_score": 820.0,
+      "summary": "It's been quite a week in French Politics. \u00a0S\u00e9bastien LeCornu stepped down from his post as Prime Minister on Monday, on Friday President Emmanuel Macron reappointed him. In between, there have been m",
+      "timeline": [
+        {
+          "date": "September 9, 2025",
+          "event": "S\u00e9bastien Lecornu appointed Prime Minister by President Emmanuel Macron."
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "Lecornu and cabinet resign amid political backlash and parliamentary gridlock."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "President Macron reappoints Lecornu as Prime Minister after coalition talks."
+        }
+      ],
+      "details": [
+        "Cabinet size: 19 ministers appointed\nNew defense minister: Catherine Vautrin\nFinance minister: Roland Lescure"
+      ]
+    },
+    {
+      "title": "Morocco king urges speedy social reforms following youth-led protests",
+      "url": "https://www.france24.com/en/video/20251011-morocco-king-urges-speedy-social-reforms-following-youth-led-protests",
+      "source": "France 24",
+      "description": "Morocco's King Mohammed VI on Friday said improving public education and healthcare was a priority, but made no reference to the youth movement that has been staging nationwide protests for sweeping social reforms. The royal speech had been much anticipated by the protesters, who have taken to the streets almost every night since September 27.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/51dc0542-a6b5-11f0-a416-005056bf30b7/w:1024/p:16x9/EN-20251011-170738-170918-CS.jpg",
+      "author": "FRANCE24",
+      "publishedAt": "2025-10-13T17:14:36.938957",
+      "category": "politics",
+      "emoji": "\ud83d\udc51",
+      "final_score": 820.0,
+      "summary": "Morocco's King Mohammed VI on Friday said improving public education and healthcare was a priority, but made no reference to the youth movement that has been staging nationwide protests for sweeping s",
+      "timeline": [
+        {
+          "date": "September 27, 2025",
+          "event": "Youth-led GenZ 212 protests begin in major Moroccan cities demanding social reforms."
+        },
+        {
+          "date": "September 30, 2025",
+          "event": "Rioting and clashes escalate; injuries and arrests reported in multiple cities."
+        },
+        {
+          "date": "October 1, 2025",
+          "event": "Three protesters killed in Leqliaa after gunfire by law enforcement during clashes."
+        },
+        {
+          "date": "October 3, 2025",
+          "event": "King Mohammed VI urges reforms in education and healthcare, omitting direct protest mention."
+        }
+      ],
+      "details": [
+        "Youth unemployment rate: 35.8 percent\nArrested protesters: 409 people\nDeaths reported: 3 protesters"
+      ]
+    },
+    {
       "title": "In a \u2018wishful thinking\u2019 address, Donald Trump hails \u2018historic dawn",
       "url": "https://www.france24.com/en/video/20251013-in-a-wishful-thinking-address-donald-trump-hails-historic-dawn-of-a-new-middle-east",
       "source": "France 24",
@@ -2572,6 +2871,33 @@
       ],
       "details": [
         "Pesticide suicides: 20% global total[5]  \nBan impact: 28\u201392% reduction[5]  \nLives saved: 15,000\u201330,000 in 3 years[7]"
+      ]
+    },
+    {
+      "title": "Markets digest bank earnings after recent turmoil",
+      "url": "https://www.cnn.com/business/live-news/stock-market-bank-earnings/index.html",
+      "source": "CNN World",
+      "description": "",
+      "content": "",
+      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/230328155427-01-nyse-0328-super-169.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:15:16.595300",
+      "category": "business",
+      "emoji": "\ud83d\udcc8",
+      "final_score": 810.0,
+      "summary": "I notice you haven't actually shared the article text for me to summarize. If you'd like me to create a concise 35-40 word summary, please provide the full article text and I'll format it according to your requirements with bold key terms.",
+      "timeline": [
+        {
+          "date": "October 14, 2025",
+          "event": "JPMorgan, Wells Fargo, Goldman Sachs, Citigroup report Q3 earnings after recent market turmoil"
+        },
+        {
+          "date": "October 15, 2025",
+          "event": "Bank of America and Morgan Stanley release Q3 2025 earnings results"
+        }
+      ],
+      "details": [
+        "Earnings growth: 9% expected  \nM&A volume: $1.26 trillion Q3  \nMega-deals: Record number in 2025"
       ]
     },
     {
@@ -2730,6 +3056,33 @@
       ]
     },
     {
+      "title": "Trump Praises Egyptian President's Role in Gaza Deal",
+      "url": "https://www.france24.com/en/video/20251013-donald-trump-praises-role-played-by-egyptian-president-in-gaza-deal",
+      "source": "France 24",
+      "description": "Trump praised Egyptian President Abdel Fattah al-Sisi's on October 13, 2025 as the two leaders appeared together before an international summit on the Gaza deal. \"He played a very important role\" in talks with Hamas. \"I appreciate it very much,\" Trump said of Sisi, whom he called as a powerful leader who keeps crime down in his country.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/b7f622b4-a849-11f0-9d2b-005056a97e36/w:1024/p:16x9/EN-20251013-165706-170218-CS.jpg",
+      "author": "FRANCE24",
+      "publishedAt": "2025-10-13T17:13:30.247511",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 780.0,
+      "summary": "Trump praised Egyptian President Abdel Fattah al-Sisi's on October 13, 2025 as the two leaders appeared together before an international summit on the Gaza deal. \"He played a very important role\" in t",
+      "timeline": [
+        {
+          "date": "October 13, 2025",
+          "event": "Trump praises Egypt's Sisi for key role in Gaza deal at international summit"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Trump confirms phase two of Gaza negotiations has started in Sharm el-Sheikh"
+        }
+      ],
+      "details": [
+        "Summit location: Sharm el-Sheikh[1]  \nCeasefire: Formal signing ceremony expected[1]  \nNegotiations: Phase two has started[1]"
+      ]
+    },
+    {
       "title": "The AI Boom Has a Copper Problem. Are Microbes the",
       "url": "https://spectrum.ieee.org/ai-copper",
       "source": "IEEE Spectrum",
@@ -2829,378 +3182,9 @@
       "details": [
         "Signatories: 56 countries  \nFirst signed: October 13, 2020  \nLatest workshop: May 2025, Abu Dhabi"
       ]
-    },
-    {
-      "title": "A list of this year's Nobel Prize winners",
-      "url": "https://phys.org/news/2025-10-year-nobel-prize-winners.html",
-      "source": "Phys.org",
-      "description": "The announcement Monday that three laureates will share the Nobel memorial prize in economics for explaining innovation-driven growth brings this year's Nobel awards to a close.",
-      "content": "",
-      "urlToImage": "https://scx1.b-cdn.net/csz/news/tmb/2025/a-list-of-this-years-n-3.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T14:29:50.710103",
-      "category": "science",
-      "emoji": "\ud83c\udfc6",
-      "final_score": 770.0,
-      "summary": "The 2023 **Nobel Prize** season concluded with the Economics award recognizing three scholars for their work on **innovation-driven growth**. This final announcement completes the prestigious annual ceremony honoring groundbreaking achievements across multiple disciplines.",
-      "timeline": [
-        {
-          "date": "October 7, 2024",
-          "event": "Nobel Prize in Physiology or Medicine announced in Stockholm."
-        },
-        {
-          "date": "October 8, 2024",
-          "event": "Nobel Prize in Physics announced by the Royal Swedish Academy of Sciences."
-        },
-        {
-          "date": "October 9, 2024",
-          "event": "Nobel Prize in Chemistry announced in Stockholm."
-        },
-        {
-          "date": "October 14, 2024",
-          "event": "Three laureates awarded Nobel Prize in Economics for studies on institutions and prosperity."
-        }
-      ],
-      "details": [
-        "Peace Prize: Narges Mohammadi  \nLiterature Prize: Jon Fosse  \nPhysics Prize: Pierre Agostini et al."
-      ]
-    },
-    {
-      "title": "China's EV Sales Surge Before Tax Incentives End",
-      "url": "https://www.scmp.com/business/china-business/article/3328837/chinas-pure-ev-sales-hit-all-time-high-new-models-expiring-tax-breaks-lure-buyers?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Sales of pure-electric vehicles (EVs) in mainland China hit an all-time high last month as consumers rushed to take advantage of expiring tax breaks and subsidies.\nThe country\u2019s 50 or so EV makers delivered a total of 826,000 BEVs (battery electric vehicles) to domestic customers in September, 28.5 per cent higher than a year earlier, according to data from the China Passenger Car Association (CPCA). The previous record was 762,000 in December 2024.\nThe sales boom came earlier than usual, as...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/7d34b0c8-6cc2-4b6b-bcca-271acf2b4c74_decc46b3.jpg",
-      "author": "Daniel Ren",
-      "publishedAt": "2025-10-13T12:43:40.132140",
-      "category": "business",
-      "emoji": "\ud83d\udcc8",
-      "final_score": 770.0,
-      "summary": "**Pure-electric vehicle** sales in China reached a record 826,000 units in September, up 28.5% year-over-year, as consumers rushed to benefit from expiring **tax incentives**. The surge surpassed the previous record of 762,000 from December 2024.",
-      "timeline": [
-        {
-          "date": "September 2024",
-          "event": "China EV makers deliver 826,000 BEVs, a new monthly sales record"
-        },
-        {
-          "date": "December 2024",
-          "event": "Previous China BEV sales record set at 762,000 units delivered"
-        },
-        {
-          "date": "September 2025",
-          "event": "Leapmotor, Xpeng, Zeekr report best-ever monthly EV sales in China"
-        }
-      ],
-      "details": [
-        "BYD global sales: 393,060 units  \nGeely EV sales growth: 81.3% YoY  \nXiaomi EV deliveries: 42,000 units"
-      ]
-    },
-    {
-      "title": "How can Europe protect its skies against 'escalating' drone menace?",
-      "url": "https://www.japantimes.co.jp/news/2025/10/12/world/politics/europe-drone-focus/",
-      "source": "The Japan Times",
-      "description": "Concerns are growing that such disruptions are part of Russian hybrid war tactics three-and-a-half years into its invasion of Ukraine.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499091.JPG",
-      "author": "",
-      "publishedAt": "2025-10-13T16:08:31.621760",
-      "category": "politics",
-      "emoji": "\ud83d\udee1\ufe0f",
-      "final_score": 760.0,
-      "summary": "Concerns are growing that such disruptions are part of Russian hybrid war tactics three-and-a-half years into its invasion of Ukraine.",
-      "timeline": [
-        {
-          "date": "September 9-10, 2025",
-          "event": "19-23 Russian drones enter Poland triggering NATO Quick Reaction Alert"
-        },
-        {
-          "date": "September 12, 2025",
-          "event": "NATO launches Operation Eastern Sentry to protect alliance eastern borders"
-        },
-        {
-          "date": "September 22, 2025",
-          "event": "Copenhagen and Oslo airports closed due to multiple drone sightings"
-        },
-        {
-          "date": "October 2025",
-          "event": "Munich airport shut down twice after drone sightings over city"
-        }
-      ],
-      "details": [
-        "Incidents 2019: Nearly 2,000 reported\nAirport closures: Copenhagen 4 hours\nCountries affected: 10+ European nations"
-      ]
-    },
-    {
-      "title": "NSA Accused of Blocking Post-Quantum Cryptography Backup Plans",
-      "url": "https://it.slashdot.org/story/25/10/12/0751230/cryptologist-djb-alleges-nsa-is-pushing-an-end-to-backup-algorithms-for-post-quantum-cryptography?utm_source=rss1.0mainlinkanon&utm_medium=feed",
-      "source": "Slashdot",
-      "description": "Cryptologist/CS professor Daniel J. Bernstein is alleging that America's National Security Agency is attempting to influence NIST post-quantum cryptography standards. \n\nBernstein first emphasizes that it's normal for post-quantum cryptography (or \"PQ\") to be part of \"hybrid\" security that also includes traditional pre-quantum cryptography. (Bernstein says this is important because since 2016, \"We've seen many breaks of post-quantum proposals...\") \n\n\"The problem in a nutshell. Surveillance agency NSA and its [UK counterpart] GCHQ are trying to have standards-development organizations endorse weakening [pre-quantum] ECC+PQ down to just PQ.\"\nPart of this is that NSA and GCHQ have been endlessly repeating arguments that this weakening is a good thing... I'm instead looking at how easy it is for NSA to simply spend money to corrupt the standardization process.... The massive U.S. military budget now publicly requires cryptographic \"components\" to have NSA approval... In June 2024, NSA's William Layton wrote that \"we do not anticipate supporting hybrid in national security systems\"... \n\n[Later a Cisco employee wrote of selling non-hybrid cryptography to a significant customer, \"that's what they're willing to buy. Hence, Cisco will implement it\".] \n\nWhat do you do with your control over the U.S. military budget? That's another opportunity to \"shape the worldwide commercial cryptography marketplace\". You can tell people that you won't authorize purchasing double encryption. You can even follow through on having the military publicly purchase single encryption. Meanwhile you quietly spend a negligible amount of money on an independent encryption layer to protect the data that you care about, so you're actually using double encryption. \n\nThis seems to be a speculative scenario. But Bernstein is also concerned about how the Internet Engineering Task Force handled two drafts specifying post-quantum encryption mechanisms for TLS (\"the security layer inside HTTPS and inside various other protocols\"). For a draft suggesting \"non-hybrid\" encryption, there were 20 statements of support (plus 2 more only conditionally supporting it), but 7 more statements unequivocally opposing adoption, including one from Bernstein. The IETF has at times said they aim for \"rough consensus\" \u2014 or for \"broad consensus\" \u2014 but Bernstein insists 7 opposers in a field of 29 (24.13%) can't be said to match the legal definition of consensus (which is \"general agreement\"). \"I've filed a formal complaint regarding the claim of consensus to adopt.\" \nHe's also written a second blog post analyzing the IETF's decision-making process in detail. \"It's already bad that the IETF TLS working group adopted non-hybrid post-quantum encryption without official answers to the objections that were raised. It's much worse if the objections can't be raised in the first place.\" \nThanks to alanw (Slashdot reader #1,822) for spotting the blog posts.\n\n\nRead more of this story at Slashdot.",
-      "content": "",
-      "urlToImage": "https://a.fsdn.com/sd/twitter_icon_large.png",
-      "author": "EditorDavid",
-      "publishedAt": "2025-10-13T16:08:53.828704",
-      "category": "technology",
-      "emoji": "\ud83d\udd12",
-      "final_score": 750.0,
-      "summary": "Cryptologist **Daniel J. Bernstein** claims the **NSA** is pressuring standards organizations to abandon hybrid cryptography in favor of post-quantum-only encryption, potentially weakening security. He's filed complaints about IETF's adoption of non-hybrid protocols despite significant opposition.",
-      "timeline": [
-        {
-          "date": "June 2024",
-          "event": "NSA's William Layton states NSA will not support hybrid cryptography in national systems"
-        },
-        {
-          "date": "October 4, 2024",
-          "event": "Bernstein publishes blog post criticizing IETF adoption of non-hybrid post-quantum encryption"
-        },
-        {
-          "date": "October 5, 2024",
-          "event": "Bernstein releases second blog post analyzing IETF decision-making on post-quantum standards"
-        }
-      ],
-      "details": [
-        "RFC formalized: June 2025[2]  \nBitcoin price: $134,545[2]  \nNIST hybrid guidance: Explicitly documented[2]"
-      ]
-    },
-    {
-      "title": "CCTV drama Silent Honour marks rare salute to Communist Party",
-      "url": "https://www.scmp.com/news/china/article/3328657/silent-honour-cctv-series-marks-rare-salute-communist-party-spies-taiwan?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Patriotic films in mainland China have long celebrated undercover agents of the Communist Party, their operations portrayed as pivotal to securing victory in the 1940s civil war against the Kuomintang and the founding of the People\u2019s Republic.\nLess known are the clandestine activities carried out by these agents in Taiwan, where their efforts met with a harsh fate. Covert operations there were systematically crushed by the KMT, resulting in the capture and execution of many operatives.\nBut...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/11/105c2a25-787a-4b64-af34-4f4e92f34888_2536de37.jpg",
-      "author": "Alcott Wei",
-      "publishedAt": "2025-10-13T16:37:50.018803",
-      "category": "politics",
-      "emoji": "\ud83d\udcfa",
-      "final_score": 740.0,
-      "summary": "China's new drama **Silent Honour** spotlights previously untold stories of **Communist Party spies** who operated in Taiwan during the 1940s civil war, many of whom were executed by the **Kuomintang** government during covert operations.",
-      "timeline": [
-        {
-          "date": "June 1949",
-          "event": "KMT retreats to Taiwan; Communist Party begins espionage operations on the island"
-        },
-        {
-          "date": "1950",
-          "event": "Wu Shi case: highest-level Communist spy case in Taiwan's history uncovered"
-        },
-        {
-          "date": "May 19, 1949",
-          "event": "Martial law declared, starting White Terror era of anti-communist purges"
-        },
-        {
-          "date": "September 30, 2024",
-          "event": "CCTV drama Silent Honour premieres, marking rare salute to Party spies in Taiwan"
-        }
-      ],
-      "details": [
-        "Espionage prosecutions 2024: 64 individuals[2][3][4]  \nMilitary background: 66% of indicted spies[1][3]  \nTemple-linked spy ring: 10 indicted October 2024[4]"
-      ]
-    },
-    {
-      "title": "Hidankyo and others hold event 80 years after atomic bombings",
-      "url": "https://www.japantimes.co.jp/news/2025/10/12/japan/politics/nihon-hidankyo-event-to-mark-80-year-atomic-bombings/",
-      "source": "The Japan Times",
-      "description": "Outside the venue, attendees spoke with those who experienced the massive U.S. bombing of Tokyo in March 1945.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499098.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:09:15.591439",
-      "category": "general",
-      "emoji": "\ud83d\udd4a\ufe0f",
-      "final_score": 730.0,
-      "summary": "**Atomic bomb survivors** and community members gathered to commemorate the **80th anniversary** of the nuclear attacks, with attendees also connecting with survivors of the March 1945 U.S. conventional bombing of **Tokyo** outside the event venue.",
-      "timeline": [
-        {
-          "date": "March 1945",
-          "event": "Massive U.S. bombing of Tokyo; survivors later share their experiences at events"
-        },
-        {
-          "date": "August 1945",
-          "event": "Atomic bombs dropped on Hiroshima and Nagasaki; Hibakusha begin lifelong advocacy"
-        },
-        {
-          "date": "October 11, 2024",
-          "event": "Nihon Hidankyo awarded Nobel Peace Prize for nuclear abolition efforts"
-        },
-        {
-          "date": "December 10, 2024",
-          "event": "Nihon Hidankyo delegation attends Nobel Peace Prize ceremony in Oslo"
-        }
-      ],
-      "details": [
-        "Nobel Peace Prize: Awarded 2024  \nHibakusha survivors: 100,000 remain  \nEvent organizers: 30 groups involved"
-      ]
-    },
-    {
-      "title": "Internet becomes Japan's top daily news source for first time",
-      "url": "https://www.japantimes.co.jp/news/2025/10/12/japan/society/japan-internet-top-news-source/",
-      "source": "The Japan Times",
-      "description": "The newspaper subscription rate fell 3.7 percentage points from a year earlier to 50.1%, continuing to decline since marking 88.6% in fiscal 2008, when the survey began.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499101.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:09:22.878874",
-      "category": "technology",
-      "emoji": "\ud83c\udf10",
-      "final_score": 700.0,
-      "summary": "The newspaper subscription rate fell 3.7 percentage points from a year earlier to 50.1%, continuing to decline since marking 88.6% in fiscal 2008, when the survey began.",
-      "timeline": [
-        {
-          "date": "Fiscal 2008",
-          "event": "Newspaper subscription rate peaks at 88.6%"
-        },
-        {
-          "date": "Fiscal 2018",
-          "event": "Survey question on daily news sources added"
-        },
-        {
-          "date": "July 18 to August 17, 2025",
-          "event": "Survey conducted on news sources"
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Internet becomes top daily news source"
-        }
-      ],
-      "details": [
-        "Internet users: 109 million  \nInternet penetration: 88.2%  \nYouTube users: 78.7 million"
-      ]
-    },
-    {
-      "title": "Therapy may be the most effective way to ease irritable",
-      "url": "https://www.newscientist.com/article/2499579-therapy-may-be-the-most-effective-way-to-ease-irritable-bowel-syndrome/?utm_campaign=RSS%7CNSNS&utm_source=NSNS&utm_medium=RSS&utm_content=home",
-      "source": "New Scientist",
-      "description": "People with irritable bowel syndrome are often only given treatments like cognitive behavioural therapy after others have failed, but research suggests this approach is more effective than we thought",
-      "content": "",
-      "urlToImage": "https://images.newscientist.com/wp-content/uploads/2025/10/09163823/SEI_269625177.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:05:50.518504",
-      "category": "science",
-      "emoji": "\ud83d\udd2c",
-      "final_score": 700.0,
-      "summary": "New research indicates **cognitive behavioral therapy** may be more successful at treating **irritable bowel syndrome** than previously believed, suggesting it should be considered as a primary treatment option rather than a last resort for patients.",
-      "timeline": [
-        {
-          "date": "April 2024",
-          "event": "IBS Awareness Month highlights therapy and new treatment guidelines for IBS patients"
-        },
-        {
-          "date": "June 17-19, 2024",
-          "event": "IBS Days 2024 conference discusses advances in IBS diagnosis and therapy effectiveness"
-        },
-        {
-          "date": "July 2024",
-          "event": "Market report confirms growing demand for IBS treatments, including cognitive behavioural therapy"
-        },
-        {
-          "date": "October 2024",
-          "event": "Research suggests cognitive behavioural therapy is highly effective for irritable bowel syndrome"
-        }
-      ],
-      "details": [
-        "Prevalence: 11% global population[2]  \nDiet adherence: 87% try dietary changes[2]  \nAmitriptyline response: 70% symptom-free[4]"
-      ]
-    },
-    {
-      "title": "New Report Reveals Global Air Quality Rankings for 2021",
-      "url": "https://www.cnn.com/2022/03/22/world/air-pollution-2021-iqair-report-climate/index.html",
-      "source": "CNN World",
-      "description": "Air pollution spiked to unhealthy levels around the world in 2021, according to a new report.",
-      "content": "",
-      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/220321134236-01-india-pollution-2021-super-169.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:11:32.551790",
-      "category": "environment",
-      "emoji": "\ud83c\udf0e",
-      "final_score": 100.0,
-      "summary": "A new report reveals **air quality** reached dangerously unhealthy levels worldwide in 2021, highlighting growing concerns about **global pollution** levels. This widespread deterioration in air conditions poses significant health risks for populations across multiple continents.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "September 2021",
-          "event": "WHO updated global air quality guidelines after 15 years"
-        },
-        {
-          "date": "2021",
-          "event": "Air pollution caused 8.1 million deaths globally, becoming second-leading risk"
-        },
-        {
-          "date": "January 31, 2024",
-          "event": "WHO released sixth air quality database with 7,182 settlements data"
-        },
-        {
-          "date": "June 19, 2024",
-          "event": "State of Global Air report detailed 2021 air pollution health impacts"
-        }
-      ],
-      "details": [
-        "Most polluted city: New Delhi, India[6]  \nCleanest country: New Zealand PM2.5: 4.3[1]  \nGlobal deaths: 6.7 million (2021)[6]"
-      ]
-    },
-    {
-      "title": "Scientists identify secret ingredient in Leonardo da Vinci paintings",
-      "url": "https://www.cnn.com/style/article/old-masters-da-vinci-egg-yolk-painting-scn/index.html",
-      "source": "CNN World",
-      "description": "\"Old Masters\" such as Leonardo da Vinci, Sandro Botticelli and Rembrandt may have used proteins, especially egg yolk, in their oil paintings, according to a new study.",
-      "content": "",
-      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/230328171153-01-old-masters-egg-yolk-painting-super-169.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:10:32.834568",
-      "category": "science",
-      "emoji": "\ud83c\udfa8",
-      "final_score": 100.0,
-      "summary": "A new study reveals that Renaissance **Old Masters** like **Leonardo da Vinci**, Botticelli, and Rembrandt likely incorporated proteins, particularly egg yolk, into their oil paintings, shedding light on the technical secrets behind their masterpieces' enduring quality.\n\n(38 words)",
-      "timeline": [
-        {
-          "date": "March 28, 2023",
-          "event": "Study published revealing Old Masters used egg yolk proteins in oil paintings"
-        },
-        {
-          "date": "March 29, 2023",
-          "event": "Major news outlets report on secret ingredient discovery in da Vinci's paintings"
-        }
-      ],
-      "details": [
-        "Plumbonacrite content: 13% in Mona Lisa primer[4]  \nDrying agent: Lead(II) oxide used experimentally[2]  \nHumidity protection: Egg yolk prevents wrinkling[3]"
-      ]
-    },
-    {
-      "title": "Is the universe infinite, or does it have a limit?",
-      "url": "https://www.space.com/astronomy/is-the-universe-infinite-or-does-it-have-a-limit",
-      "source": "Space.com",
-      "description": "If the universe is expanding, then what is it expanding into, and what is it expanding from? Where's the edge of the universe, and where is its center?",
-      "content": "",
-      "urlToImage": "https://cdn.mos.cms.futurecdn.net/GezhNbtcp2rX98sSdCaDYB-1280-80.jpg",
-      "author": "Paul Sutter",
-      "publishedAt": "2025-10-13T17:07:18.939234",
-      "category": "science",
-      "emoji": "\ud83c\udf0c",
-      "final_score": 100.0,
-      "summary": "Scientists continue to debate whether the **universe** is truly infinite or has boundaries. While we know it's **expanding**, fundamental questions remain about what lies beyond its edges, where its center is located, and what drives this cosmic growth.\n\n(37 words)",
-      "timeline": [
-        {
-          "date": "1998",
-          "event": "Astronomers discover universe's expansion is accelerating, introducing concept of dark energy."
-        },
-        {
-          "date": "May 27, 2024",
-          "event": "James Webb Space Telescope data suggests no conflict in universe's expansion rate."
-        },
-        {
-          "date": "March 2025",
-          "event": "DESI data shows dark energy may be evolving, challenging previous cosmological assumptions."
-        },
-        {
-          "date": "October 6, 2025",
-          "event": "DESI releases new cosmic map, hinting dark energy might not be constant after all."
-        }
-      ],
-      "details": [
-        "Age: 13.8 billion years[3]  \nExpansion: Accelerating over time[2]  \nDark energy: 70% of universe[4]"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T17:13:00.729188",
+  "generatedAt": "2025-10-13T17:18:01.986484",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
