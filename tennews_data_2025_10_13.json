@@ -3,6 +3,33 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Middle East 'doomed' without Palestinian state, King of Jordan tells",
+      "url": "https://www.bbc.com/news/articles/c3w965y65zzo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "In an exclusive interview with BBC Panorama, the king says a two-state solution is the only answer.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/71dd/live/23199da0-a840-11f0-8df8-17b411cc599c.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:12:57.039142",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 1000.0,
+      "summary": "King Abdullah II of Jordan warns the Middle East faces a dire future unless a **two-state solution** is implemented, establishing a **Palestinian state**. His stark message came during an exclusive BBC Panorama interview addressing regional stability.",
+      "timeline": [
+        {
+          "date": "September 23, 2025",
+          "event": "Jordan's King tells UN Israel is burying Palestinian statehood, urges recognition as right"
+        },
+        {
+          "date": "September 24, 2025",
+          "event": "King Abdullah II calls Gaza war 'darkest moment', rejects 'Greater Israel' at UNGA"
+        }
+      ],
+      "details": [
+        "UNGA speech: Palestinian statehood called \"indisputable right\"[1]  \nEast Jerusalem: Proposed Palestinian capital[1]  \nRelocation plan: Jordan firmly rejected[3]"
+      ]
+    },
+    {
       "title": "What does wording of Gaza ceasefire agreement tell us?",
       "url": "https://www.bbc.com/news/articles/ckgyr8e0gl2o?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -496,41 +523,6 @@
       ]
     },
     {
-      "title": "Lake Powell Shrinks in Both Water Level and Capacity",
-      "url": "https://www.cnn.com/2022/03/21/us/lake-powell-capacity-shrinking-drought-climate/index.html",
-      "source": "CNN World",
-      "description": "Lake Powell, the second-largest human-made reservoir in the US, has lost nearly 7% of its potential storage capacity since 1963, when Glen Canyon Dam was built, a new report shows.",
-      "content": "",
-      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/220321144911-lake-powell-utah-062421-file-super-169.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:06:50.218901",
-      "category": "environment",
-      "emoji": "\ud83d\udca7",
-      "final_score": 910.0,
-      "summary": "**Lake Powell**, America's second-largest artificial reservoir, has experienced a significant decline in water storage capability, losing nearly **7% of its capacity** since the construction of Glen Canyon Dam in **1963**, new research reveals.",
-      "timeline": [
-        {
-          "date": "1963",
-          "event": "Glen Canyon Dam completed; Lake Powell begins filling and sedimentation starts."
-        },
-        {
-          "date": "1986",
-          "event": "First major sediment survey shows storage capacity loss since dam completion."
-        },
-        {
-          "date": "March 21, 2022",
-          "event": "USGS/USBR report: Lake Powell lost 6.79% storage capacity since 1963."
-        },
-        {
-          "date": "July 1, 2022",
-          "event": "Bureau of Reclamation updates storage data, showing 443,000 acre-feet capacity drop."
-        }
-      ],
-      "details": [
-        "Capacity: 27.62% full  \nElevation: 3,544.21 feet  \nAnnual drop: 33.14 feet"
-      ]
-    },
-    {
       "title": "'It's going to be really bad': Fears over AI bubble",
       "url": "https://www.bbc.com/news/articles/cz69qy760weo?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -833,37 +825,6 @@
       ],
       "details": [
         "GDP forecast 2025: 0.6%\nCapital flight 2024: $14B\nInflation rate: 42.4%"
-      ]
-    },
-    {
-      "title": "Retail spending fell in March as consumers pull back",
-      "url": "https://www.cnn.com/2023/04/14/economy/march-retail-sales/index.html",
-      "source": "CNN World",
-      "description": "Spending at US retailers fell in March as consumers pulled back amid recessionary fears fueled by the banking crisis.",
-      "content": "",
-      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/230412211243-grocery-store-california-230412-super-169.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:07:17.739985",
-      "category": "business",
-      "emoji": "\ud83d\udcc9",
-      "final_score": 900.0,
-      "summary": "**Retail spending** in the United States declined during March as worried consumers reduced their purchases. The downturn comes as **banking sector turmoil** sparked concerns about a potential recession, dampening overall consumer confidence and expenditure.",
-      "timeline": [
-        {
-          "date": "March 23, 2025",
-          "event": "Clothing and accessories spending fell 3.9% year-over-year through this date"
-        },
-        {
-          "date": "March 31, 2025",
-          "event": "US retail sales rose 1.4% from February, but consumer apprehension remained high"
-        },
-        {
-          "date": "April 2025",
-          "event": "Retail sales slowed after March jump as consumers pulled purchases forward before tariffs"
-        }
-      ],
-      "details": [
-        "Retail sales: $625.12B March 2025[7]  \nAuto sales growth: 5.3% March 2025[1]  \nCore retail sales YoY: +3.6%[2]"
       ]
     },
     {
@@ -2645,41 +2606,6 @@
       ]
     },
     {
-      "title": "Big-box stores could help slash emissions and save millions by",
-      "url": "https://www.cnn.com/2022/03/20/us/solar-power-on-big-box-store-rooftops-climate/index.html",
-      "source": "CNN World",
-      "description": "As the US attempts to wean itself off its heavy reliance on fossil fuels and shift to cleaner energy sources, many experts are eyeing a promising solution: your neighborhood big-box stores and shopping malls.",
-      "content": "",
-      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/220309154435-02-big-box-rooftop-solar-climate-super-169.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:07:05.216371",
-      "category": "environment",
-      "emoji": "\u2600\ufe0f",
-      "final_score": 800.0,
-      "summary": "**Big-box retailers** and shopping centers could play a crucial role in America's **clean energy transition** by installing rooftop solar panels, yet most aren't utilizing this opportunity despite its potential to reduce emissions and generate savings.",
-      "timeline": [
-        {
-          "date": "2017",
-          "event": "Home Depot launches pilot solar farm program on rooftops at four stores[3]."
-        },
-        {
-          "date": "End of 2018",
-          "event": "Home Depot expands rooftop solar program to 45 stores nationwide[3]."
-        },
-        {
-          "date": "September-December 2020",
-          "event": "IKEA Baltimore cuts purchased energy by 84% after installing solar panels[4]."
-        },
-        {
-          "date": "May 21, 2025",
-          "event": "Report highlights Indiana's big-box solar potential and slow adoption by retailers[2]."
-        }
-      ],
-      "details": [
-        "Annual energy use: 189,000 kWh per store[2]  \nIKEA solar adoption: 90% of locations[2]  \nCommercial solar Q1 2025 growth: 108%[1]"
-      ]
-    },
-    {
       "title": "Niti Aayog forecasts 4mn AI jobs by 2030: What roles",
       "url": "https://timesofindia.indiatimes.com/education/news/niti-aayog-says-ai-could-create-4-million-jobs-by-2030-what-jobs-can-ai-actually-create/articleshow/124499699.cms",
       "source": "Times of India",
@@ -3177,6 +3103,68 @@
       ]
     },
     {
+      "title": "New Report Reveals Global Air Quality Rankings for 2021",
+      "url": "https://www.cnn.com/2022/03/22/world/air-pollution-2021-iqair-report-climate/index.html",
+      "source": "CNN World",
+      "description": "Air pollution spiked to unhealthy levels around the world in 2021, according to a new report.",
+      "content": "",
+      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/220321134236-01-india-pollution-2021-super-169.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:11:32.551790",
+      "category": "environment",
+      "emoji": "\ud83c\udf0e",
+      "final_score": 100.0,
+      "summary": "A new report reveals **air quality** reached dangerously unhealthy levels worldwide in 2021, highlighting growing concerns about **global pollution** levels. This widespread deterioration in air conditions poses significant health risks for populations across multiple continents.\n\n(37 words)",
+      "timeline": [
+        {
+          "date": "September 2021",
+          "event": "WHO updated global air quality guidelines after 15 years"
+        },
+        {
+          "date": "2021",
+          "event": "Air pollution caused 8.1 million deaths globally, becoming second-leading risk"
+        },
+        {
+          "date": "January 31, 2024",
+          "event": "WHO released sixth air quality database with 7,182 settlements data"
+        },
+        {
+          "date": "June 19, 2024",
+          "event": "State of Global Air report detailed 2021 air pollution health impacts"
+        }
+      ],
+      "details": [
+        "Most polluted city: New Delhi, India[6]  \nCleanest country: New Zealand PM2.5: 4.3[1]  \nGlobal deaths: 6.7 million (2021)[6]"
+      ]
+    },
+    {
+      "title": "Scientists identify secret ingredient in Leonardo da Vinci paintings",
+      "url": "https://www.cnn.com/style/article/old-masters-da-vinci-egg-yolk-painting-scn/index.html",
+      "source": "CNN World",
+      "description": "\"Old Masters\" such as Leonardo da Vinci, Sandro Botticelli and Rembrandt may have used proteins, especially egg yolk, in their oil paintings, according to a new study.",
+      "content": "",
+      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/230328171153-01-old-masters-egg-yolk-painting-super-169.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:10:32.834568",
+      "category": "science",
+      "emoji": "\ud83c\udfa8",
+      "final_score": 100.0,
+      "summary": "A new study reveals that Renaissance **Old Masters** like **Leonardo da Vinci**, Botticelli, and Rembrandt likely incorporated proteins, particularly egg yolk, into their oil paintings, shedding light on the technical secrets behind their masterpieces' enduring quality.\n\n(38 words)",
+      "timeline": [
+        {
+          "date": "March 28, 2023",
+          "event": "Study published revealing Old Masters used egg yolk proteins in oil paintings"
+        },
+        {
+          "date": "March 29, 2023",
+          "event": "Major news outlets report on secret ingredient discovery in da Vinci's paintings"
+        }
+      ],
+      "details": [
+        "Plumbonacrite content: 13% in Mona Lisa primer[4]  \nDrying agent: Lead(II) oxide used experimentally[2]  \nHumidity protection: Egg yolk prevents wrinkling[3]"
+      ]
+    },
+    {
       "title": "Is the universe infinite, or does it have a limit?",
       "url": "https://www.space.com/astronomy/is-the-universe-infinite-or-does-it-have-a-limit",
       "source": "Space.com",
@@ -3212,7 +3200,7 @@
       ]
     }
   ],
-  "generatedAt": "2025-10-13T17:07:59.306654",
+  "generatedAt": "2025-10-13T17:13:00.729188",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
