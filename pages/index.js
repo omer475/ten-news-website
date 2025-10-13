@@ -1720,29 +1720,29 @@ export default function Home() {
                         borderRadius: '6px',
                         background: (() => {
                           const categoryColors = {
-                            'WORLD NEWS': { bg: '#fee2e2', text: '#dc2626' },
-                            'BUSINESS': { bg: '#fff7ed', text: '#ea580c' },
-                            'MARKETS': { bg: '#ecfeff', text: '#0891b2' },
-                            'TECH & AI': { bg: '#eef2ff', text: '#4f46e5' },
-                            'SCIENCE': { bg: '#e0f2fe', text: '#0284c7' },
-                            'HEALTH': { bg: '#ecfdf5', text: '#059669' },
-                            'CLIMATE': { bg: '#f0fdf4', text: '#16a34a' },
-                            'SPORTS': { bg: '#fffbeb', text: '#d97706' },
-                            'ENTERTAINMENT': { bg: '#fdf2f8', text: '#db2777' }
+                            'WORLD NEWS': { bg: '#fee2e2', text: '#b91c1c', border: '220, 38, 38' },
+                            'BUSINESS': { bg: '#dbeafe', text: '#1e40af', border: '30, 64, 175' },
+                            'MARKETS': { bg: '#d1fae5', text: '#047857', border: '4, 120, 87' },
+                            'TECH & AI': { bg: '#ede9fe', text: '#6d28d9', border: '109, 40, 217' },
+                            'SCIENCE': { bg: '#e0f2fe', text: '#0369a1', border: '3, 105, 161' },
+                            'HEALTH': { bg: '#ccfbf1', text: '#0f766e', border: '15, 118, 110' },
+                            'CLIMATE': { bg: '#dcfce7', text: '#15803d', border: '21, 128, 61' },
+                            'SPORTS': { bg: '#fed7aa', text: '#c2410c', border: '194, 65, 12' },
+                            'ENTERTAINMENT': { bg: '#fce7f3', text: '#be185d', border: '190, 24, 93' }
                           };
                           return categoryColors[story.category]?.bg || '#f8fafc';
                         })(),
                         color: (() => {
                           const categoryColors = {
-                            'WORLD NEWS': { bg: '#fee2e2', text: '#dc2626' },
-                            'BUSINESS': { bg: '#fff7ed', text: '#ea580c' },
-                            'MARKETS': { bg: '#ecfeff', text: '#0891b2' },
-                            'TECH & AI': { bg: '#eef2ff', text: '#4f46e5' },
-                            'SCIENCE': { bg: '#e0f2fe', text: '#0284c7' },
-                            'HEALTH': { bg: '#ecfdf5', text: '#059669' },
-                            'CLIMATE': { bg: '#f0fdf4', text: '#16a34a' },
-                            'SPORTS': { bg: '#fffbeb', text: '#d97706' },
-                            'ENTERTAINMENT': { bg: '#fdf2f8', text: '#db2777' }
+                            'WORLD NEWS': { bg: '#fee2e2', text: '#b91c1c', border: '220, 38, 38' },
+                            'BUSINESS': { bg: '#dbeafe', text: '#1e40af', border: '30, 64, 175' },
+                            'MARKETS': { bg: '#d1fae5', text: '#047857', border: '4, 120, 87' },
+                            'TECH & AI': { bg: '#ede9fe', text: '#6d28d9', border: '109, 40, 217' },
+                            'SCIENCE': { bg: '#e0f2fe', text: '#0369a1', border: '3, 105, 161' },
+                            'HEALTH': { bg: '#ccfbf1', text: '#0f766e', border: '15, 118, 110' },
+                            'CLIMATE': { bg: '#dcfce7', text: '#15803d', border: '21, 128, 61' },
+                            'SPORTS': { bg: '#fed7aa', text: '#c2410c', border: '194, 65, 12' },
+                            'ENTERTAINMENT': { bg: '#fce7f3', text: '#be185d', border: '190, 24, 93' }
                           };
                           return categoryColors[story.category]?.text || '#64748b';
                         })()
@@ -1797,15 +1797,15 @@ export default function Home() {
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           border: showTimeline[index] ? 'none' : (() => {
                             const categoryBorders = {
-                              'WORLD NEWS': '2px solid rgba(220, 38, 38, 0.25)',
-                              'BUSINESS': '2px solid rgba(234, 88, 12, 0.25)',
-                              'MARKETS': '2px solid rgba(8, 145, 178, 0.25)',
-                              'TECH & AI': '2px solid rgba(79, 70, 229, 0.25)',
-                              'SCIENCE': '2px solid rgba(2, 132, 199, 0.25)',
-                              'HEALTH': '2px solid rgba(5, 150, 105, 0.25)',
-                              'CLIMATE': '2px solid rgba(22, 163, 74, 0.25)',
-                              'SPORTS': '2px solid rgba(217, 119, 6, 0.25)',
-                              'ENTERTAINMENT': '2px solid rgba(219, 39, 119, 0.25)'
+                              'WORLD NEWS': '2px solid rgba(220, 38, 38, 0.3)',
+                              'BUSINESS': '2px solid rgba(30, 64, 175, 0.3)',
+                              'MARKETS': '2px solid rgba(4, 120, 87, 0.3)',
+                              'TECH & AI': '2px solid rgba(109, 40, 217, 0.3)',
+                              'SCIENCE': '2px solid rgba(3, 105, 161, 0.3)',
+                              'HEALTH': '2px solid rgba(15, 118, 110, 0.3)',
+                              'CLIMATE': '2px solid rgba(21, 128, 61, 0.3)',
+                              'SPORTS': '2px solid rgba(194, 65, 12, 0.3)',
+                              'ENTERTAINMENT': '2px solid rgba(190, 24, 93, 0.3)'
                             };
                             return categoryBorders[story.category] || '2px solid rgba(0, 0, 0, 0.08)';
                           })(),
@@ -1813,14 +1813,14 @@ export default function Home() {
                           boxShadow: showTimeline[index] ? 'none' : (() => {
                             const categoryShadows = {
                               'WORLD NEWS': '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)',
-                              'BUSINESS': '0 4px 20px rgba(234, 88, 12, 0.25), 0 2px 8px rgba(234, 88, 12, 0.15)',
-                              'MARKETS': '0 4px 20px rgba(8, 145, 178, 0.25), 0 2px 8px rgba(8, 145, 178, 0.15)',
-                              'TECH & AI': '0 4px 20px rgba(79, 70, 229, 0.25), 0 2px 8px rgba(79, 70, 229, 0.15)',
-                              'SCIENCE': '0 4px 20px rgba(2, 132, 199, 0.25), 0 2px 8px rgba(2, 132, 199, 0.15)',
-                              'HEALTH': '0 4px 20px rgba(5, 150, 105, 0.25), 0 2px 8px rgba(5, 150, 105, 0.15)',
-                              'CLIMATE': '0 4px 20px rgba(22, 163, 74, 0.25), 0 2px 8px rgba(22, 163, 74, 0.15)',
-                              'SPORTS': '0 4px 20px rgba(217, 119, 6, 0.25), 0 2px 8px rgba(217, 119, 6, 0.15)',
-                              'ENTERTAINMENT': '0 4px 20px rgba(219, 39, 119, 0.25), 0 2px 8px rgba(219, 39, 119, 0.15)'
+                              'BUSINESS': '0 4px 20px rgba(30, 64, 175, 0.25), 0 2px 8px rgba(30, 64, 175, 0.15)',
+                              'MARKETS': '0 4px 20px rgba(4, 120, 87, 0.25), 0 2px 8px rgba(4, 120, 87, 0.15)',
+                              'TECH & AI': '0 4px 20px rgba(109, 40, 217, 0.25), 0 2px 8px rgba(109, 40, 217, 0.15)',
+                              'SCIENCE': '0 4px 20px rgba(3, 105, 161, 0.25), 0 2px 8px rgba(3, 105, 161, 0.15)',
+                              'HEALTH': '0 4px 20px rgba(15, 118, 110, 0.25), 0 2px 8px rgba(15, 118, 110, 0.15)',
+                              'CLIMATE': '0 4px 20px rgba(21, 128, 61, 0.25), 0 2px 8px rgba(21, 128, 61, 0.15)',
+                              'SPORTS': '0 4px 20px rgba(194, 65, 12, 0.25), 0 2px 8px rgba(194, 65, 12, 0.15)',
+                              'ENTERTAINMENT': '0 4px 20px rgba(190, 24, 93, 0.25), 0 2px 8px rgba(190, 24, 93, 0.15)'
                             };
                             return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
                           })()
@@ -1920,15 +1920,15 @@ export default function Home() {
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: (() => {
                                   const categoryBorders = {
-                                    'WORLD NEWS': '2px solid rgba(220, 38, 38, 0.25)',
-                                    'BUSINESS': '2px solid rgba(234, 88, 12, 0.25)',
-                                    'MARKETS': '2px solid rgba(8, 145, 178, 0.25)',
-                                    'TECH & AI': '2px solid rgba(79, 70, 229, 0.25)',
-                                    'SCIENCE': '2px solid rgba(2, 132, 199, 0.25)',
-                                    'HEALTH': '2px solid rgba(5, 150, 105, 0.25)',
-                                    'CLIMATE': '2px solid rgba(22, 163, 74, 0.25)',
-                                    'SPORTS': '2px solid rgba(217, 119, 6, 0.25)',
-                                    'ENTERTAINMENT': '2px solid rgba(219, 39, 119, 0.25)'
+                                    'WORLD NEWS': '2px solid rgba(220, 38, 38, 0.3)',
+                                    'BUSINESS': '2px solid rgba(30, 64, 175, 0.3)',
+                                    'MARKETS': '2px solid rgba(4, 120, 87, 0.3)',
+                                    'TECH & AI': '2px solid rgba(109, 40, 217, 0.3)',
+                                    'SCIENCE': '2px solid rgba(3, 105, 161, 0.3)',
+                                    'HEALTH': '2px solid rgba(15, 118, 110, 0.3)',
+                                    'CLIMATE': '2px solid rgba(21, 128, 61, 0.3)',
+                                    'SPORTS': '2px solid rgba(194, 65, 12, 0.3)',
+                                    'ENTERTAINMENT': '2px solid rgba(190, 24, 93, 0.3)'
                                   };
                                   return categoryBorders[story.category] || '2px solid rgba(0, 0, 0, 0.08)';
                                 })(),
@@ -1937,14 +1937,14 @@ export default function Home() {
                                 boxShadow: (() => {
                                   const categoryShadows = {
                                     'WORLD NEWS': '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)',
-                                    'BUSINESS': '0 4px 20px rgba(234, 88, 12, 0.25), 0 2px 8px rgba(234, 88, 12, 0.15)',
-                                    'MARKETS': '0 4px 20px rgba(8, 145, 178, 0.25), 0 2px 8px rgba(8, 145, 178, 0.15)',
-                                    'TECH & AI': '0 4px 20px rgba(79, 70, 229, 0.25), 0 2px 8px rgba(79, 70, 229, 0.15)',
-                                    'SCIENCE': '0 4px 20px rgba(2, 132, 199, 0.25), 0 2px 8px rgba(2, 132, 199, 0.15)',
-                                    'HEALTH': '0 4px 20px rgba(5, 150, 105, 0.25), 0 2px 8px rgba(5, 150, 105, 0.15)',
-                                    'CLIMATE': '0 4px 20px rgba(22, 163, 74, 0.25), 0 2px 8px rgba(22, 163, 74, 0.15)',
-                                    'SPORTS': '0 4px 20px rgba(217, 119, 6, 0.25), 0 2px 8px rgba(217, 119, 6, 0.15)',
-                                    'ENTERTAINMENT': '0 4px 20px rgba(219, 39, 119, 0.25), 0 2px 8px rgba(219, 39, 119, 0.15)'
+                                    'BUSINESS': '0 4px 20px rgba(30, 64, 175, 0.25), 0 2px 8px rgba(30, 64, 175, 0.15)',
+                                    'MARKETS': '0 4px 20px rgba(4, 120, 87, 0.25), 0 2px 8px rgba(4, 120, 87, 0.15)',
+                                    'TECH & AI': '0 4px 20px rgba(109, 40, 217, 0.25), 0 2px 8px rgba(109, 40, 217, 0.15)',
+                                    'SCIENCE': '0 4px 20px rgba(3, 105, 161, 0.25), 0 2px 8px rgba(3, 105, 161, 0.15)',
+                                    'HEALTH': '0 4px 20px rgba(15, 118, 110, 0.25), 0 2px 8px rgba(15, 118, 110, 0.15)',
+                                    'CLIMATE': '0 4px 20px rgba(21, 128, 61, 0.25), 0 2px 8px rgba(21, 128, 61, 0.15)',
+                                    'SPORTS': '0 4px 20px rgba(194, 65, 12, 0.25), 0 2px 8px rgba(194, 65, 12, 0.15)',
+                                    'ENTERTAINMENT': '0 4px 20px rgba(190, 24, 93, 0.25), 0 2px 8px rgba(190, 24, 93, 0.15)'
                                   };
                                   return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
                                 })(),
