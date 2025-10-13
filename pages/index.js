@@ -1718,34 +1718,8 @@ export default function Home() {
                         textTransform: 'uppercase',
                         padding: '4px 8px',
                         borderRadius: '6px',
-                        background: (() => {
-                          const categoryColors = {
-                            'WORLD NEWS': { bg: '#fee2e2', text: '#b91c1c', border: '220, 38, 38' },
-                            'BUSINESS': { bg: '#dbeafe', text: '#1e40af', border: '30, 64, 175' },
-                            'MARKETS': { bg: '#d1fae5', text: '#047857', border: '4, 120, 87' },
-                            'TECH & AI': { bg: '#ede9fe', text: '#6d28d9', border: '109, 40, 217' },
-                            'SCIENCE': { bg: '#e0f2fe', text: '#0369a1', border: '3, 105, 161' },
-                            'HEALTH': { bg: '#ccfbf1', text: '#0f766e', border: '15, 118, 110' },
-                            'CLIMATE': { bg: '#dcfce7', text: '#15803d', border: '21, 128, 61' },
-                            'SPORTS': { bg: '#fed7aa', text: '#c2410c', border: '194, 65, 12' },
-                            'ENTERTAINMENT': { bg: '#fce7f3', text: '#be185d', border: '190, 24, 93' }
-                          };
-                          return categoryColors[story.category]?.bg || '#f8fafc';
-                        })(),
-                        color: (() => {
-                          const categoryColors = {
-                            'WORLD NEWS': { bg: '#fee2e2', text: '#b91c1c', border: '220, 38, 38' },
-                            'BUSINESS': { bg: '#dbeafe', text: '#1e40af', border: '30, 64, 175' },
-                            'MARKETS': { bg: '#d1fae5', text: '#047857', border: '4, 120, 87' },
-                            'TECH & AI': { bg: '#ede9fe', text: '#6d28d9', border: '109, 40, 217' },
-                            'SCIENCE': { bg: '#e0f2fe', text: '#0369a1', border: '3, 105, 161' },
-                            'HEALTH': { bg: '#ccfbf1', text: '#0f766e', border: '15, 118, 110' },
-                            'CLIMATE': { bg: '#dcfce7', text: '#15803d', border: '21, 128, 61' },
-                            'SPORTS': { bg: '#fed7aa', text: '#c2410c', border: '194, 65, 12' },
-                            'ENTERTAINMENT': { bg: '#fce7f3', text: '#be185d', border: '190, 24, 93' }
-                          };
-                          return categoryColors[story.category]?.text || '#64748b';
-                        })()
+                        background: '#fee2e2',
+                        color: '#b91c1c'
                       }}>
                         {story.emoji} {story.category}
                       </div>
@@ -1795,35 +1769,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
-                          border: showTimeline[index] ? 'none' : (() => {
-                            const categoryBorders = {
-                              'WORLD NEWS': '2px solid rgba(220, 38, 38, 0.3)',
-                              'BUSINESS': '2px solid rgba(30, 64, 175, 0.3)',
-                              'MARKETS': '2px solid rgba(4, 120, 87, 0.3)',
-                              'TECH & AI': '2px solid rgba(109, 40, 217, 0.3)',
-                              'SCIENCE': '2px solid rgba(3, 105, 161, 0.3)',
-                              'HEALTH': '2px solid rgba(15, 118, 110, 0.3)',
-                              'CLIMATE': '2px solid rgba(21, 128, 61, 0.3)',
-                              'SPORTS': '2px solid rgba(194, 65, 12, 0.3)',
-                              'ENTERTAINMENT': '2px solid rgba(190, 24, 93, 0.3)'
-                            };
-                            return categoryBorders[story.category] || '2px solid rgba(0, 0, 0, 0.08)';
-                          })(),
+                          border: showTimeline[index] ? 'none' : '2px solid rgba(220, 38, 38, 0.3)',
                           borderRadius: showTimeline[index] ? '0' : '16px',
-                          boxShadow: showTimeline[index] ? 'none' : (() => {
-                            const categoryShadows = {
-                              'WORLD NEWS': '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)',
-                              'BUSINESS': '0 4px 20px rgba(30, 64, 175, 0.25), 0 2px 8px rgba(30, 64, 175, 0.15)',
-                              'MARKETS': '0 4px 20px rgba(4, 120, 87, 0.25), 0 2px 8px rgba(4, 120, 87, 0.15)',
-                              'TECH & AI': '0 4px 20px rgba(109, 40, 217, 0.25), 0 2px 8px rgba(109, 40, 217, 0.15)',
-                              'SCIENCE': '0 4px 20px rgba(3, 105, 161, 0.25), 0 2px 8px rgba(3, 105, 161, 0.15)',
-                              'HEALTH': '0 4px 20px rgba(15, 118, 110, 0.25), 0 2px 8px rgba(15, 118, 110, 0.15)',
-                              'CLIMATE': '0 4px 20px rgba(21, 128, 61, 0.25), 0 2px 8px rgba(21, 128, 61, 0.15)',
-                              'SPORTS': '0 4px 20px rgba(194, 65, 12, 0.25), 0 2px 8px rgba(194, 65, 12, 0.15)',
-                              'ENTERTAINMENT': '0 4px 20px rgba(190, 24, 93, 0.25), 0 2px 8px rgba(190, 24, 93, 0.15)'
-                            };
-                            return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
-                          })()
+                          boxShadow: showTimeline[index] ? 'none' : '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1918,36 +1866,10 @@ export default function Home() {
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
-                                border: (() => {
-                                  const categoryBorders = {
-                                    'WORLD NEWS': '2px solid rgba(220, 38, 38, 0.3)',
-                                    'BUSINESS': '2px solid rgba(30, 64, 175, 0.3)',
-                                    'MARKETS': '2px solid rgba(4, 120, 87, 0.3)',
-                                    'TECH & AI': '2px solid rgba(109, 40, 217, 0.3)',
-                                    'SCIENCE': '2px solid rgba(3, 105, 161, 0.3)',
-                                    'HEALTH': '2px solid rgba(15, 118, 110, 0.3)',
-                                    'CLIMATE': '2px solid rgba(21, 128, 61, 0.3)',
-                                    'SPORTS': '2px solid rgba(194, 65, 12, 0.3)',
-                                    'ENTERTAINMENT': '2px solid rgba(190, 24, 93, 0.3)'
-                                  };
-                                  return categoryBorders[story.category] || '2px solid rgba(0, 0, 0, 0.08)';
-                                })(),
+                                border: '2px solid rgba(220, 38, 38, 0.3)',
                                 borderRadius: '16px',
                                 padding: '12px 20px',
-                                boxShadow: (() => {
-                                  const categoryShadows = {
-                                    'WORLD NEWS': '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)',
-                                    'BUSINESS': '0 4px 20px rgba(30, 64, 175, 0.25), 0 2px 8px rgba(30, 64, 175, 0.15)',
-                                    'MARKETS': '0 4px 20px rgba(4, 120, 87, 0.25), 0 2px 8px rgba(4, 120, 87, 0.15)',
-                                    'TECH & AI': '0 4px 20px rgba(109, 40, 217, 0.25), 0 2px 8px rgba(109, 40, 217, 0.15)',
-                                    'SCIENCE': '0 4px 20px rgba(3, 105, 161, 0.25), 0 2px 8px rgba(3, 105, 161, 0.15)',
-                                    'HEALTH': '0 4px 20px rgba(15, 118, 110, 0.25), 0 2px 8px rgba(15, 118, 110, 0.15)',
-                                    'CLIMATE': '0 4px 20px rgba(21, 128, 61, 0.25), 0 2px 8px rgba(21, 128, 61, 0.15)',
-                                    'SPORTS': '0 4px 20px rgba(194, 65, 12, 0.25), 0 2px 8px rgba(194, 65, 12, 0.15)',
-                                    'ENTERTAINMENT': '0 4px 20px rgba(190, 24, 93, 0.25), 0 2px 8px rgba(190, 24, 93, 0.15)'
-                                  };
-                                  return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
-                                })(),
+                                boxShadow: '0 4px 20px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15)',
                                 minHeight: '90px',
                                 zIndex: '10'
                               }}>
