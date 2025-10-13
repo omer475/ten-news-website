@@ -348,31 +348,11 @@ export default function Home() {
     }
   };
 
-  // Function to render text with bold markup and category-colored containers
+  // Function to render text without bold markup
   const renderBoldText = (text, category) => {
     if (!text) return '';
-    
-    const getCategoryBoldStyle = (category) => {
-      const styles = {
-        'WORLD NEWS': { background: '#fee2e2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: '#eef2ff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: '#e0f2fe', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'HEALTH': { background: '#ecfdf5', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: '#f0fdf4', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SPORTS': { background: '#fffbeb', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: '#fdf2f8', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
-      };
-      return styles[category] || { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
-    };
-    
-    return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} style={getCategoryBoldStyle(category)}>{part.slice(2, -2)}</strong>;
-      }
-      return part;
-    });
+    // Remove all ** markdown markers and return plain text
+    return text.replace(/\*\*/g, '');
   };
 
   useEffect(() => {
@@ -1756,7 +1736,8 @@ export default function Home() {
                         marginBottom: '16px',
                         fontSize: '18px',
                         lineHeight: '1.5',
-                        opacity: '0.9'
+                        opacity: '1',
+                        color: '#2c2c2c'
                       }}>{renderBoldText(story.summary, story.category)}</p>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
