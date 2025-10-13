@@ -13,10 +13,10 @@ def export_to_json():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # Get published articles (score >= 85)
+    # Get published articles (score >= 700 for new 0-1000 scoring system)
     cursor.execute('''
         SELECT * FROM articles
-        WHERE published = TRUE AND ai_final_score >= 85
+        WHERE published = TRUE AND ai_final_score >= 700
         ORDER BY ai_final_score DESC, published_at DESC
         LIMIT 100
     ''')

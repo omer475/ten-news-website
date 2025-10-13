@@ -3,6 +3,103 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Drone strike in besieged Sudan city kills dozens",
+      "url": "https://www.bbc.com/news/articles/c3rvrn8req4o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "El-Fasher has been surrounded by the RSF for 17 months, as residents face hunger and starvation.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/4f4e/live/d92cb460-a69c-11f0-a409-e197032d359e.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:22:58.553507",
+      "category": "breaking",
+      "emoji": "\ud83d\udea8",
+      "final_score": 1000.0,
+      "summary": "A devastating **drone strike** hit El-Fasher, Sudan, where residents already face severe hunger after being **besieged** by Rapid Support Forces for 17 months. The attack killed dozens, further destabilizing the humanitarian crisis in the surrounded city.",
+      "timeline": [
+        {
+          "date": "October 2024",
+          "event": "First verified drone strikes target civilian areas in El-Fasher, causing multiple casualties"
+        },
+        {
+          "date": "December 19, 2024",
+          "event": "RSF attacks Zamzam IDP Camp, widespread SAF bombardment and RSF razing in El-Fasher"
+        }
+      ],
+      "details": [
+        "Location hit: Dar Al-Arqam Shelter[1]  \nVictims: Over 60 civilians killed[1]  \nClashes intensified: Since May 2024[1]"
+      ]
+    },
+    {
+      "title": "Starmer to attend Egypt summit on Gaza peace plan, No",
+      "url": "https://www.bbc.com/news/articles/c9qnqx7znqno?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "President Trump will lead Monday's summit, where No 10 says the peace plan will be signed.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/c65e/live/eaa51700-a6d8-11f0-826a-6be1fb467f36.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:22:37.315268",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 1000.0,
+      "summary": "**Keir Starmer** will join world leaders at an Egypt summit on Monday to discuss and sign a proposed **Gaza peace plan**, according to No 10. The meeting aims to establish stability in the conflict-stricken region.",
+      "timeline": [
+        {
+          "date": "September 29, 2025",
+          "event": "Trump announces new Gaza peace plan with Netanyahu at White House press conference."
+        },
+        {
+          "date": "October 3, 2025",
+          "event": "Trump gives Hamas deadline of October 5 to accept the proposed peace deal."
+        },
+        {
+          "date": "October 4, 2025",
+          "event": "Netanyahu orders halt to Gaza City offensive; talks planned in Cairo."
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "Israel and Hamas begin indirect talks in Sharm el-Sheikh, Egypt, mediated by officials."
+        }
+      ],
+      "details": [
+        "Ceasefire date: October 10, 2025  \nSummit location: Sharm El-Sheikh, Egypt  \nCo-chair: President El-Sisi"
+      ]
+    },
+    {
+      "title": "What we know about the Gaza ceasefire agreement",
+      "url": "https://www.bbc.com/news/articles/cvgqx7ygq41o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "Israeli troops have pulled back from parts of Gaza after Israel approved Donald Trump's ceasefire and hostage release plan.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/e572/live/df6cb660-a69f-11f0-b741-177e3e2c2fc7.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:22:26.664752",
+      "category": "breaking",
+      "emoji": "\ud83d\udea8",
+      "final_score": 1000.0,
+      "summary": "Israeli troops have pulled back from parts of Gaza after Israel approved Donald Trump's ceasefire and hostage release plan.",
+      "timeline": [
+        {
+          "date": "May 5, 2024",
+          "event": "Hamas accepts three-stage ceasefire proposal mediated by Egypt, Qatar, and US."
+        },
+        {
+          "date": "January 17, 2025",
+          "event": "Israel and Hamas sign 42-day ceasefire and hostage release agreement."
+        },
+        {
+          "date": "October 3, 2025",
+          "event": "Israel\u2013Hamas ceasefire agreement takes effect, Israeli troops pull back from Gaza."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Ceasefire agreement comes into effect; humanitarian aid increases in Gaza."
+        }
+      ],
+      "details": [
+        "Hostages: 20 to be released Monday  \nPrisoners: 250 Palestinians for exchange  \nAid: Increased shipments entering Gaza"
+      ]
+    },
+    {
       "title": "As the ceasefire begins, a look at the Gaza war",
       "url": "https://www.npr.org/2025/10/13/g-s1-92205/ceasefire-gaza-war-key-figures",
       "source": "NPR News",
@@ -35,41 +132,6 @@
       ],
       "details": [
         "Population displaced: 100,000+\nTotal killed: 67,075\nTotal injured: 169,430"
-      ]
-    },
-    {
-      "title": "Preparations begin to ramp up aid in Gaza as ceasefire",
-      "url": "https://www.npr.org/2025/10/12/nx-s1-5572384/aid-gaza-ceasefire-preparations",
-      "source": "NPR News",
-      "description": "Preparations were also underway Sunday for the release of Israeli hostages held in Gaza and Palestinian prisoners held in Israel.",
-      "content": "Preparations were also underway Sunday for the release of Israeli hostages held in Gaza and Palestinian prisoners held in Israel.(Image credit: Mohammed Arafat)",
-      "urlToImage": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/2433x1622+0+0/resize/2433x1622!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Fed%2Ffd%2Fee91f180407e8ffa8ec36f5a5239%2Fap25285199758877.jpg",
-      "author": "The Associated Press",
-      "publishedAt": "2025-10-13T17:21:13.571809",
-      "category": "breaking",
-      "emoji": "\ud83d\udd4a\ufe0f",
-      "final_score": 1000.0,
-      "summary": "Preparations were also underway Sunday for the release of Israeli hostages held in Gaza and Palestinian prisoners held in Israel.",
-      "timeline": [
-        {
-          "date": "October 7, 2023",
-          "event": "Hamas attacks southern Israel; Israel declares war and launches airstrikes on Gaza"
-        },
-        {
-          "date": "October 9, 2023",
-          "event": "Israel imposes complete blockade on food, water, electricity, and fuel to Gaza"
-        },
-        {
-          "date": "January 15, 2025",
-          "event": "Qatar announces ceasefire deal reached between Israel and Hamas"
-        },
-        {
-          "date": "January 19, 2025",
-          "event": "Ceasefire begins; first Israeli hostages and Palestinian prisoners are released"
-        }
-      ],
-      "details": [
-        "Displaced: 1.9 million Palestinians[2]  \nFamine: Confirmed in Gaza City[2][3]  \nHomes destroyed: Over 90% in Gaza[2]"
       ]
     },
     {
@@ -205,6 +267,41 @@
       ]
     },
     {
+      "title": "Israel: Gaza Hostage Release Set for Monday Morning",
+      "url": "https://www.france24.com/en/middle-east/20251012-gaza-live-aid-trucks-rafah-crossing-egypt-prepares-host-gaza-peace-summit",
+      "source": "France 24",
+      "description": "An Israeli government spokesperson confirmed on Sunday that the release of hostages held in Gaza will begin early Monday morning. All 20 living hostages are expected to be released together at one time, followed by the bodies of 28 deceased.\u00a0 Palestinian prisoners will be freed after all Gaza hostages arrive in Israel. Follow our liveblog for the latest updates.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/ca690a3a-a761-11f0-b5b8-005056bfb2b6/w:1024/p:16x9/AP25284680212652.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T17:22:18.700242",
+      "category": "breaking",
+      "emoji": "\ud83d\udcf0",
+      "final_score": 980.0,
+      "summary": "The **release of hostages** from Gaza will commence early Monday, with 20 living captives and remains of 28 deceased to be freed simultaneously. Israel will reciprocate by conducting a **prisoner exchange** with Palestinians afterward.",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "Israel and Hamas agreed to first stage of US-mediated hostage-truce plan."
+        },
+        {
+          "date": "October 9, 2025",
+          "event": "Israeli cabinet ratified the hostage agreement with Hamas, setting a truce in Gaza."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Hostage-truce agreement between Israel and Hamas went into effect at noon local time."
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "All 20 remaining living Israeli hostages released; hundreds of Palestinian prisoners freed."
+        }
+      ],
+      "details": [
+        "Hostage count: 20 living, 28 deceased  \nRelease timing: 7:00 AM local  \nPrisoner exchange: 150 Palestinians freed"
+      ]
+    },
+    {
       "title": "More than 500,000 Palestinians return to ruined Gaza City as",
       "url": "https://www.france24.com/en/middle-east/20251011-more-than-500-000-palestinians-return-to-ruined-gaza-city-as-truce-holds",
       "source": "France 24",
@@ -271,6 +368,76 @@
       ]
     },
     {
+      "title": "Madagascar leader says power grab under way as army unit",
+      "url": "https://www.france24.com/en/africa/20251012-madagascar-leader-rajoelina-warns-of-coup-attempt-after-soldiers-refuse-orders-to-shoot-protesters",
+      "source": "France 24",
+      "description": "Madagascar's President Andry Rajoelina said in a statement on Sunday that \"an attempt to seize power illegally and by force\" was underway in the Indian Ocean island state, a day after some soldiers joined a vast protest movement that started last month. The mutinied army unit announced it was taking control of all military forces in the country.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/dbe7f16a-a73c-11f0-b37a-005056bfb2b6/w:1024/p:16x9/2025-10-11T213707Z-1054030937-RC2T9HA3YL1P-RTRMADP-3-MADAGASCAR-PROTESTS.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T17:26:32.235571",
+      "category": "politics",
+      "emoji": "\u26a0\ufe0f",
+      "final_score": 960.0,
+      "summary": "Amid ongoing protests in **Madagascar**, a rebellious **military faction** claimed control of the armed forces, prompting President Rajoelina to denounce an illegal power grab. The development follows weeks of demonstrations against his leadership on the island nation.",
+      "timeline": [
+        {
+          "date": "September 2024",
+          "event": "Vast protest movement begins against Madagascar government, gaining momentum nationwide."
+        },
+        {
+          "date": "October 12, 2024",
+          "event": "Soldiers join protests, mutinied army unit claims control of all military forces."
+        },
+        {
+          "date": "October 13, 2024",
+          "event": "President Rajoelina warns of attempted coup by elite military unit Capsat."
+        },
+        {
+          "date": "October 13, 2024",
+          "event": "France evacuates President Rajoelina amid escalating protests and army revolt."
+        }
+      ],
+      "details": [
+        "CAPSAT unit: Elite troops joined protests[1]  \nDeath toll: At least 22 confirmed[1]  \nTrigger: Power and water cuts sparked unrest[1]"
+      ]
+    },
+    {
+      "title": "China vows to stand firm against Trump's 100% tariff threat",
+      "url": "https://www.npr.org/2025/10/12/nx-s1-5572400/china-vows-stand-firm-against-trumps-100-tariff-threat",
+      "source": "NPR News",
+      "description": "China signaled Sunday that it would not back down in the face of a 100% tariff threat from President Donald Trump, urging the U.S. to resolve differences through negotiations instead of threats.",
+      "content": "China signaled Sunday that it would not back down in the face of a 100% tariff threat from President Donald Trump, urging the U.S. to resolve differences through negotiations instead of threats.(Image credit: AP)",
+      "urlToImage": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/3024x2016+0+0/resize/3024x2016!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F20%2F3b%2F660950b649a0bd12da411a330239%2Fap25283388795638.jpg",
+      "author": "The Associated Press",
+      "publishedAt": "2025-10-13T17:22:49.581133",
+      "category": "politics",
+      "emoji": "\u2696\ufe0f",
+      "final_score": 960.0,
+      "summary": "China firmly rejected President Trump's **100% tariff** threat, emphasizing their unwillingness to yield to economic pressure. The nation called for diplomatic **negotiations** rather than threats to resolve ongoing trade tensions with the United States.",
+      "timeline": [
+        {
+          "date": "August 12, 2025",
+          "event": "Trump extends US-China tariff truce by 90 days, delaying escalation."
+        },
+        {
+          "date": "August 26, 2025",
+          "event": "Trump threatens 200% tariff if China restricts rare earth magnet exports."
+        },
+        {
+          "date": "September 18, 2025",
+          "event": "US and China in final stage of talks for Trump state visit to Beijing."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Trump announces 100% tariffs on Chinese imports; China vows firm response."
+        }
+      ],
+      "details": [
+        "Current US tariff: 30%\nChina's retaliatory tariff: 10%\nTrade deficit 2025: $128.6B"
+      ]
+    },
+    {
       "title": "'We are inventing captivity medicine': Hospital prepares for freed Israeli",
       "url": "https://www.bbc.com/news/articles/c4gvg8jx7gmo?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -333,6 +500,41 @@
       ]
     },
     {
+      "title": "Afghanistan says it has killed 58 Pakistani soldiers in overnight",
+      "url": "https://www.npr.org/2025/10/12/nx-s1-5572402/afghanistan-killed-58-pakistani-soldiers-overnight-border-operations",
+      "source": "NPR News",
+      "description": "Afghanistan said Sunday it killed 58 Pakistani soldiers in overnight border operations, in response to what it called repeated violations of its territory and airspace.",
+      "content": "Afghanistan said Sunday it killed 58 Pakistani soldiers in overnight border operations, in response to what it called repeated violations of its territory and airspace.(Image credit: AP)",
+      "urlToImage": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/4032x2688+0+0/resize/4032x2688!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F71%2F81%2F956b0cc7437ab324994871388c20%2Fap25285254426737.jpg",
+      "author": "The Associated Press",
+      "publishedAt": "2025-10-13T17:26:45.837618",
+      "category": "breaking",
+      "emoji": "\u2694\ufe0f",
+      "final_score": 950.0,
+      "summary": "Afghanistan claims to have killed **58 Pakistani soldiers** during **overnight border operations**, responding to alleged territorial and airspace violations by Pakistan. The incident marks a significant escalation in tensions between the neighboring countries.",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "TTP ambush in Kurram district kills 11 Pakistani soldiers."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Pakistan conducts airstrikes on TTP camps in Paktika and Khost, Afghanistan."
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Afghan Taliban retaliate, attacking Pakistani border posts with artillery and drones."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Both sides halt major operations after intense cross-border clashes and casualties."
+        }
+      ],
+      "details": [
+        "Border closure: 2 days ongoing  \nPosts captured: 19 by Pakistan  \nMilitant casualties: 200+ claimed by Pakistan"
+      ]
+    },
+    {
       "title": "Mutiny in Madagascar: Army unit claims control of military; president",
       "url": "https://timesofindia.indiatimes.com/world/rest-of-world/mutiny-in-madagascar-army-unit-claims-control-of-military-president-says-coup-underway/articleshow/124498484.cms",
       "source": "Times of India",
@@ -361,6 +563,33 @@
       ],
       "details": [
         "Evacuation: President flown to France  \nProtests: 12,000+ demonstrators in Antananarivo  \nCapsat role: Led 2009 coup for Rajoelina"
+      ]
+    },
+    {
+      "title": "Biden receiving radiation therapy for prostate cancer",
+      "url": "https://www.bbc.com/news/articles/c1ede670jnyo?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "The 82-year-old former US president - who was diagnosed with an aggressive prostate cancer in May - is also getting hormone treatment.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/3846/live/3e341bf0-a6b1-11f0-90fd-c3777763571c.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:23:33.081873",
+      "category": "politics",
+      "emoji": "\ud83c\uddfa\ud83c\uddf8",
+      "final_score": 940.0,
+      "summary": "**Former President Biden**, now 82, is undergoing **radiation therapy** and hormone treatment after being diagnosed with aggressive **prostate cancer** in May. The treatment regimen is part of his ongoing medical care following the diagnosis.",
+      "timeline": [
+        {
+          "date": "May 2025",
+          "event": "Joe Biden diagnosed with aggressive prostate cancer that metastasized to bones"
+        },
+        {
+          "date": "October 2025",
+          "event": "Biden receiving radiation therapy and hormone treatment for prostate cancer"
+        }
+      ],
+      "details": [
+        "No verified, relevant data points found in the provided search results that are not already mentioned in the article description. The search results only confirm that Joe Biden is undergoing radiation therapy for prostate cancer, but do not provide additional specific details such as treatment duration, prognosis, or medical team involved[1]."
       ]
     },
     {
@@ -496,6 +725,41 @@
       ]
     },
     {
+      "title": "5 things to know about the health care fight behind",
+      "url": "https://www.npr.org/2025/10/12/nx-s1-5570849/shutdown-aca-health-care-tax-credits",
+      "source": "NPR News",
+      "description": "If Congress doesn't act, costs will rise on premiums for health care plans on the Affordable Care Act marketplaces. Here's what to know about the politics and real-world impact of this issue.",
+      "content": "If Congress doesn't act, costs will rise on premiums for health care plans on the Affordable Care Act marketplaces. Here's what to know about the politics and real-world impact of this issue.(Image credit: Tom Williams/CQ-Roll Call)",
+      "urlToImage": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/1024x683+0+0/resize/1024x683!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F89%2F61%2F42a357b447b6a77d340116f3b53a%2Fgettyimages-2239432954.jpg",
+      "author": "Selena Simmons-Duffin",
+      "publishedAt": "2025-10-13T17:23:11.582706",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 930.0,
+      "summary": "If Congress doesn't act, costs will rise on premiums for health care plans on the Affordable Care Act marketplaces. Here's what to know about the politics and real-world impact of this issue.",
+      "timeline": [
+        {
+          "date": "October 2, 2025",
+          "event": "Federal government shutdown begins over ACA subsidy extension disagreement"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Government shutdown continues into tenth day over health care subsidies"
+        },
+        {
+          "date": "November 1, 2025",
+          "event": "ACA Marketplace open enrollment period scheduled to begin"
+        },
+        {
+          "date": "December 31, 2025",
+          "event": "Enhanced ACA premium subsidies set to expire without Congressional action"
+        }
+      ],
+      "details": [
+        "New enrollees: 3.9 million[4]  \nUninsured rate: 8.2% (2024)[3]  \nPremium savings: $800 annually[2]"
+      ]
+    },
+    {
       "title": "Mexico floods leave at least 27 dead and more missing",
       "url": "https://www.bbc.com/news/articles/c89d9vp1djyo?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -528,6 +792,41 @@
       ],
       "details": [
         "Death toll: 41  \nFlood depth: 12+ feet  \nVehicles displaced: Lodged in treetops"
+      ]
+    },
+    {
+      "title": "Man Charged for Stalking Ed Davey and Family",
+      "url": "https://www.bbc.com/news/articles/c77d702znm4o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "As well as the accusations regarding Ed Davey, Inigo Rowland is charged with flick-knife possession.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/9188/live/c3b1dca0-a76e-11f0-93e3-054bcb63bc18.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T17:26:07.256523",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 920.0,
+      "summary": "**Inigo Rowland** faces charges for allegedly **stalking** Liberal Democrat leader Ed Davey and his family. The suspect is also accused of carrying a flick-knife, raising concerns about the safety of public officials and their loved ones.",
+      "timeline": [
+        {
+          "date": "June-October 2025",
+          "event": "Inigo Rowland allegedly made repeated unwanted visits to Ed Davey's home."
+        },
+        {
+          "date": "October 6, 2025",
+          "event": "Rowland arrested by police for stalking and flick-knife possession."
+        },
+        {
+          "date": "October 7, 2025",
+          "event": "Rowland appeared at Wimbledon Magistrates' Court and was remanded in custody."
+        },
+        {
+          "date": "October 14, 2025",
+          "event": "Rowland scheduled to appear again at Wimbledon Magistrates' Court."
+        }
+      ],
+      "details": [
+        "Age: 44 years  \nCourt date: October 14  \nResidence: West London"
       ]
     },
     {
@@ -1065,41 +1364,6 @@
       ]
     },
     {
-      "title": "Gaza Ceasefire Holds as Peace Summit Approaches",
-      "url": "https://www.france24.com/en/middle-east/20251012-gaza-ceasefire-holds-key-issues-remain-unresolved-trump-peace-summit-israel-hamas",
-      "source": "France 24",
-      "description": "Hamas will begin releasing Israeli hostages held in Gaza on Monday morning as part of the first phase of a peace deal pushed by US President Donald Trump that will also see the release of nearly 2,000 Palestinian prisoners. But many issues remain unresolved as Trump and his Egyptian counterpart Abdel Fattah al-Sisi prepare to chair a summit of more than 20 countries in the Red Sea resort of Sharm el-Sheikh.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/c7d8a430-a72d-11f0-ad70-005056bf30b7/w:1024/p:16x9/2025-10-11T133727Z-1679108737-RC2P9HAHO03S-RTRMADP-3-ISRAEL-PALESTINIANS-GAZA.jpg",
-      "author": "FRANCE 24",
-      "publishedAt": "2025-10-13T17:21:35.635069",
-      "category": "politics",
-      "emoji": "\ud83d\udd4a\ufe0f",
-      "final_score": 900.0,
-      "summary": "Hamas will begin releasing Israeli hostages held in Gaza on Monday morning as part of the first phase of a peace deal pushed by US President Donald Trump that will also see the release of nearly 2,000",
-      "timeline": [
-        {
-          "date": "May 5, 2024",
-          "event": "Hamas accepts three-stage ceasefire proposal mediated by Egypt and Qatar"
-        },
-        {
-          "date": "January 15, 2025",
-          "event": "Israel and Hamas agree to a variation of the ceasefire proposal"
-        },
-        {
-          "date": "January 19, 2025",
-          "event": "Ceasefire and hostages-prisoners exchange take effect in Gaza"
-        },
-        {
-          "date": "March 18, 2025",
-          "event": "Ceasefire period and exchange process officially conclude"
-        }
-      ],
-      "details": [
-        "Ceasefire violations: 1,000 documented  \nAid trucks: Hundreds entered Gaza  \nPalestinians killed post-ceasefire: 118"
-      ]
-    },
-    {
       "title": "Russia is unleashing a new surge of exploding drone attacks",
       "url": "https://www.businessinsider.com/russia-unleashed-new-surge-drone-attacks-on-ukraines-rail-network-2025-10",
       "source": "Business Insider",
@@ -1612,6 +1876,37 @@
       ]
     },
     {
+      "title": "Cameroon heads to the polls with world's oldest leader Biya",
+      "url": "https://www.france24.com/en/africa/20251012-cameroon-heads-to-the-polls-world-oldest-leader-paul-biya-seeks-eighth-term",
+      "source": "France 24",
+      "description": "Polls opened in Cameroon on Sunday in an election that could see Africa\u2019s oldest leader Paul Biya, aged 92, extend his 43-year rule by another 7 years. Biya faces nine opposition candidates, including some former allies and appointees.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/645b512c-a74c-11f0-99ad-005056bfb2b6/w:1024/p:16x9/2025-10-12T085556Z-416779083-RC27AHAY72XL-RTRMADP-3-CAMEROON-ELECTION.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T17:26:18.604010",
+      "category": "politics",
+      "emoji": "\ud83d\uddf3\ufe0f",
+      "final_score": 890.0,
+      "summary": "Cameroon's **President Paul Biya**, age 92 and the world's oldest leader, seeks his **eighth term** in Sunday's election. Having ruled for 43 years already, he faces nine opposition candidates as he attempts to extend his leadership until 2031.",
+      "timeline": [
+        {
+          "date": "July 14, 2025",
+          "event": "President Paul Biya announces candidacy for an eighth term at age 92"
+        },
+        {
+          "date": "July 21, 2025",
+          "event": "Deadline for presidential candidates to file applications with election authorities"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Cameroon holds presidential election with Biya seeking to extend 43-year rule"
+        }
+      ],
+      "details": [
+        "Voter registration: Over 8 million[1]  \nTerm limits: Removed in 2008[2]  \nVoting system: First-past-the-post[2]"
+      ]
+    },
+    {
       "title": "JPMorgan Pledges $10B for U.S. National Security Companies",
       "url": "https://fortune.com/2025/10/13/jpmorgan-national-security-up-to-10-billion-investment/",
       "source": "Fortune",
@@ -1901,6 +2196,41 @@
       ]
     },
     {
+      "title": "'Have other options if ...': Afghanistan warns Pak amid deadly",
+      "url": "https://timesofindia.indiatimes.com/world/south-asia/if-peace-efforts-dont-succeed-afghanistans-big-warning-for-pakistan-torkham-border-crossing-closed/articleshow/124498956.cms",
+      "source": "Times of India",
+      "description": "Afghanistan's Foreign Minister warned of \"other options\" if peace talks with Pakistan fail, following intense border clashes. Kabul claims retaliatory operations achieved objectives with no civilian harm, accusing \"elements in Pakistan\" of seeking instability. Pakistan, however, labelled the strikes \"unprovoked\" and a \"blatant violation of international laws.\"",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124499011,imgsize-1223294.cms",
+      "author": "TOI WORLD DESK",
+      "publishedAt": "2025-10-13T17:25:57.709165",
+      "category": "general",
+      "emoji": "\ud83d\udea8",
+      "final_score": 880.0,
+      "summary": "Afghanistan's Foreign Minister warned of \"other options\" if peace talks with Pakistan fail, following intense border clashes. Kabul claims retaliatory operations achieved objectives with no civilian h",
+      "timeline": [
+        {
+          "date": "October 8, 2025",
+          "event": "TTP ambush in Kurram district kills 11 Pakistani soldiers, sparking border conflict"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Pakistan launches airstrikes on TTP camps in Paktika and Khost, Afghanistan"
+        },
+        {
+          "date": "October 11, 2025",
+          "event": "Afghan Taliban retaliate, attacking Pakistani posts with artillery and drones"
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Both sides halt major operations after intense clashes and international calls for restraint"
+        }
+      ],
+      "details": [
+        "Border posts: 19 captured by Pakistan[1]\nSaudi pact: Defense deal signed with Pakistan[2]\nTaliban deaths: 20+ Afghan soldiers killed[1]"
+      ]
+    },
+    {
       "title": "Japan declares nationwide flu outbreak; over 4,000 hospitalised amid concerns",
       "url": "https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/new-pandemic-coming-japan-declares-nationwide-flu-outbreak-over-4000-hospitalised/articleshow/124484790.cms",
       "source": "Times of India",
@@ -2154,6 +2484,33 @@
       ],
       "details": [
         "Popular vote: 17,015,756 Trump[1]  \nHaley wins: 2 primaries[1]  \nTrump favorability: 44.1%[4]"
+      ]
+    },
+    {
+      "title": "Jailed founder of Tren de Aragua gang calls for peace",
+      "url": "https://www.france24.com/en/americas/20251012-jailed-founder-of-tren-de-aragua-gang-calls-for-peace-talks-with-colombian-government",
+      "source": "France 24",
+      "description": "Larry Alvarez, a jailed founder of the notorious Tren de Aragua gang known by his alias \"Larry Changa\", has published a letter asking Colombian President Gustavo Petro to open peace talks leading to the transnational group's \"demobilisation\".",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/fea5fda2-a730-11f0-96e0-005056a97e36/w:1024/p:16x9/AP25037802454019.jpg",
+      "author": "FRANCE 24",
+      "publishedAt": "2025-10-13T17:23:22.400345",
+      "category": "politics",
+      "emoji": "\ud83d\udde3\ufe0f",
+      "final_score": 870.0,
+      "summary": "Larry Alvarez, a jailed founder of the notorious Tren de Aragua gang known by his alias \"Larry Changa\", has published a letter asking Colombian President Gustavo Petro to open peace talks leading to t",
+      "timeline": [
+        {
+          "date": "July 2024",
+          "event": "Larry Alvarez, alias Larry Changa, arrested by Colombian police."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Alvarez publishes letter requesting peace talks with Colombian government and demobilisation."
+        }
+      ],
+      "details": [
+        "Extradition status: Awaiting transfer to Chile[1]  \nCriminal charges: Terrorism, arms trafficking, extortion, kidnapping[1]  \nPeace letter: Verified by Colombian Peace Commissioner[1]"
       ]
     },
     {
@@ -2849,346 +3206,9 @@
       "details": [
         "Coverage rate: Under 10% insured patients[1][3]  \nOut-of-pocket cost: $20,720\u2013$65,200[4]  \nAffected US women: 11% estimated prevalence[3]"
       ]
-    },
-    {
-      "title": "D\u00e9j\u00e0 vu as French President reappoints S\u00e9bastien LeCornu Prime Minister",
-      "url": "https://www.france24.com/en/tv-shows/a-week-in-france/20251011-d%C3%A9j%C3%A0-vu-as-french-president-reappoints-s%C3%A9bastien-lecornu-prime-minister",
-      "source": "France 24",
-      "description": "It's been quite a week in French Politics. \u00a0S\u00e9bastien LeCornu stepped down from his post as Prime Minister on Monday, on Friday President Emmanuel Macron reappointed him. In between, there have been meetings with the various political parties. The National Assembly remains in gridlock and time to pass a budget before the end of the year is running out.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/8d0276ea-a6b7-11f0-a0ad-005056bf30b7/w:1024/p:16x9/capture-192775193368ea78a3e5ee58-53656958.jpg",
-      "author": "Catherine VIETTE",
-      "publishedAt": "2025-10-13T17:14:47.337499",
-      "category": "politics",
-      "emoji": "\ud83c\uddeb\ud83c\uddf7",
-      "final_score": 820.0,
-      "summary": "It's been quite a week in French Politics. \u00a0S\u00e9bastien LeCornu stepped down from his post as Prime Minister on Monday, on Friday President Emmanuel Macron reappointed him. In between, there have been m",
-      "timeline": [
-        {
-          "date": "September 9, 2025",
-          "event": "S\u00e9bastien Lecornu appointed Prime Minister by President Emmanuel Macron."
-        },
-        {
-          "date": "October 6, 2025",
-          "event": "Lecornu and cabinet resign amid political backlash and parliamentary gridlock."
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "President Macron reappoints Lecornu as Prime Minister after coalition talks."
-        }
-      ],
-      "details": [
-        "Cabinet size: 19 ministers appointed\nNew defense minister: Catherine Vautrin\nFinance minister: Roland Lescure"
-      ]
-    },
-    {
-      "title": "Morocco king urges speedy social reforms following youth-led protests",
-      "url": "https://www.france24.com/en/video/20251011-morocco-king-urges-speedy-social-reforms-following-youth-led-protests",
-      "source": "France 24",
-      "description": "Morocco's King Mohammed VI on Friday said improving public education and healthcare was a priority, but made no reference to the youth movement that has been staging nationwide protests for sweeping social reforms. The royal speech had been much anticipated by the protesters, who have taken to the streets almost every night since September 27.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/51dc0542-a6b5-11f0-a416-005056bf30b7/w:1024/p:16x9/EN-20251011-170738-170918-CS.jpg",
-      "author": "FRANCE24",
-      "publishedAt": "2025-10-13T17:14:36.938957",
-      "category": "politics",
-      "emoji": "\ud83d\udc51",
-      "final_score": 820.0,
-      "summary": "Morocco's King Mohammed VI on Friday said improving public education and healthcare was a priority, but made no reference to the youth movement that has been staging nationwide protests for sweeping s",
-      "timeline": [
-        {
-          "date": "September 27, 2025",
-          "event": "Youth-led GenZ 212 protests begin in major Moroccan cities demanding social reforms."
-        },
-        {
-          "date": "September 30, 2025",
-          "event": "Rioting and clashes escalate; injuries and arrests reported in multiple cities."
-        },
-        {
-          "date": "October 1, 2025",
-          "event": "Three protesters killed in Leqliaa after gunfire by law enforcement during clashes."
-        },
-        {
-          "date": "October 3, 2025",
-          "event": "King Mohammed VI urges reforms in education and healthcare, omitting direct protest mention."
-        }
-      ],
-      "details": [
-        "Youth unemployment rate: 35.8 percent\nArrested protesters: 409 people\nDeaths reported: 3 protesters"
-      ]
-    },
-    {
-      "title": "In a \u2018wishful thinking\u2019 address, Donald Trump hails \u2018historic dawn",
-      "url": "https://www.france24.com/en/video/20251013-in-a-wishful-thinking-address-donald-trump-hails-historic-dawn-of-a-new-middle-east",
-      "source": "France 24",
-      "description": "In a historic address at the Israeli Knesset, US President Donald Trump declared that 'the era of terror has ended', marking the dawn of a new chapter for the Middle East. Delivered on the first day of the initial phase of a landmark peace agreement with Hamas, the speech was met with unanimous applause, including from Israeli Prime Minister Benjamin Netanyahu. FRANCE 24's Douglas Herbert has the analysis as Trump imposes himself as a peacemaker in the Middle East.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/728227d8-a834-11f0-988b-005056a90284/w:1024/p:16x9/EN-20251013-141438-142535-CS.jpg",
-      "author": "FRANCE24",
-      "publishedAt": "2025-10-13T15:21:09.016414",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 820.0,
-      "summary": "During a landmark speech at the **Israeli Knesset**, President Trump proclaimed an end to terror and a new era in the **Middle East peace** process, receiving widespread support from Israeli leaders including Prime Minister Netanyahu.",
-      "timeline": [
-        {
-          "date": "September 29, 2025",
-          "event": "Trump announces new Gaza peace plan with Netanyahu at White House press conference"
-        },
-        {
-          "date": "October 3, 2025",
-          "event": "Trump gives Hamas deadline of October 5 to accept the peace proposal"
-        },
-        {
-          "date": "October 8, 2025",
-          "event": "Trump announces Israel and Hamas have agreed to first phase of peace deal"
-        },
-        {
-          "date": "October 9, 2025",
-          "event": "Israel and Hamas sign phase one of peace plan in Sharm el Sheikh, Egypt"
-        }
-      ],
-      "details": [
-        "Hostages released: 20 Israelis  \nPrisoners released: 2,000 Palestinians  \nCeasefire start: January 19, 2025"
-      ]
-    },
-    {
-      "title": "Bans on highly toxic pesticides could be an effective way",
-      "url": "https://ourworldindata.org/pesticide-bans-suicide-prevention",
-      "source": "Our World in Data",
-      "description": "Pesticide poisoning is a common method of suicide in many low- to middle-income countries. Banning highly toxic pesticides and substituting them with less fatal ones can save lives.",
-      "content": "",
-      "urlToImage": "https://ourworldindata.org/cdn-cgi/imagedelivery/qLq-8BTgXU8yG0N6HnOy8g/d8cbf8af-42ff-4bb4-7704-444383efb400/w=1350",
-      "author": "Hannah Ritchie",
-      "publishedAt": "2025-10-13T14:16:22.868641",
-      "category": "science",
-      "emoji": "\u2695\ufe0f",
-      "final_score": 820.0,
-      "summary": "Research shows that banning **highly toxic pesticides** in low and middle-income countries could prevent numerous suicides. Replacing these dangerous substances with less lethal alternatives is an effective **suicide prevention** strategy, as pesticide poisoning remains widespread.",
-      "timeline": [
-        {
-          "date": "July 17, 2024",
-          "event": "PAHO study shows pesticide restrictions could prevent 120,000 suicide deaths"
-        },
-        {
-          "date": "September 9, 2024",
-          "event": "WHO and FAO launch brochure on preventing suicide through pesticide bans"
-        }
-      ],
-      "details": [
-        "Pesticide suicides: 20% global total[5]  \nBan impact: 28\u201392% reduction[5]  \nLives saved: 15,000\u201330,000 in 3 years[7]"
-      ]
-    },
-    {
-      "title": "Markets digest bank earnings after recent turmoil",
-      "url": "https://www.cnn.com/business/live-news/stock-market-bank-earnings/index.html",
-      "source": "CNN World",
-      "description": "",
-      "content": "",
-      "urlToImage": "https://cdn.cnn.com/cnnnext/dam/assets/230328155427-01-nyse-0328-super-169.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:15:16.595300",
-      "category": "business",
-      "emoji": "\ud83d\udcc8",
-      "final_score": 810.0,
-      "summary": "I notice you haven't actually shared the article text for me to summarize. If you'd like me to create a concise 35-40 word summary, please provide the full article text and I'll format it according to your requirements with bold key terms.",
-      "timeline": [
-        {
-          "date": "October 14, 2025",
-          "event": "JPMorgan, Wells Fargo, Goldman Sachs, Citigroup report Q3 earnings after recent market turmoil"
-        },
-        {
-          "date": "October 15, 2025",
-          "event": "Bank of America and Morgan Stanley release Q3 2025 earnings results"
-        }
-      ],
-      "details": [
-        "Earnings growth: 9% expected  \nM&A volume: $1.26 trillion Q3  \nMega-deals: Record number in 2025"
-      ]
-    },
-    {
-      "title": "Flu outbreak forces Malaysian schools to close ahead of crucial",
-      "url": "https://www.scmp.com/week-asia/politics/article/3328854/malaysia-battles-influenza-outbreak-schools-close-crucial-exams?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Thousands of Malaysian pupils will stay at home for up to a week, as schools were ordered closed after nearly 100 clusters of influenza infections were reported across the country.\nThe sharp spike in infections of influenza types A and B comes just weeks before 400,000 students are due to sit for their Sijil Pelajaran Malaysia (SPM) school-leaving exam \u2013 a crucial test for university placements and scholarships.\nEducation Ministry Director-General Mohd Azam Ahmad said he had instructed several...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/fc65ea35-b55a-4060-afed-2cbab753626e_506f7adc.jpg",
-      "author": "Joseph Sipalan",
-      "publishedAt": "2025-10-13T14:14:20.810112",
-      "category": "health",
-      "emoji": "\ud83d\ude37",
-      "final_score": 810.0,
-      "summary": "**Malaysian schools** have been forced to close due to a severe **influenza outbreak**, with nearly 100 infection clusters reported nationwide. The closure affects thousands of students preparing for the crucial **SPM exams** for university placements.",
-      "timeline": [
-        {
-          "date": "October 9, 2025",
-          "event": "Health Ministry reports 97 influenza A and B clusters, mostly in schools, up from 14 the previous week."
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Health Minister says school closures may be considered as flu clusters surge nationwide."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "About 6,000 students infected; several schools closed on district health office advice."
-        }
-      ],
-      "details": [
-        "Clusters reported: 97 in one week[3][7][8]  \nMost affected state: Selangor (43 clusters)[3][7][8]  \nHospitalization trend: SARI cases slightly decreasing[8]"
-      ]
-    },
-    {
-      "title": "Niti Aayog forecasts 4mn AI jobs by 2030: What roles",
-      "url": "https://timesofindia.indiatimes.com/education/news/niti-aayog-says-ai-could-create-4-million-jobs-by-2030-what-jobs-can-ai-actually-create/articleshow/124499699.cms",
-      "source": "Times of India",
-      "description": "NITI Aayog\u2019s Roadmap for Job Creation in the AI Economy outlines how Artificial Intelligence could create up to 4 million new jobs in India by 2030. While warning of displacement in routine tech roles, the report identifies emerging careers in AI engineering, ethics, training, and human-AI collaboration. It advocates for a National AI Talent Mission to drive education and reskilling. The roadmap positions India as a global hub for AI talent and innovation by 2035.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124499712,imgsize-154282.cms",
-      "author": "SANJAY SHARMA",
-      "publishedAt": "2025-10-13T17:05:07.288116",
-      "category": "technology",
-      "emoji": "\ud83e\udd16",
-      "final_score": 800.0,
-      "summary": "**NITI Aayog** predicts **Artificial Intelligence** will generate 4 million jobs in India by 2030, spanning engineering, ethics, and human-AI collaboration roles. A National AI Talent Mission aims to establish India as a global AI hub by 2035.",
-      "timeline": [
-        {
-          "date": "October 9, 2024",
-          "event": "NITI Aayog unveils Roadmap for Job Creation in the AI Economy report"
-        },
-        {
-          "date": "October 10, 2024",
-          "event": "NITI Aayog proposes National AI Talent Mission to boost AI skills and jobs"
-        }
-      ],
-      "details": [
-        "Automation risk: 60% formal jobs by 2030  \nAI talent gap: 50% supply vs demand  \nJob loss risk: 1.5 million by 2031"
-      ]
-    },
-    {
-      "title": "China and Philippines trade blame over boat collision in disputed",
-      "url": "https://www.japantimes.co.jp/news/2025/10/12/asia-pacific/china-philippines-south-china-sea-clash/",
-      "source": "The Japan Times",
-      "description": "Confrontations between Philippine and Chinese vessels occur frequently in the contested South China Sea.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/12/499175.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T16:10:22.185529",
-      "category": "politics",
-      "emoji": "\ud83d\udea2",
-      "final_score": 800.0,
-      "summary": "**China** and the **Philippines** are engaged in another maritime dispute after vessels from both nations collided in the contested South China Sea, highlighting ongoing tensions over territorial claims in the strategically important waterway.",
-      "timeline": [
-        {
-          "date": "August 27, 2024",
-          "event": "US Indo-Pacific Command open to escorting Philippine ships in disputed waters"
-        },
-        {
-          "date": "August 31, 2024",
-          "event": "Philippine and Chinese coast guards collide at Sabina Shoal, Philippines alleges ramming"
-        },
-        {
-          "date": "October 11, 2024",
-          "event": "Chinese militia boat sideswipes Philippine fisheries vessel near Thitu Island, causing minor damage"
-        }
-      ],
-      "details": [
-        "Date of collision: August 11, 2025[2]  \nDamage: 10 meters bow crumpled[2][6]  \nCasualties: None reported[2][3]"
-      ]
-    },
-    {
-      "title": "Europe's bees and butterflies at risk, conservation body says",
-      "url": "https://www.japantimes.co.jp/environment/2025/10/13/wildlife/europe-bees-butterflies-risk/",
-      "source": "The Japan Times",
-      "description": "At least 172 out of 1,928 assessed species of wild bees face extinction in Europe compared to 77 in 2014, the IUCN has said.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/499202.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T12:36:27.696318",
-      "category": "environment",
-      "emoji": "\ud83d\udc1d",
-      "final_score": 800.0,
-      "summary": "A new report from **IUCN** reveals an alarming rise in endangered **wild bee species** across Europe, with 172 species now facing extinction - more than double the 77 species identified as threatened in 2014.",
-      "timeline": [
-        {
-          "date": "2010",
-          "event": "First IUCN assessment of European butterflies lists 37 species as threatened."
-        },
-        {
-          "date": "2014",
-          "event": "IUCN lists 77 wild bee species as threatened in Europe."
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "IUCN updates Red List: 172 wild bee and 65 butterfly species now threatened."
-        }
-      ],
-      "details": [
-        "Butterfly extinction risk: 15% species  \nHoverfly extinction risk: 37% species  \nPollinator-dependent crops: 80% EU species"
-      ]
-    },
-    {
-      "title": "'Girls have to protect themselves': Mamata's shocker in student rape",
-      "url": "https://timesofindia.indiatimes.com/india/girls-have-to-protect-themselves-mamatas-shocker-in-mbbs-student-rape-case-vows-strict-action-against-guilty/articleshow/124498031.cms",
-      "source": "Times of India",
-      "description": "",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124498210,imgsize-1278233.cms",
-      "author": "TOI NEWS DESK",
-      "publishedAt": "2025-10-13T17:05:21.064274",
-      "category": "politics",
-      "emoji": "\ud83d\udde3\ufe0f",
-      "final_score": 790.0,
-      "summary": "I notice you haven't actually shared the article text that needs to be summarized. If you provide the article content, I'll create a concise 35-40 word summary following your requirements, including bold keywords and capturing the main points and significance.",
-      "timeline": [
-        {
-          "date": "August 9, 2024",
-          "event": "31-year-old doctor found raped and murdered at RG Kar Medical College."
-        },
-        {
-          "date": "August 10, 2024",
-          "event": "Kolkata Police arrest sole accused Sanjay Roy in the case."
-        },
-        {
-          "date": "August 13, 2024",
-          "event": "Calcutta High Court transfers investigation to CBI for further probe."
-        },
-        {
-          "date": "August 20, 2024",
-          "event": "Supreme Court criticizes Mamata Banerjee government over investigation delays."
-        }
-      ],
-      "details": [
-        "Arrests: 3 suspects detained  \nIncident time: 12:30 AM  \nWest Bengal 2022 rapes: 1,069 cases"
-      ]
-    },
-    {
-      "title": "Trump Praises Egyptian President's Role in Gaza Deal",
-      "url": "https://www.france24.com/en/video/20251013-donald-trump-praises-role-played-by-egyptian-president-in-gaza-deal",
-      "source": "France 24",
-      "description": "Trump praised Egyptian President Abdel Fattah al-Sisi's on October 13, 2025 as the two leaders appeared together before an international summit on the Gaza deal. \"He played a very important role\" in talks with Hamas. \"I appreciate it very much,\" Trump said of Sisi, whom he called as a powerful leader who keeps crime down in his country.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/b7f622b4-a849-11f0-9d2b-005056a97e36/w:1024/p:16x9/EN-20251013-165706-170218-CS.jpg",
-      "author": "FRANCE24",
-      "publishedAt": "2025-10-13T17:13:30.247511",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 780.0,
-      "summary": "Trump praised Egyptian President Abdel Fattah al-Sisi's on October 13, 2025 as the two leaders appeared together before an international summit on the Gaza deal. \"He played a very important role\" in t",
-      "timeline": [
-        {
-          "date": "October 13, 2025",
-          "event": "Trump praises Egypt's Sisi for key role in Gaza deal at international summit"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Trump confirms phase two of Gaza negotiations has started in Sharm el-Sheikh"
-        }
-      ],
-      "details": [
-        "Summit location: Sharm el-Sheikh[1]  \nCeasefire: Formal signing ceremony expected[1]  \nNegotiations: Phase two has started[1]"
-      ]
     }
   ],
-  "generatedAt": "2025-10-13T17:21:42.577088",
+  "generatedAt": "2025-10-13T17:26:47.028236",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
