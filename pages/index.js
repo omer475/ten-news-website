@@ -1734,7 +1734,8 @@ export default function Home() {
                         fontWeight: '800',
                         lineHeight: '1.2',
                         letterSpacing: '-0.5px',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        color: '#1d1d1f'
                       }}>{story.title}</h3>
                       
                       {/* Summary - Centered in the middle */}
