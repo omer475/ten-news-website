@@ -259,76 +259,6 @@
       ]
     },
     {
-      "title": "Mexico floods kill 39 people as storms trigger massive landslides",
-      "url": "https://www.nytimes.com/2025/10/13/world/americas/mexico-torrential-rain-deaths.html",
-      "source": "New York Times",
-      "description": "Torrential rains set off deadly floods and landslides across five Mexican states, leaving a trail of destruction.",
-      "content": "A marine helping a woman cross a flooded street on Sunday in Poza Rica, Veracruz, Mexico.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13int-mexico-rain-pljb/13int-mexico-rain-pljb-mediumSquareAt3X.jpg",
-      "author": "Emiliano Rodr\u00edguez Mega",
-      "publishedAt": "2025-10-13T23:07:50.409268",
-      "category": "environment",
-      "emoji": "\u2614",
-      "final_score": 990.0,
-      "summary": "Torrential rains set off deadly floods and landslides across five Mexican states, leaving a trail of destruction.",
-      "timeline": [
-        {
-          "date": "October 6-8, 2024",
-          "event": "Torrential rains cause deadly floods and landslides across five Mexican states"
-        },
-        {
-          "date": "October 13, 2024",
-          "event": "Mexican government reports 64 dead, 65 missing, and widespread infrastructure damage"
-        },
-        {
-          "date": "October 25, 2024",
-          "event": "Heavy rainfall begins affecting south-eastern Veracruz, causing major river overflows and floods"
-        },
-        {
-          "date": "October 28, 2024",
-          "event": "Papaloapan River overflows in Veracruz; thousands displaced, multiple towns isolated"
-        }
-      ],
-      "details": [
-        "Death toll: 64 confirmed[6]  \nMissing persons: 65 reported[6]  \nTroops deployed: 10,000+ assisting[6]"
-      ]
-    },
-    {
-      "title": "Madagascar's president flees capital amid deadly anti-government protests",
-      "url": "https://www.nytimes.com/2025/10/13/world/africa/madagascar-president-rajoelina.html",
-      "source": "New York Times",
-      "description": "The move followed weeks of intense and deadly protests against the government of President Andry Rajoelina, who himself came to power in a coup.",
-      "content": "Students and protesters calling for more power as the ride on top of a military vehicle in Antananarivo, Madagascar, on Monday.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13int-madagascar-coup-bhmz/13int-madagascar-coup-bhmz-mediumSquareAt3X.jpg",
-      "author": "John Eligon",
-      "publishedAt": "2025-10-13T23:07:32.113239",
-      "category": "politics",
-      "emoji": "\ud83d\udea8",
-      "final_score": 990.0,
-      "summary": "The move followed weeks of intense and deadly protests against the government of President Andry Rajoelina, who himself came to power in a coup.",
-      "timeline": [
-        {
-          "date": "September 25, 2025",
-          "event": "Police used tear gas on protesters; several politicians' homes set ablaze and looting began."
-        },
-        {
-          "date": "September 27, 2025",
-          "event": "Rajoelina returned from New York, deployed military, and imposed curfews in major cities."
-        },
-        {
-          "date": "September 29, 2025",
-          "event": "Rajoelina announced government dissolution; protests demanded his resignation and release of detainees."
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "President Rajoelina left Madagascar after army factions joined protesters demanding his resignation."
-        }
-      ],
-      "details": [
-        "Military support: Elite unit backed protests  \nFlight method: French military plane unconfirmed  \nResolution call: Constitution invoked by president"
-      ]
-    },
-    {
       "title": "Trump envoy Witkoff praises UK's 'vital role' in ceasefire",
       "url": "https://www.bbc.com/news/articles/cvg4rwne0ggo?at_medium=RSS&at_campaign=rss",
       "source": "BBC Breaking News",
@@ -691,41 +621,6 @@
       ],
       "details": [
         "Evacuation: President flown to France  \nProtests: 12,000+ demonstrators in Antananarivo  \nCapsat role: Led 2009 coup for Rajoelina"
-      ]
-    },
-    {
-      "title": "Gaza ceasefire brings limited relief amid widespread destruction and despair",
-      "url": "https://www.nytimes.com/2025/10/13/world/europe/gazans-ceasefire-relief-gloom.html",
-      "source": "New York Times",
-      "description": "The cease-fire in Gaza has taken hold. Hostages and prisoners have been exchanged. But amid the utter devastation of two years of war, a sense of gloom pervades.",
-      "content": "Palestinians returning to an area near Gaza City on Saturday following the cease-fire.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13int-gaza-ceasefire-promo/13int-gaza-ceasefire-jltz-mediumSquareAt3X.jpg",
-      "author": "Adam Rasgon, Bilal Shbair, Rawan Sheikh Ahmad and Saher Alghorra",
-      "publishedAt": "2025-10-13T23:07:59.996299",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 940.0,
-      "summary": "The cease-fire in Gaza has taken hold. Hostages and prisoners have been exchanged. But amid the utter devastation of two years of war, a sense of gloom pervades.",
-      "timeline": [
-        {
-          "date": "January 19, 2025",
-          "event": "Temporary ceasefire begins, allowing aid delivery and some hostages to be released"
-        },
-        {
-          "date": "March 2, 2025",
-          "event": "Israeli authorities halt aid entry to Gaza, worsening humanitarian crisis"
-        },
-        {
-          "date": "May 19, 2025",
-          "event": "Israel temporarily allows limited aid into Gaza after 11-week blockade"
-        },
-        {
-          "date": "October 2025",
-          "event": "Israel\u2013Hamas ceasefire agreement takes effect amid widespread devastation"
-        }
-      ],
-      "details": [
-        "Unemployment: 57% in Palestinian Territories[2]  \nGaza economy: 83% contraction in 2024[5]  \nJob losses: 500,000 in Palestinian areas[2]"
       ]
     },
     {
@@ -1122,68 +1017,6 @@
       ],
       "details": [
         "Death toll: 41  \nFlood depth: 12+ feet  \nVehicles displaced: Lodged in treetops"
-      ]
-    },
-    {
-      "title": "Israel releases 39 Palestinian prisoners amid Gaza hostage exchange deal",
-      "url": "https://www.nytimes.com/2025/10/13/nyregion/prisoners-freed-gaza-palestinian-west-bank.html",
-      "source": "New York Times",
-      "description": "\u201cWe were happy for our prisoners \u2014 and for the Israelis, too,\u201d one Gaza resident said. \u201cWe love peace and the truce.\u201d",
-      "content": "Palestinians celebrating the release of prisoners freed by Israel in the West Bank city of Ramallah.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13int-palestinian-prisoners-cmpt/13int-palestinian-prisoners-cmpt-mediumSquareAt3X.jpg",
-      "author": "Liam Stack, Fatima AbdulKarim, Johnatan Reiss and Bilal Shbair",
-      "publishedAt": "2025-10-13T23:08:08.616138",
-      "category": "breaking",
-      "emoji": "\ud83d\udea8",
-      "final_score": 925.0,
-      "summary": "\u201cWe were happy for our prisoners \u2014 and for the Israelis, too,\u201d one Gaza resident said. \u201cWe love peace and the truce.\u201d",
-      "timeline": [
-        {
-          "date": "February 8, 2025",
-          "event": "Palestinian prisoners released by Israel as part of Gaza ceasefire and swap deal"
-        },
-        {
-          "date": "February 8, 2025",
-          "event": "Cheering crowds greet freed Palestinian prisoners in Khan Younis, southern Gaza Strip"
-        }
-      ],
-      "details": [
-        "Prisoners released: 477  \nTotal Palestinian prisoners: 8,157  \nAdministrative detainees: 3,439"
-      ]
-    },
-    {
-      "title": "Hamas releases 11 Israeli hostages in latest Gaza prisoner exchange deal",
-      "url": "https://www.nytimes.com/2025/10/13/world/middleeast/israel-hostages-gaza.html",
-      "source": "New York Times",
-      "description": "With the releases, Israelis basked in a joyous moment of unifying national redemption after months of agonizing, polarizing war.",
-      "content": "Watching a live broadcast in Tel Aviv as hostages were released from Gaza on Monday.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/14/multimedia/14israel-hostages-ledeall-1/14israel-hostages-ledeall-1-mediumSquareAt3X.jpg",
-      "author": "Isabel Kershner",
-      "publishedAt": "2025-10-13T23:08:23.930334",
-      "category": "politics",
-      "emoji": "\ud83d\udd4a\ufe0f",
-      "final_score": 920.0,
-      "summary": "With the releases, Israelis basked in a joyous moment of unifying national redemption after months of agonizing, polarizing war.",
-      "timeline": [
-        {
-          "date": "October 7, 2023",
-          "event": "Hamas and Palestinian militants abduct 251 people from Israel to Gaza."
-        },
-        {
-          "date": "November 24\u201327, 2023",
-          "event": "Hamas releases 41 hostages during a four-day ceasefire with Israel."
-        },
-        {
-          "date": "January 2025",
-          "event": "30 hostages released during a Gaza war ceasefire agreement."
-        },
-        {
-          "date": "2025 (ongoing)",
-          "event": "20 hostages released under Gaza peace plan; 168 total returned alive."
-        }
-      ],
-      "details": [
-        "Hostages released: 7 Israelis returned[1]  \nHostages remaining: 13 still alive in Gaza[1]  \nPrisoners exchanged: 1,900 Palestinians to be freed[1]"
       ]
     },
     {
@@ -2729,33 +2562,6 @@
       ]
     },
     {
-      "title": "California enacts law requiring AI chatbots to disclose non-human status to youth",
-      "url": "https://fortune.com/2025/10/13/gov-gavin-newsom-artifical-intelligence-chatbot-openai-user-suicide-prevention-crisis-children-teens/",
-      "source": "Fortune",
-      "description": "Newsom, who has four children under 18, said California has a responsibility to protect kids and teens who turn to AI chatbots.",
-      "content": "California Gov. Gavin Newsom on Monday signed legislation to regulate artificial intelligence chatbots and protect children and teens from the potential dangers of the technology.\nThe law requires platforms to remind users they are interacting with a chatbot and not a human. The notification would pop up every three hours for users who are minors. Companies will also have to maintain a protocol to prevent self-harm content and refer users to crisis service providers if they expressed suicidal ideation.\nNewsom, who has four children under 18, said California has a responsibility to protect kids and teens who are\u00a0increasingly turning to AI chatbots for everything\u00a0from homework help to emotional support and personal advice.\n\u201cEmerging technology like chatbots and social media can inspire, educate, and connect \u2013 but without real guardrails, technology can also exploit, mislead, and endanger our kids,\u201d the Democrat said. \u201cWe\u2019ve seen some truly horrific and tragic examples of young people harmed by unregulated tech, and we won\u2019t stand by while companies continue without necessary limits and accountability.\u201d\nCalifornia is among several states that tried this year to address concerns surrounding chatbots used by kids for companionship. Safety concerns around the technology exploded following reports and lawsuits saying chatbots made by Meta, OpenAI and others engaged with young users in\u00a0highly sexualized conversations\u00a0and, in some cases,\u00a0coached them to take their own lives.\nThe legislation was among a slew of AI bills introduced by California lawmakers this year to rein in the homegrown industry that is rapidly evolving with little oversight. Tech companies and their coalitions, in response, spent at least $2.5 million in the first six months of the session lobbying against the measures, according to advocacy group Tech Oversight California. Tech companies and leaders in recent months also announced they are launching pro-AI super PACs to fight state and federal oversight.\nCalifornia Attorney General Rob Bonta in September told OpenAI he has \u201cserious concerns\u201d with its flagship chatbot, OpenAI, for children and teens. The Federal Trade Commission also launched an inquiry last month into several AI companies about the potential risks for children when they use chatbots as companions.\nResearch by a watchdog group says chatbots have been shown to give\u00a0kids dangerous advice\u00a0about topics such as drugs, alcohol and eating disorders. The mother of a teenage boy in Florida who died by suicide after developing what she described as an emotionally and sexually abusive relationship with a chatbot has filed a wrongful-death lawsuit\u00a0against Character.AI. And the parents of 16-year-old Adam Raine recently sued OpenAI and its CEO Sam Altman, alleging that ChatGPT coached the California boy in planning and taking his own life earlier this year.\nOpenAI and Meta last month announced\u00a0changes to how their chatbots respond to teenagers\u00a0asking questions about suicide or showing signs of mental and emotional distress. OpenAI said it is\u00a0rolling out new controls\u00a0enabling parents to link their accounts to their teen\u2019s account.\nMeta said it is now blocking its chatbots from talking with teens about self-harm, suicide, disordered eating and inappropriate romantic conversations, and instead directs them to expert resources. Meta already offers parental controls on teen accounts.\nEDITOR\u2019S NOTE: This story includes discussion of suicide. If you or someone you know needs help, the national suicide and crisis lifeline in the U.S. is available by calling or texting 988.\nThis story was originally featured on Fortune.com",
-      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/AP25282665453825-e1760381000565.jpg?w=2048",
-      "author": "Tr\u00e2n Nguy\u1ec5n, The Associated Press",
-      "publishedAt": "2025-10-13T23:09:19.651539",
-      "category": "technology",
-      "emoji": "\ud83e\udd16",
-      "final_score": 890.0,
-      "summary": "Governor Newsom's new legislation mandates **AI platforms** to display regular notifications for minors and implement **safety protocols** against self-harm content. The law aims to protect young users seeking **digital assistance** for homework and emotional support.",
-      "timeline": [
-        {
-          "date": "September 29, 2025",
-          "event": "Governor Newsom signs SB 53, the Transparency in Frontier Artificial Intelligence Act, into law."
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "Newsom signs SB 243, requiring AI chatbots to implement child safety and suicide prevention measures."
-        }
-      ],
-      "details": [
-        "Effective date: October 1, 2025[2]  \nBias audits: Required for employers[2]  \nHuman oversight: Mandatory in healthcare AI[1]"
-      ]
-    },
-    {
       "title": "Nor'easter Threatens New York with Floods and Strong Winds",
       "url": "https://www.nytimes.com/2025/10/13/nyregion/noreaster-storm-forecast-damage.html",
       "source": "New York Times",
@@ -3198,9 +3004,199 @@
       "details": [
         "Border posts: 19 captured by Pakistan[1]\nSaudi pact: Defense deal signed with Pakistan[2]\nTaliban deaths: 20+ Afghan soldiers killed[1]"
       ]
+    },
+    {
+      "title": "Japan declares nationwide flu outbreak; over 4,000 hospitalised amid concerns",
+      "url": "https://timesofindia.indiatimes.com/life-style/health-fitness/health-news/new-pandemic-coming-japan-declares-nationwide-flu-outbreak-over-4000-hospitalised/articleshow/124484790.cms",
+      "source": "Times of India",
+      "description": "Japan is facing a nationwide flu outbreak. Cases have surged significantly, leading to hospitalizations and school closures. This epidemic has arrived nearly five weeks earlier than expected. Health officials are urging immediate vaccination for vulnerable groups. Experts suggest this early start may become more common due to global environmental changes. Precautions like mask-wearing and handwashing are advised. Read more below!",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124485089,imgsize-26014.cms",
+      "author": "TOI LIFESTYLE DESK",
+      "publishedAt": "2025-10-13T17:04:13.381665",
+      "category": "breaking",
+      "emoji": "\ud83d\ude37",
+      "final_score": 880.0,
+      "summary": "A **nationwide flu outbreak** has struck Japan earlier than expected, resulting in over 4,000 hospitalizations and multiple school closures. Health officials recommend **urgent vaccination**, while experts link the early epidemic to environmental changes.",
+      "timeline": [
+        {
+          "date": "October 3, 2025",
+          "event": "Japan declares nationwide flu epidemic after cases surge five weeks earlier than usual"
+        },
+        {
+          "date": "October 3, 2025",
+          "event": "Over 4,000 people hospitalized and more than 100 schools closed across Japan"
+        },
+        {
+          "date": "October 8, 2025",
+          "event": "Health officials urge immediate vaccination and preventive measures for vulnerable groups"
+        }
+      ],
+      "details": [
+        "Schools closed: 135+\nPrefectures affected: 28 of 47\nPeak region: Okinawa highest cases[1][5]"
+      ]
+    },
+    {
+      "title": "EU Under Fire From European Business Leaders Over Looming CS3D",
+      "url": "https://www.forbes.com/sites/davidblackmon/2025/10/13/eu-under-fire-from-european-business-leaders-over-looming-cs3d-rules/",
+      "source": "Forbes",
+      "description": "CEOs from 46 leading French and German corporations recently urged the European Commission to drop its proposed CS3D reporting rules entirely.",
+      "content": "CEOs from 46 leading French and German corporations recently urged the European Commission to drop its proposed CS3D reporting rules entirely.",
+      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68ed06e107dc9dd1cd65ea12/0x0.jpg?width=960",
+      "author": "David Blackmon, Senior Contributor",
+      "publishedAt": "2025-10-13T16:17:22.193477",
+      "category": "business",
+      "emoji": "\ud83c\uddea\ud83c\uddfa",
+      "final_score": 880.0,
+      "summary": "**Business leaders** from 46 major French and German companies have united to oppose the European Union's proposed **CS3D reporting regulations**, calling on the **European Commission** to completely abandon the controversial sustainability disclosure rules.",
+      "timeline": [
+        {
+          "date": "April 24, 2024",
+          "event": "European Parliament adopts CS3D directive on corporate sustainability due diligence."
+        },
+        {
+          "date": "July 5, 2024",
+          "event": "CS3D directive published in the Official Journal of the European Union."
+        },
+        {
+          "date": "July 25, 2024",
+          "event": "CS3D directive enters into force across the European Union."
+        },
+        {
+          "date": "April 14, 2025",
+          "event": "EU adopts 'Stop-the-Clock' Directive, delaying CS3D compliance for largest companies by one year."
+        }
+      ],
+      "details": [
+        "Threshold: 5,000 employees, \u20ac1.5B turnover[1]  \nDeadline: July 26, 2028[1][2]  \nDisclosure cut: 50% datapoints reduced[1]"
+      ]
+    },
+    {
+      "title": "Drug Trafficking Scandal Hits Milei's Government Before Elections",
+      "url": "https://www.forbes.com/sites/afontevecchia/2025/10/13/javier-mileis-government-rocked-by-drug-trafficking-scandal-ahead-of-consequential-elections/",
+      "source": "Forbes",
+      "description": "Javier Milei's leading candidate in upcoming midterm elections, Jos\u00e9 Luis Espert, was forced to resign after ties to drug traffickers were confirmed.",
+      "content": "Javier Milei's leading candidate in upcoming midterm elections, Jos\u00e9 Luis Espert, was forced to resign after ties to drug traffickers were confirmed.",
+      "urlToImage": "https://imageio.forbes.com/specials-images/imageserve/68ed0a849ef061d649ca54c5/0x0.jpg?width=960",
+      "author": "Agustino Fontevecchia, Contributor",
+      "publishedAt": "2025-10-13T16:17:09.927945",
+      "category": "politics",
+      "emoji": "\u2696\ufe0f",
+      "final_score": 880.0,
+      "summary": "**Jos\u00e9 Luis Espert**, the leading candidate for **Javier Milei's** party in Argentina's upcoming midterm elections, has been forced to step down following revelations of confirmed connections to drug trafficking organizations, dealing a blow to Milei's administration.",
+      "timeline": [
+        {
+          "date": "October 3, 2024",
+          "event": "Documents reveal Espert received $200,000 from accused drug trafficker Fred Machado."
+        },
+        {
+          "date": "October 10, 2024",
+          "event": "Espert admits receiving money, claims it was for consulting, denies wrongdoing."
+        },
+        {
+          "date": "October 13, 2024",
+          "event": "Espert withdraws candidacy for Buenos Aires Province midterm elections amid scandal."
+        }
+      ],
+      "details": [
+        "Extradition order: Supreme Court approved  \nCampaign funding: Over $200,000 received  \nFlights taken: 35 on Machado\u2019s planes"
+      ]
+    },
+    {
+      "title": "'Dawn of new Middle East': Trump paints golden future -",
+      "url": "https://timesofindia.indiatimes.com/world/middle-east/historic-dawn-of-a-new-middle-east-donald-trump-declares-end-of-gaza-war-says-painful-nightmare-finally-over-calls-for-netanyahus-pardon/articleshow/124527673.cms",
+      "source": "Times of India",
+      "description": "US President Donald Trump declared a \"long and painful nightmare\" over for Israel, announcing a Gaza ceasefire and Hamas disarmament. He hailed the unprecedented regional endorsement of the plan, marking a \"historic dawn of a new Middle East.\" Trump also praised Prime Minister Netanyahu, calling for his pardon amid legal challenges and celebrating the return of Israeli hostages.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124529060,imgsize-1083013.cms",
+      "author": "TOI WORLD DESK",
+      "publishedAt": "2025-10-13T15:20:21.796179",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 880.0,
+      "summary": "In a landmark **Knesset speech**, Trump announced an Israel-Gaza **ceasefire** agreement requiring Hamas disarmament, declaring an end to regional conflict. He endorsed Netanyahu's leadership and celebrated the return of hostages, heralding a \"new Middle East.\"",
+      "timeline": [
+        {
+          "date": "October 13, 2025",
+          "event": "Trump addresses Knesset after Gaza ceasefire and release of 20 Israeli hostages"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Trump declares 'historic dawn of a new Middle East' in Knesset speech"
+        }
+      ],
+      "details": [
+        "Hostages released: 20\nIsraeli withdrawal: 24 hours completed\nCeasefire start: October 10, 2025"
+      ]
+    },
+    {
+      "title": "S&P 500 faces 11% pullback if China-U.S. trade tensions don\u2019t",
+      "url": "https://www.marketwatch.com/story/s-p-500-faces-11-pullback-if-china-u-s-trade-tensions-dont-cool-morgan-stanley-analyst-e73813e3?mod=mw_rss_topstories",
+      "source": "MarketWatch",
+      "description": "Morgan Stanley warned that a fresh round of trade tensions,  if not resolved, will cause a bigger drop for stocks than expected.",
+      "content": "",
+      "urlToImage": "https://images.mktw.net/im-09053909",
+      "author": "Barbara Kollmeyer",
+      "publishedAt": "2025-10-13T15:19:10.496231",
+      "category": "business",
+      "emoji": "\ud83d\udcc8",
+      "final_score": 880.0,
+      "summary": "**Trade tensions** between China and the U.S. could trigger an 11% decline in the **S&P 500** index, according to Morgan Stanley analysts. The investment bank warns that unresolved disputes may lead to steeper market losses than anticipated.",
+      "timeline": [
+        {
+          "date": "February 4, 2025",
+          "event": "US imposes 10% tariffs on all Chinese imports; China retaliates with new tariffs"
+        },
+        {
+          "date": "April 2, 2025",
+          "event": "Trump announces additional 34% tariffs on Chinese goods, raising total to 54%"
+        },
+        {
+          "date": "May 12, 2025",
+          "event": "US and China agree to 90-day tariff truce, lowering some tariffs temporarily"
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Trump announces 100% tariffs on Chinese imports; China imposes retaliatory port fees"
+        }
+      ],
+      "details": [
+        "Market cap: $55.4T[1]\nRecord high: 6,753.76[2]\nLargest stock: Nvidia 7.2%[2]"
+      ]
+    },
+    {
+      "title": "Cap on international students projected to cost Dutch economy up",
+      "url": "https://phys.org/news/2025-10-cap-international-students-dutch-economy.html",
+      "source": "Phys.org",
+      "description": "A cap on the number of international students at the five comprehensive Randstad universities will have a significantly negative impact on the Dutch economy. The gross domestic product (GDP) is expected to decline by approximately 4 to 5 billion euros. Regions, businesses, and society as a whole will feel the substantial economic consequences.",
+      "content": "",
+      "urlToImage": "https://scx1.b-cdn.net/csz/news/tmb/2025/billions-in-societal-l.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T15:12:46.033254",
+      "category": "business",
+      "emoji": "\ud83d\udcc8",
+      "final_score": 880.0,
+      "summary": "The proposed **cap on international students** at five major Dutch universities is projected to reduce the country's **GDP** by \u20ac4-5 billion, with widespread economic impacts affecting regional businesses and broader society throughout the Netherlands.",
+      "timeline": [
+        {
+          "date": "February 2024",
+          "event": "Dutch cabinet introduces cap on international students at five Randstad universities."
+        },
+        {
+          "date": "September 2024",
+          "event": "Cap takes effect for 2024\u201325 academic year at Randstad universities."
+        },
+        {
+          "date": "October 9, 2024",
+          "event": "SEO Economic Research study projects \u20ac4\u20135 billion annual GDP loss due to cap."
+        }
+      ],
+      "details": [
+        "Retention rate: 57% after 1 year[1]  \nSector loss: 39% business services[2]  \nCompanies relocating: 30% considering move[1]"
+      ]
     }
   ],
-  "generatedAt": "2025-10-13T23:10:02.866812",
+  "generatedAt": "2025-10-13T23:15:04.190450",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
