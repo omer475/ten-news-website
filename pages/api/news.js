@@ -11,21 +11,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    // FIRST: Try to fetch from Supabase (LIVE RSS news with images!)
-    console.log('🔄 Attempting to fetch from Supabase...');
-    const supabaseResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000'}/api/news-supabase`, {
-      signal: AbortSignal.timeout(5000) // 5 second timeout
-    });
-    
-    if (supabaseResponse.ok) {
-      const supabaseData = await supabaseResponse.json();
-      console.log(`✅ Serving LIVE RSS news from Supabase (${supabaseData.articles?.length || 0} articles with images!)`);
-      return res.status(200).json(supabaseData);
-    }
-  } catch (fetchError) {
-    console.log(`⚠️  Supabase not available: ${fetchError.message}`);
-  }
+  // TEMPORARILY DISABLED: Supabase has old data (0-100 scale), use JSON file instead
+  // try {
+  //   console.log('🔄 Attempting to fetch from Supabase...');
+  //   const supabaseResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000'}/api/news-supabase`, {
+  //     signal: AbortSignal.timeout(5000) // 5 second timeout
+  //   });
+  //   
+  //   if (supabaseResponse.ok) {
+  //     const supabaseData = await supabaseResponse.json();
+  //     console.log(`✅ Serving LIVE RSS news from Supabase (${supabaseData.articles?.length || 0} articles with images!)`);
+  //     return res.status(200).json(supabaseData);
+  //   }
+  // } catch (fetchError) {
+  //   console.log(`⚠️  Supabase not available: ${fetchError.message}`);
+  // }
 
   // FALLBACK 1: Try to read today's news file from public directory
   try {
