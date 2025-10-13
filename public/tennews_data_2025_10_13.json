@@ -232,6 +232,37 @@
       ]
     },
     {
+      "title": "Trump, world leaders gather in Egypt for ceasefire deal signing",
+      "url": "https://abcnews.go.com/International/trump-world-leaders-gather-egypt-ceasefire-deal-signing/story?id=126477199",
+      "source": "ABC News",
+      "description": "After speaking in Israel, Trump traveled to Egypt for an international \"peace summit\" with more than 20 world leaders on what's next for Gaza.",
+      "content": "",
+      "urlToImage": "https://s.abcnews.com/images/International/donald-trump-41-epa-gmh-251013_1760372818479_hpMain_4x3t_384.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:30:40.823182",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 990.0,
+      "summary": "Former President **Trump** joined over 20 **world leaders** in Egypt for a crucial Gaza peace summit focused on establishing a ceasefire agreement. Notable was Israeli Prime Minister Netanyahu's absence from the high-profile diplomatic gathering.",
+      "timeline": [
+        {
+          "date": "October 4, 2024",
+          "event": "Netanyahu orders halt to Gaza offensive after Trump's demands; talks planned in Cairo"
+        },
+        {
+          "date": "October 6, 2024",
+          "event": "Israel and Hamas begin indirect talks in Sharm el-Sheikh, Egypt"
+        },
+        {
+          "date": "October 9, 2024",
+          "event": "Trump signs Gaza ceasefire deal at Egypt summit with over 20 world leaders"
+        }
+      ],
+      "details": [
+        "Attendance: 20+ world leaders  \nLocation: Sharm el-Sheikh, Egypt  \nNetanyahu status: Did not attend"
+      ]
+    },
+    {
       "title": "Trump envoy Witkoff praises UK's 'vital role' in ceasefire",
       "url": "https://www.bbc.com/news/articles/cvg4rwne0ggo?at_medium=RSS&at_campaign=rss",
       "source": "BBC Breaking News",
@@ -760,68 +791,6 @@
       ]
     },
     {
-      "title": "They Helped Topple Roe v. Wade. Now Their Sights Are",
-      "url": "https://www.nytimes.com/2025/10/13/world/europe/uk-abortion-farage.html",
-      "source": "New York Times",
-      "description": "An organization that fought abortion rights in the United States is now an unlikely conduit between MAGA Republicans and Britain\u2019s ascendant Reform U.K. party.",
-      "content": "Demonstrators at the March for Life in London last month. The event attracted religious and anti-abortion groups from around the world, including the U.S.-based Alliance Defending Freedom.",
-      "urlToImage": "https://static01.nyt.com/images/2025/09/25/multimedia/00uk-abortion-fzpl/00uk-abortion-fzpl-mediumSquareAt3X-v2.jpg",
-      "author": "Jane Bradley and Elizabeth Dias",
-      "publishedAt": "2025-10-13T18:28:16.074006",
-      "category": "politics",
-      "emoji": "\u2696\ufe0f",
-      "final_score": 930.0,
-      "summary": "The **Alliance Defending Freedom**, a key player in overturning Roe v. Wade, is expanding its anti-abortion campaign to Britain by forming connections with the **Reform U.K. party**, signaling a growing transatlantic conservative alliance.",
-      "timeline": [
-        {
-          "date": "June 2024",
-          "event": "Nigel Farage resumes Reform UK leadership and party wins five seats in general election"
-        },
-        {
-          "date": "November 28, 2024",
-          "event": "Farage teams up with US anti-abortion group ADF, calls for UK abortion debate"
-        }
-      ],
-      "details": [
-        "Defections: 6 ex-Conservative MPs joined Reform UK[2]  \nDebate: Farage called for stricter abortion limits[1]  \nPolicy: Reform UK opposes at-home abortion pills[2]"
-      ]
-    },
-    {
-      "title": "Ukraine Targets Russian Oil Refineries with Drone Strikes",
-      "url": "https://www.nytimes.com/2025/10/13/world/europe/ukraine-drones-russia-oil-refineries.html",
-      "source": "New York Times",
-      "description": "With Russian forces gaining slowly on the battlefield, Ukraine hopes its long-range drone campaign will help persuade Vladimir V. Putin to change course.",
-      "content": "Even though they are far from the front lines, drone teams wear protective gear for fear of being detected and targeted by Russia.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13int-ukraine-oil-04-lthc-promo/13int-ukraine-oil-04-lthc-mediumSquareAt3X-v2.jpg",
-      "author": "Maria Varenikova and Brendan Hoffman",
-      "publishedAt": "2025-10-13T18:27:53.814004",
-      "category": "politics",
-      "emoji": "\u2694\ufe0f",
-      "final_score": 930.0,
-      "summary": "With Russian forces gaining slowly on the battlefield, Ukraine hopes its long-range drone campaign will help persuade Vladimir V. Putin to change course.",
-      "timeline": [
-        {
-          "date": "January 2024",
-          "event": "Ukraine launches drone strikes on Russian refineries"
-        },
-        {
-          "date": "August 26, 2024",
-          "event": "Omsk refinery attacked, major unit destroyed"
-        },
-        {
-          "date": "September 12, 2024",
-          "event": "Bashneft-Novoyl refinery in Ufa hit"
-        },
-        {
-          "date": "October 11, 2024",
-          "event": "Ufa oil refinery struck by SBU drones"
-        }
-      ],
-      "details": [
-        "Strikes: 61 refineries hit since 2024[3]  \nExport drop: 10% seaborne oil exports[3]  \nFuel shortage: 20% of Russian demand[4]"
-      ]
-    },
-    {
       "title": "Why Ukraine Is Betting on Strikes Deep Inside Russia",
       "url": "https://www.nytimes.com/2025/10/13/world/europe/ukraine-long-range-strikes-russia.html",
       "source": "New York Times",
@@ -954,69 +923,65 @@
       ]
     },
     {
-      "title": "Coal Miners With Black Lung Say They Are \u2018Cast Aside",
-      "url": "https://www.nytimes.com/2025/10/13/climate/coal-miners-black-lung-protest-trump.html",
-      "source": "New York Times",
-      "description": "President Trump has been a cheerleader for coal miners. But these miners say his administration is failing to enforce limits on a lethal workplace hazard.",
+      "title": "Hostages Finally Reunite with Families After Two Years",
+      "url": "https://www.bbc.com/news/articles/cyv8p8m4qg6o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC World News",
+      "description": "Families say it ends \"two years of hell\" and a journey of \"healing and rehabilitation\" will now begin.",
       "content": "",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13cli-miners-promo-vwzk/13cli-miners-promo-vwzk-mediumSquareAt3X.jpg",
-      "author": "Lisa Friedman",
-      "publishedAt": "2025-10-13T18:28:35.965732",
-      "category": "politics",
-      "emoji": "\ud83e\udd15",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/c103/live/fd00aa00-a84e-11f0-92db-77261a15b9d2.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:30:59.532228",
+      "category": "general",
+      "emoji": "\ud83e\udec2",
       "final_score": 920.0,
-      "summary": "Despite **Trump's pro-coal stance**, miners suffering from **black lung disease** claim his administration has neglected workplace safety by failing to enforce dust exposure limits, leaving sick workers feeling abandoned and unprotected in dangerous mining conditions.",
+      "summary": "After **two years** in captivity, released **hostages** have finally reunited with their overjoyed families, marking the end of what relatives described as a hellish ordeal. A challenging journey of healing and rehabilitation now lies ahead.",
       "timeline": [
         {
-          "date": "April 2024",
-          "event": "Trump administration pauses enforcement of new silica dust protections for coal miners."
+          "date": "October 7, 2023",
+          "event": "Hamas abducts hostages from Israel during a major attack."
         },
         {
-          "date": "April 9, 2025",
-          "event": "MSHA announces temporary halt to enforcement of silica dust safety measures for miners."
-        },
-        {
-          "date": "May 13, 2025",
-          "event": "Federal judge orders reinstatement of NIOSH surveillance program employees for black lung screenings."
-        },
-        {
-          "date": "May 14, 2025",
-          "event": "Trump administration reverses NIOSH layoffs and restores mine safety office closures."
+          "date": "October 13, 2025",
+          "event": "Last 20 living hostages freed by Hamas and reunited with families in Israel."
         }
       ],
       "details": [
-        "Prevalence: 13.88% of coal miners[6]  \nMonthly benefit: $1,178 in 2025[5]  \nPMF cases (2017\u20132023): 1,177 diagnosed[1]"
+        "Hostages released: 20 total  \nDays in captivity: 738 days  \nBodies remaining: 37 in Gaza"
       ]
     },
     {
-      "title": "Originalist \u2018Bombshell\u2019 Complicates Case on Trump\u2019s Power to Fire Officials",
-      "url": "https://www.nytimes.com/2025/10/13/us/politics/originalism-trump-supreme-court-unitary-executive.html",
-      "source": "New York Times",
-      "description": "As the Supreme Court seems poised to expand the president\u2019s power, a leading scholar whose work the justices have often cited issued a provocative dissent.",
-      "content": "One of Chief Justice John G. Roberts Jr.\u2019s signature projects since he joined the court 20 years ago has been to grant the president more and more power to fire executive officers.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/07/multimedia/13-dc-bar/13-dc-bar-mediumSquareAt3X.jpg",
-      "author": "Adam Liptak",
-      "publishedAt": "2025-10-13T18:28:24.673909",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
+      "title": "WATCH:  Hundreds of hikers trapped by blizzard on Mount Everest",
+      "url": "https://abcnews.go.com/International/video/hundreds-hikers-trapped-blizzard-mount-everest-126258058",
+      "source": "ABC News",
+      "description": "An effort is underway to rescue hundreds of hikers who became trapped on Mount Everest due to an unexpected blizzard.",
+      "content": "",
+      "urlToImage": "https://s.abcnews.com/images/International/251006_abc_social_everest_hpMain_4x3_384.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:30:51.167976",
+      "category": "general",
+      "emoji": "\ud83d\udea8",
       "final_score": 920.0,
-      "summary": "A leading **originalist scholar** has challenged efforts to expand **presidential powers** over firing officials, complicating Chief Justice Roberts's long-standing mission to increase executive authority as the Supreme Court prepares to rule on the matter.",
+      "summary": "A major **rescue operation** is in progress on **Mount Everest** after hundreds of hikers became stranded by a sudden blizzard. Emergency teams are working to safely evacuate the trapped climbers from the world's highest peak.",
       "timeline": [
         {
-          "date": "May 9, 2025",
-          "event": "Supreme Court pauses orders reinstating fired agency heads Wilcox and Harris pending appeal"
+          "date": "October 4, 2025",
+          "event": "Freak blizzard hits Mount Everest, trapping hundreds of hikers and workers overnight."
         },
         {
-          "date": "September 15, 2025",
-          "event": "Supreme Court agrees to hear Trump\u2019s case on firing FTC Commissioner Rebecca Slaughter"
+          "date": "October 5, 2025",
+          "event": "Rescue operations begin; hikers dig out tents and await help in deep snow."
         },
         {
           "date": "October 6, 2025",
-          "event": "Supreme Court begins new term, including cases on Trump\u2019s power to fire officials"
+          "event": "Tibetan authorities report 350 rescued, about 200 still stranded on Everest."
+        },
+        {
+          "date": "October 7, 2025",
+          "event": "All stranded hikers and workers reported rescued and safe by local authorities."
         }
       ],
       "details": [
-        "Case name: Trump v. Wilcox  \nStay granted: May 22, 2025  \nAgencies involved: NLRB, MSPB"
+        "Death toll: 1 confirmed[3]  \nInitial stranded: 1,000 hikers[2]  \nSnowfall: Over 1 meter overnight[1]"
       ]
     },
     {
@@ -1285,6 +1250,41 @@
       ],
       "details": [
         "Countries affected: 83+\nGreat Barrier Reef events: 6 since 2016\nBleaching alert levels: Now up to Level 5"
+      ]
+    },
+    {
+      "title": "WATCH:  Israelis celebrate release of hostages",
+      "url": "https://abcnews.go.com/International/video/israelis-celebrate-release-hostages-126468972",
+      "source": "ABC News",
+      "description": "ABC News is in Tel Aviv's Hostage Square, as Israelis come together to celebrate the release of hostages held in Gaza.",
+      "content": "",
+      "urlToImage": "https://s.abcnews.com/images/International/251013_abc_social_hostages_hpMain_4x3_384.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:31:24.131501",
+      "category": "politics",
+      "emoji": "\ud83c\uddee\ud83c\uddf1",
+      "final_score": 910.0,
+      "summary": "Israelis gathered in **Tel Aviv's Hostage Square** to celebrate the liberation of **hostages** from Gaza, marking an emotional milestone in the ongoing conflict. The celebration brought communities together in a display of relief and unity.",
+      "timeline": [
+        {
+          "date": "October 20, 2023",
+          "event": "Hamas releases two American hostages for humanitarian reasons after US and Qatari pressure"
+        },
+        {
+          "date": "October 23, 2023",
+          "event": "Hamas releases two elderly Israeli women hostages after mediation by Qatar and Egypt"
+        },
+        {
+          "date": "November 22, 2023",
+          "event": "Israel and Hamas agree to four-day ceasefire and release of 50 hostages"
+        },
+        {
+          "date": "November 24, 2023",
+          "event": "Hamas begins releasing 50 women and children hostages over four days"
+        }
+      ],
+      "details": [
+        "Hostages released: 17 people  \nRelease date: November 26, 2023  \nChildren freed: 13"
       ]
     },
     {
@@ -1659,69 +1659,30 @@
       ]
     },
     {
-      "title": "NASA will say goodbye to the International Space Station in",
-      "url": "https://www.space.com/space-exploration/international-space-station/nasa-will-say-goodbye-to-the-international-space-station-in-2030-and-welcome-in-the-age-of-commercial-space-stations",
-      "source": "Space.com",
-      "description": "In 2030, the International Space Station will be deorbited: driven into a remote area of the Pacific Ocean.",
+      "title": "WATCH:  Supreme Court denies Ghislaine Maxwell appeal",
+      "url": "https://abcnews.go.com/US/video/supreme-court-denies-ghislaine-maxwell-appeal-126257745",
+      "source": "ABC News",
+      "description": "The Supreme Court has declined to take up the appeal of Maxwell, who was contesting her prosecution and conviction on grounds that the government had violated an agreement made with Jeffrey Epstein before his death.",
       "content": "",
-      "urlToImage": "https://cdn.mos.cms.futurecdn.net/cRRqZguM2iX38GsQppG3q6-1280-80.jpg",
-      "author": "John M. Horack",
-      "publishedAt": "2025-10-13T18:28:05.316432",
-      "category": "science",
-      "emoji": "\ud83d\ude80",
-      "final_score": 900.0,
-      "summary": "The **International Space Station** will conclude its historic mission in 2030 when NASA plans to deliberately crash it into a remote part of the **Pacific Ocean**, marking the end of humanity's longest-running space habitat.",
-      "timeline": [
-        {
-          "date": "June 26, 2024",
-          "event": "NASA selects SpaceX to develop the ISS U.S. Deorbit Vehicle."
-        },
-        {
-          "date": "2028",
-          "event": "Planned completion of the ISS Deorbit Vehicle for NASA by SpaceX."
-        },
-        {
-          "date": "End of 2030",
-          "event": "International Space Station scheduled to end operations and begin deorbit process."
-        },
-        {
-          "date": "January 2031",
-          "event": "ISS planned to re-enter atmosphere and splash down in the Pacific Ocean."
-        }
-      ],
-      "details": [
-        "Contract value: $843 million[3]  \nCrewed experiments: 3,300+[3]  \nRussia commitment: Through 2028[3][6]"
-      ]
-    },
-    {
-      "title": "A Hostage and Prisoner Exchange",
-      "url": "https://www.nytimes.com/2025/10/13/briefing/a-hostage-and-prisoner-exchange.html",
-      "source": "New York Times",
-      "description": "We\u2019re covering the release of hostages in Gaza and of Palestinian prisoners. We\u2019re also covering President Trump\u2019s visit to Israel.",
-      "content": "In Hostages Square, in Tel Aviv.",
-      "urlToImage": "https://static01.nyt.com/images/2025/10/13/multimedia/13themorning-nl-hostage-hvlq/13themorning-nl-hostage-hvlq-mediumSquareAt3X-v2.jpg",
-      "author": "Jodi Rudoren",
-      "publishedAt": "2025-10-13T18:27:46.118212",
+      "urlToImage": "https://s.abcnews.com/images/US/251006_abc_social_devin_hpMain_4x3_384.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:31:46.924511",
       "category": "politics",
-      "emoji": "\ud83e\udd1d",
+      "emoji": "\u2696\ufe0f",
       "final_score": 900.0,
-      "summary": "In a significant development, Israel and Hamas conducted a **prisoner swap**, exchanging Palestinian detainees for Israeli **hostages** held in Gaza. The exchange occurred amid heightened tensions, coinciding with President Trump's diplomatic visit to Israel.",
+      "summary": "The **Supreme Court** rejected **Ghislaine Maxwell's** appeal challenging her conviction in the Jeffrey Epstein sex trafficking case. Maxwell claimed prosecutors violated a previous agreement with Epstein, but justices declined to review her arguments.",
       "timeline": [
         {
-          "date": "October 12, 2025",
-          "event": "Hamas releases hostages in Gaza as part of a negotiated exchange agreement"
+          "date": "April 14, 2025",
+          "event": "Ghislaine Maxwell's Supreme Court appeal officially docketed after Second Circuit rejection"
         },
         {
-          "date": "October 12, 2025",
-          "event": "Palestinian prisoners released by Israel in exchange for hostages from Gaza"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "President Trump visits Israel following the hostage and prisoner exchange"
+          "date": "October 6, 2025",
+          "event": "Supreme Court declines to hear Ghislaine Maxwell's appeal without comment"
         }
       ],
       "details": [
-        "Hostages released: 4\nPrisoners freed: 39\nTrump visit date: June 25, 2025"
+        "Sentence: 20 years federal prison  \nConviction year: 2021  \nFacility: Texas minimum-security prison"
       ]
     },
     {
@@ -3003,6 +2964,33 @@
       ]
     },
     {
+      "title": "South Korea says it flagged concerns over Hyundai\u2019s US investment",
+      "url": "https://www.scmp.com/news/asia/east-asia/article/3328870/south-korea-says-it-flagged-concerns-over-hyundais-us-investment-plan?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "South Korea\u2019s industry minister said on Monday that the government had expressed concerns over Hyundai announcing multibillion-dollar US investment plans at the same time as Seoul was involved in delicate trade negotiations with Washington.\n\u201cWe told Hyundai that [its] conduct was deeply regrettable, especially considering that our efforts have been made for the sake of Hyundai and Kia\u2019s industry,\u201d South Korea\u2019s Industry Minister Kim Jung-kwan told parliament in response to questions.\n\u201cI believe...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/14/77e053df-13e9-41db-a2a2-9e641461628c_1d55eb2a.jpg",
+      "author": "Reuters",
+      "publishedAt": "2025-10-13T18:29:58.241339",
+      "category": "business",
+      "emoji": "\ud83d\udcb0",
+      "final_score": 870.0,
+      "summary": "South Korea's **industry minister** criticized **Hyundai Motors** for announcing major US investments while Seoul conducted sensitive trade talks with Washington. The minister called the timing \"deeply regrettable,\" as it potentially complicated ongoing **diplomatic negotiations**.",
+      "timeline": [
+        {
+          "date": "March 25, 2025",
+          "event": "Hyundai announces $21 billion U.S. investment plan for 2025-2028."
+        },
+        {
+          "date": "August 26, 2025",
+          "event": "Hyundai increases U.S. investment commitment to $26 billion through 2028."
+        }
+      ],
+      "details": [
+        "Investment total: $26 billion[1][3][5]  \nJobs created: 25,000[1][3][5]  \nSteel mill capacity: 2.7 million tons/year[4]"
+      ]
+    },
+    {
       "title": "Jailed founder of Tren de Aragua gang calls for peace",
       "url": "https://www.france24.com/en/americas/20251012-jailed-founder-of-tren-de-aragua-gang-calls-for-peace-talks-with-colombian-government",
       "source": "France 24",
@@ -3220,7 +3208,7 @@
       ]
     }
   ],
-  "generatedAt": "2025-10-13T18:28:52.359725",
+  "generatedAt": "2025-10-13T18:33:53.662445",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
