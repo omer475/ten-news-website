@@ -1554,24 +1554,10 @@ export default function Home() {
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
-        {/* Logo - Always Visible, On Top of Image for News Pages */}
-        {currentIndex > 0 && stories[currentIndex]?.type === 'news' ? (
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            left: '20px',
-            zIndex: 1000,
-            fontSize: '18px',
-            fontWeight: '900',
-            letterSpacing: '-0.5px',
-            color: '#ffffff',
-            textShadow: '0 2px 8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.5)',
-            mixBlendMode: 'difference'
-          }}>
-            News<span style={{ fontWeight: '900' }}>+</span>
-          </div>
-        ) : (
-          /* Full Header for First Page */
+        {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
+
+        {/* Full Header for First Page */}
+        {currentIndex === 0 && (
           <div className="header">
             <div className="logo">
               News<span className="logo-ten">+</span>
@@ -1721,6 +1707,19 @@ export default function Home() {
                       paddingRight: '10px',
                       zIndex: '2'
                     }}>
+                      
+                      {/* Category Badge */}
+                      <div style={{
+                        display: 'inline-block',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        letterSpacing: '0.8px',
+                        color: '#1d1d1f',
+                        marginBottom: '8px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {story.emoji} {story.category}
+                      </div>
                       
                       {/* Title - Large and Prominent, Higher Position */}
                       <h3 className="news-title" style={{ 
