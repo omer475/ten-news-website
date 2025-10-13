@@ -3,33 +3,6 @@
   "totalResults": 100,
   "articles": [
     {
-      "title": "Madagascar presidency says attempt to seize power under way",
-      "url": "https://www.bbc.com/news/articles/cd070pn4g07o?at_medium=RSS&at_campaign=rss",
-      "source": "BBC World News",
-      "description": "An army unit claimed it had taken over leadership of the military command and was now in control of all the armed forces.",
-      "content": "",
-      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/b46b/live/e1628320-a774-11f0-928c-71dbb8619e94.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:29:40.287533",
-      "category": "politics",
-      "emoji": "\ud83d\udea8",
-      "final_score": 1000.0,
-      "summary": "A **military faction** in Madagascar attempted to seize power by declaring control over the country's armed forces, prompting concerns of a potential **coup d'\u00e9tat** against the current government leadership and destabilizing the island nation.",
-      "timeline": [
-        {
-          "date": "January 25, 2024",
-          "event": "Army unit announces takeover of military command in Madagascar"
-        },
-        {
-          "date": "January 25, 2024",
-          "event": "Madagascar presidency publicly warns of attempted power seizure"
-        }
-      ],
-      "details": [
-        "Protest deaths: At least 22 killed[1]  \nElite unit: CAPSAT joined protesters[1]  \nPresident status: Possibly left country[1]"
-      ]
-    },
-    {
       "title": "Drone strike in besieged Sudan city kills dozens",
       "url": "https://www.bbc.com/news/articles/c3rvrn8req4o?at_medium=RSS&at_campaign=rss",
       "source": "BBC World News",
@@ -326,41 +299,6 @@
       ],
       "details": [
         "Hostage count: 20 living, 28 deceased  \nRelease timing: 7:00 AM local  \nPrisoner exchange: 150 Palestinians freed"
-      ]
-    },
-    {
-      "title": "Pakistan closes border with Afghanistan after dozens killed in overnight",
-      "url": "https://www.france24.com/en/asia-pacific/20251012-pakistan-closes-afghanistan-border-kabul-claims-killed-58-soldiers-overnight-clashes",
-      "source": "France 24",
-      "description": "Pakistan closed all border crossings with Afghanistan on Sunday after deadly overnight clashes in which both sides claimed to have killed dozens of troops. Islamabad regularly accuses the Taliban administration in Kabul of harbouring militants who\u00a0attack\u00a0Pakistan, a charge Afghan officials deny.",
-      "content": "",
-      "urlToImage": "https://s.france24.com/media/display/6e85a6e0-a74a-11f0-8221-005056a90284/w:1024/p:16x9/2025-10-12T082942Z-795607846-RC28AHA1THVQ-RTRMADP-3-PAKISTAN-AFGHANISTAN.jpg",
-      "author": "FRANCE 24",
-      "publishedAt": "2025-10-13T17:28:09.458384",
-      "category": "politics",
-      "emoji": "\ud83d\udea8",
-      "final_score": 975.0,
-      "summary": "Pakistan has **closed its borders** with Afghanistan following deadly overnight clashes where both nations reported **significant casualties**. The closure stems from Pakistan's ongoing accusations that Taliban-led Afghanistan harbors militants who conduct cross-border attacks.",
-      "timeline": [
-        {
-          "date": "October 8, 2025",
-          "event": "TTP ambush in Kurram district kills 11 Pakistani soldiers, sparking border clashes"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Pakistan launches airstrikes on TTP camps in Paktika and Khost, Kabul reports explosions"
-        },
-        {
-          "date": "October 11, 2025",
-          "event": "Afghan Taliban retaliate, attacking Pakistani posts across five provinces with artillery and drones"
-        },
-        {
-          "date": "October 12, 2025",
-          "event": "Pakistan closes all border crossings with Afghanistan after deadly overnight clashes"
-        }
-      ],
-      "details": [
-        "Border crossings: Closed for 2nd day[1]  \nPakistan casualties: 23 confirmed by Islamabad[1]  \nTaliban claims: 58 Pakistani soldiers killed[1]"
       ]
     },
     {
@@ -787,6 +725,33 @@
       ]
     },
     {
+      "title": "Minister: China Spy Case Not Linked to Starmer's Adviser",
+      "url": "https://www.bbc.com/news/articles/cg424d712q7o?at_medium=RSS&at_campaign=rss",
+      "source": "BBC Breaking News",
+      "description": "The Conservatives suggest Jonathan Powell's role led to the collapse of the prosecutions against two men.",
+      "content": "",
+      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/99b2/live/668aeee0-a3b3-11f0-9871-a159926144cf.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T18:20:14.502528",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 930.0,
+      "summary": "The Conservatives suggest Jonathan Powell's role led to the collapse of the prosecutions against two men.",
+      "timeline": [
+        {
+          "date": "October 8, 2024",
+          "event": "China spy case against two men collapses, sparking political controversy."
+        },
+        {
+          "date": "October 9, 2024",
+          "event": "Conservatives suggest Jonathan Powell's role led to prosecution collapse; government denies involvement."
+        }
+      ],
+      "details": [
+        "Case Collapse: Recent\nPressure Source: Conservatives\nAdviser Role: Jonathan Powell"
+      ]
+    },
+    {
       "title": "5 things to know about the health care fight behind",
       "url": "https://www.npr.org/2025/10/12/nx-s1-5570849/shutdown-aca-health-care-tax-credits",
       "source": "NPR News",
@@ -1122,41 +1087,6 @@
       ],
       "details": [
         "Countries affected: 83+\nGreat Barrier Reef events: 6 since 2016\nBleaching alert levels: Now up to Level 5"
-      ]
-    },
-    {
-      "title": "Universities must tackle antisemitism, says education secretary",
-      "url": "https://www.bbc.com/news/articles/cly9y7gg6eqo?at_medium=RSS&at_campaign=rss",
-      "source": "BBC Breaking News",
-      "description": "Education Secretary Bridget Phillipson says Jewish students do not feel safe, as she sets out measures to tackle antisemitism.",
-      "content": "",
-      "urlToImage": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/477b/live/80a29800-a75a-11f0-92db-77261a15b9d2.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T17:29:06.781921",
-      "category": "politics",
-      "emoji": "\ud83d\udde3\ufe0f",
-      "final_score": 915.0,
-      "summary": "Education Secretary **Bridget Phillipson** has announced new measures to combat **antisemitism** in universities, responding to growing concerns about Jewish students feeling unsafe on campus. The initiative aims to protect students' wellbeing and ensure inclusive learning environments.",
-      "timeline": [
-        {
-          "date": "October 7, 2024",
-          "event": "Bridget Phillipson states antisemitism in universities will not be tolerated, announces new measures."
-        },
-        {
-          "date": "October 8, 2024",
-          "event": "Government confirms \u00a37 million funding to tackle antisemitism in education, including universities."
-        },
-        {
-          "date": "June 9, 2025",
-          "event": "Education Secretary meets university leaders and Jewish students to discuss campus antisemitism."
-        },
-        {
-          "date": "June 21, 2025",
-          "event": "UK government urges universities to act after Manchester synagogue attack and rising campus incidents."
-        }
-      ],
-      "details": [
-        "Incident decline: 64% drop in 2025[1]  \nOnline incidents: 13 cases in 2025[1]  \nReporting systems: Mandatory since August 2025[3]"
       ]
     },
     {
@@ -3034,41 +2964,6 @@
       ]
     },
     {
-      "title": "US Tech Firm Hit by China Tensions Before Trump Tariffs",
-      "url": "https://timesofindia.indiatimes.com/technology/tech-news/american-technology-company-that-faced-chinas-anger-hours-before-donald-trump-said-will-impose-extra-100-tariffs-on-chinese-imports/articleshow/124494725.cms",
-      "source": "Times of India",
-      "description": "Escalating US-China trade tensions saw President Trump announce a 100% tariff on Chinese imports, effective November 1. In response, China launched an antitrust probe into US chip giant Qualcomm over its acquisition of Autotalks. This move, alongside other retaliatory measures targeting US interests, signals a significant escalation in the ongoing trade dispute.",
-      "content": "",
-      "urlToImage": "https://static.toiimg.com/photo/msid-124494714,imgsize-43794.cms",
-      "author": "TOI TECH DESK",
-      "publishedAt": "2025-10-13T17:28:57.920620",
-      "category": "business",
-      "emoji": "\ud83d\udcb0",
-      "final_score": 860.0,
-      "summary": "The **trade war** intensifies as Trump declares **100% tariffs** on Chinese imports, prompting China to launch an antitrust investigation into Qualcomm's Autotalks acquisition. This latest exchange marks a serious escalation in US-China economic tensions.",
-      "timeline": [
-        {
-          "date": "May 12, 2025",
-          "event": "US and China agreed to reduce tariffs for 90 days"
-        },
-        {
-          "date": "August 12, 2025",
-          "event": "Trump extended tariff truce with China by another 90 days"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Trump announced 100% tariff on Chinese imports starting November 1"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "China announced retaliatory port fees on US vessels"
-        }
-      ],
-      "details": [
-        "Investigation announced: October 10, 2025\nAcquisition completed: June 2025\nPrior SAMR instruction: March 2024"
-      ]
-    },
-    {
       "title": "'Was working to rebuild terror infra': IDF eliminates Hezbollah operative",
       "url": "https://timesofindia.indiatimes.com/world/middle-east/was-working-to-rebuild-terror-infra-israel-eliminates-hezbollah-operative-in-lebanon-video-shows-precision-strike/articleshow/124495172.cms",
       "source": "Times of India",
@@ -3226,9 +3121,102 @@
       "details": [
         "Term premium: Highest in 10+ years[6]  \nUS 10s/30s spread: 70 basis points[4]  \nAPAC issuance: Up 47% year-on-year[3]"
       ]
+    },
+    {
+      "title": "Trump may approve Tomahawks for Ukraine if Russia continues war",
+      "url": "https://www.japantimes.co.jp/news/2025/10/13/world/politics/trump-putin-us-tomahawks-ukraine/",
+      "source": "The Japan Times",
+      "description": "U.S. President Donald Trump\u2019s comments signal an openness to expanding the range of weaponry provided to Ukraine but also that he remains focused on a ceasefire.",
+      "content": "",
+      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/13/499271.jpg",
+      "author": "",
+      "publishedAt": "2025-10-13T12:35:57.305859",
+      "category": "politics",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "final_score": 860.0,
+      "summary": "U.S. President Donald Trump\u2019s comments signal an openness to expanding the range of weaponry provided to Ukraine but also that he remains focused on a ceasefire.",
+      "timeline": [
+        {
+          "date": "October 13, 2025",
+          "event": "Trump says he may send Tomahawk missiles to Ukraine if Russia continues war"
+        },
+        {
+          "date": "October 13, 2025",
+          "event": "Trump states he discussed Tomahawks with Zelensky and plans to talk to Putin"
+        }
+      ],
+      "details": [
+        "Missile Range: 1,600 km\nEscalation Risk: High\nDecision Status: Pending"
+      ]
+    },
+    {
+      "title": "'No deliberate exclusion': Muttaqi holds another presser; women journos present",
+      "url": "https://timesofindia.indiatimes.com/india/no-deliberate-exclusion-taliban-foreign-minister-amir-khan-muttaqi-holds-another-presser-women-journalists-present/articleshow/124498291.cms",
+      "source": "Times of India",
+      "description": "Taliban's Foreign Minister Amir Khan Muttaqi addressed a press conference in Delhi with both male and female journalists present, following criticism for excluding women from a previous event. Muttaqi stated the earlier exclusion was due to short notice, not deliberate intent. This visit marks the first by a senior Taliban minister to India since the group's takeover.",
+      "content": "",
+      "urlToImage": "https://static.toiimg.com/photo/msid-124498394,imgsize-514163.cms",
+      "author": "TOI NEWS DESK",
+      "publishedAt": "2025-10-13T17:04:41.802071",
+      "category": "politics",
+      "emoji": "\ud83c\udde6\ud83c\uddeb",
+      "final_score": 850.0,
+      "summary": "The **Taliban's Foreign Minister** Muttaqi addressed media in Delhi, including female journalists, after controversy over women's exclusion from a prior event. His visit marks the first **high-level Taliban delegation** to India since Afghanistan's takeover.",
+      "timeline": [
+        {
+          "date": "October 9, 2025",
+          "event": "Amir Khan Muttaqi arrives in India for a week-long official visit."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Muttaqi holds first Delhi press conference; only male journalists are present."
+        },
+        {
+          "date": "October 12, 2025",
+          "event": "Muttaqi holds second press conference in Delhi, women journalists are included."
+        }
+      ],
+      "details": [
+        "Travel exemption: UN granted October 2025[1]  \nGirls in school: 2.8 million[3]  \nEmbassy upgrade: India plans Kabul embassy[3][4]"
+      ]
+    },
+    {
+      "title": "US, China leaders will avoid \u2018race to the bottom\u2019: Alibaba\u2019s",
+      "url": "https://www.scmp.com/tech/article/3328866/us-china-leaders-will-avoid-race-bottom-trade-alibabas-joe-tsai-says?utm_source=rss_feed",
+      "source": "South China Morning Post",
+      "description": "Alibaba Group Holding chairman Joe Tsai has expressed optimism about US-China trade tensions.\n\u201cI\u2019m actually quite optimistic that we\u2019re not going to devolve into kind of a race to the bottom\u201d, he said during an interview with CNBC dated October 10 and published on Monday. \u201cThe two countries\u2019 leaders have the wisdom to come to a point where they recognise that this is a hugely symbiotic relationship,\u201d he added.\nTsai, who owns the Brooklyn Nets basketball team, spoke on the sidelines of an NBA...",
+      "content": "",
+      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/82346091-1305-4c39-a66a-6dee3d406e12_570ffcdd.jpg",
+      "author": "Coco Feng",
+      "publishedAt": "2025-10-13T16:30:17.735843",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 850.0,
+      "summary": "**Alibaba's chairman** Joe Tsai expressed optimism about **US-China relations**, stating leaders will avoid a \"race to the bottom\" and recognize their symbiotic relationship. Tsai shared these views during a CNBC interview on the NBA sidelines.",
+      "timeline": [
+        {
+          "date": "February 4, 2025",
+          "event": "US imposes 10% tariff on all Chinese imports, citing national emergency."
+        },
+        {
+          "date": "February 4, 2025",
+          "event": "China retaliates with 15% tariffs on US coal and LNG, 10% on other goods."
+        },
+        {
+          "date": "April 9, 2025",
+          "event": "US increases tariffs on Chinese goods to 145% amid escalating tensions."
+        },
+        {
+          "date": "October 10, 2025",
+          "event": "Trump announces 100% additional tariffs on Chinese imports, effective November 1."
+        }
+      ],
+      "details": [
+        "Tariff rate: 30% US on China[1]  \nImpact: 85% US firms affected[2]  \nSoybean licenses: 3 US firms revoked[1]"
+      ]
     }
   ],
-  "generatedAt": "2025-10-13T17:46:36.766945",
+  "generatedAt": "2025-10-13T18:23:51.119599",
   "displayDate": "MONDAY, OCTOBER 13, 2025",
   "digest_date": "October 13, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
