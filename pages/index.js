@@ -1723,11 +1723,10 @@ export default function Home() {
                       zIndex: '2',
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'center',
-                      gap: '40px'
+                      justifyContent: 'space-between'
                     }}>
                       
-                      {/* Title - Large and Prominent, at the top */}
+                      {/* Title - At the top */}
                       <h3 className="news-title" style={{ 
                         marginTop: '0',
                         marginBottom: '0',
@@ -1735,19 +1734,28 @@ export default function Home() {
                         fontWeight: '800',
                         lineHeight: '1.2',
                         letterSpacing: '-0.5px',
-                        textAlign: 'left'
+                        flexShrink: 0
                       }}>{story.title}</h3>
                       
                       {/* Summary - Centered in the middle */}
-                      <p className="news-summary" style={{ 
-                        marginTop: '0',
-                        marginBottom: '0',
-                        fontSize: '18px',
-                        lineHeight: '1.5',
-                        opacity: '1',
-                        color: '#2c2c2c',
-                        textAlign: 'left'
-                      }}>{renderBoldText(story.summary, story.category)}</p>
+                      <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px 0'
+                      }}>
+                        <p className="news-summary" style={{ 
+                          margin: '0',
+                          fontSize: '18px',
+                          lineHeight: '1.5',
+                          color: '#2c2c2c',
+                          textAlign: 'center'
+                        }}>{renderBoldText(story.summary, story.category)}</p>
+                      </div>
+                      
+                      {/* Spacer for fixed bottom section */}
+                      <div style={{ flexShrink: 0, height: '0' }}></div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
