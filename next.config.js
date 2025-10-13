@@ -10,8 +10,8 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   trailingSlash: false,
-  // Ensure proper static optimization
-  output: 'standalone',
+  // Ensure proper static optimization (removed 'standalone' for Vercel JSON serving)
+  // output: 'standalone',
   // HIDE DEVELOPER INFORMATION FROM USERS
   productionBrowserSourceMaps: false,
   webpack: (config, { dev }) => {

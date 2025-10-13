@@ -27,13 +27,13 @@ export default async function handler(req, res) {
     console.log(`⚠️  Supabase not available: ${fetchError.message}`);
   }
 
-  // FALLBACK 1: Try to read today's news file
+  // FALLBACK 1: Try to read today's news file from public directory
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '_');
     
     const newsFileName = `tennews_data_${dateStr}.json`;
-    const newsFilePath = path.join(process.cwd(), newsFileName);
+    const newsFilePath = path.join(process.cwd(), 'public', newsFileName);
     
     if (fs.existsSync(newsFilePath)) {
       const newsData = JSON.parse(fs.readFileSync(newsFilePath, 'utf8'));
@@ -44,9 +44,10 @@ export default async function handler(req, res) {
     console.log(`⚠️  Error reading today's file: ${error.message}`);
   }
     
-  // FALLBACK 2: Find most recent news file
+  // FALLBACK 2: Find most recent news file in public directory
   try {
-    const files = fs.readdirSync(process.cwd());
+    const publicDir = path.join(process.cwd(), 'public');
+    const files = fs.readdirSync(publicDir);
     const newsFiles = files
       .filter(file => file.startsWith('tennews_data_') && file.endsWith('.json'))
       .sort()
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
     
     if (newsFiles.length > 0) {
       const latestNewsFile = newsFiles[0];
-      const latestNewsPath = path.join(process.cwd(), latestNewsFile);
+      const latestNewsPath = path.join(publicDir, latestNewsFile);
       const newsData = JSON.parse(fs.readFileSync(latestNewsPath, 'utf8'));
       console.log(`✅ Serving recent news data from file: ${latestNewsFile}`);
       return res.status(200).json(newsData);
