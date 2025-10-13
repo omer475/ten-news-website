@@ -1671,6 +1671,23 @@ export default function Home() {
                       console.log('No valid URL found for this story');
                     }
                   }}>
+                    
+                    {/* Blur Backdrop - Only shows when timeline is open */}
+                    {showTimeline[index] && (
+                      <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        zIndex: 5,
+                        pointerEvents: 'none'
+                      }} />
+                    )}
+                    
                     {/* News Image - TRULY Edge-to-Edge */}
                     <div style={{
                       position: 'fixed',
@@ -1870,37 +1887,23 @@ export default function Home() {
                         ) : (
                           // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
-                            <>
-                              {/* Backdrop blur overlay */}
-                              <div style={{
-                                position: 'fixed',
-                                top: '0',
+                            <div 
+                              className="timeline-container-desktop"
+                              style={{
+                                position: 'absolute',
+                                bottom: '0',
                                 left: '0',
                                 right: '0',
-                                bottom: '0',
-                                backdropFilter: 'blur(8px)',
-                                WebkitBackdropFilter: 'blur(8px)',
-                                background: 'rgba(0, 0, 0, 0.1)',
-                                zIndex: '5'
-                              }}></div>
-                              
-                              <div 
-                                className="timeline-container-desktop"
-                                style={{
-                                  position: 'absolute',
-                                  bottom: '0',
-                                  left: '0',
-                                  right: '0',
-                                  background: 'rgba(255, 255, 255, 0.95)',
-                                  backdropFilter: 'blur(10px)',
-                                  WebkitBackdropFilter: 'blur(10px)',
-                                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                                  borderRadius: '16px',
-                                  padding: '12px 20px',
-                                  boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
-                                  minHeight: '90px',
-                                  zIndex: '10'
-                                }}>
+                                background: 'rgba(255, 255, 255, 0.95)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                borderRadius: '16px',
+                                padding: '12px 20px',
+                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
+                                minHeight: '90px',
+                                zIndex: '100'
+                              }}>
                               <div style={{
                                 position: 'relative',
                                 paddingLeft: '20px',
@@ -1948,7 +1951,6 @@ export default function Home() {
                                 ))}
                   </div>
                 </div>
-                            </>
                           )
                         )}
                         
@@ -1961,7 +1963,9 @@ export default function Home() {
                           justifyContent: 'center',
                           alignItems: 'center',
                           gap: '10px',
-                          marginTop: '14px'
+                          marginTop: '14px',
+                          position: 'relative',
+                          zIndex: '100'
                         }}>
                           {/* Details Dot */}
                           <div
