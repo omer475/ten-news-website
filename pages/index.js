@@ -1655,9 +1655,9 @@ export default function Home() {
                     <div style={{
                       position: 'fixed',
                       top: '3px',
-                      left: '3px',
-                      right: '3px',
-                      width: 'calc(100vw - 6px)',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
                       height: 'calc(30vh - 3px)',
                       margin: 0,
                       padding: 0,
