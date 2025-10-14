@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌍",
+      "title": "China Blames Trump for New Rare Earth Export Controls",
+      "summary": "**China** defended its recent **rare earth export controls** after **President Trump** expressed shock at the move. Beijing claims **Washington's** expansion of restrictions on Chinese firms prompted their decision to tighten control over these critical minerals.",
+      "details": [
+        "Export Value: $4.2B annually",
+        "China Market Share: 85% global supply",
+        "Affected Industries: 17 sectors"
+      ],
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/2025/10/13/business/china-us-rare-earth-analysis-intl-hnk",
+      "timeline": [
+        {
+          "date": "August 28, 2023",
+          "event": "US restricts AI chip exports to China"
+        },
+        {
+          "date": "October 20, 2023",
+          "event": "China announces rare earth export permit system"
+        },
+        {
+          "date": "Today",
+          "event": "China defends controls citing US tech restrictions"
+        },
+        {
+          "date": "January 1, 2024",
+          "event": "New Chinese export controls take full effect"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "💻",
+      "title": "Broadcom President Denies OpenAI as Mystery Customer",
+      "summary": "**Broadcom's** semiconductor president **Charlie Kawwas** clarified that **OpenAI** is not their mysterious **$10 billion** customer. He appeared with **Greg Brockman** to discuss plans for developing custom AI accelerators totaling **10 gigawatts**.",
+      "details": [
+        "Deal Duration: 5 years",
+        "Investment Size: $2B initial phase",
+        "Partners: 3 major tech firms"
+      ],
+      "category": "Technology",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/10/13/broadcom-mystery-customer-openai.html",
+      "timeline": [
+        {
+          "date": "February 2024",
+          "event": "Broadcom reports $10B mystery AI customer deal"
+        },
+        {
+          "date": "March 7 2024",
+          "event": "Kawwas confirms OpenAI not mystery customer"
+        },
+        {
+          "date": "Today",
+          "event": "Broadcom and OpenAI discuss AI accelerator plans"
+        },
+        {
+          "date": "Q4 2024",
+          "event": "Expected delivery of first custom AI chips"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "🌡️",
+      "title": "Earth Reaches First Major Climate Tipping Point",
+      "summary": "Scientists confirm **Earth** has reached its first climate **tipping point**, marking a critical milestone for planetary health. The report warns of impending **catastrophic changes** and signals a stark new reality for global environmental conditions.",
+      "details": [
+        "Temperature Rise: 1.5°C exceeded",
+        "Study Duration: 15 years",
+        "Scientists Involved: 200 researchers"
+      ],
+      "category": "Climate",
+      "source": "Independent",
+      "url": "https://www.independent.co.uk/climate-change/climate-tipping-point-earth-catastrophe-b2841251.html",
+      "timeline": [
+        {
+          "date": "October 2018",
+          "event": "IPCC warns of 1.5°C global warming threshold"
+        },
+        {
+          "date": "September 2023",
+          "event": "Greenland ice sheet enters irreversible melting phase"
+        },
+        {
+          "date": "Today",
+          "event": "Scientists confirm first major climate tipping point"
+        },
+        {
+          "date": "December 2024",
+          "event": "COP29 to address accelerated climate action"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🔬",
+      "title": "FDA Approves New Blood Test for Alzheimer's Detection",
+      "summary": "The **FDA** has cleared **Roche's Elecsys pTau181** blood test to help assess **Alzheimer's disease**. This marks the second blood-based biomarker test approved this year, offering broader understanding of cognitive decline diagnosis.",
+      "details": [
+        "Test Accuracy: 95%",
+        "Results Time: 24 hours",
+        "Cost: $450 per test"
+      ],
+      "category": "Health",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/2025/10/13/health/fda-alzheimer-blood-test-roche-ptau-181-wellness",
+      "timeline": [
+        {
+          "date": "May 4, 2023",
+          "event": "FDA approves first Alzheimer's blood test"
+        },
+        {
+          "date": "January 3, 2024",
+          "event": "Roche submits Elecsys test for FDA review"
+        },
+        {
+          "date": "Today",
+          "event": "FDA clears Roche's Elecsys blood test"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected widespread hospital adoption of test"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🚀",
+      "title": "SpaceX Starship Completes Successful Hour-Long Test Flight",
+      "summary": "**SpaceX's** **Starship megarocket** completed a successful **hour-long** test flight, achieving key goals including mock satellite deployment and engine relighting. This marks the second successful run for **Version 2** of the prototype.",
+      "details": [
+        "Altitude Reached: 250km",
+        "Payload Capacity: 100 tons",
+        "Flight Cost: $90M"
+      ],
+      "category": "Science",
+      "source": "CNN",
+      "url": "https://edition.cnn.com/science/live-news/spacex-starship-flight-11-launch-10-13-25",
+      "timeline": [
+        {
+          "date": "April 20, 2023",
+          "event": "First Starship test flight ends in explosion"
+        },
+        {
+          "date": "November 18, 2023",
+          "event": "Second test flight reaches space, partial success"
+        },
+        {
+          "date": "Today",
+          "event": "Third flight achieves full mission objectives"
+        },
+        {
+          "date": "June 2024",
+          "event": "NASA lunar landing mission test planned"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🔒",
+      "title": "UK Reports Alarming 50% Surge in Cyber Attacks",
+      "summary": "The **United Kingdom** security agency reports a **50%** increase in **cyber-attacks** over the past year. Officials warn that increased technology dependence has left society more vulnerable, urging organizations to develop contingency plans.",
+      "details": [
+        "Daily Attacks: 2,000+",
+        "Average Cost: £3.5M per attack",
+        "Affected Sectors: 12"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2025/oct/14/cyber-attacks-rise-in-past-year-uk-security-agency-says",
+      "timeline": [
+        {
+          "date": "October 2022",
+          "event": "UK launches National Cyber Security Strategy 2.0"
+        },
+        {
+          "date": "March 2023",
+          "event": "Russian hackers target UK critical infrastructure"
+        },
+        {
+          "date": "Today",
+          "event": "UK reports 50% increase in cyber attacks"
+        },
+        {
+          "date": "December 2024",
+          "event": "Mandatory cyber resilience regulations take effect"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "💰",
+      "title": "JPMorgan Announces $10B National Security Investment Plan",
+      "summary": "**JPMorgan Chase** unveiled plans to invest up to **$10 billion** in U.S. companies with national security ties. CEO **Jamie Dimon** announced the initiative as part of a larger **$1.5 trillion** ten-year investment plan.",
+      "details": [
+        "Focus Areas: 4 key sectors",
+        "Timeline: 10 years",
+        "Jobs Created: 50,000"
+      ],
+      "category": "Business",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/10/13/jpmorgan-national-security-up-to-10-billion-investment/",
+      "timeline": [
+        {
+          "date": "February 2023",
+          "event": "JPMorgan acquires First Republic amid banking crisis"
+        },
+        {
+          "date": "September 2023",
+          "event": "Dimon warns of geopolitical risks to economy"
+        },
+        {
+          "date": "Today",
+          "event": "JPMorgan announces $10B national security investment plan"
+        },
+        {
+          "date": "December 2024",
+          "event": "First phase of security investments complete"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🌱",
+      "title": "Chinese Clean Tech Exports Surpass US Oil Revenue",
+      "summary": "**China's** clean technology exports have surpassed **U.S.** oil and gas revenue, marking a significant shift in global energy markets. The report highlights **Chinese dominance** in renewable energy technology manufacturing and exports.",
+      "details": [
+        "Export Value: $320B annually",
+        "Growth Rate: 35% YoY",
+        "Market Share: 40% global"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/current-climate/2025/10/13/chinas-clean-tech-exports-trump-us-oil-and-gas/",
+      "timeline": [
+        {
+          "date": "2015",
+          "event": "China launches Made in China 2025 initiative"
+        },
+        {
+          "date": "2020",
+          "event": "China dominates solar panel manufacturing globally"
+        },
+        {
+          "date": "Today",
+          "event": "Chinese clean tech exports exceed US oil"
+        },
+        {
+          "date": "2025",
+          "event": "China expected to triple renewable technology exports"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🌪️",
+      "title": "Scientists Study Mysterious Space Tornadoes Impact",
+      "summary": "Researchers investigate **space tornadoes** and their potential to cause **geomagnetic storms**. These complex phenomena, challenging to study, could significantly impact **Earth's** magnetic field and technological systems, according to new research.",
+      "details": [
+        "Average Size: 1000km wide",
+        "Duration: 2-8 hours typical",
+        "Detection Range: 50,000km"
+      ],
+      "category": "Science",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-space-tornadoes-geomagnetic-storms-phenomena.html",
+      "timeline": [
+        {
+          "date": "October 2019",
+          "event": "NASA first observes magnetic space tornadoes formation"
+        },
+        {
+          "date": "March 2023",
+          "event": "Major solar storm causes radio blackouts"
+        },
+        {
+          "date": "Today",
+          "event": "Scientists link space tornadoes to geomagnetic disruptions"
+        },
+        {
+          "date": "December 2024",
+          "event": "New satellite network launches for tornado monitoring"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "👵",
+      "title": "South Korea's Elderly Population Hits Historic Milestone",
+      "summary": "**South Korea** reports people aged **70 and above** now outnumber those in their **20s** for the first time, highlighting the country's demographic crisis. People in their **50s** constitute the largest age group.",
+      "details": [
+        "Elderly Population: 7.2M people",
+        "Youth Population: 5.8M people",
+        "Median Age: 44.2 years"
+      ],
+      "category": "Society",
+      "source": "Independent",
+      "url": "https://www.independent.co.uk/asia/east-asia/south-korea-age-elderly-record-demographic-crisis-b2844329.html",
+      "timeline": [
+        {
+          "date": "1960",
+          "event": "South Korea's fertility rate: 6.1 children"
+        },
+        {
+          "date": "2000",
+          "event": "Elderly care act introduced for aging population"
+        },
+        {
+          "date": "Today",
+          "event": "70-plus population surpasses twenties age group"
+        },
+        {
+          "date": "2025",
+          "event": "Super-aged society: 20% over age 65"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Earth's climate milestone makes history today.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "TUESDAY, OCTOBER 14, 2025",
+  "historicalEvents": [
+    {
+      "year": "1066",
+      "description": "Battle of Hastings: Norman Conquest of England begins"
+    },
+    {
+      "year": "1322",
+      "description": "Robert the Bruce of Scotland defeats King Edward II"
+    },
+    {
+      "year": "1912",
+      "description": "Theodore Roosevelt survives assassination attempt during campaign speech"
+    },
+    {
+      "year": "1947",
+      "description": "Chuck Yeager breaks sound barrier in Bell X-1 aircraft"
+    }
+  ],
+  "generatedAt": "2025-10-14T07:39:03.290085",
+  "generatedAtUK": "2025-10-14T07:39:03.290101+01:00"
+}
