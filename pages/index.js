@@ -9,6 +9,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
   const [darkMode, setDarkMode] = useState(false);
+  const [readArticles, setReadArticles] = useState(new Set());
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -25,10 +26,16 @@ export default function Home() {
     signupPassword: '',
     signupFullName: ''
   });
-  const [supabase] = useState(() => createClient());
+  const [supabase] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    return createClient();
+  });
 
   // Check authentication status on mount
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     // Check for stored session first
     const storedUser = localStorage.getItem('tennews_user');
     const storedSession = localStorage.getItem('tennews_session');
@@ -52,182 +59,64 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    console.log('🔄 useEffect starting...');
     const loadNewsData = async () => {
       try {
-        let newsData = null;
+        console.log('📡 About to fetch API...');
+        const response = await fetch(`/api/news?t=${Date.now()}`);
         
-        // Try to fetch from API endpoint
-        try {
-          const response = await fetch('/api/news');
-          if (response.ok) {
-            newsData = await response.json();
-            console.log('✅ Loaded news from API');
-          }
-        } catch (error) {
-          console.log('📰 API not available, using fallback');
-        }
-        
-        // If API failed, try direct file access
-        if (!newsData) {
-          try {
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}_${(today.getMonth() + 1).toString().padStart(2, '0')}_${today.getDate().toString().padStart(2, '0')}`;
-            const response = await fetch(`/tennews_data_${dateStr}.json`);
-            if (response.ok) {
-              newsData = await response.json();
-              console.log('✅ Loaded news from direct file');
-            }
-          } catch (error) {
-            console.log('📰 Direct file access failed:', error);
-          }
-        }
-        
-        let processedStories = [];
-        
-        if (newsData && newsData.articles && newsData.articles.length > 0) {
-          // Create opening story from news data
-          const openingStory = {
-            type: 'opening',
-            date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long', 
-              day: 'numeric',
-              year: 'numeric'
-            }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News'
-          };
+        if (response.ok) {
+          const newsData = await response.json();
+          console.log('📰 API Response:', newsData);
+          console.log('📰 Articles count:', newsData.articles?.length);
           
-          processedStories.push(openingStory);
-          
-          // Convert news generator articles to website format
-          newsData.articles.forEach((article, index) => {
-              const imageUrl = article.urlToImage || article.image || null;
-              
-              // DEBUG: Log image info for first 3 articles
-              if (index < 3) {
-                console.log(`📰 Article ${index + 1}: "${article.title?.substring(0, 50)}..."`);
-                console.log(`   Image URL: ${imageUrl || 'NO IMAGE'}`);
-                console.log(`   Has urlToImage: ${!!article.urlToImage}`);
-                console.log(`   Has image: ${!!article.image}`);
-              }
-              
-              const storyData = {
-              type: 'news',
-              number: article.rank || (index + 1),
-              category: (article.category || 'WORLD NEWS').toUpperCase(),
-              emoji: article.emoji || '📰',
-              title: article.title || 'News Story',
-              summary: article.rewritten_text || article.summary || 'News summary will appear here.',
-              details: article.details || [],
-              source: article.source || 'News+',
-              url: article.url || '#',
-              urlToImage: imageUrl
-              };
-              
-              // Add timeline data (from generator or create fallback)
-              if (article.timeline) {
-                storyData.timeline = article.timeline;
-              } else {
-                // Create fallback timeline for all stories (variable length)
-                const timelineVariations = [
-                  [
-                    {"date": "Background", "event": "Initial situation develops"},
-                    {"date": "Today", "event": "Major developments break"},
-                    {"date": "Next week", "event": "Follow-up expected"}
-                  ],
-                  [
-                    {"date": "Recently", "event": "Key events unfold"},
-                    {"date": "Yesterday", "event": "Critical point reached"},
-                    {"date": "Today", "event": "Story breaks"},
-                    {"date": "Coming days", "event": "Developments continue"}
-                  ],
-                  [
-                    {"date": "Last month", "event": "Initial reports emerge"},
-                    {"date": "Today", "event": "Major announcement made"}
-                  ]
-                ];
-                storyData.timeline = timelineVariations[index % timelineVariations.length];
-              }
-              
-              processedStories.push(storyData);
-          });
-        } else {
-          // Fallback stories with sample data
-          processedStories = [
-            {
+          if (newsData.articles && newsData.articles.length > 0) {
+            // Create opening story
+            const openingStory = {
               type: 'opening',
-              date: new Date().toLocaleDateString('en-US', {
+              date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long', 
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: 'News+ automation is working perfectly'
-            },
-            {
-              type: 'news',
-              number: 1,
-              category: 'SYSTEM STATUS',
-              emoji: '🤖',
-              title: 'GitHub Actions Automation Active',
-              summary: 'Your News+ system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
-              details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
-              source: 'News+ System',
-              url: '#',
-              timeline: [
-                {"date": "Setup", "event": "GitHub Actions workflow configured"},
-                {"date": "Integration", "event": "GDELT API and Claude AI connected"},
-                {"date": "Testing", "event": "Automation tested and verified"},
-                {"date": "Live", "event": "Daily news generation now active"}
-              ]
-            },
-            {
-              type: 'news',
-              number: 2,
-              category: 'SYSTEM STATUS', 
-              emoji: '🌍',
-              title: 'GDELT Global News Integration Ready',
-              summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
-              details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
-              source: 'News+ System',
-              url: '#',
-              timeline: [
-                {"date": "Research", "event": "GDELT database identified as news source"},
-                {"date": "Development", "event": "API integration and filtering built"},
-                {"date": "Testing", "event": "Source verification and quality checks"},
-                {"date": "Active", "event": "Real-time global news processing online"}
-              ]
-            },
-            {
-              type: 'news',
-              number: 3,
-              category: 'SYSTEM STATUS',
-              emoji: '🧠', 
-              title: 'Claude AI Curation System Online',
-              summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
-              details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
-              source: 'News+ System',
-              url: '#',
-              timeline: [
-                {"date": "Planning", "event": "AI curation system designed"},
-                {"date": "Implementation", "event": "Claude API integration completed"},
-                {"date": "Optimization", "event": "Story selection algorithms refined"},
-                {"date": "Production", "event": "AI curation now processing daily news"}
-              ]
-            }
-          ];
+              headline: newsData.dailyGreeting || 'Today Essential Global News'
+            };
+            
+            const processedStories = [openingStory];
+            
+            // Convert articles to story format
+            newsData.articles.forEach((article, index) => {
+              const storyData = {
+                type: 'news',
+                number: article.rank || (index + 1),
+                category: (article.category || 'WORLD NEWS').toUpperCase(),
+                emoji: article.emoji || '📰',
+                title: article.title || 'News Story',
+                summary: article.summary || 'News summary will appear here.',
+                details: article.details || [],
+                source: article.source || 'News+',
+                url: article.url || '#',
+                urlToImage: article.urlToImage,
+                id: article.id || `article_${index}`
+              };
+              processedStories.push(storyData);
+            });
+            
+            console.log('📰 Setting stories:', processedStories.length);
+            setStories(processedStories);
+          } else {
+            console.log('📰 No articles found in response');
+          }
         }
-        
-        
-        
-        setStories(processedStories);
-        setLoading(false);
       } catch (error) {
         console.error('Error loading news:', error);
+      } finally {
+        console.log('📰 Setting loading to false');
         setLoading(false);
       }
     };
-
+    
     loadNewsData();
   }, []);
 
@@ -235,6 +124,12 @@ export default function Home() {
     if (index >= 0 && index < stories.length) {
       setCurrentIndex(index);
       setMenuOpen(false);
+      
+      // Mark article as read when user navigates to it
+      const story = stories[index];
+      if (story && story.type === 'news' && story.id && user) {
+        markArticleAsRead(story.id);
+      }
     }
   };
 
@@ -253,6 +148,28 @@ export default function Home() {
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
   };
+
+  // Mark article as read
+  const markArticleAsRead = async (articleId) => {
+    if (!user || !articleId) return;
+    
+    try {
+      const response = await fetch('/api/reading-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ articleId }),
+      });
+
+      if (response.ok) {
+        setReadArticles(prev => new Set([...prev, articleId]));
+      }
+    } catch (error) {
+      console.error('Error marking article as read:', error);
+    }
+  };
+
 
 
   // Authentication functions
@@ -478,6 +395,8 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
+  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
+  
   if (loading) {
     return (
       <div className="loading-container">

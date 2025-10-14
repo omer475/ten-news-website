@@ -59,17 +59,14 @@ export default async function handler(req, res) {
         description: article.description,
         content: article.content,
         urlToImage: article.image_url,  // Frontend expects 'urlToImage'
-        image: article.image_url,  // Also set 'image' as fallback
         author: article.author,
         publishedAt: article.published_date || article.published_at,
         category: article.category,
         emoji: article.emoji || '📰',
         final_score: article.ai_final_score,
         summary: article.summary,
-        rewritten_text: article.summary,  // Frontend expects 'rewritten_text'
         timeline: timelineData,
         details: article.details_section ? article.details_section.split('\n') : [],
-        rank: article.rank || article.ai_final_score || 70,  // Add rank field
         views: article.view_count || 0
       };
     })
@@ -78,14 +75,6 @@ export default async function handler(req, res) {
       status: 'ok',
       totalResults: formattedArticles.length,
       articles: formattedArticles,
-      dailyGreeting: `Today's Top ${formattedArticles.length} Stories`,
-      readingTime: `${Math.ceil(formattedArticles.length * 0.5)} minutes read`,
-      displayDate: new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }).toUpperCase(),
       generatedAt: new Date().toISOString(),
       displayTimestamp: new Date().toLocaleString('en-US', {
         weekday: 'long',
