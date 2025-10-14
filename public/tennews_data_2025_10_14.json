@@ -3,6 +3,37 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Madagascar president Rajoelina flees country amid military rebellion",
+      "url": "https://www.npr.org/2025/10/13/nx-s1-5573511/madagascar-president-flees-country-military-rebellion",
+      "source": "NPR News",
+      "description": "Madagascar President Andry Rajoelina called for dialogue \"to find a way out of this situation\" and said the constitution should be respected.",
+      "content": "Madagascar President Andry Rajoelina called for dialogue \"to find a way out of this situation\" and said the constitution should be respected.(Image credit: Alexander Joe)",
+      "urlToImage": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/1280x832+0+0/resize/1280x832!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F3f%2F32%2F9e3dcd3048b582c11c5c4c75cd68%2Fap25286429196033.jpg",
+      "author": "The Associated Press",
+      "publishedAt": "2025-10-14T13:44:18.110086",
+      "category": "politics",
+      "emoji": "\ud83d\udea8",
+      "final_score": 1000.0,
+      "summary": "President Andry Rajoelina departed Madagascar following a **military uprising** that threatened his safety. He called for **constitutional dialogue** to resolve the crisis while seeking refuge outside the country amid escalating political tensions.",
+      "timeline": [
+        {
+          "date": "Oct 13, 2024",
+          "event": "Military rebellion begins against Rajoelina government"
+        },
+        {
+          "date": "Oct 14, 2024",
+          "event": "President calls for dialogue respecting constitution"
+        },
+        {
+          "date": "Oct 14, 2024",
+          "event": "Rajoelina flees Madagascar citing safety concerns"
+        }
+      ],
+      "details": [
+        "Population: 29.6 million\nCapital: Antananarivo\nIndependence: 1960"
+      ]
+    },
+    {
       "title": "Hamas and Israel complete prisoner swap in major Gaza conflict breakthrough",
       "url": "https://www.bbc.com/news/articles/c740jx07vz0o?at_medium=RSS&at_campaign=rss",
       "source": "BBC Breaking News",
@@ -329,6 +360,33 @@
       ]
     },
     {
+      "title": "Italian PM responds to Gaza ceasefire agreement signing",
+      "url": "https://www.nbcnews.com/video/shorts/italian-pm-reacts-to-gaza-peace-deal-signing-249794629623",
+      "source": "NBC News",
+      "description": "Italian PM reacts to Gaza peace deal signing",
+      "content": "Italian PM reacts to Gaza peace deal signing",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/f_vert_brk_keir_meloni_251013-p0e0f5.jpg",
+      "author": "",
+      "publishedAt": "2025-10-14T13:43:37.050183",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 980.0,
+      "summary": "Italy's Prime Minister issued official statement following the **ceasefire agreement** between Israel and Hamas. The response addresses **diplomatic implications** for European Union policy and regional **stability concerns** in the Middle East conflict.",
+      "timeline": [
+        {
+          "date": "Jan 15, 2025",
+          "event": "Gaza ceasefire agreement officially signed by parties"
+        },
+        {
+          "date": "Jan 15, 2025",
+          "event": "Italian Prime Minister releases public statement on deal"
+        }
+      ],
+      "details": [
+        "Position: EU diplomatic coordination\nFocus: Regional stability concerns\nTiming: Same day response"
+      ]
+    },
+    {
       "title": "Global markets tumble as Beijing imposes new ban on U.S. shipping and Bessent vows China \u2018will be hurt the most\u2019 if it doesn\u2019t surrender",
       "url": "https://fortune.com/2025/10/14/stocks-global-markets-ban-us-shipping-hanwha-bessent-china-hurt-the-most/",
       "source": "Fortune",
@@ -600,6 +658,41 @@
       ]
     },
     {
+      "title": "Nor'easter brings deadly conditions to US east coast",
+      "url": "https://www.nbcnews.com/nightly-news/video/deadly-nor-easter-slams-into-east-coast-as-alaska-is-hit-by-typhoon-remnants-249809477914",
+      "source": "NBC News",
+      "description": "A powerful nor\u2019easter brought punishing rain and heavy wind to the east coast. Meanwhile, remnants of a typhoon stranded people in remote villages in Alaska. They had to be hoisted to safety by Coast Guard helicopters. NBC News\u2019 Sam Brock reports.",
+      "content": "A powerful nor\u2019easter brought punishing rain and heavy wind to the east coast. Meanwhile, remnants of a typhoon stranded people in remote villages in Alaska. They had to be hoisted to safety by Coast Guard helicopters. NBC News\u2019 Sam Brock reports.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/1760396369622_nn_sbr_noreaster_slams_east_coast_251013_1920x1080-bj95ty.jpg",
+      "author": "",
+      "publishedAt": "2025-10-14T13:43:31.610280",
+      "category": "environment",
+      "emoji": "\u26c8\ufe0f",
+      "final_score": 950.0,
+      "summary": "Powerful storm system delivers **punishing rain** and heavy winds across eastern United States while **typhoon remnants** simultaneously impact remote Alaskan villages, forcing Coast Guard helicopter rescues of stranded residents.",
+      "timeline": [
+        {
+          "date": "Oct 13, 2024",
+          "event": "Nor'easter develops off east coast"
+        },
+        {
+          "date": "Oct 14, 2024",
+          "event": "Storm makes landfall with deadly conditions"
+        },
+        {
+          "date": "Oct 14, 2024",
+          "event": "Typhoon remnants reach Alaska villages"
+        },
+        {
+          "date": "14:30, Oct 14",
+          "event": "Coast Guard helicopters rescue stranded residents"
+        }
+      ],
+      "details": [
+        "Rescue method: Coast Guard helicopters\nAffected region: Remote Alaska villages\nStorm type: Dual weather systems"
+      ]
+    },
+    {
       "title": "Gaza ceasefire holds as US immigration agents intensify urban operations",
       "url": "https://www.npr.org/2025/10/14/g-s1-93331/up-first-newsletter-gaza-israel-trump-middle-east-ice",
       "source": "NPR News",
@@ -725,6 +818,41 @@
       ],
       "details": [
         "Evacuation: President flown to France  \nProtests: 12,000+ demonstrators in Antananarivo  \nCapsat role: Led 2009 coup for Rajoelina"
+      ]
+    },
+    {
+      "title": "Trump secures Middle East peace deal with Hamas hostage release",
+      "url": "https://www.nbcnews.com/nightly-news/video/israeli-and-mideast-leaders-celebrate-trump-s-historic-peace-deal-249811013661",
+      "source": "NBC News",
+      "description": "President Trump traveled to Israel and the Egypt as all living Hamas hostages were released as part of Trump\u2019s historic peace deal. NBC News\u2019 Peter Alexander reports.",
+      "content": "President Trump traveled to Israel and the Egypt as all living Hamas hostages were released as part of Trump\u2019s historic peace deal. NBC News\u2019 Peter Alexander reports.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/1760397158767_nn_pal_trump_deal_251013_1920x1080-nfj52l.jpg",
+      "author": "",
+      "publishedAt": "2025-10-14T13:42:51.481535",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 940.0,
+      "summary": "President Trump's diplomatic initiative resulted in the **liberation** of all surviving Hamas captives during his visit to Israel and Egypt. The **historic agreement** marks a significant breakthrough in regional negotiations and conflict resolution efforts.",
+      "timeline": [
+        {
+          "date": "Jan 20, 2025",
+          "event": "Trump inaugurated as 47th US President"
+        },
+        {
+          "date": "Jan 22, 2025",
+          "event": "Peace negotiations initiated with regional leaders"
+        },
+        {
+          "date": "Jan 24, 2025",
+          "event": "All living Hamas hostages released under agreement"
+        },
+        {
+          "date": "Jan 25, 2025",
+          "event": "Trump visits Israel and Egypt to finalize deal"
+        }
+      ],
+      "details": [
+        "Hostages: All living captives freed\nCountries: Israel, Egypt, Gaza involved\nDuration: 5-day negotiation process"
       ]
     },
     {
@@ -983,6 +1111,37 @@
       "details": [
         "I apologize, but I don't see enough information in the provided article snippet to extract 3 additional data points beyond what's mentioned in the description. The article only states that wage growth was 4.7% in the three months to August. Without access to the full article text, I cannot reliably identify other key numerical data points.",
         "If you'd like me to find 3 key data points, please provide the complete article text, and I will format them according to your requirements."
+      ]
+    },
+    {
+      "title": "Israel releases 1,950 Palestinian prisoners in Gaza hostage exchange",
+      "url": "https://www.nbcnews.com/video/shorts/freed-palestinians-met-by-cheering-crowds-in-gaza-249786437839",
+      "source": "NBC News",
+      "description": "A group of buses carrying freed Palestinians who were imprisoned by Israel arrived in southern Gaza today to crowds of people awaiting them. Hamas pledged to release the Israeli hostages by today in exchange for 250 prisoners serving life sentences and more than 1,700 Palestinians detained after the Oct. 7, 2023 attack.",
+      "content": "A group of buses carrying freed Palestinians who were imprisoned by Israel arrived in southern Gaza today to crowds of people awaiting them. Hamas pledged to release the Israeli hostages by today in exchange for 250 prisoners serving life sentences and more than 1,700 Palestinians detained after the Oct. 7, 2023 attack.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/palestinebus-g5fqq0.jpg",
+      "author": "",
+      "publishedAt": "2025-10-14T13:42:43.409561",
+      "category": "politics",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 930.0,
+      "summary": "Buses carrying freed Palestinian prisoners arrived in southern Gaza to **cheering crowds** as part of a major prisoner swap. Hamas agreed to release Israeli **hostages** in exchange for 250 **life-sentence prisoners** and over 1,700 Palestinians detained since October 7, 2023.",
+      "timeline": [
+        {
+          "date": "Oct 7, 2023",
+          "event": "Hamas attack leads to mass Palestinian detentions"
+        },
+        {
+          "date": "Jan 19, 2025",
+          "event": "Hamas pledges hostage release for prisoner exchange"
+        },
+        {
+          "date": "Jan 19, 2025",
+          "event": "Buses with freed Palestinians arrive in southern Gaza"
+        }
+      ],
+      "details": [
+        "Life sentences: 250 prisoners\nTotal released: 1,950 Palestinians\nDetention period: Since October 2023"
       ]
     },
     {
@@ -1628,6 +1787,72 @@
       ],
       "details": [
         "Countries affected: 83+\nGreat Barrier Reef events: 6 since 2016\nBleaching alert levels: Now up to Level 5"
+      ]
+    },
+    {
+      "title": "Trump proposes technocratic committee to govern Gaza under international oversight",
+      "url": "https://www.france24.com/en/middle-east/20251014-no-suggestion-of-democracy-in-us-plan-for-future-governance-of-the-gaza-strip",
+      "source": "France 24",
+      "description": "As a fragile truce in Gaza holds, attention is turning to who will govern the devastated enclave. US President Donald Trump's 20-point plan envisions a temporary technocratic committee overseen by an international \u201cBoard of Peace\u201d, with the Palestinian Authority reclaiming control later \u2013 a vision critics say sidelines many Gazans and revives echoes of colonial rule.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/e7d66428-a84c-11f0-b9b7-005056bf30b7/w:1024/p:16x9/AP25285638951219.jpg",
+      "author": "Lara BULLENS",
+      "publishedAt": "2025-10-14T13:44:12.954885",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 910.0,
+      "summary": "President Trump's **20-point plan** establishes temporary **technocratic committee** supervised by international Board of Peace before Palestinian Authority resumption. Critics argue the **governance structure** excludes Gazan voices and resembles colonial administration methods.",
+      "timeline": [
+        {
+          "date": "Jan 20, 2025",
+          "event": "Trump administration releases 20-point Gaza governance plan"
+        },
+        {
+          "date": "Jan 21, 2025",
+          "event": "International Board of Peace oversight structure detailed"
+        },
+        {
+          "date": "Jan 22, 2025",
+          "event": "Critics denounce plan as undemocratic colonial approach"
+        }
+      ],
+      "details": [
+        "Plan points: 20 total\nOversight body: Board of Peace\nFinal authority: Palestinian Authority"
+      ]
+    },
+    {
+      "title": "Trump attends Egypt peace summit after brokering Israel-Hamas ceasefire",
+      "url": "https://www.nbcnews.com/video/shorts/world-leaders-surround-trump-at-egypt-peace-summit-249804869878",
+      "source": "NBC News",
+      "description": "President Trump\u2019s influence was on full display during his visit to Egypt for a peace summit after brokering the ceasefire deal with Israel and Hamas. NBC News' Keir Simmons reports.",
+      "content": "President Trump\u2019s influence was on full display during his visit to Egypt for a peace summit after brokering the ceasefire deal with Israel and Hamas. NBC News' Keir Simmons reports.",
+      "urlToImage": "https://media-cldnry.s-nbcnews.com/image/upload/t_fit_1500w/mpx/2704722219/2025_10/trumppeacedeal-lh9j6q.jpg",
+      "author": "",
+      "publishedAt": "2025-10-14T13:43:42.929288",
+      "category": "politics",
+      "emoji": "\ud83c\udf0d",
+      "final_score": 910.0,
+      "summary": "World leaders gathered around President Trump during his **Egypt** visit following his successful mediation of a **ceasefire agreement** between Israel and Hamas, demonstrating his significant **diplomatic influence** in Middle Eastern affairs.",
+      "timeline": [
+        {
+          "date": "Jan 15, 2025",
+          "event": "Trump brokers ceasefire deal between Israel and Hamas"
+        },
+        {
+          "date": "Jan 16, 2025",
+          "event": "Egypt announces hosting of international peace summit"
+        },
+        {
+          "date": "Jan 17, 2025",
+          "event": "Trump arrives in Egypt for peace summit"
+        },
+        {
+          "date": "Jan 17, 2025",
+          "event": "World leaders surround Trump at summit proceedings"
+        }
+      ],
+      "details": [
+        "Summit location: Egypt\nCeasefire parties: Israel-Hamas\nReporter: Keir Simmons"
       ]
     },
     {
@@ -2976,234 +3201,9 @@
       "details": [
         "First demonstration: 1984\u20131985  \nDevice used: Josephson junction  \nQubit invention: \"Grandfather of qubits\""
       ]
-    },
-    {
-      "title": "What is type 5 diabetes? Newly recognized form of the",
-      "url": "https://www.livescience.com/health/diabetes/what-is-type-5-diabetes-newly-recognized-form-of-the-disease-gets-name",
-      "source": "Live Science",
-      "description": "First spotted decades ago but largely forgotten, a newly named form of diabetes stems from undernutrition and is thought to affect millions.",
-      "content": "",
-      "urlToImage": "https://cdn.mos.cms.futurecdn.net/ATeqiCfJG7EewNhyKN7jYh-1280-80.jpg",
-      "author": "Clarissa Brincat",
-      "publishedAt": "2025-10-13T14:14:09.995072",
-      "category": "science",
-      "emoji": "\ud83e\uddec",
-      "final_score": 900.0,
-      "summary": "Scientists have officially named **type 5 diabetes**, a distinct form of the disease linked to **undernutrition** that affects millions globally. Though first observed decades ago, this variant was largely overlooked until receiving recent recognition from researchers.",
-      "timeline": [
-        {
-          "date": "1955",
-          "event": "Type 5 diabetes first detected, initially called Type J diabetes in Jamaica"
-        },
-        {
-          "date": "1985",
-          "event": "WHO formally classified malnutrition-related diabetes as a distinct type"
-        },
-        {
-          "date": "1999",
-          "event": "WHO removed malnutrition-related diabetes from official classification due to controversy"
-        },
-        {
-          "date": "October 2024",
-          "event": "International Diabetes Federation adopts 'type 5 diabetes' name and launches working group"
-        }
-      ],
-      "details": [
-        "Prevalence: 20\u201325 million worldwide[2][4]  \nBMI threshold: Below 19 kg/m\u00b2[4]  \nRegions: Asia, Africa, Latin America[2][4]"
-      ]
-    },
-    {
-      "title": "White House Plans 4,000 Layoffs Amid Government Shutdown",
-      "url": "https://fortune.com/2025/10/12/jd-vance-federal-government-shutdown-white-house-4000-layoffs/",
-      "source": "Fortune",
-      "description": "\u201cTo be clear, some of these cuts are going to be painful. This is not a situation that we relish.\"",
-      "content": "Vice President JD Vance on Sunday said there will be deeper cuts to the federal workforce the longer the\u00a0government shutdown\u00a0goes on, adding to the uncertainty facing hundreds of thousands who are already furloughed without pay amid the stubborn stalemate in Congress.\nVance warned that as the federal shutdown entered its 12th day, the new cuts would be \u201cpainful,\u201d even as he said the Trump administration\u00a0worked to ensure\u00a0that the military is paid this week and some services would be preserved for low-income Americans,\u00a0including\u00a0food assistance.\nStill, hundreds of thousands of government workers have been furloughed in recent days and, in a\u00a0court filing\u00a0on Friday, the Office of Management and Budget said well over 4,000 federal employees would soon be fired in conjunction with the shutdown.\n\u201cThe longer this goes on, the deeper the cuts are going to be,\u201d Vance said on Fox News\u2019 \u201cSunday Morning Futures.\u201d \u201cTo be clear, some of these cuts are going to be painful. This is not a situation that we relish. This is not something that we\u2019re looking forward to, but the Democrats have dealt us a pretty difficult set of cards.\u201d\nLabor unions have already filed a lawsuit to stop the aggressive move by President\u00a0Donald Trump\u00a0\u2019s budget office, which goes far beyond what usually happens in a\u00a0government shutdown, further inflaming tensions between the Republicans who control Congress and the Democratic minority.\nThe shutdown began on Oct. 1 after Democrats rejected a short-term funding fix and demanded that the bill include an extension of federal subsidies for health insurance under the Affordable Care Act. The expiration of those subsidies at the end of the year will result in monthly cost increases for millions.\nTrump and Republican leaders have said they are open to negotiations on the health subsidies, but insist the government must reopen first.\nFor now, negotiations are virtually nonexistent. Dug in as ever, House leaders from both parties pointed fingers at each other in rival Sunday appearances on \u201cFox News Sunday.\u201d\n\u201cWe have repeatedly made clear that we will sit down with anyone, anytime, anyplace,\u201d said House Democratic leader Hakeem Jeffries of New York. \u201cRepublicans control the House, the Senate and the presidency. It\u2019s unfortunate they\u2019ve taken a my-way-or-the-highway approach.\u201d\nHouse Speaker\u00a0Mike Johnson\u00a0blamed Democrats and said they \u201cseem not to care\u201d about the pain the shutdown is inflicting.\n\u201cThey\u2019re trying their best to distract the American people from the simple fact that they\u2019ve chosen a partisan fight so that they can prove to their Marxist rising base in the Democratic Party that they\u2019re willing to fight Trump and Republicans,\u201d he said.\nProgressive activists, meanwhile, expressed new support for the Democratic Party\u2019s position in the shutdown fight.\nEzra Levin, co-founder of the leading progressive protest group Indivisible, said he is \u201cfeeling good about the strength of Dem position.\u201d He pointed to fractures in the GOP, noting that Georgia Rep.\u00a0Marjorie Taylor Greene\u00a0publicly warned last week that health care insurance premiums would skyrocket for average Americans \u2014 including her own adult children \u2014 if nothing is done.\n\u201cTrump and GOP are rightfully taking the blame for the shutdown and for looming premium increases,\u201d Levin said. \u201cTheir chickens are coming home to roost.\u201d\nAnd yet the Republican administration and its congressional allies are showing no signs of caving to Democratic demands or backing away from threats to use the opportunity to pursue deeper cuts to the federal workforce.\nThousands of employees at the departments of Education, Treasury, Homeland Security and Health and Human Services, as well as the Environmental Protection Agency, are set to receive layoff notices, according to spokespeople for the agencies and union representatives for federal workers.\n\u201cYou hear a lot of Senate Democrats say, well, how can Donald Trump possibly lay off all of these federal workers?\u201d Vance said. \u201cWell, the Democrats have given us a choice between giving low-income women their food benefits and paying our troops on the one hand, and, on the other hand, paying federal bureaucrats.\u201d\nDemocrats say the firings are illegal and unnecessary.\n\u201cThey do not have to do this,\u201d said Democratic Sen. Mark Kelly of Arizona on CNN\u2019s \u201cState of the Union.\u201d \u201cThey do not have to punish people that shouldn\u2019t find themselves in this position.\u201d\nThis story was originally featured on Fortune.com",
-      "urlToImage": "https://fortune.com/img-assets/wp-content/uploads/2025/10/AP25274636535230-e1760299445300.jpg?w=2048",
-      "author": "Steve Peoples, The Associated Press",
-      "publishedAt": "2025-10-13T12:36:48.475085",
-      "category": "politics",
-      "emoji": "\ud83c\udfdb\ufe0f",
-      "final_score": 900.0,
-      "summary": "**Government shutdown** enters day 12 as Vice President Vance warns of \"painful\" cuts ahead. The White House prepares to **fire over 4,000 federal workers**, adding to hundreds of thousands already furloughed without pay during the congressional stalemate.",
-      "timeline": [
-        {
-          "date": "October 1, 2025, 12:01 AM EDT",
-          "event": "US government shutdown begins after Democrats reject Republican continuing resolution"
-        },
-        {
-          "date": "October 6, 2025",
-          "event": "Trump administration pauses $28 billion in federal funding including infrastructure"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "House remains out of session pressuring Senate Democrats for votes"
-        }
-      ],
-      "details": [
-        "Furloughed employees: 900,000  \nWorking without pay: 700,000  \nWeekly economic cost: $15 billion"
-      ]
-    },
-    {
-      "title": "Coming home? Israel expects last hostages to be released early",
-      "url": "https://www.scmp.com/news/world/middle-east/article/3328717/israel-expects-last-hostages-be-released-monday?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Israel expects all hostages held in Gaza to be freed early on Monday, a spokeswoman for the prime minister\u2019s office said, adding that all surviving captives are to be released simultaneously.\n\u201cThe release of our hostages will begin early Monday morning. We are expecting all 20 of our living hostages to be released together at one time to the Red Cross and transported among six to eight vehicles,\u201d Shosh Bedrosian told journalists on Sunday.\nIsrael will begin releasing Palestinian prisoners once...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/12/4033d1f3-b960-4b46-9e79-ad04dc65c0c3_f73b1595.jpg",
-      "author": "Bloomberg",
-      "publishedAt": "2025-10-13T16:41:45.394332",
-      "category": "politics",
-      "emoji": "\ud83d\udd4a\ufe0f",
-      "final_score": 895.0,
-      "summary": "The **Israeli government** expects all remaining **hostages** in Gaza to be freed early Monday, with 20 captives to be released simultaneously to the **Red Cross** and transported in multiple vehicles, followed by Palestinian prisoner releases.",
-      "timeline": [
-        {
-          "date": "October 8, 2025",
-          "event": "Israel and Hamas agreed to first stage of US-mediated hostage-truce plan"
-        },
-        {
-          "date": "October 9, 2025",
-          "event": "Israeli cabinet ratified hostage agreement with Hamas, setting a truce in Gaza"
-        },
-        {
-          "date": "October 10, 2025",
-          "event": "Hostage-truce agreement between Israel and Hamas went into effect at noon"
-        },
-        {
-          "date": "October 13, 2025",
-          "event": "All 20 living Israeli hostages released by Hamas; Israel freed Palestinian prisoners"
-        }
-      ],
-      "details": [
-        "Hostages released: 20  \nPalestinian prisoners freed: 60  \nRelease location: Rafah crossing"
-      ]
-    },
-    {
-      "title": "Myanmar scam cities continue expanding despite regional crackdown efforts",
-      "url": "https://www.japantimes.co.jp/news/2025/10/14/asia-pacific/crime-legal/myanmar-scam-musk-starlink/",
-      "source": "The Japan Times",
-      "description": "China, Thailand and Myanmar had pressured militias into vowing to \"eradicate\" the compounds in February, releasing around 7,000 people from a brutal call center-like system.",
-      "content": "",
-      "urlToImage": "https://www.japantimes.co.jp/japantimes/uploads/images/2025/10/14/499463.jpg",
-      "author": "",
-      "publishedAt": "2025-10-14T13:37:28.472639",
-      "category": "general",
-      "emoji": "\ud83d\udea8",
-      "final_score": 890.0,
-      "summary": "Criminal compounds in Myanmar persist and grow using **Starlink internet** despite February pledges by China, Thailand and Myanmar to **eradicate** operations that previously freed **7,000 victims** from forced labor.",
-      "timeline": [
-        {
-          "date": "Feb 2024",
-          "event": "Regional governments pledge to eradicate scam compounds"
-        },
-        {
-          "date": "Feb 2024",
-          "event": "Around 7,000 people released from forced operations"
-        },
-        {
-          "date": "Oct 2024",
-          "event": "Scam cities reportedly expanding using Starlink technology"
-        }
-      ],
-      "details": [
-        "Released victims: 7,000 people\nTechnology: Starlink internet access\nCountries involved: China, Thailand, Myanmar"
-      ]
-    },
-    {
-      "title": "Sarkozy becomes France's first modern ex-president facing imprisonment",
-      "url": "https://www.scmp.com/news/world/europe/article/3328910/sarkozy-set-become-frances-first-ever-jailed-ex-president?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Nicolas Sarkozy is next week set to become the first former French president in the modern era to go to jail, following his conviction for taking part in a criminal conspiracy to seek covert funding from Libya\u2019s late dictator Muammar Gaddafi.\nHe was told on Monday by prosecutors that he would be incarcerated on October 21, according to BFM TV, which added that the former president would be held in the Paris prison of La Sant\u00e9. The date was confirmed by a person familiar with the matter who spoke...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/14/465ab49b-b66f-4fd9-8c26-accf42fec0e2_6dfec727.jpg",
-      "author": "Bloomberg",
-      "publishedAt": "2025-10-14T13:37:22.475911",
-      "category": "politics",
-      "emoji": "\u2696\ufe0f",
-      "final_score": 890.0,
-      "summary": "Nicolas Sarkozy will be **incarcerated** at Paris's La Sant\u00e9 prison on October 21 following his **criminal conspiracy** conviction for seeking covert funding from Libya's former dictator **Muammar Gaddafi**.",
-      "timeline": [
-        {
-          "date": "2011",
-          "event": "Gaddafi regime falls, ending alleged funding arrangement"
-        },
-        {
-          "date": "2021",
-          "event": "Sarkozy convicted of criminal conspiracy charges"
-        },
-        {
-          "date": "Oct 14, 2024",
-          "event": "Prosecutors notify Sarkozy of incarceration date"
-        },
-        {
-          "date": "Oct 21, 2024",
-          "event": "Scheduled imprisonment at La Sant\u00e9 prison"
-        }
-      ],
-      "details": [
-        "Prison: La Sant\u00e9 Paris\nConviction: Criminal conspiracy\nHistorical first: Modern era"
-      ]
-    },
-    {
-      "title": "Europe seeks new strategic direction amid global order collapse",
-      "url": "https://www.scmp.com/news/china/diplomacy/article/3328853/europes-3-body-problem-collapsing-global-order-sparks-hunt-new-trajectory?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Everywhere they look these days, Europe\u2019s politicians see chaos.\nThe United States is helping to trash the global order it built in its image. China is pulling the rug from under efforts to upgrade European industry by weaponising its monopoly on critical minerals. Russia is waging a hot war at the European Union\u2019s borders, with the growing danger that it may spill over.\nSo tumultuous have things become, some officials have turned to Chinese science fiction to describe it.\n\u201cWhere we are now,...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/13/6dd5c7b3-6f0d-4ddc-99df-af58dd04b074_04ebbaf0.jpg",
-      "author": "Finbarr Bermingham",
-      "publishedAt": "2025-10-14T13:36:28.619982",
-      "category": "politics",
-      "emoji": "\ud83c\udf0d",
-      "final_score": 890.0,
-      "summary": "European officials describe current **geopolitical chaos** as a three-body problem, referencing Chinese science fiction to characterize simultaneous challenges from US policy shifts, **Chinese mineral monopolization**, and **Russian aggression** threatening continental stability.",
-      "timeline": [
-        {
-          "date": "2022, Feb 24",
-          "event": "Russia launches invasion of Ukraine at EU borders"
-        },
-        {
-          "date": "2023-2024",
-          "event": "China weaponizes critical minerals monopoly against European industry"
-        },
-        {
-          "date": "Oct 2024",
-          "event": "European officials adopt three-body problem framework for strategy"
-        }
-      ],
-      "details": [
-        "Reference: Chinese science fiction three-body problem\nThreat zones: US, China, Russia\nRisk level: Potential spillover conflict"
-      ]
-    },
-    {
-      "title": "China and US conduct working-level talks amid escalating trade tensions",
-      "url": "https://www.scmp.com/economy/china-economy/article/3328883/china-and-us-held-working-level-talks-monday-despite-trade-spat?utm_source=rss_feed",
-      "source": "South China Morning Post",
-      "description": "Beijing and Washington conducted working-level talks on Monday despite a renewed escalation in trade tensions, China\u2019s Ministry of Commerce has said, urging the US to \u201cshow sincerity\u201d in its relations.\n\u201cThe US cannot engage in dialogue while intimidating and threatening to impose new restrictions. This is not the right way to deal with China,\u201d the ministry said in a statement on Tuesday.\n\u201cChina urges the US to immediately correct its wrong practices and show sincerity for dialogue.\u201d\nTensions...",
-      "content": "",
-      "urlToImage": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2025/10/14/52b7fe19-b03f-4d53-8ff4-b345c8107c65_390d11ff.jpg",
-      "author": "Ji Siqi",
-      "publishedAt": "2025-10-14T13:36:21.384086",
-      "category": "politics",
-      "emoji": "\ud83e\udd1d",
-      "final_score": 890.0,
-      "summary": "Beijing's Commerce Ministry confirmed **bilateral discussions** occurred Monday while criticizing Washington's approach of combining **dialogue** with threats of new **trade restrictions**, demanding the US demonstrate genuine commitment to negotiations.",
-      "timeline": [
-        {
-          "date": "Oct 14, 2024",
-          "event": "China and US hold working-level talks despite trade tensions"
-        },
-        {
-          "date": "Oct 15, 2024",
-          "event": "China's Commerce Ministry issues statement criticizing US approach"
-        }
-      ],
-      "details": [
-        "Meeting type: Working-level talks\nMinistry response: Tuesday statement\nChinese demand: Show sincerity"
-      ]
     }
   ],
-  "generatedAt": "2025-10-14T13:40:35.836669",
+  "generatedAt": "2025-10-14T13:45:38.343998",
   "displayDate": "TUESDAY, OCTOBER 14, 2025",
   "digest_date": "October 14, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
