@@ -1795,20 +1795,20 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
-                          border: showTimeline[index] ? 'none' : (() => {
-                            const categoryBorders = {
-                              'WORLD NEWS': '1px solid rgba(220, 38, 38, 0.35)',
-                              'BUSINESS': '1px solid rgba(234, 88, 12, 0.35)',
-                              'MARKETS': '1px solid rgba(8, 145, 178, 0.35)',
-                              'TECH & AI': '1px solid rgba(79, 70, 229, 0.35)',
-                              'SCIENCE': '1px solid rgba(2, 132, 199, 0.35)',
-                              'HEALTH': '1px solid rgba(5, 150, 105, 0.35)',
-                              'CLIMATE': '1px solid rgba(22, 163, 74, 0.35)',
-                              'SPORTS': '1px solid rgba(217, 119, 6, 0.35)',
-                              'ENTERTAINMENT': '1px solid rgba(219, 39, 119, 0.35)'
-                            };
-                            return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
-                          })(),
+                            border: showTimeline[index] ? 'none' : (() => {
+                              const categoryBorders = {
+                                'WORLD NEWS': '1px solid #dc2626',
+                                'BUSINESS': '1px solid #ea580c',
+                                'MARKETS': '1px solid #0891b2',
+                                'TECH & AI': '1px solid #4f46e5',
+                                'SCIENCE': '1px solid #0284c7',
+                                'HEALTH': '1px solid #059669',
+                                'CLIMATE': '1px solid #16a34a',
+                                'SPORTS': '1px solid #d97706',
+                                'ENTERTAINMENT': '1px solid #db2777'
+                              };
+                              return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
+                            })(),
                           borderRadius: showTimeline[index] ? '0' : '16px',
                           boxShadow: showTimeline[index] ? 'none' : (() => {
                             const categoryShadows = {
@@ -1918,20 +1918,20 @@ export default function Home() {
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
-                                border: (() => {
-                                  const categoryBorders = {
-                                    'WORLD NEWS': '1px solid rgba(220, 38, 38, 0.35)',
-                                    'BUSINESS': '1px solid rgba(234, 88, 12, 0.35)',
-                                    'MARKETS': '1px solid rgba(8, 145, 178, 0.35)',
-                                    'TECH & AI': '1px solid rgba(79, 70, 229, 0.35)',
-                                    'SCIENCE': '1px solid rgba(2, 132, 199, 0.35)',
-                                    'HEALTH': '1px solid rgba(5, 150, 105, 0.35)',
-                                    'CLIMATE': '1px solid rgba(22, 163, 74, 0.35)',
-                                    'SPORTS': '1px solid rgba(217, 119, 6, 0.35)',
-                                    'ENTERTAINMENT': '1px solid rgba(219, 39, 119, 0.35)'
-                                  };
-                                  return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
-                                })(),
+                                  border: (() => {
+                                    const categoryBorders = {
+                                      'WORLD NEWS': '1px solid #dc2626',
+                                      'BUSINESS': '1px solid #ea580c',
+                                      'MARKETS': '1px solid #0891b2',
+                                      'TECH & AI': '1px solid #4f46e5',
+                                      'SCIENCE': '1px solid #0284c7',
+                                      'HEALTH': '1px solid #059669',
+                                      'CLIMATE': '1px solid #16a34a',
+                                      'SPORTS': '1px solid #d97706',
+                                      'ENTERTAINMENT': '1px solid #db2777'
+                                    };
+                                    return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
+                                  })(),
                                 borderRadius: '16px',
                                 padding: '12px 20px',
                                 boxShadow: (() => {
