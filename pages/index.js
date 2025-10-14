@@ -1720,27 +1720,27 @@ export default function Home() {
                         borderRadius: '6px',
                         background: (() => {
                           const categoryColors = {
-                            'World': { bg: '#dbeafe', text: '#3b82f6' },
-                            'Politics': { bg: '#fee2e2', text: '#ef4444' },
-                            'Business': { bg: '#dcfce7', text: '#22c55e' },
-                            'Technology': { bg: '#ede9fe', text: '#8b5cf6' },
-                            'Sports': { bg: '#fed7aa', text: '#f97316' },
-                            'Entertainment': { bg: '#fce7f3', text: '#ec4899' },
-                            'Science': { bg: '#ccfbf1', text: '#14b8a6' },
-                            'Health': { bg: '#fef3c7', text: '#eab308' }
+                            'World': { bg: '#3b82f6', text: '#ffffff' },
+                            'Politics': { bg: '#ef4444', text: '#ffffff' },
+                            'Business': { bg: '#22c55e', text: '#ffffff' },
+                            'Technology': { bg: '#8b5cf6', text: '#ffffff' },
+                            'Sports': { bg: '#f97316', text: '#ffffff' },
+                            'Entertainment': { bg: '#ec4899', text: '#ffffff' },
+                            'Science': { bg: '#14b8a6', text: '#ffffff' },
+                            'Health': { bg: '#eab308', text: '#ffffff' }
                           };
                           return categoryColors[story.category]?.bg || '#f8fafc';
                         })(),
                         color: (() => {
                           const categoryColors = {
-                            'World': { bg: '#dbeafe', text: '#3b82f6' },
-                            'Politics': { bg: '#fee2e2', text: '#ef4444' },
-                            'Business': { bg: '#dcfce7', text: '#22c55e' },
-                            'Technology': { bg: '#ede9fe', text: '#8b5cf6' },
-                            'Sports': { bg: '#fed7aa', text: '#f97316' },
-                            'Entertainment': { bg: '#fce7f3', text: '#ec4899' },
-                            'Science': { bg: '#ccfbf1', text: '#14b8a6' },
-                            'Health': { bg: '#fef3c7', text: '#eab308' }
+                            'World': { bg: '#3b82f6', text: '#ffffff' },
+                            'Politics': { bg: '#ef4444', text: '#ffffff' },
+                            'Business': { bg: '#22c55e', text: '#ffffff' },
+                            'Technology': { bg: '#8b5cf6', text: '#ffffff' },
+                            'Sports': { bg: '#f97316', text: '#ffffff' },
+                            'Entertainment': { bg: '#ec4899', text: '#ffffff' },
+                            'Science': { bg: '#14b8a6', text: '#ffffff' },
+                            'Health': { bg: '#eab308', text: '#ffffff' }
                           };
                           return categoryColors[story.category]?.text || '#64748b';
                         })()
