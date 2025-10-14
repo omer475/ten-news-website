@@ -3,6 +3,37 @@
   "totalResults": 100,
   "articles": [
     {
+      "title": "Israel-Hamas ceasefire holds after Gaza prisoner exchanges begin",
+      "url": "https://www.npr.org/2025/10/14/nx-s1-5574057/israel-hamas-ceasefire-gaza",
+      "source": "NPR News",
+      "description": "The tenuous ceasefire in the two-year Israel-Hamas war appears to be holding even as complex issues remained ahead.",
+      "content": "The tenuous ceasefire in the two-year Israel-Hamas war appears to be holding even as complex issues remained ahead.(Image credit: Oded Balilty)",
+      "urlToImage": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/7555x5037+0+0/resize/7555x5037!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F82%2F92%2Ff1a985ab4dd0a3086a8626613ee4%2Fap25286309626129.jpg",
+      "author": "The Associated Press",
+      "publishedAt": "2025-10-14T14:04:06.403295",
+      "category": "breaking",
+      "emoji": "\ud83d\udd4a\ufe0f",
+      "final_score": 1000.0,
+      "summary": "The fragile truce between **Israel** and **Hamas** maintains stability following initial **prisoner swaps** in Gaza, though significant challenges remain for the two-year conflict's resolution.",
+      "timeline": [
+        {
+          "date": "Oct 7, 2022",
+          "event": "Israel-Hamas conflict escalated into prolonged war"
+        },
+        {
+          "date": "Jan 19, 2025",
+          "event": "Ceasefire agreement officially takes effect"
+        },
+        {
+          "date": "Jan 19, 2025",
+          "event": "First hostage and detainee exchanges completed"
+        }
+      ],
+      "details": [
+        "Conflict duration: Two years\nExchange type: Hostages for detainees\nStatus: Tenuous but holding"
+      ]
+    },
+    {
       "title": "Madagascar president Rajoelina flees country amid military rebellion",
       "url": "https://www.npr.org/2025/10/13/nx-s1-5573511/madagascar-president-flees-country-military-rebellion",
       "source": "NPR News",
@@ -523,6 +554,37 @@
       ],
       "details": [
         "Hostages released: 20  \nPrisoners freed: Hundreds  \nDeal signed: Monday"
+      ]
+    },
+    {
+      "title": "Madagascar President Rajoelina flees country after dissolving Parliament amid protests",
+      "url": "https://www.france24.com/en/video/20251014-madagascar-plunges-into-uncertainty-after-president-flees-the-country",
+      "source": "France 24",
+      "description": "Amidst mass protests in Madagascar, President Rajoelina signed a decree dissolving Parliament, before fleeing the country. It is now up to the courts to decide whether this dissolution is legal: if that's the case, MPs could call an extraordinary session to impeach the absent leader. FRANCE 24 's Ga\u00eblle Borgia tells us more from Antananarivo.",
+      "content": "",
+      "urlToImage": "https://s.france24.com/media/display/01d70094-a8fc-11f0-bab5-005056bf30b7/w:1024/p:16x9/EN-20251014-131350-131611-CS.jpg",
+      "author": "FRANCE24",
+      "publishedAt": "2025-10-14T14:04:00.215538",
+      "category": "breaking",
+      "emoji": "\ud83d\udea8",
+      "final_score": 965.0,
+      "summary": "President Andry Rajoelina dissolved **Parliament** through decree before departing Madagascar during widespread demonstrations. **Courts** will determine the dissolution's legality, potentially enabling lawmakers to convene extraordinary sessions for **impeachment** proceedings against the absent leader.",
+      "timeline": [
+        {
+          "date": "Recent days",
+          "event": "Mass protests erupted across Madagascar"
+        },
+        {
+          "date": "Latest",
+          "event": "Rajoelina signed decree dissolving Parliament"
+        },
+        {
+          "date": "Latest",
+          "event": "President fled Madagascar following decree signing"
+        }
+      ],
+      "details": [
+        "Location: Antananarivo\nAction: Parliamentary dissolution decree\nNext step: Court legal review"
       ]
     },
     {
@@ -3135,75 +3197,9 @@
       "details": [
         "Patient age: 71 years[3]  \nGenetic edits: 10 modifications[3]  \nSurvival: 171 days post-transplant[1]"
       ]
-    },
-    {
-      "title": "Molecular switch discovery could open door to male birth control",
-      "url": "https://phys.org/news/2025-10-molecular-discovery-door-male-birth.html",
-      "source": "Phys.org",
-      "description": "Michigan State University scientists have pinpointed the molecular \"switch\" that supercharges sperm for their final sprint to an egg\u2014a breakthrough that could reshape infertility treatments and pave the way for safe, nonhormonal male contraceptives. The work is published in the journal Proceedings of the National Academy of Sciences.",
-      "content": "",
-      "urlToImage": "https://scx1.b-cdn.net/csz/news/tmb/2025/new-discovery-could-op-2.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T14:32:20.777106",
-      "category": "science",
-      "emoji": "\ud83d\udd2c",
-      "final_score": 900.0,
-      "summary": "Michigan State researchers identified a molecular **sperm activator** that triggers the final push toward egg fertilization. This **breakthrough discovery** could lead to new fertility treatments and the development of hormone-free male contraceptive options.",
-      "timeline": [
-        {
-          "date": "2023",
-          "event": "Melanie Balbach joins MSU, bringing expertise in sperm metabolism research."
-        },
-        {
-          "date": "October 2025",
-          "event": "MSU team publishes PNAS paper identifying aldolase as key sperm energy switch."
-        },
-        {
-          "date": "October 2025",
-          "event": "Discovery reveals how glucose metabolism powers sperm\u2019s final sprint to egg."
-        },
-        {
-          "date": "October 2025",
-          "event": "Findings open potential for nonhormonal, on-demand male contraceptives targeting sperm metabolism."
-        }
-      ],
-      "details": [
-        "Gene target: SYPL1  \nFunding: NIH, MSU AgBioResearch  \nInfertility effect: Sperm lose motility"
-      ]
-    },
-    {
-      "title": "Quantum Computing Pioneers Win Nobel Physics Prize",
-      "url": "https://www.newscientist.com/article/2499053-nobel-prize-for-physics-goes-to-trio-behind-quantum-computing-chips/?utm_campaign=RSS%7CNSNS&utm_source=NSNS&utm_medium=RSS&utm_content=home",
-      "source": "New Scientist",
-      "description": "The 2025 Nobel prize in physics has gone to John Clarke, Michel Devoret and John Martinis, whose work has led to the development of today's quantum computers",
-      "content": "",
-      "urlToImage": "https://images.newscientist.com/wp-content/uploads/2025/10/07112903/SEI_269357959.jpg",
-      "author": "",
-      "publishedAt": "2025-10-13T14:30:50.433924",
-      "category": "science",
-      "emoji": "\ud83d\udd2c",
-      "final_score": 900.0,
-      "summary": "Three physicists - John Clarke, Michel Devoret, and John Martinis - were awarded the **2025 Nobel Prize** in physics for their groundbreaking contributions to developing **quantum computing chips**, enabling the advancement of modern quantum computers.",
-      "timeline": [
-        {
-          "date": "1968",
-          "event": "John Clarke completes PhD at Cambridge, begins research on superconducting devices."
-        },
-        {
-          "date": "Mid-1980s",
-          "event": "Clarke, Devoret, and Martinis demonstrate macroscopic quantum tunneling at UC Berkeley."
-        },
-        {
-          "date": "October 8, 2025",
-          "event": "Nobel Prize in Physics awarded to Clarke, Devoret, and Martinis."
-        }
-      ],
-      "details": [
-        "First demonstration: 1984\u20131985  \nDevice used: Josephson junction  \nQubit invention: \"Grandfather of qubits\""
-      ]
     }
   ],
-  "generatedAt": "2025-10-14T13:59:05.702983",
+  "generatedAt": "2025-10-14T14:04:07.197229",
   "displayDate": "TUESDAY, OCTOBER 14, 2025",
   "digest_date": "October 14, 2025",
   "dailyGreeting": "Breaking News - 100 Stories",
