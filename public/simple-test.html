@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Simple TenNews Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        .article {
+            border: 2px solid #e9ecef;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .article h3 { color: #495057; margin-bottom: 10px; }
+        .article .meta { color: #6c757d; font-size: 14px; margin: 5px 0; }
+        .article .summary { color: #212529; line-height: 1.6; margin-top: 10px; }
+        .article img { max-width: 100%; height: auto; border-radius: 8px; margin-top: 10px; }
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover { background: #5568d3; transform: translateY(-2px); }
+        .loading { text-align: center; padding: 40px; color: #667eea; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 TenNews Simple Diagnostic</h1>
+        <p class="info" style="padding: 15px; margin-bottom: 20px;">
+            This page tests if your TenNews API is working and articles are being served correctly.
+        </p>
+        
+        <button onclick="runTest()">🔄 Run Test</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        async function runTest() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="loading">⏳ Testing API...</div>';
+            
+            try {
+                // Test 1: Fetch API
+                console.log('Step 1: Fetching /api/news');
+                const response = await fetch('/api/news');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                
+                // Test 2: Parse JSON
+                console.log('Step 2: Parsing JSON');
+                const data = await response.json();
+                console.log('Data structure:', {
+                    hasStatus: 'status' in data,
+                    hasArticles: 'articles' in data,
+                    articlesCount: data.articles?.length
+                });
+                
+                // Test 3: Validate data
+                if (!data.articles || data.articles.length === 0) {
+                    throw new Error('No articles found in response');
+                }
+                
+                // Calculate average score
+                const avgScore = (data.articles.reduce((sum, a) => sum + (a.final_score || 0), 0) / data.articles.length).toFixed(1);
+                
+                // Build results HTML
+                let html = `
+                    <div class="status success">
+                        ✅ <strong>API Working Perfectly!</strong><br><br>
+                        📊 Total Articles: <strong>${data.articles.length}</strong><br>
+                        ⭐ Average Score: <strong>${avgScore}</strong><br>
+                        📅 Generated: ${data.displayDate || 'Unknown'}
+                    </div>
+                    
+                    <h2 style="margin-top: 30px; color: #333;">📰 First 5 Articles:</h2>
+                `;
+                
+                // Display first 5 articles
+                data.articles.slice(0, 5).forEach((article, i) => {
+                    const hasWordCount = /\(\d+\s+words?\)/.test(article.summary || '');
+                    
+                    html += `
+                        <div class="article">
+                            <h3>${i + 1}. ${article.title || 'Untitled'}</h3>
+                            <div class="meta">
+                                📍 ${article.source || 'Unknown'} | 
+                                ${article.category || 'Uncategorized'} | 
+                                Score: <strong>${article.final_score || 0}</strong>
+                                ${hasWordCount ? ' | ⚠️ <span style="color: #dc3545;">HAS WORD COUNT</span>' : ' | ✅ No word count'}
+                            </div>
+                            <div class="summary">${(article.summary || article.description || 'No summary available')}</div>
+                            ${article.urlToImage ? `<img src="${article.urlToImage}" alt="${article.title}">` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    <div class="status info" style="margin-top: 30px;">
+                        <strong>✅ All tests passed!</strong><br><br>
+                        Your API is working correctly. If you still can't see articles on the main site:
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Clear your browser cache completely</li>
+                            <li>Try incognito/private browsing mode</li>
+                            <li>Check browser console (F12) for JavaScript errors</li>
+                        </ol>
+                    </div>
+                `;
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                result.innerHTML = `
+                    <div class="status error">
+                        ❌ <strong>Test Failed</strong><br><br>
+                        Error: ${error.message}<br><br>
+                        <strong>Troubleshooting:</strong><br>
+                        1. Check your internet connection<br>
+                        2. Verify Vercel deployment is complete<br>
+                        3. Check browser console (F12) for details
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTest, 500);
+        });
+    </script>
+</body>
+</html>
+
