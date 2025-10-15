@@ -1742,7 +1742,7 @@ export default function Home() {
                           overflow: 'visible', 
                           cursor: 'pointer',
                           minHeight: '120px',
-                          height: showTimeline[index] ? '120px' : '120px',
+                          height: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '120px') : '120px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
