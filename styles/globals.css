@@ -503,42 +503,6 @@ body {
   height: var(--timeline-button-height);
 }
 
-/* Button Shadow Container */
-.timeline-button-shadow {
-  --shadow-cuttoff-fix: 2em;
-  position: absolute;
-  width: calc(100% + var(--shadow-cuttoff-fix));
-  height: calc(100% + var(--shadow-cuttoff-fix));
-  top: calc(0% - var(--shadow-cuttoff-fix) / 2);
-  left: calc(0% - var(--shadow-cuttoff-fix) / 2);
-  filter: blur(clamp(2px, 0.125em, 12px));
-  -webkit-filter: blur(clamp(2px, 0.125em, 12px));
-  -moz-filter: blur(clamp(2px, 0.125em, 12px));
-  -ms-filter: blur(clamp(2px, 0.125em, 12px));
-  overflow: visible;
-  pointer-events: none;
-}
-
-/* Shadow */
-.timeline-button-shadow::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  border-radius: 0.75rem;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));
-  width: calc(100% - var(--shadow-cuttoff-fix) - 0.25em);
-  height: calc(100% - var(--shadow-cuttoff-fix) - 0.25em);
-  top: calc(var(--shadow-cuttoff-fix) - 0.5em);
-  left: calc(var(--shadow-cuttoff-fix) - 0.875em);
-  padding: 0.125em;
-  box-sizing: border-box;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  transition: all var(--anim--hover-time) var(--anim--hover-ease);
-  overflow: visible;
-  opacity: 1;
-}
 
 /* Timeline Button Base Styles */
 .timeline-button {
@@ -685,19 +649,6 @@ body {
   --angle-1: -75deg;
 }
 
-/* Shadow Hover */
-.timeline-button-wrap:has(.timeline-button:hover) .timeline-button-shadow {
-  filter: blur(clamp(2px, 0.0625em, 6px));
-  -webkit-filter: blur(clamp(2px, 0.0625em, 6px));
-  -moz-filter: blur(clamp(2px, 0.0625em, 6px));
-  -ms-filter: blur(clamp(2px, 0.0625em, 6px));
-  transition: filter var(--anim--hover-time) var(--anim--hover-ease);
-}
-
-.timeline-button-wrap:has(.timeline-button:hover) .timeline-button-shadow::after {
-  top: calc(var(--shadow-cuttoff-fix) - 0.875em);
-  opacity: 1;
-}
 
 /* Rotation */
 .timeline-button-wrap:has(.timeline-button:active) {
@@ -712,18 +663,6 @@ body {
     0 0.225em 0.05em 0 rgba(0, 0, 0, 0.05),
     0 0.25em 0 0 rgba(255, 255, 255, 0.75),
     inset 0 0.25em 0.05em 0 rgba(0, 0, 0, 0.15);
-}
-
-.timeline-button-wrap:has(.timeline-button:active) .timeline-button-shadow {
-  filter: blur(clamp(2px, 0.125em, 12px));
-  -webkit-filter: blur(clamp(2px, 0.125em, 12px));
-  -moz-filter: blur(clamp(2px, 0.125em, 12px));
-  -ms-filter: blur(clamp(2px, 0.125em, 12px));
-}
-
-.timeline-button-wrap:has(.timeline-button:active) .timeline-button-shadow::after {
-  top: calc(var(--shadow-cuttoff-fix) - 0.5em);
-  opacity: 0.75;
 }
 
 .timeline-button-wrap:has(.timeline-button:active) svg {

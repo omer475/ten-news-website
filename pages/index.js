@@ -1708,8 +1708,7 @@ export default function Home() {
                         </div>
 
                         {/* Timeline Button */}
-                        <div className="timeline-button-wrap">
-                          <div className="timeline-button-shadow"></div>
+                        <div className="timeline-button-wrap" style={{ marginLeft: '-0.5rem' }}>
                           <button
                             className="timeline-button"
                             onClick={(e) => {
