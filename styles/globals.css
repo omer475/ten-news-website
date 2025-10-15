@@ -472,12 +472,17 @@ body {
 /* Timeline Button Styles */
 .timeline-button {
   position: relative;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
   border: 1px solid #d1d5db;
   background-color: white;
   transition: all 0.2s;
   cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Hover state (when not active) */
@@ -493,8 +498,8 @@ body {
 
 /* Icon styling */
 .timeline-button svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1rem;
+  height: 1rem;
   color: #111827;
   transition: all 0.2s;
 }

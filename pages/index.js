@@ -1721,20 +1721,22 @@ export default function Home() {
                           }}
                           style={{
                             position: 'relative',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '0.5rem',
+                            padding: '0.5rem',
+                            borderRadius: '0.375rem',
                             border: '1px solid #d1d5db',
                             backgroundColor: expandedTimeline[index] ? 'black' : 'white',
                             transition: 'all 0.2s',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem'
+                            justifyContent: 'center',
+                            width: '2rem',
+                            height: '2rem'
                           }}
                         >
                           <svg 
-                            width="1.5rem" 
-                            height="1.5rem" 
+                            width="1rem" 
+                            height="1rem" 
                             viewBox="0 0 24 24" 
                             fill="none" 
                             stroke="currentColor" 
@@ -1746,15 +1748,9 @@ export default function Home() {
                               transition: 'all 0.2s'
                             }}
                           >
-                            <path d="M3 12h18M3 6h18M3 18h18"/>
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
                           </svg>
-                          <span style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            color: expandedTimeline[index] ? 'white' : '#111827'
-                          }}>
-                            Timeline
-                          </span>
                         </button>
                       </div>
                       
