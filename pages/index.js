@@ -1742,7 +1742,8 @@ export default function Home() {
                           overflow: 'visible', 
                           cursor: 'pointer',
                           minHeight: '120px',
-                          height: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '120px') : '120px',
+                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '120px') : '120px',
+                          maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '400px' : '120px') : '120px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
@@ -1886,12 +1887,9 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                height: (() => {
-                                  const newHeight = expandedTimeline[index] ? '300px' : '120px';
-                                  console.log(`🔍 Timeline height for index ${index}:`, newHeight, 'expandedTimeline[index]:', expandedTimeline[index]);
-                                  return newHeight;
-                                })(),
-                                background: expandedTimeline[index] ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 255, 255, 0.95)',
+                                height: expandedTimeline[index] ? 'auto' : '120px',
+                                maxHeight: expandedTimeline[index] ? '400px' : '120px',
+                                background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: (() => {
@@ -1953,35 +1951,26 @@ export default function Home() {
                                  position: 'absolute',
                                  top: '8px',
                                  right: '8px',
-                                 width: '32px',
-                                 height: '32px',
-                                 background: 'rgba(255, 0, 0, 0.2)',
-                                 borderRadius: '50%',
+                                 width: '28px',
+                                 height: '28px',
                                  display: 'flex',
                                  alignItems: 'center',
                                  justifyContent: 'center',
                                  cursor: 'pointer',
                                  zIndex: '20',
-                                 transition: 'all 0.2s ease',
-                                 border: '2px solid red'
+                                 transition: 'all 0.2s ease'
                                }}
                                onClick={(e) => {
                                  e.stopPropagation();
-                                 console.log('🔍 Expand icon clicked for index:', index);
-                                 console.log('🔍 Current expandedTimeline state:', expandedTimeline);
-                                 setExpandedTimeline(prev => {
-                                   const newState = {
-                                     ...prev,
-                                     [index]: !prev[index]
-                                   };
-                                   console.log('🔍 New expandedTimeline state:', newState);
-                                   return newState;
-                                 });
+                                 setExpandedTimeline(prev => ({
+                                   ...prev,
+                                   [index]: !prev[index]
+                                 }));
                                }}>
                                  <span style={{
-                                   fontSize: '20px',
+                                   fontSize: '18px',
                                    fontWeight: 'bold',
-                                   color: '#ff0000',
+                                   color: '#666',
                                    transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
                                    transition: 'transform 0.2s ease'
                                  }}>
@@ -1991,7 +1980,8 @@ export default function Home() {
                               
                               <div style={{
                                 position: 'relative',
-                                height: expandedTimeline[index] ? '280px' : '96px',
+                                height: expandedTimeline[index] ? 'auto' : '96px',
+                                maxHeight: expandedTimeline[index] ? '380px' : '96px',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
