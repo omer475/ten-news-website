@@ -1893,10 +1893,9 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                height: expandedTimeline[index] ? 'auto' : '120px',
+                                height: expandedTimeline[index] ? '400px' : '120px',
                                 maxHeight: expandedTimeline[index] ? '400px' : '120px',
-                                transform: expandedTimeline[index] ? 'translateY(calc(-100% + 120px))' : 'translateY(0)',
-                                transition: 'transform 0.3s ease-in-out, max-height 0.3s ease-in-out',
+                                transition: 'height 0.3s ease-in-out',
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
@@ -2001,8 +2000,7 @@ export default function Home() {
                               
                               <div style={{
                                 position: 'relative',
-                                height: expandedTimeline[index] ? 'auto' : '96px',
-                                maxHeight: expandedTimeline[index] ? '380px' : '96px',
+                                height: '100%',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
@@ -2025,7 +2023,9 @@ export default function Home() {
                                   display: 'flex',
                                   flexDirection: 'column',
                                   justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end',
-                                  height: '100%'
+                                  height: '100%',
+                                  paddingTop: expandedTimeline[index] ? '8px' : '0px',
+                                  paddingBottom: '8px'
                                 }}>
                                   {story.timeline.map((event, idx) => (
                                     <div key={idx} style={{
