@@ -1730,7 +1730,7 @@ export default function Home() {
                           overflow: 'visible', 
                           cursor: 'pointer',
                           minHeight: '90px',
-                          height: '90px',
+                          height: showTimeline[index] ? 'auto' : '90px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
@@ -1871,7 +1871,7 @@ export default function Home() {
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
-                                bottom: '0',
+                                top: '0',
                                 left: '0',
                                 right: '0',
                                 background: 'rgba(255, 255, 255, 0.95)',
