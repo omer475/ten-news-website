@@ -1639,66 +1639,127 @@ export default function Home() {
                       zIndex: '2'
                     }}>
                       
-                      {/* Category Badge */}
+                      {/* Category Badge and Timeline Button Row */}
                       <div style={{
-                        display: 'inline-block',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                        letterSpacing: '0.5px',
-                        marginBottom: '8px',
-                        textTransform: 'uppercase',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        background: (() => {
-                          const categoryColors = {
-                            'World': { bg: '#3b82f6', text: '#ffffff' },
-                            'Politics': { bg: '#ef4444', text: '#ffffff' },
-                            'Business': { bg: '#22c55e', text: '#ffffff' },
-                            'Technology': { bg: '#8b5cf6', text: '#ffffff' },
-                            'Sports': { bg: '#f97316', text: '#ffffff' },
-                            'Entertainment': { bg: '#ec4899', text: '#ffffff' },
-                            'Science': { bg: '#14b8a6', text: '#ffffff' },
-                            'Health': { bg: '#eab308', text: '#ffffff' },
-                            // Legacy category mappings
-                            'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
-                            'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
-                            'MARKETS': { bg: '#22c55e', text: '#ffffff' },
-                            'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
-                            'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
-                            'HEALTH': { bg: '#eab308', text: '#ffffff' },
-                            'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
-                            'SPORTS': { bg: '#f97316', text: '#ffffff' },
-                            'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
-                            'Society': { bg: '#3b82f6', text: '#ffffff' }
-                          };
-                          return categoryColors[story.category]?.bg || '#f8fafc';
-                        })(),
-                        color: (() => {
-                          const categoryColors = {
-                            'World': { bg: '#3b82f6', text: '#ffffff' },
-                            'Politics': { bg: '#ef4444', text: '#ffffff' },
-                            'Business': { bg: '#22c55e', text: '#ffffff' },
-                            'Technology': { bg: '#8b5cf6', text: '#ffffff' },
-                            'Sports': { bg: '#f97316', text: '#ffffff' },
-                            'Entertainment': { bg: '#ec4899', text: '#ffffff' },
-                            'Science': { bg: '#14b8a6', text: '#ffffff' },
-                            'Health': { bg: '#eab308', text: '#ffffff' },
-                            // Legacy category mappings
-                            'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
-                            'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
-                            'MARKETS': { bg: '#22c55e', text: '#ffffff' },
-                            'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
-                            'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
-                            'HEALTH': { bg: '#eab308', text: '#ffffff' },
-                            'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
-                            'SPORTS': { bg: '#f97316', text: '#ffffff' },
-                            'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
-                            'Society': { bg: '#3b82f6', text: '#ffffff' }
-                          };
-                          return categoryColors[story.category]?.text || '#64748b';
-                        })()
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '8px'
                       }}>
-                        {story.emoji} {story.category}
+                        {/* Category Badge */}
+                        <div style={{
+                          display: 'inline-block',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          background: (() => {
+                            const categoryColors = {
+                              'World': { bg: '#3b82f6', text: '#ffffff' },
+                              'Politics': { bg: '#ef4444', text: '#ffffff' },
+                              'Business': { bg: '#22c55e', text: '#ffffff' },
+                              'Technology': { bg: '#8b5cf6', text: '#ffffff' },
+                              'Sports': { bg: '#f97316', text: '#ffffff' },
+                              'Entertainment': { bg: '#ec4899', text: '#ffffff' },
+                              'Science': { bg: '#14b8a6', text: '#ffffff' },
+                              'Health': { bg: '#eab308', text: '#ffffff' },
+                              // Legacy category mappings
+                              'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
+                              'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
+                              'MARKETS': { bg: '#22c55e', text: '#ffffff' },
+                              'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
+                              'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
+                              'HEALTH': { bg: '#eab308', text: '#ffffff' },
+                              'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
+                              'SPORTS': { bg: '#f97316', text: '#ffffff' },
+                              'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
+                              'Society': { bg: '#3b82f6', text: '#ffffff' }
+                            };
+                            return categoryColors[story.category]?.bg || '#f8fafc';
+                          })(),
+                          color: (() => {
+                            const categoryColors = {
+                              'World': { bg: '#3b82f6', text: '#ffffff' },
+                              'Politics': { bg: '#ef4444', text: '#ffffff' },
+                              'Business': { bg: '#22c55e', text: '#ffffff' },
+                              'Technology': { bg: '#8b5cf6', text: '#ffffff' },
+                              'Sports': { bg: '#f97316', text: '#ffffff' },
+                              'Entertainment': { bg: '#ec4899', text: '#ffffff' },
+                              'Science': { bg: '#14b8a6', text: '#ffffff' },
+                              'Health': { bg: '#eab308', text: '#ffffff' },
+                              // Legacy category mappings
+                              'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
+                              'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
+                              'MARKETS': { bg: '#22c55e', text: '#ffffff' },
+                              'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
+                              'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
+                              'HEALTH': { bg: '#eab308', text: '#ffffff' },
+                              'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
+                              'SPORTS': { bg: '#f97316', text: '#ffffff' },
+                              'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
+                              'Society': { bg: '#3b82f6', text: '#ffffff' }
+                            };
+                            return categoryColors[story.category]?.text || '#64748b';
+                          })()
+                        }}>
+                          {story.emoji} {story.category}
+                        </div>
+
+                        {/* Timeline Button */}
+                        {story.timeline && (
+                          <button
+                            className={`timeline-button ${expandedTimeline[index] ? 'active' : ''}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('Timeline button clicked for story', index);
+                              setExpandedTimeline(prev => ({
+                                ...prev,
+                                [index]: !prev[index]
+                              }));
+                            }}
+                            style={{
+                              position: 'relative',
+                              padding: '0.75rem 1.5rem',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #d1d5db',
+                              backgroundColor: expandedTimeline[index] ? 'black' : 'white',
+                              borderColor: expandedTimeline[index] ? 'black' : '#d1d5db',
+                              transition: 'all 0.2s',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!expandedTimeline[index]) {
+                                e.target.style.borderColor = '#111827';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!expandedTimeline[index]) {
+                                e.target.style.borderColor = '#d1d5db';
+                              }
+                            }}
+                          >
+                            <span 
+                              className="icon"
+                              style={{
+                                color: expandedTimeline[index] ? 'white' : '#111827',
+                                transition: 'all 0.2s',
+                                transform: expandedTimeline[index] ? 'none' : 'scale(1)',
+                                fontSize: '14px'
+                              }}
+                            >
+                              📅
+                            </span>
+                            Timeline
+                          </button>
+                        )}
                       </div>
                       
                       {/* Title - Large and Prominent, Higher Position */}
