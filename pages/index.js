@@ -1736,8 +1736,8 @@ export default function Home() {
                           >
                             {/* Details Icon (Left) */}
                             <svg 
-                              width="0.875rem" 
-                              height="0.875rem" 
+                              width="0.75rem" 
+                              height="0.75rem" 
                               viewBox="0 0 24 24" 
                               fill="none" 
                               stroke="currentColor" 
@@ -1753,8 +1753,8 @@ export default function Home() {
                             
                             {/* Timeline Icon (Right) */}
                             <svg 
-                              width="0.875rem" 
-                              height="0.875rem" 
+                              width="0.75rem" 
+                              height="0.75rem" 
                               viewBox="0 0 24 24" 
                               fill="none" 
                               stroke="currentColor" 
