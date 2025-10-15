@@ -1714,9 +1714,19 @@ export default function Home() {
                             e.preventDefault();
                             e.stopPropagation();
                             console.log('Timeline button clicked for story', index);
+                            
+                            // If details are currently shown, switch to timeline view first
+                            if (!showTimeline[index]) {
+                              setShowTimeline(prev => ({
+                                ...prev,
+                                [index]: true
+                              }));
+                            }
+                            
+                            // Always expand the timeline when button is clicked
                             setExpandedTimeline(prev => ({
                               ...prev,
-                              [index]: !prev[index]
+                              [index]: true
                             }));
                           }}
                           style={{
