@@ -1838,11 +1838,17 @@ export default function Home() {
                               endEvent.stopPropagation();
                               toggleTimeline(index);
                             } else if (!hasMoved) {
-                              // Single tap toggles timeline
-                              console.log('Timeline tap detected for story', index);
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
-                              toggleTimeline(index);
+                              // Check if the touch target is the expand icon
+                              const touchTarget = endEvent.target;
+                              const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                              
+                              if (!isExpandIcon) {
+                                // Single tap toggles timeline only if not on expand icon
+                                console.log('Timeline tap detected for story', index);
+                                endEvent.preventDefault();
+                                endEvent.stopPropagation();
+                                toggleTimeline(index);
+                              }
                             }
                             // If it's vertical swipe, let it pass through for story navigation
                             
@@ -1949,7 +1955,9 @@ export default function Home() {
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
                               }}>
                                {/* Expand Icon */}
-                               <div style={{
+                               <div 
+                                 data-expand-icon="true"
+                                 style={{
                                  position: 'absolute',
                                  top: '8px',
                                  right: '8px',
@@ -1963,17 +1971,18 @@ export default function Home() {
                                  transition: 'all 0.2s ease'
                                }}
                                onClick={(e) => {
+                                 e.preventDefault();
                                  e.stopPropagation();
+                                 console.log('Expand icon clicked for story', index);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]
                                  }));
                                }}
-                               onTouchStart={(e) => {
-                                 e.stopPropagation();
-                               }}
                                onTouchEnd={(e) => {
+                                 e.preventDefault();
                                  e.stopPropagation();
+                                 console.log('Expand icon touched for story', index);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]
