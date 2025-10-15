@@ -1708,60 +1708,45 @@ export default function Home() {
                         </div>
 
                         {/* Timeline Button */}
-                        <button
-                          className={`timeline-button ${expandedTimeline[index] ? 'active' : ''}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('Timeline button clicked for story', index);
-                            
-                            // If details are currently shown, switch to timeline view first
-                            if (!showTimeline[index]) {
-                              setShowTimeline(prev => ({
+                        <div className="timeline-button-wrap">
+                          <div className="timeline-button-shadow"></div>
+                          <button
+                            className="timeline-button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('Timeline button clicked for story', index);
+                              
+                              // If details are currently shown, switch to timeline view first
+                              if (!showTimeline[index]) {
+                                setShowTimeline(prev => ({
+                                  ...prev,
+                                  [index]: true
+                                }));
+                              }
+                              
+                              // Toggle the timeline expansion state
+                              setExpandedTimeline(prev => ({
                                 ...prev,
-                                [index]: true
+                                [index]: !prev[index]
                               }));
-                            }
-                            
-                            // Toggle the timeline expansion state
-                            setExpandedTimeline(prev => ({
-                              ...prev,
-                              [index]: !prev[index]
-                            }));
-                          }}
-                          style={{
-                            position: 'relative',
-                            padding: '0.5rem',
-                            borderRadius: '0.375rem',
-                            border: '1px solid #d1d5db',
-                            backgroundColor: expandedTimeline[index] ? 'black' : 'white',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '2rem',
-                            height: '2rem'
-                          }}
-                        >
-                          <svg 
-                            width="1rem" 
-                            height="1rem" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                            style={{
-                              color: expandedTimeline[index] ? 'white' : '#111827',
-                              transition: 'all 0.2s'
                             }}
                           >
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12,6 12,12 16,14"/>
-                          </svg>
-                        </button>
+                            <svg 
+                              width="1rem" 
+                              height="1rem" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="12" cy="12" r="10"/>
+                              <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       
                       {/* Title - Large and Prominent, Higher Position */}
