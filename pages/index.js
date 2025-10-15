@@ -1891,7 +1891,7 @@ export default function Home() {
                                   console.log(`🔍 Timeline height for index ${index}:`, newHeight, 'expandedTimeline[index]:', expandedTimeline[index]);
                                   return newHeight;
                                 })(),
-                                background: 'rgba(255, 255, 255, 0.95)',
+                                background: expandedTimeline[index] ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: (() => {
@@ -1953,14 +1953,17 @@ export default function Home() {
                                  position: 'absolute',
                                  top: '8px',
                                  right: '8px',
-                                 width: '28px',
-                                 height: '28px',
+                                 width: '32px',
+                                 height: '32px',
+                                 background: 'rgba(255, 0, 0, 0.2)',
+                                 borderRadius: '50%',
                                  display: 'flex',
                                  alignItems: 'center',
                                  justifyContent: 'center',
                                  cursor: 'pointer',
                                  zIndex: '20',
-                                 transition: 'all 0.2s ease'
+                                 transition: 'all 0.2s ease',
+                                 border: '2px solid red'
                                }}
                                onClick={(e) => {
                                  e.stopPropagation();
@@ -1976,9 +1979,9 @@ export default function Home() {
                                  });
                                }}>
                                  <span style={{
-                                   fontSize: '18px',
+                                   fontSize: '20px',
                                    fontWeight: 'bold',
-                                   color: '#666',
+                                   color: '#ff0000',
                                    transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
                                    transition: 'transform 0.2s ease'
                                  }}>
