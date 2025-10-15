@@ -1708,10 +1708,7 @@ export default function Home() {
                         </div>
 
                         {/* Timeline Button */}
-                        <div 
-                          className={`timeline-button-wrap ${showTimeline[index] ? 'active' : ''}`}
-                          style={{ marginLeft: '-0.5rem' }}
-                        >
+                        <div className="timeline-button-wrap" style={{ marginLeft: '-0.5rem' }}>
                           <button
                             className="timeline-button"
                             onClick={(e) => {
@@ -1736,8 +1733,9 @@ export default function Home() {
                           >
                             {/* Details Icon (Left) */}
                             <svg 
-                              width="0.75rem" 
-                              height="0.75rem" 
+                              className={!showTimeline[index] ? 'active' : ''}
+                              width="1rem" 
+                              height="1rem" 
                               viewBox="0 0 24 24" 
                               fill="none" 
                               stroke="currentColor" 
@@ -1753,8 +1751,9 @@ export default function Home() {
                             
                             {/* Timeline Icon (Right) */}
                             <svg 
-                              width="0.75rem" 
-                              height="0.75rem" 
+                              className={showTimeline[index] ? 'active' : ''}
+                              width="1rem" 
+                              height="1rem" 
                               viewBox="0 0 24 24" 
                               fill="none" 
                               stroke="currentColor" 
