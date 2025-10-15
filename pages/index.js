@@ -1723,7 +1723,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
                         position: 'fixed',
-                        bottom: '42px',
+                        bottom: '82px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
