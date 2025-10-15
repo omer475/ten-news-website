@@ -1742,7 +1742,7 @@ export default function Home() {
                           overflow: 'visible', 
                           cursor: 'pointer',
                           minHeight: '120px',
-                          height: showTimeline[index] ? '120px' : '120px',
+                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '120px') : '120px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
@@ -1952,8 +1952,6 @@ export default function Home() {
                                 right: '8px',
                                 width: '28px',
                                 height: '28px',
-                                borderRadius: '6px',
-                                background: 'rgba(0, 0, 0, 0.1)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -1969,9 +1967,9 @@ export default function Home() {
                                 }));
                               }}>
                                 <span style={{
-                                  fontSize: '14px',
+                                  fontSize: '18px',
                                   fontWeight: 'bold',
-                                  color: '#666',
+                                  color: '#333',
                                   transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
                                   transition: 'transform 0.2s ease'
                                 }}>
