@@ -1889,6 +1889,8 @@ export default function Home() {
                                 right: '0',
                                 height: expandedTimeline[index] ? 'auto' : '120px',
                                 maxHeight: expandedTimeline[index] ? '400px' : '120px',
+                                transform: expandedTimeline[index] ? 'translateY(calc(-100% + 120px))' : 'translateY(0)',
+                                transition: 'transform 0.3s ease-in-out, max-height 0.3s ease-in-out',
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
@@ -1966,6 +1968,16 @@ export default function Home() {
                                    ...prev,
                                    [index]: !prev[index]
                                  }));
+                               }}
+                               onTouchStart={(e) => {
+                                 e.stopPropagation();
+                               }}
+                               onTouchEnd={(e) => {
+                                 e.stopPropagation();
+                                 setExpandedTimeline(prev => ({
+                                   ...prev,
+                                   [index]: !prev[index]
+                                 }));
                                }}>
                                  <span style={{
                                    fontSize: '18px',
@@ -1985,7 +1997,10 @@ export default function Home() {
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
-                                width: '100%'
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end'
                               }}>
                                 <div style={{
                                   position: 'absolute',
@@ -1997,13 +2012,19 @@ export default function Home() {
                                   zIndex: '0',
                                   borderRadius: '2px'
                                 }}></div>
-                                {story.timeline.map((event, idx) => (
-                                  <div key={idx} style={{
-                                    position: 'relative',
-                                    marginBottom: '12px',
-                                    paddingLeft: '20px',
-                                    minHeight: '36px'
-                                  }}>
+                                <div style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end',
+                                  height: '100%'
+                                }}>
+                                  {story.timeline.map((event, idx) => (
+                                    <div key={idx} style={{
+                                      position: 'relative',
+                                      marginBottom: '12px',
+                                      paddingLeft: '20px',
+                                      minHeight: '36px'
+                                    }}>
                                     <div style={{
                                       position: 'absolute',
                                       left: '-15px',
@@ -2031,6 +2052,7 @@ export default function Home() {
                                     }}>{event.event}</div>
                                   </div>
                                 ))}
+                                </div>
                               </div>
                             </div>
                           )
