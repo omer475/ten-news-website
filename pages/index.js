@@ -2024,17 +2024,17 @@ export default function Home() {
                                       boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
-                                      fontSize: '14px',
+                                      fontSize: '12px',
                                       fontWeight: '700',
                                       color: '#3b82f6',
-                                      marginBottom: '4px',
+                                      marginBottom: '3px',
                                       letterSpacing: '0.3px'
                                     }}>{event.date}</div>
                                     <div style={{
-                                      fontSize: '16px',
+                                      fontSize: '13px',
                                       fontWeight: '500',
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
-                                      lineHeight: '1.4'
+                                      lineHeight: '1.3'
                                     }}>{event.event}</div>
                                   </div>
                                 ))}
