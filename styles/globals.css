@@ -468,3 +468,43 @@ body {
     height: 18px;
   }
 }
+
+/* Timeline Button Styles */
+.timeline-button {
+  position: relative;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+/* Hover state (when not active) */
+.timeline-button:hover {
+  border-color: #111827;
+}
+
+/* Active/pressed state */
+.timeline-button.active {
+  background-color: black;
+  border-color: black;
+}
+
+/* Icon styling */
+.timeline-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #111827;
+  transition: all 0.2s;
+}
+
+/* Icon hover effect (when not active) */
+.timeline-button:hover:not(.active) svg {
+  transform: scale(1.1);
+}
+
+/* Icon color when active */
+.timeline-button.active svg {
+  color: white;
+}

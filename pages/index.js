@@ -1708,58 +1708,54 @@ export default function Home() {
                         </div>
 
                         {/* Timeline Button */}
-                        {story.timeline && (
-                          <button
-                            className={`timeline-button ${expandedTimeline[index] ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('Timeline button clicked for story', index);
-                              setExpandedTimeline(prev => ({
-                                ...prev,
-                                [index]: !prev[index]
-                              }));
-                            }}
+                        <button
+                          className={`timeline-button ${expandedTimeline[index] ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Timeline button clicked for story', index);
+                            setExpandedTimeline(prev => ({
+                              ...prev,
+                              [index]: !prev[index]
+                            }));
+                          }}
+                          style={{
+                            position: 'relative',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #d1d5db',
+                            backgroundColor: expandedTimeline[index] ? 'black' : 'white',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <svg 
+                            width="1.5rem" 
+                            height="1.5rem" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
                             style={{
-                              position: 'relative',
-                              padding: '0.75rem 1.5rem',
-                              borderRadius: '0.5rem',
-                              border: '1px solid #d1d5db',
-                              backgroundColor: expandedTimeline[index] ? 'black' : 'white',
-                              borderColor: expandedTimeline[index] ? 'black' : '#d1d5db',
-                              transition: 'all 0.2s',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!expandedTimeline[index]) {
-                                e.target.style.borderColor = '#111827';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!expandedTimeline[index]) {
-                                e.target.style.borderColor = '#d1d5db';
-                              }
+                              color: expandedTimeline[index] ? 'white' : '#111827',
+                              transition: 'all 0.2s'
                             }}
                           >
-                            <span 
-                              className="icon"
-                              style={{
-                                color: expandedTimeline[index] ? 'white' : '#111827',
-                                transition: 'all 0.2s',
-                                transform: expandedTimeline[index] ? 'none' : 'scale(1)',
-                                fontSize: '14px'
-                              }}
-                            >
-                              📅
-                            </span>
+                            <path d="M3 12h18M3 6h18M3 18h18"/>
+                          </svg>
+                          <span style={{
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: expandedTimeline[index] ? 'white' : '#111827'
+                          }}>
                             Timeline
-                          </button>
-                        )}
+                          </span>
+                        </button>
                       </div>
                       
                       {/* Title - Large and Prominent, Higher Position */}
