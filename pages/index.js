@@ -1886,7 +1886,11 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                height: expandedTimeline[index] ? '300px' : '120px',
+                                height: (() => {
+                                  const newHeight = expandedTimeline[index] ? '300px' : '120px';
+                                  console.log(`🔍 Timeline height for index ${index}:`, newHeight, 'expandedTimeline[index]:', expandedTimeline[index]);
+                                  return newHeight;
+                                })(),
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
@@ -1960,10 +1964,16 @@ export default function Home() {
                                }}
                                onClick={(e) => {
                                  e.stopPropagation();
-                                 setExpandedTimeline(prev => ({
-                                   ...prev,
-                                   [index]: !prev[index]
-                                 }));
+                                 console.log('🔍 Expand icon clicked for index:', index);
+                                 console.log('🔍 Current expandedTimeline state:', expandedTimeline);
+                                 setExpandedTimeline(prev => {
+                                   const newState = {
+                                     ...prev,
+                                     [index]: !prev[index]
+                                   };
+                                   console.log('🔍 New expandedTimeline state:', newState);
+                                   return newState;
+                                 });
                                }}>
                                  <span style={{
                                    fontSize: '18px',
