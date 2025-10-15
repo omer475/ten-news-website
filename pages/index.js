@@ -85,23 +85,34 @@ export default function Home() {
             
             const processedStories = [openingStory];
             
-            // Convert articles to story format
-            newsData.articles.forEach((article, index) => {
-              const storyData = {
-                type: 'news',
-                number: article.rank || (index + 1),
-                category: (article.category || 'WORLD NEWS').toUpperCase(),
-                emoji: article.emoji || '📰',
-                title: article.title || 'News Story',
-                summary: article.summary || 'News summary will appear here.',
-                details: article.details || [],
-                source: article.source || 'News+',
-                url: article.url || '#',
-                urlToImage: article.urlToImage,
-                id: article.id || `article_${index}`
-              };
-              processedStories.push(storyData);
-            });
+             // Convert articles to story format
+             newsData.articles.forEach((article, index) => {
+               const storyData = {
+                 type: 'news',
+                 number: article.rank || (index + 1),
+                 category: (article.category || 'WORLD NEWS').toUpperCase(),
+                 emoji: article.emoji || '📰',
+                 title: article.title || 'News Story',
+                 summary: article.summary || 'News summary will appear here.',
+                 details: article.details || [],
+                 source: article.source || 'News+',
+                 url: article.url || '#',
+                 urlToImage: article.urlToImage,
+                 timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
+                   {"date": "Background", "event": "Initial situation develops"},
+                   {"date": "Today", "event": "Major developments break"},
+                   {"date": "Next week", "event": "Follow-up expected"}
+                 ],
+                 id: article.id || `article_${index}`
+               };
+               
+               // Debug timeline data
+               if (index < 3) {
+                 console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
+               }
+               
+               processedStories.push(storyData);
+             });
             
             console.log('📰 Setting stories:', processedStories.length);
             setStories(processedStories);
