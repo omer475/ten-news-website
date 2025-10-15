@@ -10,7 +10,6 @@ export default function Home() {
   const [showTimeline, setShowTimeline] = useState({});
   const [darkMode, setDarkMode] = useState(false);
   const [readArticles, setReadArticles] = useState(new Set());
-  const [expandedTimeline, setExpandedTimeline] = useState({});
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -1724,7 +1723,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
                         position: 'fixed',
-                        bottom: '62px',
+                        bottom: '42px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
@@ -1741,8 +1740,8 @@ export default function Home() {
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '120px',
-                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '120px') : '120px',
+                          minHeight: '90px',
+                          height: showTimeline[index] ? 'auto' : '90px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
@@ -1883,38 +1882,36 @@ export default function Home() {
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
-                                bottom: '0',
+                                top: '0',
                                 left: '0',
                                 right: '0',
-                                height: expandedTimeline[index] ? 'auto' : '120px',
-                                maxHeight: expandedTimeline[index] ? '300px' : '120px',
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
-                                border: (() => {
-                                  const categoryBorders = {
-                                    'World': '1px solid #3b82f6',
-                                    'Politics': '1px solid #ef4444',
-                                    'Business': '1px solid #22c55e',
-                                    'Technology': '1px solid #8b5cf6',
-                                    'Sports': '1px solid #f97316',
-                                    'Entertainment': '1px solid #ec4899',
-                                    'Science': '1px solid #14b8a6',
-                                    'Health': '1px solid #eab308',
-                                    // Legacy category mappings
-                                    'WORLD NEWS': '1px solid #3b82f6',
-                                    'BUSINESS': '1px solid #22c55e',
-                                    'MARKETS': '1px solid #22c55e',
-                                    'TECH & AI': '1px solid #8b5cf6',
-                                    'SCIENCE': '1px solid #14b8a6',
-                                    'HEALTH': '1px solid #eab308',
-                                    'CLIMATE': '1px solid #14b8a6',
-                                    'SPORTS': '1px solid #f97316',
-                                    'ENTERTAINMENT': '1px solid #ec4899',
-                                    'Society': '1px solid #3b82f6'
-                                  };
-                                  return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
-                                })(),
+                                  border: (() => {
+                                    const categoryBorders = {
+                                      'World': '1px solid #3b82f6',
+                                      'Politics': '1px solid #ef4444',
+                                      'Business': '1px solid #22c55e',
+                                      'Technology': '1px solid #8b5cf6',
+                                      'Sports': '1px solid #f97316',
+                                      'Entertainment': '1px solid #ec4899',
+                                      'Science': '1px solid #14b8a6',
+                                      'Health': '1px solid #eab308',
+                                      // Legacy category mappings
+                                      'WORLD NEWS': '1px solid #3b82f6',
+                                      'BUSINESS': '1px solid #22c55e',
+                                      'MARKETS': '1px solid #22c55e',
+                                      'TECH & AI': '1px solid #8b5cf6',
+                                      'SCIENCE': '1px solid #14b8a6',
+                                      'HEALTH': '1px solid #eab308',
+                                      'CLIMATE': '1px solid #14b8a6',
+                                      'SPORTS': '1px solid #f97316',
+                                      'ENTERTAINMENT': '1px solid #ec4899',
+                                      'Society': '1px solid #3b82f6'
+                                    };
+                                    return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
+                                  })(),
                                 borderRadius: '16px',
                                 padding: '12px 20px',
                                 boxShadow: (() => {
@@ -1941,50 +1938,13 @@ export default function Home() {
                                   };
                                   return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
                                 })(),
-                                minHeight: '120px',
-                                zIndex: '10',
-                                overflowY: expandedTimeline[index] ? 'visible' : 'auto'
+                                minHeight: '90px',
+                                zIndex: '10'
                               }}>
-                              {/* Expand Icon */}
-                              <div style={{
-                                position: 'absolute',
-                                top: '8px',
-                                right: '8px',
-                                width: '28px',
-                                height: '28px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                zIndex: '20',
-                                transition: 'all 0.2s ease'
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedTimeline(prev => ({
-                                  ...prev,
-                                  [index]: !prev[index]
-                                }));
-                              }}>
-                                <span style={{
-                                  fontSize: '18px',
-                                  fontWeight: 'bold',
-                                  color: '#333',
-                                  transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                  transition: 'transform 0.2s ease'
-                                }}>
-                                  ↗
-                                </span>
-                              </div>
-                              
                               <div style={{
                                 position: 'relative',
-                                height: expandedTimeline[index] ? 'auto' : '96px',
-                                overflowY: expandedTimeline[index] ? 'visible' : 'auto',
-                                paddingRight: '8px',
                                 paddingLeft: '20px',
-                                width: '100%',
-                                maxHeight: expandedTimeline[index] ? '280px' : '96px'
+                                width: '100%'
                               }}>
                                 <div style={{
                                   position: 'absolute',
@@ -2028,10 +1988,10 @@ export default function Home() {
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
                                       lineHeight: '1.4'
                                     }}>{event.event}</div>
-                                  </div>
+                      </div>
                                 ))}
-                              </div>
-                            </div>
+                  </div>
+                </div>
                           )
                         )}
                         
