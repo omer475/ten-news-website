@@ -1883,10 +1883,11 @@ export default function Home() {
                               className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
-                                top: '0',
+                                bottom: '0',
                                 left: '0',
                                 right: '0',
-                                height: '120px',
+                                height: expandedTimeline[index] ? 'auto' : '120px',
+                                maxHeight: expandedTimeline[index] ? '300px' : '120px',
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
@@ -1949,15 +1950,16 @@ export default function Home() {
                                 position: 'absolute',
                                 top: '8px',
                                 right: '8px',
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '6px',
                                 background: 'rgba(0, 0, 0, 0.1)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
-                                zIndex: '20'
+                                zIndex: '20',
+                                transition: 'all 0.2s ease'
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1967,11 +1969,13 @@ export default function Home() {
                                 }));
                               }}>
                                 <span style={{
-                                  fontSize: '12px',
+                                  fontSize: '14px',
                                   fontWeight: 'bold',
-                                  color: '#666'
+                                  color: '#666',
+                                  transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                                  transition: 'transform 0.2s ease'
                                 }}>
-                                  {expandedTimeline[index] ? '−' : '+'}
+                                  ↗
                                 </span>
                               </div>
                               
@@ -1981,7 +1985,8 @@ export default function Home() {
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
-                                width: '100%'
+                                width: '100%',
+                                maxHeight: expandedTimeline[index] ? '280px' : '96px'
                               }}>
                                 <div style={{
                                   position: 'absolute',
