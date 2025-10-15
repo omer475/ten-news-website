@@ -485,7 +485,8 @@ body {
 }
 
 :root {
-  --timeline-button-size: 2.5rem;
+  --timeline-button-width: 4rem;
+  --timeline-button-height: 2.5rem;
   --anim--hover-time: 400ms;
   --anim--hover-ease: cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -494,12 +495,12 @@ body {
 .timeline-button-wrap {
   position: relative;
   z-index: 2;
-  border-radius: 999vw;
+  border-radius: 0.75rem;
   background: transparent;
   pointer-events: none;
   transition: all var(--anim--hover-time) var(--anim--hover-ease);
-  width: var(--timeline-button-size);
-  height: var(--timeline-button-size);
+  width: var(--timeline-button-width);
+  height: var(--timeline-button-height);
 }
 
 /* Button Shadow Container */
@@ -524,7 +525,7 @@ body {
   position: absolute;
   z-index: 0;
   inset: 0;
-  border-radius: 999vw;
+  border-radius: 0.75rem;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));
   width: calc(100% - var(--shadow-cuttoff-fix) - 0.25em);
   height: calc(100% - var(--shadow-cuttoff-fix) - 0.25em);
@@ -554,7 +555,7 @@ body {
     rgba(255, 255, 255, 0.2),
     rgba(255, 255, 255, 0.05)
   );
-  border-radius: 999vw;
+  border-radius: 0.75rem;
   box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
     inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
     0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2),
@@ -569,7 +570,8 @@ body {
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0 0.75rem;
 }
 
 .timeline-button:hover {
@@ -652,7 +654,7 @@ body {
   position: absolute;
   z-index: 1;
   inset: 0;
-  border-radius: 999vw;
+  border-radius: 0.75rem;
   width: calc(100% + var(--border-width));
   height: calc(100% + var(--border-width));
   top: calc(0% - var(--border-width) / 2);
