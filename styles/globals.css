@@ -482,12 +482,14 @@ body {
   position: relative;
   width: var(--timeline-button-width);
   height: var(--timeline-button-height);
-  border-radius: 50px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: rgba(246, 240, 243, 0.3);
+  border: 1px solid rgba(246, 240, 243, 0.33);
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(6.1px);
+  -webkit-backdrop-filter: blur(6.1px);
 }
 
 /* Toggle Slider */
@@ -553,9 +555,11 @@ body {
 
 /* Hover effects */
 .timeline-button-wrap:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 40px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .timeline-button-wrap:hover::before {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
