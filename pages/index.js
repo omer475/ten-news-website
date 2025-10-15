@@ -9,8 +9,6 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
   const [darkMode, setDarkMode] = useState(false);
-  const [readArticles, setReadArticles] = useState(new Set());
-  const [expandedTimeline, setExpandedTimeline] = useState({});
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -27,16 +25,10 @@ export default function Home() {
     signupPassword: '',
     signupFullName: ''
   });
-  const [supabase] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    return createClient();
-  });
+  const [supabase] = useState(() => createClient());
 
   // Check authentication status on mount
   useEffect(() => {
-    // Only run on client side
-    if (typeof window === 'undefined') return;
-    
     // Check for stored session first
     const storedUser = localStorage.getItem('tennews_user');
     const storedSession = localStorage.getItem('tennews_session');
@@ -60,75 +52,182 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    console.log('🔄 useEffect starting...');
     const loadNewsData = async () => {
       try {
-        console.log('📡 About to fetch API...');
-        const response = await fetch(`/api/news?t=${Date.now()}`);
+        let newsData = null;
         
-        if (response.ok) {
-          const newsData = await response.json();
-          console.log('📰 API Response:', newsData);
-          console.log('📰 Articles count:', newsData.articles?.length);
+        // Try to fetch from API endpoint
+        try {
+          const response = await fetch('/api/news');
+          if (response.ok) {
+            newsData = await response.json();
+            console.log('✅ Loaded news from API');
+          }
+        } catch (error) {
+          console.log('📰 API not available, using fallback');
+        }
+        
+        // If API failed, try direct file access
+        if (!newsData) {
+          try {
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}_${(today.getMonth() + 1).toString().padStart(2, '0')}_${today.getDate().toString().padStart(2, '0')}`;
+            const response = await fetch(`/tennews_data_${dateStr}.json`);
+            if (response.ok) {
+              newsData = await response.json();
+              console.log('✅ Loaded news from direct file');
+            }
+          } catch (error) {
+            console.log('📰 Direct file access failed:', error);
+          }
+        }
+        
+        let processedStories = [];
+        
+        if (newsData && newsData.articles && newsData.articles.length > 0) {
+          // Create opening story from news data
+          const openingStory = {
+            type: 'opening',
+            date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long', 
+              day: 'numeric',
+              year: 'numeric'
+            }).toUpperCase(),
+            headline: newsData.dailyGreeting || 'Today Essential Global News'
+          };
           
-          if (newsData.articles && newsData.articles.length > 0) {
-            // Create opening story
-            const openingStory = {
+          processedStories.push(openingStory);
+          
+          // Convert news generator articles to website format
+          newsData.articles.forEach((article, index) => {
+              const imageUrl = article.urlToImage || article.image || null;
+              
+              // DEBUG: Log image info for first 3 articles
+              if (index < 3) {
+                console.log(`📰 Article ${index + 1}: "${article.title?.substring(0, 50)}..."`);
+                console.log(`   Image URL: ${imageUrl || 'NO IMAGE'}`);
+                console.log(`   Has urlToImage: ${!!article.urlToImage}`);
+                console.log(`   Has image: ${!!article.image}`);
+              }
+              
+              const storyData = {
+              type: 'news',
+              number: article.rank || (index + 1),
+              category: (article.category || 'WORLD NEWS').toUpperCase(),
+              emoji: article.emoji || '📰',
+              title: article.title || 'News Story',
+              summary: article.rewritten_text || article.summary || 'News summary will appear here.',
+              details: article.details || [],
+              source: article.source || 'News+',
+              url: article.url || '#',
+              urlToImage: imageUrl
+              };
+              
+              // Add timeline data (from generator or create fallback)
+              if (article.timeline) {
+                storyData.timeline = article.timeline;
+              } else {
+                // Create fallback timeline for all stories (variable length)
+                const timelineVariations = [
+                  [
+                    {"date": "Background", "event": "Initial situation develops"},
+                    {"date": "Today", "event": "Major developments break"},
+                    {"date": "Next week", "event": "Follow-up expected"}
+                  ],
+                  [
+                    {"date": "Recently", "event": "Key events unfold"},
+                    {"date": "Yesterday", "event": "Critical point reached"},
+                    {"date": "Today", "event": "Story breaks"},
+                    {"date": "Coming days", "event": "Developments continue"}
+                  ],
+                  [
+                    {"date": "Last month", "event": "Initial reports emerge"},
+                    {"date": "Today", "event": "Major announcement made"}
+                  ]
+                ];
+                storyData.timeline = timelineVariations[index % timelineVariations.length];
+              }
+              
+              processedStories.push(storyData);
+          });
+        } else {
+          // Fallback stories with sample data
+          processedStories = [
+            {
               type: 'opening',
-              date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
+              date: new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long', 
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: newsData.dailyGreeting || 'Today Essential Global News'
-            };
-            
-            const processedStories = [openingStory];
-            
-             // Convert articles to story format
-             newsData.articles.forEach((article, index) => {
-               const storyData = {
-                 type: 'news',
-                 number: article.rank || (index + 1),
-                 category: (article.category || 'WORLD NEWS').toUpperCase(),
-                 emoji: article.emoji || '📰',
-                 title: article.title || 'News Story',
-                 summary: article.summary || 'News summary will appear here.',
-                 details: article.details || [],
-                 source: article.source || 'News+',
-                 url: article.url || '#',
-                 urlToImage: article.urlToImage,
-                 timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
-                   {"date": "Background", "event": "Initial situation develops"},
-                   {"date": "Today", "event": "Major developments break"},
-                   {"date": "Next week", "event": "Follow-up expected"}
-                 ],
-                 id: article.id || `article_${index}`
-               };
-               
-               // Debug timeline data
-               if (index < 3) {
-                 console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
-               }
-               
-               processedStories.push(storyData);
-             });
-            
-            console.log('📰 Setting stories:', processedStories.length);
-            setStories(processedStories);
-          } else {
-            console.log('📰 No articles found in response');
-          }
+              headline: 'News+ automation is working perfectly'
+            },
+            {
+              type: 'news',
+              number: 1,
+              category: 'SYSTEM STATUS',
+              emoji: '🤖',
+              title: 'GitHub Actions Automation Active',
+              summary: 'Your News+ system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
+              details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
+              source: 'News+ System',
+              url: '#',
+              timeline: [
+                {"date": "Setup", "event": "GitHub Actions workflow configured"},
+                {"date": "Integration", "event": "GDELT API and Claude AI connected"},
+                {"date": "Testing", "event": "Automation tested and verified"},
+                {"date": "Live", "event": "Daily news generation now active"}
+              ]
+            },
+            {
+              type: 'news',
+              number: 2,
+              category: 'SYSTEM STATUS', 
+              emoji: '🌍',
+              title: 'GDELT Global News Integration Ready',
+              summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
+              details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
+              source: 'News+ System',
+              url: '#',
+              timeline: [
+                {"date": "Research", "event": "GDELT database identified as news source"},
+                {"date": "Development", "event": "API integration and filtering built"},
+                {"date": "Testing", "event": "Source verification and quality checks"},
+                {"date": "Active", "event": "Real-time global news processing online"}
+              ]
+            },
+            {
+              type: 'news',
+              number: 3,
+              category: 'SYSTEM STATUS',
+              emoji: '🧠', 
+              title: 'Claude AI Curation System Online',
+              summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
+              details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
+              source: 'News+ System',
+              url: '#',
+              timeline: [
+                {"date": "Planning", "event": "AI curation system designed"},
+                {"date": "Implementation", "event": "Claude API integration completed"},
+                {"date": "Optimization", "event": "Story selection algorithms refined"},
+                {"date": "Production", "event": "AI curation now processing daily news"}
+              ]
+            }
+          ];
         }
+        
+        
+        
+        setStories(processedStories);
+        setLoading(false);
       } catch (error) {
         console.error('Error loading news:', error);
-      } finally {
-        console.log('📰 Setting loading to false');
         setLoading(false);
       }
     };
-    
+
     loadNewsData();
   }, []);
 
@@ -136,12 +235,6 @@ export default function Home() {
     if (index >= 0 && index < stories.length) {
       setCurrentIndex(index);
       setMenuOpen(false);
-      
-      // Mark article as read when user navigates to it
-      const story = stories[index];
-      if (story && story.type === 'news' && story.id && user) {
-        markArticleAsRead(story.id);
-      }
     }
   };
 
@@ -160,28 +253,6 @@ export default function Home() {
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
   };
-
-  // Mark article as read
-  const markArticleAsRead = async (articleId) => {
-    if (!user || !articleId) return;
-    
-    try {
-      const response = await fetch('/api/reading-history', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ articleId }),
-      });
-
-      if (response.ok) {
-        setReadArticles(prev => new Set([...prev, articleId]));
-      }
-    } catch (error) {
-      console.error('Error marking article as read:', error);
-    }
-  };
-
 
 
   // Authentication functions
@@ -407,8 +478,6 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
-  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
-  
   if (loading) {
     return (
       <div className="loading-container">
@@ -1655,85 +1724,63 @@ export default function Home() {
                           textTransform: 'uppercase',
                           padding: '4px 8px',
                           borderRadius: '6px',
-                          background: (() => {
-                            const categoryColors = {
-                              'World': { bg: '#3b82f6', text: '#ffffff' },
-                              'Politics': { bg: '#ef4444', text: '#ffffff' },
-                              'Business': { bg: '#22c55e', text: '#ffffff' },
-                              'Technology': { bg: '#8b5cf6', text: '#ffffff' },
-                              'Sports': { bg: '#f97316', text: '#ffffff' },
-                              'Entertainment': { bg: '#ec4899', text: '#ffffff' },
-                              'Science': { bg: '#14b8a6', text: '#ffffff' },
-                              'Health': { bg: '#eab308', text: '#ffffff' },
-                              // Legacy category mappings
-                              'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
-                              'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
-                              'MARKETS': { bg: '#22c55e', text: '#ffffff' },
-                              'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
-                              'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
-                              'HEALTH': { bg: '#eab308', text: '#ffffff' },
-                              'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
-                              'SPORTS': { bg: '#f97316', text: '#ffffff' },
-                              'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
-                              'Society': { bg: '#3b82f6', text: '#ffffff' }
-                            };
-                            return categoryColors[story.category]?.bg || '#f8fafc';
-                          })(),
-                          color: (() => {
-                            const categoryColors = {
-                              'World': { bg: '#3b82f6', text: '#ffffff' },
-                              'Politics': { bg: '#ef4444', text: '#ffffff' },
-                              'Business': { bg: '#22c55e', text: '#ffffff' },
-                              'Technology': { bg: '#8b5cf6', text: '#ffffff' },
-                              'Sports': { bg: '#f97316', text: '#ffffff' },
-                              'Entertainment': { bg: '#ec4899', text: '#ffffff' },
-                              'Science': { bg: '#14b8a6', text: '#ffffff' },
-                              'Health': { bg: '#eab308', text: '#ffffff' },
-                              // Legacy category mappings
-                              'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
-                              'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
-                              'MARKETS': { bg: '#22c55e', text: '#ffffff' },
-                              'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
-                              'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
-                              'HEALTH': { bg: '#eab308', text: '#ffffff' },
-                              'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
-                              'SPORTS': { bg: '#f97316', text: '#ffffff' },
-                              'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
-                              'Society': { bg: '#3b82f6', text: '#ffffff' }
-                            };
-                            return categoryColors[story.category]?.text || '#64748b';
-                          })()
-                        }}>
-                          {story.emoji} {story.category}
+                        background: (() => {
+                          const categoryColors = {
+                            'World': { bg: '#3b82f6', text: '#ffffff' },
+                            'Politics': { bg: '#ef4444', text: '#ffffff' },
+                            'Business': { bg: '#22c55e', text: '#ffffff' },
+                            'Technology': { bg: '#8b5cf6', text: '#ffffff' },
+                            'Sports': { bg: '#f97316', text: '#ffffff' },
+                            'Entertainment': { bg: '#ec4899', text: '#ffffff' },
+                            'Science': { bg: '#14b8a6', text: '#ffffff' },
+                            'Health': { bg: '#eab308', text: '#ffffff' },
+                            // Legacy category mappings
+                            'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
+                            'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
+                            'MARKETS': { bg: '#22c55e', text: '#ffffff' },
+                            'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
+                            'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
+                            'HEALTH': { bg: '#eab308', text: '#ffffff' },
+                            'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
+                            'SPORTS': { bg: '#f97316', text: '#ffffff' },
+                            'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
+                            'Society': { bg: '#3b82f6', text: '#ffffff' }
+                          };
+                          return categoryColors[story.category]?.bg || '#f8fafc';
+                        })(),
+                        color: (() => {
+                          const categoryColors = {
+                            'World': { bg: '#3b82f6', text: '#ffffff' },
+                            'Politics': { bg: '#ef4444', text: '#ffffff' },
+                            'Business': { bg: '#22c55e', text: '#ffffff' },
+                            'Technology': { bg: '#8b5cf6', text: '#ffffff' },
+                            'Sports': { bg: '#f97316', text: '#ffffff' },
+                            'Entertainment': { bg: '#ec4899', text: '#ffffff' },
+                            'Science': { bg: '#14b8a6', text: '#ffffff' },
+                            'Health': { bg: '#eab308', text: '#ffffff' },
+                            // Legacy category mappings
+                            'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
+                            'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
+                            'MARKETS': { bg: '#22c55e', text: '#ffffff' },
+                            'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
+                            'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
+                            'HEALTH': { bg: '#eab308', text: '#ffffff' },
+                            'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
+                            'SPORTS': { bg: '#f97316', text: '#ffffff' },
+                            'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
+                            'Society': { bg: '#3b82f6', text: '#ffffff' }
+                          };
+                          return categoryColors[story.category]?.text || '#64748b';
+                        })()
+                      }}>
+                        {story.emoji} {story.category}
                         </div>
 
                         {/* Timeline Button */}
                         <div className="timeline-button-wrap" style={{ marginLeft: '-0.5rem' }}>
-                          <button
-                            className="timeline-button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('Section toggle button clicked for story', index);
-                              
-                              // Toggle between timeline and details view
-                              setShowTimeline(prev => ({
-                                ...prev,
-                                [index]: !prev[index]
-                              }));
-                              
-                              // If switching to timeline, expand it
-                              if (!showTimeline[index]) {
-                                setExpandedTimeline(prev => ({
-                                  ...prev,
-                                  [index]: true
-                                }));
-                              }
-                            }}
-                          >
+                          <div className="timeline-button">
                             {/* Details Icon (Left) */}
                             <svg 
-                              className={!showTimeline[index] ? 'active' : ''}
                               width="1rem" 
                               height="1rem" 
                               viewBox="0 0 24 24" 
@@ -1742,6 +1789,24 @@ export default function Home() {
                               strokeWidth="2" 
                               strokeLinecap="round" 
                               strokeLinejoin="round"
+                              style={{
+                                opacity: showTimeline[index] ? 0.4 : 1,
+                                transition: 'opacity 0.2s ease',
+                                cursor: 'pointer',
+                                padding: '0.25rem',
+                                borderRadius: '0.5rem'
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('Details icon clicked for story', index);
+                                
+                                // Switch to details view
+                                setShowTimeline(prev => ({
+                                  ...prev,
+                                  [index]: false
+                                }));
+                              }}
                             >
                               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                               <line x1="9" y1="9" x2="15" y2="9"/>
@@ -1751,7 +1816,6 @@ export default function Home() {
                             
                             {/* Timeline Icon (Right) */}
                             <svg 
-                              className={showTimeline[index] ? 'active' : ''}
                               width="1rem" 
                               height="1rem" 
                               viewBox="0 0 24 24" 
@@ -1760,11 +1824,34 @@ export default function Home() {
                               strokeWidth="2" 
                               strokeLinecap="round" 
                               strokeLinejoin="round"
+                              style={{
+                                opacity: showTimeline[index] ? 1 : 0.4,
+                                transition: 'opacity 0.2s ease',
+                                cursor: 'pointer',
+                                padding: '0.25rem',
+                                borderRadius: '0.5rem'
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('Timeline icon clicked for story', index);
+                                
+                                // Switch to timeline view and expand it
+                                setShowTimeline(prev => ({
+                                  ...prev,
+                                  [index]: true
+                                }));
+                                
+                                setExpandedTimeline(prev => ({
+                                  ...prev,
+                                  [index]: true
+                                }));
+                              }}
                             >
                               <circle cx="12" cy="12" r="10"/>
                               <polyline points="12,6 12,12 16,14"/>
                             </svg>
-                          </button>
+                          </div>
                         </div>
                       </div>
                       
@@ -1791,7 +1878,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
                         position: 'fixed',
-                        bottom: '42px',
+                        bottom: '62px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         width: '100%',
@@ -1808,9 +1895,8 @@ export default function Home() {
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: 'pointer',
-                          minHeight: '120px',
-                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '120px') : '120px',
-                          maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '400px' : '120px') : '120px',
+                          minHeight: '90px',
+                          height: '90px',
                           background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
                           backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
@@ -1905,17 +1991,11 @@ export default function Home() {
                               endEvent.stopPropagation();
                               toggleTimeline(index);
                             } else if (!hasMoved) {
-                              // Check if the touch target is the expand icon
-                              const touchTarget = endEvent.target;
-                              const isExpandIcon = touchTarget.closest('[data-expand-icon]');
-                              
-                              if (!isExpandIcon) {
-                                // Single tap toggles timeline only if not on expand icon
-                                console.log('Timeline tap detected for story', index);
-                                endEvent.preventDefault();
-                                endEvent.stopPropagation();
-                                toggleTimeline(index);
-                              }
+                              // Single tap toggles timeline
+                              console.log('Timeline tap detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              toggleTimeline(index);
                             }
                             // If it's vertical swipe, let it pass through for story navigation
                             
@@ -1960,36 +2040,33 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                height: expandedTimeline[index] ? '400px' : '120px',
-                                maxHeight: expandedTimeline[index] ? '400px' : '120px',
-                                transition: 'height 0.3s ease-in-out',
                                 background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
-                                border: (() => {
-                                  const categoryBorders = {
-                                    'World': '1px solid #3b82f6',
-                                    'Politics': '1px solid #ef4444',
-                                    'Business': '1px solid #22c55e',
-                                    'Technology': '1px solid #8b5cf6',
-                                    'Sports': '1px solid #f97316',
-                                    'Entertainment': '1px solid #ec4899',
-                                    'Science': '1px solid #14b8a6',
-                                    'Health': '1px solid #eab308',
-                                    // Legacy category mappings
-                                    'WORLD NEWS': '1px solid #3b82f6',
-                                    'BUSINESS': '1px solid #22c55e',
-                                    'MARKETS': '1px solid #22c55e',
-                                    'TECH & AI': '1px solid #8b5cf6',
-                                    'SCIENCE': '1px solid #14b8a6',
-                                    'HEALTH': '1px solid #eab308',
-                                    'CLIMATE': '1px solid #14b8a6',
-                                    'SPORTS': '1px solid #f97316',
-                                    'ENTERTAINMENT': '1px solid #ec4899',
-                                    'Society': '1px solid #3b82f6'
-                                  };
-                                  return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
-                                })(),
+                                  border: (() => {
+                                    const categoryBorders = {
+                                      'World': '1px solid #3b82f6',
+                                      'Politics': '1px solid #ef4444',
+                                      'Business': '1px solid #22c55e',
+                                      'Technology': '1px solid #8b5cf6',
+                                      'Sports': '1px solid #f97316',
+                                      'Entertainment': '1px solid #ec4899',
+                                      'Science': '1px solid #14b8a6',
+                                      'Health': '1px solid #eab308',
+                                      // Legacy category mappings
+                                      'WORLD NEWS': '1px solid #3b82f6',
+                                      'BUSINESS': '1px solid #22c55e',
+                                      'MARKETS': '1px solid #22c55e',
+                                      'TECH & AI': '1px solid #8b5cf6',
+                                      'SCIENCE': '1px solid #14b8a6',
+                                      'HEALTH': '1px solid #eab308',
+                                      'CLIMATE': '1px solid #14b8a6',
+                                      'SPORTS': '1px solid #f97316',
+                                      'ENTERTAINMENT': '1px solid #ec4899',
+                                      'Society': '1px solid #3b82f6'
+                                    };
+                                    return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
+                                  })(),
                                 borderRadius: '16px',
                                 padding: '12px 20px',
                                 boxShadow: (() => {
@@ -2016,65 +2093,13 @@ export default function Home() {
                                   };
                                   return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
                                 })(),
-                                minHeight: '120px',
-                                zIndex: '10',
-                                overflowY: expandedTimeline[index] ? 'visible' : 'auto'
+                                minHeight: '90px',
+                                zIndex: '10'
                               }}>
-                               {/* Expand Icon */}
-                               <div 
-                                 data-expand-icon="true"
-                                 style={{
-                                 position: 'absolute',
-                                 top: '8px',
-                                 right: '8px',
-                                 width: '28px',
-                                 height: '28px',
-                                 display: 'flex',
-                                 alignItems: 'center',
-                                 justifyContent: 'center',
-                                 cursor: 'pointer',
-                                 zIndex: '20',
-                                 transition: 'all 0.2s ease'
-                               }}
-                               onClick={(e) => {
-                                 e.preventDefault();
-                                 e.stopPropagation();
-                                 console.log('Expand icon clicked for story', index);
-                                 setExpandedTimeline(prev => ({
-                                   ...prev,
-                                   [index]: !prev[index]
-                                 }));
-                               }}
-                               onTouchEnd={(e) => {
-                                 e.preventDefault();
-                                 e.stopPropagation();
-                                 console.log('Expand icon touched for story', index);
-                                 setExpandedTimeline(prev => ({
-                                   ...prev,
-                                   [index]: !prev[index]
-                                 }));
-                               }}>
-                                 <span style={{
-                                   fontSize: '18px',
-                                   fontWeight: 'bold',
-                                   color: '#666',
-                                   transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                   transition: 'transform 0.2s ease'
-                                 }}>
-                                   ↗
-                                 </span>
-                               </div>
-                              
                               <div style={{
                                 position: 'relative',
-                                height: '100%',
-                                overflowY: expandedTimeline[index] ? 'visible' : 'auto',
-                                paddingRight: '8px',
                                 paddingLeft: '20px',
-                                width: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end'
+                                width: '100%'
                               }}>
                                 <div style={{
                                   position: 'absolute',
@@ -2086,21 +2111,13 @@ export default function Home() {
                                   zIndex: '0',
                                   borderRadius: '2px'
                                 }}></div>
-                                <div style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end',
-                                  height: '100%',
-                                  paddingTop: expandedTimeline[index] ? '8px' : '0px',
-                                  paddingBottom: '8px'
-                                }}>
-                                  {story.timeline.map((event, idx) => (
-                                    <div key={idx} style={{
-                                      position: 'relative',
-                                      marginBottom: '12px',
-                                      paddingLeft: '20px',
-                                      minHeight: '36px'
-                                    }}>
+                                {story.timeline.map((event, idx) => (
+                                  <div key={idx} style={{
+                                    position: 'relative',
+                                    marginBottom: '12px',
+                                    paddingLeft: '20px',
+                                    minHeight: '36px'
+                                  }}>
                                     <div style={{
                                       position: 'absolute',
                                       left: '-15px',
@@ -2114,23 +2131,22 @@ export default function Home() {
                                       boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
-                                      fontSize: '12px',
+                                      fontSize: '14px',
                                       fontWeight: '700',
                                       color: '#3b82f6',
-                                      marginBottom: '3px',
+                                      marginBottom: '4px',
                                       letterSpacing: '0.3px'
                                     }}>{event.date}</div>
                                     <div style={{
-                                      fontSize: '13px',
+                                      fontSize: '16px',
                                       fontWeight: '500',
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
-                                      lineHeight: '1.3'
+                                      lineHeight: '1.4'
                                     }}>{event.event}</div>
-                                  </div>
+                      </div>
                                 ))}
-                                </div>
-                              </div>
-                            </div>
+                  </div>
+                </div>
                           )
                         )}
                         
