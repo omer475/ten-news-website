@@ -1723,10 +1723,10 @@ export default function Home() {
                               }));
                             }
                             
-                            // Always expand the timeline when button is clicked
+                            // Toggle the timeline expansion state
                             setExpandedTimeline(prev => ({
                               ...prev,
-                              [index]: true
+                              [index]: !prev[index]
                             }));
                           }}
                           style={{
