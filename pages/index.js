@@ -2072,6 +2072,7 @@ export default function Home() {
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
+                                paddingTop: '0px',
                                 width: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -2080,7 +2081,7 @@ export default function Home() {
                                 <div style={{
                                   position: 'absolute',
                                   left: '5.5px',
-                                  top: '8px',
+                                  top: '0px',
                                   bottom: '8px',
                                   width: '3px',
                                   background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
@@ -2092,7 +2093,7 @@ export default function Home() {
                                   flexDirection: 'column',
                                   justifyContent: 'flex-start',
                                   height: '100%',
-                                  paddingTop: '8px',
+                                  paddingTop: '0px',
                                   paddingBottom: '8px'
                                 }}>
                                   {story.timeline.map((event, idx) => (
