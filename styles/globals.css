@@ -7,7 +7,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  background: #ffffff;
+  background: #F8F9FB;
   color: #1d1d1f;
   overflow: hidden;
   position: fixed;
@@ -22,7 +22,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #fff;
+  background: #F8F9FB;
 }
 
 .loading-spinner {
@@ -147,7 +147,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 80px 24px 60px;
-  background: #fff;
+  background: #F8F9FB;
   transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
   overflow-y: auto;
 }
@@ -350,7 +350,7 @@ body {
 
 .newsletter-button {
   padding: 16px 32px;
-  background: #fff;
+  background: #F8F9FB;
   color: #000;
   border: none;
   border-radius: 12px;
