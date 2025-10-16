@@ -1961,7 +1961,7 @@ export default function Home() {
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
-                                height: expandedTimeline[index] ? '300px' : '85px',
+                                height: expandedTimeline[index] ? 'auto' : '85px',
                                 maxHeight: expandedTimeline[index] ? '300px' : '85px',
                                 transition: 'height 0.3s ease-in-out',
                                 background: 'rgba(255, 255, 255, 0.95)',
