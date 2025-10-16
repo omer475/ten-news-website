@@ -1957,8 +1957,68 @@ export default function Home() {
                             <div 
                               className="timeline-container-desktop"
                               style={{
-                                height: '100%',
-                                width: '100%',
+                                position: 'absolute',
+                                bottom: '0',
+                                left: '0',
+                                right: '0',
+                                height: expandedTimeline[index] ? '300px' : '85px',
+                                maxHeight: expandedTimeline[index] ? '300px' : '85px',
+                                transition: 'height 0.3s ease-in-out',
+                                background: 'rgba(255, 255, 255, 0.95)',
+                                backdropFilter: 'blur(16px)',
+                                WebkitBackdropFilter: 'blur(16px)',
+                                border: (() => {
+                                  const categoryBorders = {
+                                    'World': '1px solid #3b82f6',
+                                    'Politics': '1px solid #ef4444',
+                                    'Business': '1px solid #22c55e',
+                                    'Technology': '1px solid #8b5cf6',
+                                    'Sports': '1px solid #f97316',
+                                    'Entertainment': '1px solid #ec4899',
+                                    'Science': '1px solid #14b8a6',
+                                    'Health': '1px solid #eab308',
+                                    // Legacy category mappings
+                                    'WORLD NEWS': '1px solid #3b82f6',
+                                    'BUSINESS': '1px solid #22c55e',
+                                    'MARKETS': '1px solid #22c55e',
+                                    'TECH & AI': '1px solid #8b5cf6',
+                                    'SCIENCE': '1px solid #14b8a6',
+                                    'HEALTH': '1px solid #eab308',
+                                    'CLIMATE': '1px solid #14b8a6',
+                                    'SPORTS': '1px solid #f97316',
+                                    'ENTERTAINMENT': '1px solid #ec4899',
+                                    'Society': '1px solid #3b82f6'
+                                  };
+                                  return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
+                                })(),
+                                borderRadius: '16px',
+                                padding: '12px 20px',
+                                boxShadow: (() => {
+                                  const categoryShadows = {
+                                    'World': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
+                                    'Politics': '0 4px 20px rgba(239, 68, 68, 0.25), 0 2px 8px rgba(239, 68, 68, 0.15)',
+                                    'Business': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
+                                    'Technology': '0 4px 20px rgba(139, 92, 246, 0.25), 0 2px 8px rgba(139, 92, 246, 0.15)',
+                                    'Sports': '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)',
+                                    'Entertainment': '0 4px 20px rgba(236, 72, 153, 0.25), 0 2px 8px rgba(236, 72, 153, 0.15)',
+                                    'Science': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
+                                    'Health': '0 4px 20px rgba(234, 179, 8, 0.25), 0 2px 8px rgba(234, 179, 8, 0.15)',
+                                    // Legacy category mappings
+                                    'WORLD NEWS': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
+                                    'BUSINESS': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
+                                    'MARKETS': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
+                                    'TECH & AI': '0 4px 20px rgba(139, 92, 246, 0.25), 0 2px 8px rgba(139, 92, 246, 0.15)',
+                                    'SCIENCE': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
+                                    'HEALTH': '0 4px 20px rgba(234, 179, 8, 0.25), 0 2px 8px rgba(234, 179, 8, 0.15)',
+                                    'CLIMATE': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
+                                    'SPORTS': '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)',
+                                    'ENTERTAINMENT': '0 4px 20px rgba(236, 72, 153, 0.25), 0 2px 8px rgba(236, 72, 153, 0.15)',
+                                    'Society': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)'
+                                  };
+                                  return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
+                                })(),
+                                minHeight: '120px',
+                                zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
                               }}>
                                {/* Expand Icon */}
@@ -2093,8 +2153,8 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }}
                             style={{
-                              width: '5px',
-                              height: '5px',
+                              width: '6px',
+                              height: '6px',
                               borderRadius: '50%',
                               background: !showTimeline[index] 
                                 ? 'rgba(0, 0, 0, 0.6)' 
@@ -2111,8 +2171,8 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }}
                             style={{
-                              width: '5px',
-                              height: '5px',
+                              width: '6px',
+                              height: '6px',
                               borderRadius: '50%',
                               background: showTimeline[index] 
                                 ? 'rgba(0, 0, 0, 0.6)' 
