@@ -1964,7 +1964,7 @@ export default function Home() {
                                 height: expandedTimeline[index] ? '300px' : '85px',
                                 maxHeight: expandedTimeline[index] ? '300px' : '85px',
                                 transition: 'height 0.3s ease-in-out',
-                                background: 'rgba(255, 255, 255, 0.95)',
+                                background: '#F8F9FB',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: (() => {
