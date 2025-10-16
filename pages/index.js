@@ -2153,15 +2153,14 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }}
                             style={{
-                              width: '8px',
-                              height: '8px',
+                              width: '5px',
+                              height: '5px',
                               borderRadius: '50%',
                               background: !showTimeline[index] 
-                                ? 'rgba(0, 0, 0, 0.8)' 
-                                : 'rgba(0, 0, 0, 0.3)',
+                                ? 'rgba(0, 0, 0, 0.6)' 
+                                : 'rgba(0, 0, 0, 0.2)',
                               cursor: 'pointer',
-                              transition: 'all 0.25s ease',
-                              border: '1px solid rgba(255, 255, 255, 0.5)'
+                              transition: 'all 0.2s ease'
                             }}
                           />
                           
@@ -2172,15 +2171,14 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }}
                             style={{
-                              width: '8px',
-                              height: '8px',
+                              width: '5px',
+                              height: '5px',
                               borderRadius: '50%',
                               background: showTimeline[index] 
-                                ? 'rgba(0, 0, 0, 0.8)' 
-                                : 'rgba(0, 0, 0, 0.3)',
+                                ? 'rgba(0, 0, 0, 0.6)' 
+                                : 'rgba(0, 0, 0, 0.2)',
                               cursor: 'pointer',
-                              transition: 'all 0.25s ease',
-                              border: '1px solid rgba(255, 255, 255, 0.5)'
+                              transition: 'all 0.2s ease'
                             }}
                           />
                         </div>
