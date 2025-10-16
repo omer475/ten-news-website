@@ -2153,14 +2153,15 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: false }));
                             }}
                             style={{
-                              width: '6px',
-                              height: '6px',
+                              width: '8px',
+                              height: '8px',
                               borderRadius: '50%',
                               background: !showTimeline[index] 
-                                ? 'rgba(0, 0, 0, 0.75)' 
-                                : 'rgba(255, 255, 255, 0.35)',
+                                ? 'rgba(0, 0, 0, 0.8)' 
+                                : 'rgba(0, 0, 0, 0.3)',
                               cursor: 'pointer',
-                              transition: 'all 0.25s ease'
+                              transition: 'all 0.25s ease',
+                              border: '1px solid rgba(255, 255, 255, 0.5)'
                             }}
                           />
                           
@@ -2171,14 +2172,15 @@ export default function Home() {
                               setShowTimeline(prev => ({ ...prev, [index]: true }));
                             }}
                             style={{
-                              width: '6px',
-                              height: '6px',
+                              width: '8px',
+                              height: '8px',
                               borderRadius: '50%',
                               background: showTimeline[index] 
-                                ? 'rgba(0, 0, 0, 0.75)' 
-                                : 'rgba(255, 255, 255, 0.35)',
+                                ? 'rgba(0, 0, 0, 0.8)' 
+                                : 'rgba(0, 0, 0, 0.3)',
                               cursor: 'pointer',
-                              transition: 'all 0.25s ease'
+                              transition: 'all 0.25s ease',
+                              border: '1px solid rgba(255, 255, 255, 0.5)'
                             }}
                           />
                         </div>
