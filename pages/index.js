@@ -1992,7 +1992,7 @@ export default function Home() {
                                   return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
                                 })(),
                                 borderRadius: '16px',
-                                padding: '3px 20px 12px 20px',
+                                padding: '6px 20px 12px 20px',
                                 boxShadow: (() => {
                                   const categoryShadows = {
                                     'World': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
