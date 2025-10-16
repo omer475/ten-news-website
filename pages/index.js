@@ -2075,7 +2075,7 @@ export default function Home() {
                                 width: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end'
+                                justifyContent: 'flex-start'
                               }}>
                                 <div style={{
                                   position: 'absolute',
@@ -2090,9 +2090,9 @@ export default function Home() {
                                 <div style={{
                                   display: 'flex',
                                   flexDirection: 'column',
-                                  justifyContent: expandedTimeline[index] ? 'flex-start' : 'flex-end',
+                                  justifyContent: 'flex-start',
                                   height: '100%',
-                                  paddingTop: expandedTimeline[index] ? '8px' : '0px',
+                                  paddingTop: '8px',
                                   paddingBottom: '8px'
                                 }}>
                                   {story.timeline.map((event, idx) => (
