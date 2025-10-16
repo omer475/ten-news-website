@@ -851,7 +851,7 @@ export default function Home() {
         }
 
         .news-summary {
-          font-size: 17px;
+          font-size: 16px;
           color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
           line-height: 1.6;
           margin-bottom: 16px;
@@ -1783,9 +1783,9 @@ export default function Home() {
                       <p className="news-summary" style={{ 
                         marginTop: '0',
                         marginBottom: '16px',
-                        fontSize: '18px',
+                        fontSize: '16px',
                         lineHeight: '1.5',
-                        color: '#1a1a1a',
+                        color: '#4a4a4a',
                         opacity: '1'
                       }}>{renderBoldText(story.summary, story.category)}</p>
                       
