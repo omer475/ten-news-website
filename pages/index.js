@@ -1634,8 +1634,8 @@ export default function Home() {
                     <div className="news-content" style={{
                       position: 'relative',
                       paddingTop: 'calc(30vh + 12px)',
-                      paddingLeft: '10px',
-                      paddingRight: '10px',
+                      paddingLeft: '24px',
+                      paddingRight: '24px',
                       zIndex: '2'
                     }}>
                       
@@ -1784,7 +1784,7 @@ export default function Home() {
                         marginTop: '0',
                         marginBottom: '16px',
                         fontSize: '16px',
-                        lineHeight: '1.5',
+                        lineHeight: '1.6',
                         color: '#4a4a4a',
                         opacity: '1'
                       }}>{renderBoldText(story.summary, story.category)}</p>
@@ -1964,7 +1964,7 @@ export default function Home() {
                                 height: expandedTimeline[index] ? '300px' : '85px',
                                 maxHeight: expandedTimeline[index] ? '300px' : '85px',
                                 transition: 'height 0.3s ease-in-out',
-                                background: '#F8F9FB',
+                                background: 'rgba(255, 255, 255, 0.95)',
                                 backdropFilter: 'blur(16px)',
                                 WebkitBackdropFilter: 'blur(16px)',
                                 border: (() => {
