@@ -2101,12 +2101,13 @@ export default function Home() {
                                       position: 'relative',
                                       marginBottom: '12px',
                                       paddingLeft: '20px',
-                                      minHeight: '36px'
+                                      minHeight: '36px',
+                                      marginTop: idx === 0 ? '0px' : '0px'
                                     }}>
                                     <div style={{
                                       position: 'absolute',
                                       left: '-15px',
-                                      top: '6px',
+                                      top: '0px',
                                       width: '12px',
                                       height: '12px',
                                       borderRadius: '50%',
@@ -2120,13 +2121,15 @@ export default function Home() {
                                       fontWeight: '700',
                                       color: '#3b82f6',
                                       marginBottom: '3px',
-                                      letterSpacing: '0.3px'
+                                      letterSpacing: '0.3px',
+                                      marginTop: '0px'
                                     }}>{event.date}</div>
                                     <div style={{
                                       fontSize: '13px',
                                       fontWeight: '500',
                                       color: darkMode ? '#e2e8f0' : '#1e293b',
-                                      lineHeight: '1.3'
+                                      lineHeight: '1.3',
+                                      marginTop: '0px'
                                     }}>{event.event}</div>
                                   </div>
                                 ))}
