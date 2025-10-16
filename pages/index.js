@@ -2017,7 +2017,7 @@ export default function Home() {
                                   };
                                   return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
                                 })(),
-                                minHeight: '120px',
+                                minHeight: '85px',
                                 zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
                               }}>
