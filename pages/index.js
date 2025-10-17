@@ -824,7 +824,7 @@ export default function Home() {
           align-items: center;
           gap: 6px;
           padding: 6px 14px;
-          border-radius: 0;
+          border-radius: 4px;
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 1px;
@@ -869,7 +869,7 @@ export default function Home() {
           background: #ffffff;
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          border-radius: 0;
+          border-radius: 8px;
           padding: 12px 20px;
           border: 2px solid #000000;
           margin-top: 20px;
@@ -1817,7 +1817,7 @@ export default function Home() {
                           backdropFilter: 'none',
                           WebkitBackdropFilter: 'none',
                           border: showTimeline[index] ? 'none' : '2px solid #000000',
-                          borderRadius: '0',
+                          borderRadius: '8px',
                           boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
