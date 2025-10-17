@@ -844,7 +844,7 @@ export default function Home() {
 
         .news-title {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-          font-size: 48px;
+          font-size: 52px;
           font-weight: 900;
           line-height: 1.1;
           letter-spacing: -0.5px;
