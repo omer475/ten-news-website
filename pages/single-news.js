@@ -1029,7 +1029,7 @@ export default function SingleNewsPage() {
         .details-section {
           margin-bottom: 48px;
           border: 2px solid #000000;
-          border-radius: 6px;
+          border-radius: 0;
           overflow: hidden;
           transition: all 0.3s ease;
           background: #ffffff;
@@ -1215,7 +1215,7 @@ export default function SingleNewsPage() {
           margin-bottom: 48px;
           padding: 0;
           background: #ffffff;
-          border-radius: 6px;
+          border-radius: 0;
           border: 2px solid #000000;
         }
 

@@ -2143,8 +2143,8 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* Read Full Article Button */}
-                      {story.url && story.url !== '#' && (
+                      {/* Removed Read Full Article Button */}
+                      {false && story.url && story.url !== '#' && (
                         <div style={{
                           position: 'absolute',
                           bottom: '20px',
