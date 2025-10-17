@@ -2506,4 +2506,4 @@ function EmailConfirmation({ email, onBack }) {
       </div>
     </div>
   );
-}
+}/* Force rebuild Fri Oct 17 12:57:17 BST 2025 */
