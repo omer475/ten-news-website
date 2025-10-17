@@ -780,7 +780,7 @@ export default function SingleNewsPage() {
           padding: 8px 16px;
           background: #ffffff;
           border: 1px solid #333333;
-          border-radius: 4px;
+          border-radius: 0;
           font-size: 11px;
           font-weight: 600;
           color: #333333;
