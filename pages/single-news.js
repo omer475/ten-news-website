@@ -759,13 +759,13 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 16px;
+          padding: 8px 12px;
           background: #ffffff;
-          border: 1px solid #333333;
-          border-radius: 0;
+          border: 2px solid #000000;
+          border-radius: 4px;
           font-size: 11px;
           font-weight: 600;
-          color: #333333;
+          color: #000000;
           cursor: pointer;
           transition: all 0.2s;
           text-transform: uppercase;
@@ -778,7 +778,7 @@ export default function SingleNewsPage() {
         }
 
         .action-btn:hover {
-          background: #333333;
+          background: #000000;
           color: #ffffff;
         }
 
@@ -787,16 +787,18 @@ export default function SingleNewsPage() {
         }
 
         .action-btn.bookmarked {
-          color: #f59e0b;
-          border-color: #f59e0b;
+          background: #000000;
+          color: #ffffff;
+          border-color: #000000;
         }
 
         .font-size-controls {
           display: flex;
           gap: 4px;
-          border: 1px solid #e5e5e7;
-          border-radius: 6px;
+          border: 2px solid #000000;
+          border-radius: 4px;
           padding: 2px;
+          background: #ffffff;
         }
 
         .dark-mode .font-size-controls {
@@ -811,12 +813,13 @@ export default function SingleNewsPage() {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
-          border-radius: 4px;
+          border-radius: 2px;
+          color: #000000;
         }
 
         .font-btn.active {
-          background: #1d1d1f;
-          color: white;
+          background: #000000;
+          color: #ffffff;
         }
 
         .dark-mode .font-btn.active {

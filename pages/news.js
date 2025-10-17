@@ -499,13 +499,13 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 16px;
+          padding: 8px 12px;
           background: #ffffff;
-          border: 1px solid #333333;
-          border-radius: 0;
+          border: 2px solid #000000;
+          border-radius: 4px;
           font-size: 11px;
           font-weight: 600;
-          color: #333333;
+          color: #000000;
           cursor: pointer;
           transition: all 0.2s;
           text-transform: uppercase;
@@ -513,7 +513,7 @@ export default function SingleNewsPage() {
         }
 
         .action-btn:hover {
-          background: #333333;
+          background: #000000;
           color: #ffffff;
         }
 
