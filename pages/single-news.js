@@ -765,8 +765,6 @@ export default function SingleNewsPage() {
 
         .dark-mode .category {
           color: #ffffff;
-          background: #000000;
-          border-color: #ffffff;
         }
 
         .header-actions {
@@ -782,7 +780,7 @@ export default function SingleNewsPage() {
           padding: 8px 16px;
           background: #ffffff;
           border: 1px solid #333333;
-          border-radius: 0;
+          border-radius: 4px;
           font-size: 11px;
           font-weight: 600;
           color: #333333;
