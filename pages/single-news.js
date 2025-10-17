@@ -318,15 +318,6 @@ export default function SingleNewsPage() {
                   </svg>
                   Start Reading
                 </button>
-                
-                <button className="external-btn" onClick={handleReadMore}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                    <polyline points="15,3 21,3 21,9"/>
-                    <line x1="10" y1="14" x2="21" y2="3"/>
-                  </svg>
-                  Read Full Article
-                </button>
               </div>
             </div>
             
@@ -454,15 +445,6 @@ export default function SingleNewsPage() {
 
             {/* Actions */}
             <div className="article-actions">
-              <button className="action-button primary" onClick={handleReadMore}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                  <polyline points="15,3 21,3 21,9"/>
-                  <line x1="10" y1="14" x2="21" y2="3"/>
-                </svg>
-                Read Full Article
-              </button>
-              
               <button className="action-button secondary" onClick={() => window.print()}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6,9 6,2 18,2 18,9"/>
@@ -1047,7 +1029,7 @@ export default function SingleNewsPage() {
         .details-section {
           margin-bottom: 48px;
           border: 2px solid #000000;
-          border-radius: 0;
+          border-radius: 6px;
           overflow: hidden;
           transition: all 0.3s ease;
           background: #ffffff;
@@ -1233,7 +1215,7 @@ export default function SingleNewsPage() {
           margin-bottom: 48px;
           padding: 0;
           background: #ffffff;
-          border-radius: 0;
+          border-radius: 6px;
           border: 2px solid #000000;
         }
 
