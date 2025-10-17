@@ -823,19 +823,23 @@ export default function Home() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px;
-          border-radius: 6px;
+          padding: 6px 14px;
+          border-radius: 0;
           font-size: 11px;
           font-weight: 700;
-          letter-spacing: 0.5px;
+          letter-spacing: 1px;
           text-transform: uppercase;
           margin-bottom: 10px;
           transition: all 0.2s ease;
           cursor: pointer;
+          background: ${darkMode ? '#ffffff' : '#000000'};
+          color: ${darkMode ? '#000000' : '#ffffff'};
+          border: 2px solid ${darkMode ? '#000000' : '#ffffff'};
         }
 
         .news-category:hover {
-          transform: scale(1.05);
+          transform: none;
+          background: ${darkMode ? '#cccccc' : '#333333'};
         }
 
         .news-category-icon {
@@ -862,22 +866,22 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-radius: 16px;
+          background: #ffffff;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          border-radius: 0;
           padding: 12px 20px;
+          border: 2px solid #000000;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+          box-shadow: none;
         }
 
         .news-detail-item {
           flex: 1;
           text-align: center;
           padding: 0 15px;
-          border-right: 1px solid #e2e8f0;
+          border-right: 1px solid #000000;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -891,24 +895,24 @@ export default function Home() {
 
         .news-detail-label {
           font-size: 10px;
-          color: #6b7280;
+          color: #666666;
           text-transform: uppercase;
           letter-spacing: 1px;
-          font-weight: 600;
+          font-weight: 700;
           margin-bottom: 1px;
         }
 
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: ${darkMode ? '#f9fafb' : '#111827'};
+          color: #000000;
           line-height: 1.2;
           margin: 0;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: #6b7280;
+          color: #666666;
           font-weight: 500;
           margin-top: 0;
         }
@@ -1561,12 +1565,9 @@ export default function Home() {
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
-                    console.log('Clicked story URL:', story.url);
-                    if (story.url && story.url !== '#') {
-                      window.open(story.url, '_blank');
-                    } else {
-                      console.log('No valid URL found for this story');
-                    }
+                    console.log('Clicked story:', story.title);
+                    // Navigate to single news page
+                    window.location.href = `/news?id=${story.id}`;
                   }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
@@ -1812,58 +1813,12 @@ export default function Home() {
                           minHeight: '85px',
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
-                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
-                          backdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
-                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(16px)',
-                            border: showTimeline[index] ? 'none' : (() => {
-                              const categoryBorders = {
-                                'World': '1px solid #3b82f6',
-                                'Politics': '1px solid #ef4444',
-                                'Business': '1px solid #22c55e',
-                                'Technology': '1px solid #8b5cf6',
-                                'Sports': '1px solid #f97316',
-                                'Entertainment': '1px solid #ec4899',
-                                'Science': '1px solid #14b8a6',
-                                'Health': '1px solid #eab308',
-                                // Legacy category mappings
-                                'WORLD NEWS': '1px solid #3b82f6',
-                                'BUSINESS': '1px solid #22c55e',
-                                'MARKETS': '1px solid #22c55e',
-                                'TECH & AI': '1px solid #8b5cf6',
-                                'SCIENCE': '1px solid #14b8a6',
-                                'HEALTH': '1px solid #eab308',
-                                'CLIMATE': '1px solid #14b8a6',
-                                'SPORTS': '1px solid #f97316',
-                                'ENTERTAINMENT': '1px solid #ec4899',
-                                'Society': '1px solid #3b82f6'
-                              };
-                              return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
-                            })(),
-                          borderRadius: showTimeline[index] ? '0' : '16px',
-                          boxShadow: showTimeline[index] ? 'none' : (() => {
-                            const categoryShadows = {
-                              'World': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
-                              'Politics': '0 4px 20px rgba(239, 68, 68, 0.25), 0 2px 8px rgba(239, 68, 68, 0.15)',
-                              'Business': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
-                              'Technology': '0 4px 20px rgba(139, 92, 246, 0.25), 0 2px 8px rgba(139, 92, 246, 0.15)',
-                              'Sports': '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)',
-                              'Entertainment': '0 4px 20px rgba(236, 72, 153, 0.25), 0 2px 8px rgba(236, 72, 153, 0.15)',
-                              'Science': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
-                              'Health': '0 4px 20px rgba(234, 179, 8, 0.25), 0 2px 8px rgba(234, 179, 8, 0.15)',
-                              // Legacy category mappings
-                              'WORLD NEWS': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
-                              'BUSINESS': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
-                              'MARKETS': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
-                              'TECH & AI': '0 4px 20px rgba(139, 92, 246, 0.25), 0 2px 8px rgba(139, 92, 246, 0.15)',
-                              'SCIENCE': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
-                              'HEALTH': '0 4px 20px rgba(234, 179, 8, 0.25), 0 2px 8px rgba(234, 179, 8, 0.15)',
-                              'CLIMATE': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
-                              'SPORTS': '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)',
-                              'ENTERTAINMENT': '0 4px 20px rgba(236, 72, 153, 0.25), 0 2px 8px rgba(236, 72, 153, 0.15)',
-                              'Society': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)'
-                            };
-                            return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
-                          })()
+                          background: showTimeline[index] ? 'transparent' : '#ffffff',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          border: showTimeline[index] ? 'none' : '2px solid #000000',
+                          borderRadius: '0',
+                          boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -2185,6 +2140,55 @@ export default function Home() {
                               transition: 'all 0.2s ease'
                             }}
                           />
+                        </div>
+                      )}
+                      
+                      {/* Read Full Article Button */}
+                      {story.url && story.url !== '#' && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '20px',
+                          right: '20px',
+                          zIndex: '100'
+                        }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(story.url, '_blank');
+                            }}
+                            style={{
+                              padding: '8px 16px',
+                              background: 'rgba(255, 255, 255, 0.9)',
+                              backdropFilter: 'blur(10px)',
+                              WebkitBackdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              color: '#1d1d1f',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.background = 'rgba(255, 255, 255, 1)';
+                              e.target.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+                              e.target.style.transform = 'translateY(0)';
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                              <polyline points="15,3 21,3 21,9"/>
+                              <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Read Full Article
+                          </button>
                         </div>
                       )}
                       
