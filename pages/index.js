@@ -1459,7 +1459,7 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: 3px solid #000000;
+            border: 1px solid #000000;
             box-shadow: none;
           }
           
@@ -1651,8 +1651,8 @@ export default function Home() {
                           textTransform: 'uppercase',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          background: '#000000',
-                          color: '#ffffff'
+                          background: '#f5f5f5',
+                          color: '#000000'
                         }}>
                           {story.emoji} {story.category}
                         </div>
@@ -1765,7 +1765,7 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: showTimeline[index] ? 'none' : '3px solid #000000',
+                            border: showTimeline[index] ? 'none' : '1px solid #000000',
                           borderRadius: showTimeline[index] ? '0' : '8px',
                           boxShadow: 'none'
                         }}
@@ -1871,7 +1871,7 @@ export default function Home() {
                                 background: '#ffffff',
                                 backdropFilter: 'none',
                                 WebkitBackdropFilter: 'none',
-                                border: '3px solid #000000',
+                                border: '1px solid #000000',
                                 borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
                                 boxShadow: 'none',
