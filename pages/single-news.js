@@ -734,15 +734,15 @@ export default function SingleNewsPage() {
         }
 
         .category {
-          color: #000000;
-          font-weight: 700;
+          color: #333333;
+          font-weight: 600;
           background: #ffffff;
           padding: 4px 12px;
-          border: 2px solid #000000;
-          border-radius: 4px;
+          border: 1px solid #333333;
+          border-radius: 0;
           text-transform: uppercase;
           font-size: 11px;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
         }
 
         .dark-mode .category {
@@ -759,13 +759,13 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 12px;
+          padding: 8px 16px;
           background: #ffffff;
-          border: 2px solid #000000;
-          border-radius: 4px;
+          border: 1px solid #333333;
+          border-radius: 0;
           font-size: 11px;
           font-weight: 600;
-          color: #000000;
+          color: #333333;
           cursor: pointer;
           transition: all 0.2s;
           text-transform: uppercase;
@@ -778,7 +778,7 @@ export default function SingleNewsPage() {
         }
 
         .action-btn:hover {
-          background: #000000;
+          background: #333333;
           color: #ffffff;
         }
 
@@ -787,18 +787,16 @@ export default function SingleNewsPage() {
         }
 
         .action-btn.bookmarked {
-          background: #000000;
-          color: #ffffff;
-          border-color: #000000;
+          color: #f59e0b;
+          border-color: #f59e0b;
         }
 
         .font-size-controls {
           display: flex;
           gap: 4px;
-          border: 2px solid #000000;
-          border-radius: 4px;
+          border: 1px solid #e5e5e7;
+          border-radius: 6px;
           padding: 2px;
-          background: #ffffff;
         }
 
         .dark-mode .font-size-controls {
@@ -813,13 +811,12 @@ export default function SingleNewsPage() {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
-          border-radius: 2px;
-          color: #000000;
+          border-radius: 4px;
         }
 
         .font-btn.active {
-          background: #000000;
-          color: #ffffff;
+          background: #1d1d1f;
+          color: white;
         }
 
         .dark-mode .font-btn.active {
@@ -1053,8 +1050,8 @@ export default function SingleNewsPage() {
           align-items: center;
           justify-content: space-between;
           padding: 16px 24px;
-          background: #000000;
-          border-bottom: none;
+          background: #f5f5f5;
+          border-bottom: 1px solid #e0e0e0;
         }
 
         .dark-mode .section-header {
@@ -1066,11 +1063,11 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 12px;
-          font-size: 14px;
-          font-weight: 700;
-          color: #ffffff;
+          font-size: 13px;
+          font-weight: 600;
+          color: #333333;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
         }
 
         .dark-mode .section-header h2 {
@@ -1081,7 +1078,7 @@ export default function SingleNewsPage() {
           padding: 6px 12px;
           background: #ffffff;
           color: #000000;
-          border: 1px solid #ffffff;
+          border: 1px solid #333333;
           border-radius: 0;
           font-size: 10px;
           font-weight: 700;
@@ -1092,8 +1089,8 @@ export default function SingleNewsPage() {
         }
 
         .toggle-btn:hover {
-          background: #cccccc;
-          border-color: #cccccc;
+          background: #333333;
+          color: #ffffff;
         }
 
         .timeline-content {
