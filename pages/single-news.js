@@ -782,7 +782,7 @@ export default function SingleNewsPage() {
           padding: 8px 16px;
           background: #ffffff;
           border: 1px solid #333333;
-          border-radius: 2px;
+          border-radius: 0;
           font-size: 11px;
           font-weight: 600;
           color: #333333;
@@ -793,8 +793,7 @@ export default function SingleNewsPage() {
         }
 
         .dark-mode .action-btn {
-          border-color: #666666;
-          background: #1a1a1a;
+          border-color: #404040;
           color: #ffffff;
         }
 
