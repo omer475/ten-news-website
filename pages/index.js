@@ -823,23 +823,19 @@ export default function Home() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 4px 10px;
-          border-radius: 4px;
-          font-size: 10px;
-          font-weight: 600;
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
           margin-bottom: 10px;
           transition: all 0.2s ease;
           cursor: pointer;
-          background: ${darkMode ? '#ffffff' : '#000000'};
-          color: ${darkMode ? '#000000' : '#ffffff'};
-          border: 1px solid ${darkMode ? '#000000' : '#ffffff'};
         }
 
         .news-category:hover {
-          transform: none;
-          background: ${darkMode ? '#f5f5f5' : '#333333'};
+          transform: scale(1.05);
         }
 
         .news-category-icon {
@@ -866,22 +862,22 @@ export default function Home() {
 
         .news-meta {
           display: flex;
-          background: #ffffff;
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
-          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-radius: 16px;
           padding: 12px 20px;
-          border: 2px solid #000000;
           margin-top: 20px;
           gap: 0;
-          box-shadow: none;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
         }
 
         .news-detail-item {
           flex: 1;
           text-align: center;
           padding: 0 15px;
-          border-right: 1px solid #000000;
+          border-right: 1px solid #e2e8f0;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -895,24 +891,24 @@ export default function Home() {
 
         .news-detail-label {
           font-size: 10px;
-          color: #666666;
+          color: #6b7280;
           text-transform: uppercase;
           letter-spacing: 1px;
-          font-weight: 700;
+          font-weight: 600;
           margin-bottom: 1px;
         }
 
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: #000000;
+          color: ${darkMode ? '#f9fafb' : '#111827'};
           line-height: 1.2;
           margin: 0;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: #666666;
+          color: #6b7280;
           font-weight: 500;
           margin-top: 0;
         }
@@ -1234,7 +1230,7 @@ export default function Home() {
         .timeline-section {
           margin-top: 24px;
           padding-top: 24px;
-          border-top: 1px solid #e2e8f0;
+          border-top: 1px solid #e5e5e5;
           transform: translateX(100%);
           opacity: 0;
           transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1250,7 +1246,7 @@ export default function Home() {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 1px;
-          color: #94a3b8;
+          color: #666666;
           margin-bottom: 16px;
           display: flex;
           align-items: center;
@@ -1273,8 +1269,8 @@ export default function Home() {
           left: 6px;
           top: 8px;
           bottom: 8px;
-          width: 2px;
-          background: linear-gradient(180deg, #3b82f6, #e2e8f0);
+          width: 1px;
+          background: #cccccc;
         }
 
         .timeline-item {
@@ -1307,28 +1303,27 @@ export default function Home() {
           position: absolute;
           left: -14px;
           top: 6px;
-          width: 12px;
-          height: 12px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: white;
-          border: 2px solid #3b82f6;
+          background: #000000;
           z-index: 1;
         }
 
         .timeline-item:last-child::before {
-          background: #3b82f6;
+          background: #000000;
         }
 
         .timeline-date {
           font-size: 11px;
           font-weight: 600;
-          color: #3b82f6;
+          color: #666666;
           margin-bottom: 4px;
         }
 
         .timeline-event {
           font-size: 14px;
-          color: #1e293b;
+          color: #000000;
           line-height: 1.4;
         }
 
@@ -1463,11 +1458,9 @@ export default function Home() {
           .news-meta {
             padding: 10px 15px;
             margin-top: 15px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            background: #ffffff;
+            border: 3px solid #000000;
+            box-shadow: none;
           }
           
           .news-detail-item {
@@ -1566,8 +1559,10 @@ export default function Home() {
                   
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                     console.log('Clicked story:', story.title);
-                    // Navigate to single news page
-                    window.location.href = `/news?id=${story.id}`;
+                    // Navigate directly to source URL
+                    if (story.url && story.url !== '#') {
+                      window.open(story.url, '_blank');
+                    }
                   }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
@@ -1651,59 +1646,13 @@ export default function Home() {
                         <div style={{
                           display: 'inline-block',
                           fontSize: '11px',
-                          fontWeight: '700',
+                          fontWeight: '600',
                           letterSpacing: '0.5px',
                           textTransform: 'uppercase',
                           padding: '4px 8px',
-                          borderRadius: '6px',
-                          background: (() => {
-                            const categoryColors = {
-                              'World': { bg: '#3b82f6', text: '#ffffff' },
-                              'Politics': { bg: '#ef4444', text: '#ffffff' },
-                              'Business': { bg: '#22c55e', text: '#ffffff' },
-                              'Technology': { bg: '#8b5cf6', text: '#ffffff' },
-                              'Sports': { bg: '#f97316', text: '#ffffff' },
-                              'Entertainment': { bg: '#ec4899', text: '#ffffff' },
-                              'Science': { bg: '#14b8a6', text: '#ffffff' },
-                              'Health': { bg: '#eab308', text: '#ffffff' },
-                              // Legacy category mappings
-                              'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
-                              'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
-                              'MARKETS': { bg: '#22c55e', text: '#ffffff' },
-                              'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
-                              'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
-                              'HEALTH': { bg: '#eab308', text: '#ffffff' },
-                              'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
-                              'SPORTS': { bg: '#f97316', text: '#ffffff' },
-                              'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
-                              'Society': { bg: '#3b82f6', text: '#ffffff' }
-                            };
-                            return categoryColors[story.category]?.bg || '#f8fafc';
-                          })(),
-                          color: (() => {
-                            const categoryColors = {
-                              'World': { bg: '#3b82f6', text: '#ffffff' },
-                              'Politics': { bg: '#ef4444', text: '#ffffff' },
-                              'Business': { bg: '#22c55e', text: '#ffffff' },
-                              'Technology': { bg: '#8b5cf6', text: '#ffffff' },
-                              'Sports': { bg: '#f97316', text: '#ffffff' },
-                              'Entertainment': { bg: '#ec4899', text: '#ffffff' },
-                              'Science': { bg: '#14b8a6', text: '#ffffff' },
-                              'Health': { bg: '#eab308', text: '#ffffff' },
-                              // Legacy category mappings
-                              'WORLD NEWS': { bg: '#3b82f6', text: '#ffffff' },
-                              'BUSINESS': { bg: '#22c55e', text: '#ffffff' },
-                              'MARKETS': { bg: '#22c55e', text: '#ffffff' },
-                              'TECH & AI': { bg: '#8b5cf6', text: '#ffffff' },
-                              'SCIENCE': { bg: '#14b8a6', text: '#ffffff' },
-                              'HEALTH': { bg: '#eab308', text: '#ffffff' },
-                              'CLIMATE': { bg: '#14b8a6', text: '#ffffff' },
-                              'SPORTS': { bg: '#f97316', text: '#ffffff' },
-                              'ENTERTAINMENT': { bg: '#ec4899', text: '#ffffff' },
-                              'Society': { bg: '#3b82f6', text: '#ffffff' }
-                            };
-                            return categoryColors[story.category]?.text || '#64748b';
-                          })()
+                          borderRadius: '4px',
+                          background: '#000000',
+                          color: '#ffffff'
                         }}>
                           {story.emoji} {story.category}
                         </div>
@@ -1814,10 +1763,10 @@ export default function Home() {
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
-                          backdropFilter: 'none',
-                          WebkitBackdropFilter: 'none',
-                          border: showTimeline[index] ? 'none' : '2px solid #000000',
-                          borderRadius: '8px',
+                          backdropFilter: showTimeline[index] ? 'none' : 'none',
+                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
+                            border: showTimeline[index] ? 'none' : '3px solid #000000',
+                          borderRadius: showTimeline[index] ? '0' : '8px',
                           boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
@@ -1919,59 +1868,13 @@ export default function Home() {
                                 height: expandedTimeline[index] ? '300px' : '85px',
                                 maxHeight: expandedTimeline[index] ? '300px' : '85px',
                                 transition: 'height 0.3s ease-in-out',
-                                background: 'rgba(255, 255, 255, 0.95)',
-                                backdropFilter: 'blur(16px)',
-                                WebkitBackdropFilter: 'blur(16px)',
-                                border: (() => {
-                                  const categoryBorders = {
-                                    'World': '1px solid #3b82f6',
-                                    'Politics': '1px solid #ef4444',
-                                    'Business': '1px solid #22c55e',
-                                    'Technology': '1px solid #8b5cf6',
-                                    'Sports': '1px solid #f97316',
-                                    'Entertainment': '1px solid #ec4899',
-                                    'Science': '1px solid #14b8a6',
-                                    'Health': '1px solid #eab308',
-                                    // Legacy category mappings
-                                    'WORLD NEWS': '1px solid #3b82f6',
-                                    'BUSINESS': '1px solid #22c55e',
-                                    'MARKETS': '1px solid #22c55e',
-                                    'TECH & AI': '1px solid #8b5cf6',
-                                    'SCIENCE': '1px solid #14b8a6',
-                                    'HEALTH': '1px solid #eab308',
-                                    'CLIMATE': '1px solid #14b8a6',
-                                    'SPORTS': '1px solid #f97316',
-                                    'ENTERTAINMENT': '1px solid #ec4899',
-                                    'Society': '1px solid #3b82f6'
-                                  };
-                                  return categoryBorders[story.category] || '1px solid rgba(0, 0, 0, 0.08)';
-                                })(),
-                                borderRadius: '16px',
+                                background: '#ffffff',
+                                backdropFilter: 'none',
+                                WebkitBackdropFilter: 'none',
+                                border: '3px solid #000000',
+                                borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
-                                boxShadow: (() => {
-                                  const categoryShadows = {
-                                    'World': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
-                                    'Politics': '0 4px 20px rgba(239, 68, 68, 0.25), 0 2px 8px rgba(239, 68, 68, 0.15)',
-                                    'Business': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
-                                    'Technology': '0 4px 20px rgba(139, 92, 246, 0.25), 0 2px 8px rgba(139, 92, 246, 0.15)',
-                                    'Sports': '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)',
-                                    'Entertainment': '0 4px 20px rgba(236, 72, 153, 0.25), 0 2px 8px rgba(236, 72, 153, 0.15)',
-                                    'Science': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
-                                    'Health': '0 4px 20px rgba(234, 179, 8, 0.25), 0 2px 8px rgba(234, 179, 8, 0.15)',
-                                    // Legacy category mappings
-                                    'WORLD NEWS': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)',
-                                    'BUSINESS': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
-                                    'MARKETS': '0 4px 20px rgba(34, 197, 94, 0.25), 0 2px 8px rgba(34, 197, 94, 0.15)',
-                                    'TECH & AI': '0 4px 20px rgba(139, 92, 246, 0.25), 0 2px 8px rgba(139, 92, 246, 0.15)',
-                                    'SCIENCE': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
-                                    'HEALTH': '0 4px 20px rgba(234, 179, 8, 0.25), 0 2px 8px rgba(234, 179, 8, 0.15)',
-                                    'CLIMATE': '0 4px 20px rgba(20, 184, 166, 0.25), 0 2px 8px rgba(20, 184, 166, 0.15)',
-                                    'SPORTS': '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)',
-                                    'ENTERTAINMENT': '0 4px 20px rgba(236, 72, 153, 0.25), 0 2px 8px rgba(236, 72, 153, 0.15)',
-                                    'Society': '0 4px 20px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15)'
-                                  };
-                                  return categoryShadows[story.category] || '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08)';
-                                })(),
+                                boxShadow: 'none',
                                 minHeight: '85px',
                                 zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
@@ -2140,55 +2043,6 @@ export default function Home() {
                               transition: 'all 0.2s ease'
                             }}
                           />
-                        </div>
-                      )}
-                      
-                      {/* Removed Read Full Article Button */}
-                      {false && story.url && story.url !== '#' && (
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '20px',
-                          right: '20px',
-                          zIndex: '100'
-                        }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(story.url, '_blank');
-                            }}
-                            style={{
-                              padding: '8px 16px',
-                              background: 'rgba(255, 255, 255, 0.9)',
-                              backdropFilter: 'blur(10px)',
-                              WebkitBackdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              borderRadius: '20px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              color: '#1d1d1f',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.background = 'rgba(255, 255, 255, 1)';
-                              e.target.style.transform = 'translateY(-1px)';
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.background = 'rgba(255, 255, 255, 0.9)';
-                              e.target.style.transform = 'translateY(0)';
-                            }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                              <polyline points="15,3 21,3 21,9"/>
-                              <line x1="10" y1="14" x2="21" y2="3"/>
-                            </svg>
-                            Read Full Article
-                          </button>
                         </div>
                       )}
                       
