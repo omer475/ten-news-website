@@ -480,14 +480,14 @@ export default function SingleNewsPage() {
 
         .category {
           color: #000000;
-          font-weight: 700;
+          font-weight: 600;
           background: #ffffff;
-          padding: 4px 12px;
-          border: 2px solid #000000;
+          padding: 4px 10px;
+          border: 1px solid #000000;
           border-radius: 4px;
           text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 1px;
+          font-size: 10px;
+          letter-spacing: 0.5px;
         }
 
         .header-actions {
@@ -499,13 +499,13 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 16px;
+          padding: 6px 12px;
           background: #ffffff;
-          border: 1px solid #333333;
-          border-radius: 0;
-          font-size: 11px;
+          border: 1px solid #000000;
+          border-radius: 4px;
+          font-size: 10px;
           font-weight: 600;
-          color: #333333;
+          color: #000000;
           cursor: pointer;
           transition: all 0.2s;
           text-transform: uppercase;
@@ -513,8 +513,8 @@ export default function SingleNewsPage() {
         }
 
         .action-btn:hover {
-          background: #333333;
-          color: #ffffff;
+          background: #f5f5f5;
+          color: #000000;
         }
 
         .hero-section {
@@ -677,8 +677,8 @@ export default function SingleNewsPage() {
           padding: 6px 12px;
           background: #ffffff;
           color: #000000;
-          border: 1px solid #ffffff;
-          border-radius: 0;
+          border: 1px solid #000000;
+          border-radius: 4px;
           font-size: 10px;
           font-weight: 700;
           cursor: pointer;
@@ -688,8 +688,8 @@ export default function SingleNewsPage() {
         }
 
         .toggle-btn:hover {
-          background: #cccccc;
-          border-color: #cccccc;
+          background: #f5f5f5;
+          border-color: #000000;
         }
 
         .timeline-content {
@@ -791,7 +791,7 @@ export default function SingleNewsPage() {
           margin-bottom: 48px;
           padding: 0;
           background: #ffffff;
-          border-radius: 8px;
+          border-radius: 0;
           border: 2px solid #000000;
         }
 

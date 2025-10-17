@@ -318,15 +318,6 @@ export default function SingleNewsPage() {
                   </svg>
                   Start Reading
                 </button>
-                
-                <button className="external-btn" onClick={handleReadMore}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                    <polyline points="15,3 21,3 21,9"/>
-                    <line x1="10" y1="14" x2="21" y2="3"/>
-                  </svg>
-                  Read Full Article
-                </button>
               </div>
             </div>
             
@@ -454,15 +445,6 @@ export default function SingleNewsPage() {
 
             {/* Actions */}
             <div className="article-actions">
-              <button className="action-button primary" onClick={handleReadMore}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                  <polyline points="15,3 21,3 21,9"/>
-                  <line x1="10" y1="14" x2="21" y2="3"/>
-                </svg>
-                Read Full Article
-              </button>
-              
               <button className="action-button secondary" onClick={() => window.print()}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6,9 6,2 18,2 18,9"/>
@@ -753,14 +735,14 @@ export default function SingleNewsPage() {
 
         .category {
           color: #000000;
-          font-weight: 700;
+          font-weight: 600;
           background: #ffffff;
-          padding: 4px 12px;
-          border: 2px solid #000000;
+          padding: 4px 10px;
+          border: 1px solid #000000;
           border-radius: 4px;
           text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 1px;
+          font-size: 10px;
+          letter-spacing: 0.5px;
         }
 
         .dark-mode .category {
@@ -1046,10 +1028,11 @@ export default function SingleNewsPage() {
         .timeline-section,
         .details-section {
           margin-bottom: 48px;
-          border: 1px solid #e5e5e7;
-          border-radius: 16px;
+          border: 2px solid #000000;
+          border-radius: 8px;
           overflow: hidden;
           transition: all 0.3s ease;
+          background: #ffffff;
         }
 
         .dark-mode .timeline-section,
@@ -1059,16 +1042,16 @@ export default function SingleNewsPage() {
 
         .timeline-section.expanded,
         .details-section.expanded {
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          box-shadow: none;
         }
 
         .section-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 20px 24px;
-          background: #f8f9fa;
-          border-bottom: 1px solid #e5e5e7;
+          padding: 16px 24px;
+          background: #000000;
+          border-bottom: none;
         }
 
         .dark-mode .section-header {
@@ -1080,9 +1063,11 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 12px;
-          font-size: 18px;
+          font-size: 14px;
           font-weight: 700;
-          color: #1d1d1f;
+          color: #ffffff;
+          text-transform: uppercase;
+          letter-spacing: 1px;
         }
 
         .dark-mode .section-header h2 {
@@ -1090,33 +1075,37 @@ export default function SingleNewsPage() {
         }
 
         .toggle-btn {
-          padding: 8px 16px;
-          background: #1d1d1f;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
+          padding: 6px 12px;
+          background: #ffffff;
+          color: #000000;
+          border: 1px solid #000000;
+          border-radius: 4px;
+          font-size: 10px;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.2s;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         .toggle-btn:hover {
-          background: #000;
+          background: #f5f5f5;
+          border-color: #000000;
         }
 
         .timeline-content {
-          padding: 24px;
+          padding: 32px;
           position: relative;
+          background: #f5f5f5;
         }
 
         .timeline-line {
           position: absolute;
-          left: 24px;
+          left: 32px;
           top: 0;
           bottom: 0;
-          width: 2px;
-          background: #e5e5e7;
+          width: 1px;
+          background: #000000;
         }
 
         .dark-mode .timeline-line {
@@ -1125,8 +1114,8 @@ export default function SingleNewsPage() {
 
         .timeline-item {
           display: flex;
-          gap: 16px;
-          margin-bottom: 24px;
+          gap: 20px;
+          margin-bottom: 28px;
           position: relative;
         }
 
@@ -1135,10 +1124,10 @@ export default function SingleNewsPage() {
         }
 
         .timeline-dot {
-          width: 12px;
-          height: 12px;
-          background: #1d1d1f;
-          border-radius: 50%;
+          width: 8px;
+          height: 8px;
+          background: #000000;
+          border-radius: 0;
           margin-top: 6px;
           flex-shrink: 0;
           z-index: 1;
@@ -1154,18 +1143,19 @@ export default function SingleNewsPage() {
         }
 
         .timeline-date {
-          font-size: 12px;
-          font-weight: 600;
-          color: #86868b;
+          font-size: 10px;
+          font-weight: 700;
+          color: #666666;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 4px;
+          letter-spacing: 1px;
+          margin-bottom: 6px;
         }
 
         .timeline-event {
-          font-size: 16px;
-          color: #1d1d1f;
-          line-height: 1.5;
+          font-size: 15px;
+          color: #000000;
+          line-height: 1.6;
+          font-weight: 400;
         }
 
         .dark-mode .timeline-event {
@@ -1174,13 +1164,14 @@ export default function SingleNewsPage() {
 
         /* Details Section */
         .details-content {
-          padding: 24px;
+          padding: 32px;
+          background: #f5f5f5;
         }
 
         .detail-item {
           display: flex;
-          gap: 16px;
-          margin-bottom: 20px;
+          gap: 20px;
+          margin-bottom: 24px;
           align-items: flex-start;
         }
 
@@ -1189,15 +1180,15 @@ export default function SingleNewsPage() {
         }
 
         .detail-number {
-          width: 24px;
-          height: 24px;
-          background: #1d1d1f;
-          color: white;
-          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          background: #000000;
+          color: #ffffff;
+          border-radius: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 700;
           flex-shrink: 0;
         }
@@ -1208,10 +1199,11 @@ export default function SingleNewsPage() {
         }
 
         .detail-text {
-          font-size: 16px;
-          color: #1d1d1f;
-          line-height: 1.6;
-          padding-top: 2px;
+          font-size: 15px;
+          color: #000000;
+          line-height: 1.7;
+          padding-top: 4px;
+          font-weight: 400;
         }
 
         .dark-mode .detail-text {
@@ -1221,9 +1213,10 @@ export default function SingleNewsPage() {
         /* Article Meta */
         .article-meta-section {
           margin-bottom: 48px;
-          padding: 32px;
-          background: #f8f9fa;
-          border-radius: 16px;
+          padding: 0;
+          background: #ffffff;
+          border-radius: 0;
+          border: 2px solid #000000;
         }
 
         .dark-mode .article-meta-section {
@@ -1233,26 +1226,33 @@ export default function SingleNewsPage() {
         .meta-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 24px;
+          gap: 0;
         }
 
         .meta-item {
           text-align: center;
+          padding: 24px;
+          border-right: 1px solid #cccccc;
+          border-bottom: 1px solid #cccccc;
+        }
+
+        .meta-item:last-child {
+          border-right: none;
         }
 
         .meta-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: #86868b;
+          font-size: 10px;
+          font-weight: 700;
+          color: #666666;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 1px;
           margin-bottom: 8px;
         }
 
         .meta-value {
           font-size: 16px;
-          font-weight: 600;
-          color: #1d1d1f;
+          font-weight: 700;
+          color: #000000;
         }
 
         .dark-mode .meta-value {
@@ -1260,7 +1260,7 @@ export default function SingleNewsPage() {
         }
 
         .score-value {
-          color: #34c759;
+          color: #000000;
         }
 
         /* Actions */

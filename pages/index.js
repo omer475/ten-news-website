@@ -823,23 +823,23 @@ export default function Home() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 14px;
+          padding: 4px 10px;
           border-radius: 4px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 1px;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
           text-transform: uppercase;
           margin-bottom: 10px;
           transition: all 0.2s ease;
           cursor: pointer;
           background: ${darkMode ? '#ffffff' : '#000000'};
           color: ${darkMode ? '#000000' : '#ffffff'};
-          border: 2px solid ${darkMode ? '#000000' : '#ffffff'};
+          border: 1px solid ${darkMode ? '#000000' : '#ffffff'};
         }
 
         .news-category:hover {
           transform: none;
-          background: ${darkMode ? '#cccccc' : '#333333'};
+          background: ${darkMode ? '#f5f5f5' : '#333333'};
         }
 
         .news-category-icon {
