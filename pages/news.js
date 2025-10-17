@@ -479,15 +479,15 @@ export default function SingleNewsPage() {
         }
 
         .category {
-          color: #333333;
-          font-weight: 600;
+          color: #000000;
+          font-weight: 700;
           background: #ffffff;
           padding: 4px 12px;
-          border: 1px solid #333333;
-          border-radius: 0;
+          border: 2px solid #000000;
+          border-radius: 4px;
           text-transform: uppercase;
           font-size: 11px;
-          letter-spacing: 0.5px;
+          letter-spacing: 1px;
         }
 
         .header-actions {
@@ -502,7 +502,7 @@ export default function SingleNewsPage() {
           padding: 8px 16px;
           background: #ffffff;
           border: 1px solid #333333;
-          border-radius: 0;
+          border-radius: 2px;
           font-size: 11px;
           font-weight: 600;
           color: #333333;
@@ -658,26 +658,26 @@ export default function SingleNewsPage() {
           align-items: center;
           justify-content: space-between;
           padding: 16px 24px;
-          background: #f5f5f5;
-          border-bottom: 1px solid #e0e0e0;
+          background: #000000;
+          border-bottom: none;
         }
 
         .section-header h2 {
           display: flex;
           align-items: center;
           gap: 12px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #333333;
+          font-size: 14px;
+          font-weight: 700;
+          color: #ffffff;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 1px;
         }
 
         .toggle-btn {
           padding: 6px 12px;
           background: #ffffff;
           color: #000000;
-          border: 1px solid #333333;
+          border: 1px solid #ffffff;
           border-radius: 0;
           font-size: 10px;
           font-weight: 700;
@@ -688,8 +688,8 @@ export default function SingleNewsPage() {
         }
 
         .toggle-btn:hover {
-          background: #333333;
-          color: #ffffff;
+          background: #cccccc;
+          border-color: #cccccc;
         }
 
         .timeline-content {
