@@ -1637,22 +1637,12 @@ export default function Home() {
                       zIndex: '2'
                     }}>
                       
-                      {/* Title - Large and Prominent, Higher Position */}
-                      <h3 className="news-title" style={{ 
-                        marginTop: '0',
-                        marginBottom: '16px',
-                        fontSize: '26px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        letterSpacing: '-0.5px'
-                      }}>{story.title}</h3>
-                      
                       {/* Category Badge and Timeline Button Row */}
                       <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '16px'
+                        marginBottom: '8px'
                       }}>
                         {/* Category Badge */}
                         <div style={{
@@ -1730,6 +1720,16 @@ export default function Home() {
                           </button>
                         </div>
                       </div>
+                      
+                       {/* Title - Large and Prominent, Higher Position */}
+                       <h3 className="news-title" style={{ 
+                         marginTop: '0',
+                         marginBottom: '6px',
+                         fontSize: '26px',
+                         fontWeight: '800',
+                         lineHeight: '1.2',
+                         letterSpacing: '-0.5px'
+                       }}>{story.title}</h3>
                       
                       {/* Summary - Visible and Styled */}
                       <p className="news-summary" style={{ 
