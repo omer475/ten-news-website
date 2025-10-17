@@ -1459,7 +1459,7 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: 1px solid #000000;
+            border: 2px solid #000000;
             box-shadow: none;
           }
           
@@ -1765,7 +1765,7 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: showTimeline[index] ? 'none' : '1px solid #000000',
+                            border: showTimeline[index] ? 'none' : '2px solid #000000',
                           borderRadius: showTimeline[index] ? '0' : '8px',
                           boxShadow: 'none'
                         }}
@@ -1871,7 +1871,7 @@ export default function Home() {
                                 background: '#ffffff',
                                 backdropFilter: 'none',
                                 WebkitBackdropFilter: 'none',
-                                border: '1px solid #000000',
+                                border: '2px solid #000000',
                                 borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
                                 boxShadow: 'none',

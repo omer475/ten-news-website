@@ -476,18 +476,18 @@ body {
   padding: 4px 8px;
   display: inline-flex;
   gap: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   align-items: center;
   border: 1px solid #e5e5e5;
 }
 
 .toggle-option {
-  background: transparent;
+  background: #f5f5f5;
   border: none;
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -495,7 +495,7 @@ body {
 }
 
 .toggle-option:hover:not(.active) {
-  background: #f8f8f8;
+  background: #e5e5e5;
 }
 
 .toggle-option.active {
@@ -516,7 +516,7 @@ body {
   height: 4px;
   background: #cccccc;
   border-radius: 1px;
-  transition: all 0.2s ease;
+  transition: none;
 }
 
 .toggle-option.active .grid-square {
@@ -544,7 +544,7 @@ body {
   height: 2px;
   background: #cccccc;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: none;
 }
 
 .list-bar {
@@ -552,7 +552,7 @@ body {
   background: #cccccc;
   border-radius: 0.5px;
   flex: 1;
-  transition: all 0.2s ease;
+  transition: none;
 }
 
 .toggle-option.active .list-dot,
