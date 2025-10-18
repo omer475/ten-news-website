@@ -843,11 +843,9 @@ export default function Home() {
         }
 
         .news-title {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-          font-size: 52px;
-          font-weight: 900;
-          line-height: 1.1;
-          letter-spacing: -0.5px;
+          font-size: 48px;
+          font-weight: 800;
+          line-height: 1.2;
           margin-bottom: 20px;
           color: ${darkMode ? '#ffffff' : '#000000'};
         }
@@ -1230,103 +1228,76 @@ export default function Home() {
 
         /* Timeline Styles */
         .timeline-section {
-          margin-top: 24px;
-          padding-top: 24px;
-          border-top: 1px solid #e5e5e5;
-          transform: translateX(100%);
-          opacity: 0;
-          transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .timeline-section.visible {
-          transform: translateX(0);
-          opacity: 1;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #f0f0f0;
         }
 
         .timeline-label {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          color: #666666;
+          font-size: 12px;
+          font-weight: 500;
+          color: #9ca3af;
           margin-bottom: 16px;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
 
         .timeline-label::before {
-          content: '📅';
-          font-size: 12px;
+          content: '•';
+          font-size: 16px;
+          color: #d1d5db;
         }
 
         .timeline {
           position: relative;
-          padding-left: 20px;
+          padding-left: 16px;
         }
 
         .timeline::before {
           content: '';
           position: absolute;
-          left: 6px;
-          top: 8px;
-          bottom: 8px;
+          left: 4px;
+          top: 4px;
+          bottom: 4px;
           width: 1px;
-          background: #cccccc;
+          background: #e5e7eb;
         }
 
         .timeline-item {
           position: relative;
-          margin-bottom: 20px;
-          padding-left: 20px;
-          opacity: 0;
-          animation: timelineSlideIn 0.5s ease forwards;
-        }
-
-        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
-        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
-        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
-        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
-        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
-
-        @keyframes timelineSlideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          margin-bottom: 16px;
+          padding-left: 16px;
         }
 
         .timeline-item::before {
           content: '';
           position: absolute;
-          left: -14px;
-          top: 6px;
-          width: 8px;
-          height: 8px;
+          left: -8px;
+          top: 4px;
+          width: 4px;
+          height: 4px;
           border-radius: 50%;
-          background: #000000;
+          background: #d1d5db;
           z-index: 1;
         }
 
         .timeline-item:last-child::before {
-          background: #000000;
+          background: #9ca3af;
         }
 
         .timeline-date {
           font-size: 11px;
-          font-weight: 600;
-          color: #666666;
-          margin-bottom: 4px;
+          font-weight: 500;
+          color: #9ca3af;
+          margin-bottom: 2px;
         }
 
         .timeline-event {
           font-size: 14px;
-          color: #000000;
-          line-height: 1.4;
+          color: #374151;
+          line-height: 1.5;
+          font-weight: 400;
         }
 
         .swipe-indicator {
@@ -1397,7 +1368,7 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 32px;
+            font-size: 30px;
           }
           
           .main-headline {
@@ -1461,8 +1432,8 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 3px solid #000000;
+            box-shadow: none;
           }
           
           .news-detail-item {
@@ -1653,8 +1624,8 @@ export default function Home() {
                           textTransform: 'uppercase',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          background: '#f5f5f5',
-                          color: '#000000'
+                          background: '#000000',
+                          color: '#ffffff'
                         }}>
                           {story.emoji} {story.category}
                         </div>
@@ -1767,9 +1738,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: 'none',
-                            borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            border: showTimeline[index] ? 'none' : '3px solid #000000',
+                          borderRadius: showTimeline[index] ? '0' : '8px',
+                          boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1873,10 +1844,10 @@ export default function Home() {
                                 background: '#ffffff',
                                 backdropFilter: 'none',
                                 WebkitBackdropFilter: 'none',
-                                border: 'none',
+                                border: '3px solid #000000',
                                 borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                boxShadow: 'none',
                                 minHeight: '85px',
                                 zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
