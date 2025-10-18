@@ -1228,14 +1228,14 @@ export default function Home() {
           100% { width: 100%; }
         }
 
-        /* Timeline Styles */
+        /* Timeline Styles - Minimal Design */
         .timeline-section {
-          margin-top: 24px;
-          padding-top: 24px;
-          border-top: 1px solid #e5e5e5;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: none;
           transform: translateX(100%);
           opacity: 0;
-          transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: all 0.3s ease;
         }
 
         .timeline-section.visible {
@@ -1244,89 +1244,93 @@ export default function Home() {
         }
 
         .timeline-label {
-          font-size: 11px;
-          font-weight: 600;
+          font-size: 10px;
+          font-weight: 500;
           text-transform: uppercase;
-          letter-spacing: 1px;
-          color: #666666;
-          margin-bottom: 16px;
+          letter-spacing: 0.5px;
+          color: #9ca3af;
+          margin-bottom: 12px;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
 
         .timeline-label::before {
-          content: '📅';
-          font-size: 12px;
+          content: '';
+          width: 4px;
+          height: 4px;
+          background: #d1d5db;
+          border-radius: 50%;
         }
 
         .timeline {
           position: relative;
-          padding-left: 20px;
+          padding-left: 16px;
         }
 
         .timeline::before {
           content: '';
           position: absolute;
-          left: 6px;
-          top: 8px;
-          bottom: 8px;
+          left: 4px;
+          top: 6px;
+          bottom: 6px;
           width: 1px;
-          background: #cccccc;
+          background: #e5e7eb;
         }
 
         .timeline-item {
           position: relative;
-          margin-bottom: 20px;
-          padding-left: 20px;
+          margin-bottom: 16px;
+          padding-left: 16px;
           opacity: 0;
-          animation: timelineSlideIn 0.5s ease forwards;
+          animation: timelineSlideIn 0.3s ease forwards;
         }
 
-        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
-        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
-        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
-        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
-        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+        .timeline-item:nth-child(1) { animation-delay: 0.05s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.15s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.25s; }
 
         @keyframes timelineSlideIn {
           from {
             opacity: 0;
-            transform: translateX(-10px);
+            transform: translateY(8px);
           }
           to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
           }
         }
 
         .timeline-item::before {
           content: '';
           position: absolute;
-          left: -14px;
-          top: 6px;
-          width: 8px;
-          height: 8px;
+          left: -12px;
+          top: 4px;
+          width: 4px;
+          height: 4px;
           border-radius: 50%;
-          background: #000000;
+          background: #9ca3af;
           z-index: 1;
         }
 
         .timeline-item:last-child::before {
-          background: #000000;
+          background: #6b7280;
         }
 
         .timeline-date {
-          font-size: 11px;
-          font-weight: 600;
-          color: #666666;
-          margin-bottom: 4px;
+          font-size: 10px;
+          font-weight: 500;
+          color: #9ca3af;
+          margin-bottom: 2px;
         }
 
         .timeline-event {
-          font-size: 14px;
-          color: #000000;
+          font-size: 13px;
+          color: #374151;
           line-height: 1.4;
+          font-weight: 400;
         }
 
         .swipe-indicator {
