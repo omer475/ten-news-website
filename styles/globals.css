@@ -471,41 +471,36 @@ body {
 
 /* Toggle Switch Styles */
 .toggle-switch {
-  background: transparent;
+  background: #f8f8f8;
   border-radius: 8px;
-  padding: 2px;
+  padding: 3px;
   display: inline-flex;
   gap: 0;
   box-shadow: none;
   align-items: center;
   border: none;
-  position: relative;
 }
 
 .toggle-option {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  font-size: 12px;
-  font-weight: 500;
-  color: #666666;
 }
 
 .toggle-option:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.05);
-  color: #333333;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .toggle-option.active {
-  background: #000000;
-  color: #ffffff;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 /* Grid icon */
@@ -520,13 +515,13 @@ body {
 .grid-square {
   width: 4px;
   height: 4px;
-  background: #999999;
+  background: #666666;
   border-radius: 1px;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
 }
 
 .toggle-option.active .grid-square {
-  background: #ffffff;
+  background: #000000;
 }
 
 /* List icon */
@@ -548,20 +543,20 @@ body {
 .list-dot {
   width: 2px;
   height: 2px;
-  background: #999999;
+  background: #666666;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
 }
 
 .list-bar {
   height: 1px;
-  background: #999999;
+  background: #666666;
   border-radius: 0.5px;
   flex: 1;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
 }
 
 .toggle-option.active .list-dot,
 .toggle-option.active .list-bar {
-  background: #ffffff;
+  background: #000000;
 }
