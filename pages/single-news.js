@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import mapboxgl from 'mapbox-gl';
 
 export default function SingleNewsPage() {
   const router = useRouter();
@@ -9,6 +10,9 @@ export default function SingleNewsPage() {
   const [error, setError] = useState(null);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [map, setMap] = useState(null);
   const [isReading, setIsReading] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
@@ -89,6 +93,99 @@ export default function SingleNewsPage() {
 
   const toggleDetails = () => {
     setShowDetails(!showDetails);
+  };
+
+  const toggleGraph = () => {
+    setShowGraph(!showGraph);
+  };
+
+  const toggleMap = () => {
+    setShowMap(!showMap);
+    if (!showMap && article?.map) {
+      // Initialize map when showing
+      setTimeout(() => {
+        initializeMap();
+      }, 100);
+    }
+  };
+
+  const initializeMap = () => {
+    if (!article?.map || map) return;
+
+    // Set your Mapbox access token here
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'YOUR_MAPBOX_TOKEN_HERE';
+
+    const mapInstance = new mapboxgl.Map({
+      container: 'map-container',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [article.map.center?.lon || 0, article.map.center?.lat || 0],
+      zoom: article.map.zoom || 8
+    });
+
+    // Add markers
+    if (article.map.markers) {
+      article.map.markers.forEach((marker, index) => {
+        const el = document.createElement('div');
+        el.className = 'map-marker';
+        el.style.backgroundColor = marker.color || '#ff0000';
+        el.style.width = '20px';
+        el.style.height = '20px';
+        el.style.borderRadius = '50%';
+        el.style.border = '2px solid white';
+        el.style.cursor = 'pointer';
+
+        new mapboxgl.Marker(el)
+          .setLngLat([marker.lon, marker.lat])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 })
+              .setHTML(`
+                <div style="padding: 8px;">
+                  <strong>${marker.label}</strong><br/>
+                  <small>${marker.lat?.toFixed(2)}, ${marker.lon?.toFixed(2)}</small>
+                  ${marker.info ? `<br/><small>${marker.info}</small>` : ''}
+                </div>
+              `)
+          )
+          .addTo(mapInstance);
+      });
+    }
+
+    // Add affected region circle if available
+    if (article.map.affected_region && article.map.affected_region.radius_km) {
+      mapInstance.on('load', () => {
+        mapInstance.addSource('affected-region', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [article.map.center?.lon || 0, article.map.center?.lat || 0]
+            }
+          }
+        });
+
+        mapInstance.addLayer({
+          id: 'affected-region-circle',
+          type: 'circle',
+          source: 'affected-region',
+          paint: {
+            'circle-radius': {
+              stops: [
+                [0, 0],
+                [20, article.map.affected_region.radius_km * 1000]
+              ],
+              base: 2
+            },
+            'circle-color': '#ff0000',
+            'circle-opacity': 0.2,
+            'circle-stroke-color': '#ff0000',
+            'circle-stroke-width': 2
+          }
+        });
+      });
+    }
+
+    setMap(mapInstance);
   };
 
   const startReading = () => {
@@ -182,6 +279,7 @@ export default function SingleNewsPage() {
         <meta name="twitter:title" content={article.title} />
         <meta name="twitter:description" content={article.summary} />
         <meta name="twitter:image" content={article.image} />
+        <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
       </Head>
 
       <div className={`single-news-page ${darkMode ? 'dark-mode' : ''}`}>
@@ -318,6 +416,15 @@ export default function SingleNewsPage() {
                   </svg>
                   Start Reading
                 </button>
+                
+                <button className="external-btn" onClick={handleReadMore}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15,3 21,3 21,9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  Read Full Article
+                </button>
               </div>
             </div>
             
@@ -409,6 +516,107 @@ export default function SingleNewsPage() {
               </div>
             )}
 
+            {/* Graph Section */}
+            {article.graph && (
+              <div className={`graph-section ${showGraph ? 'expanded' : ''}`}>
+                <div className="section-header">
+                  <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 3v18h18"/>
+                      <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                    </svg>
+                    Data Visualization
+                  </h2>
+                  <button className="toggle-btn" onClick={toggleGraph}>
+                    {showGraph ? 'Hide' : 'Show'} Graph
+                  </button>
+                </div>
+                
+                {showGraph && (
+                  <div className="graph-content">
+                    <div className="graph-title">{article.graph.title}</div>
+                    <div className="graph-container">
+                      <div className="graph-placeholder">
+                        <div className="graph-type">{article.graph.type} chart</div>
+                        <div className="graph-data-count">{article.graph.data?.length || 0} data points</div>
+                        <div className="graph-axis-labels">
+                          <div className="y-axis">{article.graph.y_label}</div>
+                          <div className="x-axis">{article.graph.x_label}</div>
+                        </div>
+                      </div>
+                    </div>
+                    {article.graph.data && article.graph.data.length > 0 && (
+                      <div className="graph-data-table">
+                        <div className="data-points">
+                          {article.graph.data.map((point, index) => (
+                            <div key={index} className="data-point">
+                              <span className="data-date">{point.date}</span>
+                              <span className="data-value">{point.value}</span>
+                              {point.label && <span className="data-label">{point.label}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Map Section */}
+            {article.map && (
+              <div className={`map-section ${showMap ? 'expanded' : ''}`}>
+                <div className="section-header">
+                  <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/>
+                      <path d="M8 2v16"/>
+                      <path d="M16 6v16"/>
+                    </svg>
+                    Geographic Context
+                  </h2>
+                  <button className="toggle-btn" onClick={toggleMap}>
+                    {showMap ? 'Hide' : 'Show'} Map
+                  </button>
+                </div>
+                
+                {showMap && (
+                  <div className="map-content">
+                    <div className="map-container">
+                      <div id="map-container" className="mapbox-container"></div>
+                    </div>
+                    {article.map.markers && article.map.markers.length > 0 && (
+                      <div className="map-markers-list">
+                        <div className="markers-title">Key Locations:</div>
+                        {article.map.markers.map((marker, index) => (
+                          <div key={index} className="marker-item">
+                            <div className="marker-color" style={{backgroundColor: marker.color}}></div>
+                            <div className="marker-info">
+                              <div className="marker-label">{marker.label}</div>
+                              <div className="marker-coords">
+                                {marker.lat?.toFixed(2)}, {marker.lon?.toFixed(2)}
+                              </div>
+                              {marker.info && <div className="marker-description">{marker.info}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {article.map.affected_region && (
+                      <div className="affected-region">
+                        <div className="region-info">
+                          <div className="region-type">{article.map.affected_region.type}</div>
+                          {article.map.affected_region.radius_km && (
+                            <div className="region-radius">Radius: {article.map.affected_region.radius_km} km</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Article Meta */}
             <div className="article-meta-section">
               <div className="meta-grid">
@@ -445,6 +653,15 @@ export default function SingleNewsPage() {
 
             {/* Actions */}
             <div className="article-actions">
+              <button className="action-button primary" onClick={handleReadMore}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15,3 21,3 21,9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Read Full Article
+              </button>
+              
               <button className="action-button secondary" onClick={() => window.print()}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6,9 6,2 18,2 18,9"/>
@@ -734,15 +951,8 @@ export default function SingleNewsPage() {
         }
 
         .category {
-          color: #000000;
+          color: #1d1d1f;
           font-weight: 600;
-          background: #ffffff;
-          padding: 4px 10px;
-          border: 1px solid #000000;
-          border-radius: 4px;
-          text-transform: uppercase;
-          font-size: 10px;
-          letter-spacing: 0.5px;
         }
 
         .dark-mode .category {
@@ -759,17 +969,15 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 16px;
-          background: #ffffff;
-          border: 1px solid #333333;
-          border-radius: 0;
-          font-size: 11px;
-          font-weight: 600;
-          color: #333333;
+          padding: 8px 12px;
+          background: none;
+          border: 1px solid #e5e5e7;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          color: #86868b;
           cursor: pointer;
           transition: all 0.2s;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
 
         .dark-mode .action-btn {
@@ -778,8 +986,8 @@ export default function SingleNewsPage() {
         }
 
         .action-btn:hover {
-          background: #333333;
-          color: #ffffff;
+          background: #f5f5f7;
+          color: #1d1d1f;
         }
 
         .dark-mode .action-btn:hover {
@@ -1026,32 +1234,37 @@ export default function SingleNewsPage() {
 
         /* Timeline Section */
         .timeline-section,
-        .details-section {
+        .details-section,
+        .graph-section,
+        .map-section {
           margin-bottom: 48px;
-          border: 2px solid #000000;
-          border-radius: 8px;
+          border: 1px solid #e5e5e7;
+          border-radius: 16px;
           overflow: hidden;
           transition: all 0.3s ease;
-          background: #ffffff;
         }
 
         .dark-mode .timeline-section,
-        .dark-mode .details-section {
+        .dark-mode .details-section,
+        .dark-mode .graph-section,
+        .dark-mode .map-section {
           border-color: #404040;
         }
 
         .timeline-section.expanded,
-        .details-section.expanded {
-          box-shadow: none;
+        .details-section.expanded,
+        .graph-section.expanded,
+        .map-section.expanded {
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         .section-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 16px 24px;
-          background: #000000;
-          border-bottom: none;
+          padding: 20px 24px;
+          background: #f8f9fa;
+          border-bottom: 1px solid #e5e5e7;
         }
 
         .dark-mode .section-header {
@@ -1063,11 +1276,9 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 12px;
-          font-size: 14px;
+          font-size: 18px;
           font-weight: 700;
-          color: #ffffff;
-          text-transform: uppercase;
-          letter-spacing: 1px;
+          color: #1d1d1f;
         }
 
         .dark-mode .section-header h2 {
@@ -1075,37 +1286,33 @@ export default function SingleNewsPage() {
         }
 
         .toggle-btn {
-          padding: 6px 12px;
-          background: #ffffff;
-          color: #000000;
-          border: 1px solid #000000;
-          border-radius: 4px;
-          font-size: 10px;
-          font-weight: 700;
+          padding: 8px 16px;
+          background: #1d1d1f;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
 
         .toggle-btn:hover {
-          background: #f5f5f5;
-          border-color: #000000;
+          background: #000;
         }
 
         .timeline-content {
-          padding: 32px;
+          padding: 24px;
           position: relative;
-          background: #f5f5f5;
         }
 
         .timeline-line {
           position: absolute;
-          left: 32px;
+          left: 24px;
           top: 0;
           bottom: 0;
-          width: 1px;
-          background: #000000;
+          width: 2px;
+          background: #e5e5e7;
         }
 
         .dark-mode .timeline-line {
@@ -1114,8 +1321,8 @@ export default function SingleNewsPage() {
 
         .timeline-item {
           display: flex;
-          gap: 20px;
-          margin-bottom: 28px;
+          gap: 16px;
+          margin-bottom: 24px;
           position: relative;
         }
 
@@ -1124,10 +1331,10 @@ export default function SingleNewsPage() {
         }
 
         .timeline-dot {
-          width: 8px;
-          height: 8px;
-          background: #000000;
-          border-radius: 0;
+          width: 12px;
+          height: 12px;
+          background: #1d1d1f;
+          border-radius: 50%;
           margin-top: 6px;
           flex-shrink: 0;
           z-index: 1;
@@ -1143,19 +1350,18 @@ export default function SingleNewsPage() {
         }
 
         .timeline-date {
-          font-size: 10px;
-          font-weight: 700;
-          color: #666666;
+          font-size: 12px;
+          font-weight: 600;
+          color: #86868b;
           text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 6px;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
         }
 
         .timeline-event {
-          font-size: 15px;
-          color: #000000;
-          line-height: 1.6;
-          font-weight: 400;
+          font-size: 16px;
+          color: #1d1d1f;
+          line-height: 1.5;
         }
 
         .dark-mode .timeline-event {
@@ -1164,14 +1370,13 @@ export default function SingleNewsPage() {
 
         /* Details Section */
         .details-content {
-          padding: 32px;
-          background: #f5f5f5;
+          padding: 24px;
         }
 
         .detail-item {
           display: flex;
-          gap: 20px;
-          margin-bottom: 24px;
+          gap: 16px;
+          margin-bottom: 20px;
           align-items: flex-start;
         }
 
@@ -1180,15 +1385,15 @@ export default function SingleNewsPage() {
         }
 
         .detail-number {
-          width: 28px;
-          height: 28px;
-          background: #000000;
-          color: #ffffff;
-          border-radius: 0;
+          width: 24px;
+          height: 24px;
+          background: #1d1d1f;
+          color: white;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 700;
           flex-shrink: 0;
         }
@@ -1199,24 +1404,283 @@ export default function SingleNewsPage() {
         }
 
         .detail-text {
-          font-size: 15px;
-          color: #000000;
-          line-height: 1.7;
-          padding-top: 4px;
-          font-weight: 400;
+          font-size: 16px;
+          color: #1d1d1f;
+          line-height: 1.6;
+          padding-top: 2px;
         }
 
         .dark-mode .detail-text {
           color: #ffffff;
         }
 
+        /* Graph Section */
+        .graph-content {
+          padding: 24px;
+        }
+
+        .graph-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #1d1d1f;
+          margin-bottom: 16px;
+        }
+
+        .dark-mode .graph-title {
+          color: #ffffff;
+        }
+
+        .graph-container {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 24px;
+          margin-bottom: 16px;
+          min-height: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dark-mode .graph-container {
+          background: #2a2a2a;
+        }
+
+        .graph-placeholder {
+          text-align: center;
+          color: #86868b;
+        }
+
+        .dark-mode .graph-placeholder {
+          color: #a1a1a6;
+        }
+
+        .graph-type {
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+
+        .graph-data-count {
+          font-size: 14px;
+          margin-bottom: 16px;
+        }
+
+        .graph-axis-labels {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          color: #86868b;
+        }
+
+        .dark-mode .graph-axis-labels {
+          color: #a1a1a6;
+        }
+
+        .graph-data-table {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 16px;
+        }
+
+        .dark-mode .graph-data-table {
+          background: #2a2a2a;
+        }
+
+        .data-points {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .data-point {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 12px;
+          background: #ffffff;
+          border-radius: 6px;
+          border: 1px solid #e5e5e7;
+        }
+
+        .dark-mode .data-point {
+          background: #1c1c1e;
+          border-color: #404040;
+        }
+
+        .data-date {
+          font-size: 14px;
+          color: #86868b;
+          font-weight: 500;
+        }
+
+        .dark-mode .data-date {
+          color: #a1a1a6;
+        }
+
+        .data-value {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1d1d1f;
+        }
+
+        .dark-mode .data-value {
+          color: #ffffff;
+        }
+
+        .data-label {
+          font-size: 12px;
+          color: #86868b;
+          margin-left: 8px;
+        }
+
+        .dark-mode .data-label {
+          color: #a1a1a6;
+        }
+
+        /* Map Section */
+        .map-content {
+          padding: 24px;
+        }
+
+        .map-container {
+          background: #f8f9fa;
+          border-radius: 12px;
+          margin-bottom: 16px;
+          min-height: 400px;
+          overflow: hidden;
+        }
+
+        .dark-mode .map-container {
+          background: #2a2a2a;
+        }
+
+        .mapbox-container {
+          width: 100%;
+          height: 400px;
+          border-radius: 12px;
+        }
+
+        .map-markers-list {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 16px;
+        }
+
+        .dark-mode .map-markers-list {
+          background: #2a2a2a;
+        }
+
+        .markers-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1d1d1f;
+          margin-bottom: 12px;
+        }
+
+        .dark-mode .markers-title {
+          color: #ffffff;
+        }
+
+        .marker-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          margin-bottom: 12px;
+          padding: 8px;
+          background: #ffffff;
+          border-radius: 6px;
+          border: 1px solid #e5e5e7;
+        }
+
+        .dark-mode .marker-item {
+          background: #1c1c1e;
+          border-color: #404040;
+        }
+
+        .marker-color {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          margin-top: 4px;
+          flex-shrink: 0;
+        }
+
+        .marker-info {
+          flex: 1;
+        }
+
+        .marker-label {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1d1d1f;
+          margin-bottom: 2px;
+        }
+
+        .dark-mode .marker-label {
+          color: #ffffff;
+        }
+
+        .marker-coords {
+          font-size: 12px;
+          color: #86868b;
+          margin-bottom: 4px;
+        }
+
+        .dark-mode .marker-coords {
+          color: #a1a1a6;
+        }
+
+        .marker-description {
+          font-size: 13px;
+          color: #86868b;
+          line-height: 1.4;
+        }
+
+        .dark-mode .marker-description {
+          color: #a1a1a6;
+        }
+
+        .affected-region {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 16px;
+        }
+
+        .dark-mode .affected-region {
+          background: #2a2a2a;
+        }
+
+        .region-info {
+          text-align: center;
+        }
+
+        .region-type {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1d1d1f;
+          margin-bottom: 4px;
+        }
+
+        .dark-mode .region-type {
+          color: #ffffff;
+        }
+
+        .region-radius {
+          font-size: 14px;
+          color: #86868b;
+        }
+
+        .dark-mode .region-radius {
+          color: #a1a1a6;
+        }
+
         /* Article Meta */
         .article-meta-section {
           margin-bottom: 48px;
-          padding: 0;
-          background: #ffffff;
-          border-radius: 0;
-          border: 2px solid #000000;
+          padding: 32px;
+          background: #f8f9fa;
+          border-radius: 16px;
         }
 
         .dark-mode .article-meta-section {
@@ -1226,33 +1690,26 @@ export default function SingleNewsPage() {
         .meta-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 0;
+          gap: 24px;
         }
 
         .meta-item {
           text-align: center;
-          padding: 24px;
-          border-right: 1px solid #cccccc;
-          border-bottom: 1px solid #cccccc;
-        }
-
-        .meta-item:last-child {
-          border-right: none;
         }
 
         .meta-label {
-          font-size: 10px;
-          font-weight: 700;
-          color: #666666;
+          font-size: 12px;
+          font-weight: 600;
+          color: #86868b;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
           margin-bottom: 8px;
         }
 
         .meta-value {
           font-size: 16px;
-          font-weight: 700;
-          color: #000000;
+          font-weight: 600;
+          color: #1d1d1f;
         }
 
         .dark-mode .meta-value {
@@ -1260,7 +1717,7 @@ export default function SingleNewsPage() {
         }
 
         .score-value {
-          color: #000000;
+          color: #34c759;
         }
 
         /* Actions */

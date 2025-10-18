@@ -172,6 +172,15 @@ export default function SingleNewsPage() {
                 </svg>
                 Start Reading
               </button>
+              
+              <button className="external-btn" onClick={handleReadMore}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15,3 21,3 21,9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                Read Full Article
+              </button>
             </div>
           </div>
           
@@ -294,6 +303,15 @@ export default function SingleNewsPage() {
 
           {/* Actions */}
           <div className="article-actions">
+            <button className="action-button primary" onClick={handleReadMore}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15,3 21,3 21,9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Read Full Article
+            </button>
+            
             <button className="action-button secondary" onClick={() => window.print()}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="6,9 6,2 18,2 18,9"/>
@@ -471,7 +489,7 @@ export default function SingleNewsPage() {
           display: flex;
           gap: 16px;
           font-size: 13px;
-          color: #86868b;
+          color: #666666;
         }
 
         .article-meta span {
@@ -479,14 +497,13 @@ export default function SingleNewsPage() {
         }
 
         .category {
-          color: #000000;
+          background: #000000;
+          color: #ffffff;
           font-weight: 600;
-          background: #ffffff;
-          padding: 4px 10px;
-          border: 1px solid #000000;
+          padding: 4px 8px;
           border-radius: 4px;
+          font-size: 11px;
           text-transform: uppercase;
-          font-size: 10px;
           letter-spacing: 0.5px;
         }
 
@@ -499,22 +516,20 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px;
-          background: #ffffff;
-          border: 1px solid #000000;
+          padding: 8px 12px;
+          background: #000000;
+          border: none;
           border-radius: 4px;
-          font-size: 10px;
-          font-weight: 600;
-          color: #000000;
+          font-size: 12px;
+          font-weight: 500;
+          color: #ffffff;
           cursor: pointer;
           transition: all 0.2s;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
 
         .action-btn:hover {
-          background: #f5f5f5;
-          color: #000000;
+          background: #333333;
+          color: #ffffff;
         }
 
         .hero-section {
@@ -641,7 +656,7 @@ export default function SingleNewsPage() {
         .timeline-section,
         .details-section {
           margin-bottom: 48px;
-          border: 2px solid #000000;
+          border: 1px solid #e5e5e5;
           border-radius: 8px;
           overflow: hidden;
           transition: all 0.3s ease;
@@ -650,37 +665,35 @@ export default function SingleNewsPage() {
 
         .timeline-section.expanded,
         .details-section.expanded {
-          box-shadow: none;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .section-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 16px 24px;
-          background: #000000;
-          border-bottom: none;
+          padding: 16px 20px;
+          background: #f8f8f8;
+          border-bottom: 1px solid #e5e5e5;
         }
 
         .section-header h2 {
           display: flex;
           align-items: center;
-          gap: 12px;
-          font-size: 14px;
-          font-weight: 700;
-          color: #ffffff;
-          text-transform: uppercase;
-          letter-spacing: 1px;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #000000;
         }
 
         .toggle-btn {
           padding: 6px 12px;
-          background: #ffffff;
-          color: #000000;
-          border: 1px solid #000000;
+          background: #000000;
+          color: #ffffff;
+          border: none;
           border-radius: 4px;
-          font-size: 10px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
           text-transform: uppercase;
@@ -688,29 +701,28 @@ export default function SingleNewsPage() {
         }
 
         .toggle-btn:hover {
-          background: #f5f5f5;
-          border-color: #000000;
+          background: #333333;
         }
 
         .timeline-content {
-          padding: 32px;
+          padding: 20px;
           position: relative;
-          background: #f5f5f5;
+          background: #ffffff;
         }
 
         .timeline-line {
           position: absolute;
-          left: 32px;
+          left: 20px;
           top: 0;
           bottom: 0;
           width: 1px;
-          background: #000000;
+          background: #cccccc;
         }
 
         .timeline-item {
           display: flex;
-          gap: 20px;
-          margin-bottom: 28px;
+          gap: 12px;
+          margin-bottom: 20px;
           position: relative;
         }
 
@@ -722,7 +734,7 @@ export default function SingleNewsPage() {
           width: 8px;
           height: 8px;
           background: #000000;
-          border-radius: 0;
+          border-radius: 50%;
           margin-top: 6px;
           flex-shrink: 0;
           z-index: 1;
@@ -734,30 +746,30 @@ export default function SingleNewsPage() {
         }
 
         .timeline-date {
-          font-size: 10px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 500;
           color: #666666;
           text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 6px;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
         }
 
         .timeline-event {
-          font-size: 15px;
+          font-size: 14px;
           color: #000000;
-          line-height: 1.6;
+          line-height: 1.4;
           font-weight: 400;
         }
 
         .details-content {
-          padding: 32px;
-          background: #f5f5f5;
+          padding: 20px;
+          background: #ffffff;
         }
 
         .detail-item {
           display: flex;
-          gap: 20px;
-          margin-bottom: 24px;
+          gap: 12px;
+          margin-bottom: 16px;
           align-items: flex-start;
         }
 
@@ -766,69 +778,73 @@ export default function SingleNewsPage() {
         }
 
         .detail-number {
-          width: 28px;
-          height: 28px;
+          width: 20px;
+          height: 20px;
           background: #000000;
           color: #ffffff;
-          border-radius: 0;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 13px;
-          font-weight: 700;
+          font-size: 10px;
+          font-weight: 600;
           flex-shrink: 0;
         }
 
         .detail-text {
-          font-size: 15px;
+          font-size: 14px;
           color: #000000;
-          line-height: 1.7;
-          padding-top: 4px;
+          line-height: 1.4;
+          padding-top: 2px;
           font-weight: 400;
         }
 
         .article-meta-section {
           margin-bottom: 48px;
-          padding: 0;
-          background: #ffffff;
-          border-radius: 0;
-          border: 2px solid #000000;
+          padding: 24px;
+          background: #f8f8f8;
+          border-radius: 8px;
+          border: 1px solid #e5e5e5;
         }
 
         .meta-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 0;
+          gap: 20px;
         }
 
         .meta-item {
           text-align: center;
-          padding: 24px;
-          border-right: 1px solid #cccccc;
-          border-bottom: 1px solid #cccccc;
+          padding: 16px;
+          background: #ffffff;
+          border-radius: 6px;
+          border: 1px solid #e5e5e5;
+          transition: all 0.2s;
         }
 
-        .meta-item:last-child {
-          border-right: none;
+        .meta-item:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .meta-label {
-          font-size: 10px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 500;
           color: #666666;
           text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 8px;
+          letter-spacing: 0.5px;
+          margin-bottom: 6px;
         }
 
         .meta-value {
-          font-size: 16px;
-          font-weight: 700;
+          font-size: 14px;
+          font-weight: 600;
           color: #000000;
         }
 
         .score-value {
           color: #000000;
+          font-weight: 700;
         }
 
         .article-actions {
@@ -842,40 +858,40 @@ export default function SingleNewsPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 12px 20px;
+          padding: 10px 16px;
           border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .action-button.primary {
-          background: #1d1d1f;
-          color: white;
+          background: #000000;
+          color: #ffffff;
         }
 
         .action-button.primary:hover {
-          background: #000;
+          background: #333333;
           transform: translateY(-1px);
         }
 
         .action-button.secondary {
-          background: white;
-          color: #1d1d1f;
-          border: 1px solid #e5e5e7;
+          background: #ffffff;
+          color: #000000;
+          border: 1px solid #e5e5e5;
         }
 
         .action-button.secondary:hover {
-          background: #f5f5f7;
-          border-color: #d2d2d7;
+          background: #f8f8f8;
+          border-color: #cccccc;
         }
 
         .news-footer {
-          background: #1d1d1f;
-          color: white;
-          padding: 40px 24px;
+          background: #000000;
+          color: #ffffff;
+          padding: 32px 24px;
           text-align: center;
         }
 
@@ -885,35 +901,35 @@ export default function SingleNewsPage() {
         }
 
         .footer-logo {
-          font-size: 24px;
-          font-weight: 800;
+          font-size: 20px;
+          font-weight: 700;
           margin-bottom: 8px;
         }
 
         .logo-ten {
-          color: white;
+          color: #ffffff;
         }
 
         .footer-text {
-          font-size: 14px;
-          color: #86868b;
-          margin-bottom: 24px;
+          font-size: 13px;
+          color: #cccccc;
+          margin-bottom: 20px;
         }
 
         .back-to-home {
-          padding: 12px 24px;
-          background: white;
-          color: #1d1d1f;
+          padding: 10px 20px;
+          background: #ffffff;
+          color: #000000;
           border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .back-to-home:hover {
-          background: #f5f5f7;
+          background: #f8f8f8;
           transform: translateY(-1px);
         }
 
