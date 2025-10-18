@@ -1242,7 +1242,8 @@ export default function SingleNewsPage() {
           border-radius: 16px;
           overflow: hidden;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+          border: none !important;
         }
 
         .dark-mode .timeline-section,
@@ -1250,21 +1251,22 @@ export default function SingleNewsPage() {
         .dark-mode .graph-section,
         .dark-mode .map-section {
           background: #1a1a1a;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+          border: none !important;
         }
 
         .timeline-section.expanded,
         .details-section.expanded,
         .graph-section.expanded,
         .map-section.expanded {
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
         }
 
         .dark-mode .timeline-section.expanded,
         .dark-mode .details-section.expanded,
         .dark-mode .graph-section.expanded,
         .dark-mode .map-section.expanded {
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
         }
 
         .section-header {
