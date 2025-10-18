@@ -1228,14 +1228,14 @@ export default function Home() {
           100% { width: 100%; }
         }
 
-        /* Timeline Styles - Minimal Design */
+        /* Timeline Styles */
         .timeline-section {
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: none;
+          margin-top: 24px;
+          padding-top: 24px;
+          border-top: 1px solid #e5e5e5;
           transform: translateX(100%);
           opacity: 0;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .timeline-section.visible {
@@ -1244,93 +1244,89 @@ export default function Home() {
         }
 
         .timeline-label {
-          font-size: 10px;
-          font-weight: 500;
+          font-size: 11px;
+          font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: #9ca3af;
-          margin-bottom: 12px;
+          letter-spacing: 1px;
+          color: #666666;
+          margin-bottom: 16px;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
         }
 
         .timeline-label::before {
-          content: '';
-          width: 4px;
-          height: 4px;
-          background: #d1d5db;
-          border-radius: 50%;
+          content: '📅';
+          font-size: 12px;
         }
 
         .timeline {
           position: relative;
-          padding-left: 16px;
+          padding-left: 20px;
         }
 
         .timeline::before {
           content: '';
           position: absolute;
-          left: 4px;
-          top: 6px;
-          bottom: 6px;
+          left: 6px;
+          top: 8px;
+          bottom: 8px;
           width: 1px;
-          background: #e5e7eb;
+          background: #cccccc;
         }
 
         .timeline-item {
           position: relative;
-          margin-bottom: 16px;
-          padding-left: 16px;
+          margin-bottom: 20px;
+          padding-left: 20px;
           opacity: 0;
-          animation: timelineSlideIn 0.3s ease forwards;
+          animation: timelineSlideIn 0.5s ease forwards;
         }
 
-        .timeline-item:nth-child(1) { animation-delay: 0.05s; }
-        .timeline-item:nth-child(2) { animation-delay: 0.1s; }
-        .timeline-item:nth-child(3) { animation-delay: 0.15s; }
-        .timeline-item:nth-child(4) { animation-delay: 0.2s; }
-        .timeline-item:nth-child(5) { animation-delay: 0.25s; }
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
 
         @keyframes timelineSlideIn {
           from {
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateX(-10px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
           }
         }
 
         .timeline-item::before {
           content: '';
           position: absolute;
-          left: -12px;
-          top: 4px;
-          width: 4px;
-          height: 4px;
+          left: -14px;
+          top: 6px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: #9ca3af;
+          background: #000000;
           z-index: 1;
         }
 
         .timeline-item:last-child::before {
-          background: #6b7280;
+          background: #000000;
         }
 
         .timeline-date {
-          font-size: 10px;
-          font-weight: 500;
-          color: #9ca3af;
-          margin-bottom: 2px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #666666;
+          margin-bottom: 4px;
         }
 
         .timeline-event {
-          font-size: 13px;
-          color: #374151;
+          font-size: 14px;
+          color: #000000;
           line-height: 1.4;
-          font-weight: 400;
         }
 
         .swipe-indicator {
@@ -1401,7 +1397,7 @@ export default function Home() {
           }
           
           .news-title {
-            font-size: 30px;
+            font-size: 32px;
           }
           
           .main-headline {
@@ -1725,15 +1721,15 @@ export default function Home() {
                         </div>
                       </div>
                       
-                       {/* Title - Large and Prominent, Higher Position */}
-                       <h3 className="news-title" style={{ 
-                         marginTop: '0',
-                         marginBottom: '6px',
-                         fontSize: '26px',
-                         fontWeight: '800',
-                         lineHeight: '1.2',
-                         letterSpacing: '-0.5px'
-                       }}>{story.title}</h3>
+                      {/* Title - Large and Prominent, Higher Position */}
+                      <h3 className="news-title" style={{ 
+                        marginTop: '0',
+                        marginBottom: '10px',
+                        fontSize: '26px',
+                        fontWeight: '800',
+                        lineHeight: '1.2',
+                        letterSpacing: '-0.5px'
+                      }}>{story.title}</h3>
                       
                       {/* Summary - Visible and Styled */}
                       <p className="news-summary" style={{ 
