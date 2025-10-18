@@ -1459,8 +1459,8 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: 2px solid #000000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 3px solid #000000;
+            box-shadow: none;
           }
           
           .news-detail-item {
@@ -1765,9 +1765,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: showTimeline[index] ? 'none' : '2px solid #000000',
-                          borderRadius: showTimeline[index] ? '0' : '8px',
-                          boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            border: 'none',
+                            borderRadius: showTimeline[index] ? '0' : '8px',
+                            boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1871,10 +1871,10 @@ export default function Home() {
                                 background: '#ffffff',
                                 backdropFilter: 'none',
                                 WebkitBackdropFilter: 'none',
-                                border: '2px solid #000000',
+                                border: '3px solid #000000',
                                 borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                boxShadow: 'none',
                                 minHeight: '85px',
                                 zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
