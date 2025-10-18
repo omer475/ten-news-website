@@ -1238,24 +1238,33 @@ export default function SingleNewsPage() {
         .graph-section,
         .map-section {
           margin-bottom: 48px;
-          border: 1px solid #e5e5e7;
+          background: #ffffff;
           border-radius: 16px;
           overflow: hidden;
           transition: all 0.3s ease;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .dark-mode .timeline-section,
         .dark-mode .details-section,
         .dark-mode .graph-section,
         .dark-mode .map-section {
-          border-color: #404040;
+          background: #1a1a1a;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .timeline-section.expanded,
         .details-section.expanded,
         .graph-section.expanded,
         .map-section.expanded {
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .dark-mode .timeline-section.expanded,
+        .dark-mode .details-section.expanded,
+        .dark-mode .graph-section.expanded,
+        .dark-mode .map-section.expanded {
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
         }
 
         .section-header {
