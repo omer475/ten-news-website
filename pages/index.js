@@ -96,7 +96,7 @@ export default function Home() {
                  title: article.title || 'News Story',
                  summary: article.summary || 'News summary will appear here.',
                  details: article.details || [],
-                  source: article.source || 'Today+',
+                 source: article.source || 'News+',
                  url: article.url || '#',
                  urlToImage: article.urlToImage,
                  timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
@@ -843,9 +843,11 @@ export default function Home() {
         }
 
         .news-title {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
           font-size: 48px;
-          font-weight: 800;
-          line-height: 1.2;
+          font-weight: 900;
+          line-height: 1.1;
+          letter-spacing: -0.5px;
           margin-bottom: 20px;
           color: ${darkMode ? '#ffffff' : '#000000'};
         }
@@ -1459,8 +1461,8 @@ export default function Home() {
             padding: 10px 15px;
             margin-top: 15px;
             background: #ffffff;
-            border: 3px solid #000000;
-            box-shadow: none;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
           
           .news-detail-item {
@@ -1651,8 +1653,8 @@ export default function Home() {
                           textTransform: 'uppercase',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          background: '#000000',
-                          color: '#ffffff'
+                          background: '#f5f5f5',
+                          color: '#000000'
                         }}>
                           {story.emoji} {story.category}
                         </div>
@@ -1765,9 +1767,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: showTimeline[index] ? 'none' : '3px solid #000000',
-                          borderRadius: showTimeline[index] ? '0' : '8px',
-                          boxShadow: 'none'
+                            border: 'none',
+                            borderRadius: showTimeline[index] ? '0' : '8px',
+                            boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -1871,10 +1873,10 @@ export default function Home() {
                                 background: '#ffffff',
                                 backdropFilter: 'none',
                                 WebkitBackdropFilter: 'none',
-                                border: '3px solid #000000',
+                                border: 'none',
                                 borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
-                                boxShadow: 'none',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                 minHeight: '85px',
                                 zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'

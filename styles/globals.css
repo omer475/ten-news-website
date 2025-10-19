@@ -471,11 +471,11 @@ body {
 
 /* Toggle Switch Styles */
 .toggle-switch {
-  background: #f8f8f8;
+  background: transparent;
   border-radius: 8px;
-  padding: 3px;
+  padding: 2px;
   display: inline-flex;
-  gap: 0;
+  gap: 4px;
   box-shadow: none;
   align-items: center;
   border: none;
@@ -485,9 +485,9 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: 6px;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -495,12 +495,11 @@ body {
 }
 
 .toggle-option:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.04);
+  background: #f5f5f5;
 }
 
 .toggle-option.active {
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  background: #f5f5f5;
 }
 
 /* Grid icon */
@@ -515,9 +514,9 @@ body {
 .grid-square {
   width: 4px;
   height: 4px;
-  background: #666666;
+  background: #999999;
   border-radius: 1px;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .toggle-option.active .grid-square {
@@ -543,17 +542,17 @@ body {
 .list-dot {
   width: 2px;
   height: 2px;
-  background: #666666;
+  background: #999999;
   border-radius: 50%;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .list-bar {
   height: 1px;
-  background: #666666;
+  background: #999999;
   border-radius: 0.5px;
   flex: 1;
-  transition: background 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .toggle-option.active .list-dot,
