@@ -471,22 +471,22 @@ body {
 
 /* Toggle Switch Styles */
 .toggle-switch {
-  background: transparent;
-  border-radius: 8px;
-  padding: 3px;
+  background: #f5f5f5;
+  border-radius: 7px;
+  padding: 2px;
   display: inline-flex;
-  gap: 4px;
+  gap: 3px;
   box-shadow: none;
   align-items: center;
-  border: 1px solid #e0e0e0;
+  border: none;
 }
 
 .toggle-option {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 6px;
+  padding: 5px 7px;
+  border-radius: 5px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -495,11 +495,12 @@ body {
 }
 
 .toggle-option:hover:not(.active) {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .toggle-option.active {
-  background: #000000;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Grid icon */
@@ -507,20 +508,20 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2px;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .grid-square {
-  width: 5px;
-  height: 5px;
+  width: 4.5px;
+  height: 4.5px;
   background: #666666;
   border-radius: 1px;
   transition: all 0.2s ease;
 }
 
 .toggle-option.active .grid-square {
-  background: #ffffff;
+  background: #000000;
 }
 
 /* List icon */
@@ -528,8 +529,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2.5px;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   justify-content: center;
 }
 
@@ -557,5 +558,5 @@ body {
 
 .toggle-option.active .list-dot,
 .toggle-option.active .list-bar {
-  background: #ffffff;
+  background: #000000;
 }
