@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "☢️",
+      "title": "Iran Officially Terminates Decade-Old Nuclear Agreement With World Powers",
+      "summary": "**Iran** has officially announced the end of its **2015 nuclear agreement**, which had imposed restrictions on its nuclear program. The termination comes amid rising tensions with **Western powers** and follows years of gradual withdrawal from **compliance measures**.",
+      "details": [
+        "Enrichment level: 60% uranium purity",
+        "Sanctions impact: $100B frozen assets",
+        "Inspection sites: 18 facilities affected"
+      ],
+      "category": "World News",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/world/2025/oct/18/iran-announces-official-end-to-10-year-old-nuclear-agreement",
+      "timeline": [
+        {
+          "date": "July 14, 2015",
+          "event": "Iran signs nuclear deal with world powers"
+        },
+        {
+          "date": "May 8, 2018",
+          "event": "US withdraws from deal, reimposes sanctions"
+        },
+        {
+          "date": "January 16, 2024",
+          "event": "Iran officially terminates nuclear agreement commitments"
+        },
+        {
+          "date": "March 2024",
+          "event": "IAEA expected to report increased uranium enrichment"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🚢",
+      "title": "Trump Blocks Global Maritime Emissions Reduction Agreement",
+      "summary": "Former president **Donald Trump** has derailed an **International Maritime Organization** vote on reducing shipping emissions by threatening **sanctions**. The decision affects global efforts to cut **maritime pollution** levels at major ports worldwide.",
+      "details": [
+        "Shipping emissions: 3% global CO2",
+        "Affected vessels: 50,000 worldwide",
+        "Economic impact: $2B annually"
+      ],
+      "category": "Climate",
+      "source": "Al Jazeera",
+      "url": "https://www.aljazeera.com/news/2025/10/18/trump-torpedoes-international-deal-to-reduce-shipping-emissions",
+      "timeline": [
+        {
+          "date": "April 15, 2023",
+          "event": "IMO proposes 2030 emissions reduction targets"
+        },
+        {
+          "date": "July 7, 2023",
+          "event": "IMO members agree to 20% reduction"
+        },
+        {
+          "date": "Today",
+          "event": "Trump threatens sanctions over maritime emissions deal"
+        },
+        {
+          "date": "January 1, 2025",
+          "event": "Global shipping emissions regulations set to begin"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "🤖",
+      "title": "AI Market Bubble Now 17 Times Larger Than Dot-Com Era",
+      "summary": "Ten **AI startups** have accumulated nearly **$1 trillion** in market value over **12 months**, raising concerns of a bubble **17 times** larger than the dot-com era. Analysts warn of potential market correction.",
+      "details": [
+        "Valuation growth: 800% YoY",
+        "Investment total: $180B",
+        "Active AI startups: 12,000"
+      ],
+      "category": "Business",
+      "source": "CNN",
+      "url": "https://www.cnn.com/2025/10/18/business/ai-bubble-analyst-nightcap",
+      "timeline": [
+        {
+          "date": "November 2022",
+          "event": "ChatGPT launch sparks massive AI investment surge"
+        },
+        {
+          "date": "March 2023",
+          "event": "Nvidia market value exceeds $1 trillion"
+        },
+        {
+          "date": "Today",
+          "event": "Ten AI startups reach $1T valuation"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "Analysts predict significant AI market correction"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "💰",
+      "title": "US Government Seizes Record $15B in Bitcoin Assets",
+      "summary": "The **U.S. government** has seized **$15 billion** worth of **Bitcoin**, marking the largest cryptocurrency seizure in history. The action raises questions about federal handling of **digital assets** and crypto reserve strategies.",
+      "details": [
+        "Bitcoin price: $75,000",
+        "Wallet addresses seized: 127",
+        "Investigation duration: 14 months"
+      ],
+      "category": "Business",
+      "source": "Forbes",
+      "url": "https://www.forbes.com/sites/jillgoldenziel/2025/10/18/15-billion-bitcoin-seizure-raises-questions-for-trumps-crypto-reserve-strategy/",
+      "timeline": [
+        {
+          "date": "November 5, 2021",
+          "event": "DOJ seizes $3.6B Bitcoin from Bitfinex hack"
+        },
+        {
+          "date": "February 8, 2022",
+          "event": "Couple arrested for laundering stolen cryptocurrency"
+        },
+        {
+          "date": "Today",
+          "event": "Government seizes record $15B in Bitcoin assets"
+        },
+        {
+          "date": "June 30, 2024",
+          "event": "Treasury expected to auction seized cryptocurrency"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🛩️",
+      "title": "Military Drone Industry Attracts Massive Investment Surge",
+      "summary": "The **military drone** industry is experiencing unprecedented growth with **multi-million dollar** investments. **Defense contractors** worldwide are racing to develop advanced unmanned vehicles, revolutionizing modern warfare capabilities and battlefield technology.",
+      "details": [
+        "Market size: $35B",
+        "Growth rate: 25% annually",
+        "Leading manufacturers: 12 companies"
+      ],
+      "category": "Technology",
+      "source": "El País",
+      "url": "https://english.elpais.com/economy-and-business/2025-10-19/drones-are-changing-the-face-of-war-and-attracting-multi-million-dollar-investments.html",
+      "timeline": [
+        {
+          "date": "August 2019",
+          "event": "Pentagon launches $2B drone development program"
+        },
+        {
+          "date": "March 2023",
+          "event": "Turkey's Bayraktar drones prove decisive in conflicts"
+        },
+        {
+          "date": "Today",
+          "event": "Global defense firms invest billions in drones"
+        },
+        {
+          "date": "December 2024",
+          "event": "AI-powered autonomous drone swarms enter military service"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "⚛️",
+      "title": "Amazon Unveils Plans for Revolutionary Modular Nuclear Reactor",
+      "summary": "**Amazon** has revealed designs for one of America's first **modular nuclear reactors**, aimed at powering its expanding **AI** and **cloud services**. The facility represents a significant shift toward nuclear energy in tech infrastructure.",
+      "details": [
+        "Power output: 500 megawatts",
+        "Completion date: 2028",
+        "Investment size: $2.5B"
+      ],
+      "category": "Technology",
+      "source": "Engadget",
+      "url": "https://www.engadget.com/big-tech/amazon-reveals-what-one-of-the-us-first-modular-nuclear-reactors-will-look-like-180721637.html",
+      "timeline": [
+        {
+          "date": "November 2021",
+          "event": "Amazon joins Nuclear Innovation Alliance as member"
+        },
+        {
+          "date": "March 2023",
+          "event": "AWS data centers reach record energy consumption"
+        },
+        {
+          "date": "Today",
+          "event": "Amazon announces modular nuclear reactor development plans"
+        },
+        {
+          "date": "2026",
+          "event": "First Amazon nuclear facility expected operational"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🏦",
+      "title": "Japanese Banking Giants Unite to Launch Digital Stablecoins",
+      "summary": "Japan's top banks **MUFG**, **Sumitomo Mitsui**, and **Mizuho** are collaborating to issue corporate stablecoins pegged to the **yen** and **dollar**. The initiative aims to standardize digital currency settlements nationwide.",
+      "details": [
+        "Launch date: March 2026",
+        "Initial supply: ¥1 trillion",
+        "Partner banks: 15 regional"
+      ],
+      "category": "Business",
+      "source": "Japan Times",
+      "url": "https://www.japantimes.co.jp/business/2025/10/18/japan-banks-stablecoins/",
+      "timeline": [
+        {
+          "date": "April 2021",
+          "event": "Bank of Japan launches digital yen pilot"
+        },
+        {
+          "date": "October 2022",
+          "event": "MUFG tests first corporate stablecoin platform"
+        },
+        {
+          "date": "Today",
+          "event": "Three major banks announce joint stablecoin initiative"
+        },
+        {
+          "date": "December 2024",
+          "event": "National stablecoin network expected to launch"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🔒",
+      "title": "Meta Introduces Parental Controls for AI Chat Interactions",
+      "summary": "**Meta** is implementing new safety measures allowing parents to restrict their children's interactions with **AI chatbots**. The controls will affect all **under-18** accounts across Meta's platforms, addressing concerns about AI influence.",
+      "details": [
+        "Affected users: 45M teens",
+        "AI characters: 200+ disabled",
+        "Implementation date: December 2025"
+      ],
+      "category": "Technology",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/technology/2025/oct/18/parents-will-be-able-to-block-meta-bots-from-talking-to-their-children-under-new-safeguards",
+      "timeline": [
+        {
+          "date": "February 27, 2023",
+          "event": "Meta launches AI chatbots across social platforms"
+        },
+        {
+          "date": "October 12, 2023",
+          "event": "Teen mental health concerns prompt AI restrictions"
+        },
+        {
+          "date": "Today",
+          "event": "Meta introduces parental controls for AI chats"
+        },
+        {
+          "date": "January 2024",
+          "event": "Global rollout of AI controls expected"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🔥",
+      "title": "Global Forests Face Unprecedented Fire Risk Due to Climate",
+      "summary": "Climate change is transforming forests from **Australia** to the **Amazon** into potential firestorms. Rising temperatures and extended **drought periods** have created conditions for more frequent and intense **forest fires** worldwide.",
+      "details": [
+        "Affected area: 100M hectares",
+        "Temperature increase: 2.1°C",
+        "Fire frequency: Up 40%"
+      ],
+      "category": "Climate",
+      "source": "Euronews",
+      "url": "https://www.euronews.com/green/2025/10/18/from-australia-to-the-amazon-how-climate-change-is-turning-forests-into-firestorms",
+      "timeline": [
+        {
+          "date": "January 2019",
+          "event": "Australia records hottest year, severe drought begins"
+        },
+        {
+          "date": "August 2019",
+          "event": "Amazon rainforest fires reach record-breaking levels"
+        },
+        {
+          "date": "Today",
+          "event": "Global forests face unprecedented wildfire risk"
+        },
+        {
+          "date": "December 2024",
+          "event": "UN climate summit to address forest protection"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🌒",
+      "title": "India's Chandrayaan-2 Makes Breakthrough Moon-Sun Observation",
+      "summary": "**Chandrayaan-2**, India's lunar mission, has achieved the first-ever observation of **solar coronal mass ejection** effects on the Moon's atmosphere using its **CHACE-2** payload, marking a significant scientific breakthrough.",
+      "details": [
+        "Orbit altitude: 100km",
+        "Mission duration: 6 years",
+        "Data points collected: 1M+"
+      ],
+      "category": "Science",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/science/chandrayaan-2-makes-first-ever-observation-of-suns-impact-on-moon-says-isro/article70181623.ece",
+      "timeline": [
+        {
+          "date": "July 22, 2019",
+          "event": "Chandrayaan-2 launched from Sriharikota space center"
+        },
+        {
+          "date": "September 7, 2019",
+          "event": "Vikram lander crashed during Moon landing attempt"
+        },
+        {
+          "date": "Today",
+          "event": "CHACE-2 observes solar effects on lunar atmosphere"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected end of Chandrayaan-2 orbital mission"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Brace for major shifts in global markets.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "SUNDAY, OCTOBER 19, 2025",
+  "historicalEvents": [
+    {
+      "year": "1781",
+      "description": "British surrender at Yorktown, ending American Revolutionary War"
+    },
+    {
+      "year": "1812",
+      "description": "Napoleon begins retreat from Moscow"
+    },
+    {
+      "year": "1935",
+      "description": "League of Nations sanctions Italy for invading Ethiopia"
+    },
+    {
+      "year": "1987",
+      "description": "Black Monday: Dow Jones falls record 508 points"
+    }
+  ],
+  "generatedAt": "2025-10-19T07:37:05.301004",
+  "generatedAtUK": "2025-10-19T07:37:05.301022+01:00"
+}
