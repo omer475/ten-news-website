@@ -6,6 +6,13 @@ import json
 from datetime import datetime
 from supabase import create_client, Client
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not available, use system environment variables
+
 # Supabase configuration
 SUPABASE_URL = os.environ.get('SUPABASE_URL', 'your-supabase-url')
 SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', 'your-supabase-service-key')
@@ -42,28 +49,72 @@ def save_articles_to_supabase(articles, source_part):
     
     for i, article in enumerate(articles, 1):
         try:
-            # Prepare article data for database
+            # Handle new live system format vs old format
+            summary_data = article.get('summary', {})
+            if isinstance(summary_data, dict):
+                # New format: summary has paragraph and bullets
+                summary_paragraph = summary_data.get('paragraph', '')
+                summary_bullets = json.dumps(summary_data.get('bullets', []))
+            else:
+                # Old format: summary is just a string
+                summary_paragraph = str(summary_data)
+                summary_bullets = json.dumps([])
+            
+            # Normalize details into newline-joined string (ensure elements are strings)
+            raw_details = article.get('details', []) or []
+            normalized_details = []
+            for item in raw_details:
+                if isinstance(item, str):
+                    normalized_details.append(item)
+                elif isinstance(item, dict):
+                    # Common shapes: {label, value} or {date, event}
+                    if 'label' in item or 'value' in item:
+                        label = str(item.get('label', '')).strip()
+                        value = str(item.get('value', '')).strip()
+                        normalized_details.append(f"{label}: {value}".strip(': '))
+                    else:
+                        normalized_details.append(json.dumps(item, ensure_ascii=False))
+                else:
+                    normalized_details.append(str(item))
+
+            # Prepare article data for database (full mapping)
             db_article = {
-                'title': article.get('title', ''),
-                'summary': article.get('summary', ''),
-                'full_text': article.get('full_text', ''),
+                # Core
                 'url': article.get('url', ''),
-                'image_url': article.get('image', ''),
+                'guid': article.get('guid', ''),
                 'source': article.get('source', 'Unknown'),
-                'source_part': source_part,
+                'title': article.get('title', ''),
+                'description': article.get('description', summary_paragraph),
+                'content': article.get('content', article.get('text', '')),
+                'image_url': article.get('image_url', ''),
+                'author': article.get('author', ''),
+                'published_date': article.get('published_date') or article.get('published_time'),
+
+                # AI processing / scoring
+                'ai_processed': article.get('ai_processed', True),
+                'ai_score_raw': article.get('ai_score_raw'),
+                'ai_category': article.get('ai_category'),
+                'ai_reasoning': article.get('ai_reasoning'),
+                'ai_final_score': article.get('score', article.get('final_score', 0)),
+
+                # Publishing status
+                'published': True,
+                'published_at': article.get('publishedAt', datetime.now().isoformat()),
                 'category': article.get('category', 'World News'),
                 'emoji': article.get('emoji', '📰'),
-                'final_score': float(article.get('final_score', 0)),
-                'global_impact': float(article.get('scores', {}).get('global_impact', 0)),
-                'scientific_significance': float(article.get('scores', {}).get('scientific_significance', 0)),
-                'novelty': float(article.get('scores', {}).get('novelty', 0)),
-                'credibility': float(article.get('scores', {}).get('credibility', 0)),
-                'engagement': float(article.get('scores', {}).get('engagement', 0)),
-                'details': json.dumps(article.get('details', [])),
+
+                # Enhanced content
                 'timeline': json.dumps(article.get('timeline', [])),
-                'citations': json.dumps(article.get('citations', [])),
-                'published_at': article.get('publishedAt', datetime.now().isoformat()),
-                'added_at': article.get('added_at', datetime.now().isoformat())
+                'details_section': '\n'.join(normalized_details),
+                'summary': summary_paragraph,
+                # JSONB fields: pass native structures
+                'summary_bullets': article.get('summary', {}).get('bullets', []) if isinstance(summary_data, dict) else [],
+                'graph': article.get('graph', {}),
+                'map': article.get('map', {}),
+
+                # Engagement / image metadata
+                'view_count': article.get('view_count', 0),
+                'image_extraction_method': article.get('image_extraction_method', ''),
             }
             
             # Insert into database (upsert to handle duplicates)
