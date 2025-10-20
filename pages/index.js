@@ -1798,11 +1798,11 @@ export default function Home() {
                             const diffX = Math.abs(startX - currentX);
                             const diffY = Math.abs(startY - currentY);
                             
-                            if (diffX > 10 || diffY > 10) {
+                            if (diffX > 5 || diffY > 5) {
                               hasMoved = true;
                               
-                              // Determine swipe direction
-                              if (diffX > diffY && diffX > 50) {
+                              // Determine swipe direction - prioritize horizontal
+                              if (diffX > diffY && diffX > 15) {
                                 swipeDirection = 'horizontal';
                                 moveEvent.preventDefault();
                                 moveEvent.stopPropagation();
@@ -1817,7 +1817,8 @@ export default function Home() {
                             const diffX = Math.abs(startX - endX);
                             
                             // Only handle horizontal swipes for summary/bullet points toggle
-                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
+                            // Much lower threshold for better responsiveness
+                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 15) {
                               console.log('Horizontal summary swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
