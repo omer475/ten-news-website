@@ -11,6 +11,7 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
+  const [showBulletPoints, setShowBulletPoints] = useState({}); 
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -95,6 +96,7 @@ export default function Home() {
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
                  summary: article.summary || 'News summary will appear here.',
+                 summary_bullets: article.summary_bullets || [],
                  details: article.details || [],
                  source: article.source || 'Today+',
                  url: article.url || '#',
@@ -110,6 +112,7 @@ export default function Home() {
                // Debug timeline data
                if (index < 3) {
                  console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
+                 console.log(`📝 Article ${index + 1} summary_bullets:`, storyData.summary_bullets);
                }
                
                processedStories.push(storyData);
@@ -151,6 +154,14 @@ export default function Home() {
   // Timeline toggle function
   const toggleTimeline = (storyIndex) => {
     setShowTimeline(prev => ({
+      ...prev,
+      [storyIndex]: !prev[storyIndex]
+    }));
+  };
+
+  // Bullet points toggle function
+  const toggleBulletPoints = (storyIndex) => {
+    setShowBulletPoints(prev => ({
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
@@ -373,6 +384,13 @@ export default function Home() {
         setTimeout(() => {
           isTransitioning = false;
         }, 500);
+      } else if (e.key === 's' || e.key === 'S') {
+        // Toggle summary/bullet points with 'S' key
+        e.preventDefault();
+        const currentStory = stories[currentIndex];
+        if (currentStory && currentStory.type === 'news') {
+          toggleBulletPoints(currentIndex);
+        }
       }
     };
 
@@ -1354,6 +1372,29 @@ export default function Home() {
           font-size: 12px;
         }
 
+        .summary-mode-indicator {
+          position: absolute;
+          top: '-8px';
+          right: '12px';
+          font-size: '9px';
+          color: '#3b82f6';
+          font-weight: '600';
+          text-transform: 'uppercase';
+          letter-spacing: '0.5px';
+          opacity: '0.8';
+          background: 'rgba(59, 130, 246, 0.1)';
+          padding: '2px 6px';
+          borderRadius: '4px';
+        }
+
+        .summary-content {
+          transition: opacity 0.3s ease-in-out;
+        }
+
+        .summary-content.switching {
+          opacity: 0.7;
+        }
+
         .news-meta {
           position: relative;
         }
@@ -1731,15 +1772,142 @@ export default function Home() {
                         letterSpacing: '-0.5px'
                       }}>{story.title}</h3>
                       
-                      {/* Summary - Visible and Styled */}
-                      <p className="news-summary" style={{ 
-                        marginTop: '0',
-                        marginBottom: '16px',
-                        fontSize: '16px',
-                        lineHeight: '1.6',
-                        color: '#4a4a4a',
-                        opacity: '1'
-                      }}>{renderBoldText(story.summary, story.category)}</p>
+                      {/* Summary/Bullet Points - Swipeable */}
+                      <div 
+                        className="news-summary" 
+                        style={{ 
+                          marginTop: '0',
+                          marginBottom: '16px',
+                          fontSize: '16px',
+                          lineHeight: '1.6',
+                          color: '#4a4a4a',
+                          opacity: '1',
+                          minHeight: '60px',
+                          padding: '8px 0',
+                          position: 'relative'
+                        }}
+                        onTouchStart={(e) => {
+                          const startX = e.touches[0].clientX;
+                          const startY = e.touches[0].clientY;
+                          let hasMoved = false;
+                          let swipeDirection = null;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
+                            
+                            if (diffX > 10 || diffY > 10) {
+                              hasMoved = true;
+                              
+                              // Determine swipe direction
+                              if (diffX > diffY && diffX > 50) {
+                                swipeDirection = 'horizontal';
+                                moveEvent.preventDefault();
+                                moveEvent.stopPropagation();
+                              } else if (diffY > diffX && diffY > 30) {
+                                swipeDirection = 'vertical';
+                              }
+                            }
+                          };
+                          
+                          const handleTouchEnd = (endEvent) => {
+                            const endX = endEvent.changedTouches[0].clientX;
+                            const diffX = Math.abs(startX - endX);
+                            
+                            // Only handle horizontal swipes for summary/bullet points toggle
+                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
+                              console.log('Horizontal summary swipe detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              toggleBulletPoints(index);
+                            }
+                            
+                            // Clean up listeners
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                        }}
+                      >
+                        <div className="summary-content">
+                          {!showBulletPoints[index] ? (
+                            // Show Summary
+                            <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
+                          ) : (
+                            // Show Bullet Points
+                            <div style={{ margin: 0 }}>
+                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
+                                <ul style={{ 
+                                  margin: 0, 
+                                  paddingLeft: '20px',
+                                  listStyleType: 'disc'
+                                }}>
+                                  {story.summary_bullets.map((bullet, i) => (
+                                    <li key={i} style={{ 
+                                      marginBottom: '8px',
+                                      fontSize: '16px',
+                                      lineHeight: '1.6'
+                                    }}>
+                                      {renderBoldText(bullet, story.category)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                  No bullet points available
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Mode indicator and swipe hint */}
+                        {story.summary_bullets && story.summary_bullets.length > 0 && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginTop: '8px'
+                          }}>
+                            {/* Current mode indicator */}
+                            <div style={{
+                              fontSize: '9px',
+                              color: '#3b82f6',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              background: 'rgba(59, 130, 246, 0.1)',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              opacity: '0.8'
+                            }}>
+                              {!showBulletPoints[index] ? 'Summary' : 'Bullets'}
+                            </div>
+                            
+                            {/* Swipe/keyboard indicator */}
+                            <div style={{
+                              fontSize: '9px',
+                              color: '#cbd5e1',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              opacity: '0.6'
+                            }}>
+                              <span>←</span>
+                              <span>Swipe</span>
+                              <span>→</span>
+                              <span style={{ marginLeft: '8px', fontSize: '8px' }}>or press S</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{

@@ -74,6 +74,7 @@ export default async function handler(req, res) {
         emoji: article.emoji || '📰',
         final_score: article.ai_final_score,
         summary: article.summary || article.description || '',
+        summary_bullets: article.summary_bullets || [],
         timeline: timelineData,
         details: article.details_section ? article.details_section.split('\n') : [],
         views: article.view_count || 0
