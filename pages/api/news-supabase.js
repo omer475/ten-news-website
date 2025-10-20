@@ -36,10 +36,19 @@ export default async function handler(req, res) {
       throw error
     }
 
+    // Filter out any test/placeholder records
+    const filteredArticles = (articles || []).filter(a => {
+      const url = a?.url || ''
+      const title = a?.title || ''
+      const source = a?.source || ''
+      return url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source)
+    })
+
     console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
+    console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests`)
 
     // Format for frontend
-    const formattedArticles = articles.map(article => {
+    const formattedArticles = filteredArticles.map(article => {
       let timelineData = null;
       if (article.timeline) {
         try {
@@ -58,13 +67,13 @@ export default async function handler(req, res) {
         source: article.source,
         description: article.description,
         content: article.content,
-        urlToImage: article.image_url,  // Frontend expects 'urlToImage'
+        urlToImage: article.image_url || '',  // Frontend expects 'urlToImage'
         author: article.author,
         publishedAt: article.published_date || article.published_at,
         category: article.category,
         emoji: article.emoji || '📰',
         final_score: article.ai_final_score,
-        summary: article.summary,
+        summary: article.summary || article.description || '',
         timeline: timelineData,
         details: article.details_section ? article.details_section.split('\n') : [],
         views: article.view_count || 0
