@@ -33,7 +33,7 @@ onTouchStart={(e) => {
   const startY = e.touches[0].clientY;
   
   // Detect horizontal vs vertical swipes
-  // Only toggle on clear horizontal swipes (>15px for responsiveness)
+  // Only toggle on clear horizontal swipes (>50px)
   // Let vertical swipes pass through for story navigation
 }}
 ```
