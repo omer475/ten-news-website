@@ -96,7 +96,7 @@ export default function Home() {
                  title: article.title || 'News Story',
                  summary: article.summary || 'News summary will appear here.',
                  details: article.details || [],
-                 source: article.source || 'News+',
+                 source: article.source || 'Today+',
                  url: article.url || '#',
                  urlToImage: article.urlToImage,
                  timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
@@ -1490,7 +1490,7 @@ export default function Home() {
         {currentIndex === 0 && (
           <div className="header">
             <div className="logo">
-              News<span className="logo-ten">+</span>
+              Today<span className="logo-ten">+</span>
             </div>
             
             <div style={{ flex: 1 }}></div>
@@ -2062,7 +2062,7 @@ export default function Home() {
           <div className="auth-modal-overlay" onClick={() => setAuthModal(null)}>
             <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
               <div className="auth-modal-header">
-                <h2>{authModal === 'login' ? 'Login to News+' : 'Create Your Account'}</h2>
+                <h2>{authModal === 'login' ? 'Login to Today+' : 'Create Your Account'}</h2>
                 <button className="auth-close" onClick={() => setAuthModal(null)}>×</button>
               </div>
 
