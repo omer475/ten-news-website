@@ -46,7 +46,10 @@ export default async function handler(req, res) {
       options: {
         data: {
           full_name: fullName,
-        }
+        },
+        emailRedirectTo: process.env.NODE_ENV === 'production' 
+          ? 'https://tennews.ai/auth/callback'
+          : 'http://localhost:3000/auth/callback'
       }
     })
 
