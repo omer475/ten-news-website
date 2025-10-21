@@ -14,7 +14,6 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
-  const [showBulletPoints, setShowBulletPoints] = useState({});
   const [globalBulletPointsMode, setGlobalBulletPointsMode] = useState(false);
 
   // Initialize default component display
@@ -185,9 +184,10 @@ export default function Home() {
     }));
   };
 
-  // Bullet points toggle function - now global
-  const toggleBulletPoints = (storyIndex) => {
+  // Bullet points toggle function - now global for all stories
+  const toggleBulletPoints = () => {
     setGlobalBulletPointsMode(prev => !prev);
+    console.log('🔄 Toggling bullet points mode globally');
   };
 
   // Dark mode toggle function
@@ -412,7 +412,7 @@ export default function Home() {
         e.preventDefault();
         const currentStory = stories[currentIndex];
         if (currentStory && currentStory.type === 'news') {
-          toggleBulletPoints(currentIndex);
+          toggleBulletPoints();
         }
       }
     };
@@ -1840,10 +1840,10 @@ export default function Home() {
                             
                             // Only handle horizontal swipes for summary/bullet points toggle
                             if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
-                              console.log('Horizontal summary swipe detected for story', index);
+                              console.log('Horizontal summary swipe detected - toggling global mode');
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              toggleBulletPoints(index);
+                              toggleBulletPoints();
                             }
                             
                             // Clean up listeners
