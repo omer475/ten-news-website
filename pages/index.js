@@ -8,10 +8,33 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
+  const [showDetails, setShowDetails] = useState({});
+  const [showMap, setShowMap] = useState({});
+  const [showGraph, setShowGraph] = useState({});
   const [darkMode, setDarkMode] = useState(false);
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
-  const [showBulletPoints, setShowBulletPoints] = useState({}); 
+  const [showBulletPoints, setShowBulletPoints] = useState({});
+
+  // Initialize default component display
+  useEffect(() => {
+    if (stories.length > 0) {
+      const newShowDetails = {};
+      stories.forEach((story, index) => {
+        // Set default to details if available, otherwise timeline, otherwise map, otherwise graph
+        if (story.details && story.details.length > 0) {
+          newShowDetails[index] = true;
+        } else if (story.timeline && story.timeline.length > 0) {
+          setShowTimeline(prev => ({ ...prev, [index]: true }));
+        } else if (story.map) {
+          setShowMap(prev => ({ ...prev, [index]: true }));
+        } else if (story.graph) {
+          setShowGraph(prev => ({ ...prev, [index]: true }));
+        }
+      });
+      setShowDetails(newShowDetails);
+    }
+  }, [stories]); 
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -109,7 +132,7 @@ export default function Home() {
                  id: article.id || `article_${index}`
                };
                
-               // Debug timeline data
+               // Debug timeline and summary_bullets data
                if (index < 3) {
                  console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
                  console.log(`📝 Article ${index + 1} summary_bullets:`, storyData.summary_bullets);
@@ -1835,10 +1858,10 @@ export default function Home() {
                       >
                         <div className="summary-content">
                           {!showBulletPoints[index] ? (
-                            // Show Summary
+                            // Show Summary Paragraph
                             <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
                           ) : (
-                            // Show Bullet Points
+                            // Show Summary Bullet Points
                             <div style={{ margin: 0 }}>
                               {story.summary_bullets && story.summary_bullets.length > 0 ? (
                                 <ul style={{ 
@@ -1885,7 +1908,7 @@ export default function Home() {
                               borderRadius: '4px',
                               opacity: '0.8'
                             }}>
-                              {!showBulletPoints[index] ? 'Summary' : 'Bullets'}
+                              {!showBulletPoints[index] ? 'Paragraph' : 'Bullets'}
                             </div>
                             
                             {/* Swipe/keyboard indicator */}
@@ -2004,8 +2027,8 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        {/* Content - Either Details OR Timeline (never both visible) */}
-                        {!showTimeline[index] ? (
+                        {/* Content - Show one component at a time */}
+                        {showDetails[index] ? (
                           // Show Details Only
                           story.details && story.details.map((detail, i) => {
                           const [label, value] = detail.split(':');
@@ -2025,7 +2048,7 @@ export default function Home() {
                             </div>
                           );
                           })
-                        ) : (
+                        ) : showTimeline[index] ? (
                           // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
                             <div 
@@ -2165,54 +2188,196 @@ export default function Home() {
                               </div>
                             </div>
                           )
+                        ) : showMap[index] ? (
+                          // Show Map Only
+                          story.map && (
+                            <div 
+                              className="map-container"
+                              style={{
+                                position: 'absolute',
+                                bottom: '0',
+                                left: '0',
+                                right: '0',
+                                height: '200px',
+                                background: '#ffffff',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                zIndex: '10',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexDirection: 'column'
+                              }}>
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#1e293b',
+                                marginBottom: '8px'
+                              }}>📍 Location Map</div>
+                              <div style={{
+                                width: '100%',
+                                height: '150px',
+                                background: '#f8fafc',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid #e2e8f0',
+                                color: '#64748b',
+                                fontSize: '12px'
+                              }}>
+                                Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
+                              </div>
+                            </div>
+                          )
+                        ) : showGraph[index] ? (
+                          // Show Graph Only
+                          story.graph && (
+                            <div 
+                              className="graph-container"
+                              style={{
+                                position: 'absolute',
+                                bottom: '0',
+                                left: '0',
+                                right: '0',
+                                height: '200px',
+                                background: '#ffffff',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                zIndex: '10',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexDirection: 'column'
+                              }}>
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#1e293b',
+                                marginBottom: '8px'
+                              }}>📊 Data Visualization</div>
+                              <div style={{
+                                width: '100%',
+                                height: '150px',
+                                background: '#f8fafc',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid #e2e8f0',
+                                color: '#64748b',
+                                fontSize: '12px'
+                              }}>
+                                Graph visualization for: {story.graph.title || 'Data Trends'}
+                              </div>
+                            </div>
+                          )
                         )}
                         
                   </div>
                       
-                      {/* Minimal Navigation Dots */}
-                      {story.timeline && (
+                      {/* Component Navigation Dots */}
+                      {(story.details || story.timeline || story.map || story.graph) && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          gap: '10px',
+                          gap: '8px',
                           marginTop: '14px'
                         }}>
                           {/* Details Dot */}
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowTimeline(prev => ({ ...prev, [index]: false }));
-                            }}
-                            style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: !showTimeline[index] 
-                                ? 'rgba(0, 0, 0, 0.6)' 
-                                : 'rgba(0, 0, 0, 0.2)',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                          />
+                          {story.details && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDetails(prev => ({ ...prev, [index]: true }));
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                setShowMap(prev => ({ ...prev, [index]: false }));
+                                setShowGraph(prev => ({ ...prev, [index]: false }));
+                              }}
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                background: showDetails[index] 
+                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  : 'rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            />
+                          )}
                           
                           {/* Timeline Dot */}
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowTimeline(prev => ({ ...prev, [index]: true }));
-                            }}
-                            style={{
-                              width: '6px',
-                              height: '6px',
-                              borderRadius: '50%',
-                              background: showTimeline[index] 
-                                ? 'rgba(0, 0, 0, 0.6)' 
-                                : 'rgba(0, 0, 0, 0.2)',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                          />
+                          {story.timeline && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDetails(prev => ({ ...prev, [index]: false }));
+                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                setShowMap(prev => ({ ...prev, [index]: false }));
+                                setShowGraph(prev => ({ ...prev, [index]: false }));
+                              }}
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                background: showTimeline[index] 
+                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  : 'rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            />
+                          )}
+
+                          {/* Map Dot */}
+                          {story.map && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDetails(prev => ({ ...prev, [index]: false }));
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                setShowMap(prev => ({ ...prev, [index]: true }));
+                                setShowGraph(prev => ({ ...prev, [index]: false }));
+                              }}
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                background: showMap[index] 
+                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  : 'rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            />
+                          )}
+
+                          {/* Graph Dot */}
+                          {story.graph && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDetails(prev => ({ ...prev, [index]: false }));
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                setShowMap(prev => ({ ...prev, [index]: false }));
+                                setShowGraph(prev => ({ ...prev, [index]: true }));
+                              }}
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                background: showGraph[index] 
+                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  : 'rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            />
+                          )}
                         </div>
                       )}
                       
