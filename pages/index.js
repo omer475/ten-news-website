@@ -1527,15 +1527,15 @@ export default function Home() {
         .toggle-option {
           background: none;
           border: none;
-          padding: 4px;
+          padding: 5px;
           border-radius: 4px;
           cursor: pointer;
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 20px;
-          height: 20px;
+          width: 24px;
+          height: 24px;
         }
 
         .toggle-option.active {
@@ -1552,8 +1552,8 @@ export default function Home() {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1px;
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
         }
 
         .grid-square {
@@ -1565,8 +1565,8 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           gap: 2px;
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
         }
 
         .list-line {
@@ -1863,8 +1863,8 @@ export default function Home() {
                     <div className="news-content" style={{
                       position: 'relative',
                       paddingTop: 'calc(30vh + 12px)',
-                      paddingLeft: '24px',
-                      paddingRight: '24px',
+                      paddingLeft: '8px',
+                      paddingRight: '8px',
                       zIndex: '2'
                     }}>
                       
