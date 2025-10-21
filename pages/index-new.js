@@ -46,14 +46,6 @@ export default function Home() {
     };
     
     loadData();
-    
-    // Emergency timeout - force loading to false after 3 seconds
-    const timeout = setTimeout(() => {
-      console.log('🔧 Emergency timeout: Setting loading to false');
-      setLoading(false);
-    }, 3000);
-    
-    return () => clearTimeout(timeout);
   }, []);
 
   const toggleBulletPoints = () => {
