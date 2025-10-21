@@ -137,6 +137,7 @@ export default function Home() {
                if (index < 3) {
                  console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
                  console.log(`📝 Article ${index + 1} summary_bullets:`, storyData.summary_bullets);
+                 console.log(`📝 Article ${index + 1} summary:`, storyData.summary);
                }
                
                processedStories.push(storyData);
