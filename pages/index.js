@@ -14,7 +14,17 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
-  const [globalBulletPointsMode, setGlobalBulletPointsMode] = useState(false);
+  const [showBulletPoints, setShowBulletPoints] = useState({});
+
+  // Helper function to count available components for a story
+  const getAvailableComponentsCount = (story) => {
+    let count = 0;
+    if (story.details && story.details.length > 0) count++;
+    if (story.timeline && story.timeline.length > 0) count++;
+    if (story.map) count++;
+    if (story.graph) count++;
+    return count;
+  };
 
   // Initialize default component display
   useEffect(() => {
@@ -93,11 +103,10 @@ export default function Home() {
         
         if (response.ok) {
           const newsData = await response.json();
-          console.log('📰 API Response received');
+          console.log('📰 API Response:', newsData);
           console.log('📰 Articles count:', newsData.articles?.length);
           
           if (newsData.articles && newsData.articles.length > 0) {
-            console.log('📰 Processing articles...');
             // Create opening story
             const openingStory = {
               type: 'opening',
@@ -134,25 +143,25 @@ export default function Home() {
                  id: article.id || `article_${index}`
                };
                
-               // Debug timeline and summary_bullets data
-               if (index < 3) {
-                 console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
-                 console.log(`📝 Article ${index + 1} summary_bullets:`, storyData.summary_bullets);
-               }
-               
                processedStories.push(storyData);
              });
             
+            console.log('📰 Setting stories:', processedStories.length);
             setStories(processedStories);
+            console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
+            setStories([]);
           }
         } else {
           console.log('📡 Response not ok:', response.status);
+          setStories([]);
         }
       } catch (error) {
         console.error('Error loading news:', error);
+        setStories([]);
       } finally {
+        console.log('📰 Setting loading to false');
         setLoading(false);
       }
     };
@@ -184,10 +193,13 @@ export default function Home() {
     }));
   };
 
-  // Bullet points toggle function - now global for all stories
-  const toggleBulletPoints = () => {
-    setGlobalBulletPointsMode(prev => !prev);
-    console.log('🔄 Toggling bullet points mode globally');
+  // Summary display mode toggle function - per story
+  const toggleSummaryDisplayMode = (storyIndex) => {
+    setShowBulletPoints(prev => ({
+      ...prev,
+      [storyIndex]: !prev[storyIndex]
+    }));
+    console.log(`🔄 Toggling summary display mode for story ${storyIndex}`);
   };
 
   // Dark mode toggle function
@@ -412,7 +424,7 @@ export default function Home() {
         e.preventDefault();
         const currentStory = stories[currentIndex];
         if (currentStory && currentStory.type === 'news') {
-          toggleBulletPoints();
+          toggleSummaryDisplayMode(currentIndex);
         }
       }
     };
@@ -448,8 +460,46 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
-  // Show loading only if we truly have no data
-  if (loading && stories.length === 0) {
+  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Temporary debug - force loading to false if stories exist
+  if (stories.length > 0 && loading) {
+    console.log('🔧 Debug: Forcing loading to false');
+    setLoading(false);
+  }
+  
+  // Temporary debug - show current state
+  console.log('🔧 Debug: Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Emergency fallback - if loading takes too long, show something
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading && stories.length === 0) {
+        console.log('🔧 Emergency: Setting loading to false after timeout');
+        setLoading(false);
+      }
+    }, 2000); // 2 second timeout
+    
+    return () => clearTimeout(timer);
+  }, [loading, stories.length]);
+  
+  // Force loading to false if we have stories but still loading
+  useEffect(() => {
+    if (stories.length > 0 && loading) {
+      console.log('🔧 Force: Setting loading to false because stories exist');
+      setLoading(false);
+    }
+  }, [stories.length, loading]);
+  
+  // Additional safety check - force render if we have data
+  useEffect(() => {
+    if (stories.length > 0) {
+      console.log('🔧 Safety: Stories exist, ensuring loading is false');
+      setLoading(false);
+    }
+  }, [stories.length]);
+  
+  if (loading) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -1722,8 +1772,9 @@ export default function Home() {
                           {story.emoji} {story.category}
                         </div>
 
-                        {/* Toggle Switch */}
-                        <div className="toggle-switch">
+                        {/* Toggle Switch - Only show if multiple components available */}
+                        {getAvailableComponentsCount(story) > 1 && (
+                          <div className="toggle-switch">
                           {/* Grid Option (Details) */}
                             <button
                             className={`toggle-option ${!showTimeline[index] ? 'active' : ''}`}
@@ -1781,7 +1832,8 @@ export default function Home() {
                                 </div>
                               </div>
                             </button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Title - Large and Prominent, Higher Position */}
@@ -1840,10 +1892,10 @@ export default function Home() {
                             
                             // Only handle horizontal swipes for summary/bullet points toggle
                             if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
-                              console.log('Horizontal summary swipe detected - toggling global mode');
+                              console.log('Horizontal summary swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              toggleBulletPoints();
+                              toggleSummaryDisplayMode(index);
                             }
                             
                             // Clean up listeners
@@ -1856,20 +1908,20 @@ export default function Home() {
                         }}
                       >
                         <div className="summary-content">
-                          {!globalBulletPointsMode ? (
+                          {!showBulletPoints[index] ? (
                             // Show Summary Paragraph
                             <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
                           ) : (
                             // Show Summary Bullet Points
                             <div style={{ margin: 0 }}>
                               {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                                <ul style={{ 
-                                  margin: 0, 
+                                <ul style={{
+                                  margin: 0,
                                   paddingLeft: '20px',
                                   listStyleType: 'disc'
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
-                                    <li key={i} style={{ 
+                                    <li key={i} style={{
                                       marginBottom: '8px',
                                       fontSize: '16px',
                                       lineHeight: '1.6'
@@ -1907,7 +1959,7 @@ export default function Home() {
                               borderRadius: '4px',
                               opacity: '0.8'
                             }}>
-                              {!globalBulletPointsMode ? 'Paragraph' : 'Bullets'}
+                              {!showBulletPoints[index] ? 'Paragraph' : 'Bullets'}
                             </div>
                             
                             {/* Swipe/keyboard indicator */}
@@ -2277,8 +2329,8 @@ export default function Home() {
                         
                   </div>
                       
-                      {/* Component Navigation Dots */}
-                      {(story.details || story.timeline || story.map || story.graph) && (
+                      {/* Component Navigation Dots - Only show if multiple components available */}
+                      {getAvailableComponentsCount(story) > 1 && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'center',
