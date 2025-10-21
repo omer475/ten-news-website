@@ -89,6 +89,7 @@ export default function Home() {
       try {
         console.log('📡 About to fetch API...');
         const response = await fetch(`/api/news?t=${Date.now()}`);
+        console.log('📡 Response status:', response.status);
         
         if (response.ok) {
           const newsData = await response.json();
@@ -146,6 +147,8 @@ export default function Home() {
           } else {
             console.log('📰 No articles found in response');
           }
+        } else {
+          console.log('📡 Response not ok:', response.status);
         }
       } catch (error) {
         console.error('Error loading news:', error);
@@ -449,6 +452,27 @@ export default function Home() {
   }, [user, currentIndex]);
 
   console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Temporary debug - force loading to false if stories exist
+  if (stories.length > 0 && loading) {
+    console.log('🔧 Debug: Forcing loading to false');
+    setLoading(false);
+  }
+  
+  // Temporary debug - show current state
+  console.log('🔧 Debug: Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Emergency fallback - if loading takes too long, show something
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading && stories.length === 0) {
+        console.log('🔧 Emergency: Setting loading to false after timeout');
+        setLoading(false);
+      }
+    }, 5000); // 5 second timeout
+    
+    return () => clearTimeout(timer);
+  }, [loading, stories.length]);
   
   if (loading) {
     return (
@@ -2274,7 +2298,7 @@ export default function Home() {
                               </div>
                             </div>
                           )
-                        )}
+                        ) : null}
                         
                   </div>
                       
