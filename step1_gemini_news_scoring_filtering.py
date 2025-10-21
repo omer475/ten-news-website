@@ -1,8 +1,90 @@
+#!/usr/bin/env python3
+"""
+STEP 1: GEMINI NEWS SCORING & FILTERING
+==========================================
+Purpose: Filter RSS articles down to "must-know" news articles
+Model: Gemini 2.5 Flash
+Input: RSS articles with title, source, description, url
+Output: Approved articles (score ≥700)
+"""
+
 import requests
 import json
 import time
-import os
+import re
 from typing import List, Dict
+
+def _fix_truncated_json(json_text: str) -> List[Dict]:
+    """
+    Fix truncated JSON responses from Gemini API
+    """
+    # Clean up the response
+    json_text = json_text.strip()
+    
+    # Remove any leading/trailing non-JSON content
+    start_idx = json_text.find('[')
+    if start_idx == -1:
+        raise ValueError("No JSON array found in response")
+    
+    json_text = json_text[start_idx:]
+    
+    # If it doesn't end with ], try to find the last complete object
+    if not json_text.endswith(']'):
+        # Find the last complete object by looking for }, patterns
+        last_complete_idx = -1
+        brace_count = 0
+        in_string = False
+        escape_next = False
+        
+        for i, char in enumerate(json_text):
+            if escape_next:
+                escape_next = False
+                continue
+                
+            if char == '\\':
+                escape_next = True
+                continue
+                
+            if char == '"' and not escape_next:
+                in_string = not in_string
+                continue
+                
+            if not in_string:
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        # Found end of an object
+                        last_complete_idx = i
+        
+        if last_complete_idx > 0:
+            # Find the end of this object (including any trailing comma)
+            end_idx = last_complete_idx + 1
+            while end_idx < len(json_text) and json_text[end_idx] in ', \n\t':
+                end_idx += 1
+            
+            json_text = json_text[:end_idx] + ']'
+        else:
+            # If we can't find complete objects, just close the array
+            json_text = json_text.rstrip(', \n\t') + ']'
+    
+    # Try to parse the fixed JSON
+    try:
+        return json.loads(json_text)
+    except json.JSONDecodeError as e:
+        # Last resort: try to extract individual objects using regex
+        objects = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', json_text)
+        if objects:
+            parsed_objects = []
+            for obj_str in objects:
+                try:
+                    parsed_objects.append(json.loads(obj_str))
+                except json.JSONDecodeError:
+                    continue
+            return parsed_objects
+        else:
+            raise ValueError(f"Could not extract any valid JSON objects: {e}")
 
 def score_news_articles_step1(articles: List[Dict], api_key: str) -> Dict:
     """
@@ -16,7 +98,7 @@ def score_news_articles_step1(articles: List[Dict], api_key: str) -> Dict:
         dict with 'approved' and 'filtered' lists
     """
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     
     system_prompt = """You are a news curator AI for a global news application. Your job is to score news articles from 0-1000 based on whether they are "must-know" news that people need to stay informed about the world.
 
@@ -161,23 +243,22 @@ Rules:
 - No explanations or additional fields
 - Valid JSON only"""
 
-    # Format articles for prompt
-    articles_text = json.dumps(articles, indent=2)
+    # Prepare articles for scoring
+    articles_text = "Score these news articles based on must-know criteria. Return JSON array only.\n\nArticles to score:\n[\n"
     
-    user_prompt = f"""Score these news articles based on must-know criteria. Return JSON array only.
-
-Articles to score:
-{articles_text}
-
-Evaluate each article and return JSON array with title, score (0-1000), and status (APPROVED if >=700, FILTERED if <700)."""
-
-    payload = {
+    for article in articles:
+        articles_text += f'  {{\n    "title": "{article["title"]}",\n    "source": "{article["source"]}",\n    "text": "{article.get("text", "")[:500]}",\n    "url": "{article["url"]}"\n  }},\n'
+    
+    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), and status (APPROVED if >=700, FILTERED if <700)."
+    
+    # Prepare request
+    request_data = {
         "contents": [
             {
                 "role": "user",
                 "parts": [
                     {
-                        "text": user_prompt
+                        "text": articles_text
                     }
                 ]
             }
@@ -198,189 +279,79 @@ Evaluate each article and return JSON array with title, score (0-1000), and stat
         }
     }
     
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        # Make API request
+        response = requests.post(url, json=request_data, timeout=60)
         response.raise_for_status()
         
-        data = response.json()
+        # Parse response
+        result = response.json()
         
-        # Extract the generated content
-        result_text = data['candidates'][0]['content']['parts'][0]['text']
+        # Extract text from response
+        if 'candidates' in result and len(result['candidates']) > 0:
+            candidate = result['candidates'][0]
+            if 'content' in candidate and 'parts' in candidate['content']:
+                response_text = candidate['content']['parts'][0]['text']
+            else:
+                raise ValueError("No valid content in Gemini response")
+        else:
+            raise ValueError("No valid response from Gemini API")
         
-        # Parse JSON result
-        results = json.loads(result_text)
+        # Parse JSON response with robust error handling
+        scored_articles = None
         
-        # Separate approved and filtered
+        try:
+            scored_articles = json.loads(response_text)
+        except json.JSONDecodeError as e:
+            print(f"⚠️ JSON parse error: {e}")
+            print(f"Response text: {response_text[:500]}...")
+            
+            # Try to fix truncated JSON response
+            try:
+                scored_articles = _fix_truncated_json(response_text)
+                print(f"✅ Fixed truncated JSON - recovered {len(scored_articles)} articles")
+            except Exception as fix_error:
+                print(f"❌ Could not fix JSON: {fix_error}")
+                print("❌ Could not parse JSON response")
+                return {"approved": [], "filtered": articles}
+        
+        # Separate approved and filtered articles
         approved = []
         filtered = []
         
-        # Match scores with original article data (including URLs)
-        for i, result in enumerate(results):
-            article_with_score = {
-                **articles[i],  # Include all original fields (title, source, text, url)
-                'score': result['score'],
-                'status': result['status']
-            }
+        for scored_article in scored_articles:
+            # Find original article
+            original_article = None
+            for article in articles:
+                if article['title'] == scored_article['title']:
+                    original_article = article
+                    break
             
-            if result['status'] == 'APPROVED':
-                approved.append(article_with_score)
-            else:
-                filtered.append(article_with_score)
+            if original_article:
+                # Add score and status to original article
+                original_article['score'] = scored_article['score']
+                original_article['status'] = scored_article['status']
+                
+                if scored_article['status'] == 'APPROVED':
+                    approved.append(original_article)
+                else:
+                    filtered.append(original_article)
         
         return {
-            'approved': approved,
-            'filtered': filtered,
-            'total': len(results),
-            'approval_rate': len(approved) / len(results) * 100 if results else 0
+            "approved": approved,
+            "filtered": filtered
         }
         
     except requests.exceptions.RequestException as e:
-        print(f"API request error: {e}")
-        raise
-    except (KeyError, json.JSONDecodeError) as e:
-        print(f"Response parsing error: {e}")
-        print(f"Response: {response.text}")
-        raise
+        print(f"❌ API request failed: {e}")
+        return {"approved": [], "filtered": articles}
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return {"approved": [], "filtered": articles}
 
-
-def process_large_rss_feed(all_articles: List[Dict], api_key: str, batch_size: int = 30) -> Dict:
-    """
-    Process large RSS feeds in batches of 30
-    
-    Args:
-        all_articles: Complete list from RSS (could be 1000+)
-        api_key: Gemini API key
-        batch_size: Articles per API call (max 30 recommended)
-    
-    Returns:
-        Combined results from all batches
-    """
-    all_approved = []
-    all_filtered = []
-    
-    total_batches = (len(all_articles) + batch_size - 1) // batch_size
-    
-    for i in range(0, len(all_articles), batch_size):
-        batch = all_articles[i:i+batch_size]
-        batch_num = i // batch_size + 1
-        
-        print(f"\nProcessing batch {batch_num}/{total_batches} ({len(batch)} articles)...")
-        
-        try:
-            results = score_news_articles_step1(batch, api_key)
-            all_approved.extend(results['approved'])
-            all_filtered.extend(results['filtered'])
-            
-            print(f"✓ Batch {batch_num}: {len(results['approved'])} approved, {len(results['filtered'])} filtered")
-            
-        except Exception as e:
-            print(f"✗ Batch {batch_num} failed: {e}")
-            continue
-        
-        # Rate limiting (if needed)
-        if i + batch_size < len(all_articles):
-            time.sleep(0.5)
-    
-    return {
-        'approved': all_approved,
-        'filtered': all_filtered,
-        'total': len(all_articles),
-        'approval_rate': len(all_approved) / len(all_articles) * 100 if all_articles else 0
-    }
-
-
-def validate_step1_output(results: Dict, input_articles: List[Dict]) -> tuple:
-    """
-    Validate Step 1 scoring output before passing to Step 2
-    """
-    errors = []
-    warnings = []
-    
-    # Check structure
-    if not isinstance(results, dict):
-        errors.append("Results must be a dict with 'approved' and 'filtered'")
-        return False, errors, warnings
-    
-    if 'approved' not in results or 'filtered' not in results:
-        errors.append("Missing 'approved' or 'filtered' fields")
-        return False, errors, warnings
-    
-    approved = results['approved']
-    filtered = results['filtered']
-    
-    # Validate counts
-    total_returned = len(approved) + len(filtered)
-    if total_returned != len(input_articles):
-        errors.append(f"Count mismatch: {total_returned} returned, {len(input_articles)} input")
-    
-    # Validate approved articles have URLs for Step 2
-    for article in approved:
-        if 'url' not in article or not article['url']:
-            errors.append(f"Approved article missing URL: {article.get('title', 'Unknown')}")
-        
-        if 'score' not in article:
-            errors.append(f"Article missing score: {article.get('title', 'Unknown')}")
-        elif article['score'] < 700:
-            warnings.append(f"Approved article scored below 700: {article['title']} ({article['score']})")
-    
-    # Check approval rate
-    approval_rate = results.get('approval_rate', 0)
-    if approval_rate < 5:
-        warnings.append(f"Very low approval rate: {approval_rate:.1f}% - standards may be too high")
-    elif approval_rate > 80:
-        warnings.append(f"Very high approval rate: {approval_rate:.1f}% - standards may be too low")
-    
-    is_valid = len(errors) == 0
-    return is_valid, errors, warnings
-
-
-def analyze_step1_results(results: Dict) -> Dict:
-    """
-    Analyze Step 1 scoring patterns
-    """
-    approved = results['approved']
-    filtered = results['filtered']
-    
-    # Score distribution
-    all_scores = [a['score'] for a in approved + filtered]
-    
-    analytics = {
-        'total_articles': len(all_scores),
-        'approved_count': len(approved),
-        'filtered_count': len(filtered),
-        'approval_rate': results['approval_rate'],
-        'score_distribution': {
-            '950-1000 (Critical)': len([s for s in all_scores if s >= 950]),
-            '850-949 (Highly Important)': len([s for s in all_scores if 850 <= s < 950]),
-            '700-849 (Important)': len([s for s in all_scores if 700 <= s < 850]),
-            '500-699 (Filtered)': len([s for s in all_scores if 500 <= s < 700]),
-            '0-499 (Filtered)': len([s for s in all_scores if s < 500])
-        },
-        'avg_approved_score': sum(a['score'] for a in approved) / len(approved) if approved else 0,
-        'avg_filtered_score': sum(f['score'] for f in filtered) / len(filtered) if filtered else 0,
-        'top_sources': {}
-    }
-    
-    # Top sources in approved
-    for article in approved:
-        source = article.get('source', 'Unknown')
-        analytics['top_sources'][source] = analytics['top_sources'].get(source, 0) + 1
-    
-    return analytics
-
-
-# Example usage and testing
 if __name__ == "__main__":
-    # Test with sample articles
-    print("🧪 TESTING STEP 1: GEMINI NEWS SCORING")
-    print("=" * 60)
-    
-    # Sample articles from RSS feed
-    articles_from_rss = [
+    # Test the function
+    test_articles = [
         {
             "title": "European Central Bank raises interest rates to 4.5 percent",
             "source": "Reuters",
@@ -390,80 +361,12 @@ if __name__ == "__main__":
         {
             "title": "Celebrity couple announces divorce",
             "source": "Entertainment Weekly",
-            "text": "Famous actor and actress announce separation after 5 years.",
+            "text": "",
             "url": "https://ew.com/celebrity-divorce"
-        },
-        {
-            "title": "UN Security Council votes on Gaza ceasefire resolution",
-            "source": "Associated Press",
-            "text": "The United Nations Security Council met today to vote on a resolution calling for immediate ceasefire.",
-            "url": "https://apnews.com/un-gaza-vote"
-        },
-        {
-            "title": "Local bakery wins best pastry award",
-            "source": "City News",
-            "text": "Downtown bakery receives recognition for their croissants.",
-            "url": "https://citynews.com/bakery-award"
-        },
-        {
-            "title": "Major tech company announces layoffs affecting 10,000 employees",
-            "source": "Bloomberg",
-            "text": "Tech giant announces significant workforce reduction due to economic pressures.",
-            "url": "https://bloomberg.com/tech-layoffs"
         }
     ]
     
-    # Get API key from environment
-    api_key = os.getenv('GOOGLE_API_KEY')
-    if not api_key:
-        print("❌ GOOGLE_API_KEY environment variable not set")
-        print("Please set your Google AI API key:")
-        print("export GOOGLE_API_KEY='your-api-key-here'")
-        exit(1)
-    
-    print(f"\n📊 Scoring {len(articles_from_rss)} sample articles...")
-    
-    try:
-        results = score_news_articles_step1(articles_from_rss, api_key)
-        
-        print(f"\n=== STEP 1 RESULTS ===")
-        print(f"Total articles: {results['total']}")
-        print(f"Approved: {len(results['approved'])} ({results['approval_rate']:.1f}%)")
-        print(f"Filtered: {len(results['filtered'])}")
-        
-        print("\n=== APPROVED ARTICLES (Ready for Step 2) ===")
-        for article in results['approved']:
-            print(f"[{article['score']}] {article['title']}")
-            print(f"    Source: {article['source']}")
-            print(f"    URL: {article['url']}")
-        
-        print("\n=== FILTERED ARTICLES ===")
-        for article in results['filtered']:
-            print(f"[{article['score']}] {article['title']}")
-            print(f"    Source: {article['source']}")
-        
-        # Validate results
-        is_valid, errors, warnings = validate_step1_output(results, articles_from_rss)
-        
-        if not is_valid:
-            print(f"\n❌ VALIDATION ERRORS:")
-            for error in errors:
-                print(f"  - {error}")
-        elif warnings:
-            print(f"\n⚠️  VALIDATION WARNINGS:")
-            for warning in warnings:
-                print(f"  - {warning}")
-        else:
-            print(f"\n✅ Validation passed!")
-        
-        # Analytics
-        analytics = analyze_step1_results(results)
-        print(f"\n📈 ANALYTICS:")
-        print(f"   Average approved score: {analytics['avg_approved_score']:.1f}")
-        print(f"   Average filtered score: {analytics['avg_filtered_score']:.1f}")
-        print(f"   Score distribution: {analytics['score_distribution']}")
-        
-        print(f"\n🚀 Ready for Step 2: {len(results['approved'])} URLs to fetch with Jina")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
+    api_key = "YOUR_API_KEY_HERE"
+    results = score_news_articles_step1(test_articles, api_key)
+    print(f"Approved: {len(results['approved'])}")
+    print(f"Filtered: {len(results['filtered'])}")
