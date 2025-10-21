@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
     // Send welcome email
     await resend.emails.send({
-      from: 'Ten News <news@tennews.com>', // You'll need to verify this domain in Resend
+      from: 'Ten News <onboarding@resend.dev>', // Using Resend's default domain
       to: email,
       subject: 'Welcome to Ten News - Daily Global Digest',
       html: `

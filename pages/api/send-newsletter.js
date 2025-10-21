@@ -119,7 +119,7 @@ export default async function handler(req, res) {
       
       try {
         await resend.emails.send({
-          from: 'Ten News <news@tennews.com>',
+          from: 'Ten News <onboarding@resend.dev>',
           to: batch.map(sub => sub.email),
           subject: subject,
           html: emailHTML,

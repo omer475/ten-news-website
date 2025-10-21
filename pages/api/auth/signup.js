@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     // Send welcome email
     try {
       await resend.emails.send({
-        from: 'Ten News <noreply@tennews.app>',
+        from: 'Ten News <onboarding@resend.dev>',
         to: email,
         subject: 'Welcome to Ten News! 🎉',
         html: `
