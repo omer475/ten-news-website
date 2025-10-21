@@ -15,6 +15,7 @@ export default function Home() {
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
+  const [globalBulletPointsMode, setGlobalBulletPointsMode] = useState(false);
 
   // Initialize default component display
   useEffect(() => {
@@ -184,12 +185,9 @@ export default function Home() {
     }));
   };
 
-  // Bullet points toggle function
+  // Bullet points toggle function - now global
   const toggleBulletPoints = (storyIndex) => {
-    setShowBulletPoints(prev => ({
-      ...prev,
-      [storyIndex]: !prev[storyIndex]
-    }));
+    setGlobalBulletPointsMode(prev => !prev);
   };
 
   // Dark mode toggle function
@@ -450,8 +448,8 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
-  // Always show content for now
-  if (false) {
+  // Show loading only if we truly have no data
+  if (loading && stories.length === 0) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -1858,7 +1856,7 @@ export default function Home() {
                         }}
                       >
                         <div className="summary-content">
-                          {!showBulletPoints[index] ? (
+                          {!globalBulletPointsMode ? (
                             // Show Summary Paragraph
                             <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
                           ) : (
@@ -1909,7 +1907,7 @@ export default function Home() {
                               borderRadius: '4px',
                               opacity: '0.8'
                             }}>
-                              {!showBulletPoints[index] ? 'Paragraph' : 'Bullets'}
+                              {!globalBulletPointsMode ? 'Paragraph' : 'Bullets'}
                             </div>
                             
                             {/* Swipe/keyboard indicator */}
