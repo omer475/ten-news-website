@@ -24,21 +24,28 @@ export default function Home() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
-    // Only handle touch events on summary content
-    if (e.target.closest('.summary-content')) {
-      setTouchEnd(null);
-      setTouchStart(e.targetTouches[0].clientX);
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
+      return;
     }
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
   };
 
   const onTouchMove = (e) => {
-    // Only handle touch events on summary content
-    if (e.target.closest('.summary-content')) {
-      setTouchEnd(e.targetTouches[0].clientX);
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
+      return;
     }
+    setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = (e) => {
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
+      return;
+    }
+    
     if (!touchStart || !touchEnd) return;
     
     const distance = touchStart - touchEnd;
@@ -46,13 +53,11 @@ export default function Home() {
     const isRightSwipe = distance < -minSwipeDistance;
 
     if (isLeftSwipe || isRightSwipe) {
-      // Only prevent if this is specifically on the summary content
-      if (e.target.closest('.summary-content')) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Toggle between summary and bullet points
-        setGlobalShowBullets(prev => !prev);
-      }
+      // Prevent click event when swiping
+      e.preventDefault();
+      e.stopPropagation();
+      // Toggle between summary and bullet points
+      setGlobalShowBullets(prev => !prev);
     }
   };
 
@@ -1953,6 +1958,18 @@ export default function Home() {
                           onTouchMove={onTouchMove}
                           onTouchEnd={onTouchEnd}
                           style={{ cursor: 'pointer' }}
+                          onClick={(e) => {
+                            // Only prevent click if it was a swipe, not a tap
+                            if (touchStart && touchEnd) {
+                              const distance = Math.abs(touchStart - touchEnd);
+                              if (distance > minSwipeDistance) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return;
+                              }
+                            }
+                            // Allow normal click to pass through to parent
+                          }}
                         >
                           {!globalShowBullets ? (
                             // Show Summary Paragraph
@@ -2008,23 +2025,6 @@ export default function Home() {
                               {!globalShowBullets ? 'Paragraph' : 'Bullets'}
                             </div>
                             
-                            {/* Swipe/keyboard indicator */}
-                            <div style={{
-                              fontSize: '9px',
-                              color: '#cbd5e1',
-                              fontWeight: '600',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              opacity: '0.6'
-                            }}>
-                              <span>←</span>
-                              <span>Swipe</span>
-                              <span>→</span>
-                              <span style={{ marginLeft: '8px', fontSize: '8px' }}>or press S</span>
-                            </div>
                           </div>
                         )}
                       </div>
