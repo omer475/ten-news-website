@@ -2076,31 +2076,6 @@ export default function Home() {
                           )}
                         </div>
                         
-                        {/* Mode indicator and swipe hint */}
-                        {story.summary_bullets && story.summary_bullets.length > 0 && (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginTop: '8px'
-                          }}>
-                            {/* Current mode indicator */}
-                            <div style={{
-                              fontSize: '9px',
-                              color: '#3b82f6',
-                              fontWeight: '600',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              background: 'rgba(59, 130, 246, 0.1)',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              opacity: '0.8'
-                            }}>
-                              {!globalShowBullets ? 'Paragraph' : 'Bullets'}
-                            </div>
-                            
-                          </div>
-                        )}
                       </div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
