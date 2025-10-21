@@ -1516,6 +1516,79 @@ export default function Home() {
           position: relative;
         }
 
+        .toggle-switch {
+          display: flex;
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 6px;
+          padding: 2px;
+          gap: 2px;
+        }
+
+        .toggle-option {
+          background: none;
+          border: none;
+          padding: 4px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+        }
+
+        .toggle-option.active {
+          background: #000000;
+        }
+
+        .toggle-option.active .grid-square,
+        .toggle-option.active .list-dot,
+        .toggle-option.active .list-bar {
+          background: #ffffff;
+        }
+
+        .grid-icon {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1px;
+          width: 12px;
+          height: 12px;
+        }
+
+        .grid-square {
+          background: #666666;
+          border-radius: 1px;
+        }
+
+        .list-icon {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          width: 12px;
+          height: 12px;
+        }
+
+        .list-line {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+        }
+
+        .list-dot {
+          width: 2px;
+          height: 2px;
+          background: #666666;
+          border-radius: 50%;
+        }
+
+        .list-bar {
+          width: 8px;
+          height: 1px;
+          background: #666666;
+          border-radius: 1px;
+        }
+
 
         /* Desktop timeline - no height limit */
         @media (min-width: 769px) {
@@ -1805,12 +1878,12 @@ export default function Home() {
                         {/* Category Badge */}
                         <div style={{
                           display: 'inline-block',
-                          fontSize: '11px',
+                          fontSize: '9px',
                           fontWeight: '600',
                           letterSpacing: '0.5px',
                           textTransform: 'uppercase',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
+                          padding: '3px 6px',
+                          borderRadius: '3px',
                           background: '#f5f5f5',
                           color: '#000000'
                         }}>
