@@ -1527,14 +1527,14 @@ export default function Home() {
         .toggle-option {
           background: none;
           border: none;
-          padding: 5px;
+          padding: 5px 8px;
           border-radius: 4px;
           cursor: pointer;
           transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 24px;
+          width: 32px;
           height: 24px;
         }
 
