@@ -15,6 +15,38 @@ export default function Home() {
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
+  const [globalShowBullets, setGlobalShowBullets] = useState(false); // Global preference for bullets vs summary
+
+  // Swipe handling for summary/bullet toggle
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = (e) => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe || isRightSwipe) {
+      // Prevent click event when swiping
+      e.preventDefault();
+      e.stopPropagation();
+      // Toggle between summary and bullet points
+      setGlobalShowBullets(prev => !prev);
+    }
+  };
 
   // Helper function to count available components for a story
   const getAvailableComponentsCount = (story) => {
@@ -1907,8 +1939,14 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        <div className="summary-content">
-                          {!showBulletPoints[index] ? (
+                        <div 
+                          className="summary-content"
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {!globalShowBullets ? (
                             // Show Summary Paragraph
                             <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
                           ) : (
@@ -1959,7 +1997,7 @@ export default function Home() {
                               borderRadius: '4px',
                               opacity: '0.8'
                             }}>
-                              {!showBulletPoints[index] ? 'Paragraph' : 'Bullets'}
+                              {!globalShowBullets ? 'Paragraph' : 'Bullets'}
                             </div>
                             
                             {/* Swipe/keyboard indicator */}
