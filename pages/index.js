@@ -469,10 +469,18 @@ export default function Home() {
         console.log('🔧 Emergency: Setting loading to false after timeout');
         setLoading(false);
       }
-    }, 5000); // 5 second timeout
+    }, 3000); // 3 second timeout
     
     return () => clearTimeout(timer);
   }, [loading, stories.length]);
+  
+  // Force loading to false if we have stories but still loading
+  useEffect(() => {
+    if (stories.length > 0 && loading) {
+      console.log('🔧 Force: Setting loading to false because stories exist');
+      setLoading(false);
+    }
+  }, [stories.length, loading]);
   
   if (loading) {
     return (
