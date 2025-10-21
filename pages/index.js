@@ -144,14 +144,21 @@ export default function Home() {
             
             console.log('📰 Setting stories:', processedStories.length);
             setStories(processedStories);
+            console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
+            // Set empty stories to prevent infinite loading
+            setStories([]);
           }
         } else {
           console.log('📡 Response not ok:', response.status);
+          // Set empty stories to prevent infinite loading
+          setStories([]);
         }
       } catch (error) {
         console.error('Error loading news:', error);
+        // Set empty stories to prevent infinite loading
+        setStories([]);
       } finally {
         console.log('📰 Setting loading to false');
         setLoading(false);
