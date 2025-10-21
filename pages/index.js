@@ -133,13 +133,6 @@ export default function Home() {
                  id: article.id || `article_${index}`
                };
                
-               // Debug timeline and summary_bullets data
-               if (index < 3) {
-                 console.log(`📅 Article ${index + 1} timeline:`, storyData.timeline);
-                 console.log(`📝 Article ${index + 1} summary_bullets:`, storyData.summary_bullets);
-                 console.log(`📝 Article ${index + 1} summary:`, storyData.summary);
-               }
-               
                processedStories.push(storyData);
              });
             
@@ -148,17 +141,14 @@ export default function Home() {
             console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
-            // Set empty stories to prevent infinite loading
             setStories([]);
           }
         } else {
           console.log('📡 Response not ok:', response.status);
-          // Set empty stories to prevent infinite loading
           setStories([]);
         }
       } catch (error) {
         console.error('Error loading news:', error);
-        // Set empty stories to prevent infinite loading
         setStories([]);
       } finally {
         console.log('📰 Setting loading to false');
