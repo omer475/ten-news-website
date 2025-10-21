@@ -24,12 +24,18 @@ export default function Home() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    // Only handle touch events on summary content
+    if (e.target.closest('.summary-content')) {
+      setTouchEnd(null);
+      setTouchStart(e.targetTouches[0].clientX);
+    }
   };
 
   const onTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    // Only handle touch events on summary content
+    if (e.target.closest('.summary-content')) {
+      setTouchEnd(e.targetTouches[0].clientX);
+    }
   };
 
   const onTouchEnd = (e) => {
@@ -40,11 +46,13 @@ export default function Home() {
     const isRightSwipe = distance < -minSwipeDistance;
 
     if (isLeftSwipe || isRightSwipe) {
-      // Prevent click event when swiping
-      e.preventDefault();
-      e.stopPropagation();
-      // Toggle between summary and bullet points
-      setGlobalShowBullets(prev => !prev);
+      // Only prevent if this is specifically on the summary content
+      if (e.target.closest('.summary-content')) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Toggle between summary and bullet points
+        setGlobalShowBullets(prev => !prev);
+      }
     }
   };
 
@@ -974,47 +982,6 @@ export default function Home() {
           color: ${darkMode ? '#ffffff' : '#000000'};
         }
 
-        .component-switch {
-          display: flex;
-          background: ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
-          border-radius: 8px;
-          padding: 2px;
-        }
-
-        .component-switch-btn {
-          background: transparent;
-          border: none;
-          padding: 8px 12px;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: ${darkMode ? '#ffffff' : '#000000'};
-        }
-
-        .component-switch-btn:hover {
-          background: ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
-        }
-
-        .switch-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .switch-arrow {
-          font-size: 14px;
-          font-weight: bold;
-          transform: rotate(0deg);
-          transition: transform 0.2s ease;
-        }
-
-        .component-switch-btn:hover .switch-arrow {
-          transform: rotate(180deg);
-        }
-
         .news-summary {
           font-size: 16px;
           color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
@@ -1845,54 +1812,64 @@ export default function Home() {
                           {story.emoji} {story.category}
                         </div>
 
-                        {/* Component Switch Button - Only show if multiple components available */}
+                        {/* Toggle Switch - Only show if multiple components available */}
                         {getAvailableComponentsCount(story) > 1 && (
-                          <div className="component-switch">
+                          <div className="toggle-switch">
+                          {/* Grid Option (Details) */}
                             <button
-                              className="component-switch-btn"
+                            className={`toggle-option ${!showTimeline[index] ? 'active' : ''}`}
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                console.log('Component switch clicked for story', index);
-                                
-                                // Cycle through available components
-                                const availableComponents = [];
-                                if (story.details && story.details.length > 0) availableComponents.push('details');
-                                if (story.timeline && story.timeline.length > 0) availableComponents.push('timeline');
-                                if (story.map) availableComponents.push('map');
-                                if (story.graph) availableComponents.push('graph');
-                                
-                                // Find current active component
-                                let currentComponent = 'details';
-                                if (showTimeline[index]) currentComponent = 'timeline';
-                                else if (showMap[index]) currentComponent = 'map';
-                                else if (showGraph[index]) currentComponent = 'graph';
-                                
-                                // Find next component in cycle
-                                const currentIndex = availableComponents.indexOf(currentComponent);
-                                const nextIndex = (currentIndex + 1) % availableComponents.length;
-                                const nextComponent = availableComponents[nextIndex];
-                                
-                                // Reset all components to false
-                                setShowDetails(prev => ({ ...prev, [index]: false }));
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                                setShowMap(prev => ({ ...prev, [index]: false }));
-                                setShowGraph(prev => ({ ...prev, [index]: false }));
-                                
-                                // Set the next component to true
-                                if (nextComponent === 'details') {
-                                  setShowDetails(prev => ({ ...prev, [index]: true }));
-                                } else if (nextComponent === 'timeline') {
-                                  setShowTimeline(prev => ({ ...prev, [index]: true }));
-                                } else if (nextComponent === 'map') {
-                                  setShowMap(prev => ({ ...prev, [index]: true }));
-                                } else if (nextComponent === 'graph') {
-                                  setShowGraph(prev => ({ ...prev, [index]: true }));
-                                }
-                              }}
+                              console.log('Grid option clicked for story', index);
+                              setShowTimeline(prev => ({
+                                ...prev,
+                                [index]: false
+                              }));
+                            }}
                             >
-                              <div className="switch-icon">
-                                <div className="switch-arrow">⇄</div>
+                              <div className="grid-icon">
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                              </div>
+                            </button>
+
+                          {/* List Option (Timeline) */}
+                            <button
+                              className={`toggle-option ${showTimeline[index] ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              console.log('List option clicked for story', index);
+                              
+                              // Switch to timeline view
+                              setShowTimeline(prev => ({
+                                ...prev,
+                                [index]: true
+                              }));
+                              
+                              // Toggle timeline expansion
+                              setExpandedTimeline(prev => ({
+                                ...prev,
+                                [index]: !prev[index]
+                              }));
+                            }}
+                            >
+                              <div className="list-icon">
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
                               </div>
                             </button>
                           </div>
