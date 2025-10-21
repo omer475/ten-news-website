@@ -193,12 +193,9 @@ export default function Home() {
     }));
   };
 
-  // Bullet points toggle function
+  // Bullet points toggle function - now global
   const toggleBulletPoints = (storyIndex) => {
-    setShowBulletPoints(prev => ({
-      ...prev,
-      [storyIndex]: !prev[storyIndex]
-    }));
+    setGlobalBulletPointsMode(prev => !prev);
   };
 
   // Dark mode toggle function
@@ -477,7 +474,7 @@ export default function Home() {
         console.log('🔧 Emergency: Setting loading to false after timeout');
         setLoading(false);
       }
-    }, 3000); // 3 second timeout
+    }, 2000); // 2 second timeout
     
     return () => clearTimeout(timer);
   }, [loading, stories.length]);
@@ -489,6 +486,14 @@ export default function Home() {
       setLoading(false);
     }
   }, [stories.length, loading]);
+  
+  // Additional safety check - force render if we have data
+  useEffect(() => {
+    if (stories.length > 0) {
+      console.log('🔧 Safety: Stories exist, ensuring loading is false');
+      setLoading(false);
+    }
+  }, [stories.length]);
   
   if (loading) {
     return (
@@ -1766,32 +1771,32 @@ export default function Home() {
                         {/* Toggle Switch */}
                         <div className="toggle-switch">
                           {/* Grid Option (Details) */}
-                          <button
+                            <button
                             className={`toggle-option ${!showTimeline[index] ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                               console.log('Grid option clicked for story', index);
                               setShowTimeline(prev => ({
                                 ...prev,
                                 [index]: false
                               }));
                             }}
-                          >
-                            <div className="grid-icon">
-                              <div className="grid-square"></div>
-                              <div className="grid-square"></div>
-                              <div className="grid-square"></div>
-                              <div className="grid-square"></div>
-                            </div>
-                          </button>
+                            >
+                              <div className="grid-icon">
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                              </div>
+                            </button>
 
                           {/* List Option (Timeline) */}
-                          <button
-                            className={`toggle-option ${showTimeline[index] ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                            <button
+                              className={`toggle-option ${showTimeline[index] ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                               console.log('List option clicked for story', index);
                               
                               // Switch to timeline view
@@ -1806,22 +1811,22 @@ export default function Home() {
                                 [index]: !prev[index]
                               }));
                             }}
-                          >
-                            <div className="list-icon">
-                              <div className="list-line">
-                                <div className="list-dot"></div>
-                                <div className="list-bar"></div>
+                            >
+                              <div className="list-icon">
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
                               </div>
-                              <div className="list-line">
-                                <div className="list-dot"></div>
-                                <div className="list-bar"></div>
-                              </div>
-                              <div className="list-line">
-                                <div className="list-dot"></div>
-                                <div className="list-bar"></div>
-                              </div>
-                            </div>
-                          </button>
+                            </button>
                         </div>
                       </div>
                       
@@ -1897,20 +1902,20 @@ export default function Home() {
                         }}
                       >
                         <div className="summary-content">
-                          {!showBulletPoints[index] ? (
+                          {!globalBulletPointsMode ? (
                             // Show Summary Paragraph
                             <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
                           ) : (
                             // Show Summary Bullet Points
                             <div style={{ margin: 0 }}>
                               {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                                <ul style={{ 
-                                  margin: 0, 
+                                <ul style={{
+                                  margin: 0,
                                   paddingLeft: '20px',
                                   listStyleType: 'disc'
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
-                                    <li key={i} style={{ 
+                                    <li key={i} style={{
                                       marginBottom: '8px',
                                       fontSize: '16px',
                                       lineHeight: '1.6'
@@ -1948,7 +1953,7 @@ export default function Home() {
                               borderRadius: '4px',
                               opacity: '0.8'
                             }}>
-                              {!showBulletPoints[index] ? 'Paragraph' : 'Bullets'}
+                              {!globalBulletPointsMode ? 'Paragraph' : 'Bullets'}
                             </div>
                             
                             {/* Swipe/keyboard indicator */}
@@ -2244,9 +2249,9 @@ export default function Home() {
                                 padding: '12px',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                 zIndex: '10',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 flexDirection: 'column'
                               }}>
                               <div style={{
@@ -2256,19 +2261,19 @@ export default function Home() {
                                 marginBottom: '8px'
                               }}>📍 Location Map</div>
                               <div style={{
-                                width: '100%',
+                                    width: '100%',
                                 height: '150px',
                                 background: '#f8fafc',
-                                borderRadius: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                 border: '1px solid #e2e8f0',
                                 color: '#64748b',
                                 fontSize: '12px'
                               }}>
                                 Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
-                              </div>
+                                  </div>
                             </div>
                           )
                         ) : showGraph[index] ? (
@@ -2287,9 +2292,9 @@ export default function Home() {
                                 padding: '12px',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                 zIndex: '10',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 flexDirection: 'column'
                               }}>
                               <div style={{
@@ -2298,14 +2303,14 @@ export default function Home() {
                                 color: '#1e293b',
                                 marginBottom: '8px'
                               }}>📊 Data Visualization</div>
-                              <div style={{
-                                width: '100%',
+                                    <div style={{
+                                      width: '100%',
                                 height: '150px',
                                 background: '#f8fafc',
-                                borderRadius: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                      borderRadius: '6px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
                                 border: '1px solid #e2e8f0',
                                 color: '#64748b',
                                 fontSize: '12px'
