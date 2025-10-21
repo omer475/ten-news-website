@@ -1539,13 +1539,13 @@ export default function Home() {
         }
 
         .toggle-option.active {
-          background: #000000;
+          background: #ffffff;
         }
 
         .toggle-option.active .grid-square,
         .toggle-option.active .list-dot,
         .toggle-option.active .list-bar {
-          background: #ffffff;
+          background: #000000;
         }
 
         .grid-icon {
@@ -1873,7 +1873,8 @@ export default function Home() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '8px'
+                        marginBottom: '4px',
+                        marginTop: '-8px'
                       }}>
                         {/* Category Badge */}
                         <div style={{
