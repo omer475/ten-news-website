@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🌊",
+      "title": "Sea Levels Rising Faster Than Any Time in 4000 Years",
+      "summary": "Scientists report **sea levels** are rising at unprecedented rates compared to the past **4,000 years**. Research from **Greenland** ice sheets shows accelerated melting, with current rates significantly exceeding historical patterns, raising concerns about coastal communities worldwide.",
+      "details": [
+        "Rise Rate: 3.7mm annually",
+        "Ice Loss: 28 trillion tons",
+        "Temperature Increase: 1.1°C since 1880"
+      ],
+      "category": "Climate",
+      "source": "EuroNews",
+      "url": "https://pt.euronews.com/green/2025/10/20/nivel-do-mar-sobe-mais-rapido-do-que-em-qualquer-outra-altura-nos-ultimos-4000-anos-eis-po",
+      "timeline": [
+        {
+          "date": "1990",
+          "event": "Greenland ice sheet loss begins accelerating"
+        },
+        {
+          "date": "2012",
+          "event": "Arctic sea ice reaches record low"
+        },
+        {
+          "date": "Today",
+          "event": "Sea levels rising fastest in millennia"
+        },
+        {
+          "date": "2050",
+          "event": "Projected one-meter sea level rise globally"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🚢",
+      "title": "US-Led Opposition Blocks Global Shipping Emissions Deal",
+      "summary": "A proposed international agreement to reduce **shipping emissions** has failed after opposition from the **United States** and **Saudi Arabia**. The deal aimed to cut **3%** of global greenhouse emissions from maritime transport.",
+      "details": [
+        "Current Fleet: 90,000 vessels",
+        "Annual Emissions: 1 billion tons",
+        "Growth Rate: 4.5% yearly"
+      ],
+      "category": "Climate",
+      "source": "EuroNews",
+      "url": "https://www.euronews.com/green/2025/10/20/international-deal-to-reduce-emissions-from-shipping-sinks-after-us-led-opposition",
+      "timeline": [
+        {
+          "date": "April 2018",
+          "event": "IMO adopts initial greenhouse gas reduction strategy"
+        },
+        {
+          "date": "June 2023",
+          "event": "IMO proposes 20-30% emissions cut by 2030"
+        },
+        {
+          "date": "Today",
+          "event": "US and Saudi Arabia block emissions deal"
+        },
+        {
+          "date": "July 2024",
+          "event": "Next IMO meeting to revisit shipping regulations"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "⛽",
+      "title": "EU Plans Complete Phase-Out of Russian Gas by 2027",
+      "summary": "The **European Union** has approved plans to eliminate **Russian gas** imports, including pipeline and **LNG**, by **2027**. Energy ministers in Luxembourg endorsed the European Commission's proposal to end dependency amid ongoing Ukraine conflict.",
+      "details": [
+        "Current Imports: 155bcm annually",
+        "Cost Savings: €60 billion",
+        "Alternative Sources: 12 countries"
+      ],
+      "category": "Business",
+      "source": "Le Monde",
+      "url": "https://www.lemonde.fr/en/energies/article/2025/10/20/eu-agrees-to-stop-importing-russian-gas-by-end-2027_6746600_98.html",
+      "timeline": [
+        {
+          "date": "February 24, 2022",
+          "event": "Russia invades Ukraine, disrupting EU gas supplies"
+        },
+        {
+          "date": "March 8, 2022",
+          "event": "EU announces REPowerEU plan reducing Russian dependence"
+        },
+        {
+          "date": "Today",
+          "event": "EU ministers approve 2027 Russian gas ban"
+        },
+        {
+          "date": "December 31, 2027",
+          "event": "Complete phase-out of Russian gas targeted"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "💾",
+      "title": "AI Boom Creates Unexpected Demand for Basic Memory Chips",
+      "summary": "The surge in **artificial intelligence** development is driving unexpected demand for basic memory chips. **Samsung** and other manufacturers report increased prices and shortages as **AI computing** requirements reshape the semiconductor market.",
+      "details": [
+        "Price Increase: 45% quarterly",
+        "Market Value: $78 billion",
+        "Production Capacity: 2.1 million units"
+      ],
+      "category": "Technology",
+      "source": "Straits Times",
+      "url": "https://www.straitstimes.com/business/chip-crunch-how-the-ai-boom-is-stoking-prices-of-less-trendy-memory",
+      "timeline": [
+        {
+          "date": "November 2022",
+          "event": "ChatGPT launch triggers massive AI chip demand"
+        },
+        {
+          "date": "March 2023",
+          "event": "Samsung begins converting DRAM lines for AI"
+        },
+        {
+          "date": "Today",
+          "event": "Memory chip prices surge amid AI shortage"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "Samsung expanding production capacity for AI chips"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🛰️",
+      "title": "Space Warfare Concerns Rise as Nations Show Orbital Capabilities",
+      "summary": "Military experts warn of increasing space warfare capabilities as **Russia** and **China** demonstrate sophisticated **orbital maneuvers**. Defense analysts note growing concerns about satellite security and potential military confrontations in space.",
+      "details": [
+        "Active Satellites: 7,200",
+        "Defense Budget: $24.7 billion",
+        "Orbital Tests: 15 this year"
+      ],
+      "category": "Technology",
+      "source": "Space.com",
+      "url": "https://www.space.com/space-exploration/satellites/are-we-already-witnessing-space-warfare-in-action-this-is-not-just-posturing",
+      "timeline": [
+        {
+          "date": "January 2007",
+          "event": "China destroys satellite in first ASAT test"
+        },
+        {
+          "date": "November 2021",
+          "event": "Russia tests anti-satellite weapon, creates debris field"
+        },
+        {
+          "date": "Today",
+          "event": "Nations demonstrate advanced satellite maneuvering capabilities"
+        },
+        {
+          "date": "December 2024",
+          "event": "UN Space Security Conference addresses warfare concerns"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🌾",
+      "title": "G20 Summit to Address Global Hunger Crisis",
+      "summary": "**South Africa's** G20 presidency focuses on addressing global hunger through 'solidarity, equality, and sustainability.' The initiative aims to reform **food systems** and increase support for **small-scale farmers** in developing nations.",
+      "details": [
+        "Affected Population: 828 million",
+        "Aid Package: $18 billion",
+        "Target Countries: 45"
+      ],
+      "category": "Society",
+      "source": "Bangkok Post",
+      "url": "https://www.bangkokpost.com/opinion/opinion/3124062/how-g20-could-help-end-hunger",
+      "timeline": [
+        {
+          "date": "September 9, 2023",
+          "event": "India hands G20 presidency to South Africa"
+        },
+        {
+          "date": "December 1, 2023",
+          "event": "South Africa begins G20 presidency term"
+        },
+        {
+          "date": "Today",
+          "event": "G20 launches food security initiative"
+        },
+        {
+          "date": "November 2024",
+          "event": "Brazil hosts G20 summit on reforms"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "⚡",
+      "title": "British Columbia Restricts AI Computing Power Usage",
+      "summary": "**British Columbia** announces restrictions on **artificial intelligence** computing power consumption and implements complete ban on **cryptocurrency mining**. The move aims to preserve energy resources and reduce environmental impact.",
+      "details": [
+        "Power Savings: 2.8GW annually",
+        "Affected Facilities: 43",
+        "Implementation Date: March 2026"
+      ],
+      "category": "Technology",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-10-20/british-columbia-moves-to-limit-ai-power-use-ban-crypto-mining",
+      "timeline": [
+        {
+          "date": "December 2021",
+          "event": "BC Hydro warns about crypto mining strain"
+        },
+        {
+          "date": "August 2023",
+          "event": "Province suspends new crypto mining connections"
+        },
+        {
+          "date": "Today",
+          "event": "BC restricts AI and bans crypto mining"
+        },
+        {
+          "date": "January 2025",
+          "event": "Review of policy impact on tech sector"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🏥",
+      "title": "Medical AI Startup OpenEvidence Secures Massive Funding Round",
+      "summary": "**OpenEvidence**, dubbed the ChatGPT for medical professionals, raises **$200 million** at **$6 billion** valuation. The funding comes three months after previous round, highlighting strong investor confidence in medical AI technology.",
+      "details": [
+        "Users: 125,000 doctors",
+        "Accuracy Rate: 94%",
+        "Hospital Partners: 2,800"
+      ],
+      "category": "Health",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2025/10/20/openevidence-the-chatgpt-for-doctors-raises-200m-at-6b-valuation/",
+      "timeline": [
+        {
+          "date": "September 15, 2023",
+          "event": "OpenEvidence launches medical AI diagnostic platform beta"
+        },
+        {
+          "date": "January 10, 2024",
+          "event": "Initial funding round raises $50M Series A"
+        },
+        {
+          "date": "Today",
+          "event": "Secures $200M funding at $6B valuation"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected FDA approval for diagnostic AI tools"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🔒",
+      "title": "Major Security Breach at F5 Raises Industry Concerns",
+      "summary": "Cybersecurity firm **F5** reveals year-long digital intrusion attributed to **Chinese** hackers. The breach exposed sensitive **source code** and software vulnerabilities, prompting widespread security concerns across corporate networks.",
+      "details": [
+        "Affected Systems: 12,000",
+        "Duration: 14 months",
+        "Data Stolen: 1.2TB"
+      ],
+      "category": "Technology",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/technology/cyber-defenders-sound-the-alarm-as-f5-hack-exposes-broad-risks/article70185201.ece",
+      "timeline": [
+        {
+          "date": "January 2023",
+          "event": "Chinese hackers first infiltrate F5 security systems"
+        },
+        {
+          "date": "August 2023",
+          "event": "F5 detects suspicious activity in development servers"
+        },
+        {
+          "date": "Today",
+          "event": "F5 discloses year-long breach of source code"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "F5 security patch rollout for affected products"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "✈️",
+      "title": "First Confirmed Space Debris Strike on Passenger Aircraft",
+      "summary": "In a 'one in a trillion' incident, suspected **space debris** struck a **Boeing 737** during flight, causing minor injuries to the pilot. The unprecedented event marks the first confirmed collision between orbital debris and commercial aircraft.",
+      "details": [
+        "Flight Altitude: 35,000 feet",
+        "Impact Speed: 17,000 mph",
+        "Debris Size: 0.3 inches"
+      ],
+      "category": "Science",
+      "source": "The Independent",
+      "url": "https://www.independent.co.uk/space/space-debris-hits-flight-satellite-starlink-b2848544.html",
+      "timeline": [
+        {
+          "date": "1957",
+          "event": "First human-made satellite launches space debris era"
+        },
+        {
+          "date": "2007",
+          "event": "NASA tracks 500,000 pieces orbital debris"
+        },
+        {
+          "date": "Today",
+          "event": "Space debris hits Boeing 737, injures pilot"
+        },
+        {
+          "date": "2024",
+          "event": "FAA to implement space debris detection protocols"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Climate headlines shake our world today.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "TUESDAY, OCTOBER 21, 2025",
+  "historicalEvents": [
+    {
+      "year": "1805",
+      "description": "Battle of Trafalgar: British Navy defeats French-Spanish fleet"
+    },
+    {
+      "year": "1879",
+      "description": "Thomas Edison successfully tests first incandescent light bulb"
+    },
+    {
+      "year": "1944",
+      "description": "US troops capture Aachen, first German city to fall"
+    },
+    {
+      "year": "1967",
+      "description": "Pentagon protesters march on the Pentagon against Vietnam War"
+    }
+  ],
+  "generatedAt": "2025-10-21T07:39:12.891267",
+  "generatedAtUK": "2025-10-21T07:39:12.891282+01:00"
+}
