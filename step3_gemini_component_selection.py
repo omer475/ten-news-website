@@ -28,7 +28,7 @@ class ComponentConfig:
     top_k: int = 40
     max_output_tokens: int = 256
     min_components: int = 1  # Minimum components per article (allow single best)
-    max_components: int = 3  # Maximum components per article (prefer concise sets)
+    max_components: int = 4  # Maximum components per article (all if relevant)
     max_article_preview: int = 2000  # Max chars to send (save tokens)
     retry_attempts: int = 3
     retry_delay: float = 2.0
@@ -38,15 +38,23 @@ class ComponentConfig:
 # SYSTEM PROMPT - COMPONENT SELECTION LOGIC
 # ==========================================
 
-COMPONENT_SELECTION_PROMPT = """You are analyzing news article TITLES to select the best 2-3 visual components for each story.
+COMPONENT_SELECTION_PROMPT = """You are analyzing news article TITLES to select the MOST RELEVANT visual components for each story.
 
 CRITICAL: You will ONLY see the article TITLE. Choose components based on the title alone.
 
-AVAILABLE COMPONENTS (select EXACTLY 2-3 of these):
+AVAILABLE COMPONENTS (select 1-4 of these, ONLY if truly relevant):
 1. timeline - Historical events and chronology
 2. details - Key facts, numbers, statistics
 3. graph - Data visualization and trends
 4. map - Geographic locations
+
+SELECTION PHILOSOPHY: QUALITY OVER QUANTITY
+- Choose ONLY components that add genuine value to understanding the story
+- If only 1 component is relevant, select only 1
+- If 2 are relevant, select 2
+- If 3 are relevant, select 3
+- If all 4 are relevant, select 4
+- NEVER select irrelevant components just to meet a minimum
 
 COMPONENT SELECTION GUIDE:
 
@@ -78,15 +86,15 @@ Examples: "Ambassador recalled", "CEO resigns", "Nuclear deal collapses"
 - Business deals (amounts, companies)
 Examples: "Pope canonizes 7 saints", "iPhone 16 announced", "Company acquires rival"
 
-SELECTION STRATEGY BY TITLE TYPE:
+SELECTION STRATEGY BY TITLE TYPE (choose ONLY relevant ones):
 
-Disasters/Conflicts → ["map", "details", "timeline"]
-Economic/Financial → ["graph", "details", "timeline"]
-Politics/Diplomacy → ["timeline", "details", "map"]
-Product/Tech News → ["details", "graph"] or ["details", "timeline"]
-Science/Research → ["details", "graph"] or ["details"]
-Elections → ["graph", "map", "details"]
-Deaths/Casualties → ["details", "timeline"] or ["details", "map"]
+Disasters/Conflicts → ["map", "details", "timeline"] (if geographic + ongoing)
+Economic/Financial → ["graph", "details"] (if data-heavy) or ["details"] (if simple announcement)
+Politics/Diplomacy → ["timeline", "details"] (if ongoing) or ["details"] (if single event)
+Product/Tech News → ["details"] (usually just specs) or ["details", "graph"] (if market data)
+Science/Research → ["details"] (usually just findings) or ["details", "graph"] (if data)
+Elections → ["graph", "map", "details"] (if results) or ["details"] (if single announcement)
+Deaths/Casualties → ["details"] (if single event) or ["details", "map"] (if geographic)
 
 OUTPUT FORMAT - RETURN ONLY THESE EXACT KEYWORDS:
 {
@@ -99,38 +107,47 @@ OUTPUT FORMAT - RETURN ONLY THESE EXACT KEYWORDS:
 CRITICAL RULES:
 1. Use ONLY these exact words: "timeline", "details", "graph", "map"
 2. NO descriptive names like "Timeline of events" - just "timeline"
-3. Return EXACTLY 2-3 components (not 1, not 4)
-4. Choose the BEST FIT components for the title
-5. Vary your selections - don't always choose the same components
+3. Return 1-4 components (choose ONLY relevant ones)
+4. Choose the MOST RELEVANT components for the title
+5. Quality over quantity - better to have 1 perfect component than 2 mediocre ones
+6. Ask yourself: "Does this component genuinely help understand this story?"
 
 EXAMPLES:
 
 Title: "Earthquake strikes Turkey near Gaziantep"
-Output: {"components": ["map", "details", "timeline"], "graph_type": null, "graph_data_needed": null, "map_locations": ["Turkey", "Gaziantep"]}
+Output: {"components": ["map", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": ["Turkey", "Gaziantep"]}
+(Only map and details are relevant - no timeline needed for immediate disaster)
 
 Title: "Interest rates rise to 4.5 percent"
-Output: {"components": ["graph", "details", "timeline"], "graph_type": "line", "graph_data_needed": "interest rates over time", "map_locations": null}
+Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "interest rates over time", "map_locations": null}
+(Only graph and details - no timeline needed for single rate change)
 
 Title: "iPhone 16 announced with $999 price"
-Output: {"components": ["details", "timeline"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
+Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
+(Only details needed - no other components add value)
 
 Title: "Colombia recalls ambassador after Trump accusations"
 Output: {"components": ["timeline", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
+(Timeline and details relevant - no map needed for diplomatic action)
 
 Title: "Election results show Biden wins 306 electoral votes"
 Output: {"components": ["graph", "map", "details"], "graph_type": "bar", "graph_data_needed": "electoral votes by candidate", "map_locations": ["swing states"]}
+(All three relevant - results need visualization, geography, and facts)
 
 Title: "Scientists discover new Earth-like planet"
-Output: {"components": ["details", "graph"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
+Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
+(Only details needed - no other components add value to discovery)
 
 Title: "Hurricane Milton approaches Florida coast"
 Output: {"components": ["map", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": ["Florida"]}
+(Only map and details - no timeline needed for approaching storm)
 
 REMEMBER: 
 - Analyze ONLY the title
 - Use exact keywords: "timeline", "details", "graph", "map"
-- Select 2-3 components that best fit the story type
-- Vary your choices based on the title
+- Select 1-4 components that are TRULY relevant to the story
+- Quality over quantity - choose fewer but better components
+- Ask: "Would a reader genuinely benefit from this component?"
 
 Return ONLY valid JSON with the exact keyword strings."""
 
@@ -189,16 +206,16 @@ class GeminiComponentSelector:
         # Get article title only
         article_title = article.get('title', 'No title')
         
-        user_prompt = f"""Analyze this news title and select the best 2-3 components.
+        user_prompt = f"""Analyze this news title and select the MOST RELEVANT components (1-4).
 
 TITLE: {article_title}
 
 REQUIREMENTS:
 - Analyze ONLY the title above
-- Select EXACTLY 2-3 components that best fit this story type
+- Select 1-4 components that are TRULY relevant to this story
+- Quality over quantity - choose fewer but better components
 - Use exact keywords: "timeline", "details", "graph", "map"
-- Choose components that make sense for THIS specific title
-- Vary your selections - different titles need different components
+- Ask yourself: "Does this component genuinely help understand this story?"
 
 Return ONLY valid JSON with exact component keywords."""
 
