@@ -1954,17 +1954,18 @@ export default function Home() {
                           textTransform: 'uppercase',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          background: (() => {
-                            const cat = story.category.toLowerCase();
-                            if (cat.includes('tech')) return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                            if (cat.includes('business') || cat.includes('econom')) return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-                            if (cat.includes('politics')) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-                            if (cat.includes('health')) return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
-                            if (cat.includes('science')) return 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
-                            if (cat.includes('sport')) return 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)';
-                            if (cat.includes('entertainment')) return 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';
-                            return 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)';
-                          })(),
+                            background: (() => {
+                              const cat = story.category.toLowerCase();
+                             if (cat.includes('world')) return 'rgba(30, 58, 138, 0.3)'; // Light Navy Blue
+                             if (cat.includes('politics')) return 'rgba(220, 38, 38, 0.3)'; // Light Crimson Red
+                             if (cat.includes('business')) return 'rgba(5, 150, 105, 0.3)'; // Light Emerald Green
+                             if (cat.includes('technology')) return 'rgba(147, 51, 234, 0.3)'; // Light Bright Purple
+                             if (cat.includes('science')) return 'rgba(6, 182, 212, 0.3)'; // Light Cyan
+                             if (cat.includes('health')) return 'rgba(236, 72, 153, 0.3)'; // Light Pink
+                             if (cat.includes('sports')) return 'rgba(249, 115, 22, 0.3)'; // Light Vibrant Orange
+                             if (cat.includes('lifestyle')) return 'rgba(234, 179, 8, 0.3)'; // Light Golden Yellow
+                             return 'rgba(30, 58, 138, 0.3)'; // Default to Light World (Navy Blue)
+                            })(),
                           color: '#ffffff',
                           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                           transition: 'all 0.3s ease'
