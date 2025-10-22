@@ -121,6 +121,36 @@ export default function Home() {
     }
   };
 
+  // Category color mapping system
+  const getCategoryColors = (category) => {
+    const colorMap = {
+      'Breaking News': '#FF4444',      // Red
+      'Science': '#4CAF50',            // Green
+      'Technology': '#2196F3',         // Blue
+      'Business': '#FF9800',           // Orange
+      'Environment': '#4CAF50',        // Green
+      'Data Science': '#9C27B0',       // Purple
+      'Politics': '#E91E63',           // Pink
+      'General': '#607D8B',            // Blue Grey
+      'Health': '#4CAF50',             // Green
+      'Sports': '#FF5722',             // Deep Orange
+      'Entertainment': '#E91E63',      // Pink
+      'World': '#3F51B5',              // Indigo
+      'Economy': '#FF9800',            // Orange
+      'Education': '#795548',          // Brown
+      'Culture': '#9C27B0'             // Purple
+    };
+    
+    const baseColor = colorMap[category] || '#607D8B'; // Default to Blue Grey
+    
+    return {
+      primary: baseColor,
+      light: `${baseColor}20`, // 20% opacity for lighter version
+      lighter: `${baseColor}15`, // 15% opacity for even lighter version
+      shadow: `${baseColor}30` // 30% opacity for shadow
+    };
+  };
+
   // Initialize default component display
   useEffect(() => {
     if (stories.length > 0) {
@@ -1935,8 +1965,8 @@ export default function Home() {
                           textTransform: 'uppercase',
                           padding: '3px 6px',
                           borderRadius: '3px',
-                          background: '#f5f5f5',
-                          color: '#000000'
+                          background: getCategoryColors(story.category).lighter,
+                          color: getCategoryColors(story.category).primary
                         }}>
                           {story.emoji} {story.category}
                         </div>
@@ -2230,7 +2260,7 @@ export default function Home() {
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
                             border: 'none',
                             borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
@@ -2316,7 +2346,7 @@ export default function Home() {
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{mainValue}</div>
+                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
