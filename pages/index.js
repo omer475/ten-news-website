@@ -2215,7 +2215,9 @@ export default function Home() {
                                     <li key={i} style={{
                                       marginBottom: '8px',
                                       fontSize: '16px',
-                                      lineHeight: '1.6'
+                                      lineHeight: '1.6',
+                                      fontWeight: '600',
+                                      color: '#1a1a1a'
                                     }}>
                                       {renderBoldText(bullet, story.category)}
                                     </li>
