@@ -61,6 +61,16 @@ export default function Home() {
     }
   };
 
+  // Helper function to count available components for a story
+  const getAvailableComponentsCount = (story) => {
+    let count = 0;
+    if (story.details && story.details.length > 0) count++;
+    if (story.timeline && story.timeline.length > 0) count++;
+    if (story.map) count++;
+    if (story.graph) count++;
+    return count;
+  };
+
   // Helper function to get available information types for a story
   const getAvailableInformationTypes = (story) => {
     const types = [];
@@ -71,9 +81,44 @@ export default function Home() {
     return types;
   };
 
-  // Helper function to count available components for a story
-  const getAvailableComponentsCount = (story) => {
-    return getAvailableInformationTypes(story).length;
+  // Helper function to get current information type for a story
+  const getCurrentInformationType = (story, index) => {
+    if (showTimeline[index]) return 'timeline';
+    if (showDetails[index]) return 'details';
+    if (showMap[index]) return 'map';
+    if (showGraph[index]) return 'graph';
+    return 'details'; // default
+  };
+
+  // Helper function to switch to next information type
+  const switchToNextInformationType = (story, index) => {
+    const availableTypes = getAvailableInformationTypes(story);
+    const currentType = getCurrentInformationType(story, index);
+    const currentIndex = availableTypes.indexOf(currentType);
+    const nextIndex = (currentIndex + 1) % availableTypes.length;
+    const nextType = availableTypes[nextIndex];
+
+    // Reset all states
+    setShowTimeline(prev => ({ ...prev, [index]: false }));
+    setShowDetails(prev => ({ ...prev, [index]: false }));
+    setShowMap(prev => ({ ...prev, [index]: false }));
+    setShowGraph(prev => ({ ...prev, [index]: false }));
+
+    // Set the new state
+    switch (nextType) {
+      case 'timeline':
+        setShowTimeline(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'details':
+        setShowDetails(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'map':
+        setShowMap(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'graph':
+        setShowGraph(prev => ({ ...prev, [index]: true }));
+        break;
+    }
   };
 
   // Initialize default component display
@@ -241,46 +286,6 @@ export default function Home() {
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
-  };
-
-  // Function to cycle through available information types
-  const cycleInformationType = (storyIndex) => {
-    const story = stories[storyIndex];
-    const availableTypes = getAvailableInformationTypes(story);
-    
-    if (availableTypes.length <= 1) return; // No cycling if only one type
-    
-    // Determine current type
-    let currentType = 'details';
-    if (showTimeline[storyIndex]) currentType = 'timeline';
-    else if (showMap[storyIndex]) currentType = 'map';
-    else if (showGraph[storyIndex]) currentType = 'graph';
-    
-    // Find next type
-    const currentIndex = availableTypes.indexOf(currentType);
-    const nextIndex = (currentIndex + 1) % availableTypes.length;
-    const nextType = availableTypes[nextIndex];
-    
-    // Reset all states
-    setShowTimeline(prev => ({ ...prev, [storyIndex]: false }));
-    setShowMap(prev => ({ ...prev, [storyIndex]: false }));
-    setShowGraph(prev => ({ ...prev, [storyIndex]: false }));
-    setShowDetails(prev => ({ ...prev, [storyIndex]: false }));
-    
-    // Set the next type
-    switch (nextType) {
-      case 'timeline':
-        setShowTimeline(prev => ({ ...prev, [storyIndex]: true }));
-        break;
-      case 'map':
-        setShowMap(prev => ({ ...prev, [storyIndex]: true }));
-        break;
-      case 'graph':
-        setShowGraph(prev => ({ ...prev, [storyIndex]: true }));
-        break;
-      default:
-        setShowDetails(prev => ({ ...prev, [storyIndex]: true }));
-    }
   };
 
   // Summary display mode toggle function - per story
@@ -1651,46 +1656,6 @@ export default function Home() {
           border-radius: 1px;
         }
 
-        .map-icon {
-          position: relative;
-          width: 14px;
-          height: 14px;
-        }
-
-        .map-outline {
-          width: 12px;
-          height: 8px;
-          border: 1px solid #666666;
-          border-radius: 2px;
-          position: absolute;
-          top: 2px;
-          left: 1px;
-        }
-
-        .map-pin {
-          width: 2px;
-          height: 4px;
-          background: #666666;
-          border-radius: 1px;
-          position: absolute;
-          top: 6px;
-          left: 6px;
-        }
-
-        .graph-icon {
-          display: flex;
-          align-items: end;
-          gap: 1px;
-          width: 14px;
-          height: 14px;
-        }
-
-        .graph-bar {
-          width: 2px;
-          background: #666666;
-          border-radius: 1px;
-        }
-
 
         /* Desktop timeline - no height limit */
         @media (min-width: 769px) {
@@ -2014,13 +1979,8 @@ export default function Home() {
                             backdropFilter: 'blur(10px)',
                             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                           }}>
-                            {getAvailableInformationTypes(story).map((infoType, typeIndex) => {
-                              const isActive = 
-                                (infoType === 'details' && !showTimeline[index] && !showMap[index] && !showGraph[index]) ||
-                                (infoType === 'timeline' && showTimeline[index]) ||
-                                (infoType === 'map' && showMap[index]) ||
-                                (infoType === 'graph' && showGraph[index]);
-
+                            {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
+                              const isActive = getCurrentInformationType(story, index) === infoType;
                               return (
                                 <button
                                   key={infoType}
@@ -2032,14 +1992,17 @@ export default function Home() {
                                     
                                     // Reset all states
                                     setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: false }));
                                     setShowMap(prev => ({ ...prev, [index]: false }));
                                     setShowGraph(prev => ({ ...prev, [index]: false }));
-                                    setShowDetails(prev => ({ ...prev, [index]: false }));
-                                    
-                                    // Set the selected type
+
+                                    // Set the selected state
                                     switch (infoType) {
                                       case 'timeline':
                                         setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'details':
+                                        setShowDetails(prev => ({ ...prev, [index]: true }));
                                         break;
                                       case 'map':
                                         setShowMap(prev => ({ ...prev, [index]: true }));
@@ -2047,8 +2010,6 @@ export default function Home() {
                                       case 'graph':
                                         setShowGraph(prev => ({ ...prev, [index]: true }));
                                         break;
-                                      default:
-                                        setShowDetails(prev => ({ ...prev, [index]: true }));
                                     }
                                   }}
                                   style={{
@@ -2100,17 +2061,73 @@ export default function Home() {
                                     </div>
                                   )}
                                   {infoType === 'map' && (
-                                    <div className="map-icon">
-                                      <div className="map-outline"></div>
-                                      <div className="map-pin"></div>
+                                    <div className="map-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        border: `2px solid ${isActive ? '#ffffff' : '#666666'}`,
+                                        borderRadius: '50%',
+                                        position: 'relative'
+                                      }}>
+                                        <div style={{
+                                          position: 'absolute',
+                                          top: '50%',
+                                          left: '50%',
+                                          transform: 'translate(-50%, -50%)',
+                                          width: '4px',
+                                          height: '4px',
+                                          background: isActive ? '#ffffff' : '#666666',
+                                          borderRadius: '50%'
+                                        }}></div>
+                                      </div>
                                     </div>
                                   )}
                                   {infoType === 'graph' && (
-                                    <div className="graph-icon">
-                                      <div className="graph-bar" style={{ height: '8px' }}></div>
-                                      <div className="graph-bar" style={{ height: '12px' }}></div>
-                                      <div className="graph-bar" style={{ height: '6px' }}></div>
-                                      <div className="graph-bar" style={{ height: '10px' }}></div>
+                                    <div className="graph-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '12px',
+                                        height: '8px',
+                                        display: 'flex',
+                                        alignItems: 'end',
+                                        gap: '1px'
+                                      }}>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '3px',
+                                          background: isActive ? '#ffffff' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '6px',
+                                          background: isActive ? '#ffffff' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '4px',
+                                          background: isActive ? '#ffffff' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '8px',
+                                          background: isActive ? '#ffffff' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                      </div>
                                     </div>
                                   )}
                                 </button>
@@ -2256,13 +2273,13 @@ export default function Home() {
                         zIndex: '50'
                       }}>
                         
-                        {/* Fixed Position Details/Timeline Section */}
+                        {/* Fixed Position Information Box */}
                         <div 
                           className="news-meta" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
-                          cursor: 'pointer',
+                          cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
                           minHeight: '85px',
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
@@ -2274,6 +2291,9 @@ export default function Home() {
                             boxShadow: showTimeline[index] ? 'none' : '0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(102, 126, 234, 0.05)'
                         }}
                         onTouchStart={(e) => {
+                          // Only handle if there are multiple information types
+                          if (getAvailableComponentsCount(story) <= 1) return;
+                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
@@ -2307,23 +2327,23 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only handle horizontal swipes for information cycling
+                            // Only handle horizontal swipes for information switching
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
                               console.log('Horizontal information swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              cycleInformationType(index);
+                              switchToNextInformationType(story, index);
                             } else if (!hasMoved) {
                               // Check if the touch target is the expand icon
                               const touchTarget = endEvent.target;
                               const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                               
                               if (!isExpandIcon) {
-                                // Single tap cycles through information types
-                                console.log('Information tap detected for story', index);
+                                // Single tap switches information type
+                                console.log('Information box tap detected for story', index);
                                 endEvent.preventDefault();
                                 endEvent.stopPropagation();
-                                cycleInformationType(index);
+                                switchToNextInformationType(story, index);
                               }
                             }
                             // If it's vertical swipe, let it pass through for story navigation
