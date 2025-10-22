@@ -61,14 +61,19 @@ export default function Home() {
     }
   };
 
+  // Helper function to get available information types for a story
+  const getAvailableInformationTypes = (story) => {
+    const types = [];
+    if (story.details && story.details.length > 0) types.push('details');
+    if (story.timeline && story.timeline.length > 0) types.push('timeline');
+    if (story.map) types.push('map');
+    if (story.graph) types.push('graph');
+    return types;
+  };
+
   // Helper function to count available components for a story
   const getAvailableComponentsCount = (story) => {
-    let count = 0;
-    if (story.details && story.details.length > 0) count++;
-    if (story.timeline && story.timeline.length > 0) count++;
-    if (story.map) count++;
-    if (story.graph) count++;
-    return count;
+    return getAvailableInformationTypes(story).length;
   };
 
   // Initialize default component display
@@ -236,6 +241,46 @@ export default function Home() {
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
+  };
+
+  // Function to cycle through available information types
+  const cycleInformationType = (storyIndex) => {
+    const story = stories[storyIndex];
+    const availableTypes = getAvailableInformationTypes(story);
+    
+    if (availableTypes.length <= 1) return; // No cycling if only one type
+    
+    // Determine current type
+    let currentType = 'details';
+    if (showTimeline[storyIndex]) currentType = 'timeline';
+    else if (showMap[storyIndex]) currentType = 'map';
+    else if (showGraph[storyIndex]) currentType = 'graph';
+    
+    // Find next type
+    const currentIndex = availableTypes.indexOf(currentType);
+    const nextIndex = (currentIndex + 1) % availableTypes.length;
+    const nextType = availableTypes[nextIndex];
+    
+    // Reset all states
+    setShowTimeline(prev => ({ ...prev, [storyIndex]: false }));
+    setShowMap(prev => ({ ...prev, [storyIndex]: false }));
+    setShowGraph(prev => ({ ...prev, [storyIndex]: false }));
+    setShowDetails(prev => ({ ...prev, [storyIndex]: false }));
+    
+    // Set the next type
+    switch (nextType) {
+      case 'timeline':
+        setShowTimeline(prev => ({ ...prev, [storyIndex]: true }));
+        break;
+      case 'map':
+        setShowMap(prev => ({ ...prev, [storyIndex]: true }));
+        break;
+      case 'graph':
+        setShowGraph(prev => ({ ...prev, [storyIndex]: true }));
+        break;
+      default:
+        setShowDetails(prev => ({ ...prev, [storyIndex]: true }));
+    }
   };
 
   // Summary display mode toggle function - per story
@@ -1070,11 +1115,28 @@ export default function Home() {
           transition: all 0.3s;
         }
 
+        .progress-dot:hover {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          transform: scale(1.3);
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
         .progress-dot.active {
           width: 6px;
           height: 20px;
           border-radius: 3px;
-          background: linear-gradient(180deg, #1f2937, #000000);
+          background: linear-gradient(180deg, #667eea, #764ba2);
+          box-shadow: 0 2px 12px rgba(102, 126, 234, 0.5);
+          animation: progressPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes progressPulse {
+          0%, 100% {
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.5);
+          }
+          50% {
+            box-shadow: 0 2px 20px rgba(102, 126, 234, 0.8);
+          }
         }
 
 
@@ -1589,6 +1651,46 @@ export default function Home() {
           border-radius: 1px;
         }
 
+        .map-icon {
+          position: relative;
+          width: 14px;
+          height: 14px;
+        }
+
+        .map-outline {
+          width: 12px;
+          height: 8px;
+          border: 1px solid #666666;
+          border-radius: 2px;
+          position: absolute;
+          top: 2px;
+          left: 1px;
+        }
+
+        .map-pin {
+          width: 2px;
+          height: 4px;
+          background: #666666;
+          border-radius: 1px;
+          position: absolute;
+          top: 6px;
+          left: 6px;
+        }
+
+        .graph-icon {
+          display: flex;
+          align-items: end;
+          gap: 1px;
+          width: 14px;
+          height: 14px;
+        }
+
+        .graph-bar {
+          width: 2px;
+          background: #666666;
+          border-radius: 1px;
+        }
+
 
         /* Desktop timeline - no height limit */
         @media (min-width: 769px) {
@@ -1813,7 +1915,9 @@ export default function Home() {
                       justifyContent: 'center',
                       zIndex: '1',
                       borderRadius: '12px',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.3s ease'
                     }}>
                       {story.urlToImage ? (
                         <img 
@@ -1883,74 +1987,135 @@ export default function Home() {
                           fontWeight: '600',
                           letterSpacing: '0.5px',
                           textTransform: 'uppercase',
-                          padding: '3px 6px',
-                          borderRadius: '3px',
-                          background: '#f5f5f5',
-                          color: '#000000'
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          background: (() => {
+                            const cat = story.category.toLowerCase();
+                            if (cat.includes('tech')) return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                            if (cat.includes('business') || cat.includes('econom')) return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                            if (cat.includes('politics')) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+                            if (cat.includes('health')) return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+                            if (cat.includes('science')) return 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+                            if (cat.includes('sport')) return 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)';
+                            if (cat.includes('entertainment')) return 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';
+                            return 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)';
+                          })(),
+                          color: '#ffffff',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                          transition: 'all 0.3s ease'
                         }}>
                           {story.emoji} {story.category}
                         </div>
 
-                        {/* Toggle Switch - Only show if multiple components available */}
+                        {/* Dynamic Information Switch - Only show if multiple information types available */}
                         {getAvailableComponentsCount(story) > 1 && (
-                          <div className="toggle-switch">
-                          {/* Grid Option (Details) */}
-                            <button
-                            className={`toggle-option ${!showTimeline[index] ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              console.log('Grid option clicked for story', index);
-                              setShowTimeline(prev => ({
-                                ...prev,
-                                [index]: false
-                              }));
-                            }}
-                            >
-                              <div className="grid-icon">
-                                <div className="grid-square"></div>
-                                <div className="grid-square"></div>
-                                <div className="grid-square"></div>
-                                <div className="grid-square"></div>
-                              </div>
-                            </button>
+                          <div className="toggle-switch" style={{
+                            background: 'rgba(0, 0, 0, 0.05)',
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            {getAvailableInformationTypes(story).map((infoType, typeIndex) => {
+                              const isActive = 
+                                (infoType === 'details' && !showTimeline[index] && !showMap[index] && !showGraph[index]) ||
+                                (infoType === 'timeline' && showTimeline[index]) ||
+                                (infoType === 'map' && showMap[index]) ||
+                                (infoType === 'graph' && showGraph[index]);
 
-                          {/* List Option (Timeline) */}
-                            <button
-                              className={`toggle-option ${showTimeline[index] ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              console.log('List option clicked for story', index);
-                              
-                              // Switch to timeline view
-                              setShowTimeline(prev => ({
-                                ...prev,
-                                [index]: true
-                              }));
-                              
-                              // Toggle timeline expansion
-                              setExpandedTimeline(prev => ({
-                                ...prev,
-                                [index]: !prev[index]
-                              }));
-                            }}
-                            >
-                              <div className="list-icon">
-                                <div className="list-line">
-                                  <div className="list-dot"></div>
-                                  <div className="list-bar"></div>
-                                </div>
-                                <div className="list-line">
-                                  <div className="list-dot"></div>
-                                  <div className="list-bar"></div>
-                                </div>
-                                <div className="list-line">
-                                  <div className="list-dot"></div>
-                                  <div className="list-bar"></div>
-                                </div>
-                              </div>
-                            </button>
+                              return (
+                                <button
+                                  key={infoType}
+                                  className={`toggle-option ${isActive ? 'active' : ''}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log(`${infoType} option clicked for story`, index);
+                                    
+                                    // Reset all states
+                                    setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowMap(prev => ({ ...prev, [index]: false }));
+                                    setShowGraph(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: false }));
+                                    
+                                    // Set the selected type
+                                    switch (infoType) {
+                                      case 'timeline':
+                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'map':
+                                        setShowMap(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'graph':
+                                        setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      default:
+                                        setShowDetails(prev => ({ ...prev, [index]: true }));
+                                    }
+                                  }}
+                                  style={{
+                                    background: isActive ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent'
+                                  }}
+                                >
+                                  {infoType === 'details' && (
+                                    <div className="grid-icon">
+                                      <div className="grid-square" style={{
+                                        background: isActive ? '#ffffff' : '#666666'
+                                      }}></div>
+                                      <div className="grid-square" style={{
+                                        background: isActive ? '#ffffff' : '#666666'
+                                      }}></div>
+                                      <div className="grid-square" style={{
+                                        background: isActive ? '#ffffff' : '#666666'
+                                      }}></div>
+                                      <div className="grid-square" style={{
+                                        background: isActive ? '#ffffff' : '#666666'
+                                      }}></div>
+                                    </div>
+                                  )}
+                                  {infoType === 'timeline' && (
+                                    <div className="list-icon">
+                                      <div className="list-line">
+                                        <div className="list-dot" style={{
+                                          background: isActive ? '#ffffff' : '#666666'
+                                        }}></div>
+                                        <div className="list-bar" style={{
+                                          background: isActive ? '#ffffff' : '#666666'
+                                        }}></div>
+                                      </div>
+                                      <div className="list-line">
+                                        <div className="list-dot" style={{
+                                          background: isActive ? '#ffffff' : '#666666'
+                                        }}></div>
+                                        <div className="list-bar" style={{
+                                          background: isActive ? '#ffffff' : '#666666'
+                                        }}></div>
+                                      </div>
+                                      <div className="list-line">
+                                        <div className="list-dot" style={{
+                                          background: isActive ? '#ffffff' : '#666666'
+                                        }}></div>
+                                        <div className="list-bar" style={{
+                                          background: isActive ? '#ffffff' : '#666666'
+                                        }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {infoType === 'map' && (
+                                    <div className="map-icon">
+                                      <div className="map-outline"></div>
+                                      <div className="map-pin"></div>
+                                    </div>
+                                  )}
+                                  {infoType === 'graph' && (
+                                    <div className="graph-icon">
+                                      <div className="graph-bar" style={{ height: '8px' }}></div>
+                                      <div className="graph-bar" style={{ height: '12px' }}></div>
+                                      <div className="graph-bar" style={{ height: '6px' }}></div>
+                                      <div className="graph-bar" style={{ height: '10px' }}></div>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -2101,12 +2266,12 @@ export default function Home() {
                           minHeight: '85px',
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
-                          background: showTimeline[index] ? 'transparent' : '#ffffff',
-                          backdropFilter: showTimeline[index] ? 'none' : 'none',
-                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: 'none',
+                          background: showTimeline[index] ? 'transparent' : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95))',
+                          backdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
+                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'blur(10px)',
+                            border: showTimeline[index] ? 'none' : '1px solid rgba(102, 126, 234, 0.1)',
                             borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                            boxShadow: showTimeline[index] ? 'none' : '0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(102, 126, 234, 0.05)'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -2142,23 +2307,23 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only handle horizontal swipes for timeline
+                            // Only handle horizontal swipes for information cycling
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              console.log('Horizontal timeline swipe detected for story', index);
+                              console.log('Horizontal information swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              toggleTimeline(index);
+                              cycleInformationType(index);
                             } else if (!hasMoved) {
                               // Check if the touch target is the expand icon
                               const touchTarget = endEvent.target;
                               const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                               
                               if (!isExpandIcon) {
-                                // Single tap toggles timeline only if not on expand icon
-                                console.log('Timeline tap detected for story', index);
+                                // Single tap cycles through information types
+                                console.log('Information tap detected for story', index);
                                 endEvent.preventDefault();
                                 endEvent.stopPropagation();
-                                toggleTimeline(index);
+                                cycleInformationType(index);
                               }
                             }
                             // If it's vertical swipe, let it pass through for story navigation
@@ -2186,10 +2351,28 @@ export default function Home() {
                           const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
                           
+                          // Define color gradients for each detail item
+                          const gradients = [
+                            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                          ];
+                          
                           return (
                             <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{mainValue}</div>
+                              <div className="news-detail-label" style={{
+                                background: gradients[i % 3],
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}>{cleanLabel}</div>
+                              <div className="news-detail-value" style={{
+                                background: gradients[i % 3],
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                fontWeight: '900'
+                              }}>{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
@@ -2207,13 +2390,13 @@ export default function Home() {
                                 height: expandedTimeline[index] ? '300px' : '85px',
                                 maxHeight: expandedTimeline[index] ? '300px' : '85px',
                                 transition: 'height 0.3s ease-in-out',
-                                background: '#ffffff',
-                                backdropFilter: 'none',
-                                WebkitBackdropFilter: 'none',
-                                border: 'none',
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98))',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(102, 126, 234, 0.15)',
                                 borderRadius: '8px',
                                 padding: '6px 20px 12px 20px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(102, 126, 234, 0.08)',
                                 minHeight: '85px',
                                 zIndex: '10',
                                 overflowY: expandedTimeline[index] ? 'visible' : 'auto'
@@ -2232,7 +2415,14 @@ export default function Home() {
                                  justifyContent: 'center',
                                  cursor: 'pointer',
                                  zIndex: '20',
-                                 transition: 'all 0.2s ease'
+                                 transition: 'all 0.3s ease',
+                                 background: expandedTimeline[index] 
+                                   ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                                   : 'rgba(102, 126, 234, 0.1)',
+                                 borderRadius: '50%',
+                                 boxShadow: expandedTimeline[index] 
+                                   ? '0 2px 8px rgba(102, 126, 234, 0.3)' 
+                                   : 'none'
                                }}
                                onClick={(e) => {
                                  e.preventDefault();
@@ -2255,9 +2445,9 @@ export default function Home() {
                                  <span style={{
                                    fontSize: '18px',
                                    fontWeight: 'bold',
-                                   color: '#666',
+                                   color: expandedTimeline[index] ? '#ffffff' : '#667eea',
                                    transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                   transition: 'transform 0.2s ease'
+                                   transition: 'all 0.3s ease'
                                  }}>
                                    ↗
                                  </span>
@@ -2281,9 +2471,10 @@ export default function Home() {
                                   top: '0px',
                                   bottom: '8px',
                                   width: '3px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
+                                  background: 'linear-gradient(180deg, #667eea, #f093fb, #4facfe)',
                                   zIndex: '0',
-                                  borderRadius: '2px'
+                                  borderRadius: '2px',
+                                  boxShadow: '0 0 8px rgba(102, 126, 234, 0.3)'
                                 }}></div>
                                 <div style={{
                                   display: 'flex',
@@ -2293,13 +2484,22 @@ export default function Home() {
                                   paddingTop: '0px',
                                   paddingBottom: '8px'
                                 }}>
-                                  {story.timeline.map((event, idx) => (
+                                  {story.timeline.map((event, idx) => {
+                                    const colors = [
+                                      { bg: '#667eea', border: '#764ba2' },
+                                      { bg: '#f093fb', border: '#f5576c' },
+                                      { bg: '#4facfe', border: '#00f2fe' }
+                                    ];
+                                    const colorSet = colors[idx % colors.length];
+                                    
+                                    return (
                                     <div key={idx} style={{
                                       position: 'relative',
                                       marginBottom: '12px',
                                       paddingLeft: '20px',
                                       minHeight: '36px',
-                                      marginTop: idx === 0 ? '0px' : '0px'
+                                      marginTop: idx === 0 ? '0px' : '0px',
+                                      transition: 'all 0.3s ease'
                                     }}>
                                     <div style={{
                                       position: 'absolute',
@@ -2308,15 +2508,21 @@ export default function Home() {
                                       width: '12px',
                                       height: '12px',
                                       borderRadius: '50%',
-                                      background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
-                                      border: '2.5px solid #3b82f6',
+                                      background: idx === story.timeline.length - 1 
+                                        ? `linear-gradient(135deg, ${colorSet.bg}, ${colorSet.border})` 
+                                        : 'white',
+                                      border: `2.5px solid ${colorSet.bg}`,
                                       zIndex: '2',
-                                      boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
+                                      boxShadow: `0 2px 8px ${colorSet.bg}40`,
+                                      transition: 'all 0.3s ease'
                                     }}></div>
                                     <div style={{
                                       fontSize: '12px',
                                       fontWeight: '700',
-                                      color: '#3b82f6',
+                                      background: `linear-gradient(135deg, ${colorSet.bg}, ${colorSet.border})`,
+                                      WebkitBackgroundClip: 'text',
+                                      WebkitTextFillColor: 'transparent',
+                                      backgroundClip: 'text',
                                       marginBottom: '3px',
                                       letterSpacing: '0.3px',
                                       marginTop: '0px'
@@ -2329,7 +2535,8 @@ export default function Home() {
                                       marginTop: '0px'
                                     }}>{event.event}</div>
                                   </div>
-                                ))}
+                                  );
+                                })}
                                 </div>
                               </div>
                             </div>
@@ -2444,14 +2651,15 @@ export default function Home() {
                                 setShowGraph(prev => ({ ...prev, [index]: false }));
                               }}
                               style={{
-                                width: '6px',
-                                height: '6px',
+                                width: showDetails[index] ? '8px' : '6px',
+                                height: showDetails[index] ? '8px' : '6px',
                                 borderRadius: '50%',
                                 background: showDetails[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
                                   : 'rgba(0, 0, 0, 0.2)',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.3s ease',
+                                boxShadow: showDetails[index] ? '0 2px 8px rgba(102, 126, 234, 0.4)' : 'none'
                               }}
                             />
                           )}
@@ -2467,14 +2675,15 @@ export default function Home() {
                                 setShowGraph(prev => ({ ...prev, [index]: false }));
                               }}
                               style={{
-                                width: '6px',
-                                height: '6px',
+                                width: showTimeline[index] ? '8px' : '6px',
+                                height: showTimeline[index] ? '8px' : '6px',
                                 borderRadius: '50%',
                                 background: showTimeline[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' 
                                   : 'rgba(0, 0, 0, 0.2)',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.3s ease',
+                                boxShadow: showTimeline[index] ? '0 2px 8px rgba(240, 147, 251, 0.4)' : 'none'
                               }}
                             />
                           )}
@@ -2490,14 +2699,15 @@ export default function Home() {
                                 setShowGraph(prev => ({ ...prev, [index]: false }));
                               }}
                               style={{
-                                width: '6px',
-                                height: '6px',
+                                width: showMap[index] ? '8px' : '6px',
+                                height: showMap[index] ? '8px' : '6px',
                                 borderRadius: '50%',
                                 background: showMap[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' 
                                   : 'rgba(0, 0, 0, 0.2)',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.3s ease',
+                                boxShadow: showMap[index] ? '0 2px 8px rgba(79, 172, 254, 0.4)' : 'none'
                               }}
                             />
                           )}
@@ -2513,14 +2723,15 @@ export default function Home() {
                                 setShowGraph(prev => ({ ...prev, [index]: true }));
                               }}
                               style={{
-                                width: '6px',
-                                height: '6px',
+                                width: showGraph[index] ? '8px' : '6px',
+                                height: showGraph[index] ? '8px' : '6px',
                                 borderRadius: '50%',
                                 background: showGraph[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  ? 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' 
                                   : 'rgba(0, 0, 0, 0.2)',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.3s ease',
+                                boxShadow: showGraph[index] ? '0 2px 8px rgba(67, 233, 123, 0.4)' : 'none'
                               }}
                             />
                           )}
