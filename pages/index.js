@@ -71,6 +71,56 @@ export default function Home() {
     return count;
   };
 
+  // Helper function to get available information types for a story
+  const getAvailableInformationTypes = (story) => {
+    const types = [];
+    if (story.details && story.details.length > 0) types.push('details');
+    if (story.timeline && story.timeline.length > 0) types.push('timeline');
+    if (story.map) types.push('map');
+    if (story.graph) types.push('graph');
+    return types;
+  };
+
+  // Helper function to get current information type for a story
+  const getCurrentInformationType = (story, index) => {
+    if (showTimeline[index]) return 'timeline';
+    if (showDetails[index]) return 'details';
+    if (showMap[index]) return 'map';
+    if (showGraph[index]) return 'graph';
+    return 'details'; // default
+  };
+
+  // Helper function to switch to next information type
+  const switchToNextInformationType = (story, index) => {
+    const availableTypes = getAvailableInformationTypes(story);
+    const currentType = getCurrentInformationType(story, index);
+    const currentIndex = availableTypes.indexOf(currentType);
+    const nextIndex = (currentIndex + 1) % availableTypes.length;
+    const nextType = availableTypes[nextIndex];
+
+    // Reset all states
+    setShowTimeline(prev => ({ ...prev, [index]: false }));
+    setShowDetails(prev => ({ ...prev, [index]: false }));
+    setShowMap(prev => ({ ...prev, [index]: false }));
+    setShowGraph(prev => ({ ...prev, [index]: false }));
+
+    // Set the new state
+    switch (nextType) {
+      case 'timeline':
+        setShowTimeline(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'details':
+        setShowDetails(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'map':
+        setShowMap(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'graph':
+        setShowGraph(prev => ({ ...prev, [index]: true }));
+        break;
+    }
+  };
+
   // Initialize default component display
   useEffect(() => {
     if (stories.length > 0) {
@@ -1891,66 +1941,140 @@ export default function Home() {
                           {story.emoji} {story.category}
                         </div>
 
-                        {/* Toggle Switch - Only show if multiple components available */}
+                        {/* Dynamic Information Switch - Only show if multiple information types available */}
                         {getAvailableComponentsCount(story) > 1 && (
                           <div className="toggle-switch">
-                          {/* Grid Option (Details) */}
-                            <button
-                            className={`toggle-option ${!showTimeline[index] ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              console.log('Grid option clicked for story', index);
-                              setShowTimeline(prev => ({
-                                ...prev,
-                                [index]: false
-                              }));
-                            }}
-                            >
-                              <div className="grid-icon">
-                                <div className="grid-square"></div>
-                                <div className="grid-square"></div>
-                                <div className="grid-square"></div>
-                                <div className="grid-square"></div>
-                              </div>
-                            </button>
+                            {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
+                              const isActive = getCurrentInformationType(story, index) === infoType;
+                              return (
+                                <button
+                                  key={infoType}
+                                  className={`toggle-option ${isActive ? 'active' : ''}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log(`${infoType} option clicked for story`, index);
+                                    
+                                    // Reset all states
+                                    setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: false }));
+                                    setShowMap(prev => ({ ...prev, [index]: false }));
+                                    setShowGraph(prev => ({ ...prev, [index]: false }));
 
-                          {/* List Option (Timeline) */}
-                            <button
-                              className={`toggle-option ${showTimeline[index] ? 'active' : ''}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              console.log('List option clicked for story', index);
-                              
-                              // Switch to timeline view
-                              setShowTimeline(prev => ({
-                                ...prev,
-                                [index]: true
-                              }));
-                              
-                              // Toggle timeline expansion
-                              setExpandedTimeline(prev => ({
-                                ...prev,
-                                [index]: !prev[index]
-                              }));
-                            }}
-                            >
-                              <div className="list-icon">
-                                <div className="list-line">
-                                  <div className="list-dot"></div>
-                                  <div className="list-bar"></div>
-                                </div>
-                                <div className="list-line">
-                                  <div className="list-dot"></div>
-                                  <div className="list-bar"></div>
-                                </div>
-                                <div className="list-line">
-                                  <div className="list-dot"></div>
-                                  <div className="list-bar"></div>
-                                </div>
-                              </div>
-                            </button>
+                                    // Set the selected state
+                                    switch (infoType) {
+                                      case 'timeline':
+                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'details':
+                                        setShowDetails(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'map':
+                                        setShowMap(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'graph':
+                                        setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                    }
+                                  }}
+                                >
+                                  {infoType === 'details' && (
+                                    <div className="grid-icon">
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                    </div>
+                                  )}
+                                  {infoType === 'timeline' && (
+                                    <div className="list-icon">
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {infoType === 'map' && (
+                                    <div className="map-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        border: `2px solid ${isActive ? '#000000' : '#666666'}`,
+                                        borderRadius: '50%',
+                                        position: 'relative'
+                                      }}>
+                                        <div style={{
+                                          position: 'absolute',
+                                          top: '50%',
+                                          left: '50%',
+                                          transform: 'translate(-50%, -50%)',
+                                          width: '4px',
+                                          height: '4px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '50%'
+                                        }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {infoType === 'graph' && (
+                                    <div className="graph-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '12px',
+                                        height: '8px',
+                                        display: 'flex',
+                                        alignItems: 'end',
+                                        gap: '1px'
+                                      }}>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '3px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '6px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '4px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '8px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -2097,7 +2221,7 @@ export default function Home() {
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
-                          cursor: 'pointer',
+                          cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
                           minHeight: '85px',
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
@@ -2109,6 +2233,9 @@ export default function Home() {
                             boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
+                          // Only handle if there are multiple information types
+                          if (getAvailableComponentsCount(story) <= 1) return;
+                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
@@ -2142,23 +2269,23 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only handle horizontal swipes for timeline
+                            // Only handle horizontal swipes for information switching
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              console.log('Horizontal timeline swipe detected for story', index);
+                              console.log('Horizontal information swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              toggleTimeline(index);
+                              switchToNextInformationType(story, index);
                             } else if (!hasMoved) {
                               // Check if the touch target is the expand icon
                               const touchTarget = endEvent.target;
                               const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                               
                               if (!isExpandIcon) {
-                                // Single tap toggles timeline only if not on expand icon
-                                console.log('Timeline tap detected for story', index);
+                                // Single tap switches information type
+                                console.log('Information box tap detected for story', index);
                                 endEvent.preventDefault();
                                 endEvent.stopPropagation();
-                                toggleTimeline(index);
+                                switchToNextInformationType(story, index);
                               }
                             }
                             // If it's vertical swipe, let it pass through for story navigation
