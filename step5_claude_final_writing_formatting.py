@@ -45,13 +45,12 @@ You will receive:
 
 You must write:
 1. Title (≤12 words)
-2. Summary in TWO formats:
-   - Paragraph (35-42 words)
-   - Bullet points (3-5 bullets, 8-15 words each)
-3. Timeline (if selected, 2-4 events)
-4. Details (if selected, exactly 3 data points)
-5. Graph (if selected, formatted data)
-6. Map (if selected, formatted coordinates)
+2. Detailed article text (150-200 words) - comprehensive journalistic coverage
+3. Summary bullets (3-5 bullets, 8-15 words each, max 40 words total)
+4. Timeline (if selected, 2-4 events)
+5. Details (if selected, exactly 3 data points)
+6. Graph (if selected, formatted data)
+7. Map (if selected, formatted coordinates)
 
 === TITLE RULES ===
 - Maximum 12 words
@@ -66,21 +65,42 @@ Examples:
 ✓ "Magnitude 7.8 earthquake strikes Turkey near Syrian border"
 ✓ "Donald Trump wins 2024 presidential election with 312 electoral votes"
 
-=== SUMMARY PARAGRAPH (35-42 words) ===
-- Flowing prose, natural narrative
-- Add NEW information beyond title
-- NEVER repeat exact title wording
-- Geographic specificity
-- Use past tense for completed events
-- Include impact, consequences, key numbers
-- One cohesive text block
+=== DETAILED ARTICLE TEXT (150-200 words) ===
+CRITICAL: Write a comprehensive, detailed news article that provides complete information about the story.
 
-=== SUMMARY BULLETS (3-5 bullets, 8-15 words each) ===
+Rules:
+- 150-200 words (MANDATORY - count carefully)
+- Write in detailed, journalistic style
+- Provide comprehensive coverage of the story
+- Include background context, current developments, and implications
+- Use multiple paragraphs for better readability
+- Include specific details, quotes, statistics, and expert opinions
+- Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
+- Use past tense for completed events, present tense for ongoing situations
+- Use active voice
+- Write for an educated audience seeking in-depth information
+
+Structure:
+1. Opening paragraph: Main event with key details and immediate impact
+2. Background paragraph: Context, historical factors, and why this matters
+3. Details paragraph: Specific information, numbers, quotes, expert analysis
+4. Implications paragraph: Consequences, future outlook, broader significance
+
+Writing style:
+- Professional journalism tone
+- Factual and objective
+- Engaging but not sensational
+- Clear and accessible language
+- Proper attribution when mentioning sources
+- Avoid speculation unless clearly labeled as such
+
+=== SUMMARY BULLETS (3-5 bullets, 8-15 words each, MAX 40 words total) ===
 CRITICAL: Bullets must tell COMPLETE story independently.
 
 Rules:
 - 3-5 bullets (minimum 3, maximum 5)
 - 8-15 words per bullet
+- MAXIMUM 40 words total across ALL bullets combined
 - Each bullet is complete, standalone thought
 - Start directly with key information (no "The" or "This")
 - No periods at end
@@ -216,14 +236,12 @@ Return ONLY valid JSON:
 
 {
   "title": "...",
-  "summary": {
-    "paragraph": "35-42 word text...",
-    "bullets": [
-      "Bullet 1 (8-15 words)",
-      "Bullet 2 (8-15 words)",
-      "Bullet 3 (8-15 words)"
-    ]
-  },
+  "detailed_text": "150-200 word comprehensive article...",
+  "summary_bullets": [
+    "Bullet 1 (8-15 words)",
+    "Bullet 2 (8-15 words)",
+    "Bullet 3 (8-15 words)"
+  ],
   "timeline": [...],  // Only if timeline selected
   "details": [...],   // Only if details selected
   "graph": {...},     // Only if graph selected
@@ -232,8 +250,8 @@ Return ONLY valid JSON:
 
 VALIDATION CHECKLIST:
 - Title: ≤12 words, declarative, geographic specificity
-- Paragraph: 35-42 words, no title repetition
-- Bullets: 3-5 bullets, 8-15 words each, complete story, no periods
+- Detailed text: 150-200 words, comprehensive coverage, journalistic style
+- Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods
 - Timeline: 2-4 events, chronological, ≤14 words per event
 - Details: Exactly 3, all have numbers, <8 words each
 - Graph: At least 4 data points, correct format
@@ -386,11 +404,12 @@ Type: {article.get('graph_type', 'line')}
         
         prompt += """Generate complete article with:
 1. Title (≤12 words)
-2. Summary paragraph (35-42 words) + bullets (3-5, 8-15 words each)
-3. Timeline (if selected)
-4. Details (if selected, exactly 3 with numbers)
-5. Graph (if selected)
-6. Map (if selected)
+2. Detailed article text (150-200 words) - comprehensive journalistic coverage
+3. Summary bullets (3-5, 8-15 words each, max 40 words total)
+4. Timeline (if selected)
+5. Details (if selected, exactly 3 with numbers)
+6. Graph (if selected)
+7. Map (if selected)
 
 Return ONLY valid JSON."""
         
@@ -411,32 +430,35 @@ Return ONLY valid JSON."""
         elif len(result['title'].split()) > 12:
             errors.append(f"Title too long: {len(result['title'].split())} words")
         
-        if 'summary' not in result:
-            errors.append("Missing summary")
+        # Validate detailed text
+        if 'detailed_text' not in result:
+            errors.append("Missing detailed_text")
         else:
-            summary = result['summary']
+            detailed_words = len(result['detailed_text'].split())
+            if detailed_words < 150 or detailed_words > 200:
+                errors.append(f"Detailed text word count: {detailed_words} (need 150-200)")
+        
+        # Validate summary bullets
+        if 'summary_bullets' not in result:
+            errors.append("Missing summary_bullets")
+        else:
+            bullets = result['summary_bullets']
+            if len(bullets) < 3 or len(bullets) > 5:
+                errors.append(f"Bullet count: {len(bullets)} (need 3-5)")
             
-            if 'paragraph' not in summary:
-                errors.append("Missing summary paragraph")
-            else:
-                para_words = len(summary['paragraph'].split())
-                if para_words < 35 or para_words > 42:
-                    errors.append(f"Paragraph word count: {para_words} (need 35-42)")
-            
-            if 'bullets' not in summary:
-                errors.append("Missing summary bullets")
-            else:
-                bullets = summary['bullets']
-                if len(bullets) < 3 or len(bullets) > 5:
-                    errors.append(f"Bullet count: {len(bullets)} (need 3-5)")
+            # Check total word count across all bullets
+            total_words = 0
+            for i, bullet in enumerate(bullets):
+                words = len(bullet.split())
+                total_words += words
+                if words < 8 or words > 15:
+                    errors.append(f"Bullet {i+1} word count: {words} (need 8-15)")
                 
-                for i, bullet in enumerate(bullets):
-                    words = len(bullet.split())
-                    if words < 8 or words > 15:
-                        errors.append(f"Bullet {i+1} word count: {words} (need 8-15)")
-                    
-                    if bullet.endswith('.'):
-                        errors.append(f"Bullet {i+1} ends with period")
+                if bullet.endswith('.'):
+                    errors.append(f"Bullet {i+1} ends with period")
+            
+            if total_words > 40:
+                errors.append(f"Total bullet words: {total_words} (max 40)")
         
         # Check selected components - support both field names
         components = article.get('components', article.get('selected_components', []))

@@ -146,7 +146,8 @@ def publish_articles_to_website(articles: List[Dict]):
                 'emoji': article.get('emoji', '📰'),
                 
                 # Enhanced content
-                'summary': article.get('summary', {}),  # Pass full summary object
+                'article': article.get('detailed_text', ''),  # NEW: detailed article text (150-200 words)
+                'summary_bullets': article.get('summary_bullets', []),  # NEW: bullet points
                 'timeline': article.get('timeline', []),
                 'details': article.get('details', []),
                 'graph': article.get('graph', {}),
