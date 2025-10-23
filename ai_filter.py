@@ -217,7 +217,8 @@ class AINewsFilter:
                     step3_results.append({
                         'processed_article': article,
                         'claude_title': claude_result['title'],
-                        'claude_summary': claude_result['summary']
+                        'claude_detailed_text': claude_result['summary'],
+                        'summary_bullets': claude_result.get('summary_bullets', [])
                     })
                     
                 except Exception as e:
@@ -245,7 +246,7 @@ class AINewsFilter:
                 try:
                     perplexity_result = search_perplexity_context(
                         article['claude_title'],
-                        article['claude_summary']
+                        article['claude_detailed_text']
                     )
                     
                     step4_results.append({
@@ -281,7 +282,7 @@ class AINewsFilter:
                 try:
                     timeline_details = claude_format_timeline_details(
                         article['step3_data']['claude_title'],
-                        article['step3_data']['claude_summary'],
+                        article['step3_data']['claude_detailed_text'],
                         article['perplexity_context']
                     )
                     
@@ -293,7 +294,8 @@ class AINewsFilter:
                         'db_article': db_article,
                         'score': score,
                         'title': article['step3_data']['claude_title'],
-                        'summary': article['step3_data']['claude_summary'],
+                        'detailed_text': article['step3_data']['claude_detailed_text'],
+                        'summary_bullets': article['step3_data'].get('summary_bullets', []),
                         'timeline': timeline_details['timeline'],
                         'details': timeline_details['details'],
                         'citations': article['citations']
@@ -353,6 +355,9 @@ class AINewsFilter:
             conn = self._get_db_connection()
             cursor = conn.cursor()
             
+            # Prepare summary bullets JSON
+            summary_bullets_json = json.dumps(article.get('summary_bullets', []))
+            
             cursor.execute('''
                 UPDATE articles SET
                     ai_processed = TRUE,
@@ -361,7 +366,8 @@ class AINewsFilter:
                     ai_reasoning = '5-step workflow: Gemini-Jina-Claude-Perplexity-Claude',
                     published = TRUE,
                     ai_title = ?,
-                    ai_summary = ?,
+                    article = ?,
+                    summary_bullets = ?,
                     ai_timeline = ?,
                     ai_details = ?,
                     ai_citations = ?,
@@ -370,7 +376,8 @@ class AINewsFilter:
             ''', (
                 article['score'],
                 article['title'],
-                article['summary'],
+                article['detailed_text'],
+                summary_bullets_json,
                 timeline_json,
                 details_json,
                 citations_json,

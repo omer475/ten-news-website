@@ -27,7 +27,12 @@ def claude_write_title_summary(article: Dict[str, str]) -> Dict[str, str]:
 OUTPUT FORMAT - Always respond with valid JSON:
 {
   "title": "Your generated title",
-  "summary": "Your generated summary"
+  "summary": "Your generated detailed article text (150-200 words)",
+  "summary_bullets": [
+    "First bullet point (8-15 words)",
+    "Second bullet point (8-15 words)",
+    "Third bullet point (8-15 words)"
+  ]
 }
 
 TITLE RULES:
@@ -49,18 +54,22 @@ Title examples:
 ✓ "Australian wildfires force evacuation of 50,000 residents"
 
 SUMMARY RULES:
-- EXACTLY 35-42 words (MANDATORY - count carefully)
+- EXACTLY 150-200 words (MANDATORY - count carefully)
+- Write comprehensive, detailed news article
 - Must add NEW information beyond the title
 - NEVER repeat exact wording from title
 - Must include geographic/entity specificity
-- Flexible sentence structure (1-4 sentences)
-- Prioritize impact and consequences
+- Use multiple paragraphs for better readability
+- Include background context, current developments, and implications
+- Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
 - Use past tense for completed events, present tense for ongoing situations
 - Use active voice
+- Write for an educated audience seeking in-depth information
 
-SUMMARY EXAMPLES (35-42 words each):
-✓ "The quarter-point increase marks the tenth consecutive rate hike since July 2023, aimed at bringing inflation down from its current 5.3 percent. The decision affects 340 million eurozone residents and is expected to increase borrowing costs for mortgages and business loans across member countries." (42 words)
-✓ "This latest increase brings the ECB's main refinancing rate to 4.5 percent, the highest level since 2008. The move affects borrowing costs for 19 eurozone countries and comes as inflation remains stubbornly high despite previous rate increases." (38 words)
+SUMMARY EXAMPLES (150-200 words each):
+✓ "The European Central Bank announced a quarter-point interest rate increase to 4.5 percent on Thursday, marking the tenth consecutive rate hike since July 2023. The decision comes as inflation remains stubbornly high at 5.3 percent, well above the ECB's 2 percent target. The rate increase affects 340 million people across 19 eurozone countries and is expected to raise borrowing costs for mortgages, business loans, and consumer credit. ECB President Christine Lagarde stated that the bank remains committed to bringing inflation back to target levels, despite concerns about economic growth. The move follows similar actions by other central banks globally, including the Federal Reserve and Bank of England. Analysts predict this could be the final rate increase in the current cycle, as economic indicators suggest slowing growth across the eurozone. The decision was made unanimously by the ECB's Governing Council, reflecting broad consensus on the need for continued monetary tightening." (150 words)
+
+✓ "A powerful magnitude 7.8 earthquake struck southeastern Turkey near the Syrian border early Monday morning, causing widespread destruction across both countries. The quake's epicenter was located near the city of Gaziantep, Turkey, at a depth of approximately 17.9 kilometers. Initial reports indicate significant damage to buildings and infrastructure, with rescue operations underway in multiple cities including Kahramanmaras, Malatya, and Diyarbakir. The earthquake was felt as far away as Cyprus, Lebanon, and Israel. Turkish authorities have declared a state of emergency in affected regions and requested international assistance. The disaster comes at a particularly vulnerable time, with harsh winter conditions complicating rescue efforts. Hospitals in the region are reportedly overwhelmed, and power outages have affected millions of residents. This is the strongest earthquake to hit Turkey since the devastating 1999 Izmit earthquake that killed over 17,000 people." (150 words)
 
 Information hierarchy (prioritize in order):
 1. Impact/consequences (who affected, how many)
@@ -79,17 +88,42 @@ Define acronyms on first use EXCEPT: UN, US, UK, EU, NATO, NASA, WHO, GDP, CEO, 
 
 PROHIBITED in summary: Exact title repetition, speculative language ("may", "could", "might") unless quoting source, editorial opinions, questions, exclamation marks, promotional language, incomplete sentences, bullet points, dramatic phrases ("shocking", "devastating"), vague references without location
 
+SUMMARY BULLETS RULES:
+- EXACTLY 3-5 bullets (minimum 3, maximum 5)
+- Each bullet: 8-15 words
+- MAXIMUM 40 words total across ALL bullets combined
+- Each bullet is complete, standalone thought
+- Start directly with key information (no "The" or "This")
+- No periods at end
+- Include specific details (numbers, names, locations)
+- Active voice
+- Must tell COMPLETE story independently
+
+Bullet Structure:
+1. First bullet: Full main event with key details (WHO + WHAT + KEY NUMBER)
+2. Second bullet: Context or background (WHY, historical comparison)
+3. Third bullet: Impact/consequences (WHO affected, HOW MANY)
+4. Fourth bullet (optional): Additional key detail
+5. Fifth bullet (optional): Final important detail
+
+Bullet Examples:
+✓ "European Central Bank raises interest rates to 4.5 percent, tenth consecutive hike"
+✓ "Inflation remains at 5.3 percent, well above ECB's 2 percent target"
+✓ "340 million eurozone residents face higher borrowing costs for mortgages"
+
 GENERATION PROCESS:
 1. Read the original article carefully
 2. Identify the main news event and geographic location/entity
 3. Generate title (≤12 words) with complete main point
-4. Generate summary (35-42 words) adding information NOT in title
-5. Verify no exact title wording repeated in summary
-6. Check word counts and geographic specificity
+4. Generate detailed article (150-200 words) adding comprehensive information NOT in title
+5. Generate 3-5 bullet points (8-15 words each, max 40 words total)
+6. Verify no exact title wording repeated in summary
+7. Check word counts and geographic specificity
 
 VALIDATION BEFORE OUTPUT:
 Title: ≤12 words, statement not question, includes country/region/entity, active voice, sentence case
-Summary: EXACTLY 35-42 words (count each word carefully), no exact title repetition, geographic specificity, specific numbers included, correct tense, active voice
+Summary: EXACTLY 150-200 words (count each word carefully), comprehensive coverage, journalistic style, no exact title repetition, geographic specificity, specific numbers included, correct tense, active voice
+Bullets: 3-5 bullets, 8-15 words each, max 40 words total, complete standalone thoughts, no periods
 
 OUTPUT REQUIREMENTS:
 - Return ONLY valid JSON
@@ -149,12 +183,13 @@ def validate_title_summary(response: Dict[str, str]) -> Tuple[bool, list]:
     """
     errors = []
     
-    if 'title' not in response or 'summary' not in response:
-        errors.append("Missing title or summary")
+    if 'title' not in response or 'summary' not in response or 'summary_bullets' not in response:
+        errors.append("Missing title, summary, or summary_bullets")
         return False, errors
     
     title = response['title']
     summary = response['summary']
+    summary_bullets = response.get('summary_bullets', [])
     
     # Validate title
     title_words = len(title.split())
@@ -182,6 +217,26 @@ def validate_title_summary(response: Dict[str, str]) -> Tuple[bool, list]:
         if phrase in summary_lower:
             errors.append(f"Summary repeats title: '{phrase}'")
             break
+    
+    # Validate bullets
+    if not isinstance(summary_bullets, list):
+        errors.append("Summary bullets must be a list")
+    elif len(summary_bullets) < 3:
+        errors.append(f"Too few bullets: {len(summary_bullets)} (min 3)")
+    elif len(summary_bullets) > 5:
+        errors.append(f"Too many bullets: {len(summary_bullets)} (max 5)")
+    else:
+        total_bullet_words = 0
+        for i, bullet in enumerate(summary_bullets):
+            bullet_words = len(bullet.split())
+            total_bullet_words += bullet_words
+            if bullet_words < 8:
+                errors.append(f"Bullet {i+1} too short: {bullet_words} words (min 8)")
+            elif bullet_words > 15:
+                errors.append(f"Bullet {i+1} too long: {bullet_words} words (max 15)")
+        
+        if total_bullet_words > 40:
+            errors.append(f"Total bullet words too many: {total_bullet_words} (max 40)")
     
     is_valid = len(errors) == 0
     return is_valid, errors
