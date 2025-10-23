@@ -287,7 +287,7 @@ export default function Home() {
                  category: (article.category || 'WORLD NEWS').toUpperCase(),
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
-                 summary: article.summary || 'News summary will appear here.',
+                 detailed_text: article.detailed_text || 'Article text will appear here.',
                  summary_bullets: article.summary_bullets || [],
                  details: article.details || [],
                  source: article.source || 'Today+',
@@ -2269,13 +2269,9 @@ export default function Home() {
                               transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                               animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                             }}>
-                              {story.detailed_text ? (
-                                <div dangerouslySetInnerHTML={{
-                                  __html: story.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                }} />
-                              ) : (
-                                <p style={{ marginBottom: '20px' }}>{story.summary}</p>
-                              )}
+                              <div dangerouslySetInnerHTML={{
+                                __html: story.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              }} />
                             </div>
                           )}
                         </div>
@@ -2884,24 +2880,9 @@ export default function Home() {
                 marginBottom: '30px',
                 color: 'rgba(255, 255, 255, 0.9)'
               }}>
-                {selectedArticle.detailed_text ? (
-                  <div dangerouslySetInnerHTML={{
-                    __html: selectedArticle.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  }} />
-                ) : (
-                  <div>
-                    <p>{selectedArticle.summary}</p>
-                    {selectedArticle.summary_bullets && (
-                      <ul style={{ marginTop: '16px', paddingLeft: '20px' }}>
-                        {selectedArticle.summary_bullets.map((bullet, index) => (
-                          <li key={index} style={{ marginBottom: '8px' }}>
-                            {bullet.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
+                <div dangerouslySetInnerHTML={{
+                  __html: selectedArticle.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                }} />
               </div>
 
               {/* Additional components if available */}
