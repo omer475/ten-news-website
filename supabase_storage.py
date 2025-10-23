@@ -49,16 +49,13 @@ def save_articles_to_supabase(articles, source_part):
     
     for i, article in enumerate(articles, 1):
         try:
-            # Handle new live system format vs old format
-            summary_data = article.get('summary', {})
-            if isinstance(summary_data, dict):
-                # New format: summary has paragraph and bullets
-                summary_paragraph = summary_data.get('paragraph', '')
-                summary_bullets = json.dumps(summary_data.get('bullets', []))
-            else:
-                # Old format: summary is just a string
-                summary_paragraph = str(summary_data)
-                summary_bullets = json.dumps([])
+            # Handle new live system format (detailed_text + summary_bullets)
+            detailed_text = article.get('detailed_text', article.get('article', ''))
+            summary_bullets_data = article.get('summary_bullets', [])
+            
+            # Ensure summary_bullets is a list
+            if not isinstance(summary_bullets_data, list):
+                summary_bullets_data = []
             
             # Normalize details into newline-joined string (ensure elements are strings)
             raw_details = article.get('details', []) or []
@@ -84,7 +81,7 @@ def save_articles_to_supabase(articles, source_part):
                 'guid': article.get('guid', ''),
                 'source': article.get('source', 'Unknown'),
                 'title': article.get('title', ''),
-                'description': article.get('description', summary_paragraph),
+                'description': article.get('description', ''),
                 'content': article.get('content', article.get('text', '')),
                 'image_url': article.get('image_url', ''),
                 'author': article.get('author', ''),
@@ -103,12 +100,12 @@ def save_articles_to_supabase(articles, source_part):
                 'category': article.get('category', 'World News'),
                 'emoji': article.get('emoji', '📰'),
 
-                # Enhanced content
+                # Enhanced content - NEW FIELD NAMES
+                'article': detailed_text,  # NEW: Detailed article text (max 200 words)
+                'summary_bullets': summary_bullets_data,  # NEW: Bullet points array
                 'timeline': json.dumps(article.get('timeline', [])),
                 'details_section': '\n'.join(normalized_details),
-                'summary': summary_paragraph,
                 # JSONB fields: pass native structures
-                'summary_bullets': article.get('summary', {}).get('bullets', []) if isinstance(summary_data, dict) else [],
                 'graph': article.get('graph', {}),
                 'map': article.get('map', {}),
 
