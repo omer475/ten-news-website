@@ -157,6 +157,12 @@ def publish_articles_to_website(articles: List[Dict]):
                 'publishedAt': datetime.now().isoformat(),
                 'image_extraction_method': article.get('image_extraction_method', '')
             }
+            
+            # DEBUG: Check if article and summary_bullets are populated
+            if not db_article['article']:
+                print(f"  ⚠️ WARNING: Article {i+1}/{len(articles)} has empty 'article' field. Keys: {list(article.keys())[:10]}")
+            if not db_article['summary_bullets']:
+                print(f"  ⚠️ WARNING: Article {i+1}/{len(articles)} has empty 'summary_bullets' field")
             articles_to_publish.append(db_article)
             if 'id' in article:
                 article_ids.append(article['id'])

@@ -328,6 +328,8 @@ class ClaudeFinalWriter:
                 is_valid, errors = self._validate_output(result, article)
                 
                 if is_valid:
+                    # DEBUG: Print what we're returning
+                    print(f"  DEBUG: Returning keys: {list(result.keys())}")
                     return result
                 else:
                     print(f"  ⚠ Validation issues (attempt {attempt + 1}): {errors[:2]}")
@@ -335,6 +337,7 @@ class ClaudeFinalWriter:
                         continue
                     else:
                         # Return despite issues
+                        print(f"  DEBUG: Returning keys (with issues): {list(result.keys())}")
                         return result
             
             except json.JSONDecodeError as e:
