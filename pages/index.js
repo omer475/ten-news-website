@@ -616,7 +616,7 @@ export default function Home() {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, stories.length]);
+  }, [currentIndex, stories.length, showDetailedText, user]);
 
   // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
   useEffect(() => {
