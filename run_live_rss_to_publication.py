@@ -118,6 +118,15 @@ def publish_articles_to_website(articles: List[Dict]):
         # Import your existing publish function
         from supabase_storage import save_articles_to_supabase
         
+        # DEBUG: Check first article structure
+        if articles and len(articles) > 0:
+            print(f"\n🔍 DEBUG: First article has {len(articles[0].keys())} keys")
+            print(f"🔍 DEBUG: Has 'detailed_text'? {'detailed_text' in articles[0]}")
+            print(f"🔍 DEBUG: Has 'summary_bullets'? {'summary_bullets' in articles[0]}")
+            print(f"🔍 DEBUG: Has 'title'? {'title' in articles[0]}")
+            if 'detailed_text' in articles[0]:
+                print(f"🔍 DEBUG: detailed_text length: {len(articles[0]['detailed_text'])} chars")
+        
         print(f"📤 Publishing {len(articles)} articles to tennews.ai...")
         
         # Convert articles to the format expected by Supabase function - FULL FIELD MAPPING
