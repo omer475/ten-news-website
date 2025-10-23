@@ -501,6 +501,12 @@ export default function Home() {
     const handleTouchEnd = (e) => {
       if (isTransitioning) return;
       
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen) {
+        return; // Don't allow story navigation when article is open
+      }
+      
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
       
@@ -531,6 +537,12 @@ export default function Home() {
     const handleWheel = (e) => {
       if (isTransitioning) return;
       
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen) {
+        return; // Don't allow story navigation when article is open
+      }
+      
       if (Math.abs(e.deltaY) > 30) {
         // Allow backward navigation, but prevent forward navigation when paywall is active
         const isPaywallActive = !user && currentIndex >= 5;
@@ -556,6 +568,12 @@ export default function Home() {
 
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
+
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen && (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft')) {
+        return; // Don't allow story navigation when article is open
+      }
 
       const isPaywallActive = !user && currentIndex >= 5;
       
@@ -2258,19 +2276,66 @@ export default function Home() {
                           
                           {/* Show Detailed Article Text Below Bullets - Scrollable */}
                           {showDetailedText[index] && (
-                            <div style={{
-                              marginTop: '16px',
-                              marginBottom: '100px',
-                              fontSize: '16px',
-                              lineHeight: '1.6',
-                              color: '#1a1a1a',
-                              opacity: 1,
-                              transform: 'translateY(0)',
-                              transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                              animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                            }}>
+                            <div 
+                              style={{
+                                marginTop: '16px',
+                                marginBottom: '100px',
+                                fontSize: '16px',
+                                lineHeight: '1.8',
+                                color: '#1a1a1a',
+                                opacity: 1,
+                                transform: 'translateY(0)',
+                                transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                              }}
+                              onTouchStart={(e) => {
+                                const startX = e.touches[0].clientX;
+                                const startY = e.touches[0].clientY;
+                                let hasMoved = false;
+                                
+                                const handleTouchMove = (moveEvent) => {
+                                  const currentX = moveEvent.touches[0].clientX;
+                                  const diffX = Math.abs(currentX - startX);
+                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
+                                  
+                                  if (diffX > 10 || diffY > 10) {
+                                    hasMoved = true;
+                                  }
+                                };
+                                
+                                const handleTouchEnd = (endEvent) => {
+                                  const endX = endEvent.changedTouches[0].clientX;
+                                  const diffX = endX - startX;
+                                  
+                                  // Swipe right to close article
+                                  if (hasMoved && diffX > 100) {
+                                    endEvent.preventDefault();
+                                    endEvent.stopPropagation();
+                                    toggleDetailedText(index); // Close article
+                                  }
+                                  
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
+                                };
+                                
+                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                              }}
+                            >
                               <div dangerouslySetInnerHTML={{
-                                __html: story.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                __html: story.detailed_text
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  .split('. ')
+                                  .reduce((acc, sentence, i, arr) => {
+                                    // Group every 2-3 sentences into a paragraph
+                                    if (i % 3 === 0) {
+                                      const paragraph = arr.slice(i, i + 3).join('. ') + (i + 3 < arr.length ? '.' : '');
+                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + paragraph + '</p>';
+                                    } else if (i % 3 === 1 && i === arr.length - 1) {
+                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + sentence + '</p>';
+                                    }
+                                    return acc;
+                                  }, '')
                               }} />
                             </div>
                           )}
