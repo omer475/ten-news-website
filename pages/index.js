@@ -158,41 +158,39 @@ export default function Home() {
   const getCategoryColors = (category) => {
     if (!category) category = 'General';
     
-    // Normalize category: take first category if multiple, capitalize properly
+    // Normalize category: take first if multiple, convert to proper case for matching
     const normalizedCategory = category
-      .split(',')[0]  // Take first category if multiple
+      .split(',')[0]  // Take first category if multiple (e.g., "Business, Technology" → "Business")
       .trim()
-      .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .toLowerCase();
     
     const colorMap = {
-      'Breaking News': '#FF4444',      // Red
-      'Breaking': '#FF4444',           // Red
-      'Science': '#4CAF50',            // Green
-      'Technology': '#2196F3',         // Blue
-      'Business': '#FF9800',           // Orange
-      'Environment': '#4CAF50',        // Green
-      'Data Science': '#9C27B0',       // Purple
-      'Politics': '#E91E63',           // Pink
-      'General': '#607D8B',            // Blue Grey
-      'Health': '#4CAF50',             // Green
-      'Sports': '#FF5722',             // Deep Orange
-      'Entertainment': '#E91E63',      // Pink
-      'World': '#3F51B5',              // Indigo
-      'Economy': '#FF9800',            // Orange
-      'Education': '#795548',          // Brown
-      'Culture': '#9C27B0'             // Purple
+      // User-specified colors
+      'world': '#1E3A8A',              // Navy Blue - International news, global affairs
+      'politics': '#DC2626',           // Crimson Red - Government, elections, policy
+      'business': '#059669',           // Emerald Green - Economy, markets, finance
+      'technology': '#9333EA',         // Bright Purple - Tech industry, innovation
+      'science': '#06B6D4',            // Cyan - Research, discoveries, environmental issues
+      'health': '#EC4899',             // Pink - Medicine, wellness, public health
+      'sports': '#F97316',             // Vibrant Orange - Athletics, competitions
+      'lifestyle': '#EAB308',          // Golden Yellow - Fashion, food, travel
+      
+      // Additional categories
+      'breaking news': '#DC2626',      // Crimson Red (same as Politics)
+      'breaking': '#DC2626',           // Crimson Red
+      'environment': '#06B6D4',        // Cyan (same as Science)
+      'entertainment': '#EC4899',      // Pink (same as Health)
+      'economy': '#059669',            // Emerald Green (same as Business)
+      'general': '#607D8B'             // Blue Grey - Default
     };
     
     const baseColor = colorMap[normalizedCategory] || '#607D8B'; // Default to Blue Grey
     
     return {
       primary: baseColor,
-      light: `${baseColor}20`, // 20% opacity for lighter version
-      lighter: `${baseColor}08`, // 8% opacity for very light background
-      shadow: `${baseColor}30` // 30% opacity for shadow
+      light: `${baseColor}20`,         // 20% opacity
+      lighter: `${baseColor}08`,       // 8% opacity - VERY LIGHT for background
+      shadow: `${baseColor}30`         // 30% opacity for shadow
     };
   };
 
@@ -293,12 +291,23 @@ export default function Home() {
             
              // Convert articles to story format
              newsData.articles.forEach((article, index) => {
+               // Process category: take first if multiple, capitalize properly
+               const processedCategory = article.category ? 
+                 article.category
+                   .split(',')[0]           // Take first category if multiple
+                   .trim()                  // Remove whitespace
+                   .split(' ')              // Split words
+                   .map(word => 
+                     word.charAt(0).toUpperCase() +  // Capitalize first letter
+                     word.slice(1).toLowerCase()     // Lowercase rest
+                   )
+                   .join(' ')               // Join back
+                 : 'General';               // Default fallback
+               
                const storyData = {
                  type: 'news',
                  number: article.rank || (index + 1),
-                 category: article.category ? 
-                   article.category.split(',')[0].trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') 
-                   : 'General',
+                 category: processedCategory,
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
                  detailed_text: article.detailed_text || 'Article text will appear here.',
