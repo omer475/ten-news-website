@@ -98,7 +98,8 @@ def score_news_articles_step1(articles: List[Dict], api_key: str) -> Dict:
         dict with 'approved' and 'filtered' lists
     """
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    # Use gemini-2.0-flash-exp as gemini-2.5-flash may not be available yet
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     
     system_prompt = """You are a news curator AI scoring articles 0-1000 for shareability and conversation-worthiness.
 
