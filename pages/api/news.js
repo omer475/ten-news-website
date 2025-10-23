@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check for test mode (for testing Timeline & Graph components)
+   // Check for test mode (for testing Timeline & Graph components)
   if (req.query.test === 'true') {
     try {
       const testFilePath = path.join(process.cwd(), 'public', 'test_timeline_graph.json');
@@ -56,6 +56,7 @@ export default async function handler(req, res) {
           rank: index + 1,
           id: article.id,
           title: article.title,
+          detailed_text: article.ai_detailed_text || article.summary,
           summary: article.summary,
           url: article.url,
           urlToImage: article.image_url,
