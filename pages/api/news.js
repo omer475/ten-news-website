@@ -52,24 +52,39 @@ export default async function handler(req, res) {
         // Fall back to regular news if Supabase fails
       } else if (articles && articles.length > 0) {
         // Format articles for frontend
-        const formattedArticles = articles.map((article, index) => ({
-          rank: index + 1,
-          id: article.id,
-          title: article.title,
-          detailed_text: article.ai_detailed_text || article.summary,
-          summary: article.summary,
-          url: article.url,
-          urlToImage: article.image_url,
-          source: article.source,
-          category: article.category,
-          emoji: article.emoji,
-          details: article.details || [],
-          timeline: article.timeline || [],
-          citations: article.citations || [],
-          published_at: article.published_at,
-          added_at: article.added_at,
-          final_score: article.final_score
-        }));
+        const formattedArticles = articles.map((article, index) => {
+          // Parse summary_bullets if it's a string
+          let summaryBullets = [];
+          if (article.summary_bullets) {
+            try {
+              summaryBullets = typeof article.summary_bullets === 'string'
+                ? JSON.parse(article.summary_bullets)
+                : article.summary_bullets;
+            } catch (e) {
+              console.error('Error parsing summary_bullets:', e);
+              summaryBullets = [];
+            }
+          }
+
+          return {
+            rank: index + 1,
+            id: article.id,
+            title: article.title,
+            detailed_text: article.article || article.ai_detailed_text || article.summary,
+            summary_bullets: summaryBullets,
+            url: article.url,
+            urlToImage: article.image_url,
+            source: article.source,
+            category: article.category,
+            emoji: article.emoji,
+            details: article.details || [],
+            timeline: article.timeline || [],
+            citations: article.citations || [],
+            published_at: article.published_at,
+            added_at: article.added_at,
+            final_score: article.final_score
+          };
+        });
 
         return res.status(200).json({
           status: 'ok',

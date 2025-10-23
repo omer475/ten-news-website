@@ -60,6 +60,19 @@ export default async function handler(req, res) {
         }
       }
 
+      // Parse summary_bullets if it's a string
+      let summaryBullets = [];
+      if (article.summary_bullets) {
+        try {
+          summaryBullets = typeof article.summary_bullets === 'string'
+            ? JSON.parse(article.summary_bullets)
+            : article.summary_bullets;
+        } catch (e) {
+          console.error('Error parsing summary_bullets:', e);
+          summaryBullets = [];
+        }
+      }
+
       return {
         id: article.id,
         title: article.title,
@@ -73,8 +86,8 @@ export default async function handler(req, res) {
         category: article.category,
         emoji: article.emoji || '📰',
         final_score: article.ai_final_score,
-        summary: article.summary || article.description || '',
-        summary_bullets: article.summary_bullets || [],
+        detailed_text: article.article || article.summary || article.description || '',  // NEW: Use 'article' field
+        summary_bullets: summaryBullets,
         timeline: timelineData,
         details: article.details_section ? article.details_section.split('\n') : [],
         views: article.view_count || 0
