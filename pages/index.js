@@ -16,8 +16,11 @@ export default function Home() {
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
   const [globalShowBullets, setGlobalShowBullets] = useState(false); // Global preference for bullets vs summary
+  const [showDetailedArticle, setShowDetailedArticle] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
 
-  // Swipe handling for summary/bullet toggle
+  // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
@@ -56,9 +59,42 @@ export default function Home() {
       // Prevent click event when swiping
       e.preventDefault();
       e.stopPropagation();
-      // Toggle between summary and bullet points
-      setGlobalShowBullets(prev => !prev);
+      
+      // If detailed article is open, swipe left-to-right closes it
+      if (showDetailedArticle && isRightSwipe) {
+        setShowDetailedArticle(false);
+        setSelectedArticle(null);
+        return;
+      }
+      
+      // If detailed text is showing for current article, swipe right returns to summary
+      if (showDetailedText[currentIndex] && isRightSwipe) {
+        setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
+        return;
+      }
+      
+      // Otherwise toggle between summary and bullet points
+      if (!showDetailedArticle && !showDetailedText[currentIndex]) {
+        setGlobalShowBullets(prev => !prev);
+      }
     }
+  };
+
+  // Function to open detailed article
+  const openDetailedArticle = (story) => {
+    setSelectedArticle(story);
+    setShowDetailedArticle(true);
+  };
+
+  // Function to close detailed article
+  const closeDetailedArticle = () => {
+    setShowDetailedArticle(false);
+    setSelectedArticle(null);
+  };
+
+  // Function to toggle detailed text for current article
+  const toggleDetailedText = (storyIndex) => {
+    setShowDetailedText(prev => ({ ...prev, [storyIndex]: !prev[storyIndex] }));
   };
 
   // Helper function to count available components for a story
@@ -1870,13 +1906,124 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
-                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
-                    console.log('Clicked story:', story.title);
-                    // Navigate directly to source URL
-                    if (story.url && story.url !== '#') {
-                      window.open(story.url, '_blank');
-                    }
-                  }}>
+                  {showDetailedText[index] ? (
+                    // Full Article View - Classic News Page Style
+                    <div style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: '#ffffff',
+                      zIndex: 1000,
+                      overflow: 'auto',
+                      padding: '20px',
+                      paddingTop: '60px'
+                    }}>
+                      {/* Article Header */}
+                      <div style={{
+                        marginBottom: '30px',
+                        borderBottom: '2px solid #f0f0f0',
+                        paddingBottom: '20px'
+                      }}>
+                        {/* Category Badge */}
+                        <div style={{
+                          display: 'inline-block',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: '#ffffff',
+                          backgroundColor: getCategoryColors(story.category).primary,
+                          padding: '6px 12px',
+                          borderRadius: '20px',
+                          marginBottom: '15px'
+                        }}>
+                          {story.emoji} {story.category}
+                        </div>
+                        
+                        {/* Article Title */}
+                        <h1 style={{
+                          fontSize: '28px',
+                          fontWeight: '700',
+                          lineHeight: '1.3',
+                          color: '#1a1a1a',
+                          margin: '0 0 15px 0'
+                        }}>
+                          {story.title}
+                        </h1>
+                        
+                        {/* Article Image */}
+                        {story.urlToImage && (
+                          <div style={{
+                            width: '100%',
+                            height: '200px',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            marginBottom: '20px'
+                          }}>
+                            <img 
+                              src={story.urlToImage}
+                              alt={story.title}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Article Content */}
+                      <div style={{
+                        fontSize: '18px',
+                        lineHeight: '1.7',
+                        color: '#333333',
+                        maxWidth: '800px',
+                        margin: '0 auto'
+                      }}>
+                        {story.detailed_text ? (
+                          <div dangerouslySetInnerHTML={{
+                            __html: story.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          }} />
+                        ) : (
+                          <div>
+                            <p style={{ marginBottom: '20px' }}>{story.summary}</p>
+                            {story.summary_bullets && story.summary_bullets.length > 0 && (
+                              <ul style={{ paddingLeft: '20px' }}>
+                                {story.summary_bullets.map((bullet, i) => (
+                                  <li key={i} style={{ marginBottom: '10px' }}>
+                                    {bullet.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Swipe Instruction */}
+                      <div style={{
+                        position: 'fixed',
+                        bottom: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        color: 'white',
+                        padding: '10px 20px',
+                        borderRadius: '25px',
+                        fontSize: '14px',
+                        zIndex: 1001
+                      }}>
+                        ← Swipe right to return to articles
+                      </div>
+                    </div>
+                  ) : (
+                    // Original News Item View
+                    <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                      console.log('Clicked story:', story.title);
+                      // Toggle detailed text to show full article
+                      toggleDetailedText(index);
+                    }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -2689,6 +2836,7 @@ export default function Home() {
                       </div> {/* Close fixed position container */}
                     </div>
                   </div>
+                  )} {/* Close conditional rendering for original news item view */}
                 </div>
               ) : null}
             </div>
@@ -2730,10 +2878,212 @@ export default function Home() {
         {/* Email Confirmation Modal */}
         {emailConfirmation && (
           <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)}>
-            <EmailConfirmation
+            <EmailConfirmation 
               email={emailConfirmation.email}
               onBack={() => setEmailConfirmation(null)}
             />
+          </div>
+        )}
+
+        {/* Detailed Article Overlay */}
+        {showDetailedArticle && selectedArticle && (
+          <div 
+            className="detailed-article-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              zIndex: 1000,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {/* Header with close button */}
+            <div style={{
+              position: 'sticky',
+              top: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.95)',
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              zIndex: 1001
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  background: getCategoryColors(selectedArticle.category).lighter,
+                  color: getCategoryColors(selectedArticle.category).primary
+                }}>
+                  {selectedArticle.emoji} {selectedArticle.category}
+                </div>
+              </div>
+              
+              <button
+                onClick={closeDetailedArticle}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: '18px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '20px',
+              color: 'white'
+            }}>
+              {/* Article title */}
+              <h1 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                lineHeight: '1.3',
+                margin: '0 0 20px 0',
+                color: 'white'
+              }}>
+                {selectedArticle.title}
+              </h1>
+
+              {/* Detailed article text */}
+              <div style={{
+                fontSize: '16px',
+                lineHeight: '1.6',
+                marginBottom: '30px',
+                color: 'rgba(255, 255, 255, 0.9)'
+              }}>
+                {selectedArticle.detailed_text ? (
+                  <div dangerouslySetInnerHTML={{
+                    __html: selectedArticle.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  }} />
+                ) : (
+                  <div>
+                    <p>{selectedArticle.summary}</p>
+                    {selectedArticle.summary_bullets && (
+                      <ul style={{ marginTop: '16px', paddingLeft: '20px' }}>
+                        {selectedArticle.summary_bullets.map((bullet, index) => (
+                          <li key={index} style={{ marginBottom: '8px' }}>
+                            {bullet.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Additional components if available */}
+              {selectedArticle.timeline && selectedArticle.timeline.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h3 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    marginBottom: '16px',
+                    color: 'white',
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                    paddingBottom: '8px'
+                  }}>
+                    Timeline
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {selectedArticle.timeline.map((event, index) => (
+                      <div key={index} style={{
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'flex-start'
+                      }}>
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          minWidth: '80px',
+                          flexShrink: 0
+                        }}>
+                          {event.date}
+                        </div>
+                        <div style={{
+                          fontSize: '14px',
+                          lineHeight: '1.4',
+                          color: 'rgba(255, 255, 255, 0.9)'
+                        }}>
+                          {event.event}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedArticle.details && selectedArticle.details.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h3 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    marginBottom: '16px',
+                    color: 'white',
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                    paddingBottom: '8px'
+                  }}>
+                    Key Details
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedArticle.details.map((detail, index) => (
+                      <div key={index} style={{
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        padding: '8px 12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '6px'
+                      }}>
+                        {detail}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Swipe instruction */}
+              <div style={{
+                textAlign: 'center',
+                marginTop: '40px',
+                padding: '20px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                Swipe left to right to return to articles
+              </div>
+            </div>
           </div>
         )}
       </div>
