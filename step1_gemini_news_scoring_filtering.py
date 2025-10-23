@@ -100,156 +100,144 @@ def score_news_articles_step1(articles: List[Dict], api_key: str) -> Dict:
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     
-    system_prompt = """You are a news curator AI for a global news application. Your job is to score news articles from 0-1000 based on whether they are "must-know" news that people need to stay informed about the world.
+    system_prompt = """You are a news curator AI scoring articles 0-1000 for shareability and conversation-worthiness.
 
-CORE MISSION: Surface only essential news - information people NEED to know to be informed citizens and understand major world events. Quality and significance over quantity.
+CORE MISSION: Surface news people WANT to share - stories that make people say "Did you hear?" Focus on educational, surprising, engaging content.
 
-MUST-KNOW NEWS DEFINITION:
-News that people cannot afford to miss because it:
-- Directly impacts their lives (economy, health, safety, policy, rights)
-- Represents major world events everyone should know (wars, elections, disasters, treaties)
-- Involves significant institutional actions (governments, central banks, major organizations)
-- Has historical importance (will be remembered, creates lasting change)
-- Is essential for understanding the current state of the world
+TARGET: Approve ~10% of articles (only truly shareable news).
 
-NOT must-know: Interesting stories, nice-to-know facts, entertainment, minor updates, incremental developments without major new information.
+CRITICAL "SO WHAT?" TEST: Every article must answer "What changes for me/the world if I know this?"
 
-EVALUATION CRITERIA:
+✅ HAS IMPACT: Real-world consequences happen, something changes NOW, creates forward momentum
+❌ NO IMPACT: Documentaries/investigations without outcomes, retrospective analysis, background info only
 
-1. SIGNIFICANCE & IMPACT
-Judge the real-world importance:
-- Does this affect millions of people's lives directly?
-- Is this a major event that reshapes politics, economy, or society?
-- Does this involve critical government/institutional actions?
-- Will this be historically significant?
-- Do citizens NEED this information?
+SCORING CRITERIA (5 factors, total 1000 points):
 
-Breaking news indicators (analyze meaning, not just keywords):
-- Major events that just happened: elections decided, leaders resign, disasters strike, wars begin/end, major attacks occur, policies passed, treaties signed
-- Not breaking: scheduled events, ongoing situations without major development, analysis pieces, future predictions
-- Language patterns: look for present/past tense completion ("announces," "passes," "strikes," "dies") NOT speculation ("could," "may," "expected to")
+1. RECENCY & TIMELINESS (0-200):
+180-200: Just happened (breaking news, today's events)
+140-179: Very recent (yesterday, this week)  
+100-139: Recent (within few days)
+60-99: Somewhat recent (this week)
+0-59: Old news, scheduled events, incremental updates
+CRITICAL: Articles >7 days max 100 points, >30 days = 0 points
 
-2. SOURCE CREDIBILITY
-Tier 1 (Highest): Reuters, AP, AFP, BBC, CNN, Al Jazeera, NPR, New York Times, Wall Street Journal, Washington Post, The Guardian, Financial Times, The Economist
-Tier 2 (Strong): Established national outlets with journalism standards, quality specialized sources (Nature, Science, Bloomberg, Politico, Axios, Foreign Affairs)
-Tier 3 (Acceptable): Credible regional outlets, reputable digital publications
+2. SURPRISE & WOW FACTOR (0-250):
+230-250: Mind-blowing discoveries, shocking events
+190-229: Very surprising, unexpected
+150-189: Interesting, somewhat surprising
+100-149: Moderately interesting
+50-99: Predictable, expected
+0-49: No surprise factor, completely expected
 
-Eliminate: Tabloids, blogs, unverified sources, conspiracy sites, sponsored content, satirical sources
+3. IMPACT & SCALE (0-200):
+180-200: Affects hundreds of millions globally
+140-179: Affects tens of millions or major regions
+100-139: Affects millions or important institutions
+60-99: Affects thousands or specific communities
+20-59: Limited impact or niche audience
+0-19: Minimal real-world impact
 
-3. TITLE QUALITY
-Must be clear, specific, informative, and professional:
-- Explains what happened with details (names, numbers, locations, outcomes)
-- Neutral factual tone without emotional manipulation
-- Complete information, not a teaser or clickbait hook
-- Grammatically correct
-- Specific proper nouns (not vague references)
+4. CONVERSATION-WORTHINESS (0-250):
+230-250: Instant conversation starter - EVERYONE will talk about this
+190-229: Very likely to be discussed
+150-189: Worth mentioning in conversation
+100-149: Might come up in specific contexts
+50-99: Only specialists would discuss
+0-49: Nobody would bring this up casually
 
-Eliminate: Clickbait, vague hooks, excessive caps, manipulative language, unclear references
+5. EDUCATIONAL VALUE (0-100):
+90-100: Teaches fundamental new knowledge or paradigm shift
+70-89: Significant educational content
+50-69: Moderately educational
+30-49: Minimal new information
+0-29: No educational value
 
-4. CONTENT FOCUS
-High priority (core must-know):
-- Politics: Elections, major legislation, government crises, policy changes
-- Economy: Markets, inflation, employment, major corporate news, economic policy, trade
-- International: Wars, diplomacy, conflicts, refugee crises, treaties
-- Health: Pandemics, major health crises, breakthrough treatments, public health policy
-- Science/Tech: Major breakthroughs, significant AI developments, space milestones, major cybersecurity threats
-- Environment: Major climate events, environmental disasters, significant climate policy
-- Security: Terrorism, major societal crime, significant cybersecurity breaches
+AUTOMATIC FILTERS (Score <700):
+❌ OLD NEWS: Articles >7 days max 400, >30 days max 200
+❌ CLICKBAIT: "You won't believe...", "SHOCKING:", emotional manipulation
+❌ MINOR POLITICAL THEATER: "Senator introduces bill...", procedural votes
+❌ INCREMENTAL UPDATES: "Day X of conflict...", status quo reports
+❌ NO ACTIONABLE IMPACT: Documentaries, investigations without outcomes
+❌ OPINION/ANALYSIS: Pure commentary without breaking news
+❌ LOW-QUALITY SOURCES: Tabloids, blogs, conspiracy sites
+❌ LOCAL CRIME: Single arrests unless major public figure/terrorism
+❌ MINOR CELEBRITY: Personal activities, minor awards
 
-Lower priority (only if truly exceptional):
-- Sports: Only major finals (World Cup final, Olympics opening/closing, Super Bowl, Champions League final) or historic achievements
-- Entertainment: Only deaths of major cultural figures or historic cultural moments with broad societal impact
-- Lifestyle/Culture: Generally excluded unless societally transformative
-- Celebrity: Excluded unless broader significance (major philanthropy, important social issue involvement)
+STUDIES & RESEARCH:
+✅ APPROVE (700+) if "DINNER TABLE TEST": Would you bring this up at dinner?
+- Genuinely surprising/counterintuitive findings
+- Major health/life implications people care about
+- Breakthrough discoveries that change understanding
 
-5. ARTICLE TEXT ANALYSIS (if provided)
-When text snippet is available, use it to:
-- Distinguish breaking news from analysis/commentary
-- Detect if it's an update to ongoing story (only approve if MAJOR new development)
-- Identify clickbait disguised as news
-- Verify title accurately represents content
-- Assess depth and substance
+❌ FILTER (<700): Confirms known facts, incremental findings, purely academic
 
-AUTOMATIC FILTERING - Score below 700:
-- Clickbait or manipulative headlines
-- Low credibility sources
-- Celebrity gossip, entertainment fluff, lifestyle features
-- Opinion pieces, editorials, commentary (unless about major must-know event)
-- Vague or unclear titles without substance
-- Minor updates to ongoing stories without major developments
-- "Analysis" or "Explainer" pieces (unless tied to breaking major news)
-- Unverified rumors or speculation
-- Promotional content or press releases
-- Extreme sensationalism
-- Hyper-local news without national/international significance
-- "Interesting but not essential" stories
+HIGH-SCORING EXAMPLES:
+✅ Politics: "Congress passes historic healthcare reform" (850-1000)
+✅ Business: "Federal Reserve makes emergency rate cut" (850-950)
+✅ Science: "Scientists cure specific cancer in trial" (850-950)
+✅ Sports: "World Cup final decided by historic goal" (800-900)
+✅ World: "Historic peace agreement signed" (900-1000)
 
-SCORING SCALE (Holistic Judgment):
+❌ FILTER: "Senator proposes bill", "Study confirms exercise healthy", "Team advances to next round"
 
-950-1000: CRITICAL MUST-KNOW
-- Major breaking news of global significance
-- Examples: War starts/ends, major natural disaster (thousands affected), pandemic declared, historic election results, major leader dies/resigns, significant terrorist attack, major economic crisis, peace treaty signed, major scientific breakthrough with immediate impact
+SOURCE CREDIBILITY:
+Tier 1 (1.0x): Reuters, AP, BBC, CNN, NYT, WSJ, Guardian, etc.
+Tier 2 (0.9x): Established national outlets, Nature, Science
+Tier 3 (0.7x): Credible regional outlets
+Tier 4 (0.4x): Questionable sources, blogs
+Tier 5 (0.0x): Tabloids, conspiracy sites
 
-850-949: HIGHLY IMPORTANT
-- Significant breaking news or major developments
-- Examples: Major policy changes, significant economic news (interest rate decisions, major market moves), important international developments, major health announcements, significant court rulings, important legislative votes
+CATEGORIES (assign ONE - CRITICAL REQUIREMENT):
+You MUST assign exactly ONE category to each article. Choose the MOST APPROPRIATE category:
 
-700-849: IMPORTANT MUST-KNOW
-- Solid news people should be aware of
-- Examples: Notable political developments, economic indicators, ongoing major story updates with substantial new information, significant regional events with broader implications, important appointments/departures
+- **World**: International news, global affairs, foreign policy, conflicts, diplomacy
+- **Politics**: Government, elections, policy, political developments, legislation
+- **Business**: Economy, markets, finance, corporate news, economic indicators
+- **Technology**: Tech industry, innovation, digital trends, gadgets, software
+- **Science**: Research, discoveries, environmental issues, health studies, space
+- **Health**: Medicine, wellness, public health, medical breakthroughs, healthcare
+- **Sports**: Athletics, competitions, teams, sporting events, Olympics
+- **Lifestyle**: Fashion, food, travel, home, personal interest, entertainment
 
-500-699: DECENT BUT NOT ESSENTIAL (FILTERED)
-- Good reporting but not critical
-- Examples: Minor political news, corporate announcements without major impact, incremental updates, regional news without global significance
+CRITICAL CATEGORY RULES:
+1. EVERY article MUST get exactly ONE category
+2. Choose the PRIMARY focus of the article
+3. If multiple categories apply, pick the MOST IMPORTANT one
+4. NEVER use "Other" or any category not listed above
+5. Category assignment is MANDATORY for every article
 
-Below 500: NOT MUST-KNOW (FILTERED)
-- Not essential, low quality, or violates filtering rules
-- Examples: Celebrity news, entertainment, sports (except major finals), lifestyle, opinion pieces, clickbait, minor stories, vague content
-
-SCORING PRINCIPLES:
-1. Impact over interest: Does this affect people's lives or is it just interesting?
-2. Significance test: Will this matter tomorrow? Next week? Next year?
-3. Need-to-know test: Must people know this to be informed citizens?
-4. Better to approve borderline important news (avoid false negatives) than filter potentially important news
-5. When in doubt between two scores, choose the higher one - missing important news is worse than showing slightly less important news
-6. Quality over quantity: Better to approve 5 essential stories than 30 mixed-quality stories
-
-SPECIAL SITUATIONS:
-- Major event dominance: Can approve multiple articles on same event if it's truly critical breaking news
-- Slow news day: Do NOT lower standards - maintain 700+ threshold
-- Conflicting reports: Approve if from credible sources covering developing essential story
-- Analysis of major events: Score based on the underlying event's importance, not the analysis itself
-- Updates to ongoing stories: Only approve if MAJOR new development, not incremental updates
-
-OUTPUT REQUIREMENTS:
-Return ONLY valid JSON array with exactly this structure for each article:
+OUTPUT FORMAT - Return ONLY valid JSON:
 [
   {
     "title": "exact article title here",
     "score": 850,
-    "status": "APPROVED"
-  },
-  {
-    "title": "another article title",
-    "score": 650,
-    "status": "FILTERED"
+    "category": "Science",
+    "status": "APPROVED",
+    "score_breakdown": {
+      "recency": 180,
+      "surprise": 240,
+      "impact": 150,
+      "conversation": 210,
+      "educational": 90
+    }
   }
 ]
 
 Rules:
-- status = "APPROVED" if score >= 700
-- status = "FILTERED" if score < 700
+- status = "APPROVED" if score >= 700, "FILTERED" if < 700
+- category MUST be one of: World, Politics, Business, Technology, Science, Health, Sports, Lifestyle
+- category is MANDATORY - every article must have exactly one category
+- Include score_breakdown for transparency
 - Maintain order of input articles
-- No explanations or additional fields
 - Valid JSON only"""
 
     # Prepare articles for scoring
-    articles_text = "Score these news articles based on must-know criteria. Return JSON array only.\n\nArticles to score:\n[\n"
+    articles_text = "Score these news articles based on shareability and conversation-worthiness criteria. Return JSON array only.\n\nArticles to score:\n[\n"
     
     for article in articles:
         articles_text += f'  {{\n    "title": "{article["title"]}",\n    "source": "{article["source"]}",\n    "text": "{article.get("text", "")[:500]}",\n    "url": "{article["url"]}"\n  }},\n'
     
-    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), and status (APPROVED if >=700, FILTERED if <700)."
+    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), category (MANDATORY - choose from: World, Politics, Business, Technology, Science, Health, Sports, Lifestyle), status (APPROVED if >=700, FILTERED if <700), and score_breakdown."
     
     # Prepare request
     request_data = {
@@ -281,7 +269,7 @@ Rules:
     
     try:
         # Make API request
-        response = requests.post(url, json=request_data, timeout=60)
+        response = requests.post(url, json=request_data, timeout=120)
         response.raise_for_status()
         
         # Parse response
@@ -290,11 +278,25 @@ Rules:
         # Extract text from response
         if 'candidates' in result and len(result['candidates']) > 0:
             candidate = result['candidates'][0]
+            
+            # Check for safety ratings or blocked content
+            if 'finishReason' in candidate:
+                finish_reason = candidate['finishReason']
+                if finish_reason != 'STOP':
+                    print(f"⚠️ Gemini response finished with reason: {finish_reason}")
+                    if finish_reason in ['SAFETY', 'RECITATION', 'OTHER']:
+                        print(f"❌ Content blocked or filtered by Gemini")
+                        if 'safetyRatings' in candidate:
+                            print(f"Safety ratings: {candidate['safetyRatings']}")
+                        return {"approved": [], "filtered": articles}
+            
             if 'content' in candidate and 'parts' in candidate['content']:
                 response_text = candidate['content']['parts'][0]['text']
             else:
+                print(f"❌ No content in candidate. Candidate structure: {json.dumps(candidate, indent=2)[:500]}")
                 raise ValueError("No valid content in Gemini response")
         else:
+            print(f"❌ No candidates in result. Result structure: {json.dumps(result, indent=2)[:500]}")
             raise ValueError("No valid response from Gemini API")
         
         # Parse JSON response with robust error handling
@@ -328,9 +330,16 @@ Rules:
                     break
             
             if original_article:
-                # Add score and status to original article
+                # Add score, status, and category to original article
                 original_article['score'] = scored_article['score']
                 original_article['status'] = scored_article['status']
+                original_article['category'] = scored_article.get('category', 'Other')
+                
+                # Validate category
+                valid_categories = ['World', 'Politics', 'Business', 'Technology', 'Science', 'Health', 'Sports', 'Lifestyle']
+                if original_article['category'] not in valid_categories:
+                    print(f"⚠️ Invalid category '{original_article['category']}' for article: {original_article['title'][:50]}...")
+                    original_article['category'] = 'Other'  # Fallback
                 
                 if scored_article['status'] == 'APPROVED':
                     approved.append(original_article)
@@ -344,9 +353,19 @@ Rules:
         
     except requests.exceptions.RequestException as e:
         print(f"❌ API request failed: {e}")
+        # Assign default categories when API fails
+        for article in articles:
+            article['category'] = 'Other'  # Default fallback
+            article['score'] = 0
+            article['status'] = 'FILTERED'
         return {"approved": [], "filtered": articles}
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+        # Assign default categories when any error occurs
+        for article in articles:
+            article['category'] = 'Other'  # Default fallback
+            article['score'] = 0
+            article['status'] = 'FILTERED'
         return {"approved": [], "filtered": articles}
 
 if __name__ == "__main__":
