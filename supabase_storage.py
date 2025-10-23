@@ -53,6 +53,12 @@ def save_articles_to_supabase(articles, source_part):
             detailed_text = article.get('detailed_text', article.get('article', ''))
             summary_bullets_data = article.get('summary_bullets', [])
             
+            # DEBUG: Check what we got
+            if not detailed_text:
+                print(f"  🔍 DEBUG [{i}/{len(articles)}]: No detailed_text found. Article keys: {list(article.keys())[:15]}")
+            else:
+                print(f"  ✅ DEBUG [{i}/{len(articles)}]: detailed_text length: {len(detailed_text)} chars, bullets: {len(summary_bullets_data)}")
+            
             # Ensure summary_bullets is a list
             if not isinstance(summary_bullets_data, list):
                 summary_bullets_data = []
