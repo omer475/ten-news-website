@@ -45,7 +45,7 @@ You will receive:
 
 You must write:
 1. Title (≤12 words)
-2. Detailed article text (150-200 words) - comprehensive journalistic coverage
+2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
 3. Summary bullets (3-5 bullets, 8-15 words each, max 40 words total)
 4. Timeline (if selected, 2-4 events)
 5. Details (if selected, exactly 3 data points)
@@ -65,12 +65,13 @@ Examples:
 ✓ "Magnitude 7.8 earthquake strikes Turkey near Syrian border"
 ✓ "Donald Trump wins 2024 presidential election with 312 electoral votes"
 
-=== DETAILED ARTICLE TEXT (150-200 words) ===
+=== DETAILED ARTICLE TEXT (Maximum 200 words) ===
 CRITICAL: Write a comprehensive, detailed news article that provides complete information about the story.
 
 Rules:
-- 150-200 words (MANDATORY - count carefully)
-- Write in detailed, journalistic style
+- Maximum 200 words (MANDATORY - do not exceed)
+- Write detailed, comprehensive journalistic coverage
+- No minimum word count - focus on quality and completeness
 - Provide comprehensive coverage of the story
 - Include background context, current developments, and implications
 - Use multiple paragraphs for better readability
@@ -236,7 +237,7 @@ Return ONLY valid JSON:
 
 {
   "title": "...",
-  "detailed_text": "150-200 word comprehensive article...",
+  "detailed_text": "Detailed comprehensive article (max 200 words)...",
   "summary_bullets": [
     "Bullet 1 (8-15 words)",
     "Bullet 2 (8-15 words)",
@@ -250,7 +251,7 @@ Return ONLY valid JSON:
 
 VALIDATION CHECKLIST:
 - Title: ≤12 words, declarative, geographic specificity
-- Detailed text: 150-200 words, comprehensive coverage, journalistic style
+- Detailed text: Maximum 200 words, detailed comprehensive coverage, journalistic style
 - Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods
 - Timeline: 2-4 events, chronological, ≤14 words per event
 - Details: Exactly 3, all have numbers, <8 words each
@@ -404,7 +405,7 @@ Type: {article.get('graph_type', 'line')}
         
         prompt += """Generate complete article with:
 1. Title (≤12 words)
-2. Detailed article text (150-200 words) - comprehensive journalistic coverage
+2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
 3. Summary bullets (3-5, 8-15 words each, max 40 words total)
 4. Timeline (if selected)
 5. Details (if selected, exactly 3 with numbers)
@@ -435,8 +436,10 @@ Return ONLY valid JSON."""
             errors.append("Missing detailed_text")
         else:
             detailed_words = len(result['detailed_text'].split())
-            if detailed_words < 150 or detailed_words > 200:
-                errors.append(f"Detailed text word count: {detailed_words} (need 150-200)")
+            if detailed_words > 200:
+                errors.append(f"Detailed text word count: {detailed_words} (maximum 200)")
+            elif detailed_words < 50:
+                errors.append(f"Detailed text too short: {detailed_words} words (should be detailed and comprehensive)")
         
         # Validate summary bullets
         if 'summary_bullets' not in result:

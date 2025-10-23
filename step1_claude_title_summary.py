@@ -27,7 +27,7 @@ def claude_write_title_summary(article: Dict[str, str]) -> Dict[str, str]:
 OUTPUT FORMAT - Always respond with valid JSON:
 {
   "title": "Your generated title",
-  "summary": "Your generated detailed article text (150-200 words)",
+  "summary": "Your detailed article text (maximum 200 words)",
   "summary_bullets": [
     "First bullet point (8-15 words)",
     "Second bullet point (8-15 words)",
@@ -54,8 +54,9 @@ Title examples:
 ✓ "Australian wildfires force evacuation of 50,000 residents"
 
 SUMMARY RULES:
-- EXACTLY 150-200 words (MANDATORY - count carefully)
-- Write comprehensive, detailed news article
+- Maximum 200 words (MANDATORY - do not exceed)
+- Write detailed, comprehensive news article
+- No minimum word count - focus on quality and completeness
 - Must add NEW information beyond the title
 - NEVER repeat exact wording from title
 - Must include geographic/entity specificity
@@ -115,14 +116,14 @@ GENERATION PROCESS:
 1. Read the original article carefully
 2. Identify the main news event and geographic location/entity
 3. Generate title (≤12 words) with complete main point
-4. Generate detailed article (150-200 words) adding comprehensive information NOT in title
+4. Generate detailed article (maximum 200 words) adding comprehensive information NOT in title
 5. Generate 3-5 bullet points (8-15 words each, max 40 words total)
 6. Verify no exact title wording repeated in summary
 7. Check word counts and geographic specificity
 
 VALIDATION BEFORE OUTPUT:
 Title: ≤12 words, statement not question, includes country/region/entity, active voice, sentence case
-Summary: EXACTLY 150-200 words (count each word carefully), comprehensive coverage, journalistic style, no exact title repetition, geographic specificity, specific numbers included, correct tense, active voice
+Summary: Maximum 200 words, detailed comprehensive coverage, journalistic style, no exact title repetition, geographic specificity, specific numbers included, correct tense, active voice
 Bullets: 3-5 bullets, 8-15 words each, max 40 words total, complete standalone thoughts, no periods
 
 OUTPUT REQUIREMENTS:
@@ -204,10 +205,10 @@ def validate_title_summary(response: Dict[str, str]) -> Tuple[bool, list]:
     
     # Validate summary
     summary_words = len(summary.split())
-    if summary_words < 35:
-        errors.append(f"Summary too short: {summary_words} words (min 35)")
-    elif summary_words > 42:
-        errors.append(f"Summary too long: {summary_words} words (max 42)")
+    if summary_words > 200:
+        errors.append(f"Summary too long: {summary_words} words (max 200)")
+    elif summary_words < 50:
+        errors.append(f"Summary too short: {summary_words} words (should be detailed and comprehensive)")
     
     # Check title repetition
     title_words_list = title.lower().split()
