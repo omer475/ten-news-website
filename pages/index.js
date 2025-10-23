@@ -1982,13 +1982,13 @@ export default function Home() {
                     </div>
                     
                     {/* Content Area - Starts After Image */}
-                    <div className="news-content" style={{
-                      position: 'relative',
-                      paddingTop: 'calc(30vh + 4px)',
-                      paddingLeft: '8px',
-                      paddingRight: '8px',
-                      zIndex: '2'
-                    }}>
+                      <div className="news-content" style={{
+                        position: 'relative',
+                        paddingTop: 'calc(30vh + 4px)',
+                        paddingLeft: '8px',
+                        paddingRight: '8px',
+                        zIndex: '2'
+                      }}>
                       
                       {/* Category Badge and Timeline Button Row */}
                       <div style={{
@@ -2286,14 +2286,16 @@ export default function Home() {
                       <div style={{
                         position: showDetailedText[index] ? 'relative' : 'fixed',
                         bottom: showDetailedText[index] ? 'auto' : '32px',
-                        left: showDetailedText[index] ? 'auto' : '50%',
+                        left: showDetailedText[index] ? '0' : '50%',
                         transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: '950px',
+                        maxWidth: showDetailedText[index] ? '950px' : '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
                         zIndex: '50',
-                        marginTop: showDetailedText[index] ? '0' : '0'
+                        marginTop: showDetailedText[index] ? '0' : '0',
+                        marginLeft: showDetailedText[index] ? 'auto' : '0',
+                        marginRight: showDetailedText[index] ? 'auto' : '0'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
