@@ -1984,7 +1984,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                      paddingTop: 'calc(30vh + 6px)',
+                      paddingTop: 'calc(30vh + 4px)',
                       paddingLeft: '8px',
                       paddingRight: '8px',
                       zIndex: '2'
@@ -1995,8 +1995,8 @@ export default function Home() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '4px',
-                        marginTop: '-8px'
+                        marginBottom: '2px',
+                        marginTop: '-12px'
                       }}>
                         {/* Category Badge */}
                         <div style={{
