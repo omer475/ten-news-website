@@ -156,8 +156,20 @@ export default function Home() {
 
   // Category color mapping system
   const getCategoryColors = (category) => {
+    if (!category) category = 'General';
+    
+    // Normalize category: take first category if multiple, capitalize properly
+    const normalizedCategory = category
+      .split(',')[0]  // Take first category if multiple
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
     const colorMap = {
       'Breaking News': '#FF4444',      // Red
+      'Breaking': '#FF4444',           // Red
       'Science': '#4CAF50',            // Green
       'Technology': '#2196F3',         // Blue
       'Business': '#FF9800',           // Orange
@@ -174,12 +186,12 @@ export default function Home() {
       'Culture': '#9C27B0'             // Purple
     };
     
-    const baseColor = colorMap[category] || '#607D8B'; // Default to Blue Grey
+    const baseColor = colorMap[normalizedCategory] || '#607D8B'; // Default to Blue Grey
     
     return {
       primary: baseColor,
       light: `${baseColor}20`, // 20% opacity for lighter version
-      lighter: `${baseColor}15`, // 15% opacity for even lighter version
+      lighter: `${baseColor}08`, // 8% opacity for very light background
       shadow: `${baseColor}30` // 30% opacity for shadow
     };
   };
@@ -284,7 +296,9 @@ export default function Home() {
                const storyData = {
                  type: 'news',
                  number: article.rank || (index + 1),
-                 category: (article.category || 'WORLD NEWS').toUpperCase(),
+                 category: article.category ? 
+                   article.category.split(',')[0].trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') 
+                   : 'General',
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
                  detailed_text: article.detailed_text || 'Article text will appear here.',
