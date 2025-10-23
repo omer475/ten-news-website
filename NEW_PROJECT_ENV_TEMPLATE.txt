@@ -1,0 +1,38 @@
+# ==========================================
+# TEN NEWS - NEW PROJECT ENVIRONMENT VARIABLES
+# ==========================================
+# Copy this to .env and fill in your new values
+
+# ==========================================
+# SUPABASE (NEW PROJECT)
+# ==========================================
+# Get these from: Supabase Dashboard → Settings → API
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_NEW_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_new_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_new_service_role_key_here
+
+# ==========================================
+# AI API KEYS (Keep your existing keys)
+# ==========================================
+ANTHROPIC_API_KEY=your_existing_claude_key
+CLAUDE_API_KEY=your_existing_claude_key
+GOOGLE_API_KEY=your_existing_gemini_key
+PERPLEXITY_API_KEY=your_existing_perplexity_key
+
+# ==========================================
+# WEB SCRAPING (Keep your existing keys)
+# ==========================================
+SCRAPINGBEE_API_KEY=your_existing_scrapingbee_key
+JINA_API_KEY=your_existing_jina_key
+
+# ==========================================
+# EMAIL (Optional - for user auth)
+# ==========================================
+RESEND_API_KEY=your_resend_key_if_you_have_one
+
+# ==========================================
+# NEXT.JS
+# ==========================================
+NEXT_PUBLIC_SITE_URL=https://tennews.ai
+NODE_ENV=production
+
