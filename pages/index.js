@@ -2483,7 +2483,7 @@ export default function Home() {
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
+                              <div className="news-detail-value" style={{ color: '#1E3A8A' }}>{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
