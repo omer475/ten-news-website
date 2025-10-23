@@ -15,7 +15,7 @@ export default function Home() {
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
-  const [globalShowBullets, setGlobalShowBullets] = useState(false); // Global preference for bullets vs summary
+  // Removed globalShowBullets - only showing summary text now
   const [showDetailedArticle, setShowDetailedArticle] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
@@ -73,10 +73,7 @@ export default function Home() {
         return;
       }
       
-      // Otherwise toggle between summary and bullet points
-      if (!showDetailedArticle && !showDetailedText[currentIndex]) {
-        setGlobalShowBullets(prev => !prev);
-      }
+      // No more bullet/summary toggle - only detailed text navigation
     }
   };
 
@@ -1551,6 +1548,17 @@ export default function Home() {
           }
         }
 
+        @keyframes slideInFromBottom {
+          0% {
+            opacity: 0;
+            transform: translateY(100vh);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .timeline-item::before {
           content: '';
           position: absolute;
@@ -1906,122 +1914,9 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
-                  {showDetailedText[index] ? (
-                    // Full Article View - Classic News Page Style
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: '#ffffff',
-                      zIndex: 1000,
-                      overflow: 'auto',
-                      padding: '20px',
-                      paddingTop: '60px'
-                    }}>
-                      {/* Article Header */}
-                      <div style={{
-                        marginBottom: '30px',
-                        borderBottom: '2px solid #f0f0f0',
-                        paddingBottom: '20px'
-                      }}>
-                        {/* Category Badge */}
-                        <div style={{
-                          display: 'inline-block',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: '#ffffff',
-                          backgroundColor: getCategoryColors(story.category).primary,
-                          padding: '6px 12px',
-                          borderRadius: '20px',
-                          marginBottom: '15px'
-                        }}>
-                          {story.emoji} {story.category}
-                        </div>
-                        
-                        {/* Article Title */}
-                        <h1 style={{
-                          fontSize: '28px',
-                          fontWeight: '700',
-                          lineHeight: '1.3',
-                          color: '#1a1a1a',
-                          margin: '0 0 15px 0'
-                        }}>
-                          {story.title}
-                        </h1>
-                        
-                        {/* Article Image */}
-                        {story.urlToImage && (
-                          <div style={{
-                            width: '100%',
-                            height: '200px',
-                            borderRadius: '12px',
-                            overflow: 'hidden',
-                            marginBottom: '20px'
-                          }}>
-                            <img 
-                              src={story.urlToImage}
-                              alt={story.title}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover'
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Article Content */}
-                      <div style={{
-                        fontSize: '18px',
-                        lineHeight: '1.7',
-                        color: '#333333',
-                        maxWidth: '800px',
-                        margin: '0 auto'
-                      }}>
-                        {story.detailed_text ? (
-                          <div dangerouslySetInnerHTML={{
-                            __html: story.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          }} />
-                        ) : (
-                          <div>
-                            <p style={{ marginBottom: '20px' }}>{story.summary}</p>
-                            {story.summary_bullets && story.summary_bullets.length > 0 && (
-                              <ul style={{ paddingLeft: '20px' }}>
-                                {story.summary_bullets.map((bullet, i) => (
-                                  <li key={i} style={{ marginBottom: '10px' }}>
-                                    {bullet.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Swipe Instruction */}
-                      <div style={{
-                        position: 'fixed',
-                        bottom: '20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        color: 'white',
-                        padding: '10px 20px',
-                        borderRadius: '25px',
-                        fontSize: '14px',
-                        zIndex: 1001
-                      }}>
-                        ← Swipe right to return to articles
-                      </div>
-                    </div>
-                  ) : (
-                    // Original News Item View
+                    // Original News Item View - Everything stays the same
                     <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
-                      console.log('Clicked story:', story.title);
-                      // Toggle detailed text to show full article
+                      // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                     }}>
                     {/* News Image - With Rounded Corners and Spacing */}
@@ -2333,47 +2228,53 @@ export default function Home() {
                           onTouchMove={onTouchMove}
                           onTouchEnd={onTouchEnd}
                           style={{ cursor: 'pointer' }}
-                          onClick={(e) => {
-                            // Only prevent click if it was a swipe, not a tap
-                            if (touchStart && touchEnd) {
-                              const distance = Math.abs(touchStart - touchEnd);
-                              if (distance > minSwipeDistance) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                return;
-                              }
-                            }
-                            // Allow normal click to pass through to parent
-                          }}
                         >
-                          {!globalShowBullets ? (
-                            // Show Summary Paragraph
-                            <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
-                          ) : (
-                            // Show Summary Bullet Points
-                            <div style={{ margin: 0 }}>
-                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                                <ul style={{
-                                  margin: 0,
-                                  paddingLeft: '20px',
-                                  listStyleType: 'disc'
-                                }}>
-                                  {story.summary_bullets.map((bullet, i) => (
-                                    <li key={i} style={{
-                                      marginBottom: '8px',
-                                      fontSize: '16px',
-                                      lineHeight: '1.6',
-                                      fontWeight: '600',
-                                      color: '#1a1a1a'
-                                    }}>
-                                      {renderBoldText(bullet, story.category)}
-                                    </li>
-                                  ))}
-                                </ul>
+                          {/* Show Only Bullet Text */}
+                          <div style={{ margin: 0 }}>
+                            {story.summary_bullets && story.summary_bullets.length > 0 ? (
+                              <ul style={{
+                                margin: 0,
+                                paddingLeft: '20px',
+                                listStyleType: 'disc'
+                              }}>
+                                {story.summary_bullets.map((bullet, i) => (
+                                  <li key={i} style={{
+                                    marginBottom: '8px',
+                                    fontSize: '16px',
+                                    lineHeight: '1.6',
+                                    fontWeight: '600',
+                                    color: '#1a1a1a'
+                                  }}>
+                                    {renderBoldText(bullet, story.category)}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                No bullet points available
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Show Detailed Article Text Below Bullets - Scrollable */}
+                          {showDetailedText[index] && (
+                            <div style={{
+                              marginTop: '16px',
+                              marginBottom: '100px',
+                              fontSize: '16px',
+                              lineHeight: '1.6',
+                              color: '#1a1a1a',
+                              opacity: 1,
+                              transform: 'translateY(0)',
+                              transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                              animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                            }}>
+                              {story.detailed_text ? (
+                                <div dangerouslySetInnerHTML={{
+                                  __html: story.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                }} />
                               ) : (
-                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
-                                  No bullet points available
-                                </p>
+                                <p style={{ marginBottom: '20px' }}>{story.summary}</p>
                               )}
                             </div>
                           )}
@@ -2383,18 +2284,19 @@ export default function Home() {
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
-                        position: 'fixed',
-                        bottom: '32px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
+                        position: showDetailedText[index] ? 'relative' : 'fixed',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
+                        left: showDetailedText[index] ? 'auto' : '50%',
+                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
                         maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
-                        zIndex: '50'
+                        zIndex: '50',
+                        marginTop: showDetailedText[index] ? '0' : '0'
                       }}>
                         
-                        {/* Fixed Position Details/Timeline Section */}
+                        {/* Details/Timeline Section - At end of article when detailed text is showing */}
                         <div 
                           className="news-meta" 
                         style={{ 
@@ -2836,7 +2738,6 @@ export default function Home() {
                       </div> {/* Close fixed position container */}
                     </div>
                   </div>
-                  )} {/* Close conditional rendering for original news item view */}
                 </div>
               ) : null}
             </div>
