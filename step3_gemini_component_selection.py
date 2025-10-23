@@ -99,14 +99,51 @@ Deaths/Casualties → ["details"] (if single event) or ["details", "map"] (if ge
 OUTPUT FORMAT - RETURN ONLY THESE EXACT KEYWORDS:
 {
   "components": ["map", "details"],
+  "emoji": "🌍",
   "graph_type": null,
   "graph_data_needed": null,
   "map_locations": null
 }
 
+EMOJI SELECTION:
+Choose ONE emoji that best represents the story's main topic:
+
+📰 News & Media: 📰 📻 📺 🗞️
+🌍 Geography & Travel: 🌍 🌎 🌏 🗺️ ✈️ 🚢
+🏛️ Politics & Government: 🏛️ ⚖️ 🗳️ 🏴 🏳️
+💼 Business & Economy: 💼 💰 📈 📉 💵 💶 💷 💴 🏢 🏦
+🔬 Science & Research: 🔬 🧬 🧪 🔭 🌌 ⚗️
+💊 Health & Medicine: 💊 🏥 🩺 💉 🧬 🦠
+🌱 Environment & Climate: 🌱 ♻️ 🌳 🌊 ⛰️ 🌡️ ⚡ 🌤️ 🌧️ 🌪️ 🔥
+⚽ Sports: ⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🥊 🏆 🥇
+🎭 Arts & Entertainment: 🎭 🎬 🎵 🎨 📚 🎪 🎤
+💻 Technology: 💻 📱 🤖 🔌 💾 🖥️ ⌨️ 🖱️ 📡
+🚗 Transportation: 🚗 🚙 🚕 ✈️ 🚂 🚁 🚢 🚀
+🏗️ Infrastructure: 🏗️ 🏘️ 🌉 🏭 ⚡
+⚠️ Disasters & Emergencies: 🔥 🌊 ⚡ 🌪️ 💥 ⚠️ 🚨
+⚔️ Conflicts & Security: ⚔️ 🛡️ 💣 🚨 👮 🔫
+🎓 Education: 🎓 📚 🏫 ✏️ 📖
+👨‍👩‍👧 Society & Culture: 👥 🤝 ❤️ 👶 👴 ⚡
+🍔 Food & Agriculture: 🍔 🌾 🍎 🐄 🌽 🥖
+⚖️ Law & Justice: ⚖️ 👨‍⚖️ 🏛️ 📜
+🏆 Awards & Achievements: 🏆 🥇 🥈 🥉 ⭐ 🎖️
+💀 Death & Tragedy: 💀 ⚰️ 🕊️ 🖤
+🎉 Celebrations & Events: 🎉 🎊 🎈 🎁 🎂
+🔐 Privacy & Security: 🔐 🔒 🔑 🛡️ 👁️
+
+Examples:
+- "Earthquake in Turkey" → 🌊
+- "Fed raises interest rates" → 📈
+- "SpaceX launches satellite" → 🚀
+- "Climate summit in Paris" → 🌍
+- "Apple announces iPhone 16" → 📱
+- "World Cup final" → ⚽
+- "Nobel Prize winner announced" → 🏆
+
 CRITICAL RULES:
 1. Use ONLY these exact words: "timeline", "details", "graph", "map"
 2. NO descriptive names like "Timeline of events" - just "timeline"
+3. Choose ONE emoji that best captures the story's essence
 3. Return 1-4 components (choose ONLY relevant ones)
 4. Choose the MOST RELEVANT components for the title
 5. Quality over quantity - better to have 1 perfect component than 2 mediocre ones
@@ -370,6 +407,7 @@ Return ONLY valid JSON with exact component keywords."""
         if any(word in title_lower for word in ['earthquake', 'hurricane', 'flood', 'strikes', 'war', 'conflict', 'border', 'country']):
             return {
                 'components': ['map', 'details'],
+                'emoji': '🌍',
                 'graph_type': None,
                 'graph_data_needed': None,
                 'map_locations': None
@@ -379,6 +417,7 @@ Return ONLY valid JSON with exact component keywords."""
         elif any(word in title_lower for word in ['rate', 'price', 'percent', 'increases', 'falls', 'stock', 'market', 'election']):
             return {
                 'components': ['graph', 'details'],
+                'emoji': '📈',
                 'graph_type': 'line',
                 'graph_data_needed': 'historical data',
                 'map_locations': None
@@ -388,6 +427,7 @@ Return ONLY valid JSON with exact component keywords."""
         elif any(word in title_lower for word in ['announces', 'launches', 'reveals', 'iphone', 'product']):
             return {
                 'components': ['details', 'timeline'],
+                'emoji': '📱',
                 'graph_type': None,
                 'graph_data_needed': None,
                 'map_locations': None
@@ -397,6 +437,7 @@ Return ONLY valid JSON with exact component keywords."""
         else:
             return {
                 'components': ['timeline', 'details'],
+                'emoji': '📰',
                 'graph_type': None,
                 'graph_data_needed': None,
                 'map_locations': None
@@ -445,6 +486,7 @@ Return ONLY valid JSON with exact component keywords."""
                 # Add selection to article
                 article_with_components = article.copy()
                 article_with_components['components'] = selection['components']  # Fixed: was 'selected_components'
+                article_with_components['emoji'] = selection.get('emoji', '📰')  # NEW: Extract emoji, default to 📰
                 article_with_components['graph_type'] = selection.get('graph_type')
                 article_with_components['graph_data_needed'] = selection.get('graph_data_needed')
                 article_with_components['map_locations'] = selection.get('map_locations')
