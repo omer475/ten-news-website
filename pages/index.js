@@ -15,184 +15,6 @@ export default function Home() {
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
-  // Removed globalShowBullets - only showing summary text now
-  const [showDetailedArticle, setShowDetailedArticle] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState(null);
-  const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
-
-  // Swipe handling for summary/bullet toggle and detailed article navigation
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e) => {
-    // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
-      return;
-    }
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e) => {
-    // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
-      return;
-    }
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = (e) => {
-    // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
-      return;
-    }
-    
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe || isRightSwipe) {
-      // Prevent click event when swiping
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // If detailed article is open, swipe left-to-right closes it
-      if (showDetailedArticle && isRightSwipe) {
-        setShowDetailedArticle(false);
-        setSelectedArticle(null);
-        return;
-      }
-      
-      // If detailed text is showing for current article, swipe right returns to summary
-      if (showDetailedText[currentIndex] && isRightSwipe) {
-        setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
-        return;
-      }
-      
-      // No more bullet/summary toggle - only detailed text navigation
-    }
-  };
-
-  // Function to open detailed article
-  const openDetailedArticle = (story) => {
-    setSelectedArticle(story);
-    setShowDetailedArticle(true);
-  };
-
-  // Function to close detailed article
-  const closeDetailedArticle = () => {
-    setShowDetailedArticle(false);
-    setSelectedArticle(null);
-  };
-
-  // Function to toggle detailed text for current article
-  const toggleDetailedText = (storyIndex) => {
-    setShowDetailedText(prev => ({ ...prev, [storyIndex]: !prev[storyIndex] }));
-  };
-
-  // Helper function to count available components for a story
-  const getAvailableComponentsCount = (story) => {
-    let count = 0;
-    if (story.details && story.details.length > 0) count++;
-    if (story.timeline && story.timeline.length > 0) count++;
-    if (story.map) count++;
-    if (story.graph) count++;
-    return count;
-  };
-
-  // Helper function to get available information types for a story
-  const getAvailableInformationTypes = (story) => {
-    const types = [];
-    if (story.details && story.details.length > 0) types.push('details');
-    if (story.timeline && story.timeline.length > 0) types.push('timeline');
-    if (story.map) types.push('map');
-    if (story.graph) types.push('graph');
-    return types;
-  };
-
-  // Helper function to get current information type for a story
-  const getCurrentInformationType = (story, index) => {
-    if (showTimeline[index]) return 'timeline';
-    if (showDetails[index]) return 'details';
-    if (showMap[index]) return 'map';
-    if (showGraph[index]) return 'graph';
-    return 'details'; // default
-  };
-
-  // Helper function to switch to next information type
-  const switchToNextInformationType = (story, index) => {
-    const availableTypes = getAvailableInformationTypes(story);
-    const currentType = getCurrentInformationType(story, index);
-    const currentIndex = availableTypes.indexOf(currentType);
-    const nextIndex = (currentIndex + 1) % availableTypes.length;
-    const nextType = availableTypes[nextIndex];
-
-    // Reset all states
-    setShowTimeline(prev => ({ ...prev, [index]: false }));
-    setShowDetails(prev => ({ ...prev, [index]: false }));
-    setShowMap(prev => ({ ...prev, [index]: false }));
-    setShowGraph(prev => ({ ...prev, [index]: false }));
-
-    // Set the new state
-    switch (nextType) {
-      case 'timeline':
-        setShowTimeline(prev => ({ ...prev, [index]: true }));
-        break;
-      case 'details':
-        setShowDetails(prev => ({ ...prev, [index]: true }));
-        break;
-      case 'map':
-        setShowMap(prev => ({ ...prev, [index]: true }));
-        break;
-      case 'graph':
-        setShowGraph(prev => ({ ...prev, [index]: true }));
-        break;
-    }
-  };
-
-  // Category color mapping system
-  const getCategoryColors = (category) => {
-    if (!category) category = 'General';
-    
-    // Normalize category: take first if multiple, convert to proper case for matching
-    const normalizedCategory = category
-      .split(',')[0]  // Take first category if multiple (e.g., "Business, Technology" → "Business")
-      .trim()
-      .toLowerCase();
-    
-    const colorMap = {
-      // User-specified colors
-      'world': '#1E3A8A',              // Navy Blue - International news, global affairs
-      'politics': '#DC2626',           // Crimson Red - Government, elections, policy
-      'business': '#059669',           // Emerald Green - Economy, markets, finance
-      'technology': '#9333EA',         // Bright Purple - Tech industry, innovation
-      'science': '#06B6D4',            // Cyan - Research, discoveries, environmental issues
-      'health': '#EC4899',             // Pink - Medicine, wellness, public health
-      'sports': '#F97316',             // Vibrant Orange - Athletics, competitions
-      'lifestyle': '#EAB308',          // Golden Yellow - Fashion, food, travel
-      
-      // Additional categories
-      'breaking news': '#DC2626',      // Crimson Red (same as Politics)
-      'breaking': '#DC2626',           // Crimson Red
-      'environment': '#06B6D4',        // Cyan (same as Science)
-      'entertainment': '#EC4899',      // Pink (same as Health)
-      'economy': '#059669',            // Emerald Green (same as Business)
-      'general': '#607D8B'             // Blue Grey - Default
-    };
-    
-    const baseColor = colorMap[normalizedCategory] || '#607D8B'; // Default to Blue Grey
-    
-    return {
-      primary: baseColor,
-      light: `${baseColor}20`,         // 20% opacity
-      lighter: `${baseColor}08`,       // 8% opacity - VERY LIGHT for background
-      shadow: `${baseColor}30`         // 30% opacity for shadow
-    };
-  };
 
   // Initialize default component display
   useEffect(() => {
@@ -291,26 +113,13 @@ export default function Home() {
             
              // Convert articles to story format
              newsData.articles.forEach((article, index) => {
-               // Process category: take first if multiple, capitalize properly
-               const processedCategory = article.category ? 
-                 article.category
-                   .split(',')[0]           // Take first category if multiple
-                   .trim()                  // Remove whitespace
-                   .split(' ')              // Split words
-                   .map(word => 
-                     word.charAt(0).toUpperCase() +  // Capitalize first letter
-                     word.slice(1).toLowerCase()     // Lowercase rest
-                   )
-                   .join(' ')               // Join back
-                 : 'General';               // Default fallback
-               
                const storyData = {
                  type: 'news',
                  number: article.rank || (index + 1),
-                 category: processedCategory,
+                 category: (article.category || 'WORLD NEWS').toUpperCase(),
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
-                 detailed_text: article.detailed_text || 'Article text will appear here.',
+                 summary: article.summary || 'News summary will appear here.',
                  summary_bullets: article.summary_bullets || [],
                  details: article.details || [],
                  source: article.source || 'Today+',
@@ -524,12 +333,6 @@ export default function Home() {
     const handleTouchEnd = (e) => {
       if (isTransitioning) return;
       
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen) {
-        return; // Don't allow story navigation when article is open
-      }
-      
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
       
@@ -560,12 +363,6 @@ export default function Home() {
     const handleWheel = (e) => {
       if (isTransitioning) return;
       
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen) {
-        return; // Don't allow story navigation when article is open
-      }
-      
       if (Math.abs(e.deltaY) > 30) {
         // Allow backward navigation, but prevent forward navigation when paywall is active
         const isPaywallActive = !user && currentIndex >= 5;
@@ -591,12 +388,6 @@ export default function Home() {
 
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
-
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen && (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft')) {
-        return; // Don't allow story navigation when article is open
-      }
 
       const isPaywallActive = !user && currentIndex >= 5;
       
@@ -639,7 +430,7 @@ export default function Home() {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, stories.length, showDetailedText, user]);
+  }, [currentIndex, stories.length]);
 
   // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
   useEffect(() => {
@@ -1192,7 +983,7 @@ export default function Home() {
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: ${darkMode ? '#f9fafb' : '#111827'};
+          color: ${darkMode ? '#f9fafb' : '#000000'};
           line-height: 1.2;
           margin: 0;
         }
@@ -1589,17 +1380,6 @@ export default function Home() {
           }
         }
 
-        @keyframes slideInFromBottom {
-          0% {
-            opacity: 0;
-            transform: translateY(100vh);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
         .timeline-item::before {
           content: '';
           position: absolute;
@@ -1679,79 +1459,6 @@ export default function Home() {
 
         .news-meta {
           position: relative;
-        }
-
-        .toggle-switch {
-          display: flex;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 6px;
-          padding: 2px;
-          gap: 2px;
-        }
-
-        .toggle-option {
-          background: none;
-          border: none;
-          padding: 5px 8px;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 24px;
-        }
-
-        .toggle-option.active {
-          background: #ffffff;
-        }
-
-        .toggle-option.active .grid-square,
-        .toggle-option.active .list-dot,
-        .toggle-option.active .list-bar {
-          background: #000000;
-        }
-
-        .grid-icon {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1px;
-          width: 14px;
-          height: 14px;
-        }
-
-        .grid-square {
-          background: #666666;
-          border-radius: 1px;
-        }
-
-        .list-icon {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          width: 14px;
-          height: 14px;
-        }
-
-        .list-line {
-          display: flex;
-          align-items: center;
-          gap: 2px;
-        }
-
-        .list-dot {
-          width: 2px;
-          height: 2px;
-          background: #666666;
-          border-radius: 50%;
-        }
-
-        .list-bar {
-          width: 8px;
-          height: 1px;
-          background: #666666;
-          border-radius: 1px;
         }
 
 
@@ -1955,11 +1662,13 @@ export default function Home() {
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
-                    // Original News Item View - Everything stays the same
-                    <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
-                      // Toggle detailed text to show article under summary
-                      toggleDetailedText(index);
-                    }}>
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                    console.log('Clicked story:', story.title);
+                    // Navigate directly to source URL
+                    if (story.url && story.url !== '#') {
+                      window.open(story.url, '_blank');
+                    }
+                  }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -1967,12 +1676,12 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(30vh - 3px)',
+                      height: 'calc(50vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'flex',
-                      alignItems: 'center',
+                      alignItems: 'flex-end',
                       justifyContent: 'center',
                       zIndex: '1',
                       borderRadius: '12px',
@@ -1986,7 +1695,10 @@ export default function Home() {
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
-                            objectPosition: 'center'
+                            objectPosition: 'center',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0
                           }}
                           onLoad={() => {
                             console.log('✅ Image loaded successfully:', story.urlToImage);
@@ -1995,17 +1707,6 @@ export default function Home() {
                             console.error('❌ Image failed to load:', story.urlToImage);
                             console.error('   Story title:', story.title);
                             e.target.style.display = 'none';
-                            e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                            e.target.parentElement.innerHTML = `
-                              <div style="
-                                font-size: 72px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                width: 100%;
-                                height: 100%;
-                              ">${story.emoji || '📰'}</div>
-                            `;
                           }}
                         />
                       ) : (
@@ -2015,192 +1716,115 @@ export default function Home() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           width: '100%',
-                          height: '100%'
+                          height: '100%',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
                         }}>
                           {story.emoji || '📰'}
                         </div>
                       )}
+                      
+                      {/* Title with subtle blur background - inside photo */}
+                      <div className="title-overlay" style={{
+                        position: 'relative',
+                        width: '100%',
+                        padding: '24px',
+                        background: 'linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent)',
+                        backdropFilter: 'blur(3px)',
+                        WebkitBackdropFilter: 'blur(3px)',
+                        zIndex: 2,
+                        transition: 'all 0.6s ease'
+                      }}>
+                        <h3 style={{ 
+                          margin: 0,
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          lineHeight: '1.3',
+                          letterSpacing: '-0.3px',
+                          color: '#ffffff',
+                          textShadow: '0 2px 12px rgba(0, 0, 0, 0.5)'
+                        }}>{story.title}</h3>
+                      </div>
                     </div>
                     
                     {/* Content Area - Starts After Image */}
-                      <div className="news-content" style={{
-                        position: 'relative',
-                        paddingTop: 'calc(30vh - 20px)',
-                        paddingLeft: '8px',
-                        paddingRight: '8px',
-                        zIndex: '2'
-                      }}>
+                    <div className="news-content" style={{
+                      position: 'relative',
+                      paddingTop: 'calc(50vh + 12px)',
+                      paddingLeft: '24px',
+                      paddingRight: '24px',
+                      zIndex: '2'
+                    }}>
                       
-                      {/* Category Badge and Timeline Button Row */}
+                      {/* Toggle Switch Row */}
                       <div style={{
                         display: 'flex',
-                        justifyContent: 'space-between',
+                        justifyContent: 'flex-end',
                         alignItems: 'center',
-                        marginBottom: '2px',
-                        marginTop: '-12px'
+                        marginBottom: '8px'
                       }}>
-                        {/* Category Badge */}
-                        <div style={{
-                          display: 'inline-block',
-                          fontSize: '9px',
-                          fontWeight: '600',
-                          letterSpacing: '0.5px',
-                          textTransform: 'uppercase',
-                          padding: '3px 6px',
-                          borderRadius: '3px',
-                          background: getCategoryColors(story.category).lighter,
-                          color: getCategoryColors(story.category).primary
-                        }}>
-                          {story.emoji} {story.category}
+                        {/* Toggle Switch */}
+                        <div className="toggle-switch">
+                          {/* Grid Option (Details) */}
+                            <button
+                            className={`toggle-option ${!showTimeline[index] ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              console.log('Grid option clicked for story', index);
+                              setShowTimeline(prev => ({
+                                ...prev,
+                                [index]: false
+                              }));
+                            }}
+                            >
+                              <div className="grid-icon">
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                                <div className="grid-square"></div>
+                              </div>
+                            </button>
+
+                          {/* List Option (Timeline) */}
+                            <button
+                              className={`toggle-option ${showTimeline[index] ? 'active' : ''}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              console.log('List option clicked for story', index);
+                              
+                              // Switch to timeline view
+                              setShowTimeline(prev => ({
+                                ...prev,
+                                [index]: true
+                              }));
+                              
+                              // Toggle timeline expansion
+                              setExpandedTimeline(prev => ({
+                                ...prev,
+                                [index]: !prev[index]
+                              }));
+                            }}
+                            >
+                              <div className="list-icon">
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                                <div className="list-line">
+                                  <div className="list-dot"></div>
+                                  <div className="list-bar"></div>
+                                </div>
+                              </div>
+                            </button>
                         </div>
-
-                        {/* Dynamic Information Switch - Only show if multiple information types available */}
-                        {getAvailableComponentsCount(story) > 1 && (
-                          <div className="toggle-switch">
-                            {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
-                              const isActive = getCurrentInformationType(story, index) === infoType;
-                              return (
-                                <button
-                                  key={infoType}
-                                  className={`toggle-option ${isActive ? 'active' : ''}`}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log(`${infoType} option clicked for story`, index);
-                                    
-                                    // Reset all states
-                                    setShowTimeline(prev => ({ ...prev, [index]: false }));
-                                    setShowDetails(prev => ({ ...prev, [index]: false }));
-                                    setShowMap(prev => ({ ...prev, [index]: false }));
-                                    setShowGraph(prev => ({ ...prev, [index]: false }));
-
-                                    // Set the selected state
-                                    switch (infoType) {
-                                      case 'timeline':
-                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                      case 'details':
-                                        setShowDetails(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                      case 'map':
-                                        setShowMap(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                      case 'graph':
-                                        setShowGraph(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                    }
-                                  }}
-                                >
-                                  {infoType === 'details' && (
-                                    <div className="grid-icon">
-                                      <div className="grid-square"></div>
-                                      <div className="grid-square"></div>
-                                      <div className="grid-square"></div>
-                                      <div className="grid-square"></div>
-                                    </div>
-                                  )}
-                                  {infoType === 'timeline' && (
-                                    <div className="list-icon">
-                                      <div className="list-line">
-                                        <div className="list-dot"></div>
-                                        <div className="list-bar"></div>
-                                      </div>
-                                      <div className="list-line">
-                                        <div className="list-dot"></div>
-                                        <div className="list-bar"></div>
-                                      </div>
-                                      <div className="list-line">
-                                        <div className="list-dot"></div>
-                                        <div className="list-bar"></div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {infoType === 'map' && (
-                                    <div className="map-icon" style={{
-                                      width: '14px',
-                                      height: '14px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center'
-                                    }}>
-                                      <div style={{
-                                        width: '10px',
-                                        height: '10px',
-                                        border: `2px solid ${isActive ? '#000000' : '#666666'}`,
-                                        borderRadius: '50%',
-                                        position: 'relative'
-                                      }}>
-                                        <div style={{
-                                          position: 'absolute',
-                                          top: '50%',
-                                          left: '50%',
-                                          transform: 'translate(-50%, -50%)',
-                                          width: '4px',
-                                          height: '4px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '50%'
-                                        }}></div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {infoType === 'graph' && (
-                                    <div className="graph-icon" style={{
-                                      width: '14px',
-                                      height: '14px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center'
-                                    }}>
-                                      <div style={{
-                                        width: '12px',
-                                        height: '8px',
-                                        display: 'flex',
-                                        alignItems: 'end',
-                                        gap: '1px'
-                                      }}>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '3px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '6px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '4px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '8px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
-                      
-                      {/* Title - Large and Prominent, Higher Position */}
-                      <h3 className="news-title" style={{ 
-                        marginTop: '0',
-                        marginBottom: '10px',
-                        fontSize: '26px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        letterSpacing: '-0.5px'
-                      }}>{story.title}</h3>
                       
                       {/* Summary/Bullet Points - Swipeable */}
                       <div 
@@ -2263,132 +1887,102 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        <div 
-                          className="summary-content"
-                          onTouchStart={onTouchStart}
-                          onTouchMove={onTouchMove}
-                          onTouchEnd={onTouchEnd}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          {/* Show Only Bullet Text */}
-                          <div style={{ margin: 0 }}>
-                            {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                              <ul style={{
-                                margin: 0,
-                                paddingLeft: '20px',
-                                listStyleType: 'disc'
-                              }}>
-                                {story.summary_bullets.map((bullet, i) => (
-                                  <li key={i} style={{
-                                    marginBottom: '8px',
-                                    fontSize: '16px',
-                                    lineHeight: '1.6',
-                                    fontWeight: '600',
-                                    color: '#1a1a1a'
-                                  }}>
-                                    {renderBoldText(bullet, story.category)}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
-                                No bullet points available
-                              </p>
-                            )}
-                          </div>
-                          
-                          {/* Show Detailed Article Text Below Bullets - Scrollable */}
-                          {showDetailedText[index] && (
-                            <div 
-                              style={{
-                                marginTop: '16px',
-                                marginBottom: '100px',
-                                fontSize: '16px',
-                                lineHeight: '1.8',
-                                color: '#1a1a1a',
-                                opacity: 1,
-                                transform: 'translateY(0)',
-                                transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                              }}
-                              onTouchStart={(e) => {
-                                const startX = e.touches[0].clientX;
-                                const startY = e.touches[0].clientY;
-                                let hasMoved = false;
-                                
-                                const handleTouchMove = (moveEvent) => {
-                                  const currentX = moveEvent.touches[0].clientX;
-                                  const diffX = Math.abs(currentX - startX);
-                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
-                                  
-                                  if (diffX > 10 || diffY > 10) {
-                                    hasMoved = true;
-                                  }
-                                };
-                                
-                                const handleTouchEnd = (endEvent) => {
-                                  const endX = endEvent.changedTouches[0].clientX;
-                                  const diffX = endX - startX;
-                                  
-                                  // Swipe right to close article
-                                  if (hasMoved && diffX > 100) {
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    toggleDetailedText(index); // Close article
-                                  }
-                                  
-                                  document.removeEventListener('touchmove', handleTouchMove);
-                                  document.removeEventListener('touchend', handleTouchEnd);
-                                };
-                                
-                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
-                              }}
-                            >
-                              <div dangerouslySetInnerHTML={{
-                                __html: story.detailed_text
-                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                  .split('. ')
-                                  .reduce((acc, sentence, i, arr) => {
-                                    // Group every 2-3 sentences into a paragraph
-                                    if (i % 3 === 0) {
-                                      const paragraph = arr.slice(i, i + 3).join('. ') + (i + 3 < arr.length ? '.' : '');
-                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + paragraph + '</p>';
-                                    } else if (i % 3 === 1 && i === arr.length - 1) {
-                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + sentence + '</p>';
-                                    }
-                                    return acc;
-                                  }, '')
-                              }} />
+                        <div className="summary-content">
+                          {!showBulletPoints[index] ? (
+                            // Show Summary Paragraph
+                            <p style={{ margin: 0 }}>{renderBoldText(story.summary, story.category)}</p>
+                          ) : (
+                            // Show Summary Bullet Points
+                            <div style={{ margin: 0 }}>
+                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
+                                <ul style={{
+                                  margin: 0,
+                                  paddingLeft: '20px',
+                                  listStyleType: 'disc'
+                                }}>
+                                  {story.summary_bullets.map((bullet, i) => (
+                                    <li key={i} style={{
+                                      marginBottom: '8px',
+                                      fontSize: '16px',
+                                      lineHeight: '1.6'
+                                    }}>
+                                      {renderBoldText(bullet, story.category)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                  No bullet points available
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
                         
+                        {/* Mode indicator and swipe hint */}
+                        {story.summary_bullets && story.summary_bullets.length > 0 && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginTop: '8px'
+                          }}>
+                            {/* Current mode indicator */}
+                            <div style={{
+                              fontSize: '9px',
+                              color: '#3b82f6',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              background: 'rgba(59, 130, 246, 0.1)',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              opacity: '0.8'
+                            }}>
+                              {!showBulletPoints[index] ? 'Paragraph' : 'Bullets'}
+                            </div>
+                            
+                            {/* Swipe/keyboard indicator */}
+                            <div style={{
+                              fontSize: '9px',
+                              color: '#cbd5e1',
+                              fontWeight: '600',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              opacity: '0.6'
+                            }}>
+                              <span>←</span>
+                              <span>Swipe</span>
+                              <span>→</span>
+                              <span style={{ marginLeft: '8px', fontSize: '8px' }}>or press S</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
-                        position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '32px',
-                        left: showDetailedText[index] ? '0' : '50%',
-                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
+                        position: 'fixed',
+                        bottom: '42px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: showDetailedText[index] ? '950px' : '950px',
+                        maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
-                        zIndex: '50',
-                        marginTop: showDetailedText[index] ? '0' : '0',
-                        marginLeft: showDetailedText[index] ? 'auto' : '0',
-                        marginRight: showDetailedText[index] ? 'auto' : '0'
+                        zIndex: '50'
                       }}>
                         
-                        {/* Details/Timeline Section - At end of article when detailed text is showing */}
+                        {/* Fixed Position Details/Timeline Section */}
                         <div 
                           className="news-meta" 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
-                          cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
+                          cursor: 'pointer',
                           minHeight: '85px',
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
@@ -2397,12 +1991,9 @@ export default function Home() {
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
                             border: 'none',
                             borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
+                            boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
-                          // Only handle if there are multiple information types
-                          if (getAvailableComponentsCount(story) <= 1) return;
-                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
@@ -2436,23 +2027,23 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only handle horizontal swipes for information switching
+                            // Only handle horizontal swipes for timeline
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              console.log('Horizontal information swipe detected for story', index);
+                              console.log('Horizontal timeline swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              switchToNextInformationType(story, index);
+                              toggleTimeline(index);
                             } else if (!hasMoved) {
                               // Check if the touch target is the expand icon
                               const touchTarget = endEvent.target;
                               const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                               
                               if (!isExpandIcon) {
-                                // Single tap switches information type
-                                console.log('Information box tap detected for story', index);
+                                // Single tap toggles timeline only if not on expand icon
+                                console.log('Timeline tap detected for story', index);
                                 endEvent.preventDefault();
                                 endEvent.stopPropagation();
-                                switchToNextInformationType(story, index);
+                                toggleTimeline(index);
                               }
                             }
                             // If it's vertical swipe, let it pass through for story navigation
@@ -2483,7 +2074,7 @@ export default function Home() {
                           return (
                             <div key={i} className="news-detail-item">
                               <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: '#1E3A8A' }}>{mainValue}</div>
+                              <div className="news-detail-value">{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                             </div>
                           );
@@ -2718,8 +2309,8 @@ export default function Home() {
                         
                   </div>
                       
-                      {/* Component Navigation Dots - Only show if multiple components available */}
-                      {getAvailableComponentsCount(story) > 1 && (
+                      {/* Component Navigation Dots */}
+                      {(story.details || story.timeline || story.map || story.graph) && (
                         <div style={{
                           display: 'flex',
                           justifyContent: 'center',
@@ -2865,197 +2456,10 @@ export default function Home() {
         {/* Email Confirmation Modal */}
         {emailConfirmation && (
           <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)}>
-            <EmailConfirmation 
+            <EmailConfirmation
               email={emailConfirmation.email}
               onBack={() => setEmailConfirmation(null)}
             />
-          </div>
-        )}
-
-        {/* Detailed Article Overlay */}
-        {showDetailedArticle && selectedArticle && (
-          <div 
-            className="detailed-article-overlay"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.9)',
-              zIndex: 1000,
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            {/* Header with close button */}
-            <div style={{
-              position: 'sticky',
-              top: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-              padding: '16px 20px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              zIndex: 1001
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  background: getCategoryColors(selectedArticle.category).lighter,
-                  color: getCategoryColors(selectedArticle.category).primary
-                }}>
-                  {selectedArticle.emoji} {selectedArticle.category}
-                </div>
-              </div>
-              
-              <button
-                onClick={closeDetailedArticle}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '40px',
-                  height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'white',
-                  fontSize: '18px'
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Scrollable content */}
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '20px',
-              color: 'white'
-            }}>
-              {/* Article title */}
-              <h1 style={{
-                fontSize: '24px',
-                fontWeight: '700',
-                lineHeight: '1.3',
-                margin: '0 0 20px 0',
-                color: 'white'
-              }}>
-                {selectedArticle.title}
-              </h1>
-
-              {/* Detailed article text */}
-              <div style={{
-                fontSize: '16px',
-                lineHeight: '1.6',
-                marginBottom: '30px',
-                color: 'rgba(255, 255, 255, 0.9)'
-              }}>
-                <div dangerouslySetInnerHTML={{
-                  __html: selectedArticle.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                }} />
-              </div>
-
-              {/* Additional components if available */}
-              {selectedArticle.timeline && selectedArticle.timeline.length > 0 && (
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    marginBottom: '16px',
-                    color: 'white',
-                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
-                    paddingBottom: '8px'
-                  }}>
-                    Timeline
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {selectedArticle.timeline.map((event, index) => (
-                      <div key={index} style={{
-                        display: 'flex',
-                        gap: '12px',
-                        alignItems: 'flex-start'
-                      }}>
-                        <div style={{
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          minWidth: '80px',
-                          flexShrink: 0
-                        }}>
-                          {event.date}
-                        </div>
-                        <div style={{
-                          fontSize: '14px',
-                          lineHeight: '1.4',
-                          color: 'rgba(255, 255, 255, 0.9)'
-                        }}>
-                          {event.event}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedArticle.details && selectedArticle.details.length > 0 && (
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    marginBottom: '16px',
-                    color: 'white',
-                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
-                    paddingBottom: '8px'
-                  }}>
-                    Key Details
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {selectedArticle.details.map((detail, index) => (
-                      <div key={index} style={{
-                        fontSize: '14px',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        padding: '8px 12px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '6px'
-                      }}>
-                        {detail}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Swipe instruction */}
-              <div style={{
-                textAlign: 'center',
-                marginTop: '40px',
-                padding: '20px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.7)'
-              }}>
-                Swipe left to right to return to articles
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -3322,4 +2726,4 @@ function EmailConfirmation({ email, onBack }) {
       </div>
     </div>
   );
-}// Force deployment - Thu Oct 23 15:14:36 BST 2025
+}
