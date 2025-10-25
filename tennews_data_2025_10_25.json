@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "📊",
+      "title": "US Inflation Climbs to 3% as Consumer Prices Rise",
+      "summary": "US **inflation** reached **3%** in September, up from **2.9%** in August but below analyst forecasts of **3.1%**. The Labor Department report showed continued price increases, with **coffee costs** surging nearly 19% compared to last year.",
+      "details": [
+        "Monthly increase: 0.4%",
+        "Core inflation: 4.1%",
+        "Food prices: Up 3.7% annually"
+      ],
+      "category": "Business",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/cgkzgrmvdrno",
+      "timeline": [
+        {
+          "date": "June 2022",
+          "event": "US inflation peaked at 9.1% record high"
+        },
+        {
+          "date": "July 2023",
+          "event": "Fed raised interest rates to 5.5%"
+        },
+        {
+          "date": "Today",
+          "event": "September inflation reaches 3%, coffee prices surge"
+        },
+        {
+          "date": "December 2023",
+          "event": "Fed expected to maintain current interest rates"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "💰",
+      "title": "JPMorgan Makes Historic Move to Accept Crypto Collateral",
+      "summary": "**JPMorgan Chase** announced plans to accept **Bitcoin** and **Ethereum** as collateral, marking a significant shift in the banking giant's cryptocurrency strategy. The move represents a major departure from CEO **Jamie Dimon's** previous skepticism toward digital assets.",
+      "details": [
+        "Market cap: $390B",
+        "Global branches: 4,700",
+        "Crypto trading volume: $2.1T annually"
+      ],
+      "category": "Business",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-10-24/jpmorgan-to-allow-bitcoin-ether-as-collateral-in-crypto-push",
+      "timeline": [
+        {
+          "date": "September 13, 2017",
+          "event": "Jamie Dimon calls Bitcoin 'a fraud'"
+        },
+        {
+          "date": "February 14, 2019",
+          "event": "JPMorgan launches first bank-backed cryptocurrency JPM Coin"
+        },
+        {
+          "date": "Today",
+          "event": "JPMorgan accepts Bitcoin and Ethereum as collateral"
+        },
+        {
+          "date": "Q2 2024",
+          "event": "Expected expansion to additional cryptocurrency assets"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "🔬",
+      "title": "Google Quantum Computer Achieves Major Computing Breakthrough",
+      "summary": "**Google** has developed a new **quantum algorithm** that outperforms traditional supercomputers in real-world applications. The breakthrough demonstrates significant advancement in **quantum computing** technology, marking a milestone in computational capabilities.",
+      "details": [
+        "Processing speed: 100 qubits",
+        "Error rate: Below 0.1%",
+        "Development time: 18 months"
+      ],
+      "category": "Technology",
+      "source": "Phys.org",
+      "url": "https://phys.org/news/2025-10-google-latest-quantum-algorithm-outperform.html",
+      "timeline": [
+        {
+          "date": "September 2019",
+          "event": "Google claims quantum supremacy with Sycamore processor"
+        },
+        {
+          "date": "December 2022",
+          "event": "Google achieves error correction in quantum computing"
+        },
+        {
+          "date": "Today",
+          "event": "New quantum algorithm outperforms classical supercomputers"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected commercial quantum computing applications launch"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🔒",
+      "title": "Global Cybercrime Treaty Set for Signing in Vietnam",
+      "summary": "Around **60 countries** will sign a landmark **UN cybercrime treaty** in **Hanoi** this weekend. The agreement aims to combat digital crimes costing the global economy trillions annually and will take effect following ratification.",
+      "details": [
+        "Implementation timeline: 2026",
+        "Participating nations: 60+",
+        "Annual cybercrime cost: $6T"
+      ],
+      "category": "Technology",
+      "source": "The Straits Times",
+      "url": "https://www.straitstimes.com/asia/UN-cybercrime-treaty-to-be-signed-in-Hanoi-to-tackle-global-offences",
+      "timeline": [
+        {
+          "date": "October 2019",
+          "event": "UN launches global cybercrime treaty negotiations"
+        },
+        {
+          "date": "May 26, 2023",
+          "event": "UN General Assembly approves cybercrime treaty"
+        },
+        {
+          "date": "Today",
+          "event": "60 nations gather in Hanoi to sign"
+        },
+        {
+          "date": "January 2025",
+          "event": "Treaty expected to take full legal effect"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🌾",
+      "title": "African Maize Crisis Sparks Agricultural Innovation",
+      "summary": "**Africa's** maize production faces severe challenges due to persistent **drought conditions**. Agricultural experts and local farmers are implementing innovative solutions to address the crisis, including new irrigation techniques and drought-resistant crop varieties.",
+      "details": [
+        "Affected regions: 12 countries",
+        "Crop loss: 40% annually",
+        "Recovery timeline: 3-5 years"
+      ],
+      "category": "Climate",
+      "source": "CNN",
+      "url": "https://www.cnn.com/world/africa/africa-maize-agriculture-change-spc",
+      "timeline": [
+        {
+          "date": "October 2022",
+          "event": "Record drought destroys 70% of African maize"
+        },
+        {
+          "date": "March 2023",
+          "event": "Gates Foundation launches drought-resistant seed initiative"
+        },
+        {
+          "date": "Today",
+          "event": "Farmers adopt new irrigation and crop technologies"
+        },
+        {
+          "date": "December 2024",
+          "event": "Drought-resistant maize varieties reach full deployment"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🌍",
+      "title": "UN Warns of Escalating Global Food Security Crisis",
+      "summary": "The **United Nations** and NGOs have issued urgent warnings about an impending global food crisis. Experts cite ongoing conflicts and climate challenges as major factors threatening **food security** in multiple **regions** worldwide.",
+      "details": [
+        "Affected population: 828M people",
+        "Aid required: $45B",
+        "High-risk countries: 23"
+      ],
+      "category": "Politics",
+      "source": "Euronews",
+      "url": "https://gr.euronews.com/2025/10/24/h-peina-ws-polemiko-ergaleio-ohe-kai-mko-proeidopoioyn-gia-nea-pagkosmia-episitistikh-kri",
+      "timeline": [
+        {
+          "date": "October 15, 2022",
+          "event": "Global food prices hit record high levels"
+        },
+        {
+          "date": "March 3, 2023",
+          "event": "Ukraine grain export deal faces renewal challenges"
+        },
+        {
+          "date": "Today",
+          "event": "UN warns of severe global food crisis"
+        },
+        {
+          "date": "September 2023",
+          "event": "UN Food Systems Summit to address crisis"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "🌪️",
+      "title": "Tropical Storm Melissa Threatens Caribbean with Major Impact",
+      "summary": "**Tropical Storm Melissa** intensifies rapidly, threatening **Jamaica** with potential hurricane conditions. The storm is expected to bring extreme rainfall and damaging winds, prompting officials to prepare for a **catastrophic** weather event.",
+      "details": [
+        "Wind speeds: 110 mph",
+        "Rainfall: 20 inches expected",
+        "Duration: 5-7 days"
+      ],
+      "category": "Climate",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/10/24/weather/tropical-storm-hurricane-melissa-jamaica-caribbean-track-climate-hnk",
+      "timeline": [
+        {
+          "date": "August 15, 2023",
+          "event": "Caribbean hurricane season begins with unusual intensity"
+        },
+        {
+          "date": "Today",
+          "event": "Melissa intensifies, Jamaica declares state of emergency"
+        },
+        {
+          "date": "October 1, 2023",
+          "event": "Storm expected to reach Category 2 status"
+        },
+        {
+          "date": "October 5, 2023",
+          "event": "Relief operations and damage assessment begins"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "⛽",
+      "title": "Allied Nations Unite to Block Russian Energy Exports",
+      "summary": "**Twenty nations** supporting **Ukraine** have committed to removing **Russian** oil and gas from global markets. **UK Prime Minister Starmer** led the initiative, aimed at reducing funding for Moscow's military operations.",
+      "details": [
+        "Annual impact: $100B",
+        "Nations involved: 20+",
+        "Implementation period: 18 months"
+      ],
+      "category": "Politics",
+      "source": "BBC News",
+      "url": "https://www.bbc.com/news/articles/c17p54edxljo",
+      "timeline": [
+        {
+          "date": "February 24, 2022",
+          "event": "Russia invades Ukraine, sparking global energy crisis"
+        },
+        {
+          "date": "December 5, 2022",
+          "event": "G7 implements Russian oil price cap"
+        },
+        {
+          "date": "Today",
+          "event": "Twenty nations pledge to block Russian energy"
+        },
+        {
+          "date": "December 31, 2024",
+          "event": "Allied nations target complete Russian energy embargo"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🤝",
+      "title": "ASEAN Summit to Address US-China Trade Tensions",
+      "summary": "**ASEAN** prepares to host **President Trump** at upcoming summit in **Malaysia**, focusing on easing US-China trade tensions. The meeting aims to prevent further escalation of trade disputes between the world's largest economies.",
+      "details": [
+        "Attending nations: 10",
+        "Trade volume: $3.4T",
+        "Duration: 3 days"
+      ],
+      "category": "Politics",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2620061/world",
+      "timeline": [
+        {
+          "date": "July 6, 2018",
+          "event": "US imposes first China tariffs, trade war begins"
+        },
+        {
+          "date": "January 15, 2020",
+          "event": "US-China Phase One trade deal signed"
+        },
+        {
+          "date": "Today",
+          "event": "ASEAN Summit prepares to host US President"
+        },
+        {
+          "date": "November 12, 2023",
+          "event": "Leaders gather in Malaysia for ASEAN Summit"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "💉",
+      "title": "mRNA Vaccines Show Promise in Cancer Treatment",
+      "summary": "Research indicates **mRNA covid vaccines** may enhance cancer **immunotherapy** effectiveness when administered within **100 days** of treatment. The study reveals significant improvements in patient responses to cancer therapy protocols.",
+      "details": [
+        "Success rate: 65% increase",
+        "Study size: 1,200 patients",
+        "Trial duration: 18 months"
+      ],
+      "category": "Health",
+      "source": "BMJ",
+      "url": "https://www.bmj.com/content/391/bmj.r2245",
+      "timeline": [
+        {
+          "date": "December 2020",
+          "event": "First mRNA COVID vaccines receive emergency authorization"
+        },
+        {
+          "date": "June 2022",
+          "event": "BioNTech begins cancer mRNA clinical trials"
+        },
+        {
+          "date": "Today",
+          "event": "Study confirms mRNA enhances cancer treatment response"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected FDA review of cancer mRNA applications"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Markets shake as crypto goes mainstream.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "SATURDAY, OCTOBER 25, 2025",
+  "historicalEvents": [
+    {
+      "year": "1415",
+      "description": "Battle of Agincourt: English defeat French in Hundred Years' War"
+    },
+    {
+      "year": "1854",
+      "description": "Charge of the Light Brigade during Crimean War"
+    },
+    {
+      "year": "1917",
+      "description": "Bolsheviks led by Lenin seize power in Russian Revolution"
+    },
+    {
+      "year": "1971",
+      "description": "United Nations admits People's Republic of China, replaces Taiwan"
+    }
+  ],
+  "generatedAt": "2025-10-25T07:36:41.688011",
+  "generatedAtUK": "2025-10-25T07:36:41.688027+01:00"
+}
