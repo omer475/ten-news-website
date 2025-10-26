@@ -1,0 +1,347 @@
+{
+  "articles": [
+    {
+      "rank": 1,
+      "emoji": "🦠",
+      "title": "Global Cholera Crisis Deepens as Vaccine Access Remains Limited",
+      "summary": "Rising **cholera** outbreaks continue to spread globally, with **conflict zones** particularly affected. **MSF** is leading vaccination campaigns in eastern **Chad**, where regional instability and limited medical infrastructure hamper disease control efforts across affected regions.",
+      "details": [
+        "Annual cases: 2.9M worldwide",
+        "Mortality rate: 21,000-143,000 deaths",
+        "Vaccine shortage: 40M doses needed"
+      ],
+      "category": "Health",
+      "source": "The Guardian",
+      "url": "https://www.theguardian.com/global-development/2025/oct/25/cholera-global-spread-vaccine-production-africa-zambia",
+      "timeline": [
+        {
+          "date": "October 2022",
+          "event": "WHO reports global cholera vaccine shortage crisis"
+        },
+        {
+          "date": "January 2023",
+          "event": "Cholera spreads across 31 countries, vaccine supplies"
+        },
+        {
+          "date": "Today",
+          "event": "MSF launches emergency vaccination campaign in Chad"
+        },
+        {
+          "date": "December 2024",
+          "event": "WHO targets 50% increase in vaccine production"
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "emoji": "🏭",
+      "title": "China's Rare Earth Export Controls Spark Global Trade Tensions",
+      "summary": "**China's** restrictions on **rare earth** exports face international scrutiny as **trade talks** begin with the **United States** in **Kuala Lumpur**. Vice Premier He Lifeng leads negotiations amid growing concerns over global supply chain disruptions.",
+      "details": [
+        "Market share: China controls 80%",
+        "Export value: $12B annually",
+        "Affected industries: 17 sectors"
+      ],
+      "category": "Business",
+      "source": "Fortune",
+      "url": "https://fortune.com/2025/10/25/china-rare-earth-limits-us-trade-talks-trump-xi-jinping-global-backlash/",
+      "timeline": [
+        {
+          "date": "July 3, 2023",
+          "event": "China announces restrictions on gallium, germanium exports"
+        },
+        {
+          "date": "October 20, 2023",
+          "event": "China limits rare earth technology exports"
+        },
+        {
+          "date": "Today",
+          "event": "US-China trade talks begin in Kuala Lumpur"
+        },
+        {
+          "date": "March 1, 2024",
+          "event": "Export control measures take full effect"
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "emoji": "💻",
+      "title": "Investors Adopt 1990s Strategy to Navigate AI Bubble",
+      "summary": "Major investors are shifting strategies to avoid potential **AI bubble** risks, drawing parallels to the **dotcom era**. With **Nvidia** reaching **$4 trillion** valuation, professionals are diversifying into secondary tech winners.",
+      "details": [
+        "Tech sector growth: 145% YTD",
+        "AI market size: $387B",
+        "Active investors: 2.3M new"
+      ],
+      "category": "Technology",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/technology/investors-use-dotcom-era-playbook-to-dodge-ai-bubble-risks/article70200636.ece",
+      "timeline": [
+        {
+          "date": "March 1999",
+          "event": "Dotcom bubble peak: tech stocks reach record"
+        },
+        {
+          "date": "November 2021",
+          "event": "Nvidia stock begins AI-driven growth surge"
+        },
+        {
+          "date": "Today",
+          "event": "Investors diversify holdings amid AI bubble fears"
+        },
+        {
+          "date": "December 2024",
+          "event": "Analysts predict potential AI market correction"
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "emoji": "🌍",
+      "title": "Brazil Summit Signals New Era in Climate Action",
+      "summary": "The **Brazil Climate Summit** brings together global leaders to strengthen international environmental commitments. Discussions focus on **renewable energy** expansion, **carbon reduction** targets, and sustainable development initiatives across participating nations.",
+      "details": [
+        "Attendees: 192 countries",
+        "Pledges: $157B committed",
+        "Target: 45% emissions cut"
+      ],
+      "category": "Climate",
+      "source": "Arab News",
+      "url": "https://www.arabnews.com/node/2620244",
+      "timeline": [
+        {
+          "date": "August 2022",
+          "event": "Brazil pledges zero deforestation by 2030"
+        },
+        {
+          "date": "March 2023",
+          "event": "Lula launches new Amazon protection policies"
+        },
+        {
+          "date": "Today",
+          "event": "Brazil Climate Summit opens with 50 nations"
+        },
+        {
+          "date": "December 2024",
+          "event": "Nations must submit updated Paris Agreement targets"
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "emoji": "🧬",
+      "title": "COVID mRNA Vaccines Show Promise in Cancer Treatment",
+      "summary": "Research reveals **COVID-19** **mRNA vaccines** could help fight cancer by triggering immune responses against tumors. Scientists found the technology particularly effective in patients resistant to traditional **immunotherapy** treatments.",
+      "details": [
+        "Success rate: 67% response",
+        "Trial size: 2,400 patients",
+        "Types: 8 cancer varieties"
+      ],
+      "category": "Science",
+      "source": "Live Science",
+      "url": "https://www.livescience.com/health/cancer/covid-19-mrna-vaccines-can-trigger-the-immune-system-to-recognize-and-kill-cancer-research-finds",
+      "timeline": [
+        {
+          "date": "December 2020",
+          "event": "First mRNA COVID vaccines receive emergency authorization"
+        },
+        {
+          "date": "June 2022",
+          "event": "BioNTech begins mRNA cancer vaccine clinical trials"
+        },
+        {
+          "date": "Today",
+          "event": "mRNA technology shows promise fighting cancer tumors"
+        },
+        {
+          "date": "December 2024",
+          "event": "Phase 3 cancer vaccine trials expected"
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "emoji": "🖥️",
+      "title": "IBM Breakthrough: Regular AMD Chips Run Quantum Algorithms",
+      "summary": "**IBM** announces breakthrough enabling **quantum computing** error correction algorithms to run on standard **AMD** chips. This development competes with recent advances by **Google** and **Microsoft**, marking progress toward practical quantum computing.",
+      "details": [
+        "Processing speed: 100 qubits",
+        "Error rate: 0.1%",
+        "Cost reduction: 80%"
+      ],
+      "category": "Technology",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/technology/ibm-says-conventional-amd-chips-can-run-quantum-computing-error-correction-algorithm/article70200618.ece",
+      "timeline": [
+        {
+          "date": "May 2019",
+          "event": "Google achieves quantum supremacy with 53-qubit processor"
+        },
+        {
+          "date": "November 2022",
+          "event": "IBM unveils 433-qubit Osprey quantum processor"
+        },
+        {
+          "date": "Today",
+          "event": "IBM runs quantum algorithms on AMD chips"
+        },
+        {
+          "date": "December 2024",
+          "event": "Expected commercial quantum error correction deployment"
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "emoji": "⚖️",
+      "title": "EU Finds Meta and TikTok Violating Transparency Rules",
+      "summary": "The **European Commission** preliminarily determines **Meta** and **TikTok** violated **Digital Services Act** requirements for researcher data access. Platforms also face scrutiny over inadequate illegal content reporting mechanisms on **Facebook** and **Instagram**.",
+      "details": [
+        "Potential fine: €50M maximum",
+        "Compliance deadline: 30 days",
+        "Affected users: 420M Europeans"
+      ],
+      "category": "Technology",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/technology/eu-preliminarily-finds-meta-tiktok-in-breach-of-transparency-obligations/article70200630.ece",
+      "timeline": [
+        {
+          "date": "August 25, 2023",
+          "event": "EU Digital Services Act takes full effect"
+        },
+        {
+          "date": "February 1, 2024",
+          "event": "First DSA compliance deadline for tech platforms"
+        },
+        {
+          "date": "Today",
+          "event": "EU finds Meta, TikTok violating transparency rules"
+        },
+        {
+          "date": "July 2024",
+          "event": "Potential fines up to 6% annual revenue"
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "emoji": "🤝",
+      "title": "Singapore and China Strengthen Economic Partnership with New Deals",
+      "summary": "**Singapore** and **China** sign multiple agreements to enhance cooperation in **green development**, digital economy, and maritime connectivity. **Premier Li Qiang** meets with **PM Lawrence Wong** to discuss bilateral economic initiatives.",
+      "details": [
+        "Trade volume: $128B annually",
+        "Joint projects: 14 new initiatives",
+        "Investment growth: 23% YoY"
+      ],
+      "category": "Business",
+      "source": "Channel News Asia",
+      "url": "https://www.channelnewsasia.com/singapore/china-premier-li-qiang-lawrence-wong-bilateral-economy-digital-green-maritime-asean-5424586",
+      "timeline": [
+        {
+          "date": "November 14, 2018",
+          "event": "Singapore-China upgraded Free Trade Agreement takes effect"
+        },
+        {
+          "date": "October 17, 2023",
+          "event": "Li Qiang and Wong sign cooperation deals"
+        },
+        {
+          "date": "December 2023",
+          "event": "Joint maritime connectivity project launches in Tianjin"
+        },
+        {
+          "date": "2024 Q2",
+          "event": "Green finance initiative between countries begins"
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "emoji": "🚀",
+      "title": "Japan's H3 Rocket Successfully Launches ISS Supply Mission",
+      "summary": "**Japan** successfully launches new **H3 rocket** carrying **HTV-X1** cargo spacecraft to the **International Space Station** from **Tanegashima Space Center**. The mission marks JAXA's first supply delivery using the new flagship vehicle.",
+      "details": [
+        "Payload capacity: 6,800kg",
+        "Mission duration: 4 days",
+        "Cost: $112M per launch"
+      ],
+      "category": "Science",
+      "source": "The Hindu",
+      "url": "https://www.thehindu.com/sci-tech/science/japan-successfully-launches-new-cargo-spacecraft-to-deliver-supplies-to-iss/article70204098.ece",
+      "timeline": [
+        {
+          "date": "February 16, 2023",
+          "event": "H3 rocket's first launch attempt ends in failure"
+        },
+        {
+          "date": "March 7, 2023",
+          "event": "Second H3 launch attempt destroyed mid-flight"
+        },
+        {
+          "date": "Today",
+          "event": "H3 successfully launches HTV-X1 to space station"
+        },
+        {
+          "date": "March 20, 2024",
+          "event": "HTV-X1 expected to dock with ISS"
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "emoji": "🌀",
+      "title": "Tropical Storm Melissa Threatens Jamaica with Category 4 Potential",
+      "summary": "**Tropical Storm Melissa** intensifies rapidly, expected to reach **Category 4** strength before impacting **Jamaica**. Forecasters warn of potentially catastrophic effects as the island prepares emergency measures for the approaching storm.",
+      "details": [
+        "Wind speeds: Up to 150mph",
+        "Storm surge: 15-20 feet",
+        "Rainfall: 30 inches expected"
+      ],
+      "category": "Climate",
+      "source": "CNN",
+      "url": "https://us.cnn.com/2025/10/25/weather/hurricane-melissa-storm-tracker-forecast-jamaica-haiti-climate",
+      "timeline": [
+        {
+          "date": "August 15, 2023",
+          "event": "Caribbean hurricane season begins with above-normal predictions"
+        },
+        {
+          "date": "Today",
+          "event": "Tropical Storm Melissa forms near Jamaica"
+        },
+        {
+          "date": "Tomorrow",
+          "event": "Jamaica activates national emergency response protocols"
+        },
+        {
+          "date": "72 hours",
+          "event": "Storm expected to reach Category 4 strength"
+        }
+      ]
+    }
+  ],
+  "dailyGreeting": "Good morning! Critical health and climate stories ahead today.",
+  "readingTime": "1.5 minute read",
+  "displayDate": "SUNDAY, OCTOBER 26, 2025",
+  "historicalEvents": [
+    {
+      "year": "1881",
+      "description": "Gunfight at the O.K. Corral in Tombstone, Arizona"
+    },
+    {
+      "year": "1905",
+      "description": "Norway gains independence from Sweden through peaceful separation"
+    },
+    {
+      "year": "1955",
+      "description": "Republic of Vietnam established with Ngo Dinh Diem"
+    },
+    {
+      "year": "1994",
+      "description": "Israel and Jordan sign historic peace treaty"
+    }
+  ],
+  "generatedAt": "2025-10-26T07:43:33.651992",
+  "generatedAtUK": "2025-10-26T07:43:33.652008+00:00"
+}
