@@ -527,7 +527,7 @@ Surprising > Expected
 Global > Local
 News > Trends
 
-TARGET: 10% approval rate. Only the best stuff makes it through."""
+Target: 10% approval rate. Only the best stuff makes it through."""
 
     # Prepare articles for scoring
     articles_text = "Score these news articles based on shareability and conversation-worthiness criteria. Return JSON array only.\n\nArticles to score:\n[\n"
@@ -535,7 +535,7 @@ TARGET: 10% approval rate. Only the best stuff makes it through."""
     for article in articles:
         articles_text += f'  {{\n    "title": "{article["title"]}",\n    "source": "{article["source"]}",\n    "text": "{article.get("text", "")[:500]}",\n    "url": "{article["url"]}"\n  }},\n'
     
-    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), category (MANDATORY - choose from: World, Politics, Business, Technology, Science, Health, Sports, Lifestyle), status (APPROVED if >=700, FILTERED if <700), and score_breakdown."
+    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), category (MANDATORY - choose from: Politics, Economy, International, Health, Science, Technology, Environment, Disaster, Sports, Culture, Other), status (APPROVED if >=700, FILTERED if <700), and score_breakdown."
     
     # Prepare request
     request_data = {
