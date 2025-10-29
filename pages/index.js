@@ -2301,16 +2301,6 @@ export default function Home() {
                         )}
                       </div>
                       
-                      {/* Title - Large and Prominent, Higher Position */}
-                      <h3 className="news-title" style={{ 
-                        marginTop: '0',
-                        marginBottom: '10px',
-                        fontSize: '26px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        letterSpacing: '-0.5px'
-                      }}>{story.title}</h3>
-                      
                       {/* Summary/Bullet Points - Swipeable */}
                       <div 
                         className="news-summary" 
