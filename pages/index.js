@@ -155,6 +155,30 @@ export default function Home() {
     }
   };
 
+  // Function to calculate time since published
+  const getTimeAgo = (publishedAt) => {
+    if (!publishedAt) return '';
+    
+    try {
+      const publishedDate = new Date(publishedAt);
+      const now = new Date();
+      const diffInMs = now - publishedDate;
+      const diffInMinutes = Math.floor(diffInMs / 60000);
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      const diffInDays = Math.floor(diffInHours / 24);
+      
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes}m`;
+      if (diffInHours < 24) return `${diffInHours}h`;
+      if (diffInDays < 7) return `${diffInDays}d`;
+      
+      const weeks = Math.floor(diffInDays / 7);
+      return `${weeks}w`;
+    } catch (error) {
+      return '';
+    }
+  };
+
   // Function to extract dominant color from image
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -393,6 +417,7 @@ export default function Home() {
                    {"date": "Today", "event": "Major developments break"},
                    {"date": "Next week", "event": "Follow-up expected"}
                  ],
+                 publishedAt: article.publishedAt || article.published_at || article.added_at,
                  id: article.id || `article_${index}`
                };
                
@@ -2140,7 +2165,7 @@ export default function Home() {
                         zIndex: '2'
                       }}>
                       
-                      {/* Category Badge and Timeline Button Row */}
+                      {/* Time Since Published and Timeline Button Row */}
                       <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -2148,20 +2173,17 @@ export default function Home() {
                         marginBottom: '2px',
                         marginTop: '-12px'
                       }}>
-                        {/* Category Badge */}
-                        <div style={{
-                          display: 'inline-block',
-                          fontSize: '9px',
-                          fontWeight: '600',
-                          letterSpacing: '0.5px',
-                          textTransform: 'uppercase',
-                          padding: '3px 6px',
-                          borderRadius: '3px',
-                          background: getCategoryColors(story.category).lighter,
-                          color: getCategoryColors(story.category).primary
-                        }}>
-                          {story.emoji} {story.category}
-                        </div>
+                        {/* Time Since Published - Minimal Design */}
+                        {story.publishedAt && (
+                          <div style={{
+                            fontSize: '11px',
+                            fontWeight: '400',
+                            color: '#86868b',
+                            letterSpacing: '0.3px'
+                          }}>
+                            {getTimeAgo(story.publishedAt)}
+                          </div>
+                        )}
 
                         {/* Dynamic Information Switch - Only show if multiple information types available */}
                         {getAvailableComponentsCount(story) > 1 && (
