@@ -2051,6 +2051,8 @@ export default function Home() {
                 />
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
+                  
+                    // Original News Item View - Everything stays the same
                     <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
@@ -2399,6 +2401,27 @@ export default function Home() {
                           onTouchEnd={onTouchEnd}
                           style={{ cursor: 'pointer' }}
                         >
+                          {/* Summary Header */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: '12px',
+                            paddingBottom: '8px',
+                            borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
+                          }}>
+                            <span style={{
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              letterSpacing: '0.3px',
+                              color: '#1a1a1a',
+                              textTransform: 'uppercase'
+                            }}>Summary</span>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
+                              <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                          
                           {/* Show Only Bullet Text */}
                           <div style={{ margin: 0 }}>
                             {story.summary_bullets && story.summary_bullets.length > 0 ? (
