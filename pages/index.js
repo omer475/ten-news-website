@@ -601,11 +601,69 @@ export default function Home() {
     }
   };
 
-  // Function to render text without bold markup
-  const renderBoldText = (text, category) => {
+  // Function to render text with highlighted important words (for bullet texts - bold + colored)
+  const renderBoldText = (text, blurColor) => {
     if (!text) return '';
-    // Remove all ** markdown markers and return plain text
+    if (!blurColor) {
+      // Fallback: just remove ** markers
+      return text.replace(/\*\*/g, '');
+    }
+    
+    // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
+    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (colorMatch) {
+      const r = colorMatch[1];
+      const g = colorMatch[2];
+      const b = colorMatch[3];
+      const highlightColor = `rgb(${r}, ${g}, ${b})`;
+      
+      // Replace **text** with bold and colored spans
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
+    }
     return text.replace(/\*\*/g, '');
+  };
+
+  // Function to render title with highlighted important words (colored but not bold)
+  const renderTitleWithHighlight = (text, blurColor) => {
+    if (!text) return '';
+    if (!blurColor) {
+      return text;
+    }
+    
+    // Extract color from rgba string
+    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (colorMatch) {
+      const r = colorMatch[1];
+      const g = colorMatch[2];
+      const b = colorMatch[3];
+      const highlightColor = `rgb(${r}, ${g}, ${b})`;
+      
+      // Replace **text** with colored (but not bold) spans
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ color: highlightColor }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
+    }
+    return text;
   };
 
   useEffect(() => {
@@ -2162,7 +2220,7 @@ export default function Home() {
                           letterSpacing: '-0.5px',
                           color: '#ffffff',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{story.title}</h3>
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
                     </div>
                     
@@ -2416,8 +2474,8 @@ export default function Home() {
                               fontWeight: '700',
                               letterSpacing: '0.3px',
                               color: '#1a1a1a',
-                              textTransform: 'uppercase'
-                            }}>Summary</span>
+                              textTransform: 'none'
+                            }}><span style={{ fontSize: '15px' }}>S</span><span style={{ fontSize: '12px', textTransform: 'uppercase' }}>ummary</span></span>
                           </div>
                           
                           {/* Show Only Bullet Text */}
@@ -2437,7 +2495,7 @@ export default function Home() {
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
                                   }}>
-                                    {renderBoldText(bullet, story.category)}
+                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
                                   </li>
                                 ))}
                               </ul>
