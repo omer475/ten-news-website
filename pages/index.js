@@ -19,6 +19,7 @@ export default function Home() {
   const [showDetailedArticle, setShowDetailedArticle] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
+  const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -151,6 +152,95 @@ export default function Home() {
       case 'graph':
         setShowGraph(prev => ({ ...prev, [index]: true }));
         break;
+    }
+  };
+
+  // Function to extract dominant color from image
+  const extractDominantColor = (imgElement, storyIndex) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = imgElement.naturalWidth || imgElement.width;
+      canvas.height = imgElement.naturalHeight || imgElement.height;
+      
+      // Draw image on canvas
+      ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+      
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imageData.data;
+      
+      // Sample pixels (every 10th pixel for performance)
+      const colorMap = {};
+      for (let i = 0; i < pixels.length; i += 40) { // RGBA, so step by 4, but sample every 10 pixels
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        const alpha = pixels[i + 3];
+        
+        // Skip transparent or very light/dark pixels
+        if (alpha < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10)) {
+          continue;
+        }
+        
+        // Round to nearest 10 to group similar colors
+        const rKey = Math.round(r / 10) * 10;
+        const gKey = Math.round(g / 10) * 10;
+        const bKey = Math.round(b / 10) * 10;
+        const key = `${rKey},${gKey},${bKey}`;
+        
+        colorMap[key] = (colorMap[key] || 0) + 1;
+      }
+      
+      // Find most common color
+      let maxCount = 0;
+      let dominantColor = null;
+      for (const [color, count] of Object.entries(colorMap)) {
+        if (count > maxCount) {
+          maxCount = count;
+          dominantColor = color;
+        }
+      }
+      
+      if (dominantColor) {
+        const [r, g, b] = dominantColor.split(',').map(Number);
+        
+        // Check if the color is white (high RGB values)
+        const isWhite = r > 200 && g > 200 && b > 200;
+        
+        if (isWhite) {
+          // Use black gradient for white images
+          const rgbaColor = `rgba(0, 0, 0, 1.0)`;
+          const lightRgbaColor = `rgba(20, 20, 20, 1.0)`;
+          setImageDominantColors(prev => ({ 
+            ...prev, 
+            [storyIndex]: { original: rgbaColor, light: lightRgbaColor, isWhite: true }
+          }));
+        } else {
+          // Make the color lighter and more vibrant
+          const lightR = Math.min(255, r + 40);
+          const lightG = Math.min(255, g + 40);
+          const lightB = Math.min(255, b + 40);
+          
+          const rgbaColor = `rgba(${r}, ${g}, ${b}, 1.0)`;
+          const lightRgbaColor = `rgba(${lightR}, ${lightG}, ${lightB}, 1.0)`;
+          
+          // Store both the original and lighter versions
+          setImageDominantColors(prev => ({ 
+            ...prev, 
+            [storyIndex]: { original: rgbaColor, light: lightRgbaColor, isWhite: false }
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting dominant color:', error);
+      // Fallback to dark color
+      setImageDominantColors(prev => ({ 
+        ...prev, 
+        [storyIndex]: { original: 'rgba(0, 0, 0, 1.0)', light: 'rgba(50, 50, 50, 1.0)' }
+      }));
     }
   };
 
@@ -1949,7 +2039,7 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(30vh - 3px)',
+                      height: 'calc(35vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -1964,14 +2054,16 @@ export default function Home() {
                         <img 
                           src={story.urlToImage}
                           alt={story.title}
+                          crossOrigin="anonymous"
                           style={{
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
                             objectPosition: 'center'
                           }}
-                          onLoad={() => {
+                          onLoad={(e) => {
                             console.log('✅ Image loaded successfully:', story.urlToImage);
+                            extractDominantColor(e.target, index);
                           }}
                           onError={(e) => {
                             console.error('❌ Image failed to load:', story.urlToImage);
@@ -2002,12 +2094,47 @@ export default function Home() {
                           {story.emoji || '📰'}
                         </div>
                       )}
+                      
+                      {/* Title Overlay with Image-Based Color Gradient */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '24px 16px 20px 16px',
+                        background: imageDominantColors[index]?.light 
+                          ? `linear-gradient(to bottom, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.6')} 5%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 20%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 40%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.99')} 70%, 
+                              ${imageDominantColors[index].light} 100%)`
+                          : imageDominantColors[index]?.original
+                          ? `linear-gradient(to bottom, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.7')} 10%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.92')} 40%, 
+                              ${imageDominantColors[index].original} 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.9) 100%)',
+                        zIndex: 2
+                      }}>
+                        <h3 style={{ 
+                          margin: 0,
+                          fontSize: '26px',
+                          fontWeight: '800',
+                          lineHeight: '1.2',
+                          letterSpacing: '-0.5px',
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                        }}>{story.title}</h3>
+                      </div>
                     </div>
                     
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(30vh - 20px)',
+                        paddingTop: 'calc(35vh - 20px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
