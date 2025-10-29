@@ -2406,16 +2406,14 @@ export default function Home() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            marginBottom: '12px',
-                            paddingBottom: '8px',
-                            borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
+                            marginBottom: '12px'
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
                               <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                             <span style={{
-                              fontSize: '13px',
-                              fontWeight: '600',
+                              fontSize: '15px',
+                              fontWeight: '700',
                               letterSpacing: '0.3px',
                               color: '#1a1a1a',
                               textTransform: 'uppercase'
