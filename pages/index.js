@@ -2475,7 +2475,7 @@ export default function Home() {
                               letterSpacing: '0.3px',
                               color: '#1a1a1a',
                               textTransform: 'none'
-                            }}><span style={{ fontSize: '15px' }}>S</span><span style={{ fontSize: '12px', textTransform: 'uppercase' }}>ummary</span></span>
+                            }}><span style={{ fontSize: '15px' }}>S</span><span style={{ fontSize: '15px', textTransform: 'uppercase' }}>ummary</span></span>
                           </div>
                           
                           {/* Show Only Bullet Text */}
