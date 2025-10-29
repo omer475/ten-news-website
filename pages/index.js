@@ -2134,20 +2134,23 @@ export default function Home() {
                         background: imageDominantColors[index]?.light 
                           ? `linear-gradient(to bottom, 
                               ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 85%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.2')} 20%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 40%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.35')} 70%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.6')} 80%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.8')} 88%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 95%, 
                               ${imageDominantColors[index].light} 100%)`
                           : imageDominantColors[index]?.original
                           ? `linear-gradient(to bottom, 
                               ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.22')} 20%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.28')} 40%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.4')} 70%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.7')} 80%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 92%, 
                               ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 85%, rgba(0,0,0,0.95) 100%)',
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.15) 20%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.85) 88%, rgba(0,0,0,0.95) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2
                       }}>
                         <h3 style={{ 
