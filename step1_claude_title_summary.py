@@ -43,15 +43,19 @@ TITLE RULES:
 - Use active voice
 - Use sentence case (capitalize only first word and proper nouns)
 - PROHIBITED: Questions, clickbait phrases, exclamation marks, ALL CAPS, editorial opinions, vague geographic references
+- **BOLD MARKUP**: Use **bold** for 2-4 key words, names, places, numbers, or important entities
+  - Highlight: important names, locations, numbers, key concepts, organizations
+  - Use 2-4 bold items per title (not too few, not too many)
+  - Example: "**European Central Bank** raises interest rates to **4.5 percent**"
 
 Geographic specificity - Always specify location/entity:
 ❌ "Government announces policy" ✓ "Canadian government announces climate policy"
 ❌ "Central bank raises rates" ✓ "European Central Bank raises rates to 4.5 percent"
 
 Title examples:
-✓ "European Central Bank raises interest rates to 4.5 percent"
-✓ "Indian Parliament approves controversial citizenship amendment bill"
-✓ "Australian wildfires force evacuation of 50,000 residents"
+✓ "**European Central Bank** raises interest rates to **4.5 percent**"
+✓ "**Indian Parliament** approves controversial citizenship amendment bill"
+✓ "Australian wildfires force evacuation of **50,000** residents"
 
 SUMMARY RULES:
 - Maximum 200 words (MANDATORY - do not exceed)
@@ -98,6 +102,10 @@ SUMMARY BULLETS RULES:
 - No periods at end
 - Include specific details (numbers, names, locations)
 - Active voice
+- **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers in EACH bullet
+  - Highlight: important names, locations, numbers, key concepts, organizations
+  - Use 1-2 bold items per bullet (not too many)
+  - Example: "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since **July 2023**"
 - Must tell COMPLETE story independently
 
 Bullet Structure:
@@ -108,9 +116,9 @@ Bullet Structure:
 5. Fifth bullet (optional): Final important detail
 
 Bullet Examples:
-✓ "European Central Bank raises interest rates to 4.5 percent, tenth consecutive hike"
-✓ "Inflation remains at 5.3 percent, well above ECB's 2 percent target"
-✓ "340 million eurozone residents face higher borrowing costs for mortgages"
+✓ "**European Central Bank** raises interest rates to **4.5 percent**, tenth consecutive hike"
+✓ "Inflation remains at **5.3 percent**, well above **ECB's** **2 percent** target"
+✓ "**340 million** eurozone residents face **higher borrowing costs** for mortgages"
 
 GENERATION PROCESS:
 1. Read the original article carefully

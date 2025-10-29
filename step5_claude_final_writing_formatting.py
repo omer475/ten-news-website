@@ -59,11 +59,16 @@ You must write:
 - Complete main point of article
 - Active voice, sentence case
 - NO clickbait, questions, exclamation marks
+- **BOLD MARKUP**: Use **bold** for 2-4 key words, names, places, numbers, or important entities
+  - Highlight: important names, locations, numbers, key concepts, organizations
+  - Use 2-4 bold items per title (not too few, not too many)
+  - Example: "**European Central Bank** raises interest rates to **4.5 percent**"
+  - Example: "**Magnitude 7.8** earthquake strikes **Turkey** near Syrian border"
 
 Examples:
-✓ "European Central Bank raises interest rates to 4.5 percent"
-✓ "Magnitude 7.8 earthquake strikes Turkey near Syrian border"
-✓ "Donald Trump wins 2024 presidential election with 312 electoral votes"
+✓ "**European Central Bank** raises interest rates to **4.5 percent**"
+✓ "**Magnitude 7.8** earthquake strikes **Turkey** near Syrian border"
+✓ "**Donald Trump** wins **2024** presidential election with **312 electoral votes**"
 
 === DETAILED ARTICLE TEXT (Maximum 200 words) ===
 CRITICAL: Write a comprehensive, detailed news article that provides complete information about the story.
@@ -107,6 +112,10 @@ Rules:
 - No periods at end
 - Include specific details (numbers, names, locations)
 - Active voice
+- **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers in EACH bullet
+  - Highlight: important names, locations, numbers, key concepts, organizations
+  - Use 1-2 bold items per bullet (not too many)
+  - Example: "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since **July 2023**"
 
 Structure:
 1. First bullet: Full main event with key details (WHO + WHAT + KEY NUMBER)
@@ -118,10 +127,10 @@ Structure:
 Each bullet must be understandable on its own. User should fully understand news from ONLY bullets.
 
 Examples:
-✓ "ECB raises interest rates to 4.5%, tenth consecutive increase since July 2023"
-✓ "Current inflation at 5.3%, well above the 2% target rate"
-✓ "Decision affects 340 million people across 20 eurozone countries"
-✓ "Higher borrowing costs expected for mortgages and business loans"
+✓ "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since **July 2023**"
+✓ "Current inflation at **5.3%**, well above the **2%** target rate"
+✓ "Decision affects **340 million** people across **20** eurozone countries"
+✓ "**Higher borrowing costs** expected for mortgages and business loans"
 
 === TIMELINE (if selected) ===
 - 2-4 events in chronological order (oldest first)
@@ -328,8 +337,6 @@ class ClaudeFinalWriter:
                 is_valid, errors = self._validate_output(result, article)
                 
                 if is_valid:
-                    # DEBUG: Print what we're returning
-                    print(f"  DEBUG: Returning keys: {list(result.keys())}")
                     return result
                 else:
                     print(f"  ⚠ Validation issues (attempt {attempt + 1}): {errors[:2]}")
@@ -337,7 +344,6 @@ class ClaudeFinalWriter:
                         continue
                     else:
                         # Return despite issues
-                        print(f"  DEBUG: Returning keys (with issues): {list(result.keys())}")
                         return result
             
             except json.JSONDecodeError as e:
