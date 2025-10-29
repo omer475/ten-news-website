@@ -2121,7 +2121,7 @@ export default function Home() {
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          fontSize: '26px',
+                          fontSize: '22px',
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
