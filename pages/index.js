@@ -2405,11 +2405,14 @@ export default function Home() {
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
+                            gap: '8px',
                             marginBottom: '12px',
                             paddingBottom: '8px',
                             borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
                           }}>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
+                              <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                             <span style={{
                               fontSize: '13px',
                               fontWeight: '600',
@@ -2417,9 +2420,6 @@ export default function Home() {
                               color: '#1a1a1a',
                               textTransform: 'uppercase'
                             }}>Summary</span>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
-                              <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
                           </div>
                           
                           {/* Show Only Bullet Text */}
@@ -2435,8 +2435,9 @@ export default function Home() {
                                     marginBottom: '8px',
                                     fontSize: '16px',
                                     lineHeight: '1.6',
-                                    fontWeight: '600',
-                                    color: '#1a1a1a'
+                                    fontWeight: '400',
+                                    color: '#1a1a1a',
+                                    fontFamily: 'Georgia, "Times New Roman", Times, serif'
                                   }}>
                                     {renderBoldText(bullet, story.category)}
                                   </li>
