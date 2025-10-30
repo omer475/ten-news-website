@@ -411,7 +411,7 @@ export default function Home() {
                  details: article.details || [],
                  source: article.source || 'Today+',
                  url: article.url || '#',
-                 urlToImage: article.urlToImage,
+                 urlToImage: article.urlToImage && article.urlToImage.trim() !== '' ? article.urlToImage.trim() : null,
                  timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
                    {"date": "Background", "event": "Initial situation develops"},
                    {"date": "Today", "event": "Major developments break"},
@@ -2195,11 +2195,13 @@ export default function Home() {
                       borderRadius: '12px',
                       overflow: 'hidden'
                     }}>
-                      {story.urlToImage ? (
+                      {story.urlToImage && story.urlToImage.trim() !== '' ? (
                         <img 
-                          src={story.urlToImage}
+                          key={`img-${story.id || index}-${story.urlToImage}`}
+                          src={story.urlToImage.trim()}
                           alt={story.title}
                           crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
                           style={{
                             width: '100%',
                             height: '100%',
