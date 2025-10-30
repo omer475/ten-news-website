@@ -4,6 +4,18 @@ import NewFirstPage from '../components/NewFirstPage';
 
 export default function Home() {
   const [stories, setStories] = useState([]);
+  // Safely handle external images: avoid mixed content and hotlink blocking
+  const getSafeImageUrl = (rawUrl) => {
+    if (!rawUrl || typeof rawUrl !== 'string') return null;
+    const url = rawUrl.trim();
+    if (url === '') return null;
+    // If http (not https), proxy to avoid mixed-content blocks
+    if (url.startsWith('http://')) {
+      return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -411,7 +423,7 @@ export default function Home() {
                  details: article.details || [],
                  source: article.source || 'Today+',
                  url: article.url || '#',
-                 urlToImage: article.urlToImage,
+                urlToImage: (article.urlToImage && article.urlToImage.trim() !== '') ? article.urlToImage.trim() : null,
                  timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
                    {"date": "Background", "event": "Initial situation develops"},
                    {"date": "Today", "event": "Major developments break"},
@@ -2132,7 +2144,7 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(35vh - 3px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2143,11 +2155,13 @@ export default function Home() {
                       borderRadius: '12px',
                       overflow: 'hidden'
                     }}>
-                      {story.urlToImage ? (
+                      {(story.urlToImage && story.urlToImage.trim() !== '') ? (
                         <img 
-                          src={story.urlToImage}
+                          key={`img-${story.id || index}-${story.urlToImage}`}
+                          src={getSafeImageUrl(story.urlToImage)}
                           alt={story.title}
                           crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -2161,6 +2175,13 @@ export default function Home() {
                           onError={(e) => {
                             console.error('❌ Image failed to load:', story.urlToImage);
                             console.error('   Story title:', story.title);
+                            // Try proxy fallback once if not already attempted
+                            if (!e.target.dataset.proxied && story.urlToImage) {
+                              const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(story.urlToImage.trim())}`;
+                              e.target.dataset.proxied = '1';
+                              e.target.src = proxied;
+                              return;
+                            }
                             e.target.style.display = 'none';
                             e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                             e.target.parentElement.innerHTML = `
@@ -2236,7 +2257,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(35vh + 8px)',
+                        paddingTop: 'calc(38vh + 8px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
