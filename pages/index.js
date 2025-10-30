@@ -2431,14 +2431,22 @@ export default function Home() {
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
-                          height: 'calc(100vh - 38vh - 140px)',
-                          minHeight: '200px',
-                          padding: '8px 0',
-                          position: 'relative',
+                          // When detailed text is closed, center exactly between switch row and info box
+                          position: showDetailedText[index] ? 'relative' : 'fixed',
+                          left: showDetailedText[index] ? 'auto' : '50%',
+                          transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
+                          width: '100%',
+                          maxWidth: '950px',
+                          // Top: image (38vh) + content padding (8px) + switch row approx height (36px)
+                          top: showDetailedText[index] ? 'auto' : 'calc(38vh + 8px + 36px)',
+                          // Bottom: info box height (85px) + fixed bottom gap (32px)
+                          bottom: showDetailedText[index] ? 'auto' : 'calc(85px + 32px)',
+                          padding: '8px 15px',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
-                          alignItems: 'flex-start'
+                          alignItems: 'flex-start',
+                          zIndex: showDetailedText[index] ? 'auto' : 10
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
