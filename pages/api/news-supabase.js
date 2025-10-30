@@ -73,6 +73,11 @@ export default async function handler(req, res) {
         }
       }
 
+      // Debug: Log if image URL is missing
+      if (!article.image_url || article.image_url.trim() === '') {
+        console.log(`⚠️ No image URL for article: "${article.title.substring(0, 50)}..."`);
+      }
+
       return {
         id: article.id,
         title: article.title,
