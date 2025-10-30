@@ -2605,20 +2605,17 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Fixed Position Toggle and Content Area - Lower Position */}
+                      {/* Information Box - Details/Timeline Section */}
                       <div style={{
-                        position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '32px',
-                        left: showDetailedText[index] ? '0' : '50%',
-                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
+                        position: 'relative',
                         width: '100%',
-                        maxWidth: showDetailedText[index] ? '950px' : '950px',
+                        maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
                         zIndex: '50',
-                        marginTop: showDetailedText[index] ? '0' : '0',
-                        marginLeft: showDetailedText[index] ? 'auto' : '0',
-                        marginRight: showDetailedText[index] ? 'auto' : '0'
+                        marginTop: '16px',
+                        marginLeft: 'auto',
+                        marginRight: 'auto'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
