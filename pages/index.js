@@ -411,7 +411,7 @@ export default function Home() {
                  details: article.details || [],
                  source: article.source || 'Today+',
                  url: article.url || '#',
-                 urlToImage: article.urlToImage && article.urlToImage.trim() !== '' ? article.urlToImage.trim() : null,
+                 urlToImage: article.urlToImage,
                  timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
                    {"date": "Background", "event": "Initial situation develops"},
                    {"date": "Today", "event": "Major developments break"},
@@ -425,21 +425,6 @@ export default function Home() {
              });
             
             console.log('📰 Setting stories:', processedStories.length);
-            
-            // Debug: Log image URL status for all stories
-            console.log('\n🖼️  IMAGE URL STATUS FOR ALL ARTICLES:');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            processedStories.forEach((story, i) => {
-              if (story.type === 'news') {
-                const hasImage = story.urlToImage && story.urlToImage.trim() !== '';
-                console.log(`[${i + 1}] ${hasImage ? '✅' : '❌'} ${story.title.substring(0, 50)}...`);
-                if (hasImage) {
-                  console.log(`    🔗 ${story.urlToImage.substring(0, 80)}...`);
-                }
-              }
-            });
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-            
             setStories(processedStories);
             console.log('📰 Stories set successfully');
           } else {
@@ -616,80 +601,36 @@ export default function Home() {
     }
   };
 
-  // Helper: derive a much darker, high-contrast highlight color from blur color
-  const getContrastingHighlightColor = (blurColor) => {
+  // Helper: produce a much darker color from an rgba/rgb blur color
+  const getDarkerFromBlurColor = (blurColor) => {
     if (!blurColor) return null;
     const match = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (!match) return null;
-    let r = parseInt(match[1], 10);
-    let g = parseInt(match[2], 10);
-    let b = parseInt(match[3], 10);
-
-    // RGB → HSL
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max - min);
-      switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        default: h = (r - g) / d + 4; break;
-      }
-      h *= 60;
-    }
-
-    // Snap hue to a strong, legible palette bucket (dark variants)
-    const snap = (deg) => {
-      if (deg < 20 || deg >= 340) return { h: 15, s: 85, l: 34 };      // dark orange-red
-      if (deg < 50) return { h: 35, s: 90, l: 34 };                     // dark orange
-      if (deg < 90) return { h: 75, s: 80, l: 30 };                     // dark yellow-green
-      if (deg < 170) return { h: 135, s: 70, l: 30 };                   // dark green
-      if (deg < 230) return { h: 210, s: 85, l: 28 };                   // dark navy (blue)
-      if (deg < 270) return { h: 260, s: 75, l: 32 };                   // dark purple
-      if (deg < 320) return { h: 290, s: 80, l: 33 };                   // dark magenta
-      return { h: 210, s: 85, l: 28 };
-    };
-
-    const bucket = snap(h);
-
-    // HSL → RGB
-    const H = bucket.h / 360;
-    const S = Math.min(1, Math.max(0, bucket.s / 100));
-    const L = Math.min(1, Math.max(0, bucket.l / 100));
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
-    };
-    let r2, g2, b2;
-    if (S === 0) {
-      r2 = g2 = b2 = L; // achromatic
-    } else {
-      const q = L < 0.5 ? L * (1 + S) : L + S - L * S;
-      const p = 2 * L - q;
-      r2 = hue2rgb(p, q, H + 1/3);
-      g2 = hue2rgb(p, q, H);
-      b2 = hue2rgb(p, q, H - 1/3);
-    }
-    const R = Math.round(r2 * 255);
-    const G = Math.round(g2 * 255);
-    const B = Math.round(b2 * 255);
+    const r = parseInt(match[1], 10);
+    const g = parseInt(match[2], 10);
+    const b = parseInt(match[3], 10);
+    // Darken strongly (keep it readable on light images)
+    const factor = 0.35; // 35% of original brightness
+    const R = Math.max(0, Math.min(255, Math.round(r * factor)));
+    const G = Math.max(0, Math.min(255, Math.round(g * factor)));
+    const B = Math.max(0, Math.min(255, Math.round(b * factor)));
     return `rgb(${R}, ${G}, ${B})`;
   };
 
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, blurColor) => {
     if (!text) return '';
-    if (!blurColor) return text.replace(/\*\*/g, '');
-    const highlightColor = getContrastingHighlightColor(blurColor);
-    if (highlightColor) {
+    if (!blurColor) {
+      // Fallback: just remove ** markers
+      return text.replace(/\*\*/g, '');
+    }
+    
+    // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
+    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (colorMatch) {
+      const highlightColor = getDarkerFromBlurColor(blurColor) || 'rgb(30,30,30)';
+      
+      // Replace **text** with bold and colored spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -709,9 +650,16 @@ export default function Home() {
   // Function to render title with highlighted important words (colored but not bold)
   const renderTitleWithHighlight = (text, blurColor) => {
     if (!text) return '';
-    if (!blurColor) return text;
-    const highlightColor = getContrastingHighlightColor(blurColor);
-    if (highlightColor) {
+    if (!blurColor) {
+      return text;
+    }
+    
+    // Extract color from rgba string
+    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (colorMatch) {
+      const highlightColor = getDarkerFromBlurColor(blurColor) || 'rgb(30,30,30)';
+      
+      // Replace **text** with colored (but not bold) spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -2195,13 +2143,11 @@ export default function Home() {
                       borderRadius: '12px',
                       overflow: 'hidden'
                     }}>
-                      {story.urlToImage && story.urlToImage.trim() !== '' ? (
+                      {story.urlToImage ? (
                         <img 
-                          key={`img-${story.id || index}-${story.urlToImage}`}
-                          src={story.urlToImage.trim()}
+                          src={story.urlToImage}
                           alt={story.title}
                           crossOrigin="anonymous"
-                          referrerPolicy="no-referrer"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -2213,23 +2159,8 @@ export default function Home() {
                             extractDominantColor(e.target, index);
                           }}
                           onError={(e) => {
-                            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                            console.error('❌ IMAGE FAILED TO LOAD');
-                            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                            console.error('🔗 URL:', story.urlToImage);
-                            console.error('📰 Article:', story.title);
-                            console.error('🏢 Source:', story.source);
-                            console.error('📁 Category:', story.category);
-                            console.error('');
-                            console.error('💡 Common causes:');
-                            console.error('   1. URL is broken/deleted by source');
-                            console.error('   2. CORS policy blocking the image');
-                            console.error('   3. Image requires authentication');
-                            console.error('   4. URL format is invalid');
-                            console.error('');
-                            console.error('🧪 Test: Copy the URL above and paste in browser to check if it loads');
-                            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                            
+                            console.error('❌ Image failed to load:', story.urlToImage);
+                            console.error('   Story title:', story.title);
                             e.target.style.display = 'none';
                             e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                             e.target.parentElement.innerHTML = `
@@ -2297,8 +2228,9 @@ export default function Home() {
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff'
-                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
                     </div>
                     
