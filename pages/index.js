@@ -622,10 +622,10 @@ export default function Home() {
       if (isDark) {
         // For dark blur (white images), use a bright warm tint for visibility
         r = 255;
-        g = 240;
-        b = 190; // Bright warm beige for good visibility
+        g = 245;
+        b = 180; // Bright warm yellow/cream for visibility
       } else {
-        // Create a brighter version for bullets (50% original, 50% white) for better visibility
+        // Create a brighter version for bullets (less dramatic than title, 50% original, 50% white)
         r = Math.min(255, Math.round(r * 0.5 + 255 * 0.5));
         g = Math.min(255, Math.round(g * 0.5 + 255 * 0.5));
         b = Math.min(255, Math.round(b * 0.5 + 255 * 0.5));
@@ -668,27 +668,31 @@ export default function Home() {
       const isDark = r < 50 && g < 50 && b < 50;
       
       if (isDark) {
-        // For dark blur (white images), use a bright warm tint that's very visible
+        // For dark blur (white images), use bright yellow for maximum visibility
         r = 255;
-        g = 245;
-        b = 180; // Bright warm yellow for maximum visibility
+        g = 255;
+        b = 180; // Bright yellow for maximum visibility
       } else {
-        // Create a much brighter, more visible version for colored images
-        // Blend with white (35% original, 65% white) for maximum visibility against the blur
-        r = Math.min(255, Math.round(r * 0.35 + 255 * 0.65));
-        g = Math.min(255, Math.round(g * 0.35 + 255 * 0.65));
-        b = Math.min(255, Math.round(b * 0.35 + 255 * 0.65));
+        // Create a much brighter, highly visible version for colored images
+        // Blend with white (15% original, 85% white) for maximum visibility against the blur
+        r = Math.min(255, Math.round(r * 0.15 + 255 * 0.85));
+        g = Math.min(255, Math.round(g * 0.15 + 255 * 0.85));
+        b = Math.min(255, Math.round(b * 0.15 + 255 * 0.85));
       }
       
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
-      // Replace **text** with colored (but not bold) spans
+      // Replace **text** with colored spans with text shadow for extra visibility
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           const content = part.replace(/\*\*/g, '');
           return (
-            <span key={i} style={{ color: highlightColor }}>
+            <span key={i} style={{ 
+              color: highlightColor,
+              textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.6)',
+              fontWeight: '800' // Add slight bold for extra visibility
+            }}>
               {content}
             </span>
           );
