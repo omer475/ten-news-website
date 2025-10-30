@@ -613,6 +613,31 @@ export default function Home() {
     }
   };
 
+  // Helper: estimate title area percentage from bottom (for dynamic blur gradient)
+  const getTitleAreaPercentage = (title) => {
+    if (!title) return 25; // Default: 25% from bottom
+    
+    // Estimate title height based on text length
+    // Font size: 22px, line-height: 1.2, padding-bottom: 20px
+    const avgCharsPerLine = 40; // Approximate characters per line at 22px
+    const charsPerLine = Math.floor(avgCharsPerLine * 0.85); // Slightly conservative
+    const titleLength = title.length;
+    const estimatedLines = Math.max(1, Math.ceil(titleLength / charsPerLine));
+    
+    // Title height: (fontSize * lineHeight * lines) + padding
+    const fontSize = 22;
+    const lineHeight = 1.2;
+    const paddingBottom = 20;
+    const estimatedTitleHeight = (fontSize * lineHeight * estimatedLines) + paddingBottom;
+    
+    // Image height is roughly 38vh, estimate as ~300px on mobile
+    const estimatedImageHeight = 300;
+    const percentageFromBottom = (estimatedTitleHeight / estimatedImageHeight) * 100;
+    
+    // Clamp between 18% (short titles) and 35% (very long titles)
+    return Math.max(18, Math.min(35, Math.round(percentageFromBottom)));
+  };
+
   // Helper: produce a much darker color from an rgba/rgb blur color
   const getDarkerFromBlurColor = (blurColor) => {
     if (!blurColor) return null;
@@ -2210,50 +2235,59 @@ export default function Home() {
                       )}
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        padding: '24px 16px 20px 16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
-                        background: imageDominantColors[index]?.light 
-                          ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.02')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.05')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.12')} 60%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 68%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 73%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.70')} 78%, 
-                              ${imageDominantColors[index].light} 82%, 
-                              ${imageDominantColors[index].light} 100%)`
-                          : imageDominantColors[index]?.original
-                          ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.03')} 30%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.08')} 50%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.15')} 60%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.30')} 68%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 73%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.80')} 78%, 
-                              ${imageDominantColors[index].original} 82%, 
-                              ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.01) 30%, rgba(0,0,0,0.03) 50%, rgba(0,0,0,0.08) 60%, rgba(0,0,0,0.18) 68%, rgba(0,0,0,0.35) 73%, rgba(0,0,0,0.65) 78%, rgba(0,0,0,1.0) 82%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2
-                      }}>
-                        <h3 style={{ 
-                          margin: 0,
-                          fontSize: '22px',
-                          fontWeight: '800',
-                          lineHeight: '1.2',
-                          letterSpacing: '-0.5px',
-                          color: '#ffffff'
-                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
-                      </div>
+                      {(() => {
+                        const titleAreaPercent = getTitleAreaPercentage(story.title);
+                        const blurStartPercent = 100 - titleAreaPercent;
+                        const transitionStart = blurStartPercent - 10; // Start transition 10% before title area
+                        const transitionMid = blurStartPercent - 5; // Mid transition
+                        
+                        return (
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            padding: '24px 16px 20px 16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                            background: imageDominantColors[index]?.light 
+                              ? `linear-gradient(to bottom, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.02')} ${Math.max(0, transitionStart - 30)}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.05')} ${Math.max(0, transitionStart - 20)}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.12')} ${Math.max(0, transitionStart - 10)}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.25')} ${Math.max(0, transitionMid - 5)}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.45')} ${Math.max(0, transitionMid)}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.70')} ${Math.max(0, transitionMid + 3)}%, 
+                                  ${imageDominantColors[index].light} ${blurStartPercent}%, 
+                                  ${imageDominantColors[index].light} 100%)`
+                              : imageDominantColors[index]?.original
+                              ? `linear-gradient(to bottom, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.03')} ${Math.max(0, transitionStart - 30)}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.08')} ${Math.max(0, transitionStart - 20)}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.15')} ${Math.max(0, transitionStart - 10)}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.30')} ${Math.max(0, transitionMid - 5)}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.55')} ${Math.max(0, transitionMid)}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.80')} ${Math.max(0, transitionMid + 3)}%, 
+                                  ${imageDominantColors[index].original} ${blurStartPercent}%, 
+                                  ${imageDominantColors[index].original} 100%)`
+                              : `linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.01) ${Math.max(0, transitionStart - 30)}%, rgba(0,0,0,0.03) ${Math.max(0, transitionStart - 20)}%, rgba(0,0,0,0.08) ${Math.max(0, transitionStart - 10)}%, rgba(0,0,0,0.18) ${Math.max(0, transitionMid - 5)}%, rgba(0,0,0,0.35) ${Math.max(0, transitionMid)}%, rgba(0,0,0,0.65) ${Math.max(0, transitionMid + 3)}%, rgba(0,0,0,1.0) ${blurStartPercent}%, rgba(0,0,0,1.0) 100%)`,
+                            zIndex: 2
+                          }}>
+                            <h3 style={{ 
+                              margin: 0,
+                              fontSize: '22px',
+                              fontWeight: '800',
+                              lineHeight: '1.2',
+                              letterSpacing: '-0.5px',
+                              color: '#ffffff'
+                            }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                          </div>
+                        );
+                      })()}
                     </div>
                     
                     {/* Content Area - Starts After Image */}
