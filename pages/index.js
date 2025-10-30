@@ -2222,25 +2222,23 @@ export default function Home() {
                         justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.light 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 80%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.98')} 90%, 
-                              ${imageDominantColors[index].light} 95%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 65%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 70%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.4')} 80%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.75')} 90%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 95%, 
                               ${imageDominantColors[index].light} 100%)`
                           : imageDominantColors[index]?.original
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 80%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 65%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.2')} 70%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.5')} 80%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.85')} 90%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.98')} 95%, 
                               ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 65%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0.8) 90%, rgba(0,0,0,0.96) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2
                       }}>
                         <h3 style={{ 
@@ -2421,28 +2419,20 @@ export default function Home() {
                         )}
                       </div>
                       
-                      {/* Summary Container - Vertically Centered Between Switch and Info Box */}
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        minHeight: 'calc(100vh - 38vh - 36px - 85px - 32px - 16px)',
-                        position: 'relative',
-                        alignItems: 'flex-start'
-                      }}>
-                        {/* Summary/Bullet Points - Swipeable */}
-                        <div 
-                          className="news-summary" 
-                          style={{ 
-                            marginTop: '0',
-                            marginBottom: '16px',
-                            fontSize: '16px',
-                            lineHeight: '1.6',
-                            color: '#4a4a4a',
-                            opacity: '1',
-                            padding: '8px 0',
-                            position: 'relative'
-                          }}
+                      {/* Summary/Bullet Points - Swipeable */}
+                      <div 
+                        className="news-summary" 
+                        style={{ 
+                          marginTop: '0',
+                          marginBottom: '16px',
+                          fontSize: '16px',
+                          lineHeight: '1.6',
+                          color: '#4a4a4a',
+                          opacity: '1',
+                          minHeight: '60px',
+                          padding: '8px 0',
+                          position: 'relative'
+                        }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
@@ -2611,7 +2601,6 @@ export default function Home() {
                           )}
                         </div>
                         
-                        </div>
                       </div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
