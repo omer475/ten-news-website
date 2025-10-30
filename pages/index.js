@@ -615,11 +615,11 @@ export default function Home() {
       const r = parseInt(colorMatch[1], 10);
       const g = parseInt(colorMatch[2], 10);
       const b = parseInt(colorMatch[3], 10);
-      // Darken the color for better contrast against the blur
-      const factor = 0.6; // 60% of original brightness
-      const dr = Math.max(0, Math.floor(r * factor));
-      const dg = Math.max(0, Math.floor(g * factor));
-      const db = Math.max(0, Math.floor(b * factor));
+      // Darken the color significantly for strong contrast
+      const factor = 0.45; // 45% brightness
+      const dr = Math.max(16, Math.floor(r * factor));
+      const dg = Math.max(16, Math.floor(g * factor));
+      const db = Math.max(16, Math.floor(b * factor));
       const highlightColor = `rgb(${dr}, ${dg}, ${db})`;
       
       // Replace **text** with bold and colored spans
@@ -652,10 +652,10 @@ export default function Home() {
       const r = parseInt(colorMatch[1], 10);
       const g = parseInt(colorMatch[2], 10);
       const b = parseInt(colorMatch[3], 10);
-      const factor = 0.6; // darker version of blur color
-      const dr = Math.max(0, Math.floor(r * factor));
-      const dg = Math.max(0, Math.floor(g * factor));
-      const db = Math.max(0, Math.floor(b * factor));
+      const factor = 0.5; // slightly brighter than bullets but still dark
+      const dr = Math.max(16, Math.floor(r * factor));
+      const dg = Math.max(16, Math.floor(g * factor));
+      const db = Math.max(16, Math.floor(b * factor));
       const highlightColor = `rgb(${dr}, ${dg}, ${db})`;
       
       // Replace **text** with colored (but not bold) spans
