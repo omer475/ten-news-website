@@ -2605,18 +2605,18 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Information Box - Details/Timeline Section */}
-                      <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        maxWidth: '950px',
-                        paddingLeft: '15px',
-                        paddingRight: '15px',
-                        zIndex: '50',
-                        marginTop: '16px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto'
-                      }}>
+                        {/* Information Box - Details/Timeline Section */}
+                        <div style={{
+                          position: 'relative',
+                          width: '100%',
+                          maxWidth: '950px',
+                          paddingLeft: '15px',
+                          paddingRight: '15px',
+                          zIndex: '50',
+                          marginTop: '16px',
+                          marginLeft: 'auto',
+                          marginRight: 'auto'
+                        }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
                         <div 
