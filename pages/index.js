@@ -2421,20 +2421,28 @@ export default function Home() {
                         )}
                       </div>
                       
-                      {/* Summary/Bullet Points - Swipeable */}
-                      <div 
-                        className="news-summary" 
-                        style={{ 
-                          marginTop: '0',
-                          marginBottom: '16px',
-                          fontSize: '16px',
-                          lineHeight: '1.6',
-                          color: '#4a4a4a',
-                          opacity: '1',
-                          minHeight: '60px',
-                          padding: '8px 0',
-                          position: 'relative'
-                        }}
+                      {/* Summary Container - Vertically Centered Between Switch and Info Box */}
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        minHeight: 'calc(100vh - 38vh - 36px - 85px - 32px - 16px)',
+                        position: 'relative',
+                        alignItems: 'flex-start'
+                      }}>
+                        {/* Summary/Bullet Points - Swipeable */}
+                        <div 
+                          className="news-summary" 
+                          style={{ 
+                            marginTop: '0',
+                            marginBottom: '16px',
+                            fontSize: '16px',
+                            lineHeight: '1.6',
+                            color: '#4a4a4a',
+                            opacity: '1',
+                            padding: '8px 0',
+                            position: 'relative'
+                          }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
@@ -2509,25 +2517,7 @@ export default function Home() {
                           </div>
                           
                           {/* Show Only Bullet Text */}
-                          <div style={{ 
-                            margin: 0,
-                            // Center vertically between switch row and info box when not expanded
-                            position: showDetailedText[index] ? 'relative' : 'fixed',
-                            left: showDetailedText[index] ? 'auto' : '50%',
-                            transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
-                            width: '100%',
-                            maxWidth: '950px',
-                            // Top: image (38vh) + content padding (8px) + switch row approx height (36px)
-                            top: showDetailedText[index] ? 'auto' : 'calc(38vh + 8px + 36px)',
-                            // Bottom: info box height (85px) + fixed bottom gap (32px)
-                            bottom: showDetailedText[index] ? 'auto' : 'calc(85px + 32px)',
-                            padding: showDetailedText[index] ? '0' : '0 15px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'flex-start',
-                            zIndex: showDetailedText[index] ? 'auto' : 10
-                          }}>
+                          <div style={{ margin: 0 }}>
                             {story.summary_bullets && story.summary_bullets.length > 0 ? (
                               <ul style={{
                                 margin: 0,
@@ -2621,6 +2611,7 @@ export default function Home() {
                           )}
                         </div>
                         
+                        </div>
                       </div>
                       
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
