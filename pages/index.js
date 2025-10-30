@@ -2132,7 +2132,7 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(40vh - 3px)',
+                      height: 'calc(37vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2236,7 +2236,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(40vh + 8px)',
+                        paddingTop: 'calc(37vh + 8px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2584,20 +2584,23 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Information Box - Details/Timeline Section */}
+                      {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
-                        position: 'relative',
+                        position: showDetailedText[index] ? 'relative' : 'fixed',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
+                        left: showDetailedText[index] ? '0' : '50%',
+                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: '950px',
+                        maxWidth: showDetailedText[index] ? '950px' : '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
                         zIndex: '50',
-                        marginTop: '16px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto'
+                        marginTop: showDetailedText[index] ? '0' : '0',
+                        marginLeft: showDetailedText[index] ? 'auto' : '0',
+                        marginRight: showDetailedText[index] ? 'auto' : '0'
                       }}>
                         
-                        {/* Details/Timeline Section */}
+                        {/* Details/Timeline Section - At end of article when detailed text is showing */}
                         <div 
                           className="news-meta" 
                         style={{ 
@@ -2610,13 +2613,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                          border: 'none',
-                          borderRadius: showTimeline[index] ? '0' : '8px',
-                          boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`,
-                          padding: showDetails[index] ? '24px' : showTimeline[index] ? '8px 24px 16px 24px' : '24px',
-                          display: 'flex',
-                          flexDirection: showDetails[index] ? 'row' : 'column',
-                          gap: showDetails[index] ? '16px' : '0'
+                            border: 'none',
+                            borderRadius: showTimeline[index] ? '0' : '8px',
+                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
