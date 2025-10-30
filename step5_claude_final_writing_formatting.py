@@ -59,11 +59,10 @@ You must write:
 - Complete main point of article
 - Active voice, sentence case
 - NO clickbait, questions, exclamation marks
-- **BOLD MARKUP**: Use **bold** for 2-4 key words, names, places, numbers, or important entities
-  - Highlight: important names, locations, numbers, key concepts, organizations
-  - Use 2-4 bold items per title (not too few, not too many)
+- **BOLD MARKUP**: Add **bold** markdown around 2-4 key terms (names, numbers, places, organizations, important concepts)
   - Example: "**European Central Bank** raises interest rates to **4.5 percent**"
   - Example: "**Magnitude 7.8** earthquake strikes **Turkey** near Syrian border"
+  - Use **bold** for: person names, organization names, numbers/percentages, key locations, important technical terms
 
 Examples:
 ✓ "**European Central Bank** raises interest rates to **4.5 percent**"
@@ -112,10 +111,6 @@ Rules:
 - No periods at end
 - Include specific details (numbers, names, locations)
 - Active voice
-- **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers in EACH bullet
-  - Highlight: important names, locations, numbers, key concepts, organizations
-  - Use 1-2 bold items per bullet (not too many)
-  - Example: "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since **July 2023**"
 
 Structure:
 1. First bullet: Full main event with key details (WHO + WHAT + KEY NUMBER)
@@ -127,10 +122,10 @@ Structure:
 Each bullet must be understandable on its own. User should fully understand news from ONLY bullets.
 
 Examples:
-✓ "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since **July 2023**"
-✓ "Current inflation at **5.3%**, well above the **2%** target rate"
-✓ "Decision affects **340 million** people across **20** eurozone countries"
-✓ "**Higher borrowing costs** expected for mortgages and business loans"
+✓ "ECB raises interest rates to 4.5%, tenth consecutive increase since July 2023"
+✓ "Current inflation at 5.3%, well above the 2% target rate"
+✓ "Decision affects 340 million people across 20 eurozone countries"
+✓ "Higher borrowing costs expected for mortgages and business loans"
 
 === TIMELINE (if selected) ===
 - 2-4 events in chronological order (oldest first)
@@ -245,12 +240,12 @@ Zoom levels:
 Return ONLY valid JSON:
 
 {
-  "title": "...",
+  "title": "...with **bold** markup for 2-4 key terms",
   "detailed_text": "Detailed comprehensive article (max 200 words)...",
   "summary_bullets": [
-    "Bullet 1 (8-15 words)",
-    "Bullet 2 (8-15 words)",
-    "Bullet 3 (8-15 words)"
+    "Bullet 1 (8-15 words) with **bold** markup",
+    "Bullet 2 (8-15 words) with **bold** markup",
+    "Bullet 3 (8-15 words) with **bold** markup"
   ],
   "timeline": [...],  // Only if timeline selected
   "details": [...],   // Only if details selected
@@ -259,9 +254,9 @@ Return ONLY valid JSON:
 }
 
 VALIDATION CHECKLIST:
-- Title: ≤12 words, declarative, geographic specificity
+- Title: ≤12 words, declarative, geographic specificity, **bold** markup for 2-4 key terms
 - Detailed text: Maximum 200 words, detailed comprehensive coverage, journalistic style
-- Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods
+- Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods, **bold** markup for key terms
 - Timeline: 2-4 events, chronological, ≤14 words per event
 - Details: Exactly 3, all have numbers, <8 words each
 - Graph: At least 4 data points, correct format
@@ -413,9 +408,9 @@ Type: {article.get('graph_type', 'line')}
 """
         
         prompt += """Generate complete article with:
-1. Title (≤12 words)
+1. Title (≤12 words, with **bold** markup for 2-4 key terms like names, numbers, places)
 2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
-3. Summary bullets (3-5, 8-15 words each, max 40 words total)
+3. Summary bullets (3-5, 8-15 words each, max 40 words total, with **bold** markup for key terms)
 4. Timeline (if selected)
 5. Details (if selected, exactly 3 with numbers)
 6. Graph (if selected)
