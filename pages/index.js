@@ -2227,7 +2227,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(35vh - 20px)',
+                        paddingTop: 'calc(35vh + 8px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2239,7 +2239,7 @@ export default function Home() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '2px',
-                        marginTop: '-12px'
+                        marginTop: '0'
                       }}>
                         {/* Time Since Published - Minimal Design */}
                         {story.publishedAt && (
