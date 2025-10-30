@@ -2132,7 +2132,7 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      height: 'calc(40vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2236,7 +2236,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(38vh + 8px)',
+                        paddingTop: 'calc(40vh + 8px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
