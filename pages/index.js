@@ -155,30 +155,6 @@ export default function Home() {
     }
   };
 
-  // Function to calculate time since published
-  const getTimeAgo = (publishedAt) => {
-    if (!publishedAt) return '';
-    
-    try {
-      const publishedDate = new Date(publishedAt);
-      const now = new Date();
-      const diffInMs = now - publishedDate;
-      const diffInMinutes = Math.floor(diffInMs / 60000);
-      const diffInHours = Math.floor(diffInMinutes / 60);
-      const diffInDays = Math.floor(diffInHours / 24);
-      
-      if (diffInMinutes < 1) return 'Just now';
-      if (diffInMinutes < 60) return `${diffInMinutes}m`;
-      if (diffInHours < 24) return `${diffInHours}h`;
-      if (diffInDays < 7) return `${diffInDays}d`;
-      
-      const weeks = Math.floor(diffInDays / 7);
-      return `${weeks}w`;
-    } catch (error) {
-      return '';
-    }
-  };
-
   // Function to extract dominant color from image
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -417,7 +393,6 @@ export default function Home() {
                    {"date": "Today", "event": "Major developments break"},
                    {"date": "Next week", "event": "Follow-up expected"}
                  ],
-                 publishedAt: article.publishedAt || article.published_at || article.added_at,
                  id: article.id || `article_${index}`
                };
                
@@ -601,63 +576,21 @@ export default function Home() {
     }
   };
 
-  // Function to render text with highlighted important words (for bullet texts - bold + colored)
-  const renderBoldText = (text, blurColor) => {
+  // Function to render text without bold markup
+  const renderBoldText = (text, category) => {
     if (!text) return '';
-    if (!blurColor) {
-      // Fallback: just remove ** markers
-      return text.replace(/\*\*/g, '');
-    }
-    
-    // Extract color from rgba string and create a more visible version
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      let r = parseInt(colorMatch[1]);
-      let g = parseInt(colorMatch[2]);
-      let b = parseInt(colorMatch[3]);
-      
-      // Check if this is a black/very dark color (for white images)
-      const isDark = r < 50 && g < 50 && b < 50;
-      
-      if (isDark) {
-        // For dark blur (white images), use a bright warm tint for visibility
-        r = 255;
-        g = 245;
-        b = 180; // Bright warm yellow/cream for visibility
-      } else {
-        // Create a brighter version for bullets (less dramatic than title, 50% original, 50% white)
-        r = Math.min(255, Math.round(r * 0.5 + 255 * 0.5));
-        g = Math.min(255, Math.round(g * 0.5 + 255 * 0.5));
-        b = Math.min(255, Math.round(b * 0.5 + 255 * 0.5));
-      }
-      
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
-      
-      // Replace **text** with bold and colored spans
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
-    }
+    // Remove all ** markdown markers and return plain text
     return text.replace(/\*\*/g, '');
   };
 
-  // Function to render title with highlighted important words (colored but not bold)
+  // Function to render title with highly visible highlighted important words
   const renderTitleWithHighlight = (text, blurColor) => {
     if (!text) return '';
     if (!blurColor) {
-      return text;
+      return text.replace(/\*\*/g, ''); // Just remove bold markers if no color
     }
     
-    // Extract color from rgba string and create a more visible version
+    // Extract color from rgba string and create a MUCH more visible version
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
       let r = parseInt(colorMatch[1]);
@@ -668,21 +601,36 @@ export default function Home() {
       const isDark = r < 50 && g < 50 && b < 50;
       
       if (isDark) {
-        // For dark blur (white images), use bright yellow for maximum visibility
+        // For dark blur (white images), use a bright warm color that's VERY visible
         r = 255;
-        g = 255;
-        b = 180; // Bright yellow for maximum visibility
+        g = 235;
+        b = 120; // Bright yellow-gold for maximum visibility
       } else {
-        // Create a much brighter, highly visible version for colored images
-        // Blend with white (15% original, 85% white) for maximum visibility against the blur
-        r = Math.min(255, Math.round(r * 0.15 + 255 * 0.85));
-        g = Math.min(255, Math.round(g * 0.15 + 255 * 0.85));
-        b = Math.min(255, Math.round(b * 0.15 + 255 * 0.85));
+        // Create an EXTREMELY visible version - blend heavily with bright colors
+        // Use only 10% of original color, blend with bright white/yellow tint
+        const brightness = (r + g + b) / 3;
+        
+        if (brightness < 100) {
+          // For dark colors, blend with bright yellow-white
+          r = Math.min(255, Math.round(r * 0.1 + 255 * 0.9));
+          g = Math.min(255, Math.round(g * 0.1 + 245 * 0.9));
+          b = Math.min(255, Math.round(b * 0.1 + 200 * 0.9));
+        } else if (brightness < 150) {
+          // For medium colors, blend with white
+          r = Math.min(255, Math.round(r * 0.15 + 255 * 0.85));
+          g = Math.min(255, Math.round(g * 0.15 + 250 * 0.85));
+          b = Math.min(255, Math.round(b * 0.15 + 240 * 0.85));
+        } else {
+          // For lighter colors, still make brighter but keep more of the hue
+          r = Math.min(255, Math.round(r * 0.25 + 255 * 0.75));
+          g = Math.min(255, Math.round(g * 0.25 + 255 * 0.75));
+          b = Math.min(255, Math.round(b * 0.25 + 255 * 0.75));
+        }
       }
       
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
-      // Replace **text** with colored spans with text shadow for extra visibility
+      // Replace **text** with colored spans (no shadow, just bright color)
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -690,8 +638,7 @@ export default function Home() {
           return (
             <span key={i} style={{ 
               color: highlightColor,
-              textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.6)',
-              fontWeight: '800' // Add slight bold for extra visibility
+              fontWeight: '800' // Make it extra bold for visibility
             }}>
               {content}
             </span>
@@ -700,7 +647,7 @@ export default function Home() {
         return part;
       });
     }
-    return text;
+    return text.replace(/\*\*/g, '');
   };
 
   useEffect(() => {
@@ -2215,49 +2162,39 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Title Overlay with Image-Based Color Gradient */}
                       <div style={{
                         position: 'absolute',
-                        top: 0,
                         bottom: 0,
                         left: 0,
                         right: 0,
                         padding: '24px 16px 20px 16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.light 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 80%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.98')} 90%, 
-                              ${imageDominantColors[index].light} 95%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.6')} 5%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 20%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 40%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.99')} 70%, 
                               ${imageDominantColors[index].light} 100%)`
                           : imageDominantColors[index]?.original
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 80%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.7')} 10%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.92')} 40%, 
                               ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.65) 60%, rgba(0,0,0,0.9) 100%)',
                         zIndex: 2
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          fontSize: '22px',
+                          fontSize: '26px',
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
                           color: '#ffffff',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                        }}>{story.title}</h3>
                       </div>
                     </div>
                     
@@ -2270,7 +2207,7 @@ export default function Home() {
                         zIndex: '2'
                       }}>
                       
-                      {/* Time Since Published and Timeline Button Row */}
+                      {/* Category Badge and Timeline Button Row */}
                       <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -2278,17 +2215,20 @@ export default function Home() {
                         marginBottom: '2px',
                         marginTop: '-12px'
                       }}>
-                        {/* Time Since Published - Minimal Design */}
-                        {story.publishedAt && (
-                          <div style={{
-                            fontSize: '11px',
-                            fontWeight: '400',
-                            color: '#86868b',
-                            letterSpacing: '0.3px'
-                          }}>
-                            {getTimeAgo(story.publishedAt)}
-                          </div>
-                        )}
+                        {/* Category Badge */}
+                        <div style={{
+                          display: 'inline-block',
+                          fontSize: '9px',
+                          fontWeight: '600',
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase',
+                          padding: '3px 6px',
+                          borderRadius: '3px',
+                          background: getCategoryColors(story.category).lighter,
+                          color: getCategoryColors(story.category).primary
+                        }}>
+                          {story.emoji} {story.category}
+                        </div>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available */}
                         {getAvailableComponentsCount(story) > 1 && (
@@ -2428,6 +2368,16 @@ export default function Home() {
                         )}
                       </div>
                       
+                      {/* Title - Large and Prominent, Higher Position */}
+                      <h3 className="news-title" style={{ 
+                        marginTop: '0',
+                        marginBottom: '10px',
+                        fontSize: '26px',
+                        fontWeight: '800',
+                        lineHeight: '1.2',
+                        letterSpacing: '-0.5px'
+                      }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                      
                       {/* Summary/Bullet Points - Swipeable */}
                       <div 
                         className="news-summary" 
@@ -2496,25 +2446,6 @@ export default function Home() {
                           onTouchEnd={onTouchEnd}
                           style={{ cursor: 'pointer' }}
                         >
-                          {/* Summary Header */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginBottom: '12px'
-                          }}>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
-                              <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            <span style={{
-                              fontSize: '15px',
-                              fontWeight: '700',
-                              letterSpacing: '0.3px',
-                              color: '#1a1a1a',
-                              textTransform: 'none'
-                            }}><span style={{ fontSize: '15px' }}>S</span><span style={{ fontSize: '15px', textTransform: 'uppercase' }}>ummary</span></span>
-                          </div>
-                          
                           {/* Show Only Bullet Text */}
                           <div style={{ margin: 0 }}>
                             {story.summary_bullets && story.summary_bullets.length > 0 ? (
@@ -2528,11 +2459,10 @@ export default function Home() {
                                     marginBottom: '8px',
                                     fontSize: '16px',
                                     lineHeight: '1.6',
-                                    fontWeight: '400',
-                                    color: '#1a1a1a',
-                                    fontFamily: 'Georgia, "Times New Roman", Times, serif'
+                                    fontWeight: '600',
+                                    color: '#1a1a1a'
                                   }}>
-                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
+                                    {renderBoldText(bullet, story.category)}
                                   </li>
                                 ))}
                               </ul>
