@@ -425,6 +425,21 @@ export default function Home() {
              });
             
             console.log('📰 Setting stories:', processedStories.length);
+            
+            // Debug: Log image URL status for all stories
+            console.log('\n🖼️  IMAGE URL STATUS FOR ALL ARTICLES:');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            processedStories.forEach((story, i) => {
+              if (story.type === 'news') {
+                const hasImage = story.urlToImage && story.urlToImage.trim() !== '';
+                console.log(`[${i + 1}] ${hasImage ? '✅' : '❌'} ${story.title.substring(0, 50)}...`);
+                if (hasImage) {
+                  console.log(`    🔗 ${story.urlToImage.substring(0, 80)}...`);
+                }
+              }
+            });
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+            
             setStories(processedStories);
             console.log('📰 Stories set successfully');
           } else {
@@ -2196,8 +2211,23 @@ export default function Home() {
                             extractDominantColor(e.target, index);
                           }}
                           onError={(e) => {
-                            console.error('❌ Image failed to load:', story.urlToImage);
-                            console.error('   Story title:', story.title);
+                            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                            console.error('❌ IMAGE FAILED TO LOAD');
+                            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                            console.error('🔗 URL:', story.urlToImage);
+                            console.error('📰 Article:', story.title);
+                            console.error('🏢 Source:', story.source);
+                            console.error('📁 Category:', story.category);
+                            console.error('');
+                            console.error('💡 Common causes:');
+                            console.error('   1. URL is broken/deleted by source');
+                            console.error('   2. CORS policy blocking the image');
+                            console.error('   3. Image requires authentication');
+                            console.error('   4. URL format is invalid');
+                            console.error('');
+                            console.error('🧪 Test: Copy the URL above and paste in browser to check if it loads');
+                            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                            
                             e.target.style.display = 'none';
                             e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                             e.target.parentElement.innerHTML = `
