@@ -497,9 +497,19 @@ class OptimizedRSSFetcher:
                     return img.get('src'), 'content_html'
         
         # METHOD 6: Parse full article page for og:image (fallback when other methods fail)
-        # Use with timeout to avoid slowdowns
+        # Use with timeout to avoid slowdowns, but longer timeout for better success rate
         try:
-            response = requests.get(article_url, timeout=3, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}, allow_redirects=True)
+            response = requests.get(
+                article_url, 
+                timeout=5,  # Increased from 3 to 5 seconds for better reliability
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5'
+                }, 
+                allow_redirects=True,
+                verify=False  # Some sites have SSL issues
+            )
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 # Try og:image first
@@ -521,8 +531,14 @@ class OptimizedRSSFetcher:
                     elif image_url.startswith('/'):
                         image_url = urljoin(article_url, image_url)
                     return image_url, 'twitter_image'
+        except requests.exceptions.Timeout:
+            # Timeout is expected for slow sites - don't log
+            pass
+        except requests.exceptions.RequestException:
+            # Network errors are expected - don't log
+            pass
         except Exception:
-            # Silent fail - this is just a fallback method
+            # Other errors - silent fail
             pass
         
         # METHOD 7: No image found
