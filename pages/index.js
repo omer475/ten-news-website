@@ -2228,9 +2228,8 @@ export default function Home() {
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                          color: '#ffffff'
+                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
                     </div>
                     
