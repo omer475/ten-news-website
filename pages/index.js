@@ -620,15 +620,15 @@ export default function Home() {
       const isDark = r < 50 && g < 50 && b < 50;
       
       if (isDark) {
-        // For dark blur (white images), use a warmer, slightly darker tint than title
-        r = 240;
-        g = 230;
-        b = 200; // Warm beige/cream
+        // For dark blur (white images), use a bright warm tint for visibility
+        r = 255;
+        g = 240;
+        b = 190; // Bright warm beige for good visibility
       } else {
-        // Create a brighter version for bullets (less dramatic than title, 75% original, 25% white)
-        r = Math.min(255, Math.round(r * 0.75 + 255 * 0.25));
-        g = Math.min(255, Math.round(g * 0.75 + 255 * 0.25));
-        b = Math.min(255, Math.round(b * 0.75 + 255 * 0.25));
+        // Create a brighter version for bullets (50% original, 50% white) for better visibility
+        r = Math.min(255, Math.round(r * 0.5 + 255 * 0.5));
+        g = Math.min(255, Math.round(g * 0.5 + 255 * 0.5));
+        b = Math.min(255, Math.round(b * 0.5 + 255 * 0.5));
       }
       
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
@@ -668,16 +668,16 @@ export default function Home() {
       const isDark = r < 50 && g < 50 && b < 50;
       
       if (isDark) {
-        // For dark blur (white images), use a light warm tint that's very visible
+        // For dark blur (white images), use a bright warm tint that's very visible
         r = 255;
-        g = 248;
-        b = 220; // Light warm yellow/cream for visibility
+        g = 245;
+        b = 180; // Bright warm yellow for maximum visibility
       } else {
-        // Create a brighter, more visible version for colored images
-        // Blend with white (50% original, 50% white) for much better visibility against the blur
-        r = Math.min(255, Math.round(r * 0.5 + 255 * 0.5));
-        g = Math.min(255, Math.round(g * 0.5 + 255 * 0.5));
-        b = Math.min(255, Math.round(b * 0.5 + 255 * 0.5));
+        // Create a much brighter, more visible version for colored images
+        // Blend with white (35% original, 65% white) for maximum visibility against the blur
+        r = Math.min(255, Math.round(r * 0.35 + 255 * 0.65));
+        g = Math.min(255, Math.round(g * 0.35 + 255 * 0.65));
+        b = Math.min(255, Math.round(b * 0.35 + 255 * 0.65));
       }
       
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
