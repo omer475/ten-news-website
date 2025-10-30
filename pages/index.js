@@ -2238,8 +2238,11 @@ export default function Home() {
                       {(() => {
                         const titleAreaPercent = getTitleAreaPercentage(story.title);
                         const blurStartPercent = 100 - titleAreaPercent;
-                        const transitionStart = blurStartPercent - 10; // Start transition 10% before title area
-                        const transitionMid = blurStartPercent - 5; // Mid transition
+                        // Calculate smooth transition points from 50% (middle) to blurStartPercent
+                        const distanceFromMiddle = blurStartPercent - 50;
+                        const quarter1 = 50 + (distanceFromMiddle * 0.25);
+                        const quarter2 = 50 + (distanceFromMiddle * 0.5);
+                        const quarter3 = 50 + (distanceFromMiddle * 0.75);
                         
                         return (
                           <div style={{
@@ -2255,26 +2258,24 @@ export default function Home() {
                             background: imageDominantColors[index]?.light 
                               ? `linear-gradient(to bottom, 
                                   ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
-                                  ${imageDominantColors[index].light.replace('1.0', '0.02')} ${Math.max(0, transitionStart - 30)}%, 
-                                  ${imageDominantColors[index].light.replace('1.0', '0.05')} ${Math.max(0, transitionStart - 20)}%, 
-                                  ${imageDominantColors[index].light.replace('1.0', '0.12')} ${Math.max(0, transitionStart - 10)}%, 
-                                  ${imageDominantColors[index].light.replace('1.0', '0.25')} ${Math.max(0, transitionMid - 5)}%, 
-                                  ${imageDominantColors[index].light.replace('1.0', '0.45')} ${Math.max(0, transitionMid)}%, 
-                                  ${imageDominantColors[index].light.replace('1.0', '0.70')} ${Math.max(0, transitionMid + 3)}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.0')} 50%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.03')} ${quarter1}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.12')} ${quarter2}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.35')} ${quarter3}%, 
+                                  ${imageDominantColors[index].light.replace('1.0', '0.70')} ${Math.max(blurStartPercent - 2, blurStartPercent)}%, 
                                   ${imageDominantColors[index].light} ${blurStartPercent}%, 
                                   ${imageDominantColors[index].light} 100%)`
                               : imageDominantColors[index]?.original
                               ? `linear-gradient(to bottom, 
                                   ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
-                                  ${imageDominantColors[index].original.replace('1.0', '0.03')} ${Math.max(0, transitionStart - 30)}%, 
-                                  ${imageDominantColors[index].original.replace('1.0', '0.08')} ${Math.max(0, transitionStart - 20)}%, 
-                                  ${imageDominantColors[index].original.replace('1.0', '0.15')} ${Math.max(0, transitionStart - 10)}%, 
-                                  ${imageDominantColors[index].original.replace('1.0', '0.30')} ${Math.max(0, transitionMid - 5)}%, 
-                                  ${imageDominantColors[index].original.replace('1.0', '0.55')} ${Math.max(0, transitionMid)}%, 
-                                  ${imageDominantColors[index].original.replace('1.0', '0.80')} ${Math.max(0, transitionMid + 3)}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.0')} 50%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.05')} ${quarter1}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.15')} ${quarter2}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.40')} ${quarter3}%, 
+                                  ${imageDominantColors[index].original.replace('1.0', '0.75')} ${Math.max(blurStartPercent - 2, blurStartPercent)}%, 
                                   ${imageDominantColors[index].original} ${blurStartPercent}%, 
                                   ${imageDominantColors[index].original} 100%)`
-                              : `linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.01) ${Math.max(0, transitionStart - 30)}%, rgba(0,0,0,0.03) ${Math.max(0, transitionStart - 20)}%, rgba(0,0,0,0.08) ${Math.max(0, transitionStart - 10)}%, rgba(0,0,0,0.18) ${Math.max(0, transitionMid - 5)}%, rgba(0,0,0,0.35) ${Math.max(0, transitionMid)}%, rgba(0,0,0,0.65) ${Math.max(0, transitionMid + 3)}%, rgba(0,0,0,1.0) ${blurStartPercent}%, rgba(0,0,0,1.0) 100%)`,
+                              : `linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.02) ${quarter1}%, rgba(0,0,0,0.10) ${quarter2}%, rgba(0,0,0,0.30) ${quarter3}%, rgba(0,0,0,0.65) ${Math.max(blurStartPercent - 2, blurStartPercent)}%, rgba(0,0,0,1.0) ${blurStartPercent}%, rgba(0,0,0,1.0) 100%)`,
                             zIndex: 2
                           }}>
                             <h3 style={{ 
