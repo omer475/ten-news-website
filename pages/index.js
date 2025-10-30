@@ -2137,14 +2137,14 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                     }}>
-                    {/* News Image - Full Screen */}
+                    {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      width: '100vw',
-                      height: '38vh',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2152,7 +2152,7 @@ export default function Home() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: 0,
+                      borderRadius: '12px',
                       overflow: 'hidden'
                     }}>
                       {(story.urlToImage && story.urlToImage.trim() !== '') ? (
@@ -2431,9 +2431,12 @@ export default function Home() {
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
-                          minHeight: '60px',
+                          minHeight: '160px',
                           padding: '8px 0',
-                          position: 'relative'
+                          position: 'relative',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
