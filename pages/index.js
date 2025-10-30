@@ -2137,14 +2137,14 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                     }}>
-                    {/* News Image - With Rounded Corners and Spacing */}
+                    {/* News Image - Full Screen */}
                     <div style={{
                       position: 'fixed',
-                      top: '3px',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      width: '100vw',
+                      height: '38vh',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2152,7 +2152,7 @@ export default function Home() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '12px',
+                      borderRadius: 0,
                       overflow: 'hidden'
                     }}>
                       {(story.urlToImage && story.urlToImage.trim() !== '') ? (
