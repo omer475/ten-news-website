@@ -601,6 +601,21 @@ export default function Home() {
     }
   };
 
+  // Helper: derive a much darker color from blur color for high-contrast highlights
+  const getDarkHighlightColor = (blurColor, factor = 0.35) => {
+    if (!blurColor) return null;
+    const match = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return null;
+    const r = parseInt(match[1], 10);
+    const g = parseInt(match[2], 10);
+    const b = parseInt(match[3], 10);
+    // Reduce brightness strongly; enforce a minimum to avoid pure black
+    const dr = Math.max(16, Math.floor(r * factor));
+    const dg = Math.max(16, Math.floor(g * factor));
+    const db = Math.max(16, Math.floor(b * factor));
+    return `rgb(${dr}, ${dg}, ${db})`;
+  };
+
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, blurColor) => {
     if (!text) return '';
@@ -609,18 +624,8 @@ export default function Home() {
       return text.replace(/\*\*/g, '');
     }
     
-    // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      const r = parseInt(colorMatch[1], 10);
-      const g = parseInt(colorMatch[2], 10);
-      const b = parseInt(colorMatch[3], 10);
-      // Darken the color significantly for strong contrast
-      const factor = 0.45; // 45% brightness
-      const dr = Math.max(16, Math.floor(r * factor));
-      const dg = Math.max(16, Math.floor(g * factor));
-      const db = Math.max(16, Math.floor(b * factor));
-      const highlightColor = `rgb(${dr}, ${dg}, ${db})`;
+    const highlightColor = getDarkHighlightColor(blurColor, 0.35); // very dark for bullets
+    if (highlightColor) {
       
       // Replace **text** with bold and colored spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -646,17 +651,8 @@ export default function Home() {
       return text;
     }
     
-    // Extract color from rgba string
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      const r = parseInt(colorMatch[1], 10);
-      const g = parseInt(colorMatch[2], 10);
-      const b = parseInt(colorMatch[3], 10);
-      const factor = 0.5; // slightly brighter than bullets but still dark
-      const dr = Math.max(16, Math.floor(r * factor));
-      const dg = Math.max(16, Math.floor(g * factor));
-      const db = Math.max(16, Math.floor(b * factor));
-      const highlightColor = `rgb(${dr}, ${dg}, ${db})`;
+    const highlightColor = getDarkHighlightColor(blurColor, 0.30); // even darker on title
+    if (highlightColor) {
       
       // Replace **text** with colored (but not bold) spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
