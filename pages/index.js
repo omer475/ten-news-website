@@ -576,21 +576,15 @@ export default function Home() {
     }
   };
 
-  // Function to render text without bold markup
-  const renderBoldText = (text, category) => {
-    if (!text) return '';
-    // Remove all ** markdown markers and return plain text
-    return text.replace(/\*\*/g, '');
-  };
-
-  // Function to render title with highly visible highlighted important words
-  const renderTitleWithHighlight = (text, blurColor) => {
+  // Function to render text with highly visible colored bold words
+  const renderBoldText = (text, blurColor) => {
     if (!text) return '';
     if (!blurColor) {
-      return text.replace(/\*\*/g, ''); // Just remove bold markers if no color
+      // Fallback: just remove ** markers
+      return text.replace(/\*\*/g, '');
     }
     
-    // Extract color from rgba string and create a MUCH more visible version
+    // Extract color from rgba string and create an EXTREMELY visible version
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
       let r = parseInt(colorMatch[1]);
@@ -601,44 +595,39 @@ export default function Home() {
       const isDark = r < 50 && g < 50 && b < 50;
       
       if (isDark) {
-        // For dark blur (white images), use a bright warm color that's VERY visible
+        // For dark blur (white images), use a very bright, warm color
         r = 255;
-        g = 235;
-        b = 120; // Bright yellow-gold for maximum visibility
+        g = 220;
+        b = 100; // Bright golden-yellow for maximum visibility
       } else {
-        // Create an EXTREMELY visible version - blend heavily with bright colors
-        // Use only 10% of original color, blend with bright white/yellow tint
+        // Create an EXTREMELY visible version - blend heavily with bright white
+        // Use only 20% of original color, 80% bright white/yellow tint
         const brightness = (r + g + b) / 3;
         
-        if (brightness < 100) {
-          // For dark colors, blend with bright yellow-white
-          r = Math.min(255, Math.round(r * 0.1 + 255 * 0.9));
-          g = Math.min(255, Math.round(g * 0.1 + 245 * 0.9));
-          b = Math.min(255, Math.round(b * 0.1 + 200 * 0.9));
-        } else if (brightness < 150) {
-          // For medium colors, blend with white
-          r = Math.min(255, Math.round(r * 0.15 + 255 * 0.85));
-          g = Math.min(255, Math.round(g * 0.15 + 250 * 0.85));
-          b = Math.min(255, Math.round(b * 0.15 + 240 * 0.85));
+        if (brightness < 120) {
+          // For darker colors, blend with very bright yellow-white
+          r = Math.min(255, Math.round(r * 0.2 + 255 * 0.8));
+          g = Math.min(255, Math.round(g * 0.2 + 250 * 0.8));
+          b = Math.min(255, Math.round(b * 0.2 + 220 * 0.8));
         } else {
-          // For lighter colors, still make brighter but keep more of the hue
-          r = Math.min(255, Math.round(r * 0.25 + 255 * 0.75));
-          g = Math.min(255, Math.round(g * 0.25 + 255 * 0.75));
-          b = Math.min(255, Math.round(b * 0.25 + 255 * 0.75));
+          // For lighter colors, still make much brighter
+          r = Math.min(255, Math.round(r * 0.3 + 255 * 0.7));
+          g = Math.min(255, Math.round(g * 0.3 + 255 * 0.7));
+          b = Math.min(255, Math.round(b * 0.3 + 245 * 0.7));
         }
       }
       
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
-      // Replace **text** with colored spans (no shadow, just bright color)
+      // Replace **text** with bold and colored spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           const content = part.replace(/\*\*/g, '');
           return (
             <span key={i} style={{ 
-              color: highlightColor,
-              fontWeight: '800' // Make it extra bold for visibility
+              fontWeight: '700', 
+              color: highlightColor 
             }}>
               {content}
             </span>
@@ -648,6 +637,74 @@ export default function Home() {
       });
     }
     return text.replace(/\*\*/g, '');
+  };
+
+  // Function to render title with highly visible colored important words
+  const renderTitleWithHighlight = (text, blurColor) => {
+    if (!text) return '';
+    if (!blurColor) {
+      return text;
+    }
+    
+    // Extract color from rgba string and create an EXTREMELY visible version
+    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (colorMatch) {
+      let r = parseInt(colorMatch[1]);
+      let g = parseInt(colorMatch[2]);
+      let b = parseInt(colorMatch[3]);
+      
+      // Check if this is a black/very dark color (for white images)
+      const isDark = r < 50 && g < 50 && b < 50;
+      
+      if (isDark) {
+        // For dark blur (white images), use a very bright, warm color
+        r = 255;
+        g = 235;
+        b = 120; // Bright yellow-gold for maximum visibility
+      } else {
+        // Create an EXTREMELY visible version - blend heavily with bright colors
+        // Use only 15% of original color, blend with bright white/yellow tint
+        const brightness = (r + g + b) / 3;
+        
+        if (brightness < 100) {
+          // For dark colors, blend with bright yellow-white
+          r = Math.min(255, Math.round(r * 0.15 + 255 * 0.85));
+          g = Math.min(255, Math.round(g * 0.15 + 245 * 0.85));
+          b = Math.min(255, Math.round(b * 0.15 + 200 * 0.85));
+        } else if (brightness < 150) {
+          // For medium colors, blend with white
+          r = Math.min(255, Math.round(r * 0.2 + 255 * 0.8));
+          g = Math.min(255, Math.round(g * 0.2 + 250 * 0.8));
+          b = Math.min(255, Math.round(b * 0.2 + 240 * 0.8));
+        } else {
+          // For lighter colors, still make brighter but keep more of the hue
+          r = Math.min(255, Math.round(r * 0.3 + 255 * 0.7));
+          g = Math.min(255, Math.round(g * 0.3 + 255 * 0.7));
+          b = Math.min(255, Math.round(b * 0.3 + 255 * 0.7));
+        }
+      }
+      
+      const highlightColor = `rgb(${r}, ${g}, ${b})`;
+      
+      // Replace **text** with colored spans with extra bold weight for visibility
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ 
+              color: highlightColor,
+              fontWeight: '900', // Extra bold for maximum visibility
+              textShadow: '0 0 8px rgba(255,255,255,0.5)' // Subtle glow for extra visibility
+            }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
+    }
+    return text;
   };
 
   useEffect(() => {
@@ -2192,7 +2249,8 @@ export default function Home() {
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff'
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
                     </div>
@@ -2461,7 +2519,7 @@ export default function Home() {
                                     fontWeight: '600',
                                     color: '#1a1a1a'
                                   }}>
-                                    {renderBoldText(bullet, story.category)}
+                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
                                   </li>
                                 ))}
                               </ul>
