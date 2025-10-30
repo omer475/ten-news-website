@@ -12,6 +12,7 @@ import feedparser
 import sqlite3
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import urljoin
 import time
 import logging
 from bs4 import BeautifulSoup
@@ -495,17 +496,34 @@ class OptimizedRSSFetcher:
                 if img and img.get('src'):
                     return img.get('src'), 'content_html'
         
-        # METHOD 6: Parse full article page for og:image (expensive, limit usage)
-        # Only use for high-priority sources to avoid slowdowns
-        # Uncomment if needed:
-        # try:
-        #     response = requests.get(article_url, timeout=5, headers={'User-Agent': 'Mozilla/5.0'})
-        #     soup = BeautifulSoup(response.text, 'html.parser')
-        #     og_image = soup.find('meta', property='og:image')
-        #     if og_image and og_image.get('content'):
-        #         return og_image.get('content'), 'og_image'
-        # except:
-        #     pass
+        # METHOD 6: Parse full article page for og:image (fallback when other methods fail)
+        # Use with timeout to avoid slowdowns
+        try:
+            response = requests.get(article_url, timeout=3, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}, allow_redirects=True)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                # Try og:image first
+                og_image = soup.find('meta', property='og:image') or soup.find('meta', attrs={'name': 'og:image'})
+                if og_image and og_image.get('content'):
+                    image_url = og_image.get('content')
+                    # Handle relative URLs
+                    if image_url.startswith('//'):
+                        image_url = 'https:' + image_url
+                    elif image_url.startswith('/'):
+                        image_url = urljoin(article_url, image_url)
+                    return image_url, 'og_image'
+                # Fallback: Try twitter:image
+                twitter_image = soup.find('meta', attrs={'name': 'twitter:image'}) or soup.find('meta', attrs={'property': 'twitter:image'})
+                if twitter_image and twitter_image.get('content'):
+                    image_url = twitter_image.get('content')
+                    if image_url.startswith('//'):
+                        image_url = 'https:' + image_url
+                    elif image_url.startswith('/'):
+                        image_url = urljoin(article_url, image_url)
+                    return image_url, 'twitter_image'
+        except Exception:
+            # Silent fail - this is just a fallback method
+            pass
         
         # METHOD 7: No image found
         return None, 'none'

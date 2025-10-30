@@ -98,6 +98,37 @@ def score_news_articles_step1(articles: List[Dict], api_key: str) -> Dict:
         dict with 'approved' and 'filtered' lists
     """
     
+    # FILTER: Remove articles without images before scoring
+    articles_with_images = []
+    filtered_count = 0
+    
+    for article in articles:
+        # Check for image in various fields (image_url, urlToImage, image)
+        has_image = (
+            article.get('image_url') or 
+            article.get('urlToImage') or 
+            article.get('image')
+        )
+        
+        if has_image and has_image.strip():  # Ensure it's not empty string
+            articles_with_images.append(article)
+        else:
+            filtered_count += 1
+    
+    if filtered_count > 0:
+        print(f"🖼️  Filtered out {filtered_count} articles without images (not scoring)")
+    
+    # If no articles with images, return empty result
+    if not articles_with_images:
+        print("❌ No articles with images to score")
+        return {
+            'approved': [],
+            'filtered': articles
+        }
+    
+    # Use filtered articles for scoring
+    articles = articles_with_images
+    
     # Use gemini-2.0-flash-exp as gemini-2.5-flash may not be available yet
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     

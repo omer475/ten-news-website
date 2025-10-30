@@ -21,6 +21,34 @@ def score_articles_unified(articles, google_api_key, part_name="Unknown"):
         print("⚠️ Google API key not configured")
         return None
     
+    # PRE-FILTER: Remove articles without images before scoring
+    articles_with_images = []
+    filtered_count = 0
+    
+    for article in articles:
+        # Check for image in various fields
+        has_image = (
+            article.get('image_url') or 
+            article.get('urlToImage') or 
+            article.get('image')
+        )
+        
+        if has_image and has_image.strip():
+            articles_with_images.append(article)
+        else:
+            filtered_count += 1
+    
+    if filtered_count > 0:
+        print(f"🖼️  [{part_name}] Filtered out {filtered_count} articles without images (not scoring)")
+    
+    # If no articles with images, return None
+    if not articles_with_images:
+        print(f"❌ [{part_name}] No articles with images to score")
+        return None
+    
+    # Use filtered articles
+    articles = articles_with_images
+    
     print(f"\n🤖 [{part_name}] Scoring {len(articles)} articles (UNIFIED 0-100 SYSTEM)...")
     print("   📊 Minimum threshold: 60 points")
     
