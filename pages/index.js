@@ -601,33 +601,80 @@ export default function Home() {
     }
   };
 
-  // Helper: derive a much darker color from blur color for high-contrast highlights
-  const getDarkHighlightColor = (blurColor, factor = 0.35) => {
+  // Helper: derive a much darker, high-contrast highlight color from blur color
+  const getContrastingHighlightColor = (blurColor) => {
     if (!blurColor) return null;
     const match = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (!match) return null;
-    const r = parseInt(match[1], 10);
-    const g = parseInt(match[2], 10);
-    const b = parseInt(match[3], 10);
-    // Reduce brightness strongly; enforce a minimum to avoid pure black
-    const dr = Math.max(16, Math.floor(r * factor));
-    const dg = Math.max(16, Math.floor(g * factor));
-    const db = Math.max(16, Math.floor(b * factor));
-    return `rgb(${dr}, ${dg}, ${db})`;
+    let r = parseInt(match[1], 10);
+    let g = parseInt(match[2], 10);
+    let b = parseInt(match[3], 10);
+
+    // RGB → HSL
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max - min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4; break;
+      }
+      h *= 60;
+    }
+
+    // Snap hue to a strong, legible palette bucket (dark variants)
+    const snap = (deg) => {
+      if (deg < 20 || deg >= 340) return { h: 15, s: 85, l: 34 };      // dark orange-red
+      if (deg < 50) return { h: 35, s: 90, l: 34 };                     // dark orange
+      if (deg < 90) return { h: 75, s: 80, l: 30 };                     // dark yellow-green
+      if (deg < 170) return { h: 135, s: 70, l: 30 };                   // dark green
+      if (deg < 230) return { h: 210, s: 85, l: 28 };                   // dark navy (blue)
+      if (deg < 270) return { h: 260, s: 75, l: 32 };                   // dark purple
+      if (deg < 320) return { h: 290, s: 80, l: 33 };                   // dark magenta
+      return { h: 210, s: 85, l: 28 };
+    };
+
+    const bucket = snap(h);
+
+    // HSL → RGB
+    const H = bucket.h / 360;
+    const S = Math.min(1, Math.max(0, bucket.s / 100));
+    const L = Math.min(1, Math.max(0, bucket.l / 100));
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    let r2, g2, b2;
+    if (S === 0) {
+      r2 = g2 = b2 = L; // achromatic
+    } else {
+      const q = L < 0.5 ? L * (1 + S) : L + S - L * S;
+      const p = 2 * L - q;
+      r2 = hue2rgb(p, q, H + 1/3);
+      g2 = hue2rgb(p, q, H);
+      b2 = hue2rgb(p, q, H - 1/3);
+    }
+    const R = Math.round(r2 * 255);
+    const G = Math.round(g2 * 255);
+    const B = Math.round(b2 * 255);
+    return `rgb(${R}, ${G}, ${B})`;
   };
 
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, blurColor) => {
     if (!text) return '';
-    if (!blurColor) {
-      // Fallback: just remove ** markers
-      return text.replace(/\*\*/g, '');
-    }
-    
-    const highlightColor = getDarkHighlightColor(blurColor, 0.35); // very dark for bullets
+    if (!blurColor) return text.replace(/\*\*/g, '');
+    const highlightColor = getContrastingHighlightColor(blurColor);
     if (highlightColor) {
-      
-      // Replace **text** with bold and colored spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -647,14 +694,9 @@ export default function Home() {
   // Function to render title with highlighted important words (colored but not bold)
   const renderTitleWithHighlight = (text, blurColor) => {
     if (!text) return '';
-    if (!blurColor) {
-      return text;
-    }
-    
-    const highlightColor = getDarkHighlightColor(blurColor, 0.30); // even darker on title
+    if (!blurColor) return text;
+    const highlightColor = getContrastingHighlightColor(blurColor);
     if (highlightColor) {
-      
-      // Replace **text** with colored (but not bold) spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
       return parts.map((part, i) => {
         if (part.startsWith('**') && part.endsWith('**')) {
