@@ -609,12 +609,28 @@ export default function Home() {
       return text.replace(/\*\*/g, '');
     }
     
-    // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
+    // Extract color from rgba string and create a more visible version
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
+      let r = parseInt(colorMatch[1]);
+      let g = parseInt(colorMatch[2]);
+      let b = parseInt(colorMatch[3]);
+      
+      // Check if this is a black/very dark color (for white images)
+      const isDark = r < 50 && g < 50 && b < 50;
+      
+      if (isDark) {
+        // For dark blur (white images), use a warmer, slightly darker tint than title
+        r = 240;
+        g = 230;
+        b = 200; // Warm beige/cream
+      } else {
+        // Create a brighter version for bullets (less dramatic than title, 75% original, 25% white)
+        r = Math.min(255, Math.round(r * 0.75 + 255 * 0.25));
+        g = Math.min(255, Math.round(g * 0.75 + 255 * 0.25));
+        b = Math.min(255, Math.round(b * 0.75 + 255 * 0.25));
+      }
+      
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
       // Replace **text** with bold and colored spans
@@ -641,12 +657,29 @@ export default function Home() {
       return text;
     }
     
-    // Extract color from rgba string
+    // Extract color from rgba string and create a more visible version
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
+      let r = parseInt(colorMatch[1]);
+      let g = parseInt(colorMatch[2]);
+      let b = parseInt(colorMatch[3]);
+      
+      // Check if this is a black/very dark color (for white images)
+      const isDark = r < 50 && g < 50 && b < 50;
+      
+      if (isDark) {
+        // For dark blur (white images), use a light warm tint that's very visible
+        r = 255;
+        g = 248;
+        b = 220; // Light warm yellow/cream for visibility
+      } else {
+        // Create a brighter, more visible version for colored images
+        // Blend with white (50% original, 50% white) for much better visibility against the blur
+        r = Math.min(255, Math.round(r * 0.5 + 255 * 0.5));
+        g = Math.min(255, Math.round(g * 0.5 + 255 * 0.5));
+        b = Math.min(255, Math.round(b * 0.5 + 255 * 0.5));
+      }
+      
       const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
       // Replace **text** with colored (but not bold) spans
