@@ -2426,17 +2426,19 @@ export default function Home() {
                         className="news-summary" 
                         style={{ 
                           marginTop: '0',
-                          marginBottom: '16px',
+                          marginBottom: '0',
                           fontSize: '16px',
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
-                          minHeight: '160px',
+                          height: 'calc(100vh - 38vh - 140px)',
+                          minHeight: '200px',
                           padding: '8px 0',
                           position: 'relative',
                           display: 'flex',
                           flexDirection: 'column',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          alignItems: 'flex-start'
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
