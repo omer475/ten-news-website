@@ -2588,7 +2588,7 @@ export default function Home() {
                       <div style={{
                         position: 'relative',
                         width: '100%',
-                        maxWidth: '950px',
+                        maxWidth: '958px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
                         zIndex: '50',
