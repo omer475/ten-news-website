@@ -94,7 +94,7 @@ class LiveNewsSystem:
             
             # Get ONLY articles fetched after the cycle start time - limit to expected count
             cursor.execute('''
-                SELECT title, source, description, url, fetched_at, id
+                SELECT title, source, description, url, fetched_at, id, image_url
                 FROM articles 
                 WHERE published = 0 
                 AND fetched_at > ?
@@ -111,7 +111,8 @@ class LiveNewsSystem:
                     'text': row[2] or '',
                     'url': row[3],
                     'fetched_at': row[4],
-                    'id': row[5]
+                    'id': row[5],
+                    'image_url': row[6] or ''  # Include image_url from database
                 })
                 article_ids.append(row[5])
             
