@@ -2634,9 +2634,13 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                            border: 'none',
-                            borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
+                          border: 'none',
+                          borderRadius: showTimeline[index] ? '0' : '8px',
+                          boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`,
+                          padding: showDetails[index] ? '20px' : showTimeline[index] ? '6px 20px 12px 20px' : '20px',
+                          display: 'flex',
+                          flexDirection: showDetails[index] ? 'row' : 'column',
+                          gap: showDetails[index] ? '16px' : '0'
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
@@ -2709,24 +2713,28 @@ export default function Home() {
                         {/* Content - Show one component at a time */}
                         {showDetails[index] ? (
                           // Show Details Only
-                          story.details && story.details.map((detail, i) => {
-                          const [label, value] = detail.split(':');
-                          const cleanLabel = label?.trim() || '';
-                          const cleanValue = value?.trim() || '';
-                          
-                          // Extract main number/value and subtitle
-                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                          
-                          return (
-                            <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                            </div>
-                          );
-                          })
+                          story.details && story.details.length > 0 ? (
+                            story.details.map((detail, i) => {
+                              const [label, value] = detail.split(':');
+                              const cleanLabel = label?.trim() || '';
+                              const cleanValue = value?.trim() || '';
+                              
+                              // Extract main number/value and subtitle
+                              const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                              const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                              const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                              
+                              return (
+                                <div key={i} className="news-detail-item">
+                                  <div className="news-detail-label">{cleanLabel}</div>
+                                  <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
+                                  {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No details available</div>
+                          )
                         ) : showTimeline[index] ? (
                           // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
