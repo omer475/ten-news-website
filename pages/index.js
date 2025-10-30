@@ -4,18 +4,6 @@ import NewFirstPage from '../components/NewFirstPage';
 
 export default function Home() {
   const [stories, setStories] = useState([]);
-  // Safely handle external images: avoid mixed content and hotlink blocking
-  const getSafeImageUrl = (rawUrl) => {
-    if (!rawUrl || typeof rawUrl !== 'string') return null;
-    const url = rawUrl.trim();
-    if (url === '') return null;
-    // If http (not https), proxy to avoid mixed-content blocks
-    if (url.startsWith('http://')) {
-      return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
-    }
-    return url;
-  };
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -423,7 +411,7 @@ export default function Home() {
                  details: article.details || [],
                  source: article.source || 'Today+',
                  url: article.url || '#',
-                urlToImage: (article.urlToImage && article.urlToImage.trim() !== '') ? article.urlToImage.trim() : null,
+                 urlToImage: article.urlToImage,
                  timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
                    {"date": "Background", "event": "Initial situation develops"},
                    {"date": "Today", "event": "Major developments break"},
@@ -2144,7 +2132,7 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(37vh - 3px)',
+                      height: 'calc(35vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2155,13 +2143,11 @@ export default function Home() {
                       borderRadius: '12px',
                       overflow: 'hidden'
                     }}>
-                      {(story.urlToImage && story.urlToImage.trim() !== '') ? (
+                      {story.urlToImage ? (
                         <img 
-                          key={`img-${story.id || index}-${story.urlToImage}`}
-                          src={getSafeImageUrl(story.urlToImage)}
+                          src={story.urlToImage}
                           alt={story.title}
                           crossOrigin="anonymous"
-                          referrerPolicy="no-referrer"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -2175,13 +2161,6 @@ export default function Home() {
                           onError={(e) => {
                             console.error('❌ Image failed to load:', story.urlToImage);
                             console.error('   Story title:', story.title);
-                            // Try proxy fallback once if not already attempted
-                            if (!e.target.dataset.proxied && story.urlToImage) {
-                              const proxied = `https://images.weserv.nl/?url=${encodeURIComponent(story.urlToImage.trim())}`;
-                              e.target.dataset.proxied = '1';
-                              e.target.src = proxied;
-                              return;
-                            }
                             e.target.style.display = 'none';
                             e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                             e.target.parentElement.innerHTML = `
@@ -2250,14 +2229,14 @@ export default function Home() {
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
                           color: '#ffffff'
-                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
                     </div>
                     
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(37vh + 8px)',
+                        paddingTop: 'calc(35vh + 8px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2605,17 +2584,20 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Information Box - Details/Timeline Section */}
+                      {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
-                        position: 'relative',
+                        position: showDetailedText[index] ? 'relative' : 'fixed',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
+                        left: showDetailedText[index] ? '0' : '50%',
+                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: '1050px',
-                        paddingLeft: '20px',
-                        paddingRight: '20px',
+                        maxWidth: showDetailedText[index] ? '950px' : '950px',
+                        paddingLeft: '15px',
+                        paddingRight: '15px',
                         zIndex: '50',
-                        marginTop: '16px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto'
+                        marginTop: showDetailedText[index] ? '0' : '0',
+                        marginLeft: showDetailedText[index] ? 'auto' : '0',
+                        marginRight: showDetailedText[index] ? 'auto' : '0'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
@@ -2625,19 +2607,15 @@ export default function Home() {
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
-                          minHeight: '100px',
-                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '100px') : '100px',
-                          maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '100px') : '100px',
+                          minHeight: '85px',
+                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
+                          maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                          border: 'none',
-                          borderRadius: showTimeline[index] ? '0' : '8px',
-                          boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`,
-                          padding: showDetails[index] ? '24px' : showTimeline[index] ? '8px 24px 16px 24px' : '24px',
-                          display: 'flex',
-                          flexDirection: showDetails[index] ? 'row' : 'column',
-                          gap: showDetails[index] ? '16px' : '0'
+                            border: 'none',
+                            borderRadius: showTimeline[index] ? '0' : '8px',
+                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
@@ -2708,30 +2686,26 @@ export default function Home() {
                         }}
                       >
                         {/* Content - Show one component at a time */}
-                          {showDetails[index] ? (
-                            // Show Details Only
-                            story.details && story.details.length > 0 ? (
-                              story.details.map((detail, i) => {
-                                const [label, value] = detail.split(':');
-                                const cleanLabel = label?.trim() || '';
-                                const cleanValue = value?.trim() || '';
-                                
-                                // Extract main number/value and subtitle
-                                const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                                const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                                const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                                
-                                return (
-                                  <div key={i} className="news-detail-item">
-                                    <div className="news-detail-label">{cleanLabel}</div>
-                                    <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
-                                    {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No details available</div>
-                            )
+                        {showDetails[index] ? (
+                          // Show Details Only
+                          story.details && story.details.map((detail, i) => {
+                          const [label, value] = detail.split(':');
+                          const cleanLabel = label?.trim() || '';
+                          const cleanValue = value?.trim() || '';
+                          
+                          // Extract main number/value and subtitle
+                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                          
+                          return (
+                            <div key={i} className="news-detail-item">
+                              <div className="news-detail-label">{cleanLabel}</div>
+                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
+                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                            </div>
+                          );
+                          })
                         ) : showTimeline[index] ? (
                           // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
