@@ -612,10 +612,15 @@ export default function Home() {
     // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
+      const r = parseInt(colorMatch[1], 10);
+      const g = parseInt(colorMatch[2], 10);
+      const b = parseInt(colorMatch[3], 10);
+      // Darken the color for better contrast against the blur
+      const factor = 0.6; // 60% of original brightness
+      const dr = Math.max(0, Math.floor(r * factor));
+      const dg = Math.max(0, Math.floor(g * factor));
+      const db = Math.max(0, Math.floor(b * factor));
+      const highlightColor = `rgb(${dr}, ${dg}, ${db})`;
       
       // Replace **text** with bold and colored spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -644,10 +649,14 @@ export default function Home() {
     // Extract color from rgba string
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
+      const r = parseInt(colorMatch[1], 10);
+      const g = parseInt(colorMatch[2], 10);
+      const b = parseInt(colorMatch[3], 10);
+      const factor = 0.6; // darker version of blur color
+      const dr = Math.max(0, Math.floor(r * factor));
+      const dg = Math.max(0, Math.floor(g * factor));
+      const db = Math.max(0, Math.floor(b * factor));
+      const highlightColor = `rgb(${dr}, ${dg}, ${db})`;
       
       // Replace **text** with colored (but not bold) spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
