@@ -2239,7 +2239,7 @@ export default function Home() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '2px',
-                        marginTop: '-6px'
+                        marginTop: '-10px'
                       }}>
                         {/* Time Since Published - Minimal Design */}
                         {story.publishedAt && (
