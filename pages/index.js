@@ -2178,6 +2178,21 @@ export default function Home() {
                         </div>
                       )}
                       
+                      {/* Blur Overlay - Foreground blur layer above image, below text */}
+                      {/* Covers bottom 45% with gradient: strongest blur at bottom, fades to zero at top (55%) */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '45%',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        background: 'linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.45) 30%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0) 100%)',
+                        zIndex: 1.5,
+                        pointerEvents: 'none'
+                      }}></div>
+                      
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       <div style={{
                         position: 'absolute',
