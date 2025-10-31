@@ -654,9 +654,41 @@ export default function Home() {
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   };
 
-  // Function to derive highlight color from blur overlay hue
-  // Rule: Keep same hue (H' = H), increase saturation +20%, increase brightness +30%
-  const deriveHighlightColor = (blurColor) => {
+  // Calculate relative luminance for contrast checking
+  const getLuminance = (r, g, b) => {
+    const [rs, gs, bs] = [r, g, b].map(val => {
+      val = val / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (rgb1, rgb2) => {
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  // Get fallback color based on background hue
+  const getFallbackColorByHue = (hue) => {
+    // Blue range: 200-260 degrees
+    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
+    
+    // Green range: 100-180 degrees
+    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
+    
+    // Orange/Red range: 0-50 and 320-360 degrees
+    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
+    
+    // Default: Gray/neutral
+    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
+  };
+
+  // Get adaptive highlight color from background
+  const getAdaptiveHighlightColor = (blurColor, backgroundColor = null) => {
     if (!blurColor) return null;
     
     // Extract RGB from rgba string
@@ -667,15 +699,73 @@ export default function Home() {
     const g = parseInt(colorMatch[2]);
     const b = parseInt(colorMatch[3]);
     
-    // Convert RGB to HSL
+    // Convert to HSL to extract hue
     const [h, s, l] = rgbToHsl(r, g, b);
     
-    // Derive highlight color: same hue, +20% saturation, +30% brightness
-    const newS = Math.min(100, s + 20); // Increase saturation by 20%, cap at 100%
-    const newL = Math.min(100, l + 30); // Increase lightness by 30%, cap at 100%
+    // Sample background lightness from the original image color
+    // The text sits on a dark blur overlay, but we sample the hue from the image
+    // If the image itself is light (L >= 0.5), we might need adaptive inversion
+    const imageLightness = l / 100; // Normalize to 0-1
+    
+    // Check if we should use dark text instead (background lightness threshold)
+    // Since text is on dark blur overlay, we typically want bright highlights
+    // But if image is very light, we may want to use a tonal echo approach
+    
+    let newS, newL;
+    
+    // Since text is on dark blur overlay, we want bright, saturated highlights
+    // But we preserve the hue from the image and adjust saturation/brightness
+    if (imageLightness < 0.5) {
+      // Image is dark: brighten and saturate the hue for dark background (+20% sat, +30% brightness)
+      newS = Math.min(100, s + 20);
+      newL = Math.min(100, l + 30);
+    } else {
+      // Image is light: still brighten but adjust less aggressively
+      // We still want readable color on dark blur overlay
+      newS = Math.min(100, s + 15);
+      newL = Math.min(95, Math.max(60, l + 20)); // Ensure minimum lightness of 60% for readability
+    }
     
     // Convert back to RGB
-    const [newR, newG, newB] = hslToRgb(h, newS, newL);
+    let [newR, newG, newB] = hslToRgb(h, newS, newL);
+    
+    // Check contrast against dark blur overlay background (black with ~65% opacity at bottom)
+    // Use weighted average: 65% opacity means ~35% of underlying image shows through
+    // For contrast checking, approximate with dark gray background
+    const contrastBg = [20, 20, 20]; // Approximate dark blur overlay background
+    let contrastRatio = getContrastRatio([newR, newG, newB], contrastBg);
+    
+    // If contrast is too low (< 4.5:1), try fallback color based on hue
+    if (contrastRatio < 4.5) {
+      const fallback = getFallbackColorByHue(h);
+      contrastRatio = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      // If fallback has good contrast, use it
+      if (contrastRatio >= 4.5) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Fallback also has low contrast - brighten it while preserving hue
+        const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
+        const brightenedFallback = hslToRgb(fh, Math.min(100, fs + 20), Math.min(95, fl + 25));
+        const brightContrast = getContrastRatio(brightenedFallback, contrastBg);
+        
+        if (brightContrast >= 4.5) {
+          return `rgb(${brightenedFallback[0]}, ${brightenedFallback[1]}, ${brightenedFallback[2]})`;
+        } else {
+          // Last resort: use white for maximum contrast
+          return `rgb(255, 255, 255)`;
+        }
+      }
+    }
+    
+    // Check if color is too close to white (lightness > 95%) or lacks character
+    if (newL > 95 || s < 10) {
+      const fallback = getFallbackColorByHue(h);
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      if (fallbackContrast >= 4.5) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      }
+    }
     
     return `rgb(${newR}, ${newG}, ${newB})`;
   };
@@ -688,8 +778,7 @@ export default function Home() {
       return text.replace(/\*\*/g, '');
     }
     
-    // Derive highlight color from blur overlay hue
-    const highlightColor = deriveHighlightColor(blurColor);
+    const highlightColor = getAdaptiveHighlightColor(blurColor);
     if (!highlightColor) {
       return text.replace(/\*\*/g, '');
     }
@@ -716,8 +805,7 @@ export default function Home() {
       return text;
     }
     
-    // Derive highlight color from blur overlay hue
-    const highlightColor = deriveHighlightColor(blurColor);
+    const highlightColor = getAdaptiveHighlightColor(blurColor);
     if (!highlightColor) {
       return text;
     }
