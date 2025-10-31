@@ -2226,7 +2226,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(35vh - 20px)',
+                        paddingTop: 'calc(35vh + 8px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2237,8 +2237,8 @@ export default function Home() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '2px',
-                        marginTop: '-12px'
+                        marginBottom: '12px',
+                        marginTop: '0'
                       }}>
                         {/* Time Since Published - Minimal Design */}
                         {story.publishedAt && (
@@ -2574,20 +2574,17 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Fixed Position Toggle and Content Area - Lower Position */}
+                      {/* Information Box - Always Visible Below Content */}
                       <div style={{
-                        position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '32px',
-                        left: showDetailedText[index] ? '0' : '50%',
-                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
+                        position: 'relative',
                         width: '100%',
-                        maxWidth: showDetailedText[index] ? '950px' : '950px',
+                        maxWidth: '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
                         zIndex: '50',
-                        marginTop: showDetailedText[index] ? '0' : '0',
-                        marginLeft: showDetailedText[index] ? 'auto' : '0',
-                        marginRight: showDetailedText[index] ? 'auto' : '0'
+                        marginTop: '24px',
+                        marginLeft: 'auto',
+                        marginRight: 'auto'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
