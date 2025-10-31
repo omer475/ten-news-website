@@ -2178,19 +2178,64 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* Blur Overlay - Foreground blur layer above image, below text */}
-                      {/* Covers bottom 45% with gradient: strongest blur at bottom, fades to zero at top (55%) */}
+                      {/* Bottom Gradient Frosted Blur Overlay - Starts at 55% height */}
+                      {/* Blur gradient: 55%→70% (0→10px), 70%→85% (10→18px), 85%→100% (18→25px) */}
+                      {/* Layer 1: Full blur zone (45% height from bottom = 55-100% from top) */}
                       <div style={{
                         position: 'absolute',
+                        top: '55%',
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        height: '45%',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        background: 'linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.45) 30%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0) 100%)',
+                        backdropFilter: 'blur(25px)',
+                        WebkitBackdropFilter: 'blur(25px)',
+                        maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 33.3%, rgba(0,0,0,0.4) 66.7%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 33.3%, rgba(0,0,0,0.4) 66.7%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.5,
                         pointerEvents: 'none'
+                      }}></div>
+                      
+                      {/* Layer 2: Medium blur overlay for 70-85% section */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '55%',
+                        bottom: '15%',
+                        left: 0,
+                        right: 0,
+                        backdropFilter: 'blur(18px)',
+                        WebkitBackdropFilter: 'blur(18px)',
+                        maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)',
+                        zIndex: 1.6,
+                        pointerEvents: 'none'
+                      }}></div>
+                      
+                      {/* Layer 3: Light blur overlay for 55-70% section */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '55%',
+                        bottom: '30%',
+                        left: 0,
+                        right: 0,
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        maskImage: 'linear-gradient(to top, rgba(0,0,0,0.67) 0%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.67) 0%, rgba(0,0,0,0) 100%)',
+                        zIndex: 1.7,
+                        pointerEvents: 'none'
+                      }}></div>
+                      
+                      {/* Opacity Overlay - Dark gradient with opacity curve: 55%(0%) → 70%(20%) → 85%(45%) → 100%(65%) */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '55%',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: 'linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.45) 33.3%, rgba(0, 0, 0, 0.2) 66.7%, rgba(0, 0, 0, 0) 100%)',
+                        zIndex: 1.8,
+                        pointerEvents: 'none',
+                        mixBlendMode: 'normal'
                       }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
