@@ -601,22 +601,6 @@ export default function Home() {
     }
   };
 
-  // Helper: produce a much darker color from an rgba/rgb blur color
-  const getDarkerFromBlurColor = (blurColor) => {
-    if (!blurColor) return null;
-    const match = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!match) return null;
-    const r = parseInt(match[1], 10);
-    const g = parseInt(match[2], 10);
-    const b = parseInt(match[3], 10);
-    // Darken strongly (keep it readable on light images)
-    const factor = 0.35; // 35% of original brightness
-    const R = Math.max(0, Math.min(255, Math.round(r * factor)));
-    const G = Math.max(0, Math.min(255, Math.round(g * factor)));
-    const B = Math.max(0, Math.min(255, Math.round(b * factor)));
-    return `rgb(${R}, ${G}, ${B})`;
-  };
-
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, blurColor) => {
     if (!text) return '';
@@ -628,7 +612,10 @@ export default function Home() {
     // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
-      const highlightColor = getDarkerFromBlurColor(blurColor) || 'rgb(30,30,30)';
+      const r = colorMatch[1];
+      const g = colorMatch[2];
+      const b = colorMatch[3];
+      const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
       // Replace **text** with bold and colored spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -657,7 +644,10 @@ export default function Home() {
     // Extract color from rgba string
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (colorMatch) {
-      const highlightColor = getDarkerFromBlurColor(blurColor) || 'rgb(30,30,30)';
+      const r = colorMatch[1];
+      const g = colorMatch[2];
+      const b = colorMatch[3];
+      const highlightColor = `rgb(${r}, ${g}, ${b})`;
       
       // Replace **text** with colored (but not bold) spans
       const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -2119,7 +2109,6 @@ export default function Home() {
                 />
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
-                  
                     {/* Original News Item View - Everything stays the same */}
                     <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
@@ -2132,7 +2121,7 @@ export default function Home() {
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(37vh - 3px)',
+                      height: 'calc(35vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2228,7 +2217,8 @@ export default function Home() {
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff'
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
                     </div>
@@ -2236,7 +2226,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(37vh + 8px)',
+                        paddingTop: 'calc(35vh - 20px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2248,7 +2238,7 @@ export default function Home() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '2px',
-                        marginTop: '0'
+                        marginTop: '-12px'
                       }}>
                         {/* Time Since Published - Minimal Design */}
                         {story.publishedAt && (
@@ -2584,17 +2574,20 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Information Box - Details/Timeline Section */}
+                      {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
-                        position: 'relative',
+                        position: showDetailedText[index] ? 'relative' : 'fixed',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
+                        left: showDetailedText[index] ? '0' : '50%',
+                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: '958px',
+                        maxWidth: showDetailedText[index] ? '950px' : '950px',
                         paddingLeft: '15px',
                         paddingRight: '15px',
                         zIndex: '50',
-                        marginTop: '16px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto'
+                        marginTop: showDetailedText[index] ? '0' : '0',
+                        marginLeft: showDetailedText[index] ? 'auto' : '0',
+                        marginRight: showDetailedText[index] ? 'auto' : '0'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
@@ -2610,13 +2603,9 @@ export default function Home() {
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
                           backdropFilter: showTimeline[index] ? 'none' : 'none',
                           WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
-                          border: 'none',
-                          borderRadius: showTimeline[index] ? '0' : '8px',
-                          boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`,
-                          padding: showDetails[index] ? '24px' : showTimeline[index] ? '8px 24px 16px 24px' : '24px',
-                          display: 'flex',
-                          flexDirection: showDetails[index] ? 'row' : 'column',
-                          gap: showDetails[index] ? '16px' : '0'
+                            border: 'none',
+                            borderRadius: showTimeline[index] ? '0' : '8px',
+                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
