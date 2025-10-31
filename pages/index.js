@@ -2109,7 +2109,8 @@ export default function Home() {
                 />
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
-                    {/* Original News Item View - Everything stays the same */}
+                  
+                    // Original News Item View - Everything stays the same
                     <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
@@ -2226,7 +2227,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(35vh + 8px)',
+                        paddingTop: 'calc(35vh - 20px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2237,8 +2238,8 @@ export default function Home() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '12px',
-                        marginTop: '0'
+                        marginBottom: '2px',
+                        marginTop: '-12px'
                       }}>
                         {/* Time Since Published - Minimal Design */}
                         {story.publishedAt && (
@@ -2574,17 +2575,20 @@ export default function Home() {
                         
                       </div>
                       
-                      {/* Information Box - Always Visible Below Content */}
+                      {/* Fixed Position Toggle and Content Area - Lower Position */}
                       <div style={{
-                        position: 'relative',
+                        position: showDetailedText[index] ? 'relative' : 'fixed',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
+                        left: showDetailedText[index] ? '0' : '50%',
+                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: '950px',
-                        paddingLeft: '15px',
-                        paddingRight: '15px',
+                        maxWidth: showDetailedText[index] ? '1200px' : '1200px',
+                        paddingLeft: '8px',
+                        paddingRight: '8px',
                         zIndex: '50',
-                        marginTop: '24px',
-                        marginLeft: 'auto',
-                        marginRight: 'auto'
+                        marginTop: showDetailedText[index] ? '0' : '0',
+                        marginLeft: showDetailedText[index] ? 'auto' : '0',
+                        marginRight: showDetailedText[index] ? 'auto' : '0'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
