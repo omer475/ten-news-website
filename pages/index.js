@@ -672,6 +672,21 @@ export default function Home() {
     return (lighter + 0.05) / (darker + 0.05);
   };
 
+  // Check if color is too close to white
+  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
+    // Check RGB values - if all are above 230, it's very close to white
+    if (r > 230 && g > 230 && b > 230) return true;
+    
+    // Check lightness in HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    if (l > minLightness) return true;
+    
+    // Additional check: if saturation is very low and lightness is high
+    if (s < 5 && l > 80) return true;
+    
+    return false;
+  };
+
   // Get fallback color based on background hue
   const getFallbackColorByHue = (hue) => {
     // Blue range: 200-260 degrees
@@ -729,6 +744,45 @@ export default function Home() {
     // Convert back to RGB
     let [newR, newG, newB] = hslToRgb(h, newS, newL);
     
+    // Check if color is too close to white - reject it immediately
+    if (isTooCloseToWhite(newR, newG, newB)) {
+      // Use fallback color based on hue instead
+      const fallback = getFallbackColorByHue(h);
+      const contrastBg = [20, 20, 20];
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      // If fallback has good contrast and is not white, use it
+      if (fallbackContrast >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Brighten fallback while keeping it away from white
+        const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
+        // Cap lightness at 80% to avoid white
+        const brightenedFallback = hslToRgb(fh, Math.min(100, fs + 20), Math.min(80, fl + 20));
+        
+        // Check if brightened fallback is still not white and has good contrast
+        if (!isTooCloseToWhite(brightenedFallback[0], brightenedFallback[1], brightenedFallback[2])) {
+          const brightContrast = getContrastRatio(brightenedFallback, contrastBg);
+          if (brightContrast >= 4.5) {
+            return `rgb(${brightenedFallback[0]}, ${brightenedFallback[1]}, ${brightenedFallback[2]})`;
+          }
+        }
+        
+        // Use a saturated, darker version of the hue if everything else fails
+        // Keep it under 75% lightness to avoid white
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.min(75, Math.max(60, l)));
+        if (!isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          const safeContrast = getContrastRatio(safeColor, contrastBg);
+          if (safeContrast >= 4.5) {
+            return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+          }
+        }
+        
+        // Last resort: use a medium-dark tone based on hue (never white)
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      }
+    }
+    
     // Check contrast against dark blur overlay background (black with ~65% opacity at bottom)
     // Use weighted average: 65% opacity means ~35% of underlying image shows through
     // For contrast checking, approximate with dark gray background
@@ -740,31 +794,58 @@ export default function Home() {
       const fallback = getFallbackColorByHue(h);
       contrastRatio = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
       
-      // If fallback has good contrast, use it
-      if (contrastRatio >= 4.5) {
+      // If fallback has good contrast and is not white, use it
+      if (contrastRatio >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
         return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
       } else {
-        // Fallback also has low contrast - brighten it while preserving hue
+        // Fallback also has low contrast - brighten it while preserving hue and avoiding white
         const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
-        const brightenedFallback = hslToRgb(fh, Math.min(100, fs + 20), Math.min(95, fl + 25));
-        const brightContrast = getContrastRatio(brightenedFallback, contrastBg);
+        // Cap at 80% lightness to avoid white
+        const brightenedFallback = hslToRgb(fh, Math.min(100, fs + 20), Math.min(80, fl + 20));
         
-        if (brightContrast >= 4.5) {
-          return `rgb(${brightenedFallback[0]}, ${brightenedFallback[1]}, ${brightenedFallback[2]})`;
-        } else {
-          // Last resort: use white for maximum contrast
-          return `rgb(255, 255, 255)`;
+        if (!isTooCloseToWhite(brightenedFallback[0], brightenedFallback[1], brightenedFallback[2])) {
+          const brightContrast = getContrastRatio(brightenedFallback, contrastBg);
+          
+          if (brightContrast >= 4.5) {
+            return `rgb(${brightenedFallback[0]}, ${brightenedFallback[1]}, ${brightenedFallback[2]})`;
+          }
+        }
+        
+        // Use a safe, saturated color based on hue (never white)
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.min(75, Math.max(60, l)));
+        if (!isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          const safeContrast = getContrastRatio(safeColor, contrastBg);
+          if (safeContrast >= 4.5) {
+            return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+          }
+        }
+        
+        // Last resort: return fallback (already checked to not be white)
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      }
+    }
+    
+    // Final check: if color is too close to white (lightness > 85%) or lacks character, use fallback
+    if (newL > 85 || s < 10 || isTooCloseToWhite(newR, newG, newB)) {
+      const fallback = getFallbackColorByHue(h);
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      if (fallbackContrast >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Use a safe, saturated version that's not white
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.min(75, Math.max(60, l)));
+        const safeContrast = getContrastRatio(safeColor, contrastBg);
+        if (safeContrast >= 4.5 && !isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
         }
       }
     }
     
-    // Check if color is too close to white (lightness > 95%) or lacks character
-    if (newL > 95 || s < 10) {
+    // Final safety check before returning
+    if (isTooCloseToWhite(newR, newG, newB)) {
       const fallback = getFallbackColorByHue(h);
-      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
-      if (fallbackContrast >= 4.5) {
-        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
-      }
+      return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
     }
     
     return `rgb(${newR}, ${newG}, ${newB})`;
