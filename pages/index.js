@@ -2178,10 +2178,34 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Frosted Glass Blur Layer - Bottom 45% with gradient transition */}
                       <div style={{
                         position: 'absolute',
                         top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}>
+                        {/* Blur layer with backdrop-filter */}
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: '45%',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          background: 'linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.2) 70%, rgba(0, 0, 0, 0) 100%)',
+                          maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 100%)',
+                          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0) 100%)'
+                        }} />
+                      </div>
+                      
+                      {/* Title Container - Above blur layer */}
+                      <div style={{
+                        position: 'absolute',
                         bottom: 0,
                         left: 0,
                         right: 0,
@@ -2189,28 +2213,8 @@ export default function Home() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
-                        background: imageDominantColors[index]?.light 
-                          ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 80%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.98')} 90%, 
-                              ${imageDominantColors[index].light} 95%, 
-                              ${imageDominantColors[index].light} 100%)`
-                          : imageDominantColors[index]?.original
-                          ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 80%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
-                              ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2
+                        zIndex: 3,
+                        pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
