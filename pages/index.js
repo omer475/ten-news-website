@@ -601,6 +601,85 @@ export default function Home() {
     }
   };
 
+  // Helper: Convert RGB to HSL
+  const rgbToHsl = (r, g, b) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+        default: h = 0;
+      }
+    }
+    return [h * 360, s * 100, l * 100];
+  };
+
+  // Helper: Convert HSL to RGB
+  const hslToRgb = (h, s, l) => {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
+  // Function to derive highlight color from blur overlay hue
+  // Rule: Keep same hue (H' = H), increase saturation +20%, increase brightness +30%
+  const deriveHighlightColor = (blurColor) => {
+    if (!blurColor) return null;
+    
+    // Extract RGB from rgba string
+    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!colorMatch) return null;
+    
+    const r = parseInt(colorMatch[1]);
+    const g = parseInt(colorMatch[2]);
+    const b = parseInt(colorMatch[3]);
+    
+    // Convert RGB to HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    
+    // Derive highlight color: same hue, +20% saturation, +30% brightness
+    const newS = Math.min(100, s + 20); // Increase saturation by 20%, cap at 100%
+    const newL = Math.min(100, l + 30); // Increase lightness by 30%, cap at 100%
+    
+    // Convert back to RGB
+    const [newR, newG, newB] = hslToRgb(h, newS, newL);
+    
+    return `rgb(${newR}, ${newG}, ${newB})`;
+  };
+
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, blurColor) => {
     if (!text) return '';
@@ -609,29 +688,25 @@ export default function Home() {
       return text.replace(/\*\*/g, '');
     }
     
-    // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
-      
-      // Replace **text** with bold and colored spans
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
+    // Derive highlight color from blur overlay hue
+    const highlightColor = deriveHighlightColor(blurColor);
+    if (!highlightColor) {
+      return text.replace(/\*\*/g, '');
     }
-    return text.replace(/\*\*/g, '');
+    
+    // Replace **text** with bold and colored spans
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.replace(/\*\*/g, '');
+        return (
+          <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
+            {content}
+          </span>
+        );
+      }
+      return part;
+    });
   };
 
   // Function to render title with highlighted important words (colored but not bold)
@@ -641,29 +716,25 @@ export default function Home() {
       return text;
     }
     
-    // Extract color from rgba string
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
-      
-      // Replace **text** with colored (but not bold) spans
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ color: highlightColor }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
+    // Derive highlight color from blur overlay hue
+    const highlightColor = deriveHighlightColor(blurColor);
+    if (!highlightColor) {
+      return text;
     }
-    return text;
+    
+    // Replace **text** with colored (but not bold) spans
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.replace(/\*\*/g, '');
+        return (
+          <span key={i} style={{ color: highlightColor }}>
+            {content}
+          </span>
+        );
+      }
+      return part;
+    });
   };
 
   useEffect(() => {
