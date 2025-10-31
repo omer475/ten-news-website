@@ -2227,7 +2227,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
-                        paddingTop: 'calc(35vh - 20px)',
+                        paddingTop: 'calc(38vh + 15px)',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: '2'
@@ -2239,7 +2239,7 @@ export default function Home() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '2px',
-                        marginTop: '-12px'
+                        marginTop: '0px'
                       }}>
                         {/* Time Since Published - Minimal Design */}
                         {story.publishedAt && (
@@ -2395,7 +2395,7 @@ export default function Home() {
                       <div 
                         className="news-summary" 
                         style={{ 
-                          marginTop: '0',
+                          marginTop: '8px',
                           marginBottom: '16px',
                           fontSize: '16px',
                           lineHeight: '1.6',
