@@ -400,23 +400,71 @@ export default function Home() {
             
              // Convert articles to story format
              newsData.articles.forEach((article, index) => {
+               // Sample preview data
+               const sampleDetails = article.details && article.details.length > 0 ? article.details : [
+                 'Impact Score: 8.5/10 High significance',
+                 'Read Time: 4 min Estimated reading duration',
+                 'Source Credibility: Verified from trusted sources'
+               ];
+               
+               const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0) 
+                 ? article.timeline 
+                 : (article.timeline && typeof article.timeline === 'string' && article.timeline.trim() !== '')
+                   ? (() => {
+                       try {
+                         const parsed = JSON.parse(article.timeline);
+                         return Array.isArray(parsed) && parsed.length > 0 ? parsed : [
+                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                         ];
+                       } catch {
+                         return [
+                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                         ];
+                       }
+                     })()
+                   : [
+                     {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                     {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                     {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                     {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                   ];
+               
+               const sampleDetailedText = article.detailed_text || `**Breaking News Update**
+
+This is a preview of the full article content. In the complete version, you would see the detailed analysis and comprehensive coverage of today's top stories.
+
+The article delves into the key developments, providing context and background information that helps readers understand the broader implications. Expert opinions and multiple perspectives are included to give a well-rounded view of the situation.
+
+Additional paragraphs would continue here, exploring various aspects of the story, including historical context, potential future outcomes, and relevant statistics. The content is structured to be both informative and engaging, making complex topics accessible to a wide audience.
+
+**Key Takeaways:**
+- Important point one that summarizes a critical aspect
+- Second significant finding that provides insight
+- Third major conclusion that ties everything together
+
+The article concludes with forward-looking analysis and what readers should watch for in the coming days as this story continues to develop.`;
+               
                const storyData = {
                  type: 'news',
                  number: article.rank || (index + 1),
                  category: (article.category || 'WORLD NEWS').toUpperCase(),
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
-                 detailed_text: article.detailed_text || 'Article text will appear here.',
+                 detailed_text: sampleDetailedText,
                  summary_bullets: article.summary_bullets || [],
-                 details: article.details || [],
+                 details: sampleDetails,
                  source: article.source || 'Today+',
                  url: article.url || '#',
-                 urlToImage: article.urlToImage,
-                 timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
-                   {"date": "Background", "event": "Initial situation develops"},
-                   {"date": "Today", "event": "Major developments break"},
-                   {"date": "Next week", "event": "Follow-up expected"}
-                 ],
+                 urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+                 map: article.map || null,
+                 graph: article.graph || null,
+                 timeline: sampleTimeline,
                  publishedAt: article.publishedAt || article.published_at || article.added_at,
                  id: article.id || `article_${index}`
                };
@@ -855,7 +903,7 @@ export default function Home() {
     if (!text) return '';
     if (!blurColor) {
       // Fallback: just remove ** markers
-      return text.replace(/\*\*/g, '');
+    return text.replace(/\*\*/g, '');
     }
     
     const highlightColor = getAdaptiveHighlightColor(blurColor);
@@ -1301,16 +1349,34 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 0 24px 40px;
-          background: ${darkMode ? '#000000' : '#fff'};
+          padding: 0 24px 200px 24px;
+          background: ${darkMode ? '#000000' : 'transparent'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
+          z-index: 10;
+        }
+        
+        .story-container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          /* Reduce height to leave space for information box at bottom */
+          height: calc(100vh - 250px);
+          background: ${darkMode ? '#000000' : '#fff'};
+          z-index: -1;
+          pointer-events: none;
+          /* Ensure it doesn't extend below the content area where information box is */
+          max-height: calc(100vh - 250px);
         }
 
         .story-content {
-          max-width: 1000px;
+          max-width: 100%;
           width: 100%;
-          margin: 0 auto;
+          margin: 0;
+          background: transparent !important;
+          background-color: transparent !important;
         }
 
         .paywall-overlay {
@@ -1459,14 +1525,14 @@ export default function Home() {
 
         .news-item {
           display: block;
-          padding: 0 15px 24px 15px;
+          padding: 0;
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
           border-radius: 8px;
           position: relative;
-          margin: 0 auto;
-          max-width: 950px;
+          margin: 0;
+          max-width: 100%;
         }
 
         /* Removed first-news special styling to align all news cards */
@@ -1494,12 +1560,15 @@ export default function Home() {
 
         .news-content {
           padding-top: 0px;
-          padding-left: 0;
-          padding-right: 30px;
+          padding-left: 8px !important;
+          padding-right: 8px !important;
           padding-bottom: 0;
           margin: 0 auto;
-          max-width: 900px;
+          max-width: 100%;
+          width: 100%;
           text-align: left;
+          background: transparent !important;
+          background-color: transparent !important;
         }
 
         .news-category {
@@ -1546,16 +1615,20 @@ export default function Home() {
         }
 
         .news-meta {
-          display: flex;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          display: flex !important;
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
           border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+          border: none !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          z-index: 10000 !important;
         }
 
         .news-detail-item {
@@ -2176,8 +2249,11 @@ export default function Home() {
           }
           
           .news-content {
-            margin: 0 8px;
-            padding-right: 20px;
+            margin: 0 auto;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+            max-width: 100%;
+            width: 100%;
           }
           
           .news-number {
@@ -2319,6 +2395,7 @@ export default function Home() {
               opacity: index === currentIndex ? 1 : 0,
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
+              background: 'transparent'
             }}
           >
             {/* Paywall for stories 6+ (index >= 5) */}
@@ -2338,6 +2415,8 @@ export default function Home() {
             <div
               className="story-content"
                               style={{
+                background: 'transparent',
+                backgroundColor: 'transparent',
                 filter: index >= 5 && !user ? 'blur(5px)' : 'none',
                 pointerEvents: index >= 5 && !user ? 'none' : 'auto',
               }}
@@ -2350,10 +2429,10 @@ export default function Home() {
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                    <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
-                    }}>
+                  }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -2364,44 +2443,115 @@ export default function Home() {
                       height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
-                      background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'block',
                       zIndex: '1',
                       borderRadius: '12px',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      pointerEvents: 'none',
+                      // Ensure image container doesn't interfere with information box
+                      maxHeight: 'calc(38vh - 3px)'
                     }}>
-                      {story.urlToImage ? (
+                      {(story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? (
                         <img 
                           src={story.urlToImage}
                           alt={story.title}
+                          loading="lazy"
+                          decoding="async"
                           crossOrigin="anonymous"
+                          referrerPolicy="no-referrer-when-downgrade"
                           style={{
                             width: '100%',
                             height: '100%',
+                            minWidth: '100%',
+                            minHeight: '100%',
+                            maxWidth: '100%',
+                            maxHeight: '100%',
                             objectFit: 'cover',
-                            objectPosition: 'center'
+                            objectPosition: 'center',
+                            display: 'block',
+                            margin: 0,
+                            padding: 0,
+                            flexShrink: 0,
+                            flexGrow: 1,
+                            opacity: 1,
+                            visibility: 'visible',
+                            pointerEvents: 'auto',
+                            position: 'relative',
+                            zIndex: 1
                           }}
                           onLoad={(e) => {
                             console.log('✅ Image loaded successfully:', story.urlToImage);
-                            extractDominantColor(e.target, index);
+                            console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
+                            // Only extract color if image loaded successfully
+                            if (e.target.complete && e.target.naturalWidth > 0) {
+                              try {
+                                extractDominantColor(e.target, index);
+                              } catch (error) {
+                                console.warn('Color extraction failed:', error);
+                              }
+                            }
+                            // Ensure image is visible
+                            e.target.style.opacity = '1';
+                            e.target.style.visibility = 'visible';
                           }}
                           onError={(e) => {
                             console.error('❌ Image failed to load:', story.urlToImage);
                             console.error('   Story title:', story.title);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                            e.target.parentElement.innerHTML = `
-                              <div style="
+                            const imgElement = e.target;
+                            const parentElement = imgElement.parentElement;
+                            
+                            // Try alternative loading methods
+                            const currentSrc = imgElement.src;
+                            let retryCount = 0;
+                            const maxRetries = 2;
+                            
+                            const tryLoadImage = () => {
+                              if (retryCount < maxRetries && currentSrc && !currentSrc.includes('data:') && !currentSrc.includes('blob:')) {
+                                retryCount++;
+                                // Try with different CORS settings
+                                if (retryCount === 1) {
+                                  imgElement.crossOrigin = 'anonymous';
+                                } else {
+                                  imgElement.crossOrigin = undefined;
+                                }
+                                // Try with timestamp to bypass cache
+                                const separator = currentSrc.includes('?') ? '&' : '?';
+                                imgElement.src = currentSrc + separator + 'retry=' + Date.now();
+                                return;
+                              }
+                              
+                              // If all retries failed, show fallback
+                              imgElement.style.display = 'none';
+                              if (parentElement) {
+                                const existingFallback = parentElement.querySelector('.image-fallback');
+                                if (!existingFallback) {
+                                  parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                  const fallback = document.createElement('div');
+                                  fallback.className = 'image-fallback';
+                                  fallback.style.cssText = `
                                 font-size: 72px;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
                                 width: 100%;
                                 height: 100%;
-                              ">${story.emoji || '📰'}</div>
-                            `;
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    z-index: 1;
+                                  `;
+                                  fallback.textContent = story.emoji || '📰';
+                                  parentElement.appendChild(fallback);
+                                }
+                              }
+                            };
+                            
+                            // Try loading again after a short delay
+                            setTimeout(tryLoadImage, 500);
+                          }}
+                          onLoadStart={() => {
+                            console.log('🔄 Image loading started:', story.urlToImage);
                           }}
                         />
                       ) : (
@@ -2478,6 +2628,8 @@ export default function Home() {
                       }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'absolute',
                         top: 0,
@@ -2509,7 +2661,8 @@ export default function Home() {
                               ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
                               ${imageDominantColors[index].original} 100%)`
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2
+                        zIndex: 2,
+                        pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
@@ -2521,40 +2674,83 @@ export default function Home() {
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
                       </div>
+                      )}
                     </div>
+                    
+                    {/* Emoji fallback when no image */}
+                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                      <div style={{
+                      position: 'fixed',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
+                      margin: 0,
+                      padding: 0,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: '1',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      pointerEvents: 'none'
+                    }}>
+                        <div style={{
+                        fontSize: '72px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%'
+                      }}>
+                        {story.emoji || '📰'}
+                        </div>
+                    </div>
+                    )}
                     
                     {/* Content Area - Starts After Image */}
                       <div className="news-content" style={{
                         position: 'relative',
                         paddingTop: 'calc(38vh - 20px)',
-                        paddingLeft: '8px',
-                        paddingRight: '8px',
-                        zIndex: '2'
+                        paddingLeft: '24px',
+                        paddingRight: '24px',
+                        zIndex: '2',
+                        background: 'transparent',
+                        width: '100%',
+                        maxWidth: '100%',
+                        margin: '0 auto'
                       }}>
                       
-                      {/* Time Since Published and Timeline Button Row */}
+                      {/* Time Since Published and Timeline Button Row - Fixed Position */}
                       <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '2px',
-                        marginTop: '-12px'
+                        marginBottom: '16px',
+                        marginTop: '32px',
+                        width: '100%',
+                        position: 'relative',
+                        zIndex: 10
                       }}>
-                        {/* Time Since Published - Minimal Design */}
-                        {story.publishedAt && (
-                          <div style={{
-                            fontSize: '11px',
-                            fontWeight: '400',
-                            color: '#86868b',
-                            letterSpacing: '0.3px'
-                          }}>
-                            {getTimeAgo(story.publishedAt)}
-                          </div>
-                        )}
+                        {/* Time Since Published - Left Side */}
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: '400',
+                          color: '#86868b',
+                          letterSpacing: '0.3px',
+                          flex: '0 0 auto'
+                        }}>
+                          {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
+                        </div>
 
-                        {/* Dynamic Information Switch - Only show if multiple information types available */}
+                        {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
-                          <div className="toggle-switch">
+                          <div className="toggle-switch" style={{ 
+                            position: 'relative',
+                            flex: '0 0 auto'
+                          }}>
                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                               const isActive = getCurrentInformationType(story, index) === infoType;
                               return (
@@ -2690,19 +2886,20 @@ export default function Home() {
                         )}
                       </div>
                       
-                      {/* Summary/Bullet Points - Swipeable */}
+                      {/* Summary/Bullet Points - Swipeable - Fixed Position */}
                       <div 
                         className="news-summary" 
                         style={{ 
-                          marginTop: '0',
-                          marginBottom: '16px',
+                          marginTop: '0px',
+                          marginBottom: '32px',
                           fontSize: '16px',
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
                           minHeight: '60px',
-                          padding: '8px 0',
-                          position: 'relative'
+                          padding: '16px 0',
+                          position: 'relative',
+                          zIndex: 10
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -2758,12 +2955,15 @@ export default function Home() {
                           onTouchEnd={onTouchEnd}
                           style={{ cursor: 'pointer' }}
                         >
-                          {/* Summary Header */}
+                          {/* Summary Header - Fixed Position */}
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            marginBottom: '12px'
+                            marginBottom: '32px',
+                            marginTop: '0px',
+                            position: 'relative',
+                            width: '100%'
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
                               <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -2777,35 +2977,41 @@ export default function Home() {
                             }}><span style={{ fontSize: '15px' }}>S</span><span style={{ fontSize: '15px', textTransform: 'uppercase' }}>ummary</span></span>
                           </div>
                           
-                          {/* Show Only Bullet Text */}
-                          <div style={{ margin: 0 }}>
-                            {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                              <ul style={{
-                                margin: 0,
-                                paddingLeft: '20px',
-                                listStyleType: 'disc'
-                              }}>
-                                {story.summary_bullets.map((bullet, i) => (
-                                  <li key={i} style={{
-                                    marginBottom: '8px',
-                                    fontSize: '16px',
-                                    lineHeight: '1.6',
+                          {/* Show Only Bullet Text - Fixed Position */}
+                          <div style={{ 
+                            margin: 0,
+                            marginTop: '0px',
+                            marginBottom: '0px',
+                            position: 'relative',
+                            width: '100%'
+                          }}>
+                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
+                                <ul style={{
+                                  margin: 0,
+                                  paddingLeft: '20px',
+                                  listStyleType: 'disc'
+                                }}>
+                                  {story.summary_bullets.map((bullet, i) => (
+                                    <li key={i} style={{
+                                    marginBottom: '20px',
+                                      fontSize: '16px',
+                                    lineHeight: '1.8',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
                                   }}>
                                     {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
-                                No bullet points available
-                              </p>
-                            )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                  No bullet points available
+                                </p>
+                              )}
                           </div>
                           
-                          {/* Show Detailed Article Text Below Bullets - Scrollable */}
+                          {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
                           {showDetailedText[index] && (
                             <div 
                               style={{
@@ -2817,7 +3023,10 @@ export default function Home() {
                                 opacity: 1,
                                 transform: 'translateY(0)',
                                 transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                position: 'relative',
+                                zIndex: 1,
+                                width: '100%'
                               }}
                               onTouchStart={(e) => {
                                 const startX = e.touches[0].clientX;
@@ -2874,7 +3083,29 @@ export default function Home() {
                         
                       </div>
                       
+                    </div>
+                    {/* End of news-content div */}
+                      
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
+                    {/* Always show information box if there are any available components, regardless of image presence */}
+                    {/* MOVED OUTSIDE news-content to fix stacking context issue */}
+                    {(() => {
+                        const componentCount = getAvailableComponentsCount(story);
+                        // Debug logging
+                        if (componentCount === 0) {
+                          console.log(`⚠️ Story ${index} (${story.title?.substring(0, 50)}) has NO components:`, {
+                            hasDetails: !!(story.details && story.details.length > 0),
+                            hasTimeline: !!(story.timeline && story.timeline.length > 0),
+                            hasMap: !!story.map,
+                            hasGraph: !!story.graph,
+                            urlToImage: story.urlToImage
+                          });
+                        } else {
+                          // Log when components exist to help debug visibility issues
+                          console.log(`✅ Story ${index} (${story.title?.substring(0, 30)}) has ${componentCount} component(s), image: ${!!story.urlToImage}`);
+                        }
+                        return componentCount > 0;
+                      })() && (
                       <div style={{
                         position: showDetailedText[index] ? 'relative' : 'fixed',
                         bottom: showDetailedText[index] ? 'auto' : '32px',
@@ -2884,10 +3115,15 @@ export default function Home() {
                         maxWidth: showDetailedText[index] ? '1200px' : '1200px',
                         paddingLeft: '8px',
                         paddingRight: '8px',
-                        zIndex: '50',
+                        zIndex: 99999,
                         marginTop: showDetailedText[index] ? '0' : '0',
                         marginLeft: showDetailedText[index] ? 'auto' : '0',
-                        marginRight: showDetailedText[index] ? 'auto' : '0'
+                        marginRight: showDetailedText[index] ? 'auto' : '0',
+                        pointerEvents: 'auto',
+                        display: 'block',
+                        visibility: 'visible',
+                        opacity: 1,
+                        isolation: 'isolate'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
@@ -2897,15 +3133,20 @@ export default function Home() {
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
+                          display: 'flex',
+                          visibility: 'visible',
                           minHeight: '85px',
+                          zIndex: 99999,
+                          opacity: 1,
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
+                          backgroundColor: showTimeline[index] ? 'transparent' : '#ffffff',
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
-                          backdropFilter: showTimeline[index] ? 'none' : 'none',
-                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                             border: 'none',
                             borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
+                          boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
@@ -2976,9 +3217,46 @@ export default function Home() {
                         }}
                       >
                         {/* Content - Show one component at a time */}
-                        {showDetails[index] ? (
-                          // Show Details Only
-                          story.details && story.details.map((detail, i) => {
+                        {/* Default to details if no state is set but components exist */}
+                        {(() => {
+                          // If no state is set, default to showing details if available, otherwise timeline
+                          if (!showDetails[index] && !showTimeline[index] && !showMap[index] && !showGraph[index]) {
+                            if (story.details && story.details.length > 0) {
+                              // Set showDetails to true for this index
+                              setShowDetails(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            } else if (story.timeline && story.timeline.length > 0) {
+                              setShowTimeline(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            } else if (story.map) {
+                              setShowMap(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            } else if (story.graph) {
+                              setShowGraph(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            }
+                          }
+                          return null;
+                        })()}
+                        {showDetails[index] || (!showTimeline[index] && !showMap[index] && !showGraph[index] && story.details && story.details.length > 0) ? (
+                          // Show Details Only - Limit to 3 items
+                          story.details && story.details.slice(0, 3).map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
                           const cleanValue = value?.trim() || '';
@@ -2989,14 +3267,19 @@ export default function Home() {
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
                           
                           return (
-                            <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                            <div key={i} className="news-detail-item" style={{ 
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              color: '#111827'
+                            }}>
+                              <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
+                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary || '#111827' }}>{mainValue}</div>
+                              {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
                             </div>
                           );
                           })
-                        ) : showTimeline[index] ? (
+                        ) : showTimeline[index] || (!showDetails[index] && !showMap[index] && !showGraph[index] && story.timeline && story.timeline.length > 0) ? (
                           // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
                             <div 
@@ -3136,7 +3419,7 @@ export default function Home() {
                               </div>
                             </div>
                           )
-                        ) : showMap[index] ? (
+                        ) : showMap[index] || (!showDetails[index] && !showTimeline[index] && !showGraph[index] && story.map) ? (
                           // Show Map Only
                           story.map && (
                             <div 
@@ -3179,7 +3462,7 @@ export default function Home() {
                                   </div>
                             </div>
                           )
-                        ) : showGraph[index] ? (
+                        ) : showGraph[index] || (!showDetails[index] && !showTimeline[index] && !showMap[index] && story.graph) ? (
                           // Show Graph Only
                           story.graph && (
                             <div 
@@ -3329,8 +3612,8 @@ export default function Home() {
                         </div>
                       )}
                       
-                      </div> {/* Close fixed position container */}
                     </div>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -3373,7 +3656,7 @@ export default function Home() {
         {/* Email Confirmation Modal */}
         {emailConfirmation && (
           <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)}>
-            <EmailConfirmation 
+            <EmailConfirmation
               email={emailConfirmation.email}
               onBack={() => setEmailConfirmation(null)}
             />
