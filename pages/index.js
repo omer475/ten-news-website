@@ -2455,120 +2455,155 @@ The article concludes with forward-looking analysis and what readers should watc
                       // Ensure image container doesn't interfere with information box
                       maxHeight: 'calc(38vh - 3px)'
                     }}>
-                      {(story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? (
-                        <img 
-                          src={story.urlToImage}
-                          alt={story.title}
-                          loading="lazy"
-                          decoding="async"
-                          crossOrigin="anonymous"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            minWidth: '100%',
-                            minHeight: '100%',
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            objectFit: 'cover',
-                            objectPosition: 'center',
-                            display: 'block',
-                            margin: 0,
-                            padding: 0,
-                            flexShrink: 0,
-                            flexGrow: 1,
-                            opacity: 1,
-                            visibility: 'visible',
-                            pointerEvents: 'auto',
-                            position: 'relative',
-                            zIndex: 1
-                          }}
-                          onLoad={(e) => {
-                            console.log('✅ Image loaded successfully:', story.urlToImage);
-                            console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
-                            // Only extract color if image loaded successfully
-                            if (e.target.complete && e.target.naturalWidth > 0) {
-                              try {
-                                extractDominantColor(e.target, index);
-                              } catch (error) {
-                                console.warn('Color extraction failed:', error);
-                              }
-                            }
-                            // Ensure image is visible
-                            e.target.style.opacity = '1';
-                            e.target.style.visibility = 'visible';
-                          }}
-                          onError={(e) => {
-                            console.error('❌ Image failed to load:', story.urlToImage);
-                            console.error('   Story title:', story.title);
-                            const imgElement = e.target;
-                            const parentElement = imgElement.parentElement;
-                            
-                            // Try alternative loading methods
-                            const currentSrc = imgElement.src;
-                            let retryCount = 0;
-                            const maxRetries = 2;
-                            
-                            const tryLoadImage = () => {
-                              if (retryCount < maxRetries && currentSrc && !currentSrc.includes('data:') && !currentSrc.includes('blob:')) {
-                                retryCount++;
-                                // Try with different CORS settings
-                                if (retryCount === 1) {
-                                  imgElement.crossOrigin = 'anonymous';
-                                } else {
-                                  imgElement.crossOrigin = undefined;
+                      {(() => {
+                        // Always try to show image if URL exists - be more lenient with validation
+                        const hasImageUrl = story.urlToImage && 
+                                          typeof story.urlToImage === 'string' && 
+                                          story.urlToImage.trim() !== '' && 
+                                          story.urlToImage !== 'null' && 
+                                          story.urlToImage !== 'undefined' &&
+                                          story.urlToImage.length > 5; // At least 5 chars for a valid URL
+                        
+                        if (!hasImageUrl) {
+                          return (
+                            <div style={{
+                              fontSize: '72px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '100%',
+                              height: '100%'
+                            }}>
+                              {story.emoji || '📰'}
+                            </div>
+                          );
+                        }
+                        
+                        const imageUrl = story.urlToImage.trim();
+                        const imageKey = `img-${story.id || index}-${imageUrl.substring(0, 50)}-${Date.now()}`;
+                        
+                        return (
+                          <img 
+                            key={imageKey}
+                            src={imageUrl}
+                            alt={story.title || 'News image'}
+                            loading="lazy"
+                            decoding="async"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              minWidth: '100%',
+                              minHeight: '100%',
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              display: 'block',
+                              margin: 0,
+                              padding: 0,
+                              flexShrink: 0,
+                              flexGrow: 1,
+                              opacity: 1,
+                              visibility: 'visible',
+                              pointerEvents: 'auto',
+                              position: 'relative',
+                              zIndex: 1
+                            }}
+                            onLoad={(e) => {
+                              console.log('✅ Image loaded successfully:', imageUrl);
+                              console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
+                              // Only extract color if image loaded successfully
+                              if (e.target.complete && e.target.naturalWidth > 0) {
+                                try {
+                                  extractDominantColor(e.target, index);
+                                } catch (error) {
+                                  console.warn('Color extraction failed:', error);
                                 }
-                                // Try with timestamp to bypass cache
-                                const separator = currentSrc.includes('?') ? '&' : '?';
-                                imgElement.src = currentSrc + separator + 'retry=' + Date.now();
-                                return;
                               }
+                              // Ensure image is visible
+                              e.target.style.opacity = '1';
+                              e.target.style.visibility = 'visible';
+                              e.target.style.display = 'block';
+                            }}
+                            onError={(e) => {
+                              console.error('❌ Image failed to load:', imageUrl);
+                              console.error('   Story title:', story.title);
+                              const imgElement = e.target;
+                              const parentElement = imgElement.parentElement;
                               
-                              // If all retries failed, show fallback
-                              imgElement.style.display = 'none';
-                              if (parentElement) {
-                                const existingFallback = parentElement.querySelector('.image-fallback');
-                                if (!existingFallback) {
-                                  parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                                  const fallback = document.createElement('div');
-                                  fallback.className = 'image-fallback';
-                                  fallback.style.cssText = `
-                                font-size: 72px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                width: 100%;
-                                height: 100%;
-                                    position: absolute;
-                                    top: 0;
-                                    left: 0;
-                                    z-index: 1;
-                                  `;
-                                  fallback.textContent = story.emoji || '📰';
-                                  parentElement.appendChild(fallback);
+                              // More aggressive retry strategy
+                              let retryCount = parseInt(imgElement.dataset.retryCount || '0');
+                              const maxRetries = 5; // Increased retries
+                              
+                              const tryLoadImage = () => {
+                                if (retryCount < maxRetries && imageUrl && !imageUrl.includes('data:') && !imageUrl.includes('blob:')) {
+                                  retryCount++;
+                                  imgElement.dataset.retryCount = retryCount.toString();
+                                  
+                                  // Try different CORS settings
+                                  if (retryCount % 2 === 0) {
+                                    imgElement.crossOrigin = 'anonymous';
+                                  } else {
+                                    imgElement.crossOrigin = undefined;
+                                  }
+                                  
+                                  // Try different referrer policies
+                                  if (retryCount === 3) {
+                                    imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                                  } else if (retryCount === 4) {
+                                    imgElement.referrerPolicy = 'origin';
+                                  } else {
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                  }
+                                  
+                                  // Try with timestamp to bypass cache
+                                  const separator = imageUrl.includes('?') ? '&' : '?';
+                                  const newSrc = imageUrl + separator + '_retry=' + retryCount + '&_t=' + Date.now();
+                                  console.log(`🔄 Retry ${retryCount}/${maxRetries}: ${newSrc.substring(0, 80)}...`);
+                                  imgElement.src = newSrc;
+                                  return;
                                 }
-                              }
-                            };
-                            
-                            // Try loading again after a short delay
-                            setTimeout(tryLoadImage, 500);
-                          }}
-                          onLoadStart={() => {
-                            console.log('🔄 Image loading started:', story.urlToImage);
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          fontSize: '72px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '100%',
-                          height: '100%'
-                        }}>
-                          {story.emoji || '📰'}
-                        </div>
-                      )}
+                                
+                                // Only show fallback after all retries exhausted
+                                if (retryCount >= maxRetries) {
+                                  console.warn('⚠️ All image load attempts failed, showing fallback');
+                                  imgElement.style.display = 'none';
+                                  if (parentElement) {
+                                    const existingFallback = parentElement.querySelector('.image-fallback');
+                                    if (!existingFallback) {
+                                      parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                      const fallback = document.createElement('div');
+                                      fallback.className = 'image-fallback';
+                                      fallback.style.cssText = `
+                                        font-size: 72px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        width: 100%;
+                                        height: 100%;
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        z-index: 1;
+                                      `;
+                                      fallback.textContent = story.emoji || '📰';
+                                      parentElement.appendChild(fallback);
+                                    }
+                                  }
+                                }
+                              };
+                              
+                              // Try loading again with increasing delays
+                              setTimeout(tryLoadImage, 300 * retryCount);
+                            }}
+                            onLoadStart={() => {
+                              console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
+                            }}
+                          />
+                        );
+                      })()}
                       
                       {/* Bottom Gradient Frosted Blur Overlay - Starts at 55% height */}
                       {/* Blur gradient: 55%→70% (0→10px), 70%→85% (10→18px), 85%→100% (18→25px) */}

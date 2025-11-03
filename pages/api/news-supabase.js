@@ -80,7 +80,27 @@ export default async function handler(req, res) {
         source: article.source,
         description: article.description,
         content: article.content,
-        urlToImage: (article.image_url && article.image_url.trim() !== '' && article.image_url !== 'null' && article.image_url !== 'undefined') ? article.image_url.trim() : null,  // Frontend expects 'urlToImage'
+        // Ensure image URL is always passed if it exists and is valid
+        urlToImage: (() => {
+          const imgUrl = article.image_url;
+          if (!imgUrl) return null;
+          
+          // Handle different data types
+          const urlStr = typeof imgUrl === 'string' ? imgUrl.trim() : String(imgUrl).trim();
+          
+          // Validate URL
+          if (urlStr === '' || 
+              urlStr === 'null' || 
+              urlStr === 'undefined' || 
+              urlStr === 'None' ||
+              urlStr.toLowerCase() === 'null' ||
+              urlStr.length < 5) {
+            return null;
+          }
+          
+          // Return cleaned URL
+          return urlStr;
+        })(),  // Frontend expects 'urlToImage'
         author: article.author,
         publishedAt: article.published_date || article.published_at,
         category: article.category,
