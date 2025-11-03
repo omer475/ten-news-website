@@ -2710,8 +2710,8 @@ The article concludes with forward-looking analysis and what readers should watc
                     <div className="news-content" style={{
                       position: 'relative',
                         paddingTop: 'calc(38vh - 60px)',
-                        paddingLeft: '64px',
-                        paddingRight: '64px',
+                        paddingLeft: '25px',
+                        paddingRight: '25px',
                         zIndex: '2',
                         background: 'transparent',
                         width: '100%',
@@ -3270,7 +3270,7 @@ The article concludes with forward-looking analysis and what readers should watc
                               color: '#111827'
                             }}>
                               <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary || '#111827' }}>{mainValue}</div>
+                              <div className="news-detail-value" style={{ color: getAdaptiveHighlightColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original) || '#111827' }}>{mainValue}</div>
                               {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
                             </div>
                           );
