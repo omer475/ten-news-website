@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
 
@@ -20,6 +21,7 @@ export default function Home() {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
+  const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -1250,12 +1252,23 @@ The article concludes with forward-looking analysis and what readers should watc
 
   return (
     <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      </Head>
       <style>{`
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
           -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+          background: #ffffff;
+          padding: 0;
+          margin: 0;
+          min-height: 100vh;
+          min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
 
         body {
@@ -1268,6 +1281,32 @@ The article concludes with forward-looking analysis and what readers should watc
           height: 100%;
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
+          min-height: 100vh;
+          min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+        }
+        
+        body::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * env(safe-area-inset-top));
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        body::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * env(safe-area-inset-bottom));
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-bottom);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
         }
 
         .loading-container {
@@ -2480,14 +2519,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         }
                         
                         const imageUrl = story.urlToImage.trim();
-                        const imageKey = `img-${story.id || index}-${imageUrl.substring(0, 50)}-${Date.now()}`;
+                        // Use stable key based on story ID and URL hash, NOT timestamp
+                        const urlHash = imageUrl.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '');
+                        const imageKey = `img-${story.id || index}-${urlHash}`;
+                        const isImageLoaded = loadedImages.has(imageUrl);
                         
                         return (
                           <img 
                             key={imageKey}
                             src={imageUrl}
                             alt={story.title || 'News image'}
-                            loading="lazy"
+                            loading={isImageLoaded ? "eager" : "lazy"}
                             decoding="async"
                             crossOrigin="anonymous"
                             referrerPolicy="no-referrer"
@@ -2514,6 +2556,14 @@ The article concludes with forward-looking analysis and what readers should watc
                             onLoad={(e) => {
                               console.log('✅ Image loaded successfully:', imageUrl);
                               console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
+                              
+                              // Mark this image as successfully loaded
+                              setLoadedImages(prev => {
+                                const newSet = new Set(prev);
+                                newSet.add(imageUrl);
+                                return newSet;
+                              });
+                              
                               // Only extract color if image loaded successfully
                               if (e.target.complete && e.target.naturalWidth > 0) {
                                 try {
@@ -2522,10 +2572,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                   console.warn('Color extraction failed:', error);
                                 }
                               }
-                              // Ensure image is visible
+                              // Ensure image is visible and persistent
                               e.target.style.opacity = '1';
                               e.target.style.visibility = 'visible';
                               e.target.style.display = 'block';
+                              e.target.style.minWidth = '100%';
+                              e.target.style.minHeight = '100%';
                             }}
                             onError={(e) => {
                               console.error('❌ Image failed to load:', imageUrl);
@@ -2569,6 +2621,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                 // Only show fallback after all retries exhausted
                                 if (retryCount >= maxRetries) {
                                   console.warn('⚠️ All image load attempts failed, showing fallback');
+                                  // Remove from loaded images set if it was previously loaded
+                                  setLoadedImages(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(imageUrl);
+                                    return newSet;
+                                  });
                                   imgElement.style.display = 'none';
                                   if (parentElement) {
                                     const existingFallback = parentElement.querySelector('.image-fallback');
