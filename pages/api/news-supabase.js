@@ -46,16 +46,6 @@ export default async function handler(req, res) {
 
     console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
     console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests`)
-    
-    // Debug: Log image URL status for first 3 articles
-    if (filteredArticles.length > 0) {
-      console.log('\n📸 IMAGE URL DEBUG (first 3 articles):');
-      filteredArticles.slice(0, 3).forEach((article, i) => {
-        console.log(`  [${i + 1}] ${article.title?.substring(0, 40)}...`);
-        console.log(`      image_url: ${article.image_url ? '✅ ' + article.image_url.substring(0, 60) + '...' : '❌ MISSING'}`);
-      });
-      console.log('');
-    }
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
@@ -81,11 +71,6 @@ export default async function handler(req, res) {
           console.error('Error parsing summary_bullets:', e);
           summaryBullets = [];
         }
-      }
-
-      // Debug: Log if image URL is missing
-      if (!article.image_url || article.image_url.trim() === '') {
-        console.log(`⚠️ No image URL for article: "${article.title.substring(0, 50)}..."`);
       }
 
       return {

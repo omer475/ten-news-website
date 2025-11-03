@@ -2710,8 +2710,8 @@ The article concludes with forward-looking analysis and what readers should watc
                     <div className="news-content" style={{
                       position: 'relative',
                         paddingTop: 'calc(38vh - 60px)',
-                        paddingLeft: '25px',
-                        paddingRight: '25px',
+                        paddingLeft: '20px',
+                        paddingRight: '20px',
                         zIndex: '2',
                         background: 'transparent',
                         width: '100%',
@@ -2989,7 +2989,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
                                     <li key={i} style={{
-                                    marginBottom: '12px',
+                                    marginBottom: '8px',
                                       fontSize: '16px',
                                     lineHeight: '1.8',
                                     fontWeight: '400',
