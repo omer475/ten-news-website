@@ -2212,12 +2212,12 @@ The article concludes with forward-looking analysis and what readers should watc
           position: relative;
           display: flex;
           align-items: center;
-          gap: 8px;
-          width: 164px;
-          max-width: 164px;
-          height: 54px;
+          gap: 6px;
+          width: 120px;
+          max-width: 120px;
+          height: 42px;
           box-sizing: border-box;
-          padding: 8px 10px 10px;
+          padding: 6px 8px 8px;
           margin: 0;
           border: none;
           border-radius: 99em;
@@ -2243,25 +2243,16 @@ The article concludes with forward-looking analysis and what readers should watc
         .toggle-switch::after {
           content: '';
           position: absolute;
-          left: 4px;
-          top: 4px;
+          left: 3px;
+          top: 3px;
           display: block;
-          width: 76px;
-          height: calc(100% - 10px);
+          width: 54px;
+          height: calc(100% - 8px);
           border-radius: 99em;
-          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+          background-color: transparent;
           z-index: 0;
-          box-shadow: 
-            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          box-shadow: none;
           transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
             translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
@@ -2272,7 +2263,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .toggle-switch:has(input[c-option="2"]:checked)::after {
-          translate: 76px 0;
+          translate: 54px 0;
           transform-origin: left;
           animation: scaleToggle2 440ms ease;
         }
@@ -2296,8 +2287,8 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 0 16px;
-          width: 68px;
+          padding: 0 12px;
+          width: 54px;
           height: 100%;
           box-sizing: border-box;
           border-radius: 99em;
