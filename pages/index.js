@@ -2212,13 +2212,13 @@ The article concludes with forward-looking analysis and what readers should watc
           position: relative;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           width: auto;
-          min-width: 120px;
-          max-width: 244px;
-          height: 42px;
+          min-width: 90px;
+          max-width: 200px;
+          height: 32px;
           box-sizing: border-box;
-          padding: 6px 8px 8px;
+          padding: 4px 6px 6px;
           margin: 0;
           border: none;
           border-radius: 99em;
@@ -2244,11 +2244,11 @@ The article concludes with forward-looking analysis and what readers should watc
         .switcher::after {
           content: '';
           position: absolute;
-          left: 3px;
-          top: 3px;
+          left: 2px;
+          top: 2px;
           display: block;
-          width: 54px;
-          height: calc(100% - 8px);
+          width: 42px;
+          height: calc(100% - 6px);
           border-radius: 99em;
           background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
           z-index: 0;
@@ -2273,19 +2273,19 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .switcher:has(input[c-option="2"]:checked)::after {
-          translate: 60px 0;
+          translate: 46px 0;
           transform-origin: left;
           animation: scaleToggle2 440ms ease;
         }
 
         .switcher:has(input[c-option="3"]:checked)::after {
-          translate: 120px 0;
+          translate: 90px 0;
           transform-origin: left;
           animation: scaleToggle3 440ms ease;
         }
 
         .switcher:has(input[c-option="4"]:checked)::after {
-          translate: 180px 0;
+          translate: 134px 0;
           transform-origin: left;
           animation: scaleToggle3 440ms ease;
         }
@@ -2325,8 +2325,8 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 0 12px;
-          width: 54px;
+          padding: 0 8px;
+          width: 42px;
           height: 100%;
           box-sizing: border-box;
           border-radius: 99em;
@@ -2364,9 +2364,9 @@ The article concludes with forward-looking analysis and what readers should watc
         .grid-icon {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1px;
-          width: 14px;
-          height: 14px;
+          gap: 2px;
+          width: 20px;
+          height: 20px;
         }
 
         .grid-square {
@@ -2382,9 +2382,9 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-icon {
           display: flex;
           flex-direction: column;
-          gap: 2px;
-          width: 14px;
-          height: 14px;
+          gap: 3px;
+          width: 20px;
+          height: 20px;
         }
 
         .list-line {
@@ -2394,8 +2394,8 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .list-dot {
-          width: 2px;
-          height: 2px;
+          width: 3px;
+          height: 3px;
           background: color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 50%;
           transition: background 160ms;
@@ -2406,8 +2406,8 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .list-bar {
-          width: 8px;
-          height: 1px;
+          width: 12px;
+          height: 2px;
           background: color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 1px;
           transition: background 160ms;
@@ -2418,16 +2418,16 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .map-icon {
-          width: 14px;
-          height: 14px;
+          width: 20px;
+          height: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .map-icon > div {
-          width: 10px;
-          height: 10px;
+          width: 14px;
+          height: 14px;
           border: 2px solid color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 50%;
           position: relative;
@@ -2443,8 +2443,8 @@ The article concludes with forward-looking analysis and what readers should watc
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 4px;
-          height: 4px;
+          width: 6px;
+          height: 6px;
           background: color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 50%;
           transition: background 160ms;
@@ -2455,23 +2455,23 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .graph-icon {
-          width: 14px;
-          height: 14px;
+          width: 20px;
+          height: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .graph-icon > div {
-          width: 12px;
-          height: 8px;
+          width: 16px;
+          height: 12px;
           display: flex;
           align-items: end;
-          gap: 1px;
+          gap: 2px;
         }
 
         .graph-icon > div > div {
-          width: 2px;
+          width: 3px;
           border-radius: 1px;
           background: color-mix(in srgb, var(--c) 50%, transparent);
           transition: background 160ms;
@@ -3088,10 +3088,10 @@ The article concludes with forward-looking analysis and what readers should watc
                                      {infoType === 'graph' && (
                                        <div className="graph-icon">
                                          <div>
-                                           <div style={{ height: '3px' }}></div>
+                                           <div style={{ height: '5px' }}></div>
+                                           <div style={{ height: '9px' }}></div>
                                            <div style={{ height: '6px' }}></div>
-                                           <div style={{ height: '4px' }}></div>
-                                           <div style={{ height: '8px' }}></div>
+                                           <div style={{ height: '12px' }}></div>
                                          </div>
                                        </div>
                                      )}
