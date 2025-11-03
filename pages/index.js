@@ -1291,11 +1291,11 @@ The article concludes with forward-looking analysis and what readers should watc
   };
 
   return (
-    <>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
-      <style>{`
+      <>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
+        <style>{`
         * {
           margin: 0;
           padding: 0;
@@ -2212,12 +2212,12 @@ The article concludes with forward-looking analysis and what readers should watc
           position: relative;
           display: flex;
           align-items: center;
-          gap: 4px;
-          width: 60px;
-          max-width: 60px;
-          height: 28px;
+          gap: 8px;
+          width: 164px;
+          max-width: 164px;
+          height: 54px;
           box-sizing: border-box;
-          padding: 2px;
+          padding: 8px 10px 10px;
           margin: 0;
           border: none;
           border-radius: 99em;
@@ -2240,20 +2240,71 @@ The article concludes with forward-looking analysis and what readers should watc
             box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
+        .toggle-switch::after {
+          content: '';
+          position: absolute;
+          left: 4px;
+          top: 4px;
+          display: block;
+          width: 76px;
+          height: calc(100% - 10px);
+          border-radius: 99em;
+          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+          z-index: 0;
+          box-shadow: 
+            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .toggle-switch:has(input[c-option="1"]:checked)::after {
+          translate: 0 0;
+          transform-origin: right;
+          animation: scaleToggle 440ms ease;
+        }
+
+        .toggle-switch:has(input[c-option="2"]:checked)::after {
+          translate: 76px 0;
+          transform-origin: left;
+          animation: scaleToggle2 440ms ease;
+        }
+
+        @keyframes scaleToggle {
+          0% { scale: 1 1; }
+          50% { scale: 1.1 1; }
+          100% { scale: 1 1; }
+        }
+
+        @keyframes scaleToggle2 {
+          0% { scale: 1 1; }
+          50% { scale: 1.2 1; }
+          100% { scale: 1 1; }
+        }
+
         .toggle-option {
           --c: var(--c-content);
+          position: relative;
+          z-index: 1;
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 0;
-          width: 28px;
-          height: 24px;
+          padding: 0 16px;
+          width: 68px;
+          height: 100%;
           box-sizing: border-box;
           border-radius: 99em;
           background: none;
           border: none;
-          cursor: pointer;
           opacity: 1;
+          cursor: pointer;
           transition: all 160ms;
         }
 
@@ -2262,25 +2313,35 @@ The article concludes with forward-looking analysis and what readers should watc
           cursor: pointer;
         }
 
-        .toggle-option:hover .grid-icon,
-        .toggle-option:hover .list-icon {
-          transform: scale(1.1);
+        .toggle-option:hover .switcher__icon {
+          scale: 1.2;
         }
 
-        .toggle-option.active {
+        .toggle-option:has(input:checked) {
           --c: var(--c-content);
           cursor: auto;
         }
 
-        .toggle-option.active .grid-icon,
-        .toggle-option.active .list-icon {
-          transform: scale(1);
+        .toggle-option:has(input:checked) .switcher__icon {
+          scale: 1;
         }
 
-        .toggle-option.active .grid-square,
-        .toggle-option.active .list-dot,
-        .toggle-option.active .list-bar {
-          background: var(--c-content);
+        .toggle-option input {
+          clip: rect(0 0 0 0);
+          clip-path: inset(100%);
+          height: 1px;
+          width: 1px;
+          overflow: hidden;
+          position: absolute;
+          white-space: nowrap;
+        }
+
+        .switcher__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
         .grid-icon {
@@ -2289,17 +2350,16 @@ The article concludes with forward-looking analysis and what readers should watc
           gap: 1px;
           width: 14px;
           height: 14px;
-          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
         .grid-square {
-          background: color-mix(in srgb, var(--c-content) 50%, transparent);
+          background: color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 1px;
           transition: background 160ms;
         }
 
-        .toggle-option.active .grid-square {
-          background: var(--c-content);
+        .toggle-option:has(input:checked) .grid-square {
+          background: var(--c);
         }
 
         .list-icon {
@@ -2308,7 +2368,6 @@ The article concludes with forward-looking analysis and what readers should watc
           gap: 2px;
           width: 14px;
           height: 14px;
-          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
         .list-line {
@@ -2320,25 +2379,25 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-dot {
           width: 2px;
           height: 2px;
-          background: color-mix(in srgb, var(--c-content) 50%, transparent);
+          background: color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 50%;
           transition: background 160ms;
         }
 
-        .toggle-option.active .list-dot {
-          background: var(--c-content);
+        .toggle-option:has(input:checked) .list-dot {
+          background: var(--c);
         }
 
         .list-bar {
           width: 8px;
           height: 1px;
-          background: color-mix(in srgb, var(--c-content) 50%, transparent);
+          background: color-mix(in srgb, var(--c) 50%, transparent);
           border-radius: 1px;
           transition: background 160ms;
         }
 
-        .toggle-option.active .list-bar {
-          background: var(--c-content);
+        .toggle-option:has(input:checked) .list-bar {
+          background: var(--c);
         }
 
 
@@ -2863,147 +2922,79 @@ The article concludes with forward-looking analysis and what readers should watc
                           {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
                         </div>
 
-                        {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
-                        {getAvailableComponentsCount(story) > 1 && (
-                          <div 
-                            className="toggle-switch" 
-                            style={{ 
+                        {/* Dynamic Information Switch - Only show if both details and timeline are available - Right Side */}
+                        {(() => {
+                          const hasDetails = story.details && story.details.length > 0;
+                          const hasTimeline = story.timeline && story.timeline.length > 0;
+                          const showSwitch = hasDetails && hasTimeline;
+                          const currentType = getCurrentInformationType(story, index);
+                          
+                          if (!showSwitch) return null;
+                          
+                          return (
+                            <div className="toggle-switch" style={{ 
                               position: 'relative',
                               flex: '0 0 auto'
                             }}>
-                            {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
-                              const isActive = getCurrentInformationType(story, index) === infoType;
-                              return (
-                                <button
-                                  key={infoType}
-                                  className={`toggle-option ${isActive ? 'active' : ''}`}
-                                  onClick={(e) => {
-                                    e.preventDefault();
+                              <label className="toggle-option">
+                                <input
+                                  type="radio"
+                                  name={`info-toggle-${index}`}
+                                  value="details"
+                                  c-option="1"
+                                  checked={currentType === 'details'}
+                                  onChange={(e) => {
                                     e.stopPropagation();
-                                    console.log(`${infoType} option clicked for story`, index);
-                                    
-                                    // Reset all states
                                     setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: true }));
+                                    setShowMap(prev => ({ ...prev, [index]: false }));
+                                    setShowGraph(prev => ({ ...prev, [index]: false }));
+                                  }}
+                                />
+                                <div className="switcher__icon">
+                                  <div className="grid-icon">
+                                    <div className="grid-square"></div>
+                                    <div className="grid-square"></div>
+                                    <div className="grid-square"></div>
+                                    <div className="grid-square"></div>
+                                  </div>
+                                </div>
+                              </label>
+                              <label className="toggle-option">
+                                <input
+                                  type="radio"
+                                  name={`info-toggle-${index}`}
+                                  value="timeline"
+                                  c-option="2"
+                                  checked={currentType === 'timeline'}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    setShowTimeline(prev => ({ ...prev, [index]: true }));
                                     setShowDetails(prev => ({ ...prev, [index]: false }));
                                     setShowMap(prev => ({ ...prev, [index]: false }));
                                     setShowGraph(prev => ({ ...prev, [index]: false }));
-
-                                    // Set the selected state
-                                    switch (infoType) {
-                                      case 'timeline':
-                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                      case 'details':
-                                        setShowDetails(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                      case 'map':
-                                        setShowMap(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                      case 'graph':
-                                        setShowGraph(prev => ({ ...prev, [index]: true }));
-                                        break;
-                                    }
                                   }}
-                                >
-                                  {infoType === 'details' && (
-                                    <div className="grid-icon">
-                                      <div className="grid-square"></div>
-                                      <div className="grid-square"></div>
-                                      <div className="grid-square"></div>
-                                      <div className="grid-square"></div>
+                                />
+                                <div className="switcher__icon">
+                                  <div className="list-icon">
+                                    <div className="list-line">
+                                      <div className="list-dot"></div>
+                                      <div className="list-bar"></div>
                                     </div>
-                                  )}
-                                  {infoType === 'timeline' && (
-                                    <div className="list-icon">
-                                      <div className="list-line">
-                                        <div className="list-dot"></div>
-                                        <div className="list-bar"></div>
-                                      </div>
-                                      <div className="list-line">
-                                        <div className="list-dot"></div>
-                                        <div className="list-bar"></div>
-                                      </div>
-                                      <div className="list-line">
-                                        <div className="list-dot"></div>
-                                        <div className="list-bar"></div>
-                                      </div>
+                                    <div className="list-line">
+                                      <div className="list-dot"></div>
+                                      <div className="list-bar"></div>
                                     </div>
-                                  )}
-                                  {infoType === 'map' && (
-                                    <div className="map-icon" style={{
-                                      width: '14px',
-                                      height: '14px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center'
-                                    }}>
-                                      <div style={{
-                                        width: '10px',
-                                        height: '10px',
-                                        border: `2px solid ${isActive ? '#000000' : '#666666'}`,
-                                        borderRadius: '50%',
-                                        position: 'relative'
-                                      }}>
-                                        <div style={{
-                                          position: 'absolute',
-                                          top: '50%',
-                                          left: '50%',
-                                          transform: 'translate(-50%, -50%)',
-                                          width: '4px',
-                                          height: '4px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '50%'
-                                        }}></div>
-                                      </div>
+                                    <div className="list-line">
+                                      <div className="list-dot"></div>
+                                      <div className="list-bar"></div>
                                     </div>
-                                  )}
-                                  {infoType === 'graph' && (
-                                    <div className="graph-icon" style={{
-                                      width: '14px',
-                                      height: '14px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center'
-                                    }}>
-                                      <div style={{
-                                        width: '12px',
-                                        height: '8px',
-                                        display: 'flex',
-                                        alignItems: 'end',
-                                        gap: '1px'
-                                      }}>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '3px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '6px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '4px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                        <div style={{
-                                          width: '2px',
-                                          height: '8px',
-                                          background: isActive ? '#000000' : '#666666',
-                                          borderRadius: '1px'
-                                        }}></div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                                  </div>
+                                </div>
+                              </label>
+                            </div>
+                          );
+                        })()}
                       </div>
                       
                       {/* Summary/Bullet Points - Swipeable - Fixed Position */}
