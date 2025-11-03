@@ -901,14 +901,39 @@ The article concludes with forward-looking analysis and what readers should watc
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, blurColor) => {
     if (!text) return '';
+    
+    // Always process bold markers, even without blurColor
     if (!blurColor) {
-      // Fallback: just remove ** markers
-    return text.replace(/\*\*/g, '');
+      // Fallback: make bold words bold but without special color
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ fontWeight: '700' }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
     }
     
     const highlightColor = getAdaptiveHighlightColor(blurColor);
     if (!highlightColor) {
-      return text.replace(/\*\*/g, '');
+      // Fallback: make bold words bold even without color
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ fontWeight: '700' }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
     }
     
     // Replace **text** with bold and colored spans
@@ -926,25 +951,49 @@ The article concludes with forward-looking analysis and what readers should watc
     });
   };
 
-  // Function to render title with highlighted important words (colored but not bold)
+  // Function to render title with highlighted important words (colored AND bold)
   const renderTitleWithHighlight = (text, blurColor) => {
     if (!text) return '';
     if (!blurColor) {
-      return text;
+      // Even without blurColor, still process bold markers but without color
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ fontWeight: '700' }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
     }
     
     const highlightColor = getAdaptiveHighlightColor(blurColor);
     if (!highlightColor) {
-      return text;
+      // Fallback: still make bold words bold even without color
+      const parts = text.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const content = part.replace(/\*\*/g, '');
+          return (
+            <span key={i} style={{ fontWeight: '700' }}>
+              {content}
+            </span>
+          );
+        }
+        return part;
+      });
     }
     
-    // Replace **text** with colored (but not bold) spans
+    // Replace **text** with colored AND bold spans
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ color: highlightColor }}>
+          <span key={i} style={{ color: highlightColor, fontWeight: '700' }}>
             {content}
           </span>
         );

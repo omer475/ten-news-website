@@ -80,7 +80,7 @@ export default async function handler(req, res) {
         source: article.source,
         description: article.description,
         content: article.content,
-        urlToImage: article.image_url || '',  // Frontend expects 'urlToImage'
+        urlToImage: (article.image_url && article.image_url.trim() !== '' && article.image_url !== 'null' && article.image_url !== 'undefined') ? article.image_url.trim() : null,  // Frontend expects 'urlToImage'
         author: article.author,
         publishedAt: article.published_date || article.published_at,
         category: article.category,
