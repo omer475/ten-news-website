@@ -2212,12 +2212,12 @@ The article concludes with forward-looking analysis and what readers should watc
           position: relative;
           display: flex;
           align-items: center;
-          gap: 8px;
-          width: 160px;
-          max-width: 160px;
-          height: 50px;
+          gap: 4px;
+          width: 60px;
+          max-width: 60px;
+          height: 28px;
           box-sizing: border-box;
-          padding: 6px 10px 8px;
+          padding: 2px;
           margin: 0;
           border: none;
           border-radius: 99em;
@@ -2240,63 +2240,14 @@ The article concludes with forward-looking analysis and what readers should watc
             box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
-        .toggle-switch::after {
-          content: '';
-          position: absolute;
-          left: 4px;
-          top: 4px;
-          display: block;
-          width: 68px;
-          height: calc(100% - 10px);
-          border-radius: 99em;
-          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
-          z-index: -1;
-          box-shadow: 
-            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-        }
-
-        .toggle-switch[data-active="0"]::after {
-          translate: 0 0;
-          transform-origin: right;
-          animation: scaleToggle 440ms ease;
-        }
-
-        .toggle-switch[data-active="1"]::after {
-          translate: 76px 0;
-          transform-origin: left;
-          animation: scaleToggle2 440ms ease;
-        }
-
-        @keyframes scaleToggle {
-          0% { scale: 1 1; }
-          50% { scale: 1.1 1; }
-          100% { scale: 1 1; }
-        }
-
-        @keyframes scaleToggle2 {
-          0% { scale: 1 1; }
-          50% { scale: 1.2 1; }
-          100% { scale: 1 1; }
-        }
-
         .toggle-option {
           --c: var(--c-content);
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 0 14px;
-          width: 68px;
-          height: 100%;
+          padding: 0;
+          width: 28px;
+          height: 24px;
           box-sizing: border-box;
           border-radius: 99em;
           background: none;
@@ -2313,7 +2264,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .toggle-option:hover .grid-icon,
         .toggle-option:hover .list-icon {
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
 
         .toggle-option.active {
@@ -2916,7 +2867,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         {getAvailableComponentsCount(story) > 1 && (
                           <div 
                             className="toggle-switch" 
-                            data-active={getAvailableInformationTypes(story).findIndex((infoType) => getCurrentInformationType(story, index) === infoType)}
                             style={{ 
                               position: 'relative',
                               flex: '0 0 auto'
