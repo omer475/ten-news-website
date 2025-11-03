@@ -2521,7 +2521,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           );
                         }
                         
-                        const imageUrl = story.urlToImage.trim();
+                        const imageUrl = String(story.urlToImage).trim();
                         // Use stable key based on story ID and URL hash, NOT timestamp
                         const urlHash = imageUrl.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '');
                         const imageKey = `img-${story.id || index}-${urlHash}`;
