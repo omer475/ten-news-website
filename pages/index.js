@@ -1560,8 +1560,6 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .news-content {
           padding-top: 0px;
-          padding-left: 8px !important;
-          padding-right: 8px !important;
           padding-bottom: 0;
           margin: 0 auto;
           max-width: 100%;
@@ -2250,8 +2248,6 @@ The article concludes with forward-looking analysis and what readers should watc
           
           .news-content {
             margin: 0 auto;
-            padding-left: 8px !important;
-            padding-right: 8px !important;
             max-width: 100%;
             width: 100%;
           }
@@ -2673,7 +2669,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           color: '#ffffff',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
-                      </div>
+                        </div>
                       )}
                     </div>
                     
@@ -2711,11 +2707,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     )}
                     
                     {/* Content Area - Starts After Image */}
-                      <div className="news-content" style={{
-                        position: 'relative',
-                        paddingTop: 'calc(38vh - 20px)',
-                        paddingLeft: '24px',
-                        paddingRight: '24px',
+                    <div className="news-content" style={{
+                      position: 'relative',
+                        paddingTop: 'calc(38vh - 60px)',
+                        paddingLeft: '64px',
+                        paddingRight: '64px',
                         zIndex: '2',
                         background: 'transparent',
                         width: '100%',
@@ -2728,7 +2724,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '16px',
+                        marginBottom: '8px',
                         marginTop: '32px',
                         width: '100%',
                         position: 'relative',
@@ -2960,8 +2956,8 @@ The article concludes with forward-looking analysis and what readers should watc
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            marginBottom: '32px',
-                            marginTop: '0px',
+                            marginBottom: '12px',
+                            marginTop: '-15px',
                             position: 'relative',
                             width: '100%'
                           }}>
@@ -2993,7 +2989,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
                                     <li key={i} style={{
-                                    marginBottom: '20px',
+                                    marginBottom: '12px',
                                       fontSize: '16px',
                                     lineHeight: '1.8',
                                     fontWeight: '400',

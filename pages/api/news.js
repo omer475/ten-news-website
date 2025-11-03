@@ -134,7 +134,19 @@ export default async function handler(req, res) {
     console.log(`⚠️  Supabase not available: ${fetchError.message}`);
   }
 
-  // FALLBACK 1: Try to read today's news file from public directory
+  // FALLBACK 1: Try test example news first (for testing layout)
+  try {
+    const testFilePath = path.join(process.cwd(), 'public', 'test_example_news.json');
+    if (fs.existsSync(testFilePath)) {
+      const testData = JSON.parse(fs.readFileSync(testFilePath, 'utf8'));
+      console.log('✅ Serving TEST EXAMPLE news with photos and content');
+      return res.status(200).json(testData);
+    }
+  } catch (error) {
+    console.log(`⚠️  Error loading test example: ${error.message}`);
+  }
+
+  // FALLBACK 2: Try to read today's news file from public directory
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '_');
