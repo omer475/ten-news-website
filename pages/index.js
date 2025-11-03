@@ -29,7 +29,7 @@ export default function Home() {
 
   const onTouchStart = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
       return;
     }
     setTouchEnd(null);
@@ -38,7 +38,7 @@ export default function Home() {
 
   const onTouchMove = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
       return;
     }
     setTouchEnd(e.targetTouches[0].clientX);
@@ -46,7 +46,7 @@ export default function Home() {
 
   const onTouchEnd = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
       return;
     }
     
@@ -899,50 +899,28 @@ The article concludes with forward-looking analysis and what readers should watc
   };
 
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
-  const renderBoldText = (text, blurColor) => {
+  const renderBoldText = (text, blurColor, category = null) => {
     if (!text) return '';
     
-    // Always process bold markers, even without blurColor
-    if (!blurColor) {
-      // Fallback: make bold words bold but without special color
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700' }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
+    // Get fallback color from category if no blurColor
+    let highlightColor = null;
+    if (blurColor) {
+      highlightColor = getAdaptiveHighlightColor(blurColor);
     }
     
-    const highlightColor = getAdaptiveHighlightColor(blurColor);
-    if (!highlightColor) {
-      // Fallback: make bold words bold even without color
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700' }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
+    // If still no color, use category-based color
+    if (!highlightColor && category) {
+      const categoryColors = getCategoryColors(category);
+      highlightColor = categoryColors.primary;
     }
     
-    // Replace **text** with bold and colored spans
+    // Always process bold markers
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
+          <span key={i} style={{ fontWeight: '700', color: highlightColor || '#000000' }}>
             {content}
           </span>
         );
@@ -952,48 +930,28 @@ The article concludes with forward-looking analysis and what readers should watc
   };
 
   // Function to render title with highlighted important words (colored AND bold)
-  const renderTitleWithHighlight = (text, blurColor) => {
+  const renderTitleWithHighlight = (text, blurColor, category = null) => {
     if (!text) return '';
-    if (!blurColor) {
-      // Even without blurColor, still process bold markers but without color
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700' }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
+    
+    // Get fallback color from category if no blurColor
+    let highlightColor = null;
+    if (blurColor) {
+      highlightColor = getAdaptiveHighlightColor(blurColor);
     }
     
-    const highlightColor = getAdaptiveHighlightColor(blurColor);
-    if (!highlightColor) {
-      // Fallback: still make bold words bold even without color
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700' }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
+    // If still no color, use category-based color
+    if (!highlightColor && category) {
+      const categoryColors = getCategoryColors(category);
+      highlightColor = categoryColors.primary;
     }
     
-    // Replace **text** with colored AND bold spans
+    // Always process bold markers
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ color: highlightColor, fontWeight: '700' }}>
+          <span key={i} style={{ color: highlightColor || '#ffffff', fontWeight: '700' }}>
             {content}
           </span>
         );
@@ -1291,11 +1249,8 @@ The article concludes with forward-looking analysis and what readers should watc
   };
 
   return (
-     <>
-       <link rel="preconnect" href="https://fonts.googleapis.com" />
-       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
-       <style>{`
+    <>
+      <style>{`
         * {
           margin: 0;
           padding: 0;
@@ -2198,307 +2153,77 @@ The article concludes with forward-looking analysis and what readers should watc
           position: relative;
         }
 
-        .switcher {
-          --c-glass: #bbbbbc;
-          --c-light: #fff;
-          --c-dark: #000;
-          --c-content: #224;
-          --c-action: #0052f5;
-          --c-bg: #E8E8E9;
-          --glass-reflex-dark: 1;
-          --glass-reflex-light: 1;
-          --saturation: 150%;
-          
-          position: relative;
+        .toggle-switch {
           display: flex;
-          align-items: center;
-          gap: 0;
-          width: auto;
-          min-width: 90px;
-          max-width: 200px;
-          height: 32px;
-          box-sizing: border-box;
-          padding: 3px;
-          margin: 0;
-          border: none;
-          border-radius: 99em;
-          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
-          backdrop-filter: blur(8px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(8px) saturate(var(--saturation));
-          box-shadow: 
-            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-            inset -1.5px 2.5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 1px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 6px;
+          padding: 2px;
+          gap: 2px;
         }
 
-        .switcher::after {
-          content: '';
-          position: absolute;
-          left: 3px;
-          top: 3px;
-          display: block;
-          width: calc((100% - 6px) / var(--option-count, 2));
-          height: calc(100% - 6px);
-          border-radius: 99em;
-          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
-          z-index: 0;
-          box-shadow: 
-            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-        }
-
-        .switcher:has(input[c-option="1"]:checked)::after {
-          translate: calc(0 * (100% - 6px) / var(--option-count, 2)) 0;
-          transform-origin: right;
-          animation: scaleToggle 440ms ease;
-        }
-
-        .switcher:has(input[c-option="2"]:checked)::after {
-          translate: calc(1 * (100% - 6px) / var(--option-count, 2)) 0;
-          transform-origin: left;
-          animation: scaleToggle2 440ms ease;
-        }
-
-        .switcher:has(input[c-option="3"]:checked)::after {
-          translate: calc(2 * (100% - 6px) / var(--option-count, 2)) 0;
-          transform-origin: left;
-          animation: scaleToggle3 440ms ease;
-        }
-
-        .switcher:has(input[c-option="4"]:checked)::after {
-          translate: calc(3 * (100% - 6px) / var(--option-count, 2)) 0;
-          transform-origin: left;
-          animation: scaleToggle3 440ms ease;
-        }
-
-        @keyframes scaleToggle {
-          0% { scale: 1 1; }
-          50% { scale: 1.1 1; }
-          100% { scale: 1 1; }
-        }
-
-        @keyframes scaleToggle2 {
-          0% { scale: 1 1; }
-          50% { scale: 1.2 1; }
-          100% { scale: 1 1; }
-        }
-
-        @keyframes scaleToggle3 {
-          0% { scale: 1 1; }
-          50% { scale: 1.1 1; }
-          100% { scale: 1 1; }
-        }
-
-        .switcher__input {
-          clip: rect(0 0 0 0);
-          clip-path: inset(100%);
-          height: 1px;
-          width: 1px;
-          overflow: hidden;
-          position: absolute;
-          white-space: nowrap;
-        }
-
-        .switcher__option {
-          --c: var(--c-content);
-          position: relative;
-          z-index: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 0;
-          flex: 1 1 0;
-          min-width: 0;
-          height: 100%;
-          box-sizing: border-box;
-          border-radius: 99em;
+        .toggle-option {
           background: none;
           border: none;
-          opacity: 1;
+          padding: 5px 8px;
+          border-radius: 4px;
           cursor: pointer;
-          transition: all 160ms;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 24px;
         }
 
-        .switcher__option:hover {
-          --c: var(--c-action);
-          cursor: pointer;
+        .toggle-option.active {
+          background: #ffffff;
         }
 
-        .switcher__option:hover .switcher__icon {
-          scale: 1.2;
-        }
-
-        .switcher__option:has(input:checked) {
-          --c: var(--c-content);
-          cursor: auto;
-        }
-
-        .switcher__option:has(input:checked) .switcher__icon {
-          scale: 1;
-        }
-
-        .switcher__icon {
-          display: block;
-          width: 100%;
-          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
+        .toggle-option.active .grid-square,
+        .toggle-option.active .list-dot,
+        .toggle-option.active .list-bar {
+          background: #000000;
         }
 
         .grid-icon {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 3px;
-          width: 18px;
-          height: 18px;
-          padding: 1px;
+          gap: 1px;
+          width: 14px;
+          height: 14px;
         }
 
         .grid-square {
-          background: color-mix(in srgb, var(--c) 40%, transparent);
-          border-radius: 2px;
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .switcher__option:has(input:checked) .grid-square {
-          background: var(--c);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          background: #666666;
+          border-radius: 1px;
         }
 
         .list-icon {
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          width: 18px;
-          height: 18px;
-          justify-content: center;
-          align-items: flex-start;
+          gap: 2px;
+          width: 14px;
+          height: 14px;
         }
 
         .list-line {
           display: flex;
           align-items: center;
-          gap: 4px;
-          width: 100%;
+          gap: 2px;
         }
 
         .list-dot {
-          width: 3.5px;
-          height: 3.5px;
-          background: color-mix(in srgb, var(--c) 40%, transparent);
+          width: 2px;
+          height: 2px;
+          background: #666666;
           border-radius: 50%;
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-          flex-shrink: 0;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .switcher__option:has(input:checked) .list-dot {
-          background: var(--c);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .list-bar {
-          width: 100%;
-          height: 2.5px;
-          background: color-mix(in srgb, var(--c) 40%, transparent);
-          border-radius: 2px;
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .switcher__option:has(input:checked) .list-bar {
-          background: var(--c);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .map-icon {
-          width: 18px;
-          height: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-
-        .map-icon > div {
-          width: 16px;
-          height: 16px;
-          border: 2.5px solid color-mix(in srgb, var(--c) 40%, transparent);
-          border-radius: 50%;
-          position: relative;
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .switcher__option:has(input:checked) .map-icon > div {
-          border-color: var(--c);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .map-icon > div > div {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 5px;
-          height: 5px;
-          background: color-mix(in srgb, var(--c) 40%, transparent);
-          border-radius: 50%;
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .switcher__option:has(input:checked) .map-icon > div > div {
-          background: var(--c);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .graph-icon {
-          width: 18px;
-          height: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .graph-icon > div {
-          width: 14px;
-          height: 10px;
-          display: flex;
-          align-items: end;
-          gap: 2.5px;
-          padding-bottom: 1px;
-        }
-
-        .graph-icon > div > div {
-          width: 3px;
-          border-radius: 2px 2px 0 0;
-          background: color-mix(in srgb, var(--c) 40%, transparent);
-          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .switcher__option:has(input:checked) .graph-icon > div > div {
-          background: var(--c);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          width: 8px;
+          height: 1px;
+          background: #666666;
+          border-radius: 1px;
         }
 
 
@@ -2950,7 +2675,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           letterSpacing: '-0.5px',
                           color: '#ffffff',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}</h3>
                         </div>
                       )}
                     </div>
@@ -3023,108 +2748,145 @@ The article concludes with forward-looking analysis and what readers should watc
                           {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
                         </div>
 
-                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
-                         {getAvailableComponentsCount(story) > 1 && (
-                           <div 
-                             className="switcher" 
-                             style={{ 
-                               position: 'relative',
-                               flex: '0 0 auto',
-                               '--option-count': getAvailableInformationTypes(story).length
-                             } as React.CSSProperties}
-                           >
-                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
-                               const isActive = getCurrentInformationType(story, index) === infoType;
-                               const optionNumber = buttonIndex + 1;
-                               return (
-                                 <label
-                                   key={infoType}
-                                   className="switcher__option"
-                                   onClick={(e) => {
-                                     e.preventDefault();
-                                     e.stopPropagation();
-                                     console.log(`${infoType} option clicked for story`, index);
-                                     
-                                     // Reset all states
-                                     setShowTimeline(prev => ({ ...prev, [index]: false }));
-                                     setShowDetails(prev => ({ ...prev, [index]: false }));
-                                     setShowMap(prev => ({ ...prev, [index]: false }));
-                                     setShowGraph(prev => ({ ...prev, [index]: false }));
+                        {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
+                        {getAvailableComponentsCount(story) > 1 && (
+                          <div className="toggle-switch" style={{ 
+                            position: 'relative',
+                            flex: '0 0 auto'
+                          }}>
+                            {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
+                              const isActive = getCurrentInformationType(story, index) === infoType;
+                              return (
+                                <button
+                                  key={infoType}
+                                  className={`toggle-option ${isActive ? 'active' : ''}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log(`${infoType} option clicked for story`, index);
+                                    
+                                    // Reset all states
+                                    setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: false }));
+                                    setShowMap(prev => ({ ...prev, [index]: false }));
+                                    setShowGraph(prev => ({ ...prev, [index]: false }));
 
-                                     // Set the selected state
-                                     switch (infoType) {
-                                       case 'timeline':
-                                         setShowTimeline(prev => ({ ...prev, [index]: true }));
-                                         break;
-                                       case 'details':
-                                         setShowDetails(prev => ({ ...prev, [index]: true }));
-                                         break;
-                                       case 'map':
-                                         setShowMap(prev => ({ ...prev, [index]: true }));
-                                         break;
-                                       case 'graph':
-                                         setShowGraph(prev => ({ ...prev, [index]: true }));
-                                         break;
-                                     }
-                                   }}
-                                 >
-                                   <input
-                                     type="radio"
-                                     className="switcher__input"
-                                     name={`info-toggle-${index}`}
-                                     value={infoType}
-                                     c-option={optionNumber}
-                                     checked={isActive}
-                                     onChange={() => {}}
-                                   />
-                                   <div className="switcher__icon">
-                                     {infoType === 'details' && (
-                                       <div className="grid-icon">
-                                         <div className="grid-square"></div>
-                                         <div className="grid-square"></div>
-                                         <div className="grid-square"></div>
-                                         <div className="grid-square"></div>
-                                       </div>
-                                     )}
-                                     {infoType === 'timeline' && (
-                                       <div className="list-icon">
-                                         <div className="list-line">
-                                           <div className="list-dot"></div>
-                                           <div className="list-bar"></div>
-                                         </div>
-                                         <div className="list-line">
-                                           <div className="list-dot"></div>
-                                           <div className="list-bar"></div>
-                                         </div>
-                                         <div className="list-line">
-                                           <div className="list-dot"></div>
-                                           <div className="list-bar"></div>
-                                         </div>
-                                       </div>
-                                     )}
-                                     {infoType === 'map' && (
-                                       <div className="map-icon">
-                                         <div>
-                                           <div></div>
-                                         </div>
-                                       </div>
-                                     )}
-                                     {infoType === 'graph' && (
-                                       <div className="graph-icon">
-                                         <div>
-                                           <div style={{ height: '5px' }}></div>
-                                           <div style={{ height: '9px' }}></div>
-                                           <div style={{ height: '6px' }}></div>
-                                           <div style={{ height: '12px' }}></div>
-                                         </div>
-                                       </div>
-                                     )}
-                                   </div>
-                                 </label>
-                               );
-                             })}
-                           </div>
-                         )}
+                                    // Set the selected state
+                                    switch (infoType) {
+                                      case 'timeline':
+                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'details':
+                                        setShowDetails(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'map':
+                                        setShowMap(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'graph':
+                                        setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                    }
+                                  }}
+                                >
+                                  {infoType === 'details' && (
+                                    <div className="grid-icon">
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                    </div>
+                                  )}
+                                  {infoType === 'timeline' && (
+                                    <div className="list-icon">
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {infoType === 'map' && (
+                                    <div className="map-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        border: `2px solid ${isActive ? '#000000' : '#666666'}`,
+                                        borderRadius: '50%',
+                                        position: 'relative'
+                                      }}>
+                                        <div style={{
+                                          position: 'absolute',
+                                          top: '50%',
+                                          left: '50%',
+                                          transform: 'translate(-50%, -50%)',
+                                          width: '4px',
+                                          height: '4px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '50%'
+                                        }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {infoType === 'graph' && (
+                                    <div className="graph-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '12px',
+                                        height: '8px',
+                                        display: 'flex',
+                                        alignItems: 'end',
+                                        gap: '1px'
+                                      }}>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '3px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '6px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '4px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '8px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                       
                       {/* Summary/Bullet Points - Swipeable - Fixed Position */}
@@ -3241,7 +3003,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
                                   }}>
-                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
+                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}
                                     </li>
                                   ))}
                                 </ul>
