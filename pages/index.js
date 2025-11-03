@@ -3038,7 +3038,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
                                     <li key={i} style={{
-                                    marginBottom: '8px',
+                                    marginBottom: '6px',
                                       fontSize: '16px',
                                     lineHeight: '1.8',
                                     fontWeight: '400',
