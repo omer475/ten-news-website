@@ -2495,13 +2495,16 @@ The article concludes with forward-looking analysis and what readers should watc
                       maxHeight: 'calc(38vh - 3px)'
                     }}>
                       {(() => {
-                        // Always try to show image if URL exists - be more lenient with validation
-                        const hasImageUrl = story.urlToImage && 
-                                          typeof story.urlToImage === 'string' && 
-                                          story.urlToImage.trim() !== '' && 
-                                          story.urlToImage !== 'null' && 
-                                          story.urlToImage !== 'undefined' &&
-                                          story.urlToImage.length > 5; // At least 5 chars for a valid URL
+                        // Always try to show image if URL exists - be very lenient with validation
+                        // Only reject if clearly invalid (null, empty, or too short to be a URL)
+                        const rawUrl = story.urlToImage;
+                        const hasImageUrl = rawUrl && 
+                                          (typeof rawUrl === 'string' || typeof rawUrl === 'object') && 
+                                          String(rawUrl).trim() !== '' && 
+                                          String(rawUrl).toLowerCase() !== 'null' && 
+                                          String(rawUrl).toLowerCase() !== 'undefined' &&
+                                          String(rawUrl).toLowerCase() !== 'none' &&
+                                          String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
                         
                         if (!hasImageUrl) {
                           return (
