@@ -2424,6 +2424,7 @@ The article concludes with forward-looking analysis and what readers should watc
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
+                    // Original News Item View - Everything stays the same
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
@@ -2716,7 +2717,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         width: '100%',
                         maxWidth: '100%',
                         margin: '0 auto'
-                    }}>
+                      }}>
                       
                       {/* Time Since Published and Timeline Button Row - Fixed Position */}
                       <div style={{
@@ -2988,13 +2989,13 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
                                     <li key={i} style={{
-                                      marginBottom: '8px',
+                                    marginBottom: '8px',
                                       fontSize: '16px',
                                     lineHeight: '1.8',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
-                                    }}>
+                                  }}>
                                     {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
                                     </li>
                                   ))}
