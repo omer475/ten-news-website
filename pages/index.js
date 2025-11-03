@@ -2423,6 +2423,7 @@ The article concludes with forward-looking analysis and what readers should watc
                 />
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
+                  
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
