@@ -1292,6 +1292,9 @@ The article concludes with forward-looking analysis and what readers should watc
 
   return (
     <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
       <style>{`
         * {
           margin: 0;
@@ -2196,35 +2199,137 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .toggle-switch {
+          --c-glass: #bbbbbc;
+          --c-light: #fff;
+          --c-dark: #000;
+          --c-content: #224;
+          --c-action: #0052f5;
+          --c-bg: #E8E8E9;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 150%;
+          
+          position: relative;
           display: flex;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 6px;
-          padding: 2px;
-          gap: 2px;
+          align-items: center;
+          gap: 8px;
+          width: 160px;
+          max-width: 160px;
+          height: 50px;
+          box-sizing: border-box;
+          padding: 6px 10px 8px;
+          margin: 0;
+          border: none;
+          border-radius: 99em;
+          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
+          backdrop-filter: blur(8px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(8px) saturate(var(--saturation));
+          box-shadow: 
+            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 1.8px 3px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -2px -2px 0px -2px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -3px -8px 1px -6px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.3px -1px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -1.5px 2.5px 0px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 3px 4px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 2px -6.5px 1px -4px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 1px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .toggle-switch::after {
+          content: '';
+          position: absolute;
+          left: 4px;
+          top: 4px;
+          display: block;
+          width: 68px;
+          height: calc(100% - 10px);
+          border-radius: 99em;
+          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+          z-index: -1;
+          box-shadow: 
+            inset 0 0 0 1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 2px 1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1.5px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -2px -6px 1px -5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -1px 2px 3px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px -4px 1px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 6px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .toggle-switch[data-active="0"]::after {
+          translate: 0 0;
+          transform-origin: right;
+          animation: scaleToggle 440ms ease;
+        }
+
+        .toggle-switch[data-active="1"]::after {
+          translate: 76px 0;
+          transform-origin: left;
+          animation: scaleToggle2 440ms ease;
+        }
+
+        @keyframes scaleToggle {
+          0% { scale: 1 1; }
+          50% { scale: 1.1 1; }
+          100% { scale: 1 1; }
+        }
+
+        @keyframes scaleToggle2 {
+          0% { scale: 1 1; }
+          50% { scale: 1.2 1; }
+          100% { scale: 1 1; }
         }
 
         .toggle-option {
+          --c: var(--c-content);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0 14px;
+          width: 68px;
+          height: 100%;
+          box-sizing: border-box;
+          border-radius: 99em;
           background: none;
           border: none;
-          padding: 5px 8px;
-          border-radius: 4px;
           cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 24px;
+          opacity: 1;
+          transition: all 160ms;
+        }
+
+        .toggle-option:hover {
+          --c: var(--c-action);
+          cursor: pointer;
+        }
+
+        .toggle-option:hover .grid-icon,
+        .toggle-option:hover .list-icon {
+          transform: scale(1.2);
         }
 
         .toggle-option.active {
-          background: #ffffff;
+          --c: var(--c-content);
+          cursor: auto;
+        }
+
+        .toggle-option.active .grid-icon,
+        .toggle-option.active .list-icon {
+          transform: scale(1);
         }
 
         .toggle-option.active .grid-square,
         .toggle-option.active .list-dot,
         .toggle-option.active .list-bar {
-          background: #000000;
+          background: var(--c-content);
         }
 
         .grid-icon {
@@ -2233,11 +2338,17 @@ The article concludes with forward-looking analysis and what readers should watc
           gap: 1px;
           width: 14px;
           height: 14px;
+          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
         .grid-square {
-          background: #666666;
+          background: color-mix(in srgb, var(--c-content) 50%, transparent);
           border-radius: 1px;
+          transition: background 160ms;
+        }
+
+        .toggle-option.active .grid-square {
+          background: var(--c-content);
         }
 
         .list-icon {
@@ -2246,6 +2357,7 @@ The article concludes with forward-looking analysis and what readers should watc
           gap: 2px;
           width: 14px;
           height: 14px;
+          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
         .list-line {
@@ -2257,15 +2369,25 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-dot {
           width: 2px;
           height: 2px;
-          background: #666666;
+          background: color-mix(in srgb, var(--c-content) 50%, transparent);
           border-radius: 50%;
+          transition: background 160ms;
+        }
+
+        .toggle-option.active .list-dot {
+          background: var(--c-content);
         }
 
         .list-bar {
           width: 8px;
           height: 1px;
-          background: #666666;
+          background: color-mix(in srgb, var(--c-content) 50%, transparent);
           border-radius: 1px;
+          transition: background 160ms;
+        }
+
+        .toggle-option.active .list-bar {
+          background: var(--c-content);
         }
 
 
@@ -2792,10 +2914,13 @@ The article concludes with forward-looking analysis and what readers should watc
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
-                          <div className="toggle-switch" style={{ 
-                            position: 'relative',
-                            flex: '0 0 auto'
-                          }}>
+                          <div 
+                            className="toggle-switch" 
+                            data-active={getAvailableInformationTypes(story).findIndex((infoType) => getCurrentInformationType(story, index) === infoType)}
+                            style={{ 
+                              position: 'relative',
+                              flex: '0 0 auto'
+                            }}>
                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                               const isActive = getCurrentInformationType(story, index) === infoType;
                               return (
