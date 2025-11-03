@@ -2212,13 +2212,13 @@ The article concludes with forward-looking analysis and what readers should watc
           position: relative;
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0;
           width: auto;
           min-width: 90px;
           max-width: 200px;
           height: 32px;
           box-sizing: border-box;
-          padding: 4px 6px 6px;
+          padding: 3px;
           margin: 0;
           border: none;
           border-radius: 99em;
@@ -2244,10 +2244,10 @@ The article concludes with forward-looking analysis and what readers should watc
         .switcher::after {
           content: '';
           position: absolute;
-          left: 2px;
-          top: 2px;
+          left: 3px;
+          top: 3px;
           display: block;
-          width: 42px;
+          width: calc((100% - 6px) / var(--option-count, 2));
           height: calc(100% - 6px);
           border-radius: 99em;
           background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
@@ -2267,25 +2267,25 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .switcher:has(input[c-option="1"]:checked)::after {
-          translate: 0 0;
+          translate: calc(0 * (100% - 6px) / var(--option-count, 2)) 0;
           transform-origin: right;
           animation: scaleToggle 440ms ease;
         }
 
         .switcher:has(input[c-option="2"]:checked)::after {
-          translate: 46px 0;
+          translate: calc(1 * (100% - 6px) / var(--option-count, 2)) 0;
           transform-origin: left;
           animation: scaleToggle2 440ms ease;
         }
 
         .switcher:has(input[c-option="3"]:checked)::after {
-          translate: 90px 0;
+          translate: calc(2 * (100% - 6px) / var(--option-count, 2)) 0;
           transform-origin: left;
           animation: scaleToggle3 440ms ease;
         }
 
         .switcher:has(input[c-option="4"]:checked)::after {
-          translate: 134px 0;
+          translate: calc(3 * (100% - 6px) / var(--option-count, 2)) 0;
           transform-origin: left;
           animation: scaleToggle3 440ms ease;
         }
@@ -2325,8 +2325,9 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           justify-content: center;
           align-items: center;
-          padding: 0 8px;
-          width: 42px;
+          padding: 0;
+          flex: 1 1 0;
+          min-width: 0;
           height: 100%;
           box-sizing: border-box;
           border-radius: 99em;
@@ -2364,78 +2365,92 @@ The article concludes with forward-looking analysis and what readers should watc
         .grid-icon {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 2px;
-          width: 20px;
-          height: 20px;
+          gap: 3px;
+          width: 18px;
+          height: 18px;
+          padding: 1px;
         }
 
         .grid-square {
-          background: color-mix(in srgb, var(--c) 50%, transparent);
-          border-radius: 1px;
-          transition: background 160ms;
+          background: color-mix(in srgb, var(--c) 40%, transparent);
+          border-radius: 2px;
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .switcher__option:has(input:checked) .grid-square {
           background: var(--c);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .list-icon {
           display: flex;
           flex-direction: column;
-          gap: 3px;
-          width: 20px;
-          height: 20px;
+          gap: 4px;
+          width: 18px;
+          height: 18px;
+          justify-content: center;
+          align-items: flex-start;
         }
 
         .list-line {
           display: flex;
           align-items: center;
-          gap: 2px;
+          gap: 4px;
+          width: 100%;
         }
 
         .list-dot {
-          width: 3px;
-          height: 3px;
-          background: color-mix(in srgb, var(--c) 50%, transparent);
+          width: 3.5px;
+          height: 3.5px;
+          background: color-mix(in srgb, var(--c) 40%, transparent);
           border-radius: 50%;
-          transition: background 160ms;
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          flex-shrink: 0;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .switcher__option:has(input:checked) .list-dot {
           background: var(--c);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .list-bar {
-          width: 12px;
-          height: 2px;
-          background: color-mix(in srgb, var(--c) 50%, transparent);
-          border-radius: 1px;
-          transition: background 160ms;
+          width: 100%;
+          height: 2.5px;
+          background: color-mix(in srgb, var(--c) 40%, transparent);
+          border-radius: 2px;
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .switcher__option:has(input:checked) .list-bar {
           background: var(--c);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .map-icon {
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
+          position: relative;
         }
 
         .map-icon > div {
-          width: 14px;
-          height: 14px;
-          border: 2px solid color-mix(in srgb, var(--c) 50%, transparent);
+          width: 16px;
+          height: 16px;
+          border: 2.5px solid color-mix(in srgb, var(--c) 40%, transparent);
           border-radius: 50%;
           position: relative;
-          transition: border-color 160ms;
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .switcher__option:has(input:checked) .map-icon > div {
           border-color: var(--c);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .map-icon > div > div {
@@ -2443,42 +2458,47 @@ The article concludes with forward-looking analysis and what readers should watc
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 6px;
-          height: 6px;
-          background: color-mix(in srgb, var(--c) 50%, transparent);
+          width: 5px;
+          height: 5px;
+          background: color-mix(in srgb, var(--c) 40%, transparent);
           border-radius: 50%;
-          transition: background 160ms;
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .switcher__option:has(input:checked) .map-icon > div > div {
           background: var(--c);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .graph-icon {
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .graph-icon > div {
-          width: 16px;
-          height: 12px;
+          width: 14px;
+          height: 10px;
           display: flex;
           align-items: end;
-          gap: 2px;
+          gap: 2.5px;
+          padding-bottom: 1px;
         }
 
         .graph-icon > div > div {
           width: 3px;
-          border-radius: 1px;
-          background: color-mix(in srgb, var(--c) 50%, transparent);
-          transition: background 160ms;
+          border-radius: 2px 2px 0 0;
+          background: color-mix(in srgb, var(--c) 40%, transparent);
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .switcher__option:has(input:checked) .graph-icon > div > div {
           background: var(--c);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
 
@@ -3005,10 +3025,14 @@ The article concludes with forward-looking analysis and what readers should watc
 
                          {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                          {getAvailableComponentsCount(story) > 1 && (
-                           <div className="switcher" style={{ 
-                             position: 'relative',
-                             flex: '0 0 auto'
-                           }}>
+                           <div 
+                             className="switcher" 
+                             style={{ 
+                               position: 'relative',
+                               flex: '0 0 auto',
+                               '--option-count': getAvailableInformationTypes(story).length
+                             } as React.CSSProperties}
+                           >
                              {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                                const isActive = getCurrentInformationType(story, index) === infoType;
                                const optionNumber = buttonIndex + 1;
