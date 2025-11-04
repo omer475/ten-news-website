@@ -2797,9 +2797,9 @@ The article concludes with forward-looking analysis and what readers should watc
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}</h3>
+                          color: darkMode ? '#ffffff' : '#000000',
+                          textShadow: darkMode ? '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)' : '0 2px 8px rgba(255,255,255,0.8), 0 4px 16px rgba(255,255,255,0.4)'
+                        }}>{renderTitleWithHighlight(story.title, null, story.category)}</h3>
                         </div>
                       )}
                     </div>
