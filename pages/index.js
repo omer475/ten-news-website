@@ -1309,6 +1309,30 @@ The article concludes with forward-looking analysis and what readers should watc
           z-index: 9999;
           pointer-events: none;
         }
+        
+        .safe-area-top-overlay {
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: max(env(safe-area-inset-top), 44px);
+          background: #ffffff;
+          z-index: 99999;
+          pointer-events: none;
+        }
+        
+        .safe-area-bottom-overlay {
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: #ffffff;
+          z-index: 99999;
+          pointer-events: none;
+        }
 
         .loading-container {
           display: flex;
@@ -2393,28 +2417,10 @@ The article concludes with forward-looking analysis and what readers should watc
       `}</style>
       
       {/* Safe area top overlay */}
-      <div style={{
-        position: 'fixed',
-        top: 'calc(-1 * max(env(safe-area-inset-top), 44px))',
-        left: 0,
-        right: 0,
-        height: 'max(env(safe-area-inset-top), 44px)',
-        background: '#ffffff',
-        zIndex: 99999,
-        pointerEvents: 'none'
-      }} />
+      <div className="safe-area-top-overlay" />
       
       {/* Safe area bottom overlay */}
-      <div style={{
-        position: 'fixed',
-        bottom: 'calc(-1 * max(env(safe-area-inset-bottom), 34px))',
-        left: 0,
-        right: 0,
-        height: 'max(env(safe-area-inset-bottom), 34px)',
-        background: '#ffffff',
-        zIndex: 99999,
-        pointerEvents: 'none'
-      }} />
+      <div className="safe-area-bottom-overlay" />
       
       <div style={{ position: 'relative', width: '100%', height: 'calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom))', overflow: 'hidden', background: 'transparent' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
