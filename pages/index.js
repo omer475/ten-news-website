@@ -2665,7 +2665,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       })()}
                       
                       {/* Bottom Gradient Frosted Blur Overlay - Starts at 55% height */}
-                      {/* Blur gradient: 55%→70% (0→10px), 70%→85% (10→18px), 85%→100% (18→25px) */}
+                      {/* Blur gradient: 55%→70% (0→20px), 70%→85% (20→35px), 85%→100% (35→50px) */}
                       {/* Layer 1: Full blur zone (45% height from bottom = 55-100% from top) */}
                       <div style={{
                         position: 'absolute',
@@ -2673,8 +2673,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        backdropFilter: 'blur(25px)',
-                        WebkitBackdropFilter: 'blur(25px)',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
                         maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 33.3%, rgba(0,0,0,0.4) 66.7%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 33.3%, rgba(0,0,0,0.4) 66.7%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.5,
@@ -2688,8 +2688,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: '15%',
                         left: 0,
                         right: 0,
-                        backdropFilter: 'blur(18px)',
-                        WebkitBackdropFilter: 'blur(18px)',
+                        backdropFilter: 'blur(35px)',
+                        WebkitBackdropFilter: 'blur(35px)',
                         maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.6,
@@ -2703,8 +2703,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: '30%',
                         left: 0,
                         right: 0,
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
                         maskImage: 'linear-gradient(to top, rgba(0,0,0,0.67) 0%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.67) 0%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.7,
