@@ -86,19 +86,34 @@ export default async function handler(req, res) {
           if (!imgUrl) return null;
           
           // Handle different data types
-          const urlStr = typeof imgUrl === 'string' ? imgUrl.trim() : String(imgUrl).trim();
+          let urlStr = typeof imgUrl === 'string' ? imgUrl.trim() : String(imgUrl).trim();
           
-          // Validate URL
+          // Validate URL - very lenient validation
           if (urlStr === '' || 
               urlStr === 'null' || 
               urlStr === 'undefined' || 
               urlStr === 'None' ||
               urlStr.toLowerCase() === 'null' ||
-              urlStr.length < 5) {
+              urlStr.length < 4) { // Reduced from 5 to 4
             return null;
           }
           
-          // Return cleaned URL
+          // Normalize URL: handle protocol-relative URLs (starting with //)
+          if (urlStr.startsWith('//')) {
+            urlStr = 'https:' + urlStr;
+            console.log(`🔧 Normalized protocol-relative URL: ${urlStr.substring(0, 80)}...`);
+          }
+          
+          // Normalize URL: if missing protocol and looks like absolute URL, add https
+          if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://') && !urlStr.startsWith('data:') && !urlStr.startsWith('blob:')) {
+            // Check if it looks like an absolute URL (starts with domain-like pattern)
+            if (/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(urlStr)) {
+              urlStr = 'https://' + urlStr;
+              console.log(`🔧 Added https:// to URL: ${urlStr.substring(0, 80)}...`);
+            }
+          }
+          
+          // Return cleaned and normalized URL
           return urlStr;
         })(),  // Frontend expects 'urlToImage'
         author: article.author,
