@@ -1267,8 +1267,9 @@ The article concludes with forward-looking analysis and what readers should watc
           background: #ffffff;
           padding: 0;
           margin: 0;
-          min-height: 100vh;
-          min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+          height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
 
         body {
@@ -1279,33 +1280,33 @@ The article concludes with forward-looking analysis and what readers should watc
           position: fixed;
           width: 100%;
           height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
-          min-height: 100vh;
-          min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
         
         body::before {
           content: '';
           position: fixed;
-          top: calc(-1 * env(safe-area-inset-top));
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
           left: 0;
           right: 0;
-          height: env(safe-area-inset-top);
-          background: ${darkMode ? '#000000' : '#ffffff'};
-          z-index: -1;
+          height: max(env(safe-area-inset-top), 44px);
+          background: #ffffff !important;
+          z-index: 9999;
           pointer-events: none;
         }
         
         body::after {
           content: '';
           position: fixed;
-          bottom: calc(-1 * env(safe-area-inset-bottom));
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
           left: 0;
           right: 0;
-          height: env(safe-area-inset-bottom);
-          background: ${darkMode ? '#000000' : '#ffffff'};
-          z-index: -1;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: #ffffff !important;
+          z-index: 9999;
           pointer-events: none;
         }
 
@@ -2391,7 +2392,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
       `}</style>
       
-      <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', height: 'calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom))', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
