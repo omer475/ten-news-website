@@ -3095,7 +3095,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     <li key={i} style={{
                                     marginBottom: '12px',
                                       fontSize: '16px',
-                                    lineHeight: '1.4',
+                                    lineHeight: '1.6',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
