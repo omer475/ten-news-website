@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
 
@@ -20,6 +21,7 @@ export default function Home() {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
+  const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -400,23 +402,71 @@ export default function Home() {
             
              // Convert articles to story format
              newsData.articles.forEach((article, index) => {
+               // Sample preview data
+               const sampleDetails = article.details && article.details.length > 0 ? article.details : [
+                 'Impact Score: 8.5/10 High significance',
+                 'Read Time: 4 min Estimated reading duration',
+                 'Source Credibility: Verified from trusted sources'
+               ];
+               
+               const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0) 
+                 ? article.timeline 
+                 : (article.timeline && typeof article.timeline === 'string' && article.timeline.trim() !== '')
+                   ? (() => {
+                       try {
+                         const parsed = JSON.parse(article.timeline);
+                         return Array.isArray(parsed) && parsed.length > 0 ? parsed : [
+                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                         ];
+                       } catch {
+                         return [
+                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                         ];
+                       }
+                     })()
+                   : [
+                     {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                     {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                     {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                     {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                   ];
+               
+               const sampleDetailedText = article.detailed_text || `**Breaking News Update**
+
+This is a preview of the full article content. In the complete version, you would see the detailed analysis and comprehensive coverage of today's top stories.
+
+The article delves into the key developments, providing context and background information that helps readers understand the broader implications. Expert opinions and multiple perspectives are included to give a well-rounded view of the situation.
+
+Additional paragraphs would continue here, exploring various aspects of the story, including historical context, potential future outcomes, and relevant statistics. The content is structured to be both informative and engaging, making complex topics accessible to a wide audience.
+
+**Key Takeaways:**
+- Important point one that summarizes a critical aspect
+- Second significant finding that provides insight
+- Third major conclusion that ties everything together
+
+The article concludes with forward-looking analysis and what readers should watch for in the coming days as this story continues to develop.`;
+               
                const storyData = {
                  type: 'news',
                  number: article.rank || (index + 1),
                  category: (article.category || 'WORLD NEWS').toUpperCase(),
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
-                 detailed_text: article.detailed_text || 'Article text will appear here.',
+                 detailed_text: sampleDetailedText,
                  summary_bullets: article.summary_bullets || [],
-                 details: article.details || [],
+                 details: sampleDetails,
                  source: article.source || 'Today+',
                  url: article.url || '#',
-                 urlToImage: article.urlToImage,
-                 timeline: article.timeline && article.timeline.length > 0 ? article.timeline : [
-                   {"date": "Background", "event": "Initial situation develops"},
-                   {"date": "Today", "event": "Major developments break"},
-                   {"date": "Next week", "event": "Follow-up expected"}
-                 ],
+                 urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+                 map: article.map || null,
+                 graph: article.graph || null,
+                 timeline: sampleTimeline,
                  publishedAt: article.publishedAt || article.published_at || article.added_at,
                  id: article.id || `article_${index}`
                };
@@ -601,40 +651,7 @@ export default function Home() {
     }
   };
 
-  // Function to render text with highlighted important words (for bullet texts - bold + colored)
-  const renderBoldText = (text, blurColor) => {
-    if (!text) return '';
-    if (!blurColor) {
-      // Fallback: just remove ** markers
-      return text.replace(/\*\*/g, '');
-    }
-    
-    // Extract color from rgba string (convert rgba(r, g, b, a) to rgb)
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
-      
-      // Replace **text** with bold and colored spans
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
-          return (
-            <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
-              {content}
-            </span>
-          );
-        }
-        return part;
-      });
-    }
-    return text.replace(/\*\*/g, '');
-  };
-
-  // Color conversion utilities
+  // Helper: Convert RGB to HSL
   const rgbToHsl = (r, g, b) => {
     r /= 255;
     g /= 255;
@@ -642,9 +659,9 @@ export default function Home() {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h, s, l = (max + min) / 2;
-    
+
     if (max === min) {
-      h = s = 0;
+      h = s = 0; // achromatic
     } else {
       const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -652,16 +669,21 @@ export default function Home() {
         case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
         case g: h = ((b - r) / d + 2) / 6; break;
         case b: h = ((r - g) / d + 4) / 6; break;
+        default: h = 0;
       }
     }
-    return [h * 360, s, l];
+    return [h * 360, s * 100, l * 100];
   };
-  
+
+  // Helper: Convert HSL to RGB
   const hslToRgb = (h, s, l) => {
     h /= 360;
+    s /= 100;
+    l /= 100;
     let r, g, b;
+
     if (s === 0) {
-      r = g = b = l;
+      r = g = b = l; // achromatic
     } else {
       const hue2rgb = (p, q, t) => {
         if (t < 0) t += 1;
@@ -671,15 +693,18 @@ export default function Home() {
         if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
         return p;
       };
+
       const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       const p = 2 * l - q;
       r = hue2rgb(p, q, h + 1/3);
       g = hue2rgb(p, q, h);
       b = hue2rgb(p, q, h - 1/3);
     }
+
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   };
-  
+
+  // Calculate relative luminance for contrast checking
   const getLuminance = (r, g, b) => {
     const [rs, gs, bs] = [r, g, b].map(val => {
       val = val / 255;
@@ -687,36 +712,48 @@ export default function Home() {
     });
     return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
   };
-  
-  const getContrastRatio = (color1, color2) => {
-    const [r1, g1, b1] = color1;
-    const [r2, g2, b2] = color2;
-    const lum1 = getLuminance(r1, g1, b1);
-    const lum2 = getLuminance(r2, g2, b2);
-    const lighter = Math.max(lum1, lum2);
-    const darker = Math.min(lum1, lum2);
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (rgb1, rgb2) => {
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
     return (lighter + 0.05) / (darker + 0.05);
   };
-  
-  const getAdaptiveNeutralTone = (hue) => {
-    // Map hue ranges to adaptive neutral tones
-    if (hue >= 200 && hue <= 260) {
-      // Blue range
-      return [26, 39, 57]; // #1A2739 dark navy
-    } else if (hue >= 100 && hue <= 160) {
-      // Green range
-      return [30, 56, 42]; // #1E382A forest green
-    } else if ((hue >= 0 && hue <= 40) || (hue >= 320 && hue <= 360)) {
-      // Orange/Red range
-      return [59, 36, 26]; // #3B241A deep brown
-    } else {
-      // Gray/neutral
-      return [43, 43, 43]; // #2B2B2B graphite gray
-    }
+
+  // Check if color is too close to white
+  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
+    // Check RGB values - if all are above 230, it's very close to white
+    if (r > 230 && g > 230 && b > 230) return true;
+    
+    // Check lightness in HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    if (l > minLightness) return true;
+    
+    // Additional check: if saturation is very low and lightness is high
+    if (s < 5 && l > 80) return true;
+    
+    return false;
   };
-  
-  // Main highlight color generation function
-  const getHarmonizedHighlightColor = (blurColor) => {
+
+  // Get fallback color based on background hue
+  const getFallbackColorByHue = (hue) => {
+    // Blue range: 200-260 degrees
+    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
+    
+    // Green range: 100-180 degrees
+    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
+    
+    // Orange/Red range: 0-50 and 320-360 degrees
+    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
+    
+    // Default: Gray/neutral
+    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
+  };
+
+  // Get adaptive highlight color from background
+  const getAdaptiveHighlightColor = (blurColor, backgroundColor = null) => {
     if (!blurColor) return null;
     
     // Extract RGB from rgba string
@@ -727,87 +764,196 @@ export default function Home() {
     const g = parseInt(colorMatch[2]);
     const b = parseInt(colorMatch[3]);
     
-    // Convert to HSL
+    // Convert to HSL to extract hue
     const [h, s, l] = rgbToHsl(r, g, b);
     
-    // Determine if background is dark or light
-    const isDark = l < 0.5;
+    // Sample background lightness from the original image color
+    // The text sits on a dark blur overlay, but we sample the hue from the image
+    // If the image itself is light (L >= 0.5), we might need adaptive inversion
+    const imageLightness = l / 100; // Normalize to 0-1
     
-    // Adjust saturation and brightness based on background
-    let newS = s;
-    let newL = l;
+    // Check if we should use dark text instead (background lightness threshold)
+    // Since text is on dark blur overlay, we typically want bright highlights
+    // But if image is very light, we may want to use a tonal echo approach
     
-    if (isDark) {
-      // Dark background: brighten and saturate (+20% sat, +30% brightness)
-      newS = Math.min(1, s + 0.2);
-      newL = Math.min(1, l + 0.3);
+    let newS, newL;
+    
+    // Make colors darker while preserving hue and ensuring readability on dark blur overlay
+    // We want darker, more saturated tones for better visual distinction
+    if (imageLightness < 0.5) {
+      // Image is dark: darken but increase saturation to compensate (+30% sat, -20% brightness)
+      newS = Math.min(100, s + 30);
+      newL = Math.max(40, l - 20); // Darken, but keep minimum 40% for contrast
     } else {
-      // Light background: darken and desaturate (-20% brightness, -15% sat)
-      newL = Math.max(0, l - 0.2);
-      newS = Math.max(0, s - 0.15);
+      // Image is light: darken significantly and increase saturation
+      newS = Math.min(100, s + 25);
+      newL = Math.max(45, Math.min(70, l - 25)); // Darken more, range 45-70% for readability
     }
     
     // Convert back to RGB
     let [newR, newG, newB] = hslToRgb(h, newS, newL);
     
-    // Calculate background color for contrast check (blurred region is darkened)
-    const blurBgR = Math.round(r * 0.35); // Darkened by blur overlay
-    const blurBgG = Math.round(g * 0.35);
-    const blurBgB = Math.round(b * 0.35);
+    // Check if color is too close to white - reject it immediately
+    if (isTooCloseToWhite(newR, newG, newB)) {
+      // Use fallback color based on hue instead
+      const fallback = getFallbackColorByHue(h);
+      const contrastBg = [20, 20, 20];
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      // If fallback has good contrast and is not white, use it
+      if (fallbackContrast >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Darken fallback slightly while keeping it away from white
+        const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
+        // Darken a bit but ensure contrast (lightness 50-70%)
+        const darkenedFallback = hslToRgb(fh, Math.min(100, fs + 15), Math.max(50, Math.min(70, fl - 5)));
+        
+        // Check if darkened fallback is still not white and has good contrast
+        if (!isTooCloseToWhite(darkenedFallback[0], darkenedFallback[1], darkenedFallback[2])) {
+          const darkContrast = getContrastRatio(darkenedFallback, contrastBg);
+          if (darkContrast >= 4.5) {
+            return `rgb(${darkenedFallback[0]}, ${darkenedFallback[1]}, ${darkenedFallback[2]})`;
+          }
+        }
+        
+        // Use a saturated, darker version of the hue if everything else fails
+        // Keep it darker (45-65% lightness range) to avoid white
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.max(45, Math.min(65, l - 15)));
+        if (!isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          const safeContrast = getContrastRatio(safeColor, contrastBg);
+          if (safeContrast >= 4.5) {
+            return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+          }
+        }
+        
+        // Last resort: use a medium-dark tone based on hue (never white)
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      }
+    }
     
-    // Check contrast ratio
-    const contrast = getContrastRatio([newR, newG, newB], [blurBgR, blurBgG, blurBgB]);
+    // Check contrast against dark blur overlay background (black with ~65% opacity at bottom)
+    // Use weighted average: 65% opacity means ~35% of underlying image shows through
+    // For contrast checking, approximate with dark gray background
+    const contrastBg = [20, 20, 20]; // Approximate dark blur overlay background
+    let contrastRatio = getContrastRatio([newR, newG, newB], contrastBg);
     
-    // If contrast is too low or color is too close to white/black, use adaptive neutral
-    if (contrast < 4.5 || newL > 0.95 || newL < 0.05) {
-      [newR, newG, newB] = getAdaptiveNeutralTone(h);
+    // If contrast is too low (< 4.5:1), try fallback color based on hue
+    if (contrastRatio < 4.5) {
+      const fallback = getFallbackColorByHue(h);
+      contrastRatio = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      // If fallback has good contrast and is not white, use it
+      if (contrastRatio >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Fallback also has low contrast - darken it while preserving hue and avoiding white
+        const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
+        // Darken to 50-70% lightness range for darker appearance
+        const darkenedFallback = hslToRgb(fh, Math.min(100, fs + 15), Math.max(50, Math.min(70, fl - 5)));
+        
+        if (!isTooCloseToWhite(darkenedFallback[0], darkenedFallback[1], darkenedFallback[2])) {
+          const darkContrast = getContrastRatio(darkenedFallback, contrastBg);
+          
+          if (darkContrast >= 4.5) {
+            return `rgb(${darkenedFallback[0]}, ${darkenedFallback[1]}, ${darkenedFallback[2]})`;
+          }
+        }
+        
+        // Use a safe, saturated darker color based on hue (never white)
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.max(45, Math.min(65, l - 15)));
+        if (!isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          const safeContrast = getContrastRatio(safeColor, contrastBg);
+          if (safeContrast >= 4.5) {
+            return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+          }
+        }
+        
+        // Last resort: return fallback (already checked to not be white)
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      }
+    }
+    
+    // Final check: if color is too close to white (lightness > 70%) or lacks character, use fallback
+    if (newL > 70 || s < 10 || isTooCloseToWhite(newR, newG, newB)) {
+      const fallback = getFallbackColorByHue(h);
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      if (fallbackContrast >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Use a safe, saturated darker version that's not white
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.max(45, Math.min(65, l - 15)));
+        const safeContrast = getContrastRatio(safeColor, contrastBg);
+        if (safeContrast >= 4.5 && !isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+        }
+      }
+    }
+    
+    // Final safety check before returning
+    if (isTooCloseToWhite(newR, newG, newB)) {
+      const fallback = getFallbackColorByHue(h);
+      return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
     }
     
     return `rgb(${newR}, ${newG}, ${newB})`;
   };
-  
-  // Get default text color based on background lightness
-  const getDefaultTextColor = (blurColor) => {
-    if (!blurColor) return '#ffffff';
-    
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!colorMatch) return '#ffffff';
-    
-    const r = parseInt(colorMatch[1]);
-    const g = parseInt(colorMatch[2]);
-    const b = parseInt(colorMatch[3]);
-    
-    // Account for blur overlay darkening (blurred region is ~35% of original)
-    const blurBgR = r * 0.35;
-    const blurBgG = g * 0.35;
-    const blurBgB = b * 0.35;
-    
-    // Calculate lightness (using relative luminance)
-    const lightness = getLuminance(blurBgR, blurBgG, blurBgB);
-    
-    // Use white if background lightness < 0.5, dark charcoal if ≥ 0.5
-    return lightness < 0.5 ? '#ffffff' : '#1E1E1E';
-  };
 
-  // Function to render title with highlighted important words (colored but not bold)
-  const renderTitleWithHighlight = (text, blurColor) => {
+  // Function to render text with highlighted important words (for bullet texts - bold + colored)
+  const renderBoldText = (text, blurColor, category = null) => {
     if (!text) return '';
-    if (!blurColor) {
-      return text;
+    
+    // Get fallback color from category if no blurColor
+    let highlightColor = null;
+    if (blurColor) {
+      highlightColor = getAdaptiveHighlightColor(blurColor);
     }
     
-    const highlightColor = getHarmonizedHighlightColor(blurColor);
-    if (!highlightColor) {
-      return text;
+    // If still no color, use category-based color
+    if (!highlightColor && category) {
+      const categoryColors = getCategoryColors(category);
+      highlightColor = categoryColors.primary;
     }
     
-    // Replace **text** with colored (but not bold) spans
+    // Always process bold markers
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ color: highlightColor }}>
+          <span key={i} style={{ fontWeight: '700', color: highlightColor || '#000000' }}>
+            {content}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Function to render title with highlighted important words (colored AND bold)
+  const renderTitleWithHighlight = (text, blurColor, category = null) => {
+    if (!text) return '';
+    
+    // Get fallback color from category if no blurColor
+    let highlightColor = null;
+    if (blurColor) {
+      highlightColor = getAdaptiveHighlightColor(blurColor);
+    }
+    
+    // If still no color, use category-based color
+    if (!highlightColor && category) {
+      const categoryColors = getCategoryColors(category);
+      highlightColor = categoryColors.primary;
+    }
+    
+    // Always process bold markers
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.replace(/\*\*/g, '');
+        return (
+          <span key={i} style={{ color: highlightColor || '#ffffff', fontWeight: '700' }}>
             {content}
           </span>
         );
@@ -1106,12 +1252,24 @@ export default function Home() {
 
   return (
     <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      </Head>
       <style>{`
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
           -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+          background: #ffffff;
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
 
         body {
@@ -1122,8 +1280,34 @@ export default function Home() {
           position: fixed;
           width: 100%;
           height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        body::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
         }
 
         .loading-container {
@@ -1212,16 +1396,34 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 0 24px 40px;
-          background: ${darkMode ? '#000000' : '#fff'};
+          padding: 0 24px 200px 24px;
+          background: ${darkMode ? '#000000' : 'transparent'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
+          z-index: 10;
+        }
+        
+        .story-container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          /* Reduce height to leave space for information box at bottom */
+          height: calc(100vh - 250px);
+          background: ${darkMode ? '#000000' : '#fff'};
+          z-index: -1;
+          pointer-events: none;
+          /* Ensure it doesn't extend below the content area where information box is */
+          max-height: calc(100vh - 250px);
         }
 
         .story-content {
-          max-width: 1000px;
+          max-width: 100%;
           width: 100%;
-          margin: 0 auto;
+          margin: 0;
+          background: transparent !important;
+          background-color: transparent !important;
         }
 
         .paywall-overlay {
@@ -1370,14 +1572,14 @@ export default function Home() {
 
         .news-item {
           display: block;
-          padding: 0 15px 24px 15px;
+          padding: 0;
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
           border-radius: 8px;
           position: relative;
-          margin: 0 auto;
-          max-width: 950px;
+          margin: 0;
+          max-width: 100%;
         }
 
         /* Removed first-news special styling to align all news cards */
@@ -1405,12 +1607,13 @@ export default function Home() {
 
         .news-content {
           padding-top: 0px;
-          padding-left: 0;
-          padding-right: 30px;
           padding-bottom: 0;
           margin: 0 auto;
-          max-width: 900px;
+          max-width: 100%;
+          width: 100%;
           text-align: left;
+          background: transparent !important;
+          background-color: transparent !important;
         }
 
         .news-category {
@@ -1457,16 +1660,20 @@ export default function Home() {
         }
 
         .news-meta {
-          display: flex;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          display: flex !important;
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
           border-radius: 16px;
           padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+          border: none !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          z-index: 10000 !important;
         }
 
         .news-detail-item {
@@ -2087,8 +2294,9 @@ export default function Home() {
           }
           
           .news-content {
-            margin: 0 8px;
-            padding-right: 20px;
+            margin: 0 auto;
+            max-width: 100%;
+            width: 100%;
           }
           
           .news-number {
@@ -2230,6 +2438,7 @@ export default function Home() {
               opacity: index === currentIndex ? 1 : 0,
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
+              background: 'transparent'
             }}
           >
             {/* Paywall for stories 6+ (index >= 5) */}
@@ -2249,6 +2458,8 @@ export default function Home() {
             <div
               className="story-content"
                               style={{
+                background: 'transparent',
+                backgroundColor: 'transparent',
                 filter: index >= 5 && !user ? 'blur(5px)' : 'none',
                 pointerEvents: index >= 5 && !user ? 'none' : 'auto',
               }}
@@ -2261,10 +2472,10 @@ export default function Home() {
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                    <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
-                    }}>
+                  }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -2275,58 +2486,186 @@ export default function Home() {
                       height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
-                      background: story.urlToImage ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'block',
                       zIndex: '1',
                       borderRadius: '12px',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      pointerEvents: 'none',
+                      // Ensure image container doesn't interfere with information box
+                      maxHeight: 'calc(38vh - 3px)'
                     }}>
-                      {story.urlToImage ? (
-                        <img 
-                          src={story.urlToImage}
-                          alt={story.title}
-                          crossOrigin="anonymous"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            objectPosition: 'center'
-                          }}
-                          onLoad={(e) => {
-                            console.log('✅ Image loaded successfully:', story.urlToImage);
-                            extractDominantColor(e.target, index);
-                          }}
-                          onError={(e) => {
-                            console.error('❌ Image failed to load:', story.urlToImage);
-                            console.error('   Story title:', story.title);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                            e.target.parentElement.innerHTML = `
-                              <div style="
-                                font-size: 72px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                width: 100%;
-                                height: 100%;
-                              ">${story.emoji || '📰'}</div>
-                            `;
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          fontSize: '72px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '100%',
-                          height: '100%'
-                        }}>
-                          {story.emoji || '📰'}
-                        </div>
-                      )}
+                      {(() => {
+                        // Always try to show image if URL exists - be very lenient with validation
+                        // Only reject if clearly invalid (null, empty, or too short to be a URL)
+                        const rawUrl = story.urlToImage;
+                        const hasImageUrl = rawUrl && 
+                                          (typeof rawUrl === 'string' || typeof rawUrl === 'object') && 
+                                          String(rawUrl).trim() !== '' && 
+                                          String(rawUrl).toLowerCase() !== 'null' && 
+                                          String(rawUrl).toLowerCase() !== 'undefined' &&
+                                          String(rawUrl).toLowerCase() !== 'none' &&
+                                          String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
+                        
+                        if (!hasImageUrl) {
+                          return (
+                            <div style={{
+                              fontSize: '72px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '100%',
+                              height: '100%'
+                            }}>
+                              {story.emoji || '📰'}
+                            </div>
+                          );
+                        }
+                        
+                        const imageUrl = String(story.urlToImage).trim();
+                        // Use stable key based on story ID and URL hash, NOT timestamp
+                        const urlHash = imageUrl.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '');
+                        const imageKey = `img-${story.id || index}-${urlHash}`;
+                        const isImageLoaded = loadedImages.has(imageUrl);
+                        
+                        return (
+                          <img 
+                            key={imageKey}
+                            src={imageUrl}
+                            alt={story.title || 'News image'}
+                            loading={isImageLoaded ? "eager" : "lazy"}
+                            decoding="async"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              minWidth: '100%',
+                              minHeight: '100%',
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              display: 'block',
+                              margin: 0,
+                              padding: 0,
+                              flexShrink: 0,
+                              flexGrow: 1,
+                              opacity: 1,
+                              visibility: 'visible',
+                              pointerEvents: 'auto',
+                              position: 'relative',
+                              zIndex: 1
+                            }}
+                            onLoad={(e) => {
+                              console.log('✅ Image loaded successfully:', imageUrl);
+                              console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
+                              
+                              // Mark this image as successfully loaded
+                              setLoadedImages(prev => {
+                                const newSet = new Set(prev);
+                                newSet.add(imageUrl);
+                                return newSet;
+                              });
+                              
+                              // Only extract color if image loaded successfully
+                              if (e.target.complete && e.target.naturalWidth > 0) {
+                                try {
+                                  extractDominantColor(e.target, index);
+                                } catch (error) {
+                                  console.warn('Color extraction failed:', error);
+                                }
+                              }
+                              // Ensure image is visible and persistent
+                              e.target.style.opacity = '1';
+                              e.target.style.visibility = 'visible';
+                              e.target.style.display = 'block';
+                              e.target.style.minWidth = '100%';
+                              e.target.style.minHeight = '100%';
+                            }}
+                            onError={(e) => {
+                              console.error('❌ Image failed to load:', imageUrl);
+                              console.error('   Story title:', story.title);
+                              const imgElement = e.target;
+                              const parentElement = imgElement.parentElement;
+                              
+                              // More aggressive retry strategy
+                              let retryCount = parseInt(imgElement.dataset.retryCount || '0');
+                              const maxRetries = 5; // Increased retries
+                              
+                              const tryLoadImage = () => {
+                                if (retryCount < maxRetries && imageUrl && !imageUrl.includes('data:') && !imageUrl.includes('blob:')) {
+                                  retryCount++;
+                                  imgElement.dataset.retryCount = retryCount.toString();
+                                  
+                                  // Try different CORS settings
+                                  if (retryCount % 2 === 0) {
+                                    imgElement.crossOrigin = 'anonymous';
+                                  } else {
+                                    imgElement.crossOrigin = undefined;
+                                  }
+                                  
+                                  // Try different referrer policies
+                                  if (retryCount === 3) {
+                                    imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                                  } else if (retryCount === 4) {
+                                    imgElement.referrerPolicy = 'origin';
+                                  } else {
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                  }
+                                  
+                                  // Try with timestamp to bypass cache
+                                  const separator = imageUrl.includes('?') ? '&' : '?';
+                                  const newSrc = imageUrl + separator + '_retry=' + retryCount + '&_t=' + Date.now();
+                                  console.log(`🔄 Retry ${retryCount}/${maxRetries}: ${newSrc.substring(0, 80)}...`);
+                                  imgElement.src = newSrc;
+                                  return;
+                                }
+                                
+                                // Only show fallback after all retries exhausted
+                                if (retryCount >= maxRetries) {
+                                  console.warn('⚠️ All image load attempts failed, showing fallback');
+                                  // Remove from loaded images set if it was previously loaded
+                                  setLoadedImages(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(imageUrl);
+                                    return newSet;
+                                  });
+                                  imgElement.style.display = 'none';
+                                  if (parentElement) {
+                                    const existingFallback = parentElement.querySelector('.image-fallback');
+                                    if (!existingFallback) {
+                                      parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                      const fallback = document.createElement('div');
+                                      fallback.className = 'image-fallback';
+                                      fallback.style.cssText = `
+                                        font-size: 72px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        width: 100%;
+                                        height: 100%;
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        z-index: 1;
+                                      `;
+                                      fallback.textContent = story.emoji || '📰';
+                                      parentElement.appendChild(fallback);
+                                    }
+                                  }
+                                }
+                              };
+                              
+                              // Try loading again with increasing delays
+                              setTimeout(tryLoadImage, 300 * retryCount);
+                            }}
+                            onLoadStart={() => {
+                              console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
+                            }}
+                          />
+                        );
+                      })()}
                       
                       {/* Bottom Gradient Frosted Blur Overlay - Starts at 55% height */}
                       {/* Blur gradient: 55%→70% (0→10px), 70%→85% (10→18px), 85%→100% (18→25px) */}
@@ -2389,6 +2728,8 @@ export default function Home() {
                       }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'absolute',
                         top: 0,
@@ -2420,7 +2761,8 @@ export default function Home() {
                               ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
                               ${imageDominantColors[index].original} 100%)`
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2
+                        zIndex: 2,
+                        pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
@@ -2428,44 +2770,87 @@ export default function Home() {
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: getDefaultTextColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original),
+                          color: '#ffffff',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}</h3>
-                      </div>
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}</h3>
+                        </div>
+                      )}
                     </div>
                     
+                    {/* Emoji fallback when no image */}
+                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                      <div style={{
+                      position: 'fixed',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
+                      margin: 0,
+                      padding: 0,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: '1',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      pointerEvents: 'none'
+                    }}>
+                        <div style={{
+                        fontSize: '72px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%'
+                      }}>
+                        {story.emoji || '📰'}
+                        </div>
+                    </div>
+                    )}
+                    
                     {/* Content Area - Starts After Image */}
-                      <div className="news-content" style={{
-                        position: 'relative',
-                        paddingTop: 'calc(38vh - 20px)',
-                        paddingLeft: '8px',
-                        paddingRight: '8px',
-                        zIndex: '2'
+                    <div className="news-content" style={{
+                      position: 'relative',
+                        paddingTop: 'calc(38vh - 60px)',
+                        paddingLeft: '20px',
+                        paddingRight: '20px',
+                        zIndex: '2',
+                        background: 'transparent',
+                        width: '100%',
+                        maxWidth: '100%',
+                        margin: '0 auto'
                       }}>
                       
-                      {/* Time Since Published and Timeline Button Row */}
+                      {/* Time Since Published and Timeline Button Row - Fixed Position */}
                       <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '2px',
-                        marginTop: '-12px'
+                        marginBottom: '8px',
+                        marginTop: '32px',
+                        width: '100%',
+                        position: 'relative',
+                        zIndex: 10
                       }}>
-                        {/* Time Since Published - Minimal Design */}
-                        {story.publishedAt && (
-                          <div style={{
-                            fontSize: '11px',
-                            fontWeight: '400',
-                            color: '#86868b',
-                            letterSpacing: '0.3px'
-                          }}>
-                            {getTimeAgo(story.publishedAt)}
-                          </div>
-                        )}
+                        {/* Time Since Published - Left Side */}
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: '400',
+                          color: '#86868b',
+                          letterSpacing: '0.3px',
+                          flex: '0 0 auto'
+                        }}>
+                          {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
+                        </div>
 
-                        {/* Dynamic Information Switch - Only show if multiple information types available */}
+                        {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
-                          <div className="toggle-switch">
+                          <div className="toggle-switch" style={{ 
+                            position: 'relative',
+                            flex: '0 0 auto'
+                          }}>
                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                               const isActive = getCurrentInformationType(story, index) === infoType;
                               return (
@@ -2601,19 +2986,20 @@ export default function Home() {
                         )}
                       </div>
                       
-                      {/* Summary/Bullet Points - Swipeable */}
+                      {/* Summary/Bullet Points - Swipeable - Fixed Position */}
                       <div 
                         className="news-summary" 
                         style={{ 
-                          marginTop: '0',
-                          marginBottom: '16px',
+                          marginTop: '0px',
+                          marginBottom: '32px',
                           fontSize: '16px',
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
                           minHeight: '60px',
-                          padding: '8px 0',
-                          position: 'relative'
+                          padding: '16px 0',
+                          position: 'relative',
+                          zIndex: 10
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -2669,12 +3055,15 @@ export default function Home() {
                           onTouchEnd={onTouchEnd}
                           style={{ cursor: 'pointer' }}
                         >
-                          {/* Summary Header */}
+                          {/* Summary Header - Fixed Position */}
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            marginBottom: '12px'
+                            marginBottom: '12px',
+                            marginTop: '-15px',
+                            position: 'relative',
+                            width: '100%'
                           }}>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5 }}>
                               <path d="M4 4h8M4 8h8M4 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -2688,35 +3077,41 @@ export default function Home() {
                             }}><span style={{ fontSize: '15px' }}>S</span><span style={{ fontSize: '15px', textTransform: 'uppercase' }}>ummary</span></span>
                           </div>
                           
-                          {/* Show Only Bullet Text */}
-                          <div style={{ margin: 0 }}>
-                            {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                              <ul style={{
-                                margin: 0,
-                                paddingLeft: '20px',
-                                listStyleType: 'disc'
-                              }}>
-                                {story.summary_bullets.map((bullet, i) => (
-                                  <li key={i} style={{
-                                    marginBottom: '8px',
-                                    fontSize: '16px',
+                          {/* Show Only Bullet Text - Fixed Position */}
+                          <div style={{ 
+                            margin: 0,
+                            marginTop: '0px',
+                            marginBottom: '0px',
+                            position: 'relative',
+                            width: '100%'
+                          }}>
+                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
+                                <ul style={{
+                                  margin: 0,
+                                  paddingLeft: '20px',
+                                  listStyleType: 'disc'
+                                }}>
+                                  {story.summary_bullets.map((bullet, i) => (
+                                    <li key={i} style={{
+                                    marginBottom: '12px',
+                                      fontSize: '16px',
                                     lineHeight: '1.6',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
                                   }}>
-                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original)}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
-                                No bullet points available
-                              </p>
-                            )}
+                                    {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                  No bullet points available
+                                </p>
+                              )}
                           </div>
                           
-                          {/* Show Detailed Article Text Below Bullets - Scrollable */}
+                          {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
                           {showDetailedText[index] && (
                             <div 
                               style={{
@@ -2728,7 +3123,10 @@ export default function Home() {
                                 opacity: 1,
                                 transform: 'translateY(0)',
                                 transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                position: 'relative',
+                                zIndex: 1,
+                                width: '100%'
                               }}
                               onTouchStart={(e) => {
                                 const startX = e.touches[0].clientX;
@@ -2785,7 +3183,29 @@ export default function Home() {
                         
                       </div>
                       
+                    </div>
+                    {/* End of news-content div */}
+                      
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
+                    {/* Always show information box if there are any available components, regardless of image presence */}
+                    {/* MOVED OUTSIDE news-content to fix stacking context issue */}
+                    {(() => {
+                        const componentCount = getAvailableComponentsCount(story);
+                        // Debug logging
+                        if (componentCount === 0) {
+                          console.log(`⚠️ Story ${index} (${story.title?.substring(0, 50)}) has NO components:`, {
+                            hasDetails: !!(story.details && story.details.length > 0),
+                            hasTimeline: !!(story.timeline && story.timeline.length > 0),
+                            hasMap: !!story.map,
+                            hasGraph: !!story.graph,
+                            urlToImage: story.urlToImage
+                          });
+                        } else {
+                          // Log when components exist to help debug visibility issues
+                          console.log(`✅ Story ${index} (${story.title?.substring(0, 30)}) has ${componentCount} component(s), image: ${!!story.urlToImage}`);
+                        }
+                        return componentCount > 0;
+                      })() && (
                       <div style={{
                         position: showDetailedText[index] ? 'relative' : 'fixed',
                         bottom: showDetailedText[index] ? 'auto' : '32px',
@@ -2795,10 +3215,15 @@ export default function Home() {
                         maxWidth: showDetailedText[index] ? '1200px' : '1200px',
                         paddingLeft: '8px',
                         paddingRight: '8px',
-                        zIndex: '50',
+                        zIndex: 99999,
                         marginTop: showDetailedText[index] ? '0' : '0',
                         marginLeft: showDetailedText[index] ? 'auto' : '0',
-                        marginRight: showDetailedText[index] ? 'auto' : '0'
+                        marginRight: showDetailedText[index] ? 'auto' : '0',
+                        pointerEvents: 'auto',
+                        display: 'block',
+                        visibility: 'visible',
+                        opacity: 1,
+                        isolation: 'isolate'
                       }}>
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
@@ -2808,15 +3233,20 @@ export default function Home() {
                           position: 'relative', 
                           overflow: 'visible', 
                           cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
+                          display: 'flex',
+                          visibility: 'visible',
                           minHeight: '85px',
+                          zIndex: 99999,
+                          opacity: 1,
                           height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
                           maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
+                          backgroundColor: showTimeline[index] ? 'transparent' : '#ffffff',
                           background: showTimeline[index] ? 'transparent' : '#ffffff',
-                          backdropFilter: showTimeline[index] ? 'none' : 'none',
-                          WebkitBackdropFilter: showTimeline[index] ? 'none' : 'none',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
                             border: 'none',
                             borderRadius: showTimeline[index] ? '0' : '8px',
-                            boxShadow: showTimeline[index] ? 'none' : `0 2px 8px ${getCategoryColors(story.category).shadow}`
+                          boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
                           // Only handle if there are multiple information types
@@ -2887,9 +3317,46 @@ export default function Home() {
                         }}
                       >
                         {/* Content - Show one component at a time */}
-                        {showDetails[index] ? (
-                          // Show Details Only
-                          story.details && story.details.map((detail, i) => {
+                        {/* Default to details if no state is set but components exist */}
+                        {(() => {
+                          // If no state is set, default to showing details if available, otherwise timeline
+                          if (!showDetails[index] && !showTimeline[index] && !showMap[index] && !showGraph[index]) {
+                            if (story.details && story.details.length > 0) {
+                              // Set showDetails to true for this index
+                              setShowDetails(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            } else if (story.timeline && story.timeline.length > 0) {
+                              setShowTimeline(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            } else if (story.map) {
+                              setShowMap(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            } else if (story.graph) {
+                              setShowGraph(prev => {
+                                if (!prev[index]) {
+                                  return { ...prev, [index]: true };
+                                }
+                                return prev;
+                              });
+                            }
+                          }
+                          return null;
+                        })()}
+                        {showDetails[index] || (!showTimeline[index] && !showMap[index] && !showGraph[index] && story.details && story.details.length > 0) ? (
+                          // Show Details Only - Limit to 3 items
+                          story.details && story.details.slice(0, 3).map((detail, i) => {
                           const [label, value] = detail.split(':');
                           const cleanLabel = label?.trim() || '';
                           const cleanValue = value?.trim() || '';
@@ -2900,14 +3367,19 @@ export default function Home() {
                           const subtitle = valueMatch ? valueMatch[2].trim() : '';
                           
                           return (
-                            <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: getCategoryColors(story.category).primary }}>{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                            <div key={i} className="news-detail-item" style={{ 
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              color: '#111827'
+                            }}>
+                              <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
+                              <div className="news-detail-value" style={{ color: getAdaptiveHighlightColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original) || '#111827' }}>{mainValue}</div>
+                              {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
                             </div>
                           );
                           })
-                        ) : showTimeline[index] ? (
+                        ) : showTimeline[index] || (!showDetails[index] && !showMap[index] && !showGraph[index] && story.timeline && story.timeline.length > 0) ? (
                           // Show Timeline Only - Grows upward from bottom
                           story.timeline && (
                             <div 
@@ -3047,7 +3519,7 @@ export default function Home() {
                               </div>
                             </div>
                           )
-                        ) : showMap[index] ? (
+                        ) : showMap[index] || (!showDetails[index] && !showTimeline[index] && !showGraph[index] && story.map) ? (
                           // Show Map Only
                           story.map && (
                             <div 
@@ -3090,7 +3562,7 @@ export default function Home() {
                                   </div>
                             </div>
                           )
-                        ) : showGraph[index] ? (
+                        ) : showGraph[index] || (!showDetails[index] && !showTimeline[index] && !showMap[index] && story.graph) ? (
                           // Show Graph Only
                           story.graph && (
                             <div 
@@ -3240,8 +3712,8 @@ export default function Home() {
                         </div>
                       )}
                       
-                      </div> {/* Close fixed position container */}
                     </div>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -3284,7 +3756,7 @@ export default function Home() {
         {/* Email Confirmation Modal */}
         {emailConfirmation && (
           <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)}>
-            <EmailConfirmation 
+            <EmailConfirmation
               email={emailConfirmation.email}
               onBack={() => setEmailConfirmation(null)}
             />
