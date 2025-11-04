@@ -752,12 +752,11 @@ The article concludes with forward-looking analysis and what readers should watc
     return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
   };
 
-  // Get adaptive highlight color from blurred region background
-  // Purpose: Harmonize title color with background tint and ensure adaptive legibility
+  // Get adaptive highlight color from background
   const getAdaptiveHighlightColor = (blurColor, backgroundColor = null) => {
     if (!blurColor) return null;
     
-    // Extract RGB from rgba string (sampled from blurred region behind text)
+    // Extract RGB from rgba string
     const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
     if (!colorMatch) return null;
     
@@ -765,62 +764,131 @@ The article concludes with forward-looking analysis and what readers should watc
     const g = parseInt(colorMatch[2]);
     const b = parseInt(colorMatch[3]);
     
-    // Convert to HSL to extract hue and sample background lightness
+    // Convert to HSL to extract hue
     const [h, s, l] = rgbToHsl(r, g, b);
-    const backgroundLightness = l / 100; // Normalize to 0-1
     
-    // Calculate highlight color adjustments based on background lightness
+    // Sample background lightness from the original image color
+    // The text sits on a dark blur overlay, but we sample the hue from the image
+    // If the image itself is light (L >= 0.5), we might need adaptive inversion
+    const imageLightness = l / 100; // Normalize to 0-1
+    
+    // Check if we should use dark text instead (background lightness threshold)
+    // Since text is on dark blur overlay, we typically want bright highlights
+    // But if image is very light, we may want to use a tonal echo approach
+    
     let newS, newL;
     
-    if (backgroundLightness < 0.5) {
-      // Background is dark: brighten and saturate (+20% sat, +30% brightness)
-      newS = Math.min(100, s + 20);
-      newL = Math.min(100, l + 30);
+    // Make colors darker while preserving hue and ensuring readability on dark blur overlay
+    // We want darker, more saturated tones for better visual distinction
+    if (imageLightness < 0.5) {
+      // Image is dark: darken but increase saturation to compensate (+30% sat, -20% brightness)
+      newS = Math.min(100, s + 30);
+      newL = Math.max(40, l - 20); // Darken, but keep minimum 40% for contrast
     } else {
-      // Background is light: darken and desaturate (-20% brightness, -15% sat)
-      newS = Math.max(0, s - 15);
-      newL = Math.max(0, l - 20);
+      // Image is light: darken significantly and increase saturation
+      newS = Math.min(100, s + 25);
+      newL = Math.max(45, Math.min(70, l - 25)); // Darken more, range 45-70% for readability
     }
     
     // Convert back to RGB
     let [newR, newG, newB] = hslToRgb(h, newS, newL);
     
-    // Calculate contrast against blurred background
-    // For dark mode: black overlay with ~65% opacity at bottom ≈ [20, 20, 20]
-    // For light mode: white overlay with ~65% opacity at bottom ≈ [230, 230, 230]
-    const contrastBg = darkMode ? [20, 20, 20] : [230, 230, 230];
+    // Check if color is too close to white - reject it immediately
+    if (isTooCloseToWhite(newR, newG, newB)) {
+      // Use fallback color based on hue instead
+      const fallback = getFallbackColorByHue(h);
+      const contrastBg = [20, 20, 20];
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
+      
+      // If fallback has good contrast and is not white, use it
+      if (fallbackContrast >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Darken fallback slightly while keeping it away from white
+        const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
+        // Darken a bit but ensure contrast (lightness 50-70%)
+        const darkenedFallback = hslToRgb(fh, Math.min(100, fs + 15), Math.max(50, Math.min(70, fl - 5)));
+        
+        // Check if darkened fallback is still not white and has good contrast
+        if (!isTooCloseToWhite(darkenedFallback[0], darkenedFallback[1], darkenedFallback[2])) {
+          const darkContrast = getContrastRatio(darkenedFallback, contrastBg);
+          if (darkContrast >= 4.5) {
+            return `rgb(${darkenedFallback[0]}, ${darkenedFallback[1]}, ${darkenedFallback[2]})`;
+          }
+        }
+        
+        // Use a saturated, darker version of the hue if everything else fails
+        // Keep it darker (45-65% lightness range) to avoid white
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.max(45, Math.min(65, l - 15)));
+        if (!isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          const safeContrast = getContrastRatio(safeColor, contrastBg);
+          if (safeContrast >= 4.5) {
+            return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+          }
+        }
+        
+        // Last resort: use a medium-dark tone based on hue (never white)
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      }
+    }
+    
+    // Check contrast against dark blur overlay background (black with ~65% opacity at bottom)
+    // Use weighted average: 65% opacity means ~35% of underlying image shows through
+    // For contrast checking, approximate with dark gray background
+    const contrastBg = [20, 20, 20]; // Approximate dark blur overlay background
     let contrastRatio = getContrastRatio([newR, newG, newB], contrastBg);
     
-    // Check if highlight color is too close to white or has insufficient contrast
-    if (isTooCloseToWhite(newR, newG, newB) || contrastRatio < 4.5) {
-      // Use adaptive fallback based on background hue
+    // If contrast is too low (< 4.5:1), try fallback color based on hue
+    if (contrastRatio < 4.5) {
       const fallback = getFallbackColorByHue(h);
       contrastRatio = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
       
       // If fallback has good contrast and is not white, use it
       if (contrastRatio >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
         return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
-      }
-      
-      // Fallback also has issues - adjust based on background lightness
-      const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
-      let adjustedFallback;
-      
-      if (backgroundLightness < 0.5) {
-        // Dark background: brighten fallback
-        adjustedFallback = hslToRgb(fh, Math.min(100, fs + 20), Math.min(100, fl + 30));
       } else {
-        // Light background: darken fallback
-        adjustedFallback = hslToRgb(fh, Math.max(0, fs - 15), Math.max(0, fl - 20));
+        // Fallback also has low contrast - darken it while preserving hue and avoiding white
+        const [fh, fs, fl] = rgbToHsl(fallback.r, fallback.g, fallback.b);
+        // Darken to 50-70% lightness range for darker appearance
+        const darkenedFallback = hslToRgb(fh, Math.min(100, fs + 15), Math.max(50, Math.min(70, fl - 5)));
+        
+        if (!isTooCloseToWhite(darkenedFallback[0], darkenedFallback[1], darkenedFallback[2])) {
+          const darkContrast = getContrastRatio(darkenedFallback, contrastBg);
+          
+          if (darkContrast >= 4.5) {
+            return `rgb(${darkenedFallback[0]}, ${darkenedFallback[1]}, ${darkenedFallback[2]})`;
+          }
+        }
+        
+        // Use a safe, saturated darker color based on hue (never white)
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.max(45, Math.min(65, l - 15)));
+        if (!isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          const safeContrast = getContrastRatio(safeColor, contrastBg);
+          if (safeContrast >= 4.5) {
+            return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+          }
+        }
+        
+        // Last resort: return fallback (already checked to not be white)
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
       }
+    }
+    
+    // Final check: if color is too close to white (lightness > 70%) or lacks character, use fallback
+    if (newL > 70 || s < 10 || isTooCloseToWhite(newR, newG, newB)) {
+      const fallback = getFallbackColorByHue(h);
+      const fallbackContrast = getContrastRatio([fallback.r, fallback.g, fallback.b], contrastBg);
       
-      const adjustedContrast = getContrastRatio(adjustedFallback, contrastBg);
-      if (adjustedContrast >= 4.5 && !isTooCloseToWhite(adjustedFallback[0], adjustedFallback[1], adjustedFallback[2])) {
-        return `rgb(${adjustedFallback[0]}, ${adjustedFallback[1]}, ${adjustedFallback[2]})`;
+      if (fallbackContrast >= 4.5 && !isTooCloseToWhite(fallback.r, fallback.g, fallback.b)) {
+        return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
+      } else {
+        // Use a safe, saturated darker version that's not white
+        const safeColor = hslToRgb(h, Math.min(100, s + 30), Math.max(45, Math.min(65, l - 15)));
+        const safeContrast = getContrastRatio(safeColor, contrastBg);
+        if (safeContrast >= 4.5 && !isTooCloseToWhite(safeColor[0], safeColor[1], safeColor[2])) {
+          return `rgb(${safeColor[0]}, ${safeColor[1]}, ${safeColor[2]})`;
+        }
       }
-      
-      // Last resort: use original fallback
-      return `rgb(${fallback.r}, ${fallback.g}, ${fallback.b})`;
     }
     
     // Final safety check before returning
@@ -830,25 +898,6 @@ The article concludes with forward-looking analysis and what readers should watc
     }
     
     return `rgb(${newR}, ${newG}, ${newB})`;
-  };
-  
-  // Get default text color based on background lightness
-  const getDefaultTextColor = (blurColor) => {
-    if (!blurColor) return darkMode ? '#FFFFFF' : '#1E1E1E';
-    
-    // Extract lightness from blur color
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!colorMatch) return darkMode ? '#FFFFFF' : '#1E1E1E';
-    
-    const r = parseInt(colorMatch[1]);
-    const g = parseInt(colorMatch[2]);
-    const b = parseInt(colorMatch[3]);
-    
-    const [h, s, l] = rgbToHsl(r, g, b);
-    const backgroundLightness = l / 100; // Normalize to 0-1
-    
-    // Use pure white if background lightness < 0.5, dark charcoal if >= 0.5
-    return backgroundLightness < 0.5 ? '#FFFFFF' : '#1E1E1E';
   };
 
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
@@ -883,20 +932,16 @@ The article concludes with forward-looking analysis and what readers should watc
   };
 
   // Function to render title with highlighted important words (colored AND bold)
-  // Purpose: Harmonize title color with background tint and ensure adaptive legibility
   const renderTitleWithHighlight = (text, blurColor, category = null) => {
     if (!text) return '';
     
-    // Get default text color based on background lightness
-    const defaultTextColor = getDefaultTextColor(blurColor);
-    
-    // Get highlight color from blurred region (sample dominant hue)
+    // Get fallback color from category if no blurColor
     let highlightColor = null;
     if (blurColor) {
       highlightColor = getAdaptiveHighlightColor(blurColor);
     }
     
-    // If still no color, use category-based color as final fallback
+    // If still no color, use category-based color
     if (!highlightColor && category) {
       const categoryColors = getCategoryColors(category);
       highlightColor = categoryColors.primary;
@@ -908,7 +953,7 @@ The article concludes with forward-looking analysis and what readers should watc
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ color: highlightColor || defaultTextColor, fontWeight: '700' }}>
+          <span key={i} style={{ color: highlightColor || '#ffffff', fontWeight: '700' }}>
             {content}
           </span>
         );
@@ -2665,7 +2710,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       })()}
                       
                       {/* Bottom Gradient Frosted Blur Overlay - Starts at 55% height */}
-                      {/* Blur gradient: 55%→70% (0→20px), 70%→85% (20→35px), 85%→100% (35→50px) */}
+                      {/* Blur gradient: 55%→70% (0→10px), 70%→85% (10→18px), 85%→100% (18→25px) */}
                       {/* Layer 1: Full blur zone (45% height from bottom = 55-100% from top) */}
                       <div style={{
                         position: 'absolute',
@@ -2673,8 +2718,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(50px)',
+                        backdropFilter: 'blur(25px)',
+                        WebkitBackdropFilter: 'blur(25px)',
                         maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 33.3%, rgba(0,0,0,0.4) 66.7%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.72) 33.3%, rgba(0,0,0,0.4) 66.7%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.5,
@@ -2688,8 +2733,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: '15%',
                         left: 0,
                         right: 0,
-                        backdropFilter: 'blur(35px)',
-                        WebkitBackdropFilter: 'blur(35px)',
+                        backdropFilter: 'blur(18px)',
+                        WebkitBackdropFilter: 'blur(18px)',
                         maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.6,
@@ -2703,8 +2748,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: '30%',
                         left: 0,
                         right: 0,
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
                         maskImage: 'linear-gradient(to top, rgba(0,0,0,0.67) 0%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.67) 0%, rgba(0,0,0,0) 100%)',
                         zIndex: 1.7,
@@ -2712,7 +2757,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       }}></div>
                       
                       {/* Opacity Overlay - Gradient with opacity curve: 55%(0%) → 70%(20%) → 85%(45%) → 100%(65%) */}
-                      {/* Dark mode: Black (#000000), Light mode: White (#FFFFFF) */}
+                      {/* Dark Mode: Black #000000, Light Mode: White #FFFFFF */}
                       <div style={{
                         position: 'absolute',
                         top: '55%',
@@ -2752,8 +2797,10 @@ The article concludes with forward-looking analysis and what readers should watc
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: getDefaultTextColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original),
-                          textShadow: darkMode ? '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)' : '0 2px 8px rgba(255,255,255,0.8), 0 4px 16px rgba(255,255,255,0.4)'
+                          color: darkMode ? '#ffffff' : '#000000',
+                          textShadow: darkMode 
+                            ? '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)' 
+                            : '0 2px 8px rgba(255,255,255,0.8), 0 4px 16px rgba(255,255,255,0.4)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}</h3>
                         </div>
                       )}
