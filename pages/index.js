@@ -634,36 +634,176 @@ export default function Home() {
     return text.replace(/\*\*/g, '');
   };
 
-  // Function to render title with highlighted important words (colored but not bold)
-  const renderTitleWithHighlight = (text, blurColor) => {
-    if (!text) return '';
-    if (!blurColor) {
-      return text;
+  // Helper function to convert RGB to HSL
+  const rgbToHsl = (r, g, b) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    return [h * 360, s, l];
+  };
+
+  // Helper function to convert HSL to RGB
+  const hslToRgb = (h, s, l) => {
+    h /= 360;
+    let r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
+  // Helper function to calculate relative luminance for contrast
+  const getLuminance = (r, g, b) => {
+    const [rs, gs, bs] = [r, g, b].map(val => {
+      val = val / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Helper function to calculate contrast ratio
+  const getContrastRatio = (color1, color2) => {
+    const lum1 = getLuminance(...color1);
+    const lum2 = getLuminance(...color2);
+    const lighter = Math.max(lum1, lum2);
+    const darker = Math.min(lum1, lum2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  // Function to get adaptive highlight color based on blurred background
+  const getAdaptiveHighlightColor = (blurRegionColor, index) => {
+    if (!blurRegionColor) return null;
+    
+    // Extract RGB from color string or use image dominant color
+    let r, g, b;
+    const colorData = imageDominantColors[index];
+    
+    if (colorData) {
+      // Sample from blurred region (bottom 30-45% of image)
+      const colorMatch = (colorData.original || colorData.light || 'rgba(0,0,0,1)').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (colorMatch) {
+        r = parseInt(colorMatch[1]);
+        g = parseInt(colorMatch[2]);
+        b = parseInt(colorMatch[3]);
+      } else {
+        return null;
+      }
+    } else {
+      // Fallback: parse from blurRegionColor if provided
+      const colorMatch = blurRegionColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (colorMatch) {
+        r = parseInt(colorMatch[1]);
+        g = parseInt(colorMatch[2]);
+        b = parseInt(colorMatch[3]);
+      } else {
+        return null;
+      }
     }
     
-    // Extract color from rgba string
-    const colorMatch = blurColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (colorMatch) {
-      const r = colorMatch[1];
-      const g = colorMatch[2];
-      const b = colorMatch[3];
-      const highlightColor = `rgb(${r}, ${g}, ${b})`;
-      
-      // Replace **text** with colored (but not bold) spans
-      const parts = text.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const content = part.replace(/\*\*/g, '');
+    // Convert to HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    
+    // Determine if background is dark or light
+    const isDark = l < 0.5;
+    
+    // Calculate base text color (white if dark, dark charcoal if light)
+    const baseTextColor = isDark ? [255, 255, 255] : [30, 30, 30];
+    
+    // Extract dominant hue from blurred region
+    let highlightH, highlightS, highlightL;
+    
+    if (isDark) {
+      // Dark background: brighten and saturate (+20% sat, +30% brightness)
+      highlightH = h;
+      highlightS = Math.min(1, s + 0.2);
+      highlightL = Math.min(1, l + 0.3);
+    } else {
+      // Light background: darken and desaturate (-20% brightness, -15% sat)
+      highlightH = h;
+      highlightS = Math.max(0, s - 0.15);
+      highlightL = Math.max(0, l - 0.2);
+    }
+    
+    // Convert back to RGB
+    let [hr, hg, hb] = hslToRgb(highlightH, highlightS, highlightL);
+    
+    // Check contrast ratio (need ≥ 4.5:1)
+    const contrastRatio = getContrastRatio([hr, hg, hb], baseTextColor);
+    
+    // If contrast is too low, use fallback colors based on hue
+    if (contrastRatio < 4.5) {
+      // Determine fallback color based on hue
+      if (h >= 200 && h <= 260) {
+        // Blue → dark navy
+        return '#1A2739';
+      } else if (h >= 100 && h <= 160) {
+        // Green → forest green
+        return '#1E382A';
+      } else if ((h >= 0 && h <= 30) || (h >= 330 && h <= 360)) {
+        // Orange/Red → deep brown
+        return '#3B241A';
+      } else {
+        // Gray/neutral → graphite gray
+        return '#2B2B2B';
+      }
+    }
+    
+    // Return highlight color
+    return `rgb(${Math.round(hr)}, ${Math.round(hg)}, ${Math.round(hb)})`;
+  };
+
+  // Function to render title with highlighted important words (colored but not bold)
+  const renderTitleWithHighlight = (text, blurColor, index) => {
+    if (!text) return '';
+    
+    // Get adaptive highlight color
+    const highlightColor = getAdaptiveHighlightColor(blurColor, index);
+    
+    // Replace **text** with colored (but not bold) spans
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.replace(/\*\*/g, '');
+        if (highlightColor) {
           return (
             <span key={i} style={{ color: highlightColor }}>
               {content}
             </span>
           );
         }
-        return part;
-      });
-    }
-    return text;
+        return content;
+      }
+      return part;
+    });
   };
 
   useEffect(() => {
@@ -2242,15 +2382,37 @@ export default function Home() {
                         zIndex: 3,
                         pointerEvents: 'none'
                       }}>
-                        <h3 style={{ 
-                          margin: 0,
-                          fontSize: '22px',
-                          fontWeight: '800',
-                          lineHeight: '1.2',
-                          letterSpacing: '-0.5px',
-                          color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, '#ffffff')}</h3>
+                        {(() => {
+                          // Determine base text color based on background lightness
+                          const colorData = imageDominantColors[index];
+                          let baseTextColor = '#FFFFFF'; // Default white
+                          
+                          if (colorData) {
+                            const colorMatch = (colorData.original || colorData.light || 'rgba(0,0,0,1)').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                            if (colorMatch) {
+                              const r = parseInt(colorMatch[1]);
+                              const g = parseInt(colorMatch[2]);
+                              const b = parseInt(colorMatch[3]);
+                              const [, , l] = rgbToHsl(r, g, b);
+                              // Use white if background lightness < 0.5, dark charcoal if >= 0.5
+                              baseTextColor = l < 0.5 ? '#FFFFFF' : '#1E1E1E';
+                            }
+                          }
+                          
+                          return (
+                            <h3 style={{ 
+                              margin: 0,
+                              fontSize: '22px',
+                              fontWeight: '800',
+                              lineHeight: '1.2',
+                              letterSpacing: '-0.5px',
+                              color: baseTextColor,
+                              textShadow: baseTextColor === '#FFFFFF' 
+                                ? '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                                : '0 2px 8px rgba(255,255,255,0.3), 0 4px 16px rgba(255,255,255,0.1)'
+                            }}>{renderTitleWithHighlight(story.title, null, index)}</h3>
+                          );
+                        })()}
                       </div>
                     </div>
                     
