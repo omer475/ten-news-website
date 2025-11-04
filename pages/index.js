@@ -1286,27 +1286,27 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        .safe-area-top {
+        body::before {
+          content: '';
           position: fixed;
           top: calc(-1 * max(env(safe-area-inset-top), 44px));
           left: 0;
           right: 0;
-          width: 100%;
           height: max(env(safe-area-inset-top), 44px);
-          background: #ffffff;
-          z-index: 1;
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
           pointer-events: none;
         }
         
-        .safe-area-bottom {
+        body::after {
+          content: '';
           position: fixed;
           bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
           left: 0;
           right: 0;
-          width: 100%;
           height: max(env(safe-area-inset-bottom), 34px);
-          background: #ffffff;
-          z-index: 1;
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
           pointer-events: none;
         }
 
@@ -2392,13 +2392,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
       `}</style>
       
-      {/* Safe area top overlay - covers top notch area */}
-      <div className="safe-area-top" />
-      
-      {/* Safe area bottom overlay - covers bottom notch area */}
-      <div className="safe-area-bottom" />
-      
-      <div style={{ position: 'relative', width: '100%', height: 'calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom))', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -3101,7 +3095,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     <li key={i} style={{
                                     marginBottom: '6px',
                                       fontSize: '16px',
-                                    lineHeight: '1.8',
+                                    lineHeight: '1.4',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
                                     fontFamily: 'Georgia, "Times New Roman", Times, serif'
