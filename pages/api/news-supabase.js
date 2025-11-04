@@ -47,6 +47,30 @@ export default async function handler(req, res) {
     console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
     console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests`)
 
+    // Normalize image URLs to ensure they're valid
+    const normalizeImageUrl = (url) => {
+      if (!url) return null;
+      let normalized = String(url).trim();
+      
+      // Normalize protocol-relative URLs (starting with //)
+      if (normalized.startsWith('//')) {
+        normalized = 'https:' + normalized;
+      }
+      
+      // Normalize URLs missing protocol
+      if (!normalized.startsWith('http://') && 
+          !normalized.startsWith('https://') && 
+          !normalized.startsWith('data:') && 
+          !normalized.startsWith('blob:')) {
+        // Check if it looks like an absolute URL (domain pattern)
+        if (/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(normalized)) {
+          normalized = 'https://' + normalized;
+        }
+      }
+      
+      return normalized;
+    };
+
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
       let timelineData = null;
@@ -86,35 +110,20 @@ export default async function handler(req, res) {
           if (!imgUrl) return null;
           
           // Handle different data types
-          let urlStr = typeof imgUrl === 'string' ? imgUrl.trim() : String(imgUrl).trim();
+          const urlStr = typeof imgUrl === 'string' ? imgUrl.trim() : String(imgUrl).trim();
           
-          // Validate URL - very lenient validation
+          // Validate URL
           if (urlStr === '' || 
               urlStr === 'null' || 
               urlStr === 'undefined' || 
               urlStr === 'None' ||
               urlStr.toLowerCase() === 'null' ||
-              urlStr.length < 4) { // Reduced from 5 to 4
+              urlStr.length < 5) {
             return null;
           }
           
-          // Normalize URL: handle protocol-relative URLs (starting with //)
-          if (urlStr.startsWith('//')) {
-            urlStr = 'https:' + urlStr;
-            console.log(`🔧 Normalized protocol-relative URL: ${urlStr.substring(0, 80)}...`);
-          }
-          
-          // Normalize URL: if missing protocol and looks like absolute URL, add https
-          if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://') && !urlStr.startsWith('data:') && !urlStr.startsWith('blob:')) {
-            // Check if it looks like an absolute URL (starts with domain-like pattern)
-            if (/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(urlStr)) {
-              urlStr = 'https://' + urlStr;
-              console.log(`🔧 Added https:// to URL: ${urlStr.substring(0, 80)}...`);
-            }
-          }
-          
-          // Return cleaned and normalized URL
-          return urlStr;
+          // Normalize the URL before returning
+          return normalizeImageUrl(urlStr);
         })(),  // Frontend expects 'urlToImage'
         author: article.author,
         publishedAt: article.published_date || article.published_at,

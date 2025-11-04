@@ -2504,7 +2504,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           // Normalize protocol-relative URLs (starting with //)
                           if (normalized.startsWith('//')) {
                             normalized = 'https:' + normalized;
-                            console.log(`🔧 Frontend: Normalized protocol-relative URL: ${normalized.substring(0, 80)}...`);
+                            console.log(`🔧 Normalized protocol-relative URL: ${normalized.substring(0, 80)}...`);
                           }
                           
                           // Normalize URLs missing protocol
@@ -2515,7 +2515,7 @@ The article concludes with forward-looking analysis and what readers should watc
                             // Check if it looks like an absolute URL (domain pattern)
                             if (/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(normalized)) {
                               normalized = 'https://' + normalized;
-                              console.log(`🔧 Frontend: Added https:// to URL: ${normalized.substring(0, 80)}...`);
+                              console.log(`🔧 Added https:// to URL: ${normalized.substring(0, 80)}...`);
                             }
                           }
                           
@@ -2525,17 +2525,15 @@ The article concludes with forward-looking analysis and what readers should watc
                         // Always try to show image if URL exists - be very lenient with validation
                         // Only reject if clearly invalid (null, empty, or too short to be a URL)
                         const rawUrl = story.urlToImage;
-                        const trimmedUrl = rawUrl ? String(rawUrl).trim() : '';
                         const hasImageUrl = rawUrl && 
                                           (typeof rawUrl === 'string' || typeof rawUrl === 'object') && 
-                                          trimmedUrl !== '' && 
-                                          trimmedUrl.toLowerCase() !== 'null' && 
-                                          trimmedUrl.toLowerCase() !== 'undefined' &&
-                                          trimmedUrl.toLowerCase() !== 'none' &&
-                                          trimmedUrl.length >= 4; // Reduced from 5 to 4 for more lenient validation
+                                          String(rawUrl).trim() !== '' && 
+                                          String(rawUrl).toLowerCase() !== 'null' && 
+                                          String(rawUrl).toLowerCase() !== 'undefined' &&
+                                          String(rawUrl).toLowerCase() !== 'none' &&
+                                          String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
                         
                         if (!hasImageUrl) {
-                          console.log(`⚠️ No valid image URL for article: ${story.title?.substring(0, 50)}...`);
                           return (
                             <div style={{
                               fontSize: '72px',
@@ -2567,8 +2565,6 @@ The article concludes with forward-looking analysis and what readers should watc
                             </div>
                           );
                         }
-                        
-                        console.log(`🖼️ Attempting to load image: ${imageUrl.substring(0, 80)}...`);
                         // Use stable key based on story ID and URL hash, NOT timestamp
                         const urlHash = imageUrl.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '');
                         const imageKey = `img-${story.id || index}-${urlHash}`;
