@@ -1286,31 +1286,7 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        body::before {
-          content: '';
-          position: fixed;
-          top: calc(-1 * max(env(safe-area-inset-top), 44px));
-          left: 0;
-          right: 0;
-          height: max(env(safe-area-inset-top), 44px);
-          background: #ffffff !important;
-          z-index: 9999;
-          pointer-events: none;
-        }
-        
-        body::after {
-          content: '';
-          position: fixed;
-          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
-          left: 0;
-          right: 0;
-          height: max(env(safe-area-inset-bottom), 34px);
-          background: #ffffff !important;
-          z-index: 9999;
-          pointer-events: none;
-        }
-        
-        .safe-area-top-overlay {
+        .safe-area-top {
           position: fixed;
           top: calc(-1 * max(env(safe-area-inset-top), 44px));
           left: 0;
@@ -1318,11 +1294,11 @@ The article concludes with forward-looking analysis and what readers should watc
           width: 100%;
           height: max(env(safe-area-inset-top), 44px);
           background: #ffffff;
-          z-index: 99999;
+          z-index: 1;
           pointer-events: none;
         }
         
-        .safe-area-bottom-overlay {
+        .safe-area-bottom {
           position: fixed;
           bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
           left: 0;
@@ -1330,7 +1306,7 @@ The article concludes with forward-looking analysis and what readers should watc
           width: 100%;
           height: max(env(safe-area-inset-bottom), 34px);
           background: #ffffff;
-          z-index: 99999;
+          z-index: 1;
           pointer-events: none;
         }
 
@@ -2416,13 +2392,13 @@ The article concludes with forward-looking analysis and what readers should watc
         }
       `}</style>
       
-      {/* Safe area top overlay */}
-      <div className="safe-area-top-overlay" />
+      {/* Safe area top overlay - covers top notch area */}
+      <div className="safe-area-top" />
       
-      {/* Safe area bottom overlay */}
-      <div className="safe-area-bottom-overlay" />
+      {/* Safe area bottom overlay - covers bottom notch area */}
+      <div className="safe-area-bottom" />
       
-      <div style={{ position: 'relative', width: '100%', height: 'calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom))', overflow: 'hidden', background: 'transparent' }}>
+      <div style={{ position: 'relative', width: '100%', height: 'calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom))', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
