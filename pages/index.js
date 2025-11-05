@@ -117,6 +117,26 @@ export default function Home() {
 
   // Helper function to get available information types for a story
   const getAvailableInformationTypes = (story) => {
+    // If components array exists, use it to determine order
+    if (story.components && Array.isArray(story.components) && story.components.length > 0) {
+      // Filter to only include components that actually have data
+      return story.components.filter(type => {
+        switch (type) {
+          case 'details':
+            return story.details && story.details.length > 0;
+          case 'timeline':
+            return story.timeline && story.timeline.length > 0;
+          case 'map':
+            return story.map;
+          case 'graph':
+            return story.graph;
+          default:
+            return false;
+        }
+      });
+    }
+    
+    // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
     if (story.timeline && story.timeline.length > 0) types.push('timeline');
