@@ -124,6 +124,9 @@ def publish_articles_to_website(articles: List[Dict]):
             print(f"🔍 DEBUG: Has 'detailed_text'? {'detailed_text' in articles[0]}")
             print(f"🔍 DEBUG: Has 'summary_bullets'? {'summary_bullets' in articles[0]}")
             print(f"🔍 DEBUG: Has 'title'? {'title' in articles[0]}")
+            print(f"🔍 DEBUG: Has 'components'? {'components' in articles[0]}")
+            if 'components' in articles[0]:
+                print(f"🔍 DEBUG: components value: {articles[0]['components']}")
             if 'detailed_text' in articles[0]:
                 print(f"🔍 DEBUG: detailed_text length: {len(articles[0]['detailed_text'])} chars")
         
@@ -173,6 +176,10 @@ def publish_articles_to_website(articles: List[Dict]):
                 print(f"  ⚠️ WARNING: Article {i+1}/{len(articles)} has empty 'article' field. Keys: {list(article.keys())[:10]}")
             if not db_article['summary_bullets']:
                 print(f"  ⚠️ WARNING: Article {i+1}/{len(articles)} has empty 'summary_bullets' field")
+            
+            # DEBUG: Check components field
+            print(f"  📊 Article {i+1}: components = {db_article.get('components', 'MISSING')}")
+            
             articles_to_publish.append(db_article)
             if 'id' in article:
                 article_ids.append(article['id'])
