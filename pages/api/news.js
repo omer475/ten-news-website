@@ -67,22 +67,22 @@ export default async function handler(req, res) {
           }
 
           return {
-            rank: index + 1,
-            id: article.id,
-            title: article.title,
+          rank: index + 1,
+          id: article.id,
+          title: article.title,
             detailed_text: article.article || article.ai_detailed_text || article.summary,
             summary_bullets: summaryBullets,
-            url: article.url,
-            urlToImage: article.image_url,
-            source: article.source,
-            category: article.category,
-            emoji: article.emoji,
-            details: article.details || [],
-            timeline: article.timeline || [],
-            citations: article.citations || [],
-            published_at: article.published_at,
-            added_at: article.added_at,
-            final_score: article.final_score
+          url: article.url,
+          urlToImage: article.image_url,
+          source: article.source,
+          category: article.category,
+          emoji: article.emoji,
+          details: article.details || [],
+          timeline: article.timeline || [],
+          citations: article.citations || [],
+          published_at: article.published_at,
+          added_at: article.added_at,
+          final_score: article.final_score
           };
         });
 
