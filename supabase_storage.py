@@ -63,6 +63,10 @@ def save_articles_to_supabase(articles, source_part):
             if not isinstance(summary_bullets_data, list):
                 summary_bullets_data = []
             
+            # DEBUG: Check components field
+            components_data = article.get('components', [])
+            print(f"  🔍 DEBUG [{i}/{len(articles)}]: components in article: {components_data}")
+            
             # Normalize details into newline-joined string (ensure elements are strings)
             raw_details = article.get('details', []) or []
             normalized_details = []

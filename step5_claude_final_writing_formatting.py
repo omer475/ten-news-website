@@ -520,7 +520,8 @@ Return ONLY valid JSON."""
             components = article.get('components', article.get('selected_components', []))
             components_str = ', '.join(components) if components else 'none'
             print(f"[{i}/{len(articles)}] Writing: {article['title'][:50]}...")
-            print(f"  Components: {components_str}", end=' ')
+            print(f"  Components in article: {components}")
+            print(f"  Components formatted: {components_str}", end=' ')
             
             # Write article
             formatted = self.write_article(article)
