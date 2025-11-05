@@ -45,27 +45,54 @@ export default function GraphChart({ graph, expanded }) {
   };
 
   const renderChart = () => {
+    // Hide axis label names when collapsed, but keep axis lines visible
+    const xAxisLabel = expanded && graph.x_label ? { 
+      value: graph.x_label, 
+      position: 'insideBottom', 
+      offset: -5, 
+      style: { fontSize: '10px', fill: '#64748b' } 
+    } : null;
+    
+    const yAxisLabel = expanded && graph.y_label ? { 
+      value: graph.y_label, 
+      angle: -90, 
+      position: 'insideLeft', 
+      style: { fontSize: '10px', fill: '#64748b' } 
+    } : null;
+
+    // Axis props - show lines but hide tick labels when collapsed
+    const xAxisPropsCollapsed = {
+      ...axisProps,
+      tick: false, // Hide tick labels
+      label: null // Hide axis label name
+    };
+    
+    const yAxisPropsCollapsed = {
+      ...axisProps,
+      tick: false, // Hide tick labels
+      label: null // Hide axis label name
+    };
+
     if (graph.type === 'line' || !graph.type) {
       return (
         <LineChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="date" {...axisProps} />
-          <YAxis 
-            {...axisProps}
-            label={graph.y_label ? { 
-              value: graph.y_label, 
-              angle: -90, 
-              position: 'insideLeft', 
-              style: { fontSize: '10px', fill: '#64748b' } 
-            } : null}
+          {expanded && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
+          <XAxis 
+            dataKey="date" 
+            {...(expanded ? axisProps : xAxisPropsCollapsed)}
+            label={xAxisLabel}
           />
-          <Tooltip {...tooltipProps} />
+          <YAxis 
+            {...(expanded ? axisProps : yAxisPropsCollapsed)}
+            label={yAxisLabel}
+          />
+          {expanded && <Tooltip {...tooltipProps} />}
           <Line 
             type="monotone" 
             dataKey="value" 
             stroke="#3b82f6" 
-            strokeWidth={2}
-            dot={{ fill: '#3b82f6', r: expanded ? 4 : 2 }}
+            strokeWidth={expanded ? 2 : 2.5}
+            dot={{ fill: '#3b82f6', r: expanded ? 4 : 3 }}
             activeDot={{ r: 6 }}
           />
         </LineChart>
@@ -73,47 +100,51 @@ export default function GraphChart({ graph, expanded }) {
     } else if (graph.type === 'bar') {
       return (
         <BarChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="date" {...axisProps} />
-          <YAxis 
-            {...axisProps}
-            label={graph.y_label ? { 
-              value: graph.y_label, 
-              angle: -90, 
-              position: 'insideLeft', 
-              style: { fontSize: '10px', fill: '#64748b' } 
-            } : null}
+          {expanded && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
+          <XAxis 
+            dataKey="date" 
+            {...(expanded ? axisProps : xAxisPropsCollapsed)}
+            label={xAxisLabel}
           />
-          <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill="#3b82f6" />
+          <YAxis 
+            {...(expanded ? axisProps : yAxisPropsCollapsed)}
+            label={yAxisLabel}
+          />
+          {expanded && <Tooltip {...tooltipProps} />}
+          <Bar 
+            dataKey="value" 
+            fill={expanded ? "#3b82f6" : "#2563eb"}
+            stroke={expanded ? "#3b82f6" : "#1e40af"}
+            strokeWidth={expanded ? 0 : 1.5}
+            radius={expanded ? [4, 4, 0, 0] : [2, 2, 0, 0]}
+          />
         </BarChart>
       );
     } else if (graph.type === 'area') {
       return (
         <AreaChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="date" {...axisProps} />
-          <YAxis 
-            {...axisProps}
-            label={graph.y_label ? { 
-              value: graph.y_label, 
-              angle: -90, 
-              position: 'insideLeft', 
-              style: { fontSize: '10px', fill: '#64748b' } 
-            } : null}
+          {expanded && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
+          <XAxis 
+            dataKey="date" 
+            {...(expanded ? axisProps : xAxisPropsCollapsed)}
+            label={xAxisLabel}
           />
-          <Tooltip {...tooltipProps} />
+          <YAxis 
+            {...(expanded ? axisProps : yAxisPropsCollapsed)}
+            label={yAxisLabel}
+          />
+          {expanded && <Tooltip {...tooltipProps} />}
           <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
         </AreaChart>
       );
     } else if (graph.type === 'column') {
       return (
         <BarChart {...commonProps} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          {expanded && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
           <XAxis 
             type="number"
-            {...axisProps}
-            label={graph.x_label ? { 
+            {...(expanded ? axisProps : xAxisPropsCollapsed)}
+            label={expanded && graph.x_label ? { 
               value: graph.x_label, 
               position: 'insideBottom', 
               offset: -5, 
@@ -123,21 +154,32 @@ export default function GraphChart({ graph, expanded }) {
           <YAxis 
             type="category"
             dataKey="date"
-            {...axisProps}
-            width={60}
+            {...(expanded ? axisProps : yAxisPropsCollapsed)}
+            width={expanded ? 60 : 40}
           />
-          <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill="#3b82f6" />
+          {expanded && <Tooltip {...tooltipProps} />}
+          <Bar 
+            dataKey="value" 
+            fill={expanded ? "#3b82f6" : "#2563eb"}
+            stroke={expanded ? "#3b82f6" : "#1e40af"}
+            strokeWidth={expanded ? 0 : 1.5}
+            radius={expanded ? [4, 4, 0, 0] : [2, 2, 0, 0]}
+          />
         </BarChart>
       );
     } else {
       return (
         <LineChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="date" {...axisProps} />
-          <YAxis {...axisProps} />
-          <Tooltip {...tooltipProps} />
-          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
+          {expanded && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
+          <XAxis 
+            dataKey="date" 
+            {...(expanded ? axisProps : xAxisPropsCollapsed)}
+          />
+          <YAxis 
+            {...(expanded ? axisProps : yAxisPropsCollapsed)}
+          />
+          {expanded && <Tooltip {...tooltipProps} />}
+          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={expanded ? 2 : 2.5} />
         </LineChart>
       );
     }
