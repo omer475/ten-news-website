@@ -6,9 +6,9 @@ import dynamic from 'next/dynamic';
 
 // Dynamically import GraphChart to avoid SSR issues
 const GraphChart = dynamic(() => import('../components/GraphChart'), {
-  ssr: false,
+    ssr: false,
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
-});
+  });
 
 export default function Home() {
   const [stories, setStories] = useState([]);
@@ -107,11 +107,29 @@ export default function Home() {
 
   // Helper function to count available components for a story
   const getAvailableComponentsCount = (story) => {
+    // Use components array if available (new system)
+    if (story.components && Array.isArray(story.components)) {
+      // Filter to only count components that actually have data
+      return story.components.filter(type => {
+        switch (type) {
+          case 'details':
+            return story.details && story.details.length > 0;
+          case 'timeline':
+            return story.timeline && story.timeline.length > 0;
+          case 'graph':
+            return story.graph;
+          default:
+            return false;
+        }
+      }).length;
+    }
+    
+    // Fallback for old articles without components array (exclude map)
     let count = 0;
     if (story.details && story.details.length > 0) count++;
     if (story.timeline && story.timeline.length > 0) count++;
-    if (story.map) count++;
     if (story.graph) count++;
+    // Map is disabled, don't count it
     return count;
   };
 
@@ -132,7 +150,7 @@ export default function Home() {
           case 'graph':
             return story.graph;
           default:
-            return false;
+        return false;
         }
       });
       console.log(`✅ Filtered components for this story:`, filtered);
@@ -348,7 +366,7 @@ export default function Home() {
       stories.forEach((story, index) => {
         // Set default to details if available, otherwise timeline, otherwise map, otherwise graph
         if (story.details && story.details.length > 0) {
-          newShowDetails[index] = true;
+              newShowDetails[index] = true;
         } else if (story.timeline && story.timeline.length > 0) {
           setShowTimeline(prev => ({ ...prev, [index]: true }));
         } else if (story.map) {
@@ -3484,8 +3502,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                   paddingRight: '8px',
                                   paddingLeft: '0px',
                                   paddingTop: '0px',
-                                  display: 'flex',
-                                  flexDirection: 'column',
+                              display: 'flex',
+                              flexDirection: 'column',
                                   justifyContent: 'flex-start'
                                 }}>
                                   {/* Graph Title */}
@@ -3514,41 +3532,41 @@ The article concludes with forward-looking analysis and what readers should watc
                                         height: '100%',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
+                              justifyContent: 'center',
                                         color: '#64748b',
                                         fontSize: '12px'
-                                      }}>
+                            }}>
                                         No graph data available
                                       </div>
                                     )}
                                   </div>
                                 </div>
-                              </div>
-                            );
+                            </div>
+                          );
                           } else if (showTimeline[index]) {
                             // Show Timeline
                             return story.timeline && (
-                              <div 
-                                className="timeline-container-desktop"
-                                style={{
-                                  position: 'absolute',
-                                  bottom: '0',
-                                  left: '0',
-                                  right: '0',
-                                  height: expandedTimeline[index] ? '300px' : '85px',
-                                  maxHeight: expandedTimeline[index] ? '300px' : '85px',
-                                  transition: 'height 0.3s ease-in-out',
-                                  background: '#ffffff',
-                                  backdropFilter: 'none',
-                                  WebkitBackdropFilter: 'none',
-                                  border: 'none',
-                                  borderRadius: '8px',
-                                  padding: '6px 20px 12px 20px',
-                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                  minHeight: '85px',
-                                  zIndex: '10',
+                            <div 
+                              className="timeline-container-desktop"
+                              style={{
+                                position: 'absolute',
+                                bottom: '0',
+                                left: '0',
+                                right: '0',
+                                height: expandedTimeline[index] ? '300px' : '85px',
+                                maxHeight: expandedTimeline[index] ? '300px' : '85px',
+                                transition: 'height 0.3s ease-in-out',
+                                background: '#ffffff',
+                                backdropFilter: 'none',
+                                WebkitBackdropFilter: 'none',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 20px 12px 20px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                minHeight: '85px',
+                                zIndex: '10',
                                   overflow: expandedTimeline[index] ? 'visible' : 'hidden'
-                                }}>
+                              }}>
                                {/* Expand Icon */}
                                <div 
                                  data-expand-icon="true"
@@ -3668,45 +3686,45 @@ The article concludes with forward-looking analysis and what readers should watc
                           } else if (showMap[index]) {
                             // Show Map
                             return story.map && (
-                              <div 
-                                className="map-container"
-                                style={{
-                                  position: 'absolute',
-                                  bottom: '0',
-                                  left: '0',
-                                  right: '0',
-                                  height: '200px',
-                                  background: '#ffffff',
-                                  borderRadius: '8px',
-                                  padding: '12px',
-                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                  zIndex: '10',
+                            <div 
+                              className="map-container"
+                              style={{
+                                position: 'absolute',
+                                bottom: '0',
+                                left: '0',
+                                right: '0',
+                                height: '200px',
+                                background: '#ffffff',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                zIndex: '10',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                flexDirection: 'column'
+                              }}>
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#1e293b',
+                                marginBottom: '8px'
+                              }}>📍 Location Map</div>
+                              <div style={{
+                                    width: '100%',
+                                height: '150px',
+                                background: '#f8fafc',
+                                    borderRadius: '6px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                  flexDirection: 'column'
-                                }}>
-                                <div style={{
-                                  fontSize: '14px',
-                                  fontWeight: '600',
-                                  color: '#1e293b',
-                                  marginBottom: '8px'
-                                }}>📍 Location Map</div>
-                                <div style={{
-                                      width: '100%',
-                                  height: '150px',
-                                  background: '#f8fafc',
-                                      borderRadius: '6px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                  border: '1px solid #e2e8f0',
-                                  color: '#64748b',
-                                  fontSize: '12px'
-                                }}>
-                                  Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
-                                    </div>
-                              </div>
+                                border: '1px solid #e2e8f0',
+                                color: '#64748b',
+                                fontSize: '12px'
+                              }}>
+                                Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
+                                  </div>
+                            </div>
                             );
                           } else if (showDetails[index]) {
                             // Show Details
@@ -3722,15 +3740,15 @@ The article concludes with forward-looking analysis and what readers should watc
                               
                               return (
                                 <div key={i} className="news-detail-item" style={{ 
-                                  display: 'flex',
+                                      display: 'flex',
                                   flexDirection: 'column',
-                                  justifyContent: 'center',
+                                      justifyContent: 'center',
                                   color: '#111827'
-                                }}>
+                                    }}>
                                   <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
                                   <div className="news-detail-value" style={{ color: getAdaptiveHighlightColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original) || '#111827' }}>{mainValue}</div>
                                   {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
-                                </div>
+                                    </div>
                               );
                             });
                           } else {
@@ -3755,9 +3773,9 @@ The article concludes with forward-looking analysis and what readers should watc
                             const handleClick = (type) => {
                               // Reset all states
                               setShowDetails(prev => ({ ...prev, [index]: false }));
-                              setShowTimeline(prev => ({ ...prev, [index]: false }));
-                              setShowMap(prev => ({ ...prev, [index]: false }));
-                              setShowGraph(prev => ({ ...prev, [index]: false }));
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                setShowMap(prev => ({ ...prev, [index]: false }));
+                                setShowGraph(prev => ({ ...prev, [index]: false }));
                               // Reset expanded states
                               setExpandedTimeline(prev => ({ ...prev, [index]: false }));
                               setExpandedGraph(prev => ({ ...prev, [index]: false }));
@@ -3768,10 +3786,10 @@ The article concludes with forward-looking analysis and what readers should watc
                                   setShowDetails(prev => ({ ...prev, [index]: true }));
                                   break;
                                 case 'timeline':
-                                  setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                setShowTimeline(prev => ({ ...prev, [index]: true }));
                                   break;
                                 case 'map':
-                                  setShowMap(prev => ({ ...prev, [index]: true }));
+                                setShowMap(prev => ({ ...prev, [index]: true }));
                                   break;
                                 case 'graph':
                                   setShowGraph(prev => ({ ...prev, [index]: true }));
@@ -3786,23 +3804,23 @@ The article concludes with forward-looking analysis and what readers should watc
                               (componentType === 'graph' && showGraph[index]);
                             
                             return (
-                              <div
+                            <div
                                 key={`${index}-${componentType}-${dotIndex}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                              onClick={(e) => {
+                                e.stopPropagation();
                                   handleClick(componentType);
-                                }}
-                                style={{
-                                  width: '6px',
-                                  height: '6px',
-                                  borderRadius: '50%',
+                              }}
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
                                   background: isActive 
-                                    ? 'rgba(0, 0, 0, 0.6)' 
-                                    : 'rgba(0, 0, 0, 0.2)',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease'
-                                }}
-                              />
+                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  : 'rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            />
                             );
                           })}
                         </div>
