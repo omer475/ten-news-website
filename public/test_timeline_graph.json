@@ -1,0 +1,162 @@
+{
+  "status": "ok",
+  "totalResults": 3,
+  "articles": [
+    {
+      "rank": 1,
+      "id": "test-article-1",
+      "title": "**Federal Reserve** raises interest rates to **5.5 percent**",
+      "detailed_text": "The Federal Reserve announced a significant interest rate increase, bringing the federal funds rate to 5.5 percent, the highest level in over two decades. This decision comes amid persistent inflation concerns and a strong labor market. Fed Chair Jerome Powell indicated that further rate adjustments may be necessary depending on economic data. The move affects millions of consumers and businesses, with mortgage rates and credit card interest expected to rise. Financial markets reacted cautiously, with stock indices showing mixed responses. Economists are divided on whether this marks the peak of the rate-hiking cycle or if additional increases are needed to combat inflation.",
+      "summary_bullets": [
+        "**Fed** raises rates to **5.5%**, highest in **22 years**",
+        "Decision driven by **inflation** concerns and **strong** job market",
+        "**Mortgage rates** and **credit costs** expected to increase",
+        "**Markets** show mixed reaction to rate announcement"
+      ],
+      "url": "https://example.com/fed-rates",
+      "urlToImage": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800",
+      "source": "Financial Times",
+      "category": "Economy",
+      "emoji": "📈",
+      "details": [
+        "Previous rate: 5.25%",
+        "Inflation target: 2%",
+        "Current inflation: 3.2%"
+      ],
+      "timeline": [
+        {
+          "date": "Mar 2022",
+          "event": "Fed begins rate hike cycle from near-zero levels"
+        },
+        {
+          "date": "Jul 2023",
+          "event": "Rates reach 5.25%, highest since 2001"
+        },
+        {
+          "date": "Dec 2024",
+          "event": "Next FOMC meeting scheduled to review policy"
+        }
+      ],
+      "graph": {
+        "type": "line",
+        "title": "Federal Funds Rate 2020-2024",
+        "data": [
+          { "date": "2020-03", "value": 0.25 },
+          { "date": "2021-03", "value": 0.25 },
+          { "date": "2022-03", "value": 0.50 },
+          { "date": "2022-07", "value": 2.50 },
+          { "date": "2023-01", "value": 4.50 },
+          { "date": "2023-07", "value": 5.25 },
+          { "date": "2024-01", "value": 5.50 }
+        ],
+        "y_label": "Interest Rate (%)",
+        "x_label": "Date"
+      },
+      "components": ["graph", "timeline"],
+      "published_at": "2024-01-15T10:00:00Z",
+      "added_at": "2024-01-15T10:00:00Z",
+      "final_score": 950
+    },
+    {
+      "rank": 2,
+      "id": "test-article-2",
+      "title": "**European Central Bank** pauses rate hikes after **10 consecutive** increases",
+      "detailed_text": "The European Central Bank announced a pause in its interest rate hiking cycle, marking the first time in over a year that rates have remained unchanged. The decision comes after 10 consecutive rate increases, bringing the main refinancing rate to 4.5 percent. ECB President Christine Lagarde cited slowing inflation and weakening economic growth as key factors in the decision. The pause provides relief to businesses and consumers across the eurozone, though analysts warn that rates may need to remain elevated for an extended period. The decision affects 340 million people across 20 eurozone countries.",
+      "summary_bullets": [
+        "**ECB** pauses rate hikes after **10 consecutive** increases",
+        "Main rate holds at **4.5%** after **18 months** of increases",
+        "Decision affects **340 million** people across **20 countries**",
+        "**Inflation** slowing but remains above **2%** target"
+      ],
+      "url": "https://example.com/ecb-rates",
+      "urlToImage": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800",
+      "source": "Reuters",
+      "category": "Economy",
+      "emoji": "💶",
+      "details": [
+        "Current rate: 4.5%",
+        "Previous increase: Oct 2023",
+        "Inflation rate: 2.9%"
+      ],
+      "timeline": [
+        {
+          "date": "Jul 2022",
+          "event": "ECB begins rate hike cycle with first increase in 11 years"
+        },
+        {
+          "date": "Mar 2023",
+          "event": "ECB raises rates to 3.5% amid inflation concerns"
+        },
+        {
+          "date": "Oct 2023",
+          "event": "Tenth consecutive rate increase brings rate to 4.5%"
+        }
+      ],
+      "graph": {
+        "type": "line",
+        "title": "ECB Interest Rates 2022-2024",
+        "data": [
+          { "date": "2022-07", "value": 0.50 },
+          { "date": "2022-09", "value": 1.25 },
+          { "date": "2022-12", "value": 2.50 },
+          { "date": "2023-03", "value": 3.50 },
+          { "date": "2023-07", "value": 4.25 },
+          { "date": "2023-10", "value": 4.50 },
+          { "date": "2024-01", "value": 4.50 }
+        ],
+        "y_label": "Interest Rate (%)",
+        "x_label": "Date"
+      },
+      "components": ["timeline", "graph"],
+      "published_at": "2024-01-14T09:00:00Z",
+      "added_at": "2024-01-14T09:00:00Z",
+      "final_score": 920
+    },
+    {
+      "rank": 3,
+      "id": "test-article-3",
+      "title": "**Stock market** reaches new **all-time high** as tech stocks surge",
+      "detailed_text": "Major stock indices reached record highs as technology stocks led a broad market rally. The S&P 500 closed above 5,000 for the first time, while the NASDAQ gained over 2 percent. Strong earnings reports from major tech companies and optimism about artificial intelligence drove investor sentiment. The rally was broad-based, with gains across multiple sectors including healthcare, finance, and consumer goods. Analysts attribute the surge to strong corporate earnings, declining inflation expectations, and renewed confidence in economic growth.",
+      "summary_bullets": [
+        "**S&P 500** reaches **5,000** for first time in history",
+        "**Tech stocks** lead rally with **2%+ gains** on NASDAQ",
+        "**Strong earnings** and **AI optimism** drive investor sentiment",
+        "**Broad-based** gains across **multiple sectors**"
+      ],
+      "url": "https://example.com/stock-market",
+      "urlToImage": "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800",
+      "source": "Bloomberg",
+      "category": "Business",
+      "emoji": "📊",
+      "details": [
+        "S&P 500: 5,012",
+        "NASDAQ gain: 2.3%",
+        "Volume: 4.2B shares"
+      ],
+      "graph": {
+        "type": "line",
+        "title": "S&P 500 Index 2023-2024",
+        "data": [
+          { "date": "2023-01", "value": 4100 },
+          { "date": "2023-04", "value": 4150 },
+          { "date": "2023-07", "value": 4550 },
+          { "date": "2023-10", "value": 4300 },
+          { "date": "2024-01", "value": 5012 }
+        ],
+        "y_label": "Index Value",
+        "x_label": "Date"
+      },
+      "components": ["graph", "details"],
+      "published_at": "2024-01-13T16:00:00Z",
+      "added_at": "2024-01-13T16:00:00Z",
+      "final_score": 880
+    }
+  ],
+  "generatedAt": "2024-01-15T10:00:00Z",
+  "displayTimestamp": "Monday, January 15, 2024",
+  "digest_date": "January 15, 2024",
+  "dailyGreeting": "Today Essential Global News",
+  "readingTime": "3 articles",
+  "displayDate": "MONDAY, JANUARY 15, 2024",
+  "generatedAtUK": "2024-01-15T10:00:00Z"
+}

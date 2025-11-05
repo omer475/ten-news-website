@@ -86,487 +86,320 @@ def _fix_truncated_json(json_text: str) -> List[Dict]:
         else:
             raise ValueError(f"Could not extract any valid JSON objects: {e}")
 
-def score_news_articles_step1(articles: List[Dict], api_key: str) -> Dict:
+def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: int = 30, max_retries: int = 3) -> Dict:
     """
     Step 1: Score news articles using Gemini API
     
     Args:
         articles: list of dicts with 'title', 'source', 'text' (optional), 'url'
         api_key: Google AI API key
+        batch_size: Number of articles to process per API call (default: 30)
+        max_retries: Maximum retry attempts for rate limiting (default: 3)
     
     Returns:
         dict with 'approved' and 'filtered' lists
     """
     
-    # FILTER: Remove articles without images before scoring
-    articles_with_images = []
-    filtered_count = 0
-    
-    for article in articles:
-        # Check for image in various fields (image_url, urlToImage, image)
-        has_image = (
-            article.get('image_url') or 
-            article.get('urlToImage') or 
-            article.get('image')
-        )
-        
-        if has_image and has_image.strip():  # Ensure it's not empty string
-            articles_with_images.append(article)
-        else:
-            filtered_count += 1
-    
-    if filtered_count > 0:
-        print(f"🖼️  Filtered out {filtered_count} articles without images (not scoring)")
-    
-    # If no articles with images, return empty result
-    if not articles_with_images:
-        print("❌ No articles with images to score")
-        return {
-            'approved': [],
-            'filtered': articles
-        }
-    
-    # Use filtered articles for scoring
-    articles = articles_with_images
-    
     # Use gemini-2.0-flash-exp as gemini-2.5-flash may not be available yet
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     
-    system_prompt = """You are a news curator for people who want to stay informed about the world without wasting time on fluff. Your readers are intelligent, busy people who want to know what's actually happening - the kind of news they'd bring up in conversation or text to a friend saying "Did you see this?!"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-YOUR MINDSET: What We're Looking For
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Think like someone scrolling through news at breakfast. They want to know:
-- What happened in the world TODAY that matters?
-- What surprising things did I not know that will make me say "wow"?
-- What should I know so I'm not out of the loop?
-- What's actually interesting enough to tell someone about?
-
-We want EVENTS and SURPRISES, not analysis and trends.
-We want NEWS, not think pieces.
-We want the interesting and important, not the boring but "proper."
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THE THREE CORE QUESTIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-For every article, ask yourself:
-
-1. "DID SOMETHING HAPPEN?"
-   We want: A thing occurred. An action was completed. The world changed today.
-   We don't want: Descriptions of ongoing situations, trends, or how things work.
-   
-   Think: Is this answering "what happened?" or "what's the situation?"
-   
-   ✅ GOOD: "Congress passes bill," "Earthquake strikes," "Company announces"
-   ✅ GOOD: "Study reveals exercise deadlier than smoking" (discovery event)
-   ✅ GOOD: "401k limits unchanged 40 years" (if revealing surprising fact)
-   ❌ BAD: "ETFs gaining popularity" (trend, not event)
-   ❌ BAD: "Bank warns market near peak" (prediction, not event)
-   ❌ BAD: "Schools implementing programs" (ongoing, not event)
-
-2. "WOULD I ACTUALLY TELL SOMEONE ABOUT THIS?"
-   Imagine you're at coffee with a friend. Would you bring this up?
-   Would you text someone "Did you see this?!"
-   Would this be interesting to someone who's not a specialist?
-   
-   Think: Is this genuinely interesting or just "supposed to be important"?
-   
-   ✅ GOOD: "Not exercising is deadlier than smoking" (shocking, shareable)
-   ✅ GOOD: "401k limits frozen since Reagan era" (surprising fact)
-   ✅ GOOD: "World Cup final decided by historic penalty"
-   ❌ BAD: "Active ETFs shift market share" (only traders care)
-   ❌ BAD: "Technical indicators trigger" (boring, niche)
-   ❌ BAD: "Store fires one volunteer" (who cares?)
-
-3. "DOES THIS MATTER TO REGULAR PEOPLE?"
-   Not just experts, not just one region, not just one person.
-   Does this affect millions? Is this globally significant?
-   Would this come up in general conversation or just specialist forums?
-   
-   Think: Who actually needs to know this?
-   
-   ✅ GOOD: Fed interest rate decision (affects everyone's money)
-   ✅ GOOD: Major earthquake in populated area (human impact)
-   ✅ GOOD: War breaks out, peace treaty signed (global significance)
-   ❌ BAD: One person fired from store (local, individual)
-   ❌ BAD: Technical market analysis (niche audience)
-   ❌ BAD: Regional program launch (not broadly relevant)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-UNDERSTANDING WHAT WE'RE SEEING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Before you score anything, understand what TYPE of content this is:
-
-IS THIS NEWS OR SOMETHING ELSE?
-
-NEWS = Something happened
-- "Congress votes," "Treaty signed," "Disaster strikes," "Record broken"
-- Reports a completed action with a clear outcome
-- There's a "before" and "after"
-
-NOT NEWS = Everything else
-- ANALYSIS: "What this means," "Why X matters," "Experts explain"
-- TRENDS: "X is growing," "Shift toward Y," "Increasing popularity"
-- PREDICTIONS: "Markets may fall," "Analysts warn," "Could lead to"
-- FEATURES: "How X works," "Behind the scenes," "The story of"
-- OPINIONS: "We should," "X is wrong," editorials
-
-Rule: Only approve NEWS. Filter everything else.
-
-IS THIS ABOUT AN EVENT OR A SITUATION?
-
-EVENT = Something that happened at a specific time
-- "Hurricane hits Miami," "Bill passes Senate," "Company files bankruptcy"
-- You can point to when it happened
-- It's timely, it's breaking, it's new
-
-SITUATION = Ongoing state or gradual change
-- "Markets showing nervousness" (continuous state)
-- "Trend toward passive investing" (gradual shift)
-- "Programs addressing workforce gaps" (ongoing effort)
-- No specific moment when it happened
-
-Rule: Strongly favor EVENTS over SITUATIONS.
-
-IS THIS GLOBAL OR LOCAL?
-
-GLOBAL = Affects millions, national/international significance
-- Major disasters, elections, wars, economic decisions
-- Things everyone should know
-- Would be discussed nationwide/worldwide
-
-LOCAL = Affects few people, regional/individual significance
-- One person's employment story
-- Single store incident
-- Regional programs without broad impact
-- Only locals would care
-
-Rule: Almost always filter LOCAL unless it's extraordinary.
-
-IS THIS SURPRISING OR EXPECTED?
-
-SURPRISING = Makes you think "Wait, really?!" or "I didn't know that!"
-- Counterintuitive findings
-- Shocking comparisons
-- Unexpected outcomes
-- Hidden truths revealed
-
-EXPECTED = "Yeah, that makes sense" or "Obviously"
-- Confirming what we know
-- Predictable outcomes
-- Common knowledge
-
-Rule: Heavily favor SURPRISING over EXPECTED.
-
-IS THIS BREAKING OR EVERGREEN?
-
-BREAKING = Time-sensitive, just happened, urgent
-- "Today," "tonight," "just announced"
-- Recent past tense: "struck," "passed," "announced"
-- Wouldn't make sense to read next week
-
-EVERGREEN = Could run anytime, background, context
-- "Have been," "are continuing," "ongoing"
-- No specific time element
-- Feature stories, explainers
-
-Rule: Strongly favor BREAKING over EVERGREEN.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-WHAT TO FILTER (Understanding, Not Keywords)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ALWAYS FILTER these types - understand what they really are:
-
-1. MARKET PREDICTIONS & ANALYST OPINIONS
-   What they are: People guessing about the future based on indicators
-   Why filter: Nothing actually happened, just someone's opinion
-   Example: "Bank warns S&P 500 near peak" - No event, just forecast
-   
-2. TREND PIECES & MARKET SHIFTS
-   What they are: Describing gradual changes over time
-   Why filter: No specific event, just ongoing movement
-   Example: "ETFs gaining popularity" - When did this happen? It didn't.
-   
-3. FEATURE STORIES & PROGRAM DESCRIPTIONS
-   What they are: Background pieces about initiatives or how things work
-   Why filter: Not breaking news, could run anytime
-   Example: "Schools address gap through programs" - When did this start? Who cares?
-   
-4. LOCAL INCIDENTS WITH ONE PERSON/BUSINESS
-   What they are: Individual stories without broader significance
-   Why filter: Only affects a tiny group, not newsworthy to general audience
-   Example: "Store fires volunteer" - Affects one person. Why is this news?
-   
-5. RETROSPECTIVE ANALYSIS & DOCUMENTARIES
-   What they are: Looking back at past events
-   Why filter: Nothing new happened today, just reviewing history
-   Example: "Documentary reveals details" - Old event, no impact now
-   
-6. TECHNICAL/NICHE UPDATES
-   What they are: Industry-specific information
-   Why filter: Only specialists care, not general interest
-   Example: "Technical indicators trigger" - Who is this for?
-   
-7. ONGOING SITUATIONS WITHOUT NEW DEVELOPMENTS
-   What they are: Status updates on things we already know
-   Why filter: Repetitive, no new information
-   Example: "Day 347 of conflict" - We know. What's new?
-   
-8. OLD NEWS (>7 days)
-   What they are: Things that happened too long ago
-   Why filter: Not timely, not relevant to today's conversation
-   Example: "Blue Jays won World Series in 1993" - Why are we talking about this now?
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SPECIAL CASES: When To Approve Borderline Content
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-STUDIES & RESEARCH
-Mostly filter these UNLESS they're genuinely shocking/surprising:
-
-✅ Approve if: "Did you know?!" quality
-- "Not exercising deadlier than smoking" (shocking comparison)
-- "Coffee extends life by 30%" (surprising benefit)
-- "New organ discovered in human body" (fundamental discovery)
-
-❌ Filter if: Confirming what we know
-- "Study shows exercise is healthy" (duh)
-- "Research links smoking to cancer" (we know)
-- "Paper finds small improvement in X" (incremental)
-
-POLITICAL NEWS
-Mostly filter UNLESS it's a final, completed action:
-
-✅ Approve if: Something actually passed/happened
-- "Congress passes major healthcare reform"
-- "President impeached by House"
-- "Prime minister resigns"
-
-❌ Filter if: Procedural or theatrical
-- "Senator introduces bill" (might not pass)
-- "Politicians debate budget" (theater)
-- "President gives speech" (no action taken)
-
-SPORTS NEWS
-Mostly filter UNLESS it's a major final/record:
-
-✅ Approve if: Championship or historic moment
-- "World Cup final"
-- "Olympics opening ceremony"
-- "100-year record broken"
-
-❌ Filter if: Regular games or minor updates
-- "Team advances to next round" (expected)
-- "Player signs contract" (business)
-
-BUSINESS/ECONOMY
-Approve if broadly impactful, filter if niche:
-
-✅ Approve if: Affects millions of people
-- "Fed raises interest rates"
-- "Major bank fails"
-- "Inflation hits 40-year high"
-
-❌ Filter if: Industry-specific or analytical
-- "ETF market share shifts" (niche)
-- "Analysts predict recession" (prediction)
-- "Company reports earnings in line with estimates" (expected)
-
-INTERESTING FACTS
-Can approve IF genuinely fascinating:
-
-✅ Approve if: Surprising revelation people didn't know
-- "401k limits unchanged for 40 years" (shocking policy fact)
-- Must still be NEWS (revealed today), not encyclopedia entry
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-YOUR APPROACH TO SCORING
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Think of it this way:
-
-You're curating news for your intelligent friend who's busy. They trust you to:
-- Show them what actually HAPPENED today (events, not analysis)
-- Surprise them with fascinating things they didn't know
-- Keep them informed on major world events
-- Skip the boring procedural stuff
-- Skip the niche industry content
-- Skip the one-person local stories
-- Skip the predictions and warnings
-- Skip the features and explainers
-
-SCORE 700-1000 (APPROVE) when:
-- Something actually happened (event, not trend)
-- It's breaking news (recent, timely)
-- It's surprising OR broadly important (preferably both)
-- People would actually talk about this
-- General audience cares (not just specialists)
-
-SCORE BELOW 700 (FILTER) when:
-- Nothing actually happened (trend/analysis/prediction/feature)
-- It's old news (>7 days)
-- It's boring even if "important" (procedural political theater)
-- It's local/individual story without broad impact
-- It's niche content for specialists only
-- It's opinion/analysis rather than news
-- Nobody would bring this up in conversation
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SCORING FACTORS (Score holistically, not mechanically)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Consider these elements and give a single holistic score 0-1000:
-
-1. RECENCY & TIMELINESS (How recent is this?)
-   - Just happened today = very high
-   - Yesterday/this week = high
-   - Last week = moderate
-   - >7 days = low
-   - Old news (months/years) = very low
-
-2. SURPRISE & WOW FACTOR (Would people say "Really?!")
-   - Mind-blowing/shocking = very high
-   - Very surprising = high
-   - Somewhat interesting = moderate
-   - Expected/predictable = low
-   - Obvious = very low
-
-3. IMPACT & SCALE (How many people affected?)
-   - Hundreds of millions = very high
-   - Tens of millions = high
-   - Millions = moderate
-   - Thousands = low
-   - Individual/local = very low
-
-4. CONVERSATION-WORTHINESS (Would people discuss this?)
-   - Everyone will talk about this = very high
-   - Likely to be discussed = high
-   - Might come up = moderate
-   - Only specialists would discuss = low
-   - Nobody would mention = very low
-
-5. EDUCATIONAL VALUE (Does this teach something new?)
-   - Fundamental new knowledge = very high
-   - Significant learning = high
-   - Moderately educational = moderate
-   - Minimal new info = low
-   - No educational value = very low
-
-Think about ALL of these together. Don't calculate mechanically - use judgment.
-A breaking event that's boring but important might score 700.
-A fascinating study that's surprising might score 850.
-A local story about one person might score 300.
-An analyst prediction might score 400.
-
-TARGET: Approve roughly 10% of articles (only the truly good stuff).
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SOURCE CREDIBILITY (Factor this in)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Give more weight to quality sources:
-
-HIGH CREDIBILITY (trust them):
-Reuters, AP, AFP, BBC, CNN, Al Jazeera, NPR, New York Times, Wall Street Journal, Washington Post, The Guardian, Financial Times, Bloomberg, The Economist, Nature, Science
-
-MODERATE CREDIBILITY (generally reliable):
-Established national outlets, quality regional papers, reputable specialized sources
-
-LOW CREDIBILITY (be skeptical):
-Blogs, aggregators, questionable sources
-
-ZERO CREDIBILITY (ignore):
-Tabloids, conspiracy sites, satirical sources
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CATEGORY ASSIGNMENT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Choose ONE category that best fits:
-- Politics
-- Economy  
-- International
-- Health
-- Science
-- Technology
-- Environment
-- Disaster
-- Sports
-- Culture
-- Other
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-OUTPUT FORMAT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Return ONLY a JSON array with this structure:
+    # Process articles in batches to avoid rate limits
+    if len(articles) > batch_size:
+        print(f"📦 Processing {len(articles)} articles in batches of {batch_size}...")
+        all_approved = []
+        all_filtered = []
+        
+        for i in range(0, len(articles), batch_size):
+            batch = articles[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            total_batches = (len(articles) + batch_size - 1) // batch_size
+            
+            print(f"  Processing batch {batch_num}/{total_batches} ({len(batch)} articles)...")
+            
+            try:
+                batch_result = _process_batch(batch, url, api_key, max_retries)
+                all_approved.extend(batch_result['approved'])
+                all_filtered.extend(batch_result['filtered'])
+                
+                # Delay between batches to avoid rate limits (except for last batch)
+                if i + batch_size < len(articles):
+                    time.sleep(2)  # 2 second delay between batches
+                    
+            except Exception as e:
+                print(f"  ❌ Batch {batch_num} failed: {e}")
+                # Mark batch articles as filtered on error
+                for article in batch:
+                    article['category'] = 'Other'
+                    article['score'] = 0
+                    article['status'] = 'FILTERED'
+                all_filtered.extend(batch)
+        
+        return {
+            "approved": all_approved,
+            "filtered": all_filtered
+        }
+    else:
+        # Single batch - use existing logic
+        return _process_batch(articles, url, api_key, max_retries)
+
+
+def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: int = 3) -> Dict:
+    """
+    Process a single batch of articles with retry logic for rate limiting
+    
+    Args:
+        articles: Batch of articles to process
+        url: Gemini API URL
+        api_key: Google AI API key
+        max_retries: Maximum retry attempts
+    
+    Returns:
+        dict with 'approved' and 'filtered' lists
+    """
+    
+    system_prompt = """You are a news curator AI for a global news application. Your job is to score news articles from 0-1000 based on whether they are "must-know" news that people need to stay informed about the world.
+
+CORE MISSION: Surface only essential news - information people NEED to know to be informed citizens and understand major world events. Quality and significance over quantity.
+
+MUST-KNOW NEWS DEFINITION:
+
+News that people cannot afford to miss because it:
+
+- Directly impacts their lives (economy, health, safety, policy, rights)
+
+- Represents major world events everyone should know (wars, elections, disasters, treaties)
+
+- Involves significant institutional actions (governments, central banks, major organizations)
+
+- Has historical importance (will be remembered, creates lasting change)
+
+- Is essential for understanding the current state of the world
+
+NOT must-know: Interesting stories, nice-to-know facts, entertainment, minor updates, incremental developments without major new information.
+
+EVALUATION CRITERIA:
+
+1. SIGNIFICANCE & IMPACT
+
+Judge the real-world importance:
+
+- Does this affect millions of people's lives directly?
+
+- Is this a major event that reshapes politics, economy, or society?
+
+- Does this involve critical government/institutional actions?
+
+- Will this be historically significant?
+
+- Do citizens NEED this information?
+
+Breaking news indicators (analyze meaning, not just keywords):
+
+- Major events that just happened: elections decided, leaders resign, disasters strike, wars begin/end, major attacks occur, policies passed, treaties signed
+
+- Not breaking: scheduled events, ongoing situations without major development, analysis pieces, future predictions
+
+- Language patterns: look for present/past tense completion ("announces," "passes," "strikes," "dies") NOT speculation ("could," "may," "expected to")
+
+2. SOURCE CREDIBILITY
+
+Tier 1 (Highest): Reuters, AP, AFP, BBC, CNN, Al Jazeera, NPR, New York Times, Wall Street Journal, Washington Post, The Guardian, Financial Times, The Economist
+
+Tier 2 (Strong): Established national outlets with journalism standards, quality specialized sources (Nature, Science, Bloomberg, Politico, Axios, Foreign Affairs)
+
+Tier 3 (Acceptable): Credible regional outlets, reputable digital publications
+
+Eliminate: Tabloids, blogs, unverified sources, conspiracy sites, sponsored content, satirical sources
+
+3. TITLE QUALITY
+
+Must be clear, specific, informative, and professional:
+
+- Explains what happened with details (names, numbers, locations, outcomes)
+
+- Neutral factual tone without emotional manipulation
+
+- Complete information, not a teaser or clickbait hook
+
+- Grammatically correct
+
+- Specific proper nouns (not vague references)
+
+Eliminate: Clickbait, vague hooks, excessive caps, manipulative language, unclear references
+
+4. CONTENT FOCUS
+
+High priority (core must-know):
+
+- Politics: Elections, major legislation, government crises, policy changes
+
+- Economy: Markets, inflation, employment, major corporate news, economic policy, trade
+
+- International: Wars, diplomacy, conflicts, refugee crises, treaties
+
+- Health: Pandemics, major health crises, breakthrough treatments, public health policy
+
+- Science/Tech: Major breakthroughs, significant AI developments, space milestones, major cybersecurity threats
+
+- Environment: Major climate events, environmental disasters, significant climate policy
+
+- Security: Terrorism, major societal crime, significant cybersecurity breaches
+
+Lower priority (only if truly exceptional):
+
+- Sports: Only major finals (World Cup final, Olympics opening/closing, Super Bowl, Champions League final) or historic achievements
+
+- Entertainment: Only deaths of major cultural figures or historic cultural moments with broad societal impact
+
+- Lifestyle/Culture: Generally excluded unless societally transformative
+
+- Celebrity: Excluded unless broader significance (major philanthropy, important social issue involvement)
+
+5. ARTICLE TEXT ANALYSIS (if provided)
+
+When text snippet is available, use it to:
+
+- Distinguish breaking news from analysis/commentary
+
+- Detect if it's an update to ongoing story (only approve if MAJOR new development)
+
+- Identify clickbait disguised as news
+
+- Verify title accurately represents content
+
+- Assess depth and substance
+
+AUTOMATIC FILTERING - Score below 700:
+
+- Clickbait or manipulative headlines
+
+- Low credibility sources
+
+- Celebrity gossip, entertainment fluff, lifestyle features
+
+- Opinion pieces, editorials, commentary (unless about major must-know event)
+
+- Vague or unclear titles without substance
+
+- Minor updates to ongoing stories without major developments
+
+- "Analysis" or "Explainer" pieces (unless tied to breaking major news)
+
+- Unverified rumors or speculation
+
+- Promotional content or press releases
+
+- Extreme sensationalism
+
+- Hyper-local news without national/international significance
+
+- "Interesting but not essential" stories
+
+SCORING SCALE (Holistic Judgment):
+
+950-1000: CRITICAL MUST-KNOW
+
+- Major breaking news of global significance
+
+- Examples: War starts/ends, major natural disaster (thousands affected), pandemic declared, historic election results, major leader dies/resigns, significant terrorist attack, major economic crisis, peace treaty signed, major scientific breakthrough with immediate impact
+
+850-949: HIGHLY IMPORTANT
+
+- Significant breaking news or major developments
+
+- Examples: Major policy changes, significant economic news (interest rate decisions, major market moves), important international developments, major health announcements, significant court rulings, important legislative votes
+
+700-849: IMPORTANT MUST-KNOW
+
+- Solid news people should be aware of
+
+- Examples: Notable political developments, economic indicators, ongoing major story updates with substantial new information, significant regional events with broader implications, important appointments/departures
+
+500-699: DECENT BUT NOT ESSENTIAL (FILTERED)
+
+- Good reporting but not critical
+
+- Examples: Minor political news, corporate announcements without major impact, incremental updates, regional news without global significance
+
+Below 500: NOT MUST-KNOW (FILTERED)
+
+- Not essential, low quality, or violates filtering rules
+
+- Examples: Celebrity news, entertainment, sports (except major finals), lifestyle, opinion pieces, clickbait, minor stories, vague content
+
+SCORING PRINCIPLES:
+
+1. Impact over interest: Does this affect people's lives or is it just interesting?
+
+2. Significance test: Will this matter tomorrow? Next week? Next year?
+
+3. Need-to-know test: Must people know this to be informed citizens?
+
+4. Better to approve borderline important news (avoid false negatives) than filter potentially important news
+
+5. When in doubt between two scores, choose the higher one - missing important news is worse than showing slightly less important news
+
+6. Quality over quantity: Better to approve 5 essential stories than 30 mixed-quality stories
+
+SPECIAL SITUATIONS:
+
+- Major event dominance: Can approve multiple articles on same event if it's truly critical breaking news
+
+- Slow news day: Do NOT lower standards - maintain 700+ threshold
+
+- Conflicting reports: Approve if from credible sources covering developing essential story
+
+- Analysis of major events: Score based on the underlying event's importance, not the analysis itself
+
+- Updates to ongoing stories: Only approve if MAJOR new development, not incremental updates
+
+OUTPUT REQUIREMENTS:
+
+Return ONLY valid JSON array with exactly this structure for each article:
 
 [
+
   {
-    "title": "exact article title",
+
+    "title": "exact article title here",
+
     "score": 850,
-    "category": "Science",
-    "status": "APPROVED",
-    "score_breakdown": {
-      "recency": 180,
-      "surprise": 240,
-      "impact": 150,
-      "conversation": 210,
-      "educational": 90
-    }
+
+    "status": "APPROVED"
+
   },
+
   {
+
     "title": "another article title",
-    "score": 450,
-    "category": "Economy",
-    "status": "FILTERED",
-    "score_breakdown": {
-      "recency": 100,
-      "surprise": 50,
-      "impact": 120,
-      "conversation": 100,
-      "educational": 80
-    }
+
+    "score": 650,
+
+    "status": "FILTERED"
+
   }
+
 ]
 
 Rules:
+
 - status = "APPROVED" if score >= 700
+
 - status = "FILTERED" if score < 700
-- score_breakdown shows your thinking
-- Maintain input article order
-- Valid JSON only, no extra text
-- Every article needs a category
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REMEMBER YOUR MISSION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Maintain order of input articles
 
-You're helping people stay informed without wasting their time.
-Think: "Would I want to read this? Would I tell someone about this?"
-Be selective. Be ruthless with boring content.
-Only approve things that are genuinely newsworthy and interesting.
+- No explanations or additional fields
 
-Events > Analysis
-Breaking > Features  
-Surprising > Expected
-Global > Local
-News > Trends
-
-Target: 10% approval rate. Only the best stuff makes it through."""
+- Valid JSON only"""
 
     # Prepare articles for scoring
-    articles_text = "Score these news articles based on shareability and conversation-worthiness criteria. Return JSON array only.\n\nArticles to score:\n[\n"
+    articles_text = "Score these news articles based on must-know criteria. Return JSON array only.\n\nArticles to score:\n[\n"
     
     for article in articles:
         articles_text += f'  {{\n    "title": "{article["title"]}",\n    "source": "{article["source"]}",\n    "text": "{article.get("text", "")[:500]}",\n    "url": "{article["url"]}"\n  }},\n'
     
-    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), category (MANDATORY - choose from: Politics, Economy, International, Health, Science, Technology, Environment, Disaster, Sports, Culture, Other), status (APPROVED if >=700, FILTERED if <700), and score_breakdown."
+    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), and status (APPROVED if >=700, FILTERED if <700)."
     
     # Prepare request
     request_data = {
@@ -596,106 +429,150 @@ Target: 10% approval rate. Only the best stuff makes it through."""
         }
     }
     
-    try:
-        # Make API request
-        response = requests.post(url, json=request_data, timeout=120)
-        response.raise_for_status()
-        
-        # Parse response
-        result = response.json()
-        
-        # Extract text from response
-        if 'candidates' in result and len(result['candidates']) > 0:
-            candidate = result['candidates'][0]
-            
-            # Check for safety ratings or blocked content
-            if 'finishReason' in candidate:
-                finish_reason = candidate['finishReason']
-                if finish_reason != 'STOP':
-                    print(f"⚠️ Gemini response finished with reason: {finish_reason}")
-                    if finish_reason in ['SAFETY', 'RECITATION', 'OTHER']:
-                        print(f"❌ Content blocked or filtered by Gemini")
-                        if 'safetyRatings' in candidate:
-                            print(f"Safety ratings: {candidate['safetyRatings']}")
-                        return {"approved": [], "filtered": articles}
-            
-            if 'content' in candidate and 'parts' in candidate['content']:
-                response_text = candidate['content']['parts'][0]['text']
-            else:
-                print(f"❌ No content in candidate. Candidate structure: {json.dumps(candidate, indent=2)[:500]}")
-                raise ValueError("No valid content in Gemini response")
-        else:
-            print(f"❌ No candidates in result. Result structure: {json.dumps(result, indent=2)[:500]}")
-            raise ValueError("No valid response from Gemini API")
-        
-        # Parse JSON response with robust error handling
-        scored_articles = None
-        
+    # Retry logic for rate limiting
+    for attempt in range(max_retries):
         try:
-            scored_articles = json.loads(response_text)
-        except json.JSONDecodeError as e:
-            print(f"⚠️ JSON parse error: {e}")
-            print(f"Response text: {response_text[:500]}...")
+            # Make API request
+            response = requests.post(url, json=request_data, timeout=120)
             
-            # Try to fix truncated JSON response
-            try:
-                scored_articles = _fix_truncated_json(response_text)
-                print(f"✅ Fixed truncated JSON - recovered {len(scored_articles)} articles")
-            except Exception as fix_error:
-                print(f"❌ Could not fix JSON: {fix_error}")
-                print("❌ Could not parse JSON response")
-                return {"approved": [], "filtered": articles}
-        
-        # Separate approved and filtered articles
-        approved = []
-        filtered = []
-        
-        for scored_article in scored_articles:
-            # Find original article
-            original_article = None
-            for article in articles:
-                if article['title'] == scored_article['title']:
-                    original_article = article
-                    break
-            
-            if original_article:
-                # Add score, status, and category to original article
-                original_article['score'] = scored_article['score']
-                original_article['status'] = scored_article['status']
-                original_article['category'] = scored_article.get('category', 'Other')
-                
-                # Validate category
-                valid_categories = ['World', 'Politics', 'Business', 'Technology', 'Science', 'Health', 'Sports', 'Lifestyle']
-                if original_article['category'] not in valid_categories:
-                    print(f"⚠️ Invalid category '{original_article['category']}' for article: {original_article['title'][:50]}...")
-                    original_article['category'] = 'Other'  # Fallback
-                
-                if scored_article['status'] == 'APPROVED':
-                    approved.append(original_article)
+            # Handle rate limiting (429) with exponential backoff
+            if response.status_code == 429:
+                wait_time = (2 ** attempt) * 2  # Exponential backoff: 2s, 4s, 8s
+                if attempt < max_retries - 1:
+                    print(f"  ⚠️ Rate limited (429), waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                    time.sleep(wait_time)
+                    continue
                 else:
-                    filtered.append(original_article)
-        
-        return {
-            "approved": approved,
-            "filtered": filtered
-        }
-        
-    except requests.exceptions.RequestException as e:
-        print(f"❌ API request failed: {e}")
-        # Assign default categories when API fails
-        for article in articles:
-            article['category'] = 'Other'  # Default fallback
-            article['score'] = 0
-            article['status'] = 'FILTERED'
-        return {"approved": [], "filtered": articles}
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        # Assign default categories when any error occurs
-        for article in articles:
-            article['category'] = 'Other'  # Default fallback
-            article['score'] = 0
-            article['status'] = 'FILTERED'
-        return {"approved": [], "filtered": articles}
+                    print(f"  ❌ Rate limit exceeded after {max_retries} attempts")
+                    raise requests.exceptions.HTTPError(f"429 Too Many Requests after {max_retries} retries")
+            
+            response.raise_for_status()
+            
+            # Parse response
+            result = response.json()
+            
+            # Extract text from response
+            if 'candidates' in result and len(result['candidates']) > 0:
+                candidate = result['candidates'][0]
+                
+                # Check for safety ratings or blocked content
+                if 'finishReason' in candidate:
+                    finish_reason = candidate['finishReason']
+                    if finish_reason != 'STOP':
+                        print(f"⚠️ Gemini response finished with reason: {finish_reason}")
+                        if finish_reason in ['SAFETY', 'RECITATION', 'OTHER']:
+                            print(f"❌ Content blocked or filtered by Gemini")
+                            if 'safetyRatings' in candidate:
+                                print(f"Safety ratings: {candidate['safetyRatings']}")
+                            return {"approved": [], "filtered": articles}
+                
+                if 'content' in candidate and 'parts' in candidate['content']:
+                    response_text = candidate['content']['parts'][0]['text']
+                else:
+                    print(f"❌ No content in candidate. Candidate structure: {json.dumps(candidate, indent=2)[:500]}")
+                    raise ValueError("No valid content in Gemini response")
+            else:
+                print(f"❌ No candidates in result. Result structure: {json.dumps(result, indent=2)[:500]}")
+                raise ValueError("No valid response from Gemini API")
+            
+            # Parse JSON response with robust error handling
+            scored_articles = None
+            
+            try:
+                scored_articles = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                print(f"⚠️ JSON parse error: {e}")
+                print(f"Response text: {response_text[:500]}...")
+                
+                # Try to fix truncated JSON response
+                try:
+                    scored_articles = _fix_truncated_json(response_text)
+                    print(f"✅ Fixed truncated JSON - recovered {len(scored_articles)} articles")
+                except Exception as fix_error:
+                    print(f"❌ Could not fix JSON: {fix_error}")
+                    print("❌ Could not parse JSON response")
+                    return {"approved": [], "filtered": articles}
+            
+            # Separate approved and filtered articles
+            approved = []
+            filtered = []
+            
+            for scored_article in scored_articles:
+                # Find original article
+                original_article = None
+                for article in articles:
+                    if article['title'] == scored_article['title']:
+                        original_article = article
+                        break
+                
+                if original_article:
+                    # Add score, status, and category to original article
+                    original_article['score'] = scored_article['score']
+                    original_article['status'] = scored_article['status']
+                    original_article['category'] = scored_article.get('category', 'Other')
+                    
+                    # Validate category - update to match actual categories from Gemini
+                    valid_categories = ['World', 'Politics', 'Business', 'Economy', 'Technology', 'Science', 'Health', 'Sports', 'Lifestyle', 
+                                       'Environment', 'International', 'Culture', 'Disaster', 'Other']
+                    if original_article['category'] not in valid_categories:
+                        print(f"⚠️ Invalid category '{original_article['category']}' for article: {original_article['title'][:50]}...")
+                        # Map common variations to valid categories
+                        category_mapping = {
+                            'Economy': 'Business',
+                            'Entertainment': 'Culture',
+                            'Weather': 'Environment',
+                            'Climate': 'Environment'
+                        }
+                        mapped_category = category_mapping.get(original_article['category'], 'Other')
+                        original_article['category'] = mapped_category
+                    
+                    if scored_article['status'] == 'APPROVED':
+                        approved.append(original_article)
+                    else:
+                        filtered.append(original_article)
+            
+            return {
+                "approved": approved,
+                "filtered": filtered
+            }
+            
+        except requests.exceptions.HTTPError as e:
+            if e.response and e.response.status_code == 429:
+                # Already handled above, but catch here if it slips through
+                if attempt < max_retries - 1:
+                    continue
+            # Re-raise other HTTP errors or if retries exhausted
+            if attempt == max_retries - 1:
+                print(f"❌ API request failed after {max_retries} attempts: {e}")
+                # Assign default categories when API fails
+                for article in articles:
+                    article['category'] = 'Other'
+                    article['score'] = 0
+                    article['status'] = 'FILTERED'
+                return {"approved": [], "filtered": articles}
+            raise
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                wait_time = (2 ** attempt) * 1
+                print(f"  ⚠️ Request error (attempt {attempt + 1}/{max_retries}): {e}")
+                print(f"  Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+                continue
+            # After all retries exhausted
+            print(f"❌ API request failed after {max_retries} attempts: {e}")
+            for article in articles:
+                article['category'] = 'Other'
+                article['score'] = 0
+                article['status'] = 'FILTERED'
+            return {"approved": [], "filtered": articles}
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
+            # Assign default categories when any error occurs
+            for article in articles:
+                article['category'] = 'Other'
+                article['score'] = 0
+                article['status'] = 'FILTERED'
+            return {"approved": [], "filtered": articles}
 
 if __name__ == "__main__":
     # Test the function

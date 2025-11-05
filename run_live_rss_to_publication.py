@@ -69,7 +69,7 @@ def get_new_unread_articles(start_time: str, expected_count: int) -> List[Dict]:
         
         # Get ONLY articles fetched after the cycle start time - limit to expected count
         cursor.execute('''
-            SELECT title, source, description, url, fetched_at, id, image_url
+            SELECT title, source, description, url, fetched_at, id
             FROM articles 
             WHERE published = 0 
             AND fetched_at > ?
@@ -86,8 +86,7 @@ def get_new_unread_articles(start_time: str, expected_count: int) -> List[Dict]:
                 'text': row[2] or '',  # description as text
                 'url': row[3],
                 'fetched_at': row[4],
-                'id': row[5],
-                'image_url': row[6] or ''  # Include image_url from database
+                'id': row[5]
             })
             article_ids.append(row[5])
         

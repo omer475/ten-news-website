@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blur Effect Test - Localhost</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      background: #F8F9FB;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: #1d1d1f;
+    }
+
+    .test-container {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* News Card Container */
+    .news-card {
+      position: relative;
+      width: 100%;
+      height: 350px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .news-card:hover {
+      transform: scale(1.02);
+    }
+
+    /* Background Image */
+    .news-card-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      z-index: 1;
+    }
+
+    /* Blur Overlay - Foreground (above image, below text) */
+    /* Uses multiple layers to create gradient blur effect */
+    .blur-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 45%; /* Covers bottom 35-45% */
+      z-index: 2; /* Above image, below text */
+      pointer-events: none;
+    }
+
+    /* Base blur layer - full intensity at bottom */
+    .blur-overlay::before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      /* Gradient mask to create fade effect - matches spec table */
+      /* The overlay height is 45%, so we map: 0% overlay = 55% card, 100% overlay = 100% card */
+      mask-image: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 1) 0%,           /* 85-100% card: Full blur (20-25px) */
+        rgba(0, 0, 0, 0.95) 11%,       /* 80-85% card */
+        rgba(0, 0, 0, 0.85) 22%,       /* 75-80% card */
+        rgba(0, 0, 0, 0.7) 33%,        /* 70-75% card: 15px blur */
+        rgba(0, 0, 0, 0.45) 44%,       /* 65-70% card: 5-10px blur */
+        rgba(0, 0, 0, 0.25) 56%,       /* 60-65% card: Subtle */
+        rgba(0, 0, 0, 0.1) 67%,        /* 55-60% card: Very subtle */
+        rgba(0, 0, 0, 0) 100%          /* 0-55% card: No blur - clear */
+      );
+      -webkit-mask-image: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.95) 11%,
+        rgba(0, 0, 0, 0.85) 22%,
+        rgba(0, 0, 0, 0.7) 33%,
+        rgba(0, 0, 0, 0.45) 44%,
+        rgba(0, 0, 0, 0.25) 56%,
+        rgba(0, 0, 0, 0.1) 67%,
+        rgba(0, 0, 0, 0) 100%
+      );
+    }
+
+    /* Color overlay for text contrast */
+    .blur-overlay::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100%;
+      /* Dark mode gradient - black overlay for text contrast */
+      /* Matches spec: 85-100% = 90-100% opacity, 70-85% = 60-80% opacity, 55-70% = 20-40% opacity */
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.6) 0%,        /* 85-100% card: 40-60% opacity (spec: 90-100%) */
+        rgba(0, 0, 0, 0.5) 11%,       /* 80-85% card */
+        rgba(0, 0, 0, 0.4) 22%,       /* 75-80% card */
+        rgba(0, 0, 0, 0.3) 33%,       /* 70-75% card: 60-80% opacity */
+        rgba(0, 0, 0, 0.2) 44%,       /* 65-70% card: 20-40% opacity */
+        rgba(0, 0, 0, 0.1) 56%,       /* 60-65% card */
+        rgba(0, 0, 0, 0.05) 67%,      /* 55-60% card */
+        rgba(0, 0, 0, 0) 100%         /* 0-55% card: Transparent */
+      );
+      pointer-events: none;
+    }
+
+    /* Text Content - Above blur overlay */
+    .news-card-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 24px 16px 20px 16px;
+      z-index: 3; /* Above blur overlay */
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .news-title {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.2);
+      margin: 0;
+    }
+
+    /* Light Mode Variant */
+    .news-card.light-mode .blur-overlay::after {
+      /* Light mode gradient - white overlay */
+      background: linear-gradient(
+        to top,
+        rgba(255, 255, 255, 0.4) 0%,      /* 85-100%: Full opacity for text contrast */
+        rgba(255, 255, 255, 0.25) 30%,    /* 80-85% */
+        rgba(255, 255, 255, 0.15) 50%,    /* 70-85%: Noticeable - text begins here */
+        rgba(255, 255, 255, 0.08) 65%,    /* 55-70%: Subtle softening */
+        rgba(255, 255, 255, 0.04) 75%,    /* 50-55% */
+        rgba(255, 255, 255, 0) 100%       /* 0-55%: Transparent - clear image */
+      );
+    }
+
+    .news-card.light-mode .news-title {
+      color: #0f172a;
+      text-shadow: 0 2px 8px rgba(255, 255, 255, 0.8), 0 4px 16px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Mode Toggle */
+    .mode-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background: #1d1d1f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .mode-toggle:hover {
+      background: #000;
+    }
+
+    /* Demo Images */
+    .demo-image-1 {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .demo-image-2 {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .demo-image-3 {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    /* Info Text */
+    .info-text {
+      text-align: center;
+      font-size: 14px;
+      color: #86868b;
+      max-width: 400px;
+      line-height: 1.6;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+
+      .news-card {
+        height: 300px;
+      }
+
+      .news-title {
+        font-size: 20px;
+      }
+
+      .mode-toggle {
+        top: 10px;
+        right: 10px;
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="mode-toggle" onclick="toggleMode()">Switch to Light Mode</button>
+  
+  <h1>Blur Effect Test</h1>
+  
+  <div class="test-container">
+    <!-- Card 1 - Dark Mode -->
+    <div class="news-card" id="card1">
+      <div class="news-card-image demo-image-1"></div>
+      <div class="blur-overlay"></div>
+      <div class="news-card-content">
+        <h3 class="news-title">This is a sample news headline that demonstrates the blur effect</h3>
+      </div>
+    </div>
+
+    <!-- Card 2 - Dark Mode -->
+    <div class="news-card" id="card2">
+      <div class="news-card-image demo-image-2"></div>
+      <div class="blur-overlay"></div>
+      <div class="news-card-content">
+        <h3 class="news-title">Another example with different colors to test visibility</h3>
+      </div>
+    </div>
+
+    <!-- Card 3 - Dark Mode -->
+    <div class="news-card" id="card3">
+      <div class="news-card-image demo-image-3"></div>
+      <div class="blur-overlay"></div>
+      <div class="news-card-content">
+        <h3 class="news-title">Third card to show consistency across different backgrounds</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-text">
+    The blur overlay covers the bottom 45% of the card with a gradient transition.<br>
+    Blur intensity: 20px Gaussian blur, strongest at bottom, fading to zero at 55% height.<br>
+    Tap the button to toggle between dark and light modes.<br><br>
+    <strong>To test on your phone:</strong><br>
+    1. Make sure your phone and computer are on the same Wi-Fi network<br>
+    2. Find your computer's local IP address (e.g., 192.168.1.100)<br>
+    3. Open this file location in your browser: http://YOUR_IP:8000/blur-test-localhost.html<br>
+    4. Or use a simple HTTP server: Run "python3 -m http.server 8000" in this directory
+  </div>
+
+  <script>
+    let isLightMode = false;
+
+    function toggleMode() {
+      isLightMode = !isLightMode;
+      const cards = document.querySelectorAll('.news-card');
+      const button = document.querySelector('.mode-toggle');
+      
+      cards.forEach(card => {
+        if (isLightMode) {
+          card.classList.add('light-mode');
+        } else {
+          card.classList.remove('light-mode');
+        }
+      });
+      
+      button.textContent = isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+    }
+
+    // Optional: Add real images if needed
+    // You can replace demo-image-1, demo-image-2, demo-image-3 with actual img tags
+    // Example:
+    // <img src="your-image.jpg" class="news-card-image" alt="News">
+  </script>
+</body>
+</html>
+

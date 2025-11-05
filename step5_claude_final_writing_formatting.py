@@ -40,7 +40,7 @@ CLAUDE_WRITING_PROMPT = """You are a professional news writer for a global news 
 
 You will receive:
 1. Original article text
-2. Selected components (timeline, details, graph, map)
+2. Selected components (timeline, details, graph) - ordered by importance
 3. Context data from web searches (for selected components only)
 
 You must write:
@@ -50,7 +50,8 @@ You must write:
 4. Timeline (if selected, 2-4 events)
 5. Details (if selected, exactly 3 data points)
 6. Graph (if selected, formatted data)
-7. Map (if selected, formatted coordinates)
+
+NOTE: Map component is currently disabled.
 
 === TITLE RULES ===
 - Maximum 12 words
@@ -191,6 +192,8 @@ Use data from Perplexity search. Ensure:
 - Values as numbers only
 - Clear axis labels
 
+<!-- MAP - DISABLED (kept for future re-enabling)
+
 === MAP (if selected) ===
 Format map data from Perplexity context:
 
@@ -236,6 +239,8 @@ Zoom levels:
 - 7-8: Regional
 - 10-11: City-level
 
+-->
+
 === OUTPUT FORMAT ===
 Return ONLY valid JSON:
 
@@ -247,23 +252,18 @@ Return ONLY valid JSON:
     "Bullet 2 (8-15 words) with **bold** markup",
     "Bullet 3 (8-15 words) with **bold** markup"
   ],
-  "timeline": {"order": 1, "events": [...]},  // Only if timeline selected - order based on importance
-  "details": {"order": 2, "items": [...]},    // Only if details selected - order based on importance
-  "graph": {"order": 3, "type": "...", "title": "...", "data": [...], "y_label": "...", "x_label": "..."},  // Only if graph selected - order based on importance
-  "map": {"order": 4, ...}        // Only if map selected [CURRENTLY DISABLED] - order based on importance
+  "timeline": [...],  // Only if timeline selected
+  "details": [...],   // Only if details selected
+  "graph": {...}      // Only if graph selected
 }
-
-IMPORTANT: Each component MUST include an "order" field indicating its priority (1 = most important, 2 = second, etc.)
-The order should match the priority of components as listed in the SELECTED COMPONENTS section.
 
 VALIDATION CHECKLIST:
 - Title: ≤12 words, declarative, geographic specificity, **bold** markup for 2-4 key terms
 - Detailed text: Maximum 200 words, detailed comprehensive coverage, journalistic style
 - Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods, **bold** markup for key terms
-- Timeline: 2-4 events, chronological, ≤14 words per event, MUST include "order" and "events" fields
-- Details: Exactly 3, all have numbers, <8 words each, MUST include "order" and "items" fields
-- Graph: At least 4 data points, correct format, MUST include "order" field with other graph fields
-- Map: Valid coordinates, appropriate colors/sizes, MUST include "order" field [CURRENTLY DISABLED]
+- Timeline: 2-4 events, chronological, ≤14 words per event
+- Details: Exactly 3, all have numbers, <8 words each
+- Graph: At least 4 data points, correct format
 
 Return ONLY valid JSON, no markdown, no explanations."""
 
@@ -374,12 +374,6 @@ class ClaudeFinalWriter:
         components = article.get('components', article.get('selected_components', []))
         context_data = article.get('context_data', {})
         
-        # Build component priority order string
-        component_order_str = ""
-        if components:
-            ordered_components = [f"{i+1}. {comp}" for i, comp in enumerate(components)]
-            component_order_str = f"\nCOMPONENT PRIORITY ORDER (most important first):\n" + "\n".join(ordered_components) + "\n"
-        
         prompt = f"""Write a complete news article based on this information.
 
 ORIGINAL ARTICLE:
@@ -387,7 +381,7 @@ Title: {article['title']}
 Text: {article['text'][:3000]}
 
 SELECTED COMPONENTS: {', '.join(components)}
-{component_order_str}
+
 """
         
         # Add context data for each selected component
@@ -482,70 +476,24 @@ Return ONLY valid JSON."""
         if 'timeline' in components:
             if 'timeline' not in result:
                 errors.append("Timeline selected but not in output")
-            else:
-                timeline = result['timeline']
-                # Check if timeline has new format with order and events
-                if isinstance(timeline, dict):
-                    if 'order' not in timeline:
-                        errors.append("Timeline missing 'order' field")
-                    elif not isinstance(timeline.get('order'), int) or timeline.get('order') < 1:
-                        errors.append(f"Timeline 'order' must be positive integer, got: {timeline.get('order')}")
-                    
-                    if 'events' not in timeline:
-                        errors.append("Timeline missing 'events' field")
-                    elif len(timeline['events']) < 2 or len(timeline['events']) > 4:
-                        errors.append(f"Timeline event count: {len(timeline['events'])} (need 2-4)")
-                # Support old format (direct array)
-                elif isinstance(timeline, list):
-                    if len(timeline) < 2 or len(timeline) > 4:
-                        errors.append(f"Timeline event count: {len(timeline)} (need 2-4)")
+            elif len(result['timeline']) < 2 or len(result['timeline']) > 4:
+                errors.append(f"Timeline event count: {len(result['timeline'])} (need 2-4)")
         
         if 'details' in components:
             if 'details' not in result:
                 errors.append("Details selected but not in output")
+            elif len(result['details']) != 3:
+                errors.append(f"Details count: {len(result['details'])} (need exactly 3)")
             else:
-                details = result['details']
-                # Check if details has new format with order and items
-                if isinstance(details, dict):
-                    if 'order' not in details:
-                        errors.append("Details missing 'order' field")
-                    elif not isinstance(details.get('order'), int) or details.get('order') < 1:
-                        errors.append(f"Details 'order' must be positive integer, got: {details.get('order')}")
-                    
-                    if 'items' not in details:
-                        errors.append("Details missing 'items' field")
-                    elif len(details['items']) != 3:
-                        errors.append(f"Details count: {len(details['items'])} (need exactly 3)")
-                    else:
-                        for i, detail in enumerate(details['items']):
-                            if not any(char.isdigit() for char in detail):
-                                errors.append(f"Detail {i+1} has no number: '{detail}'")
-                # Support old format (direct array)
-                elif isinstance(details, list):
-                    if len(details) != 3:
-                        errors.append(f"Details count: {len(details)} (need exactly 3)")
-                    else:
-                        for i, detail in enumerate(details):
-                            if not any(char.isdigit() for char in detail):
-                                errors.append(f"Detail {i+1} has no number: '{detail}'")
+                for i, detail in enumerate(result['details']):
+                    if not any(char.isdigit() for char in detail):
+                        errors.append(f"Detail {i+1} has no number: '{detail}'")
         
-        if 'graph' in components:
-            if 'graph' not in result:
-                errors.append("Graph selected but not in output")
-            elif isinstance(result['graph'], dict):
-                if 'order' not in result['graph']:
-                    errors.append("Graph missing 'order' field")
-                elif not isinstance(result['graph'].get('order'), int) or result['graph'].get('order') < 1:
-                    errors.append(f"Graph 'order' must be positive integer, got: {result['graph'].get('order')}")
+        if 'graph' in components and 'graph' not in result:
+            errors.append("Graph selected but not in output")
         
-        if 'map' in components:
-            if 'map' not in result:
-                errors.append("Map selected but not in output")
-            elif isinstance(result['map'], dict):
-                if 'order' not in result['map']:
-                    errors.append("Map missing 'order' field")
-                elif not isinstance(result['map'].get('order'), int) or result['map'].get('order') < 1:
-                    errors.append(f"Map 'order' must be positive integer, got: {result['map'].get('order')}")
+        if 'map' in components and 'map' not in result:
+            errors.append("Map selected but not in output")
         
         return len(errors) == 0, errors
     
@@ -593,6 +541,7 @@ Return ONLY valid JSON."""
                     'description': article.get('description', ''),
                     'emoji': article.get('emoji', '📰'),
                     'image_extraction_method': article.get('image_extraction_method', ''),
+                    'components': article.get('components', article.get('selected_components', [])),  # NEW: Preserve component order
                     **formatted  # Add Claude-generated content
                 }
                 results.append(complete_article)

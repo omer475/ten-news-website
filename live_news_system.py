@@ -224,7 +224,6 @@ class LiveNewsSystem:
                     # Enhanced content
                     'article': article.get('detailed_text', ''),  # NEW: Detailed article text (max 200 words)
                     'summary_bullets': article.get('summary_bullets', []),  # NEW: Bullet points
-                    'components': article.get('components', []),  # NEW: Component order array
                     'timeline': article.get('timeline', []),
                     'details': article.get('details', []),
                     'graph': article.get('graph', {}),

@@ -722,24 +722,24 @@ def create_dedicated_rewriting_prompt(selected_articles_with_content):
 
 CRITICAL REQUIREMENTS:
 
-1. **WORD COUNT - STRICT**: Every summary MUST be EXACTLY 40-50 words. NO EXCEPTIONS!
+1. **WORD COUNT - STRICT**: Every detailed article MUST be EXACTLY 150-200 words. NO EXCEPTIONS!
 2. **BOLD MARKUP**: Use **bold** for 3-6 key words, names, places, numbers
-3. **DETAILS**: Exactly 3 facts in "Label: Value" format with NEW information not in summary
+3. **DETAILS**: Exactly 3 facts in "Label: Value" format with NEW information not in detailed article
 4. **TITLE**: 8-12 engaging words (NO emoji in title field)
 5. **EMOJI**: One relevant emoji per story
 
 ## WORD COUNT VALIDATION PROCESS - MANDATORY:
-For each summary:
-1. Write the summary
+For each detailed article:
+1. Write the detailed article
 2. Count every single word (including articles, prepositions, everything)
-3. If under 40 words: Add more relevant details from the article content
-4. If over 50 words: Remove unnecessary words while keeping key information
-5. Final count MUST be between 40-50 words inclusive - this is non-negotiable
-6. Use a word counter if needed: the summary should match "40-50 words" exactly
+3. If under 150 words: Add more relevant details from the article content
+4. If over 200 words: Remove unnecessary words while keeping key information
+5. Final count MUST be between 150-200 words inclusive - this is non-negotiable
+6. Use a word counter if needed: the detailed article should match "150-200 words" exactly
 
 ## BOLD MARKUP RULES:
 - **Bold** should highlight: important names, places, numbers, key concepts
-- Use 3-6 bold items per summary (not too few, not too many)
+- Use 3-6 bold items per detailed article (not too few, not too many)
 - Example: "**Apple** reported **$89.5 billion** revenue for **Q4 2024**, exceeding analyst expectations by **12%** as **iPhone 15** sales surged globally."
 
 ## DETAILS FORMAT:
@@ -798,23 +798,23 @@ def create_rewriting_prompt(articles_with_content):
 
 REWRITE RULES:
 - TITLE: 8-12 words, engaging headline (NO emoji in title field)
-- SUMMARY: CRITICAL - MUST be EXACTLY 40-50 words, count every word carefully, B2 English level. Make 3-6 important words, names, places, and numbers BOLD using **bold** markup (not too many, not too few) 
+- SUMMARY: CRITICAL - MUST be EXACTLY 150-200 words, count every word carefully, B2 English level. Make 3-6 important words, names, places, and numbers BOLD using **bold** markup (not too many, not too few) 
 - DETAILS: CRITICAL - Follow the comprehensive Details Section Instructions below
 - EMOJI: Choose relevant emoji for each article
 - CATEGORY: World News/Business/Technology/Science/Climate/Health
 
 WORD COUNT ENFORCEMENT - STRICT MANDATORY:
-- Every summary MUST contain EXACTLY 40-50 words (inclusive) - NO EXCEPTIONS
+- Every detailed article MUST contain EXACTLY 150-200 words (inclusive) - NO EXCEPTIONS
 - Count EVERY word including articles, prepositions, and small words
-- If under 40 words: Add more relevant details from the article content
-- If over 50 words: Remove unnecessary words while preserving key information
-- This is CRITICAL - summaries with wrong word count will be automatically rejected
-- Final validation: Use word counter - must be 40-50 words exactly
+- If under 150 words: Add more relevant details from the article content
+- If over 200 words: Remove unnecessary words while preserving key information
+- This is CRITICAL - detailed articles with wrong word count will be automatically rejected
+- Final validation: Use word counter - must be 150-200 words exactly
 
 ## Details Section Instructions for AI - Complete Format Guide
 
 ### CORE REQUIREMENTS
-Generate exactly 3 data points in the `details` array. Each must provide NEW information not mentioned in the summary.
+Generate exactly 3 data points in the `details` array. Each must provide NEW information not mentioned in the detailed article.
 
 ### FORMAT STRUCTURE
 

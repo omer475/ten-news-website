@@ -52,11 +52,9 @@ export default async function handler(req, res) {
       let timelineData = null;
       if (article.timeline) {
         try {
-          const parsed = typeof article.timeline === 'string' 
+          timelineData = typeof article.timeline === 'string' 
             ? JSON.parse(article.timeline) 
             : article.timeline;
-          // Handle new format with order and events, or old format (direct array)
-          timelineData = parsed.events || parsed;
         } catch (e) {
           console.error('Error parsing timeline:', e);
         }
@@ -66,13 +64,9 @@ export default async function handler(req, res) {
       let graphData = null;
       if (article.graph) {
         try {
-          const parsed = typeof article.graph === 'string' 
+          graphData = typeof article.graph === 'string' 
             ? JSON.parse(article.graph) 
             : article.graph;
-          // Handle new format with order field, or old format (direct object with data)
-          // If it has 'order' and other fields at same level, it's new format - keep as is
-          // If it's just data/type/etc, it's old format - keep as is
-          graphData = parsed;
         } catch (e) {
           console.error('Error parsing graph:', e);
         }
@@ -129,22 +123,7 @@ export default async function handler(req, res) {
         timeline: timelineData,
         graph: graphData,  // Include graph data
         components: article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null,  // Include component order
-        details: (() => {
-          // Handle details field - could be new format with order and items, or old format (direct array or newline-separated string)
-          if (!article.details_section) return [];
-          if (typeof article.details_section === 'string') {
-            // Try to parse as JSON first (in case it's the new format)
-            try {
-              const parsed = JSON.parse(article.details_section);
-              return parsed.items || parsed;  // New format has 'items', old format is direct array
-            } catch (e) {
-              // Not JSON, treat as newline-separated string (old format)
-              return article.details_section.split('\n');
-            }
-          }
-          // Already an object
-          return article.details_section.items || article.details_section;
-        })(),
+        details: article.details_section ? article.details_section.split('\n') : [],
         views: article.view_count || 0
       };
     })

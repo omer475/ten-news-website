@@ -269,6 +269,7 @@ export default function SingleNewsPage() {
   return (
     <>
       <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <title>{article.title} | Ten News</title>
         <meta name="description" content={article.summary} />
         <meta property="og:title" content={article.title} />
@@ -766,6 +767,50 @@ export default function SingleNewsPage() {
         )}
       </div>
 
+      <style jsx global>{`
+        html {
+          background: #ffffff;
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+        }
+        
+        body {
+          background: #ffffff;
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+        }
+        
+        body::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: #ffffff;
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        body::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: #ffffff;
+          z-index: -1;
+          pointer-events: none;
+        }
+      `}</style>
+      
       <style jsx>{`
         :root {
           --font-size-small: 14px;
@@ -775,23 +820,59 @@ export default function SingleNewsPage() {
         }
 
         .single-news-page {
-          min-height: 100vh;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           background: #ffffff;
           color: #1d1d1f;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           font-size: var(--font-size);
           line-height: 1.6;
+          position: relative;
+        }
+        
+        .single-news-page::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: #ffffff;
+          z-index: 0;
+          pointer-events: none;
+        }
+        
+        .single-news-page::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: #ffffff;
+          z-index: 0;
+          pointer-events: none;
         }
 
         .single-news-page.dark-mode {
           background: #1a1a1a;
           color: #ffffff;
         }
+        
+        .single-news-page.dark-mode::before,
+        .single-news-page.dark-mode::after {
+          background: #1a1a1a;
+        }
+        
+        body.dark-mode::before,
+        body.dark-mode::after {
+          background: #1a1a1a;
+        }
 
         /* Reading Progress */
         .reading-progress {
           position: fixed;
-          top: 0;
+          top: env(safe-area-inset-top);
           left: 0;
           right: 0;
           height: 3px;

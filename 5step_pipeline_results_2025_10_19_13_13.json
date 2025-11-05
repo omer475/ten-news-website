@@ -1,0 +1,460 @@
+[
+  {
+    "id": "article_1",
+    "original_url": "https://www.independent.co.uk/asia/south-asia/afghanistan-pakistan-taliban-ceasefire-qatar-b2848039.html",
+    "source": "The Independent",
+    "category": "Other",
+    "score": 850,
+    "published_time": "",
+    "title": "Afghanistan and Pakistan agree ceasefire after deadly border clashes",
+    "summary": {
+      "paragraph": "Taliban-controlled Afghanistan and Pakistan reached an immediate ceasefire agreement following peace talks in Doha, ending week-long border violence that killed dozens and wounded approximately 300 people on both sides.",
+      "bullets": [
+        "Afghanistan and Pakistan agree immediate ceasefire after Doha peace talks",
+        "Week-long border clashes killed dozens, wounded approximately 300 people",
+        "Worst violence since Taliban returned to power nearly four years ago",
+        "Follow-up meeting scheduled for Istanbul on October 25, 2024",
+        "Qatar and Turkey mediated the breakthrough agreement"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Aug 2021",
+        "event": "Taliban returns to power in Afghanistan after US withdrawal"
+      },
+      {
+        "date": "Early Oct 2024",
+        "event": "Border tensions escalate with Pakistan demanding militant crackdown"
+      },
+      {
+        "date": "Oct 18, 2024",
+        "event": "Suicide attack kills seven Pakistani soldiers near border"
+      },
+      {
+        "date": "Oct 25, 2024",
+        "event": "Follow-up meeting scheduled in Istanbul to discuss implementation"
+      }
+    ],
+    "details": [
+      "Casualties: 300 wounded",
+      "Conflict duration: 1 week",
+      "Taliban rule: 4 years"
+    ]
+  },
+  {
+    "id": "article_2",
+    "original_url": "https://www.forbes.com/sites/digital-assets/2025/10/19/bitcoin-crash-a-canary-in-the-coal-mine/",
+    "source": "Forbes",
+    "category": "Other",
+    "score": 750,
+    "published_time": "",
+    "title": "Bitcoin crashes 25 percent as traditional finance concerns trigger selloff",
+    "summary": {
+      "paragraph": "Bitcoin plummeted 25 percent in recent days, marking an equity-style crash driven by traditional finance concerns including subprime car loan defaults and potential banking contagion fears.",
+      "bullets": [
+        "Bitcoin drops 25% in equity-style crash, unusual for cryptocurrency markets",
+        "Traditional finance issues including subprime car loans triggered the selloff",
+        "Potential banking contagion fears echo Silicon Valley Bank collapse concerns",
+        "Bitcoin now trades as integrated asset within traditional financial system",
+        "Price below $100,000 could signal start of crypto winter crash"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Mar 2023",
+        "event": "Silicon Valley Bank collapse creates banking sector concerns"
+      },
+      {
+        "date": "Nov 2024",
+        "event": "Bitcoin reaches all-time highs above $100,000 per coin"
+      },
+      {
+        "date": "Dec 2024",
+        "event": "Subprime car loan defaults begin affecting small American banks"
+      },
+      {
+        "date": "Dec 16, 2024",
+        "event": "Tariff concerns and banking fears trigger market selloff"
+      }
+    ],
+    "details": [
+      "Price drop: 25%",
+      "Critical level: $100,000",
+      "Recent highs: All-time"
+    ]
+  },
+  {
+    "id": "article_3",
+    "original_url": "https://www.forbes.com/sites/digital-assets/2025/10/19/its-game-over-imminent-fed-us-dollar-crisis-predicted-to-spark-bitcoin-price-tipping-point-as-gold-soars/",
+    "source": "Forbes",
+    "category": "Other",
+    "score": 700,
+    "published_time": "",
+    "title": "Bitcoin drops 15% as analysts warn imminent dollar crisis",
+    "summary": {
+      "paragraph": "Bitcoin fell 15% from $126,000 to under $108,000 amid warnings of an imminent dollar crisis. Gold reached record highs while markets expect Federal Reserve rate cuts, fueling concerns about dollar debasement and financial instability.",
+      "bullets": [
+        "Bitcoin crashed 15% from all-time high of $126,000 to under $108,000",
+        "Gold surged 64% this year while silver gained 87% amid debasement fears",
+        "Markets price 99% chance of Fed rate cut to 3.75-4% range",
+        "Analysts warn imminent dollar crisis as investors seek hard asset alternatives",
+        "September inflation expected at 3.1%, well above Fed's 2% target"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Sep 2024",
+        "event": "Fed begins rate cutting cycle after extended pause period"
+      },
+      {
+        "date": "Oct 11, 2024",
+        "event": "CPI inflation report due amid government shutdown concerns"
+      },
+      {
+        "date": "Oct 29, 2024",
+        "event": "Fed meeting expected to deliver 25 basis point rate cut"
+      },
+      {
+        "date": "Dec 2024",
+        "event": "Additional Fed rate cuts anticipated before year end"
+      }
+    ],
+    "details": [
+      "Gold gain: 64%",
+      "Silver surge: 87%",
+      "Rate cut probability: 99%"
+    ]
+  },
+  {
+    "id": "article_4",
+    "original_url": "https://www.independent.co.uk/news/fema-department-of-homeland-security-hawaii-experts-new-york-b2848054.html",
+    "source": "The Independent",
+    "category": "Other",
+    "score": 750,
+    "published_time": "",
+    "title": "FEMA grant delays threaten state emergency response capabilities nationwide",
+    "summary": {
+      "paragraph": "Federal emergency management funding faces unprecedented delays as new population counting requirements and litigation halt critical disaster preparedness grants, forcing states to postpone hiring and equipment purchases during ongoing government shutdown.",
+      "bullets": [
+        "FEMA halted $320 million Emergency Management Performance Grant distribution on September 30",
+        "New requirements demand states exclude deported individuals from population counts",
+        "Emergency agencies delaying staff hiring and equipment purchases due to uncertainty",
+        "Government shutdown compounds funding delays with furloughed FEMA contacts",
+        "State officials warn reduced disaster response capabilities across the nation"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Sep 29, 2024",
+        "event": "FEMA distributed $320 million Emergency Management Performance Grant to states"
+      },
+      {
+        "date": "Sep 30, 2024",
+        "event": "FEMA placed grant funds on hold pending new population counts"
+      },
+      {
+        "date": "Oct 2024",
+        "event": "Federal government shutdown begins, furloughing FEMA staff members"
+      },
+      {
+        "date": "Nov 2024",
+        "event": "States continue waiting for grant approval amid ongoing delays"
+      }
+    ],
+    "details": [
+      "Grant amount: $320 million",
+      "Distribution date: Sep 29, 2024",
+      "Population data: 2020 census"
+    ]
+  },
+  {
+    "id": "article_5",
+    "original_url": "https://timesofindia.indiatimes.com/world/pakistan/china-helps-pak-launch-satellite-third-such-mission-this-year-what-is-remote-sensing-satellite/articleshow/124686660.cms",
+    "source": "Times of India",
+    "category": "Other",
+    "score": 800,
+    "published_time": "",
+    "title": "China launches Pakistan's third remote sensing satellite this year",
+    "summary": {
+      "paragraph": "China successfully deployed Pakistan's PRSS-2 remote sensing satellite alongside two Chinese satellites using a Lijian-1 Y8 rocket from northwest China, marking the third Pakistani satellite launch collaboration in 2024.",
+      "bullets": [
+        "Lijian-1 Y8 rocket carried PRSS-2 and two Chinese AIRSAT satellites",
+        "Third Pakistani satellite China launched this year after July and January missions",
+        "Remote sensing satellites monitor environmental changes, forest fires, and urban growth",
+        "China-Pakistan space partnership expanded significantly since 2018 collaboration began"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "2018",
+        "event": "China deploys Pakistan's first optical remote sensing satellite PRSS-1"
+      },
+      {
+        "date": "Jan 2024",
+        "event": "China launches Pakistani PRSC-EO1 satellite into orbit"
+      },
+      {
+        "date": "Jul 2024",
+        "event": "PRSS-1 satellite successfully launched with Chinese assistance"
+      },
+      {
+        "date": "Dec 15, 2024",
+        "event": "PRSS-2 remote sensing satellite deployed from northwest China"
+      }
+    ],
+    "details": [
+      "Satellites launched: 3",
+      "Pakistani missions: 2024",
+      "Partnership since: 2018"
+    ]
+  },
+  {
+    "id": "article_6",
+    "original_url": "https://it.slashdot.org/story/25/10/19/0238212/extortion-and-ransomware-drive-over-half-of-cyberattacks-sometimes-using-ai-microsoft-finds?utm_source=rss1.0mainlinkanon&utm_medium=feed",
+    "source": "Slashdot",
+    "category": "Other",
+    "score": 850,
+    "published_time": "on Sunday October 19, 2025 @07:34AM",
+    "title": "Microsoft reports extortion drives over half of global cyberattacks",
+    "summary": {
+      "paragraph": "Microsoft's annual digital threats report reveals extortion and ransomware motivated over 50% of cyberattacks, while cybercriminals increasingly leverage artificial intelligence to enhance phishing campaigns and malware development across targeted organizations worldwide.",
+      "bullets": [
+        "Extortion and ransomware motivated over 50% of cyberattacks globally",
+        "Identity-based attacks surged 32% in first half of 2025",
+        "Password attacks account for 97% of all identity compromises",
+        "AI accelerates malware development and creates realistic synthetic content",
+        "Phishing-resistant MFA stops over 99% of credential-based attacks"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "2023",
+        "event": "Cybercriminals begin adopting generative AI for enhanced attack campaigns"
+      },
+      {
+        "date": "Early 2024",
+        "event": "Infostealer malware usage surges among criminal organizations worldwide"
+      },
+      {
+        "date": "H1 2025",
+        "event": "Identity-based attacks increase 32% compared to previous period"
+      },
+      {
+        "date": "2025",
+        "event": "Microsoft releases annual digital threats report findings"
+      }
+    ],
+    "details": [
+      "Espionage attacks: 4%",
+      "Identity attack increase: 32%",
+      "MFA effectiveness: 99%"
+    ]
+  },
+  {
+    "id": "article_7",
+    "original_url": "https://www.independent.co.uk/tv/news/louvre-museum-surrounded-police-robbery-b2848052.html",
+    "source": "The Independent",
+    "category": "Other",
+    "score": 700,
+    "published_time": "",
+    "title": "Thieves steal French Crown Jewels from Louvre museum in Paris",
+    "summary": {
+      "paragraph": "Armed robbers broke into Paris's Louvre Museum early Sunday morning, stealing historic French Crown Jewels from the Galerie d'Apollon using construction equipment during ongoing renovation works.",
+      "bullets": [
+        "Thieves broke into Louvre's Galerie d'Apollon, stealing French Crown Jewels",
+        "Robbers used construction equipment to exploit ongoing renovation works",
+        "Heist completed in under 10 minutes with no injuries reported",
+        "Museum closed to visitors while police investigate security breach"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "2019",
+        "event": "Louvre begins major renovation of Galerie d'Apollon wing"
+      },
+      {
+        "date": "Sep 2024",
+        "event": "Construction work intensifies around Crown Jewels gallery"
+      },
+      {
+        "date": "Oct 18, 2024",
+        "event": "Security cameras show suspicious activity near museum perimeter"
+      },
+      {
+        "date": "Oct 19, 2024",
+        "event": "Police surround Louvre following early morning robbery report"
+      }
+    ],
+    "details": [
+      "Heist duration: 10 minutes",
+      "Gallery opened: 1661",
+      "Annual visitors: 9.6 million"
+    ]
+  },
+  {
+    "id": "article_8",
+    "original_url": "https://www.japantimes.co.jp/news/2025/10/19/world/north-korean-soldier-crosses-dmz/",
+    "source": "The Japan Times",
+    "category": "Other",
+    "score": 850,
+    "published_time": "",
+    "title": "North Korean soldier crosses DMZ border seeking defection to South Korea",
+    "summary": {
+      "paragraph": "A North Korean soldier voluntarily crossed the heavily fortified Demilitarized Zone on Sunday and was taken into custody by South Korean forces, marking a rare direct border crossing for defection purposes.",
+      "bullets": [
+        "North Korean soldier voluntarily crossed DMZ on Sunday seeking asylum",
+        "South Korean military took soldier into custody after border crossing",
+        "Most North Korean defectors use China route rather than direct crossing",
+        "Tens of thousands have fled North Korea since 1950s division"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "1953",
+        "event": "Korean Armistice Agreement establishes DMZ between North and South Korea"
+      },
+      {
+        "date": "2017",
+        "event": "North Korean soldier Oh Chong-song defects across JSA under gunfire"
+      },
+      {
+        "date": "2019",
+        "event": "Four North Korean fishermen cross maritime border seeking asylum"
+      },
+      {
+        "date": "Dec 2024",
+        "event": "North Korean soldier crosses land border seeking defection"
+      }
+    ],
+    "details": [
+      "Korean War division: 1950s",
+      "Total defectors: Tens of thousands",
+      "Border crossing date: Sunday"
+    ]
+  },
+  {
+    "id": "article_9",
+    "original_url": "https://www.france24.com/en/video/20251019-colombia-accuses-us-of-killing-fisherman-trump-confirms-strike-on-drug-smuggling-submarine",
+    "source": "France 24",
+    "category": "Other",
+    "score": 850,
+    "published_time": "",
+    "title": "Colombia accuses US of killing fisherman in submarine strike",
+    "summary": {
+      "paragraph": "Colombia condemned a US military strike that allegedly killed a fisherman during an operation targeting what Trump called a drug-smuggling submarine, escalating diplomatic tensions between the allied nations over anti-narcotics enforcement methods.",
+      "bullets": [
+        "US military strike on suspected drug submarine kills Colombian fisherman",
+        "Trump confirms operation targeted drug-smuggling vessel in Colombian waters",
+        "Colombia condemns US action, demands investigation into civilian death",
+        "Incident escalates diplomatic tensions over anti-narcotics cooperation methods"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Jan 2017",
+        "event": "US begins increased maritime interdiction operations in Caribbean"
+      },
+      {
+        "date": "Mar 2023",
+        "event": "Colombia reports 70% increase in cocaine production capacity"
+      },
+      {
+        "date": "Nov 2024",
+        "event": "US-Colombia sign renewed anti-drug cooperation agreement"
+      },
+      {
+        "date": "Jan 2025",
+        "event": "Submarine strike incident occurs in Colombian territorial waters"
+      }
+    ],
+    "details": [
+      "Cocaine seizures 2024: 671 tons",
+      "US anti-drug funding: $461 million",
+      "Colombian coca cultivation: 230,000 hectares"
+    ]
+  },
+  {
+    "id": "article_10",
+    "original_url": "https://www.straitstimes.com/world/europe/Germany-to-recall-ambassador-to-Georgia-as-relations-fray",
+    "source": "Straits Times",
+    "category": "Other",
+    "score": 800,
+    "published_time": "",
+    "title": "Germany recalls ambassador to Georgia amid deteriorating EU relations",
+    "summary": {
+      "paragraph": "Germany withdrew its ambassador Ernst Peter Fischer from Tbilisi for consultations following months of Georgian government accusations against EU diplomats and crackdowns on pro-European opposition protesters after disputed October elections.",
+      "bullets": [
+        "Germany recalls Ambassador Ernst Peter Fischer from Georgia for consultations",
+        "Georgian leadership accused of agitating against EU and German diplomats",
+        "Move precedes Monday EU Foreign Affairs Council meeting on Georgia",
+        "Tensions escalated after disputed October parliamentary elections in Georgia",
+        "Georgian authorities cracking down on pro-EU opposition and street protesters"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Oct 2024",
+        "event": "Disputed parliamentary elections held in Georgia trigger protests"
+      },
+      {
+        "date": "Nov 2024",
+        "event": "Georgian government decides to halt EU membership talks"
+      },
+      {
+        "date": "Nov 2024",
+        "event": "Georgian Foreign Ministry summons German ambassador Fischer"
+      },
+      {
+        "date": "Dec 15, 2024",
+        "event": "Germany announces ambassador recall ahead of EU meeting"
+      }
+    ],
+    "details": [
+      "Election date: October 2024",
+      "EU members: 27 countries",
+      "Georgia population: 3.7 million"
+    ]
+  },
+  {
+    "id": "article_11",
+    "original_url": "https://thehill.com/policy/healthcare/5562031-medicare-open-enrollment-guide/",
+    "source": "The Hill",
+    "category": "Other",
+    "score": 750,
+    "published_time": "",
+    "title": "Medicare premiums rise $21.50 for 2026 open enrollment period",
+    "summary": {
+      "paragraph": "Medicare Part B premiums will increase $21.50 to $206.50 in 2026, while prescription drug plan premiums could rise $50. Open enrollment runs October 15 through December 7 for plan changes.",
+      "bullets": [
+        "Medicare Part B premiums increasing $21.50 to $206.50 in 2026",
+        "Prescription drug plan premiums could rise up to $50 annually",
+        "Open enrollment period runs October 15 through December 7 for changes",
+        "Major insurers pulling back Medicare offerings due to profitability concerns",
+        "Out-of-pocket prescription costs capped at $2,100 for covered drugs"
+      ]
+    },
+    "timeline": [
+      {
+        "date": "Sep 2024",
+        "event": "Annual Notice of Change letters mailed to Medicare enrollees"
+      },
+      {
+        "date": "Oct 15, 2024",
+        "event": "Medicare open enrollment period begins for plan changes"
+      },
+      {
+        "date": "Dec 7, 2024",
+        "event": "Open enrollment deadline for 2026 Medicare plan selections"
+      },
+      {
+        "date": "Jan 1, 2026",
+        "event": "New Medicare premiums and plan changes take effect"
+      }
+    ],
+    "details": [
+      "Current Part B: $185",
+      "Drug cap increase: $15",
+      "Medicare history: 60 years"
+    ]
+  }
+]

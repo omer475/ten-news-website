@@ -31,7 +31,6 @@ class PerplexityConfig:
     retry_attempts: int = 3
     retry_delay: float = 2.0
     delay_between_requests: float = 0.5
-    enable_map_search: bool = False  # Map component currently disabled
 
 
 # ==========================================
@@ -437,12 +436,8 @@ class PerplexityContextSearcher:
             time.sleep(self.config.delay_between_requests)
         
         if 'map' in components:
-            if self.config.enable_map_search:
-                results['map_data'] = self.search_map_locations(article)
-                time.sleep(self.config.delay_between_requests)
-            else:
-                print(f"  ⚠ Map search is currently disabled (config.enable_map_search = False)")
-                results['map_data'] = None
+            results['map_data'] = self.search_map_locations(article)
+            time.sleep(self.config.delay_between_requests)
         
         return results
     

@@ -6,44 +6,145 @@ export default function AuthCallback() {
   const router = useRouter()
   const [status, setStatus] = useState('Verifying your email...')
   const [error, setError] = useState(null)
+  const [debugInfo, setDebugInfo] = useState([])
+  
+  const addDebugInfo = (message) => {
+    setDebugInfo(prev => [...prev, message])
+    console.log(message)
+  }
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
+    const supabase = createClient()
+    
+    addDebugInfo('🔐 Processing email confirmation callback...')
+    addDebugInfo(`📍 URL: ${window.location.href.substring(0, 100)}...`)
+    
+    const urlHash = window.location.hash.substring(0, 200)
+    const urlSearch = window.location.search
+    addDebugInfo(`📍 Hash: ${urlHash ? urlHash.substring(0, 50) + '...' : 'empty'}`)
+    addDebugInfo(`📍 Search: ${urlSearch || 'empty'}`)
+    
+    // Set up auth state change listener to catch the session when it's set
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      addDebugInfo(`🔄 Auth state changed: ${event} ${session ? '(Session exists)' : '(No session)'}`)
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session) {
+          addDebugInfo(`✅ Session obtained! User: ${session.user.email}`)
+          setStatus('Email verified successfully!')
+          
+          // Store session in localStorage (Supabase client automatically saves to its own storage)
+          localStorage.setItem('tennews_session', JSON.stringify(session))
+          localStorage.setItem('tennews_user', JSON.stringify(session.user))
+          addDebugInfo('💾 Session saved to localStorage')
+          
+          // Wait a moment to ensure session is fully set in Supabase client
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Redirect to home page
+          addDebugInfo('🔄 Redirecting to home page...')
+          setTimeout(() => {
+            window.location.href = '/?verified=true'
+          }, 1500)
+        }
+      }
+    })
+    
+    // Also try to get session immediately
+    const checkSession = async () => {
       try {
-        const supabase = createClient()
+        // Check for code in query params first
+        const urlParams = new URLSearchParams(window.location.search)
+        const code = urlParams.get('code')
         
-        // Get the session from the URL hash
+        if (code) {
+          addDebugInfo('📧 Found code in URL, exchanging for session...')
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (exchangeError) {
+            addDebugInfo(`❌ Code exchange error: ${exchangeError.message}`)
+            setError(`Code exchange failed: ${exchangeError.message}`)
+            // Continue to try getSession below
+          } else if (data.session) {
+            addDebugInfo('✅ Session obtained from code exchange!')
+            setStatus('Email verified successfully!')
+            
+            // Save to localStorage (Supabase client automatically saves to its own storage)
+            localStorage.setItem('tennews_session', JSON.stringify(data.session))
+            localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
+            addDebugInfo('💾 Session saved to localStorage')
+            
+            // Ensure Supabase client has the session by refreshing
+            await supabase.auth.refreshSession()
+            addDebugInfo('🔄 Session refreshed in Supabase client')
+            
+            // Wait a moment to ensure session is fully set
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            addDebugInfo('🔄 Redirecting to home page...')
+            setTimeout(() => {
+              window.location.href = '/?verified=true'
+            }, 1500)
+            return
+          }
+        }
+        
+        // Try getting session (handles hash fragments automatically)
+        addDebugInfo('📧 Getting session from Supabase...')
         const { data, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('Auth callback error:', error)
-          setError('Email verification failed. Please try again.')
+          addDebugInfo(`❌ Get session error: ${error.message}`)
+          setError(`Email verification failed: ${error.message}`)
           setStatus('Verification failed')
           return
         }
-
+        
         if (data.session) {
+          addDebugInfo(`✅ Session found! User: ${data.session.user.email}`)
           setStatus('Email verified successfully!')
-          // Store session in localStorage
+          
+          // Save to localStorage (Supabase client automatically saves to its own storage)
           localStorage.setItem('tennews_session', JSON.stringify(data.session))
           localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
+          addDebugInfo('💾 Session saved to localStorage')
           
-          // Redirect to home page after 2 seconds
+          // Ensure Supabase client has the session by refreshing
+          await supabase.auth.refreshSession()
+          addDebugInfo('🔄 Session refreshed in Supabase client')
+          
+          // Wait a moment to ensure session is fully set
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          addDebugInfo('🔄 Redirecting to home page...')
           setTimeout(() => {
-            router.push('/')
-          }, 2000)
+            window.location.href = '/?verified=true'
+          }, 1500)
         } else {
-          setError('No session found. Please try signing up again.')
-          setStatus('Verification failed')
+          addDebugInfo('⏳ No session yet, waiting for auth state change...')
+          // Wait a bit for the auth state change listener to fire
+          setTimeout(async () => {
+            const { data: retryData } = await supabase.auth.getSession()
+            if (!retryData?.session) {
+              addDebugInfo('❌ No session found after waiting')
+              setError('No session found. The confirmation link may have expired. Please try signing up again.')
+              setStatus('Verification failed')
+            }
+          }, 3000)
         }
       } catch (err) {
-        console.error('Callback error:', err)
-        setError('An error occurred. Please try again.')
+        addDebugInfo(`❌ Callback error: ${err.message}`)
+        setError(`An error occurred: ${err.message}`)
         setStatus('Verification failed')
       }
     }
-
-    handleAuthCallback()
+    
+    checkSession()
+    
+    // Cleanup listener on unmount
+    return () => {
+      authListener?.subscription?.unsubscribe()
+    }
   }, [router])
 
   return (
@@ -88,6 +189,28 @@ export default function AuthCallback() {
           }}>
             {error}
           </p>
+        )}
+        
+        {/* Debug info for mobile */}
+        {debugInfo.length > 0 && (
+          <div style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '8px',
+            fontSize: '12px',
+            textAlign: 'left',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            fontFamily: 'monospace'
+          }}>
+            <strong style={{ display: 'block', marginBottom: '10px' }}>Debug Info:</strong>
+            {debugInfo.map((info, idx) => (
+              <div key={idx} style={{ marginBottom: '5px', color: '#6b7280' }}>
+                {info}
+              </div>
+            ))}
+          </div>
         )}
         
         {status.includes('successfully') && (

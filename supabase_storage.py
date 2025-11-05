@@ -114,6 +114,7 @@ def save_articles_to_supabase(articles, source_part):
                 # JSONB fields: pass native structures
                 'graph': article.get('graph', {}),
                 'map': article.get('map', {}),
+                'components': article.get('components', []),  # NEW: Component order array
 
                 # Engagement / image metadata
                 'view_count': article.get('view_count', 0),
