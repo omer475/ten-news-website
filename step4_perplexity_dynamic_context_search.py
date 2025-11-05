@@ -1,7 +1,7 @@
 # STEP 4: PERPLEXITY DYNAMIC CONTEXT SEARCH
 # ==========================================
 # Purpose: Search web for contextual data based on selected components from Step 3
-# Model: Perplexity Sonar Large (llama-3.1-sonar-large-128k-online)
+# Model: Perplexity Sonar (sonar)
 # Input: ~100 articles with component selections from Step 3
 # Output: Context data for each selected component
 # Search Types: Timeline events, Key data points, Graph data, Map locations
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 class PerplexityConfig:
     """Configuration for Perplexity searches"""
     base_url: str = "https://api.perplexity.ai/chat/completions"
-    model: str = "llama-3.1-sonar-large-128k-online"
+    model: str = "sonar"  # Valid models: "sonar", "sonar-pro", "sonar-online", "sonar-reasoning"
     temperature: float = 0.2
     max_tokens: int = 2000
     search_recency_filter: str = "month"  # "day", "week", "month", "year"
@@ -31,6 +31,7 @@ class PerplexityConfig:
     retry_attempts: int = 3
     retry_delay: float = 2.0
     delay_between_requests: float = 0.5
+    enable_map_search: bool = False  # Map component currently disabled
 
 
 # ==========================================
@@ -206,12 +207,19 @@ class PerplexityContextSearcher:
             api_key: Perplexity API key
             config: PerplexityConfig instance (uses defaults if None)
         """
+        if not api_key:
+            raise ValueError("PERPLEXITY_API_KEY is required but not provided")
+        
+        if not api_key.startswith('pplx-'):
+            print(f"⚠️  WARNING: Perplexity API key should start with 'pplx-'")
+        
         self.api_key = api_key
         self.config = config or PerplexityConfig()
         
         print(f"✓ Initialized Perplexity context searcher")
         print(f"  Model: {self.config.model}")
         print(f"  Search recency: {self.config.search_recency_filter}")
+        print(f"  API Key: {api_key[:10]}...{api_key[-4:] if len(api_key) > 14 else '***'}")
     
     def search_timeline(self, article: Dict) -> Optional[Dict]:
         """
@@ -357,7 +365,27 @@ class PerplexityContextSearcher:
                     continue
                 
                 else:
-                    print(f"  ✗ Perplexity error ({search_type}): {response.status_code}")
+                    # Log detailed error information
+                    error_msg = f"  ✗ Perplexity error ({search_type}): {response.status_code}"
+                    try:
+                        error_data = response.json()
+                        if 'error' in error_data:
+                            error_detail = error_data['error']
+                            error_msg += f"\n    Error: {error_detail.get('message', 'Unknown error')}"
+                            error_msg += f"\n    Type: {error_detail.get('type', 'Unknown')}"
+                    except:
+                        error_msg += f"\n    Response: {response.text[:200]}"
+                    print(error_msg)
+                    
+                    # Don't retry on 400 errors (bad request) - they won't succeed
+                    if response.status_code == 400:
+                        return None
+                    
+                    # Retry for other errors
+                    if attempt < self.config.retry_attempts - 1:
+                        wait_time = self.config.retry_delay * (attempt + 1)
+                        time.sleep(wait_time)
+                        continue
                     return None
             
             except json.JSONDecodeError as e:
@@ -409,8 +437,12 @@ class PerplexityContextSearcher:
             time.sleep(self.config.delay_between_requests)
         
         if 'map' in components:
-            results['map_data'] = self.search_map_locations(article)
-            time.sleep(self.config.delay_between_requests)
+            if self.config.enable_map_search:
+                results['map_data'] = self.search_map_locations(article)
+                time.sleep(self.config.delay_between_requests)
+            else:
+                print(f"  ⚠ Map search is currently disabled (config.enable_map_search = False)")
+                results['map_data'] = None
         
         return results
     

@@ -42,11 +42,11 @@ COMPONENT_SELECTION_PROMPT = """You are analyzing news article TITLES to select 
 
 CRITICAL: You will ONLY see the article TITLE. Choose components based on the title alone.
 
-AVAILABLE COMPONENTS (select 1-4 of these, ONLY if truly relevant):
+AVAILABLE COMPONENTS (select 1-3 of these, ONLY if truly relevant):
 1. timeline - Historical events and chronology
 2. details - Key facts, numbers, statistics
 3. graph - Data visualization and trends
-4. map - Geographic locations
+[MAP COMPONENT CURRENTLY DISABLED]
 
 SELECTION PHILOSOPHY: QUALITY OVER QUANTITY
 - Choose ONLY components that add genuine value to understanding the story
@@ -57,13 +57,6 @@ SELECTION PHILOSOPHY: QUALITY OVER QUANTITY
 - NEVER select irrelevant components just to meet a minimum
 
 COMPONENT SELECTION GUIDE:
-
-🗺️ MAP - Choose for geographic/location stories:
-- Natural disasters (earthquake, hurricane, flood)
-- Wars, conflicts, border disputes
-- Multiple countries/cities mentioned
-- Travel, migration stories
-Examples: "Earthquake strikes Turkey", "War in Gaza", "Hurricane hits Florida"
 
 📊 GRAPH - Choose for data/trend/comparison stories:
 - Economic data (rates, prices, stocks, GDP)
@@ -88,21 +81,20 @@ Examples: "Pope canonizes 7 saints", "iPhone 16 announced", "Company acquires ri
 
 SELECTION STRATEGY BY TITLE TYPE (choose ONLY relevant ones):
 
-Disasters/Conflicts → ["map", "details", "timeline"] (if geographic + ongoing)
+Disasters/Conflicts → ["timeline", "details"] (if ongoing) or ["details"] (if immediate event)
 Economic/Financial → ["graph", "details"] (if data-heavy) or ["details"] (if simple announcement)
 Politics/Diplomacy → ["timeline", "details"] (if ongoing) or ["details"] (if single event)
 Product/Tech News → ["details"] (usually just specs) or ["details", "graph"] (if market data)
 Science/Research → ["details"] (usually just findings) or ["details", "graph"] (if data)
-Elections → ["graph", "map", "details"] (if results) or ["details"] (if single announcement)
-Deaths/Casualties → ["details"] (if single event) or ["details", "map"] (if geographic)
+Elections → ["graph", "details"] (if results with data) or ["details"] (if single announcement)
+Deaths/Casualties → ["details"] (if single event) or ["details", "timeline"] (if historical context)
 
 OUTPUT FORMAT - RETURN ONLY THESE EXACT KEYWORDS:
 {
-  "components": ["map", "details"],
-  "emoji": "🌍",
-  "graph_type": null,
-  "graph_data_needed": null,
-  "map_locations": null
+  "components": ["graph", "details"],
+  "emoji": "📊",
+  "graph_type": "line",
+  "graph_data_needed": "historical trend data"
 }
 
 EMOJI SELECTION:
@@ -152,37 +144,37 @@ CRITICAL RULES:
 EXAMPLES:
 
 Title: "Earthquake strikes Turkey near Gaziantep"
-Output: {"components": ["map", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": ["Turkey", "Gaziantep"]}
-(Only map and details are relevant - no timeline needed for immediate disaster)
+Output: {"components": ["details", "timeline"], "graph_type": null, "graph_data_needed": null}
+(Details for casualties/damage, timeline if developing situation)
 
 Title: "Interest rates rise to 4.5 percent"
-Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "interest rates over time", "map_locations": null}
-(Only graph and details - no timeline needed for single rate change)
+Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "interest rates over time"}
+(Graph for rate trends, details for key facts)
 
 Title: "iPhone 16 announced with $999 price"
-Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Only details needed - no other components add value)
+Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null}
+(Only details needed - specs, price, availability)
 
 Title: "Colombia recalls ambassador after Trump accusations"
-Output: {"components": ["timeline", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Timeline and details relevant - no map needed for diplomatic action)
+Output: {"components": ["timeline", "details"], "graph_type": null, "graph_data_needed": null}
+(Timeline for diplomatic developments, details for key facts)
 
 Title: "Election results show Biden wins 306 electoral votes"
-Output: {"components": ["graph", "map", "details"], "graph_type": "bar", "graph_data_needed": "electoral votes by candidate", "map_locations": ["swing states"]}
-(All three relevant - results need visualization, geography, and facts)
+Output: {"components": ["graph", "details"], "graph_type": "bar", "graph_data_needed": "electoral votes by candidate"}
+(Graph for vote visualization, details for key numbers)
 
 Title: "Scientists discover new Earth-like planet"
-Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Only details needed - no other components add value to discovery)
+Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null}
+(Only details needed - distance, size, characteristics)
 
 Title: "Hurricane Milton approaches Florida coast"
-Output: {"components": ["map", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": ["Florida"]}
-(Only map and details - no timeline needed for approaching storm)
+Output: {"components": ["details", "timeline"], "graph_type": null, "graph_data_needed": null}
+(Details for wind speed/category, timeline for forecast progression)
 
 REMEMBER: 
 - Analyze ONLY the title
-- Use exact keywords: "timeline", "details", "graph", "map"
-- Select 1-4 components that are TRULY relevant to the story
+- Use exact keywords: "timeline", "details", "graph" (MAP CURRENTLY DISABLED)
+- Select 1-3 components that are TRULY relevant to the story
 - Quality over quantity - choose fewer but better components
 - Ask: "Would a reader genuinely benefit from this component?"
 
@@ -336,14 +328,19 @@ Return ONLY valid JSON with exact component keywords."""
             return self._get_fallback_selection()
         
         # Filter out any non-string components
+        # Note: 'map' is currently disabled but kept in valid set for backwards compatibility
         valid_component_names = {'timeline', 'details', 'graph', 'map'}
         filtered_components = []
         for comp in components:
             if isinstance(comp, str):
+                # Skip 'map' component (currently disabled)
+                if comp == 'map':
+                    print(f"  ⚠ Map component is currently disabled, skipping")
+                    continue
                 if comp in valid_component_names:
                     filtered_components.append(comp)
                 else:
-                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map)")
+                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph)")
             elif isinstance(comp, dict):
                 # Sometimes Gemini returns dicts - try to extract the component name
                 if 'name' in comp:
@@ -403,14 +400,13 @@ Return ONLY valid JSON with exact component keywords."""
         # Simple keyword-based fallback
         title_lower = article_title.lower()
         
-        # Check for geographic indicators
+        # Check for geographic/disaster indicators
         if any(word in title_lower for word in ['earthquake', 'hurricane', 'flood', 'strikes', 'war', 'conflict', 'border', 'country']):
             return {
-                'components': ['map', 'details'],
+                'components': ['details', 'timeline'],
                 'emoji': '🌍',
                 'graph_type': None,
-                'graph_data_needed': None,
-                'map_locations': None
+                'graph_data_needed': None
             }
         
         # Check for data/trend indicators
@@ -419,8 +415,7 @@ Return ONLY valid JSON with exact component keywords."""
                 'components': ['graph', 'details'],
                 'emoji': '📈',
                 'graph_type': 'line',
-                'graph_data_needed': 'historical data',
-                'map_locations': None
+                'graph_data_needed': 'historical data'
             }
         
         # Check for product/announcement
@@ -429,8 +424,7 @@ Return ONLY valid JSON with exact component keywords."""
                 'components': ['details', 'timeline'],
                 'emoji': '📱',
                 'graph_type': None,
-                'graph_data_needed': None,
-                'map_locations': None
+                'graph_data_needed': None
             }
         
         # Default fallback
@@ -439,8 +433,7 @@ Return ONLY valid JSON with exact component keywords."""
                 'components': ['timeline', 'details'],
                 'emoji': '📰',
                 'graph_type': None,
-                'graph_data_needed': None,
-                'map_locations': None
+                'graph_data_needed': None
             }
     
     def select_components_batch(self, articles: List[Dict]) -> List[Dict]:
