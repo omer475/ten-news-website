@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
+import dynamic from 'next/dynamic';
+
+// Dynamically import GraphChart to avoid SSR issues
+const GraphChart = dynamic(() => import('../components/GraphChart'), {
+  ssr: false,
+  loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
+});
 
 export default function Home() {
   const [stories, setStories] = useState([]);
@@ -15,6 +22,7 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
+  const [expandedGraph, setExpandedGraph] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
   // Removed globalShowBullets - only showing summary text now
   const [showDetailedArticle, setShowDetailedArticle] = useState(false);
@@ -139,6 +147,10 @@ export default function Home() {
     setShowDetails(prev => ({ ...prev, [index]: false }));
     setShowMap(prev => ({ ...prev, [index]: false }));
     setShowGraph(prev => ({ ...prev, [index]: false }));
+    
+    // Reset expanded states - components should start collapsed
+    setExpandedTimeline(prev => ({ ...prev, [index]: false }));
+    setExpandedGraph(prev => ({ ...prev, [index]: false }));
 
     // Set the new state
     switch (nextType) {
@@ -2267,11 +2279,10 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
 
-        /* Desktop timeline - no height limit */
+        /* Desktop timeline - controlled by React state for expand/collapse */
         @media (min-width: 769px) {
           .timeline-container-desktop {
-            max-height: none !important;
-            height: auto !important;
+            /* Height controlled by inline styles - do not override */
           }
 
           /* Hide arrows on desktop - show on mobile/tablet */
@@ -3249,6 +3260,11 @@ The article concludes with forward-looking analysis and what readers should watc
                           boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
+                          // Check if touch started on expand icon - if so, don't handle it
+                          const touchTarget = e.target;
+                          const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                          if (isExpandIcon) return;
+                          
                           // Only handle if there are multiple information types
                           if (getAvailableComponentsCount(story) <= 1) return;
                           
@@ -3354,55 +3370,151 @@ The article concludes with forward-looking analysis and what readers should watc
                           }
                           return null;
                         })()}
-                        {showDetails[index] || (!showTimeline[index] && !showMap[index] && !showGraph[index] && story.details && story.details.length > 0) ? (
-                          // Show Details Only - Limit to 3 items
-                          story.details && story.details.slice(0, 3).map((detail, i) => {
-                          const [label, value] = detail.split(':');
-                          const cleanLabel = label?.trim() || '';
-                          const cleanValue = value?.trim() || '';
-                          
-                          // Extract main number/value and subtitle
-                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                          
-                          return (
-                            <div key={i} className="news-detail-item" style={{ 
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              color: '#111827'
-                            }}>
-                              <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
-                              <div className="news-detail-value" style={{ color: getAdaptiveHighlightColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original) || '#111827' }}>{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
-                            </div>
-                          );
-                          })
-                        ) : showTimeline[index] || (!showDetails[index] && !showMap[index] && !showGraph[index] && story.timeline && story.timeline.length > 0) ? (
-                          // Show Timeline Only - Grows upward from bottom
-                          story.timeline && (
-                            <div 
-                              className="timeline-container-desktop"
-                              style={{
-                                position: 'absolute',
-                                bottom: '0',
-                                left: '0',
-                                right: '0',
-                                height: expandedTimeline[index] ? '300px' : '85px',
-                                maxHeight: expandedTimeline[index] ? '300px' : '85px',
-                                transition: 'height 0.3s ease-in-out',
-                                background: '#ffffff',
-                                backdropFilter: 'none',
-                                WebkitBackdropFilter: 'none',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '6px 20px 12px 20px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                minHeight: '85px',
-                                zIndex: '10',
-                                overflowY: expandedTimeline[index] ? 'visible' : 'auto'
-                              }}>
+                        {/* Render components based on what's active, respecting components array order */}
+                        {(() => {
+                          // Determine which component to show based on active state
+                          // If a state is explicitly set, show that component
+                          if (showGraph[index]) {
+                            // Show Graph - Similar to timeline with expand/collapse
+                            return story.graph && (
+                              <div 
+                                className="graph-container-desktop"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: expandedGraph[index] ? '300px' : '85px',
+                                  maxHeight: expandedGraph[index] ? '300px' : '85px',
+                                  transition: 'height 0.3s ease-in-out',
+                                  background: '#ffffff',
+                                  backdropFilter: 'none',
+                                  WebkitBackdropFilter: 'none',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '6px 20px 12px 20px',
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
+                                }}>
+                                {/* Expand Icon */}
+                                <div 
+                                  data-expand-icon="true"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '8px',
+                                    width: '28px',
+                                    height: '28px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    zIndex: '20',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('Expand graph icon clicked for story', index);
+                                    setExpandedGraph(prev => ({
+                                      ...prev,
+                                      [index]: !prev[index]
+                                    }));
+                                  }}
+                                  onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('Expand graph icon touched for story', index);
+                                    setExpandedGraph(prev => ({
+                                      ...prev,
+                                      [index]: !prev[index]
+                                    }));
+                                  }}>
+                                  <span style={{
+                                    fontSize: '18px',
+                                    fontWeight: 'bold',
+                                    color: '#666',
+                                    transform: expandedGraph[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease'
+                                  }}>
+                                    ↗
+                                  </span>
+                                </div>
+                                
+                                <div style={{
+                                  position: 'relative',
+                                  height: '100%',
+                                  width: '100%',
+                                  paddingRight: '8px',
+                                  paddingLeft: '0px',
+                                  paddingTop: '0px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'flex-start'
+                                }}>
+                                  {/* Graph Title */}
+                                  <div style={{
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    color: '#3b82f6',
+                                    marginBottom: '8px',
+                                    letterSpacing: '0.3px'
+                                  }}>
+                                    {story.graph.title || 'Data Visualization'}
+                                  </div>
+                                  
+                                  {/* Chart Container */}
+                                  <div style={{
+                                    width: '100%',
+                                    height: expandedGraph[index] ? '240px' : '65px',
+                                    transition: 'height 0.3s ease-in-out',
+                                    overflow: expandedGraph[index] ? 'visible' : 'hidden'
+                                  }}>
+                                    {story.graph && story.graph.data && story.graph.data.length > 0 ? (
+                                      <GraphChart graph={story.graph} expanded={expandedGraph[index]} />
+                                    ) : (
+                                      <div style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#64748b',
+                                        fontSize: '12px'
+                                      }}>
+                                        No graph data available
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          } else if (showTimeline[index]) {
+                            // Show Timeline
+                            return story.timeline && (
+                              <div 
+                                className="timeline-container-desktop"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: expandedTimeline[index] ? '300px' : '85px',
+                                  maxHeight: expandedTimeline[index] ? '300px' : '85px',
+                                  transition: 'height 0.3s ease-in-out',
+                                  background: '#ffffff',
+                                  backdropFilter: 'none',
+                                  WebkitBackdropFilter: 'none',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '6px 20px 12px 20px',
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflow: expandedTimeline[index] ? 'visible' : 'hidden'
+                                }}>
                                {/* Expand Icon */}
                                <div 
                                  data-expand-icon="true"
@@ -3422,7 +3534,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                onClick={(e) => {
                                  e.preventDefault();
                                  e.stopPropagation();
-                                 console.log('Expand icon clicked for story', index);
+                                 console.log('Expand icon clicked for story', index, 'current state:', expandedTimeline[index], 'will toggle to:', !expandedTimeline[index]);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]
@@ -3451,7 +3563,7 @@ The article concludes with forward-looking analysis and what readers should watc
                               <div style={{
                                 position: 'relative',
                                 height: '100%',
-                                overflowY: expandedTimeline[index] ? 'visible' : 'auto',
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
                                 paddingTop: '0px',
@@ -3518,94 +3630,80 @@ The article concludes with forward-looking analysis and what readers should watc
                                 </div>
                               </div>
                             </div>
-                          )
-                        ) : showMap[index] || (!showDetails[index] && !showTimeline[index] && !showGraph[index] && story.map) ? (
-                          // Show Map Only
-                          story.map && (
-                            <div 
-                              className="map-container"
-                              style={{
-                                position: 'absolute',
-                                bottom: '0',
-                                left: '0',
-                                right: '0',
-                                height: '200px',
-                                background: '#ffffff',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                zIndex: '10',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                flexDirection: 'column'
-                              }}>
-                              <div style={{
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                color: '#1e293b',
-                                marginBottom: '8px'
-                              }}>📍 Location Map</div>
-                              <div style={{
-                                    width: '100%',
-                                height: '150px',
-                                background: '#f8fafc',
-                                    borderRadius: '6px',
+                          );
+                          } else if (showMap[index]) {
+                            // Show Map
+                            return story.map && (
+                              <div 
+                                className="map-container"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: '200px',
+                                  background: '#ffffff',
+                                  borderRadius: '8px',
+                                  padding: '12px',
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                  zIndex: '10',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                border: '1px solid #e2e8f0',
-                                color: '#64748b',
-                                fontSize: '12px'
-                              }}>
-                                Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
-                                  </div>
-                            </div>
-                          )
-                        ) : showGraph[index] || (!showDetails[index] && !showTimeline[index] && !showMap[index] && story.graph) ? (
-                          // Show Graph Only
-                          story.graph && (
-                            <div 
-                              className="graph-container"
-                              style={{
-                                position: 'absolute',
-                                bottom: '0',
-                                left: '0',
-                                right: '0',
-                                height: '200px',
-                                background: '#ffffff',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                zIndex: '10',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                flexDirection: 'column'
-                              }}>
-                              <div style={{
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                color: '#1e293b',
-                                marginBottom: '8px'
-                              }}>📊 Data Visualization</div>
-                                    <div style={{
+                                  flexDirection: 'column'
+                                }}>
+                                <div style={{
+                                  fontSize: '14px',
+                                  fontWeight: '600',
+                                  color: '#1e293b',
+                                  marginBottom: '8px'
+                                }}>📍 Location Map</div>
+                                <div style={{
                                       width: '100%',
-                                height: '150px',
-                                background: '#f8fafc',
+                                  height: '150px',
+                                  background: '#f8fafc',
                                       borderRadius: '6px',
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                border: '1px solid #e2e8f0',
-                                color: '#64748b',
-                                fontSize: '12px'
-                              }}>
-                                Graph visualization for: {story.graph.title || 'Data Trends'}
+                                  border: '1px solid #e2e8f0',
+                                  color: '#64748b',
+                                  fontSize: '12px'
+                                }}>
+                                  Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
+                                    </div>
                               </div>
-                            </div>
-                          )
-                        ) : null}
+                            );
+                          } else if (showDetails[index]) {
+                            // Show Details
+                            return story.details && story.details.slice(0, 3).map((detail, i) => {
+                              const [label, value] = detail.split(':');
+                              const cleanLabel = label?.trim() || '';
+                              const cleanValue = value?.trim() || '';
+                              
+                              // Extract main number/value and subtitle
+                              const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                              const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                              const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                              
+                              return (
+                                <div key={i} className="news-detail-item" style={{ 
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'center',
+                                  color: '#111827'
+                                }}>
+                                  <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
+                                  <div className="news-detail-value" style={{ color: getAdaptiveHighlightColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original) || '#111827' }}>{mainValue}</div>
+                                  {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
+                                </div>
+                              );
+                            });
+                          } else {
+                            // No state set - fallback to default based on available components
+                            return null;
+                          }
+                        })()}
                         
                   </div>
                       
