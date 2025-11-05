@@ -228,6 +228,7 @@ class LiveNewsSystem:
                     'details': article.get('details', []),
                     'graph': article.get('graph', {}),
                     'map': article.get('map', {}),
+                    'components': article.get('components', []),  # NEW: Component order array
                     
                     # Timestamps
                     'publishedAt': datetime.now().isoformat(),
