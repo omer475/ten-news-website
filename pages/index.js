@@ -107,29 +107,11 @@ export default function Home() {
 
   // Helper function to count available components for a story
   const getAvailableComponentsCount = (story) => {
-    // Use components array if available (new system)
-    if (story.components && Array.isArray(story.components)) {
-      // Filter to only count components that actually have data
-      return story.components.filter(type => {
-        switch (type) {
-          case 'details':
-            return story.details && story.details.length > 0;
-          case 'timeline':
-            return story.timeline && story.timeline.length > 0;
-          case 'graph':
-            return story.graph;
-          default:
-            return false;
-        }
-      }).length;
-    }
-    
-    // Fallback for old articles without components array (exclude map)
     let count = 0;
     if (story.details && story.details.length > 0) count++;
     if (story.timeline && story.timeline.length > 0) count++;
+    if (story.map) count++;
     if (story.graph) count++;
-    // Map is disabled, don't count it
     return count;
   };
 
@@ -173,7 +155,10 @@ export default function Home() {
     if (showDetails[index]) return 'details';
     if (showMap[index]) return 'map';
     if (showGraph[index]) return 'graph';
-    return 'details'; // default
+    
+    // If no state is set, default to the first component from the components array
+    const availableTypes = getAvailableInformationTypes(story);
+    return availableTypes.length > 0 ? availableTypes[0] : 'details';
   };
 
   // Helper function to switch to next information type
