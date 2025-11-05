@@ -247,20 +247,31 @@ Return ONLY valid JSON:
     "Bullet 2 (8-15 words) with **bold** markup",
     "Bullet 3 (8-15 words) with **bold** markup"
   ],
-  "timeline": [...],  // Only if timeline selected
-  "details": [...],   // Only if details selected
-  "graph": {...},     // Only if graph selected
-  "map": {...}        // Only if map selected
+  "components": ["graph", "timeline", "details"],  // REQUIRED: Array showing ORDER of components you generated (only include components you actually generated)
+  "timeline": [...],  // Only if timeline selected AND generated
+  "details": [...],   // Only if details selected AND generated
+  "graph": {...},     // Only if graph selected AND generated
+  "map": {...}        // Only if map selected AND generated
 }
+
+CRITICAL - COMPONENTS ARRAY:
+- You MUST include "components" field with an array showing which components you generated
+- Order matters: ["graph", "timeline", "details"] means graph will show first, timeline second, details third
+- Only include components you actually generated. Examples:
+  * If you generated graph and timeline: "components": ["graph", "timeline"]
+  * If you only generated details: "components": ["details"]
+  * If you generated timeline, details, and graph: "components": ["timeline", "details", "graph"]
+- DO NOT include components you didn't generate (e.g., if no graph data, don't include "graph" in array)
 
 VALIDATION CHECKLIST:
 - Title: ≤12 words, declarative, geographic specificity, **bold** markup for 2-4 key terms
 - Detailed text: Maximum 200 words, detailed comprehensive coverage, journalistic style
 - Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods, **bold** markup for key terms
-- Timeline: 2-4 events, chronological, ≤14 words per event
-- Details: Exactly 3, all have numbers, <8 words each
-- Graph: At least 4 data points, correct format
-- Map: Valid coordinates, appropriate colors/sizes
+- Components: REQUIRED array showing order of generated components
+- Timeline: 2-4 events, chronological, ≤14 words per event (only if you generated it)
+- Details: Exactly 3, all have numbers, <8 words each (only if you generated it)
+- Graph: At least 4 data points, correct format (only if you generated it)
+- Map: Valid coordinates, appropriate colors/sizes (only if you generated it)
 
 Return ONLY valid JSON, no markdown, no explanations."""
 
@@ -408,9 +419,9 @@ Type: {article.get('graph_type', 'line')}
 """
         
         prompt += """Generate complete article with:
-1. Title (≤12 words, with **bold** markup for 2-4 key terms like names, numbers, places)
+1. Title (≤12 words)
 2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
-3. Summary bullets (3-5, 8-15 words each, max 40 words total, with **bold** markup for key terms)
+3. Summary bullets (3-5, 8-15 words each, max 40 words total)
 4. Timeline (if selected)
 5. Details (if selected, exactly 3 with numbers)
 6. Graph (if selected)
