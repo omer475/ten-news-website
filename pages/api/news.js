@@ -79,6 +79,8 @@ export default async function handler(req, res) {
           emoji: article.emoji,
           details: article.details || [],
           timeline: article.timeline || [],
+          graph: article.graph || null,
+          components: article.components || null,
           citations: article.citations || [],
           published_at: article.published_at,
           added_at: article.added_at,
@@ -134,7 +136,7 @@ export default async function handler(req, res) {
     console.log(`⚠️  Supabase not available: ${fetchError.message}`);
   }
 
-  // FALLBACK 1: Try test example news first (for testing layout)
+  // FALLBACK 1: Try test example news (for development/testing only)
   try {
     const testFilePath = path.join(process.cwd(), 'public', 'test_example_news.json');
     if (fs.existsSync(testFilePath)) {

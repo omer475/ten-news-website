@@ -47,30 +47,6 @@ export default async function handler(req, res) {
     console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
     console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests`)
 
-    // Normalize image URLs to ensure they're valid
-    const normalizeImageUrl = (url) => {
-      if (!url) return null;
-      let normalized = String(url).trim();
-      
-      // Normalize protocol-relative URLs (starting with //)
-      if (normalized.startsWith('//')) {
-        normalized = 'https:' + normalized;
-      }
-      
-      // Normalize URLs missing protocol
-      if (!normalized.startsWith('http://') && 
-          !normalized.startsWith('https://') && 
-          !normalized.startsWith('data:') && 
-          !normalized.startsWith('blob:')) {
-        // Check if it looks like an absolute URL (domain pattern)
-        if (/^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(normalized)) {
-          normalized = 'https://' + normalized;
-        }
-      }
-      
-      return normalized;
-    };
-
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
       let timelineData = null;
@@ -81,6 +57,18 @@ export default async function handler(req, res) {
             : article.timeline;
         } catch (e) {
           console.error('Error parsing timeline:', e);
+        }
+      }
+
+      // Parse graph if it's a string
+      let graphData = null;
+      if (article.graph) {
+        try {
+          graphData = typeof article.graph === 'string' 
+            ? JSON.parse(article.graph) 
+            : article.graph;
+        } catch (e) {
+          console.error('Error parsing graph:', e);
         }
       }
 
@@ -122,8 +110,8 @@ export default async function handler(req, res) {
             return null;
           }
           
-          // Normalize the URL before returning
-          return normalizeImageUrl(urlStr);
+          // Return cleaned URL
+          return urlStr;
         })(),  // Frontend expects 'urlToImage'
         author: article.author,
         publishedAt: article.published_date || article.published_at,
@@ -133,6 +121,8 @@ export default async function handler(req, res) {
         detailed_text: article.article || article.summary || article.description || '',  // NEW: Use 'article' field
         summary_bullets: summaryBullets,
         timeline: timelineData,
+        graph: graphData,  // Include graph data
+        components: article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null,  // Include component order
         details: article.details_section ? article.details_section.split('\n') : [],
         views: article.view_count || 0
       };
