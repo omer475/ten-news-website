@@ -3333,39 +3333,48 @@ The article concludes with forward-looking analysis and what readers should watc
                         }}
                       >
                         {/* Content - Show one component at a time */}
-                        {/* Default to details if no state is set but components exist */}
+                        {/* Default to first component from components array */}
                         {(() => {
-                          // If no state is set, default to showing details if available, otherwise timeline
+                          // If no state is set, default to first component in the components array
                           if (!showDetails[index] && !showTimeline[index] && !showMap[index] && !showGraph[index]) {
-                            if (story.details && story.details.length > 0) {
-                              // Set showDetails to true for this index
-                              setShowDetails(prev => {
-                                if (!prev[index]) {
-                                  return { ...prev, [index]: true };
-                                }
-                                return prev;
-                              });
-                            } else if (story.timeline && story.timeline.length > 0) {
-                              setShowTimeline(prev => {
-                                if (!prev[index]) {
-                                  return { ...prev, [index]: true };
-                                }
-                                return prev;
-                              });
-                            } else if (story.map) {
-                              setShowMap(prev => {
-                                if (!prev[index]) {
-                                  return { ...prev, [index]: true };
-                                }
-                                return prev;
-                              });
-                            } else if (story.graph) {
-                              setShowGraph(prev => {
-                                if (!prev[index]) {
-                                  return { ...prev, [index]: true };
-                                }
-                                return prev;
-                              });
+                            const availableTypes = getAvailableInformationTypes(story);
+                            if (availableTypes.length > 0) {
+                              const firstType = availableTypes[0];
+                              
+                              switch (firstType) {
+                                case 'details':
+                                  setShowDetails(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'timeline':
+                                  setShowTimeline(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'map':
+                                  setShowMap(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'graph':
+                                  setShowGraph(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                              }
                             }
                           }
                           return null;
@@ -3716,97 +3725,61 @@ The article concludes with forward-looking analysis and what readers should watc
                           gap: '8px',
                           marginTop: '14px'
                         }}>
-                          {/* Details Dot */}
-                          {story.details && (
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowDetails(prev => ({ ...prev, [index]: true }));
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                                setShowMap(prev => ({ ...prev, [index]: false }));
-                                setShowGraph(prev => ({ ...prev, [index]: false }));
-                              }}
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: showDetails[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
-                                  : 'rgba(0, 0, 0, 0.2)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                              }}
-                            />
-                          )}
-                          
-                          {/* Timeline Dot */}
-                          {story.timeline && (
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowDetails(prev => ({ ...prev, [index]: false }));
-                                setShowTimeline(prev => ({ ...prev, [index]: true }));
-                                setShowMap(prev => ({ ...prev, [index]: false }));
-                                setShowGraph(prev => ({ ...prev, [index]: false }));
-                              }}
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: showTimeline[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
-                                  : 'rgba(0, 0, 0, 0.2)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                              }}
-                            />
-                          )}
-
-                          {/* Map Dot */}
-                          {story.map && (
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowDetails(prev => ({ ...prev, [index]: false }));
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                                setShowMap(prev => ({ ...prev, [index]: true }));
-                                setShowGraph(prev => ({ ...prev, [index]: false }));
-                              }}
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: showMap[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
-                                  : 'rgba(0, 0, 0, 0.2)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                              }}
-                            />
-                          )}
-
-                          {/* Graph Dot */}
-                          {story.graph && (
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowDetails(prev => ({ ...prev, [index]: false }));
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                                setShowMap(prev => ({ ...prev, [index]: false }));
-                                setShowGraph(prev => ({ ...prev, [index]: true }));
-                              }}
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: showGraph[index] 
-                                  ? 'rgba(0, 0, 0, 0.6)' 
-                                  : 'rgba(0, 0, 0, 0.2)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                              }}
-                            />
-                          )}
+                          {/* Dynamically render dots based on components array order */}
+                          {getAvailableInformationTypes(story).map((componentType, dotIndex) => {
+                            const handleClick = (type) => {
+                              // Reset all states
+                              setShowDetails(prev => ({ ...prev, [index]: false }));
+                              setShowTimeline(prev => ({ ...prev, [index]: false }));
+                              setShowMap(prev => ({ ...prev, [index]: false }));
+                              setShowGraph(prev => ({ ...prev, [index]: false }));
+                              // Reset expanded states
+                              setExpandedTimeline(prev => ({ ...prev, [index]: false }));
+                              setExpandedGraph(prev => ({ ...prev, [index]: false }));
+                              
+                              // Set the clicked one
+                              switch (type) {
+                                case 'details':
+                                  setShowDetails(prev => ({ ...prev, [index]: true }));
+                                  break;
+                                case 'timeline':
+                                  setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                  break;
+                                case 'map':
+                                  setShowMap(prev => ({ ...prev, [index]: true }));
+                                  break;
+                                case 'graph':
+                                  setShowGraph(prev => ({ ...prev, [index]: true }));
+                                  break;
+                              }
+                            };
+                            
+                            const isActive = 
+                              (componentType === 'details' && showDetails[index]) ||
+                              (componentType === 'timeline' && showTimeline[index]) ||
+                              (componentType === 'map' && showMap[index]) ||
+                              (componentType === 'graph' && showGraph[index]);
+                            
+                            return (
+                              <div
+                                key={`${index}-${componentType}-${dotIndex}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClick(componentType);
+                                }}
+                                style={{
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  background: isActive 
+                                    ? 'rgba(0, 0, 0, 0.6)' 
+                                    : 'rgba(0, 0, 0, 0.2)',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease'
+                                }}
+                              />
+                            );
+                          })}
                         </div>
                       )}
                       
