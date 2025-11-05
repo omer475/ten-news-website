@@ -119,8 +119,9 @@ export default function Home() {
   const getAvailableInformationTypes = (story) => {
     // If components array exists, use it to determine order
     if (story.components && Array.isArray(story.components) && story.components.length > 0) {
+      console.log(`📊 Story "${story.title?.substring(0, 30)}..." has components array:`, story.components);
       // Filter to only include components that actually have data
-      return story.components.filter(type => {
+      const filtered = story.components.filter(type => {
         switch (type) {
           case 'details':
             return story.details && story.details.length > 0;
@@ -134,8 +135,11 @@ export default function Home() {
             return false;
         }
       });
+      console.log(`✅ Filtered components for this story:`, filtered);
+      return filtered;
     }
     
+    console.log(`⚠️  Story "${story.title?.substring(0, 30)}..." has NO components array, using fallback`);
     // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
@@ -499,6 +503,7 @@ The article concludes with forward-looking analysis and what readers should watc
                  map: article.map || null,
                  graph: article.graph || null,
                  timeline: sampleTimeline,
+                 components: article.components || null,  // CRITICAL: Include components array
                  publishedAt: article.publishedAt || article.published_at || article.added_at,
                  id: article.id || `article_${index}`
                };

@@ -65,12 +65,25 @@
       "source": "Medical Journal Today",
       "url": "https://example.com/cancer-breakthrough",
       "publishedAt": "2025-11-02T07:15:00Z",
-      "details": [
-        "Success Rate: 85%",
-        "Trial Size: 500 patients",
-        "Treatment Type: Immunotherapy",
-        "Expected Availability: Early 2026"
-      ]
+      "components": ["timeline", "graph"],
+      "timeline": [
+        {"date": "2020", "event": "Initial research begins at Johns Hopkins"},
+        {"date": "2022", "event": "Phase I trials show promising results"},
+        {"date": "2024", "event": "Phase III trials exceed expectations"},
+        {"date": "2025", "event": "FDA fast-tracks approval process"}
+      ],
+      "graph": {
+        "type": "bar",
+        "title": "Cancer Treatment Success Rates Comparison",
+        "data": [
+          { "date": "Traditional Chemo", "value": 35 },
+          { "date": "Radiation", "value": 45 },
+          { "date": "Previous Immunotherapy", "value": 60 },
+          { "date": "New Treatment", "value": 85 }
+        ],
+        "y_label": "Success Rate (%)",
+        "x_label": "Treatment Type"
+      }
     },
     {
       "rank": 3,
@@ -131,11 +144,18 @@
       "source": "Financial Times",
       "url": "https://example.com/bitcoin-surge",
       "publishedAt": "2025-11-02T05:30:00Z",
+      "components": ["details", "timeline"],
       "details": [
         "Current Price: $125,000",
         "24h Trading Volume: $200+ billion",
         "Institutional Growth: 300%",
         "Market Cap: $2.5 trillion"
+      ],
+      "timeline": [
+        {"date": "2009", "event": "Bitcoin created by Satoshi Nakamoto"},
+        {"date": "2017", "event": "First major bull run to $20,000"},
+        {"date": "2021", "event": "Institutional adoption begins"},
+        {"date": "2025", "event": "New all-time high of $125,000"}
       ]
     },
     {
@@ -153,12 +173,19 @@
       "source": "Gaming Weekly",
       "url": "https://example.com/ps6-launch",
       "publishedAt": "2025-11-02T04:00:00Z",
-      "details": [
-        "Pre-Orders: 10 million in 7 days",
-        "Resolution: 8K at 240fps",
-        "Launch Date: December 2025",
-        "Price: $699"
-      ]
+      "components": ["graph"],
+      "graph": {
+        "type": "bar",
+        "title": "PlayStation Console Sales (First Year)",
+        "data": [
+          { "date": "PS3", "value": 13 },
+          { "date": "PS4", "value": 20 },
+          { "date": "PS5", "value": 25 },
+          { "date": "PS6 (Projected)", "value": 50 }
+        ],
+        "y_label": "Million Units",
+        "x_label": "Console Generation"
+      }
     }
   ]
 }
