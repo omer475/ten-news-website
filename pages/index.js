@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
@@ -34,6 +34,10 @@ export default function Home() {
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  
+  // Track touch positions for bullet and article taps
+  const bulletTouchStartRef = useRef({});
+  const articleTouchStartRef = useRef({});
 
   const minSwipeDistance = 50;
 
@@ -3320,59 +3324,59 @@ The article concludes with forward-looking analysis and what readers should watc
                                   paddingLeft: '20px',
                                   listStyleType: 'disc'
                                 }}>
-                                  {story.summary_bullets.map((bullet, i) => {
-                                    let bulletTouchStart = null;
-                                    
-                                    return (
-                                      <li 
-                                        key={i} 
-                                        onClick={(e) => {
+                                  {story.summary_bullets.map((bullet, i) => (
+                                    <li 
+                                      key={i} 
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleDetailedText(index);
+                                      }}
+                                      onTouchStart={(e) => {
+                                        const bulletKey = `${index}-${i}`;
+                                        bulletTouchStartRef.current[bulletKey] = {
+                                          x: e.touches[0].clientX,
+                                          y: e.touches[0].clientY
+                                        };
+                                      }}
+                                      onTouchEnd={(e) => {
+                                        const bulletKey = `${index}-${i}`;
+                                        const touchStartPos = bulletTouchStartRef.current[bulletKey];
+                                        
+                                        if (!touchStartPos) return;
+                                        
+                                        const touchEnd = {
+                                          x: e.changedTouches[0].clientX,
+                                          y: e.changedTouches[0].clientY
+                                        };
+                                        
+                                        const deltaX = Math.abs(touchEnd.x - touchStartPos.x);
+                                        const deltaY = Math.abs(touchEnd.y - touchStartPos.y);
+                                        
+                                        // Only trigger if it's a tap (minimal movement)
+                                        if (deltaX < 10 && deltaY < 10) {
                                           e.preventDefault();
                                           e.stopPropagation();
                                           toggleDetailedText(index);
-                                        }}
-                                        onTouchStart={(e) => {
-                                          bulletTouchStart = {
-                                            x: e.touches[0].clientX,
-                                            y: e.touches[0].clientY
-                                          };
-                                        }}
-                                        onTouchEnd={(e) => {
-                                          if (!bulletTouchStart) return;
-                                          
-                                          const touchEnd = {
-                                            x: e.changedTouches[0].clientX,
-                                            y: e.changedTouches[0].clientY
-                                          };
-                                          
-                                          const deltaX = Math.abs(touchEnd.x - bulletTouchStart.x);
-                                          const deltaY = Math.abs(touchEnd.y - bulletTouchStart.y);
-                                          
-                                          // Only trigger if it's a tap (minimal movement)
-                                          if (deltaX < 10 && deltaY < 10) {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            toggleDetailedText(index);
-                                          }
-                                          
-                                          bulletTouchStart = null;
-                                        }}
-                                        style={{
-                                          marginBottom: '12px',
-                                          fontSize: '17px',
-                                          lineHeight: '1.55',
-                                          fontWeight: '400',
-                                          color: '#000000',
-                                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
-                                          cursor: 'pointer',
-                                          userSelect: 'none',
-                                          WebkitTapHighlightColor: 'transparent'
-                                        }}
-                                      >
-                                        {renderBoldText(bullet, imageDominantColors[index], story.category)}
-                                      </li>
-                                    );
-                                  })}
+                                        }
+                                        
+                                        delete bulletTouchStartRef.current[bulletKey];
+                                      }}
+                                      style={{
+                                        marginBottom: '12px',
+                                        fontSize: '17px',
+                                        lineHeight: '1.55',
+                                        fontWeight: '400',
+                                        color: '#000000',
+                                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+                                        cursor: 'pointer',
+                                        userSelect: 'none',
+                                        WebkitTapHighlightColor: 'transparent'
+                                      }}
+                                    >
+                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                    </li>
+                                  ))}
                                 </ul>
                               ) : (
                                 <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
@@ -3382,42 +3386,41 @@ The article concludes with forward-looking analysis and what readers should watc
                           </div>
                           
                           {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
-                          {showDetailedText[index] && (() => {
-                            let articleTouchStart = null;
-                            
-                            return (
-                              <div 
-                                onClick={(e) => {
+                          {showDetailedText[index] && (
+                            <div 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleDetailedText(index);
+                              }}
+                              onTouchStart={(e) => {
+                                articleTouchStartRef.current[index] = {
+                                  x: e.touches[0].clientX,
+                                  y: e.touches[0].clientY
+                                };
+                              }}
+                              onTouchEnd={(e) => {
+                                const touchStartPos = articleTouchStartRef.current[index];
+                                
+                                if (!touchStartPos) return;
+                                
+                                const touchEnd = {
+                                  x: e.changedTouches[0].clientX,
+                                  y: e.changedTouches[0].clientY
+                                };
+                                
+                                const deltaX = Math.abs(touchEnd.x - touchStartPos.x);
+                                const deltaY = Math.abs(touchEnd.y - touchStartPos.y);
+                                
+                                // Only close if it's a tap (minimal movement)
+                                if (deltaX < 10 && deltaY < 10) {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   toggleDetailedText(index);
-                                }}
-                                onTouchStart={(e) => {
-                                  articleTouchStart = {
-                                    x: e.touches[0].clientX,
-                                    y: e.touches[0].clientY
-                                  };
-                                }}
-                                onTouchEnd={(e) => {
-                                  if (!articleTouchStart) return;
-                                  
-                                  const touchEnd = {
-                                    x: e.changedTouches[0].clientX,
-                                    y: e.changedTouches[0].clientY
-                                  };
-                                  
-                                  const deltaX = Math.abs(touchEnd.x - articleTouchStart.x);
-                                  const deltaY = Math.abs(touchEnd.y - articleTouchStart.y);
-                                  
-                                  // Only close if it's a tap (minimal movement)
-                                  if (deltaX < 10 && deltaY < 10) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    toggleDetailedText(index);
-                                  }
-                                  
-                                  articleTouchStart = null;
-                                }}
+                                }
+                                
+                                delete articleTouchStartRef.current[index];
+                              }}
                                 style={{
                                   marginTop: '16px',
                                   marginBottom: '100px',
@@ -3451,9 +3454,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                     return acc;
                                   }, '')
                               }} />
-                              </div>
-                            );
-                          })()}
+                            </div>
+                          )}
                         </div>
                         
                       </div>
