@@ -3324,15 +3324,23 @@ The article concludes with forward-looking analysis and what readers should watc
                                   listStyleType: 'disc'
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
-                                    <li key={i} style={{
-                                    marginBottom: '12px',
-                                      fontSize: '17px',
-                                    lineHeight: '1.55',
-                                    fontWeight: '400',
-                                    color: '#000000',
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif'
-                                  }}>
-                                    {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                    <li 
+                                      key={i} 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleDetailedText(index);
+                                      }}
+                                      style={{
+                                        marginBottom: '12px',
+                                        fontSize: '17px',
+                                        lineHeight: '1.55',
+                                        fontWeight: '400',
+                                        color: '#000000',
+                                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
                                     </li>
                                   ))}
                                 </ul>
@@ -3346,6 +3354,10 @@ The article concludes with forward-looking analysis and what readers should watc
                           {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
                           {showDetailedText[index] && (
                             <div 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleDetailedText(index);
+                              }}
                               style={{
                                 marginTop: '16px',
                                 marginBottom: '100px',
@@ -3358,7 +3370,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                 animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                                 position: 'relative',
                                 zIndex: 1,
-                                width: '100%'
+                                width: '100%',
+                                cursor: 'pointer'
                               }}
                               onTouchStart={(e) => {
                                 const startX = e.touches[0].clientX;
