@@ -1853,6 +1853,9 @@ The article concludes with forward-looking analysis and what readers should watc
           flex-direction: column;
           justify-content: center;
           min-height: 38px;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          hyphens: auto;
         }
 
         .news-detail-item:last-child,
@@ -1867,6 +1870,10 @@ The article concludes with forward-looking analysis and what readers should watc
           letter-spacing: 1px;
           font-weight: 600;
           margin-bottom: 1px;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
+          line-height: 1.3;
         }
 
         .news-detail-value {
@@ -1875,6 +1882,9 @@ The article concludes with forward-looking analysis and what readers should watc
           color: #000000;
           line-height: 1.2;
           margin: 0;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
         }
 
         .news-detail-subtitle {
@@ -1882,6 +1892,10 @@ The article concludes with forward-looking analysis and what readers should watc
           color: #000000;
           font-weight: 500;
           margin-top: 0;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          white-space: normal;
+          line-height: 1.3;
         }
 
         .progress-indicator {
@@ -2759,20 +2773,63 @@ The article concludes with forward-looking analysis and what readers should watc
             /* Glass container styles - no overrides needed */
           }
           
+          .glass-content {
+            flex-wrap: nowrap !important;
+            padding: 12px 4px !important;
+            gap: 0 !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          
           .news-detail-item {
-            padding: 0 10px;
+            padding: 0 2px !important;
+            min-width: 0 !important;
+            flex: 1 1 0 !important;
+            max-width: 33.33% !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            width: auto !important;
           }
           
           .news-detail-label {
-            font-size: 9px;
+            font-size: 7px !important;
+            letter-spacing: 0.2px !important;
+            line-height: 1.1 !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
+            word-break: break-all !important;
+            max-width: 100% !important;
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
           
           .news-detail-value {
-            font-size: 16px;
+            font-size: 11px !important;
+            line-height: 1.0 !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
+            word-break: break-all !important;
+            max-width: 100% !important;
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
           
           .news-detail-subtitle {
-            font-size: 10px;
+            font-size: 7px !important;
+            line-height: 1.1 !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: normal !important;
+            word-break: break-all !important;
+            max-width: 100% !important;
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>
@@ -4050,36 +4107,49 @@ The article concludes with forward-looking analysis and what readers should watc
                                       </div>
                                     ))
                                   ) : (
-                                    // COLLAPSED VIEW - Show compelling preview
+                                    // COLLAPSED VIEW - Show compelling timeline preview
                                     <div style={{
+                                      position: 'relative',
                                       display: 'flex',
                                       alignItems: 'center',
-                                      gap: '16px',
-                                      paddingLeft: '24px',
+                                      paddingLeft: '20px',
                                       height: '100%',
                                       minHeight: '60px',
-                                      justifyContent: 'flex-start',
-                                      paddingRight: '12px'
+                                      justifyContent: 'flex-start'
                                     }}>
+                                      {/* Timeline vertical line */}
+                                      <div style={{
+                                        position: 'absolute',
+                                        left: '5.5px',
+                                        top: '0px',
+                                        bottom: '0px',
+                                        width: '3px',
+                                        background: 'linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.1) 100%)',
+                                        zIndex: '0',
+                                        borderRadius: '2px',
+                                        opacity: 0.6
+                                      }}></div>
+                                      
                                       <div style={{
                                         position: 'relative',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '16px',
-                                        flex: 1
+                                        gap: '12px',
+                                        flex: 1,
+                                        paddingLeft: '8px'
                                       }}>
-                                        {/* Enhanced Timeline indicator dot */}
+                                        {/* Timeline indicator dot - more prominent */}
                                         <div style={{
                                           position: 'absolute',
-                                          left: '-15px',
+                                          left: '-2px',
                                           top: '50%',
                                           transform: 'translateY(-50%)',
-                                          width: '12px',
-                                          height: '12px',
+                                          width: '14px',
+                                          height: '14px',
                                           borderRadius: '50%',
                                           background: '#000000',
-                                          border: '3px solid #000000',
-                                          zIndex: '2',
+                                          border: '3px solid #ffffff',
+                                          zIndex: '3',
                                           boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(0, 0, 0, 0.1)'
                                         }}></div>
                                         
@@ -4089,34 +4159,34 @@ The article concludes with forward-looking analysis and what readers should watc
                                             display: 'flex',
                                             flexDirection: 'column',
                                             gap: '6px',
-                                            flex: 1
+                                            flex: 1,
+                                            paddingLeft: '16px'
                                           }}>
                                             <div style={{
                                               fontSize: '11px',
                                               fontWeight: '700',
                                               color: '#000000',
-                                              letterSpacing: '0.8px',
-                                              opacity: 0.85,
+                                              letterSpacing: '0.5px',
+                                              opacity: 0.9,
                                               textTransform: 'uppercase',
-                                              marginBottom: '2px'
+                                              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                                             }}>{story.timeline[0].date}</div>
                                             <div style={{
-                                              fontSize: '15px',
-                                              fontWeight: '700',
+                                              fontSize: '14px',
+                                              fontWeight: '600',
                                               color: '#000000',
                                               lineHeight: '1.5',
-                                              opacity: 1,
+                                              opacity: 0.95,
                                               display: '-webkit-box',
                                               WebkitLineClamp: 2,
                                               WebkitBoxOrient: 'vertical',
                                               overflow: 'hidden',
-                                              textOverflow: 'ellipsis',
-                                              letterSpacing: '-0.2px'
+                                              textOverflow: 'ellipsis'
                                             }}>{story.timeline[0].event}</div>
                                           </div>
                                         )}
                                         
-                                        {/* Enhanced Event count indicator */}
+                                        {/* Event count indicator - more prominent */}
                                         {story.timeline.length > 1 && (
                                           <div style={{
                                             display: 'flex',
@@ -4124,18 +4194,18 @@ The article concludes with forward-looking analysis and what readers should watc
                                             gap: '8px',
                                             paddingLeft: '16px',
                                             borderLeft: '2px solid rgba(0, 0, 0, 0.2)',
-                                            paddingRight: '4px'
+                                            backgroundColor: 'rgba(0, 0, 0, 0.03)',
+                                            padding: '6px 12px',
+                                            borderRadius: '6px',
+                                            marginRight: '8px'
                                           }}>
                                             <div style={{
-                                              fontSize: '12px',
+                                              fontSize: '11px',
                                               fontWeight: '700',
                                               color: '#000000',
-                                              opacity: 0.75,
+                                              opacity: 0.8,
                                               letterSpacing: '0.5px',
-                                              padding: '4px 8px',
-                                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                                              borderRadius: '4px',
-                                              whiteSpace: 'nowrap'
+                                              textTransform: 'uppercase'
                                             }}>
                                               +{story.timeline.length - 1} more
                                             </div>
@@ -4224,11 +4294,14 @@ The article concludes with forward-looking analysis and what readers should watc
                                 <div key={i} className="news-detail-item" style={{ 
                                       display: 'flex',
                                   flexDirection: 'column',
-                                      justifyContent: 'center'
+                                      justifyContent: 'center',
+                                      minWidth: 0,
+                                      maxWidth: '100%',
+                                      overflow: 'hidden'
                                     }}>
-                                  <div className="news-detail-label">{cleanLabel}</div>
-                                  <div className="news-detail-value">{mainValue}</div>
-                                  {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                                  <div className="news-detail-label" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{cleanLabel}</div>
+                                  <div className="news-detail-value" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{mainValue}</div>
+                                  {subtitle && <div className="news-detail-subtitle" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{subtitle}</div>}
                                     </div>
                               );
                             });
