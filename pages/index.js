@@ -1867,9 +1867,9 @@ The article concludes with forward-looking analysis and what readers should watc
           font-size: 10px;
           color: #000000;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
           font-weight: 600;
-          margin-bottom: 1px;
+          margin-bottom: 4px;
           word-wrap: break-word;
           overflow-wrap: break-word;
           white-space: normal;
@@ -1891,7 +1891,7 @@ The article concludes with forward-looking analysis and what readers should watc
           font-size: 11px;
           color: #000000;
           font-weight: 500;
-          margin-top: 0;
+          margin-top: 2px;
           word-wrap: break-word;
           overflow-wrap: break-word;
           white-space: normal;
@@ -2774,62 +2774,54 @@ The article concludes with forward-looking analysis and what readers should watc
           }
           
           .glass-content {
-            flex-wrap: nowrap !important;
-            padding: 12px 4px !important;
-            gap: 0 !important;
-            overflow: hidden !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
+            flex-direction: column !important;
+            padding: 12px 16px !important;
+            gap: 12px !important;
+            align-items: stretch !important;
           }
           
           .news-detail-item {
-            padding: 0 2px !important;
+            padding: 12px !important;
             min-width: 0 !important;
-            flex: 1 1 0 !important;
-            max-width: 33.33% !important;
+            flex: none !important;
+            max-width: 100% !important;
+            width: 100% !important;
             box-sizing: border-box !important;
-            overflow: hidden !important;
-            width: auto !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+            text-align: left !important;
+          }
+          
+          .news-detail-item:last-child {
+            border-bottom: none !important;
           }
           
           .news-detail-label {
-            font-size: 7px !important;
-            letter-spacing: 0.2px !important;
-            line-height: 1.1 !important;
+            font-size: 10px !important;
+            letter-spacing: 0.5px !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             white-space: normal !important;
-            word-break: break-all !important;
+            word-break: break-word !important;
             max-width: 100% !important;
-            display: block !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
           }
           
           .news-detail-value {
-            font-size: 11px !important;
-            line-height: 1.0 !important;
+            font-size: 20px !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             white-space: normal !important;
-            word-break: break-all !important;
+            word-break: break-word !important;
             max-width: 100% !important;
-            display: block !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
           }
           
           .news-detail-subtitle {
-            font-size: 7px !important;
-            line-height: 1.1 !important;
+            font-size: 11px !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
             white-space: normal !important;
-            word-break: break-all !important;
+            word-break: break-word !important;
             max-width: 100% !important;
-            display: block !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
           }
         }
       `}</style>
