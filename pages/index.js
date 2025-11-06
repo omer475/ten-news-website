@@ -1853,9 +1853,6 @@ The article concludes with forward-looking analysis and what readers should watc
           flex-direction: column;
           justify-content: center;
           min-height: 38px;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          hyphens: auto;
         }
 
         .news-detail-item:last-child,
@@ -1867,13 +1864,9 @@ The article concludes with forward-looking analysis and what readers should watc
           font-size: 10px;
           color: #000000;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 1px;
           font-weight: 600;
-          margin-bottom: 4px;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          white-space: normal;
-          line-height: 1.3;
+          margin-bottom: 1px;
         }
 
         .news-detail-value {
@@ -1882,20 +1875,13 @@ The article concludes with forward-looking analysis and what readers should watc
           color: #000000;
           line-height: 1.2;
           margin: 0;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          white-space: normal;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
           color: #000000;
           font-weight: 500;
-          margin-top: 2px;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          white-space: normal;
-          line-height: 1.3;
+          margin-top: 0;
         }
 
         .progress-indicator {
@@ -2774,54 +2760,35 @@ The article concludes with forward-looking analysis and what readers should watc
           }
           
           .glass-content {
-            flex-direction: column !important;
-            padding: 12px 16px !important;
-            gap: 12px !important;
-            align-items: stretch !important;
+            flex-wrap: wrap !important;
+            gap: 0 !important;
           }
           
           .news-detail-item {
-            padding: 12px !important;
-            min-width: 0 !important;
-            flex: none !important;
-            max-width: 100% !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
+            padding: 8px 10px;
+            flex: 1 1 45% !important;
+            min-width: 45%;
+            max-width: 50%;
             border-right: none !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
-            text-align: left !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
           }
           
-          .news-detail-item:last-child {
-            border-bottom: none !important;
+          .news-detail-item:nth-last-child(-n+2) {
+            border-bottom: none;
           }
           
           .news-detail-label {
-            font-size: 10px !important;
-            letter-spacing: 0.5px !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            max-width: 100% !important;
+            font-size: 8px;
+            letter-spacing: 0.5px;
           }
           
           .news-detail-value {
-            font-size: 20px !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            max-width: 100% !important;
+            font-size: 16px;
+            line-height: 1.1;
           }
           
           .news-detail-subtitle {
-            font-size: 11px !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            max-width: 100% !important;
+            font-size: 9px;
           }
         }
       `}</style>
@@ -4286,14 +4253,11 @@ The article concludes with forward-looking analysis and what readers should watc
                                 <div key={i} className="news-detail-item" style={{ 
                                       display: 'flex',
                                   flexDirection: 'column',
-                                      justifyContent: 'center',
-                                      minWidth: 0,
-                                      maxWidth: '100%',
-                                      overflow: 'hidden'
+                                      justifyContent: 'center'
                                     }}>
-                                  <div className="news-detail-label" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{cleanLabel}</div>
-                                  <div className="news-detail-value" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{mainValue}</div>
-                                  {subtitle && <div className="news-detail-subtitle" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{subtitle}</div>}
+                                  <div className="news-detail-label">{cleanLabel}</div>
+                                  <div className="news-detail-value">{mainValue}</div>
+                                  {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
                                     </div>
                               );
                             });
