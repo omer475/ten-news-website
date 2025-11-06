@@ -1307,7 +1307,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: #E8E8E9;
+          background: #ffffff;
           padding: 0;
           margin: 0;
           height: 100%;
@@ -2598,7 +2598,7 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-dot {
           width: 4px;
           height: 4px;
-          background: #E8E8E9;
+          background: #ffffff;
           border: 1.5px solid #666666;
           border-radius: 50%;
           flex-shrink: 0;
@@ -2759,21 +2759,8 @@ The article concludes with forward-looking analysis and what readers should watc
             /* Glass container styles - no overrides needed */
           }
           
-          .glass-content {
-            flex-direction: column !important;
-            gap: 0 !important;
-          }
-          
           .news-detail-item {
-            width: 100% !important;
-            padding: 12px 15px !important;
-            border-right: none !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
-            flex: none !important;
-          }
-          
-          .news-detail-item:last-child {
-            border-bottom: none !important;
+            padding: 0 10px;
           }
           
           .news-detail-label {
@@ -3498,7 +3485,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     lineHeight: '1.8',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
-                                    fontFamily: 'Georgia, "Times New Roman", Times, serif'
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
                                   }}>
                                     {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}
                                     </li>
@@ -4063,50 +4050,36 @@ The article concludes with forward-looking analysis and what readers should watc
                                       </div>
                                     ))
                                   ) : (
-                                    // COLLAPSED VIEW - Show compelling timeline preview
+                                    // COLLAPSED VIEW - Show elegant preview
                                     <div style={{
-                                      position: 'relative',
                                       display: 'flex',
                                       alignItems: 'center',
+                                      gap: '12px',
                                       paddingLeft: '20px',
                                       height: '100%',
                                       minHeight: '60px',
                                       justifyContent: 'flex-start'
                                     }}>
-                                      {/* Timeline vertical line */}
-                                      <div style={{
-                                        position: 'absolute',
-                                        left: '5.5px',
-                                        top: '0px',
-                                        bottom: '0px',
-                                        width: '3px',
-                                        background: 'linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.1) 100%)',
-                                        zIndex: '0',
-                                        borderRadius: '2px',
-                                        opacity: 0.6
-                                      }}></div>
-                                      
                                       <div style={{
                                         position: 'relative',
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '12px',
-                                        flex: 1,
-                                        paddingLeft: '8px'
+                                        flex: 1
                                       }}>
-                                        {/* Timeline indicator dot - more prominent */}
+                                        {/* Timeline indicator dot */}
                                         <div style={{
                                           position: 'absolute',
-                                          left: '-2px',
+                                          left: '-13px',
                                           top: '50%',
                                           transform: 'translateY(-50%)',
-                                          width: '14px',
-                                          height: '14px',
+                                          width: '10px',
+                                          height: '10px',
                                           borderRadius: '50%',
                                           background: '#000000',
-                                          border: '3px solid #ffffff',
-                                          zIndex: '3',
-                                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(0, 0, 0, 0.1)'
+                                          border: '2px solid #000000',
+                                          zIndex: '2',
+                                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
                                         }}></div>
                                         
                                         {/* First event preview */}
@@ -4114,25 +4087,23 @@ The article concludes with forward-looking analysis and what readers should watc
                                           <div style={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '6px',
-                                            flex: 1,
-                                            paddingLeft: '16px'
+                                            gap: '5px',
+                                            flex: 1
                                           }}>
                                             <div style={{
-                                              fontSize: '11px',
-                                              fontWeight: '700',
+                                              fontSize: '10px',
+                                              fontWeight: '600',
                                               color: '#000000',
                                               letterSpacing: '0.5px',
-                                              opacity: 0.9,
-                                              textTransform: 'uppercase',
-                                              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                                              opacity: 0.7,
+                                              textTransform: 'uppercase'
                                             }}>{story.timeline[0].date}</div>
                                             <div style={{
                                               fontSize: '14px',
                                               fontWeight: '600',
                                               color: '#000000',
-                                              lineHeight: '1.5',
-                                              opacity: 0.95,
+                                              lineHeight: '1.4',
+                                              opacity: 0.9,
                                               display: '-webkit-box',
                                               WebkitLineClamp: 2,
                                               WebkitBoxOrient: 'vertical',
@@ -4142,26 +4113,21 @@ The article concludes with forward-looking analysis and what readers should watc
                                           </div>
                                         )}
                                         
-                                        {/* Event count indicator - more prominent */}
+                                        {/* Event count indicator */}
                                         {story.timeline.length > 1 && (
                                           <div style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '8px',
-                                            paddingLeft: '16px',
-                                            borderLeft: '2px solid rgba(0, 0, 0, 0.2)',
-                                            backgroundColor: 'rgba(0, 0, 0, 0.03)',
-                                            padding: '6px 12px',
-                                            borderRadius: '6px',
-                                            marginRight: '8px'
+                                            gap: '6px',
+                                            paddingLeft: '12px',
+                                            borderLeft: '1px solid rgba(0, 0, 0, 0.15)'
                                           }}>
                                             <div style={{
                                               fontSize: '11px',
-                                              fontWeight: '700',
+                                              fontWeight: '600',
                                               color: '#000000',
-                                              opacity: 0.8,
-                                              letterSpacing: '0.5px',
-                                              textTransform: 'uppercase'
+                                              opacity: 0.6,
+                                              letterSpacing: '0.3px'
                                             }}>
                                               +{story.timeline.length - 1} more
                                             </div>
