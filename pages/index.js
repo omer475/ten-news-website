@@ -1307,7 +1307,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: #ffffff;
+          background: #F5F5F5;
           padding: 0;
           margin: 0;
           height: 100%;
@@ -1317,7 +1317,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#E8E8E9'};
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           overflow: hidden;
           position: fixed;
@@ -1336,7 +1336,7 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           height: max(env(safe-area-inset-top), 44px);
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#E8E8E9'};
           z-index: -1;
           pointer-events: none;
         }
@@ -1348,7 +1348,7 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           height: max(env(safe-area-inset-bottom), 34px);
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#E8E8E9'};
           z-index: -1;
           pointer-events: none;
         }
@@ -1359,7 +1359,7 @@ The article concludes with forward-looking analysis and what readers should watc
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#E8E8E9'};
         }
 
         .loading-spinner {
@@ -1454,7 +1454,7 @@ The article concludes with forward-looking analysis and what readers should watc
           right: 0;
           /* Reduce height to leave space for information box at bottom */
           height: calc(100vh - 250px);
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#E8E8E9'};
           z-index: -1;
           pointer-events: none;
           /* Ensure it doesn't extend below the content area where information box is */
@@ -1485,7 +1485,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .paywall-modal {
-          background: ${darkMode ? '#1f2937' : '#ffffff'};
+          background: ${darkMode ? '#1f2937' : '#E8E8E9'};
           border-radius: 16px;
           padding: 32px;
           max-width: 400px;
@@ -2042,7 +2042,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .auth-modal {
-          background: ${darkMode ? '#1f2937' : '#ffffff'};
+          background: ${darkMode ? '#1f2937' : '#E8E8E9'};
           border-radius: 16px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           width: 90%;
@@ -2124,7 +2124,7 @@ The article concludes with forward-looking analysis and what readers should watc
           border: 1px solid ${darkMode ? '#374151' : '#d5d5d5'};
           border-radius: 8px;
           font-size: 16px;
-          background: ${darkMode ? '#111827' : '#ffffff'};
+          background: ${darkMode ? '#111827' : '#E8E8E9'};
           color: ${darkMode ? '#ffffff' : '#111827'};
           transition: border-color 0.2s;
         }
@@ -2363,7 +2363,7 @@ The article concludes with forward-looking analysis and what readers should watc
           --c-dark: #000;
           --c-content: #224;
           --c-action: #0052f5;
-          --c-bg: #ffffff;
+          --c-bg: #F5F5F5;
           --glass-reflex-dark: 1;
           --glass-reflex-light: 1;
           --saturation: 150%;
@@ -2598,7 +2598,7 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-dot {
           width: 4px;
           height: 4px;
-          background: #ffffff;
+          background: #F5F5F5;
           border: 1.5px solid #666666;
           border-radius: 50%;
           flex-shrink: 0;
