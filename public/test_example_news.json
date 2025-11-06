@@ -1,194 +1,258 @@
 {
-  "digest_date": "November 2, 2025",
-  "dailyGreeting": "Good Morning",
-  "readingTime": "15 minutes",
-  "displayDate": "SATURDAY, NOVEMBER 2, 2025",
-  "generatedAt": "2025-11-02T10:00:00Z",
-  "generatedAtUK": "2025-11-02T10:00:00Z",
+  "digest_date": "November 6, 2025",
   "articles": [
     {
       "rank": 1,
-      "emoji": "🚀",
-      "title": "SpaceX Successfully Launches Revolutionary Starship Rocket",
-      "urlToImage": "https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=1200&h=800&fit=crop",
+      "id": "test-1",
+      "emoji": "🤖",
+      "title": "**OpenAI** Releases **GPT-5** with Revolutionary **Reasoning Capabilities**",
+      "summary": "OpenAI unveils GPT-5, featuring enhanced reasoning and multimodal capabilities that outperform previous models across all benchmarks.",
       "summary_bullets": [
-        "**SpaceX** achieved a major milestone with the successful launch and landing of its latest Starship prototype",
-        "The rocket reached an altitude of **150 kilometers** before performing a controlled descent",
-        "This marks the **first fully reusable** orbital-class rocket system in history"
+        "**GPT-5** achieves **98% accuracy** on complex reasoning tasks, surpassing human expert performance",
+        "New **multimodal architecture** seamlessly processes text, images, audio, and video simultaneously",
+        "**OpenAI** reports 10x improvement in computational efficiency compared to GPT-4",
+        "Model features **real-time learning** capabilities with built-in fact-checking mechanisms"
       ],
-      "detailed_text": "In a historic moment for space exploration, SpaceX has successfully launched and recovered its revolutionary Starship rocket system. The massive vehicle lifted off from the company's Starbase facility in Texas at dawn, marking a significant leap forward in making space travel more accessible and affordable. The rocket's first stage booster returned to Earth just minutes after liftoff, executing a precision landing that drew cheers from the control room. Meanwhile, the upper stage continued its journey, reaching an altitude of 150 kilometers before initiating its own controlled descent. The successful test demonstrates the viability of fully reusable rocket technology, which could reduce the cost of space launches by up to 90%. Industry experts are calling this a watershed moment that could accelerate humanity's expansion into space. NASA has already announced plans to use Starship for future lunar missions as part of the Artemis program. The achievement comes after years of iterative testing and represents a culmination of SpaceX's ambitious vision for interplanetary travel.",
-      "category": "Technology",
-      "source": "Space News Daily",
-      "url": "https://example.com/spacex-starship",
-      "publishedAt": "2025-11-02T08:30:00Z",
-      "components": ["graph", "timeline", "details"],
-      "graph": {
-        "type": "line",
-        "title": "SpaceX Launch Success Rate 2019-2025",
-        "data": [
-          { "date": "2019", "value": 65 },
-          { "date": "2020", "value": 75 },
-          { "date": "2021", "value": 82 },
-          { "date": "2022", "value": 88 },
-          { "date": "2023", "value": 92 },
-          { "date": "2024", "value": 95 },
-          { "date": "2025", "value": 98 }
-        ],
-        "y_label": "Success Rate (%)",
-        "x_label": "Year"
-      },
+      "detailed_text": "OpenAI has launched GPT-5, marking a significant leap in artificial intelligence capabilities. The new model demonstrates unprecedented reasoning abilities, achieving near-perfect scores on complex mathematical and logical problems. Industry experts suggest this release could accelerate AI adoption across scientific research, education, and professional services.",
+      "details": ["Release Date: November 2025", "Parameters: 2 Trillion", "Training Time: 6 months"],
       "timeline": [
-        {"date": "2019", "event": "Starship prototype program begins"},
-        {"date": "2021", "event": "First high-altitude test flight"},
-        {"date": "2023", "event": "First orbital test attempt"},
-        {"date": "2025", "event": "Successful orbital launch and landing"}
+        {"date": "June 2025", "event": "GPT-5 development announced"},
+        {"date": "September 2025", "event": "Beta testing begins with select partners"},
+        {"date": "November 2025", "event": "Public release and API access"}
       ],
-      "details": [
-        "Launch Site: Starbase, Texas",
-        "Altitude Reached: 150km",
-        "Total Flight Duration: 42 minutes",
-        "Cost Reduction: Up to 90%"
-      ]
+      "components": ["details", "timeline"],
+      "category": "Technology",
+      "source": "TechCrunch",
+      "url": "https://example.com/gpt5",
+      "urlToImage": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T09:00:00Z"
     },
     {
       "rank": 2,
-      "emoji": "🏥",
-      "title": "Breakthrough Cancer Treatment Shows 85% Success Rate in Clinical Trials",
-      "urlToImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=1200&h=800&fit=crop",
+      "id": "test-2",
+      "emoji": "🌍",
+      "title": "**UN Climate Summit** Achieves Historic **Carbon Neutrality Agreement** by **130 Nations**",
+      "summary": "World leaders reach groundbreaking consensus on aggressive carbon reduction targets at COP30 summit.",
       "summary_bullets": [
-        "A new **immunotherapy treatment** has shown remarkable success in treating advanced melanoma",
-        "Clinical trials report an **85% remission rate** among participants with stage 4 cancer",
-        "The FDA has fast-tracked approval, with treatment expected to be available by **early 2026**"
+        "**130 countries** commit to achieving **net-zero emissions** by 2040, five years ahead of previous targets",
+        "**$500 billion** climate fund established to support developing nations' green transition",
+        "Agreement includes **mandatory reporting** and **penalties** for non-compliance",
+        "**Renewable energy** investment pledges exceed **$2 trillion** over next decade"
       ],
-      "detailed_text": "Medical researchers have announced a groundbreaking development in cancer treatment that could save millions of lives. A novel immunotherapy approach, developed by a team at Johns Hopkins University, has demonstrated an unprecedented 85% success rate in treating patients with advanced melanoma. The treatment works by training the patient's own immune system to recognize and attack cancer cells more effectively. Unlike traditional chemotherapy, this new approach causes minimal side effects while delivering superior results. The Phase III clinical trials involved 500 patients across multiple countries, all of whom had stage 4 melanoma that had not responded to conventional treatments. After six months of treatment, 85% of participants showed complete or partial remission. The results have exceeded even the most optimistic predictions from the research team. Dr. Sarah Chen, lead researcher on the project, stated that this represents a paradigm shift in cancer treatment. The therapy utilizes modified T-cells that are specially trained to target specific proteins found on melanoma cells. The FDA has granted breakthrough therapy designation, fast-tracking the approval process. If all goes according to plan, the treatment could be widely available by early 2026, offering new hope to cancer patients worldwide.",
-      "category": "Health",
-      "source": "Medical Journal Today",
-      "url": "https://example.com/cancer-breakthrough",
-      "publishedAt": "2025-11-02T07:15:00Z",
-      "components": ["timeline", "graph"],
+      "detailed_text": "The COP30 summit in Dubai has produced the most comprehensive climate agreement in history. With 130 nations signing on, the deal represents over 85% of global emissions. The agreement includes binding commitments, regular progress reviews, and significant financial support for nations transitioning to clean energy.",
+      "details": ["Participating Countries: 130", "Investment Pledged: $2 Trillion", "Target Year: 2040"],
       "timeline": [
-        {"date": "2020", "event": "Initial research begins at Johns Hopkins"},
-        {"date": "2022", "event": "Phase I trials show promising results"},
-        {"date": "2024", "event": "Phase III trials exceed expectations"},
-        {"date": "2025", "event": "FDA fast-tracks approval process"}
+        {"date": "October 2025", "event": "Pre-summit negotiations begin"},
+        {"date": "November 3, 2025", "event": "Summit officially opens in Dubai"},
+        {"date": "November 5, 2025", "event": "Historic agreement signed"}
       ],
-      "graph": {
-        "type": "bar",
-        "title": "Cancer Treatment Success Rates Comparison",
-        "data": [
-          { "date": "Traditional Chemo", "value": 35 },
-          { "date": "Radiation", "value": 45 },
-          { "date": "Previous Immunotherapy", "value": 60 },
-          { "date": "New Treatment", "value": 85 }
-        ],
-        "y_label": "Success Rate (%)",
-        "x_label": "Treatment Type"
-      }
+      "components": ["details", "timeline"],
+      "category": "Environment",
+      "source": "Reuters",
+      "url": "https://example.com/climate",
+      "urlToImage": "https://images.unsplash.com/photo-1569163139394-de4798aa62b6?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T08:30:00Z"
     },
     {
       "rank": 3,
-      "emoji": "🌍",
-      "title": "Global Climate Summit Reaches Historic Agreement on Carbon Emissions",
-      "urlToImage": "https://images.unsplash.com/photo-1569163139394-de4798aa62b6?w=1200&h=800&fit=crop",
+      "id": "test-3",
+      "emoji": "🏥",
+      "title": "**FDA Approves** First **Universal Cancer Vaccine** with **89% Success Rate**",
+      "summary": "Revolutionary mRNA-based vaccine shows remarkable efficacy across multiple cancer types in final trials.",
       "summary_bullets": [
-        "**195 nations** have signed a binding agreement to achieve net-zero emissions by **2045**",
-        "Developed countries will contribute **$500 billion** annually to help developing nations transition to clean energy",
-        "The agreement includes strict **enforcement mechanisms** with penalties for non-compliance"
+        "**Phase 3 trials** demonstrate **89% tumor reduction** across seven different cancer types",
+        "**mRNA technology** enables personalized treatment based on individual tumor genetics",
+        "Vaccine shows **minimal side effects** compared to traditional chemotherapy",
+        "**Mass production** begins next month with global distribution planned for early 2026"
       ],
-      "detailed_text": "World leaders have reached a landmark agreement at the Global Climate Summit in Geneva, marking the most significant international climate accord since the Paris Agreement of 2015. After two weeks of intensive negotiations, representatives from 195 nations signed a binding treaty committing to achieve net-zero carbon emissions by 2045. The agreement goes beyond previous climate deals by including robust enforcement mechanisms and substantial financial commitments. Developed nations have pledged to contribute $500 billion annually to a global climate fund, which will support developing countries in their transition to renewable energy. The treaty also establishes an independent monitoring body with the authority to impose trade sanctions on countries that fail to meet their reduction targets. Environmental groups, which have long criticized previous climate agreements as lacking teeth, have cautiously welcomed the new accord. Greta Thunberg, the prominent climate activist, called it \"a step in the right direction, but implementation will be key.\" The agreement includes specific interim targets, requiring countries to reduce emissions by 50% by 2035. Major polluters including the United States, China, and India have all signed the accord, though some expressed concerns about the economic impact. The summit also addressed adaptation strategies for regions already experiencing severe climate impacts, allocating $100 billion for climate resilience projects.",
-      "category": "Environment",
-      "source": "Global News Network",
-      "url": "https://example.com/climate-summit",
-      "publishedAt": "2025-11-02T06:45:00Z",
-      "components": ["timeline", "graph", "details"],
-      "graph": {
-        "type": "line",
-        "title": "Global CO2 Emissions 2015-2045 (Projected)",
-        "data": [
-          { "date": "2015", "value": 36000 },
-          { "date": "2020", "value": 34500 },
-          { "date": "2025", "value": 32000 },
-          { "date": "2030", "value": 26000 },
-          { "date": "2035", "value": 18000 },
-          { "date": "2040", "value": 9000 },
-          { "date": "2045", "value": 0 }
-        ],
-        "y_label": "Million Tonnes CO2",
-        "x_label": "Year"
-      },
+      "detailed_text": "The FDA has granted accelerated approval for a groundbreaking cancer vaccine that represents a paradigm shift in oncology treatment. Developed using advanced mRNA technology, the vaccine teaches the immune system to recognize and destroy cancer cells. Initial rollout will prioritize patients with late-stage cancers.",
+      "details": ["Success Rate: 89%", "Cancer Types: 7", "Approval Date: November 2025"],
       "timeline": [
-        {"date": "2015", "event": "Paris Agreement signed"},
-        {"date": "2020", "event": "First major countries announce net-zero targets"},
-        {"date": "2023", "event": "Record global temperatures spark urgency"},
-        {"date": "2025", "event": "Historic binding agreement reached"}
+        {"date": "2023", "event": "Phase 1 trials begin"},
+        {"date": "2024", "event": "Phase 2 trials show promise"},
+        {"date": "November 2025", "event": "FDA approval granted"}
       ],
-      "details": [
-        "Signatories: 195 nations",
-        "Net-Zero Target: 2045",
-        "Annual Climate Fund: $500 billion",
-        "2035 Reduction Target: 50%"
-      ]
+      "components": ["details", "timeline"],
+      "category": "Health",
+      "source": "Nature Medicine",
+      "url": "https://example.com/cancer-vaccine",
+      "urlToImage": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T07:45:00Z"
     },
     {
       "rank": 4,
-      "emoji": "💰",
-      "title": "Bitcoin Surges to New All-Time High Amid Institutional Adoption",
-      "urlToImage": "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200&h=800&fit=crop",
+      "id": "test-4",
+      "emoji": "🚀",
+      "title": "**SpaceX** Successfully Launches **First Commercial Mars Mission** with **4 Astronauts**",
+      "summary": "Private space company makes history with crewed mission to establish first permanent settlement on Mars.",
       "summary_bullets": [
-        "Bitcoin reached a new record high of **$125,000**, surpassing its previous peak",
-        "Major banks including **JPMorgan** and **Goldman Sachs** announce cryptocurrency trading desks",
-        "Institutional investment in crypto has increased by **300%** in the past year"
+        "**Starship vehicle** carrying **four commercial astronauts** successfully departs Earth orbit",
+        "**9-month journey** to Mars marks beginning of permanent human presence on red planet",
+        "Mission includes **advanced life support systems** and **3D printing technology** for construction",
+        "**SpaceX** plans **supply missions** every 26 months during optimal launch windows"
       ],
-      "detailed_text": "The cryptocurrency market experienced a seismic shift today as Bitcoin reached an unprecedented $125,000, marking a new all-time high and cementing its position as a legitimate asset class. The surge comes on the heels of several major announcements from traditional financial institutions embracing digital currencies. JPMorgan Chase, which once dismissed Bitcoin as a fraud, has now established a full-service cryptocurrency trading desk for institutional clients. Goldman Sachs followed suit hours later with a similar announcement. This institutional adoption represents a dramatic reversal from the skepticism that dominated Wall Street just a few years ago. The rally has been fueled by a combination of factors including increased regulatory clarity, growing inflation concerns, and the entry of major corporations into the crypto space. Tesla, MicroStrategy, and Square have collectively added billions of dollars worth of Bitcoin to their corporate treasuries. Market analysts point to the approval of multiple Bitcoin ETFs earlier this year as a turning point that made crypto accessible to mainstream investors. Trading volumes have reached record levels, with daily transactions exceeding $200 billion across major exchanges. However, some experts warn that the rapid price appreciation could lead to increased volatility. Despite the optimism, regulatory challenges remain, particularly regarding stablecoins and decentralized finance platforms.",
-      "category": "Business",
-      "source": "Financial Times",
-      "url": "https://example.com/bitcoin-surge",
-      "publishedAt": "2025-11-02T05:30:00Z",
-      "components": ["details", "timeline"],
-      "details": [
-        "Current Price: $125,000",
-        "24h Trading Volume: $200+ billion",
-        "Institutional Growth: 300%",
-        "Market Cap: $2.5 trillion"
-      ],
+      "detailed_text": "SpaceX has achieved a historic milestone with the successful launch of its first crewed mission to Mars. The four-person crew includes two scientists, an engineer, and a medical doctor. They will spend 30 months on Mars establishing infrastructure for future missions before returning to Earth.",
+      "details": ["Crew Size: 4 astronauts", "Journey Time: 9 months", "Mission Duration: 30 months"],
       "timeline": [
-        {"date": "2009", "event": "Bitcoin created by Satoshi Nakamoto"},
-        {"date": "2017", "event": "First major bull run to $20,000"},
-        {"date": "2021", "event": "Institutional adoption begins"},
-        {"date": "2025", "event": "New all-time high of $125,000"}
-      ]
+        {"date": "2024", "event": "Crew selection and training begins"},
+        {"date": "October 2025", "event": "Final systems check completed"},
+        {"date": "November 6, 2025", "event": "Successful launch from Cape Canaveral"}
+      ],
+      "components": ["details", "timeline"],
+      "category": "Science",
+      "source": "Space.com",
+      "url": "https://example.com/mars-mission",
+      "urlToImage": "https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T06:00:00Z"
     },
     {
       "rank": 5,
-      "emoji": "🎮",
-      "title": "Revolutionary Gaming Console Breaks Pre-Order Records",
-      "urlToImage": "https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=1200&h=800&fit=crop",
+      "id": "test-5",
+      "emoji": "💰",
+      "title": "**Bitcoin** Surges Past **$150,000** Following **Fed's Digital Currency Announcement**",
+      "summary": "Cryptocurrency markets rally as Federal Reserve reveals plans for US central bank digital currency.",
       "summary_bullets": [
-        "The new **PlayStation 6** has received over **10 million pre-orders** in its first week",
-        "Features groundbreaking **holographic display technology** and AI-powered gameplay",
-        "Expected to revolutionize gaming with **8K resolution** at 240fps"
+        "**Bitcoin** reaches all-time high of **$152,000**, up 45% in past month",
+        "**Federal Reserve** announces **digital dollar** rollout starting Q2 2026",
+        "Major institutions increase **crypto holdings** by **$89 billion** in October alone",
+        "**Ethereum** and other altcoins gain 20-30% on positive regulatory clarity"
       ],
-      "detailed_text": "Sony has shattered entertainment industry records with the announcement of the PlayStation 6, which received over 10 million pre-orders in just seven days. The next-generation console represents the biggest technological leap in gaming history, featuring holographic display technology that projects 3D images without the need for special glasses. The system is powered by a custom-designed processor that delivers 8K resolution at 240 frames per second, creating an unprecedented level of visual fidelity. Perhaps most impressively, the PS6 incorporates advanced artificial intelligence that adapts game difficulty and storylines based on individual player behavior and preferences. This AI system can generate unique content on the fly, ensuring that no two playthroughs are exactly alike. The console also features haptic feedback technology that has been dramatically enhanced from previous generations, allowing players to feel textures, temperatures, and environmental conditions through the controller. Game developers have praised the new platform's capabilities, with several studios already announcing exclusive titles that will showcase the system's power. The launch lineup includes a stunning remake of a beloved franchise that demonstrates the console's ability to blur the line between games and reality. Industry analysts predict that the PS6 will sell over 50 million units in its first year, potentially becoming the fastest-selling console in history.",
+      "detailed_text": "The cryptocurrency market is experiencing unprecedented growth following the Federal Reserve's surprise announcement of a US central bank digital currency. Bitcoin led the surge, breaking through psychological barriers as institutional investors view the news as validation of digital currencies. Analysts predict continued volatility but long-term stability.",
+      "details": ["Bitcoin Price: $152,000", "Market Cap: $3 Trillion", "Monthly Gain: 45%"],
+      "category": "Business",
+      "source": "Bloomberg",
+      "url": "https://example.com/bitcoin",
+      "urlToImage": "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T05:15:00Z"
+    },
+    {
+      "rank": 6,
+      "id": "test-6",
+      "emoji": "🎮",
+      "title": "**Sony** Unveils **PlayStation 6** with **Photorealistic Graphics** and **AI-Generated Content**",
+      "summary": "Next-generation console promises revolutionary gaming experience with real-time AI-created worlds.",
+      "summary_bullets": [
+        "**PlayStation 6** features **custom neural processor** capable of generating infinite game content",
+        "Console delivers **true 8K resolution** at 240fps with ray-tracing on all games",
+        "Built-in **AI assistant** creates personalized storylines and adaptive difficulty",
+        "Launch lineup includes **15 exclusive titles** with **backwards compatibility** for all PS5 games"
+      ],
+      "detailed_text": "Sony Interactive Entertainment has revealed the PlayStation 6, showcasing technology that blurs the line between video games and reality. The console's AI capabilities can generate unique quests, characters, and entire worlds in real-time, ensuring no two gaming experiences are ever the same. Pre-orders begin next week.",
+      "details": ["Release Date: March 2026", "Launch Price: $599", "Storage: 4TB SSD"],
+      "timeline": [
+        {"date": "September 2025", "event": "First teaser released"},
+        {"date": "November 6, 2025", "event": "Official reveal event in Tokyo"},
+        {"date": "March 2026", "event": "Global launch scheduled"}
+      ],
+      "components": ["details", "timeline"],
       "category": "Technology",
-      "source": "Gaming Weekly",
-      "url": "https://example.com/ps6-launch",
-      "publishedAt": "2025-11-02T04:00:00Z",
-      "components": ["graph"],
-      "graph": {
-        "type": "bar",
-        "title": "PlayStation Console Sales (First Year)",
-        "data": [
-          { "date": "PS3", "value": 13 },
-          { "date": "PS4", "value": 20 },
-          { "date": "PS5", "value": 25 },
-          { "date": "PS6 (Projected)", "value": 50 }
-        ],
-        "y_label": "Million Units",
-        "x_label": "Console Generation"
-      }
+      "source": "IGN",
+      "url": "https://example.com/ps6",
+      "urlToImage": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T04:30:00Z"
+    },
+    {
+      "rank": 7,
+      "id": "test-7",
+      "emoji": "⚽",
+      "title": "**Manchester United** Wins **Premier League** Title After **Historic 38-Game Unbeaten Season**",
+      "summary": "Red Devils complete perfect season under new manager, breaking 150-year-old record.",
+      "summary_bullets": [
+        "**Manchester United** secures league title with **5 games remaining**, earliest in history",
+        "Team achieves **38 consecutive matches** without defeat, surpassing Arsenal's invincibles",
+        "Star striker scores **47 goals**, breaking Premier League single-season record",
+        "**£2 billion** valuation surge expected following unprecedented season performance"
+      ],
+      "detailed_text": "Manchester United has written a new chapter in football history by completing an unbeaten Premier League season. Under the guidance of their new manager and with a revitalized squad, the team dominated opponents with attractive, attacking football. The achievement has sparked celebrations across Manchester and secured numerous sponsorship deals.",
+      "details": ["Wins: 33", "Draws: 5", "Goals Scored: 121"],
+      "timeline": [
+        {"date": "August 2025", "event": "Season begins with 3-0 victory"},
+        {"date": "December 2025", "event": "Halfway point - still unbeaten"},
+        {"date": "April 2026", "event": "Title mathematically secured"}
+      ],
+      "components": ["details", "timeline"],
+      "category": "Sports",
+      "source": "BBC Sport",
+      "url": "https://example.com/united",
+      "urlToImage": "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T03:00:00Z"
+    },
+    {
+      "rank": 8,
+      "id": "test-8",
+      "emoji": "🎬",
+      "title": "**Avatar 3** Breaks **Box Office Records** with **$2.1 Billion Opening Weekend**",
+      "summary": "James Cameron's latest installment shatters all previous records in unprecedented global release.",
+      "summary_bullets": [
+        "Film earns **$2.1 billion** in opening weekend, doubling previous record",
+        "**Revolutionary technology** allows viewers to experience film in **true 3D** without glasses",
+        "**150 countries** simultaneous release marks largest theatrical event in history",
+        "**Streaming rights** sold for record **$500 million** to Disney+"
+      ],
+      "detailed_text": "James Cameron's Avatar 3 has redefined what's possible at the box office. The film's groundbreaking visual effects and immersive storytelling attracted massive audiences worldwide. Theater owners report sold-out shows for the next three weeks, and industry analysts predict the film will become the highest-grossing movie of all time.",
+      "details": ["Opening Weekend: $2.1B", "Theater Count: 15,000", "Runtime: 3h 28min"],
+      "category": "Entertainment",
+      "source": "Variety",
+      "url": "https://example.com/avatar3",
+      "urlToImage": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T02:15:00Z"
+    },
+    {
+      "rank": 9,
+      "id": "test-9",
+      "emoji": "🌊",
+      "title": "**Scientists Discover** Massive **Ocean Beneath Earth's Surface** with **3x More Water** Than All Seas",
+      "summary": "Groundbreaking research reveals hidden reservoir 400 miles underground, revolutionizing understanding of Earth's water cycle.",
+      "summary_bullets": [
+        "**Underground ocean** located in transition zone **400 miles beneath surface** contains more water than all surface oceans combined",
+        "Discovery explains **mysterious earthquake patterns** and **volcanic activity** in specific regions",
+        "**Ringwoodite mineral** acts as massive sponge, holding water in crystal structure",
+        "Finding has **implications for life origins** and **planetary formation** theories"
+      ],
+      "detailed_text": "An international team of geologists has made a stunning discovery that challenges our understanding of Earth's structure. Using advanced seismic imaging, they've confirmed the existence of a massive ocean trapped in rock 400 miles underground. This discovery could explain various geological phenomena and has profound implications for theories about how our planet formed.",
+      "details": ["Depth: 400 miles", "Volume: 3x surface oceans", "Discovery Date: November 2025"],
+      "timeline": [
+        {"date": "2023", "event": "Initial seismic anomalies detected"},
+        {"date": "2024", "event": "Ringwoodite samples analyzed"},
+        {"date": "November 2025", "event": "Major discovery announced"}
+      ],
+      "components": ["details", "timeline"],
+      "category": "Science",
+      "source": "Nature",
+      "url": "https://example.com/underground-ocean",
+      "urlToImage": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T01:00:00Z"
+    },
+    {
+      "rank": 10,
+      "id": "test-10",
+      "emoji": "🏛️",
+      "title": "**EU** Announces **Universal Basic Income** Trial in **6 Member States** Covering **5 Million Citizens**",
+      "summary": "European Union launches largest UBI experiment in history, providing €1,200 monthly to participants.",
+      "summary_bullets": [
+        "**6 EU countries** including Germany, Spain, and Netherlands to implement **2-year trial**",
+        "Each participant receives **€1,200 monthly** with no strings attached",
+        "**€72 billion budget** allocated for comprehensive study of economic and social impacts",
+        "Research will measure effects on **employment, health, education, and entrepreneurship**"
+      ],
+      "detailed_text": "The European Union has approved the world's largest universal basic income trial, involving 5 million citizens across six member states. The two-year experiment will provide crucial data on whether UBI can address income inequality, job displacement from automation, and social welfare challenges. Results will inform potential EU-wide implementation.",
+      "details": ["Participants: 5 Million", "Monthly Payment: €1,200", "Duration: 2 years"],
+      "timeline": [
+        {"date": "May 2025", "event": "EU Parliament approves UBI trial"},
+        {"date": "September 2025", "event": "Participant selection begins"},
+        {"date": "January 2026", "event": "First payments scheduled"}
+      ],
+      "components": ["details", "timeline"],
+      "category": "Politics",
+      "source": "Financial Times",
+      "url": "https://example.com/eu-ubi",
+      "urlToImage": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200&h=800&fit=crop",
+      "published_at": "2025-11-06T00:30:00Z"
     }
-  ]
+  ],
+  "dailyGreeting": "Today's Essential Global News",
+  "readingTime": "35 minutes total reading time",
+  "displayDate": "WEDNESDAY, NOVEMBER 6, 2025",
+  "generatedAt": "2025-11-06T09:00:00Z",
+  "generatedAtUK": "2025-11-06T09:00:00Z"
 }
-
-
-
