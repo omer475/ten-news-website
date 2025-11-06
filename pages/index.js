@@ -2750,10 +2750,7 @@ The article concludes with forward-looking analysis and what readers should watc
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
-                      // Toggle detailed text to show article under summary
-                      toggleDetailedText(index);
-                  }}>
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -3327,6 +3324,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                     <li 
                                       key={i} 
                                       onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleDetailedText(index);
+                                      }}
+                                      onTouchEnd={(e) => {
+                                        e.preventDefault();
                                         e.stopPropagation();
                                         toggleDetailedText(index);
                                       }}
@@ -3337,7 +3340,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                         fontWeight: '400',
                                         color: '#000000',
                                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
-                                        cursor: 'pointer'
+                                        cursor: 'pointer',
+                                        userSelect: 'none',
+                                        WebkitTapHighlightColor: 'transparent'
                                       }}
                                     >
                                       {renderBoldText(bullet, imageDominantColors[index], story.category)}
@@ -3355,6 +3360,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           {showDetailedText[index] && (
                             <div 
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 toggleDetailedText(index);
                               }}
@@ -3371,40 +3377,15 @@ The article concludes with forward-looking analysis and what readers should watc
                                 position: 'relative',
                                 zIndex: 1,
                                 width: '100%',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                userSelect: 'none',
+                                WebkitTapHighlightColor: 'transparent'
                               }}
-                              onTouchStart={(e) => {
-                                const startX = e.touches[0].clientX;
-                                const startY = e.touches[0].clientY;
-                                let hasMoved = false;
-                                
-                                const handleTouchMove = (moveEvent) => {
-                                  const currentX = moveEvent.touches[0].clientX;
-                                  const diffX = Math.abs(currentX - startX);
-                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
-                                  
-                                  if (diffX > 10 || diffY > 10) {
-                                    hasMoved = true;
-                                  }
-                                };
-                                
-                                const handleTouchEnd = (endEvent) => {
-                                  const endX = endEvent.changedTouches[0].clientX;
-                                  const diffX = endX - startX;
-                                  
-                                  // Swipe right to close article
-                                  if (hasMoved && diffX > 100) {
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    toggleDetailedText(index); // Close article
-                                  }
-                                  
-                                  document.removeEventListener('touchmove', handleTouchMove);
-                                  document.removeEventListener('touchend', handleTouchEnd);
-                                };
-                                
-                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                              onTouchEnd={(e) => {
+                                // Simple tap to close - no swipe detection needed
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleDetailedText(index);
                               }}
                             >
                               <div dangerouslySetInnerHTML={{
