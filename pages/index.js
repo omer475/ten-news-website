@@ -2760,35 +2760,32 @@ The article concludes with forward-looking analysis and what readers should watc
           }
           
           .glass-content {
-            flex-wrap: wrap !important;
+            flex-direction: column !important;
             gap: 0 !important;
           }
           
           .news-detail-item {
-            padding: 8px 10px;
-            flex: 1 1 45% !important;
-            min-width: 45%;
-            max-width: 50%;
+            width: 100% !important;
+            padding: 12px 15px !important;
             border-right: none !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+            flex: none !important;
           }
           
-          .news-detail-item:nth-last-child(-n+2) {
-            border-bottom: none;
+          .news-detail-item:last-child {
+            border-bottom: none !important;
           }
           
           .news-detail-label {
-            font-size: 8px;
-            letter-spacing: 0.5px;
+            font-size: 9px;
           }
           
           .news-detail-value {
             font-size: 16px;
-            line-height: 1.1;
           }
           
           .news-detail-subtitle {
-            font-size: 9px;
+            font-size: 10px;
           }
         }
       `}</style>
