@@ -1307,7 +1307,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: #F5F5F5;
+          background: #FAFAFA;
           padding: 0;
           margin: 0;
           height: 100%;
@@ -2363,7 +2363,7 @@ The article concludes with forward-looking analysis and what readers should watc
           --c-dark: #000;
           --c-content: #224;
           --c-action: #0052f5;
-          --c-bg: #F5F5F5;
+          --c-bg: #FAFAFA;
           --glass-reflex-dark: 1;
           --glass-reflex-light: 1;
           --saturation: 150%;
@@ -2598,7 +2598,7 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-dot {
           width: 4px;
           height: 4px;
-          background: #F5F5F5;
+          background: #FAFAFA;
           border: 1.5px solid #666666;
           border-radius: 50%;
           flex-shrink: 0;
