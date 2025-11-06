@@ -39,7 +39,7 @@ export default function Home() {
 
   const onTouchStart = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
       return;
     }
     setTouchEnd(null);
@@ -48,7 +48,7 @@ export default function Home() {
 
   const onTouchMove = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
       return;
     }
     setTouchEnd(e.targetTouches[0].clientX);
@@ -56,7 +56,7 @@ export default function Home() {
 
   const onTouchEnd = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.toggle-switch') || e.target.closest('[data-expand-icon]')) {
       return;
     }
     
@@ -156,7 +156,7 @@ export default function Home() {
     if (showMap[index]) return 'map';
     if (showGraph[index]) return 'graph';
     
-    // If no state is set, default to the first component from the components array
+    // Default to first component in array (respects component order)
     const availableTypes = getAvailableInformationTypes(story);
     return availableTypes.length > 0 ? availableTypes[0] : 'details';
   };
@@ -1294,9 +1294,6 @@ The article concludes with forward-looking analysis and what readers should watc
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
       </Head>
       <style>{`
         * {
@@ -1307,7 +1304,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: #FAFAFA;
+          background: #ffffff;
           padding: 0;
           margin: 0;
           height: 100%;
@@ -1317,7 +1314,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          background: ${darkMode ? '#000000' : '#E8E8E9'};
+          background: ${darkMode ? '#000000' : '#ffffff'};
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           overflow: hidden;
           position: fixed;
@@ -1336,7 +1333,7 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           height: max(env(safe-area-inset-top), 44px);
-          background: ${darkMode ? '#000000' : '#E8E8E9'};
+          background: ${darkMode ? '#000000' : '#ffffff'};
           z-index: -1;
           pointer-events: none;
         }
@@ -1348,7 +1345,7 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           height: max(env(safe-area-inset-bottom), 34px);
-          background: ${darkMode ? '#000000' : '#E8E8E9'};
+          background: ${darkMode ? '#000000' : '#ffffff'};
           z-index: -1;
           pointer-events: none;
         }
@@ -1359,7 +1356,7 @@ The article concludes with forward-looking analysis and what readers should watc
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background: ${darkMode ? '#000000' : '#E8E8E9'};
+          background: ${darkMode ? '#000000' : '#fff'};
         }
 
         .loading-spinner {
@@ -1388,7 +1385,7 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           height: 60px;
-          background: ${darkMode ? 'rgba(0,0,0,0.97)' : 'rgba(232,232,233,0.97)'};
+          background: ${darkMode ? 'rgba(0,0,0,0.97)' : 'rgba(255,255,255,0.97)'};
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           z-index: 1000;
@@ -1454,7 +1451,7 @@ The article concludes with forward-looking analysis and what readers should watc
           right: 0;
           /* Reduce height to leave space for information box at bottom */
           height: calc(100vh - 250px);
-          background: ${darkMode ? '#000000' : '#E8E8E9'};
+          background: ${darkMode ? '#000000' : '#fff'};
           z-index: -1;
           pointer-events: none;
           /* Ensure it doesn't extend below the content area where information box is */
@@ -1485,7 +1482,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .paywall-modal {
-          background: ${darkMode ? '#1f2937' : '#E8E8E9'};
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
           border-radius: 16px;
           padding: 32px;
           max-width: 400px;
@@ -1704,151 +1701,26 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .news-meta {
           display: flex !important;
-          background: transparent !important;
-          background-color: transparent !important;
+          background: #ffffff !important;
+          background-color: #ffffff !important;
           backdrop-filter: none !important;
           -webkit-backdrop-filter: none !important;
-          border-radius: 2rem !important;
-          padding: 0 !important;
+          border-radius: 16px;
+          padding: 12px 20px;
           margin-top: 20px;
           gap: 0;
           border: none !important;
-          outline: none !important;
-          box-shadow: none !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
           visibility: visible !important;
           opacity: 1 !important;
           z-index: 10000 !important;
-          overflow: hidden !important;
         }
 
-        /* ========== VARIABLES ========== */
-        :root {
-          --lg-bg-color: rgba(255, 255, 255, 0.15);
-          --lg-highlight: rgba(255, 255, 255, 0.75);
-          --lg-text: #fff;
-          --lg-hover-glow: rgba(255, 255, 255, 0.4);
-        }
-
-        /* ========== CONTAINER ========== */
-        .glass-container {
-          position: relative;
-          display: flex;
-          font-weight: 600;
-          overflow: hidden;
-          color: var(--lg-text);
-          cursor: pointer;
-          background: transparent;
-          border-radius: 2rem;
-          border: none;
-          outline: none;
-          box-shadow:
-            0 6px 6px rgba(0, 0, 0, 0.2),
-            0 0 20px rgba(0, 0, 0, 0.1);
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
-        }
-
-        .glass-container--small {
-          margin: 0;
-          text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.25);
-        }
-
-        .glass-container svg {
-          fill: var(--lg-text);
-        }
-
-        .glass-container .glass-filter {
-          position: absolute;
-          inset: 0;
-          z-index: 0;
-          -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
-          filter: url(#lg-dist);
-          isolation: isolate;
-          border-radius: inherit;
-          overflow: hidden;
-          border: none;
-          outline: none;
-          pointer-events: none;
-        }
-
-        .glass-container .glass-overlay {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          background: var(--lg-bg-color);
-          border-radius: inherit;
-          overflow: hidden;
-          border: none;
-          outline: none;
-          pointer-events: none;
-        }
-
-        .glass-container .glass-specular {
-          position: absolute;
-          inset: 0;
-          z-index: 2;
-          border-radius: inherit;
-          overflow: hidden;
-          border: none;
-          outline: none;
-          pointer-events: none;
-          box-shadow:
-            inset 1px 1px 0 var(--lg-highlight),
-            inset 0 0 5px var(--lg-highlight);
-        }
-
-        .glass-container .glass-content {
-          position: relative;
-          z-index: 3;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #000000;
-          padding: 1rem 1.5rem 0.9rem;
-          line-height: 0;
-          border-radius: inherit;
-          border: none;
-          outline: none;
-        }
-
-        .glass-container .glass-content a {
-          position: relative;
-          display: inline-block;
-          padding: 1px;
-          border-radius: 1.2rem;
-        }
-
-        .glass-container .glass-content a img {
-          display: block;
-          width: 75px;
-          transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
-        }
-
-        .glass-container .glass-content a img:hover {
-          transform: scale(0.95);
-        }
-
-        /* ========== TIMELINE & GRAPH CONTAINERS (GLASS VERSION) ========== */
-        .timeline-container-desktop,
-        .graph-container-desktop,
-        .map-container {
-          background: transparent !important;
-          backdrop-filter: none !important;
-          -webkit-backdrop-filter: none !important;
-          border: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-          border-radius: 2rem !important;
-          padding: 0 !important;
-          overflow: hidden !important;
-        }
-
-        /* ========== NEWS DETAIL ITEM (GLASS VERSION) ========== */
         .news-detail-item {
           flex: 1;
           text-align: center;
           padding: 0 15px;
-          border-right: 1px solid rgba(0, 0, 0, 0.2);
+          border-right: 1px solid #e2e8f0;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -1862,7 +1734,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .news-detail-label {
           font-size: 10px;
-          color: #000000;
+          color: #6b7280;
           text-transform: uppercase;
           letter-spacing: 1px;
           font-weight: 600;
@@ -1872,14 +1744,14 @@ The article concludes with forward-looking analysis and what readers should watc
         .news-detail-value {
           font-size: 20px;
           font-weight: 800;
-          color: #000000;
+          color: ${darkMode ? '#f9fafb' : '#111827'};
           line-height: 1.2;
           margin: 0;
         }
 
         .news-detail-subtitle {
           font-size: 11px;
-          color: #000000;
+          color: #6b7280;
           font-weight: 500;
           margin-top: 0;
         }
@@ -2042,7 +1914,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .auth-modal {
-          background: ${darkMode ? '#1f2937' : '#E8E8E9'};
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
           border-radius: 16px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
           width: 90%;
@@ -2124,7 +1996,7 @@ The article concludes with forward-looking analysis and what readers should watc
           border: 1px solid ${darkMode ? '#374151' : '#d5d5d5'};
           border-radius: 8px;
           font-size: 16px;
-          background: ${darkMode ? '#111827' : '#E8E8E9'};
+          background: ${darkMode ? '#111827' : '#ffffff'};
           color: ${darkMode ? '#ffffff' : '#111827'};
           transition: border-color 0.2s;
         }
@@ -2357,303 +2229,81 @@ The article concludes with forward-looking analysis and what readers should watc
           opacity: 0.7;
         }
 
-        .switcher {
-          --c-glass: #bbbbbc;
-          --c-light: #fff;
-          --c-dark: #000;
-          --c-content: #224;
-          --c-action: #0052f5;
-          --c-bg: #FAFAFA;
-          --glass-reflex-dark: 1;
-          --glass-reflex-light: 1;
-          --saturation: 150%;
-
+        .news-meta {
           position: relative;
+        }
+
+        .toggle-switch {
           display: flex;
-          align-items: center;
-          gap: 2px;
-          width: auto;
-          height: 28px;
-          box-sizing: border-box;
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 6px;
           padding: 2px;
-          margin: 0;
-          border: none;
-          border-radius: 99em;
-          font-size: 10px;
-          font-family: "DM Sans", sans-serif;
-          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
-          backdrop-filter: blur(4px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          gap: 2px;
         }
 
-        .switcher__input {
-          clip: rect(0 0 0 0);
-          clip-path: inset(100%);
-          height: 1px;
-          width: 1px;
-          overflow: hidden;
-          position: absolute;
-          white-space: nowrap;
-        }
-
-        .switcher__option {
-          --c: var(--c-content);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 0;
-          width: 32px;
-          height: 24px;
-          box-sizing: border-box;
-          border-radius: 99em;
-          opacity: 1;
-          transition: all 160ms;
+        .toggle-option {
           background: none;
           border: none;
+          padding: 5px 8px;
+          border-radius: 4px;
           cursor: pointer;
-        }
-
-        .switcher__option:hover {
-          --c: var(--c-action);
-          cursor: pointer;
-        }
-
-        .switcher__option:hover .switcher__icon {
-          scale: 1.2;
-        }
-
-        .switcher__option.active {
-          --c: var(--c-content);
-          cursor: auto;
-        }
-
-        .switcher__option.active .switcher__icon {
-          scale: 1;
-        }
-
-        .switcher::after {
-          content: '';
-          position: absolute;
-          left: 2px;
-          top: 2px;
-          display: block;
-          width: 32px;
-          height: 24px;
-          border-radius: 99em;
-          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
-          z-index: -1;
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 1px 0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -0.75px -0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -1px -3px 0.5px -2.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -0.5px 1px 1.5px -0.5px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px -2px 0.5px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 1.5px 3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-        }
-
-        .switcher:has(.switcher__option:nth-child(1).active)::after {
-          translate: 0 0;
-          transform-origin: right;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle 440ms ease; 
-        }
-
-        .switcher:has(.switcher__option:nth-child(2).active)::after {
-          translate: 34px 0;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle2 440ms ease; 
-        }
-
-        .switcher:has(.switcher__option:nth-child(3).active)::after {
-          translate: 68px 0;
-          transform-origin: left;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle3 440ms ease; 
-        }
-
-        .switcher:has(.switcher__option:nth-child(4).active)::after {
-          translate: 102px 0;
-          transform-origin: left;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle4 440ms ease; 
-        }
-
-        @keyframes scaleToggle {
-          0% { scale: 1 1; }
-          50% { scale: 1.1 1; }
-          100% { scale: 1 1; }
-        }
-
-        @keyframes scaleToggle2 {
-          0% { scale: 1 1; }
-          50% { scale: 1.2 1; }
-          100% { scale: 1 1; }
-        } 
-
-        @keyframes scaleToggle3 {
-          0% { scale: 1 1; }
-          50% { scale: 1.1 1; }
-          100% { scale: 1 1; }
-        }
-
-        @keyframes scaleToggle4 {
-          0% { scale: 1 1; }
-          50% { scale: 1.1 1; }
-          100% { scale: 1 1; }
-        }
-
-        .switcher__icon {
+          transition: all 0.2s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 100%;
-          height: 100%;
-          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
+          width: 32px;
+          height: 24px;
+        }
+
+        .toggle-option.active {
+          background: #ffffff;
+        }
+
+        .toggle-option.active .grid-square,
+        .toggle-option.active .list-dot,
+        .toggle-option.active .list-bar {
+          background: #000000;
         }
 
         .grid-icon {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 2px;
+          gap: 1px;
           width: 14px;
           height: 14px;
-          padding: 0.5px;
         }
 
         .grid-square {
           background: #666666;
-          border-radius: 2px;
-          width: 100%;
-          height: 100%;
-          transition: all 0.2s ease;
-        }
-
-        .switcher__option.active .grid-square {
-          background: #000000;
-        }
-
-        .switcher__option:hover:not(.active) .grid-square {
-          background: #888888;
+          border-radius: 1px;
         }
 
         .list-icon {
           display: flex;
           flex-direction: column;
-          align-items: flex-start;
-          justify-content: center;
-          gap: 3px;
+          gap: 2px;
           width: 14px;
           height: 14px;
-          position: relative;
-        }
-
-        .list-icon::before {
-          content: '';
-          position: absolute;
-          left: 3px;
-          top: 0;
-          bottom: 0;
-          width: 1.5px;
-          background: #666666;
-          border-radius: 1px;
-          z-index: 0;
         }
 
         .list-line {
           display: flex;
           align-items: center;
-          gap: 4px;
-          position: relative;
-          z-index: 1;
-          width: 100%;
+          gap: 2px;
         }
 
         .list-dot {
-          width: 4px;
-          height: 4px;
-          background: #FAFAFA;
-          border: 1.5px solid #666666;
+          width: 2px;
+          height: 2px;
+          background: #666666;
           border-radius: 50%;
-          flex-shrink: 0;
-          transition: all 0.2s ease;
-          box-sizing: border-box;
         }
 
         .list-bar {
-          width: 6px;
-          height: 2px;
+          width: 8px;
+          height: 1px;
           background: #666666;
           border-radius: 1px;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-        }
-
-        .switcher__option.active .list-dot {
-          background: #000000;
-          border-color: #000000;
-        }
-
-        .switcher__option.active .list-bar {
-          background: #000000;
-        }
-
-        .switcher__option.active .list-icon::before {
-          background: #000000;
-        }
-
-        .switcher__option:hover:not(.active) .list-dot {
-          border-color: #888888;
-        }
-
-        .switcher__option:hover:not(.active) .list-bar {
-          background: #888888;
-        }
-
-        .switcher__option:hover:not(.active) .list-icon::before {
-          background: #888888;
-        }
-
-        .map-icon {
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .graph-icon {
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
 
 
@@ -2756,7 +2406,11 @@ The article concludes with forward-looking analysis and what readers should watc
           }
           
           .news-meta {
-            /* Glass container styles - no overrides needed */
+            padding: 10px 15px;
+            margin-top: 15px;
+            background: #ffffff;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
           
           .news-detail-item {
@@ -3232,7 +2886,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
-                          <div className="switcher" style={{ 
+                          <div className="toggle-switch" style={{ 
                             position: 'relative',
                             flex: '0 0 auto'
                           }}>
@@ -3241,7 +2895,7 @@ The article concludes with forward-looking analysis and what readers should watc
                               return (
                                 <button
                                   key={infoType}
-                                  className={`switcher__option ${isActive ? 'active' : ''}`}
+                                  className={`toggle-option ${isActive ? 'active' : ''}`}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -3270,102 +2924,100 @@ The article concludes with forward-looking analysis and what readers should watc
                                     }
                                   }}
                                 >
-                                  <div className="switcher__icon">
-                                    {infoType === 'details' && (
-                                      <div className="grid-icon">
-                                        <div className="grid-square"></div>
-                                        <div className="grid-square"></div>
-                                        <div className="grid-square"></div>
-                                        <div className="grid-square"></div>
+                                  {infoType === 'details' && (
+                                    <div className="grid-icon">
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                      <div className="grid-square"></div>
+                                    </div>
+                                  )}
+                                  {infoType === 'timeline' && (
+                                    <div className="list-icon">
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
                                       </div>
-                                    )}
-                                    {infoType === 'timeline' && (
-                                      <div className="list-icon">
-                                        <div className="list-line">
-                                          <div className="list-dot"></div>
-                                          <div className="list-bar"></div>
-                                        </div>
-                                        <div className="list-line">
-                                          <div className="list-dot"></div>
-                                          <div className="list-bar"></div>
-                                        </div>
-                                        <div className="list-line">
-                                          <div className="list-dot"></div>
-                                          <div className="list-bar"></div>
-                                        </div>
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
                                       </div>
-                                    )}
-                                    {infoType === 'map' && (
-                                      <div className="map-icon" style={{
-                                        width: '14px',
-                                        height: '14px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
+                                      <div className="list-line">
+                                        <div className="list-dot"></div>
+                                        <div className="list-bar"></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {infoType === 'map' && (
+                                    <div className="map-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        border: `2px solid ${isActive ? '#000000' : '#666666'}`,
+                                        borderRadius: '50%',
+                                        position: 'relative'
                                       }}>
                                         <div style={{
-                                          width: '10px',
-                                          height: '10px',
-                                          border: `2px solid ${isActive ? '#000000' : '#666666'}`,
-                                          borderRadius: '50%',
-                                          position: 'relative'
-                                        }}>
-                                          <div style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            width: '4px',
-                                            height: '4px',
-                                            background: isActive ? '#000000' : '#666666',
-                                            borderRadius: '50%'
-                                          }}></div>
-                                        </div>
+                                          position: 'absolute',
+                                          top: '50%',
+                                          left: '50%',
+                                          transform: 'translate(-50%, -50%)',
+                                          width: '4px',
+                                          height: '4px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '50%'
+                                        }}></div>
                                       </div>
-                                    )}
-                                    {infoType === 'graph' && (
-                                      <div className="graph-icon" style={{
-                                        width: '14px',
-                                        height: '14px',
+                                    </div>
+                                  )}
+                                  {infoType === 'graph' && (
+                                    <div className="graph-icon" style={{
+                                      width: '14px',
+                                      height: '14px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <div style={{
+                                        width: '12px',
+                                        height: '8px',
                                         display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
+                                        alignItems: 'end',
+                                        gap: '1px'
                                       }}>
                                         <div style={{
-                                          width: '12px',
+                                          width: '2px',
+                                          height: '3px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '6px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
+                                          height: '4px',
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
+                                        <div style={{
+                                          width: '2px',
                                           height: '8px',
-                                          display: 'flex',
-                                          alignItems: 'end',
-                                          gap: '1px'
-                                        }}>
-                                          <div style={{
-                                            width: '2px',
-                                            height: '3px',
-                                            background: isActive ? '#000000' : '#666666',
-                                            borderRadius: '1px'
-                                          }}></div>
-                                          <div style={{
-                                            width: '2px',
-                                            height: '6px',
-                                            background: isActive ? '#000000' : '#666666',
-                                            borderRadius: '1px'
-                                          }}></div>
-                                          <div style={{
-                                            width: '2px',
-                                            height: '4px',
-                                            background: isActive ? '#000000' : '#666666',
-                                            borderRadius: '1px'
-                                          }}></div>
-                                          <div style={{
-                                            width: '2px',
-                                            height: '8px',
-                                            background: isActive ? '#000000' : '#666666',
-                                            borderRadius: '1px'
-                                          }}></div>
-                                        </div>
+                                          background: isActive ? '#000000' : '#666666',
+                                          borderRadius: '1px'
+                                        }}></div>
                                       </div>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
                                 </button>
                               );
                             })}
@@ -3482,10 +3134,10 @@ The article concludes with forward-looking analysis and what readers should watc
                                     <li key={i} style={{
                                     marginBottom: '6px',
                                       fontSize: '16px',
-                                    lineHeight: '1.8',
+                                    lineHeight: '1.4',
                                     fontWeight: '400',
                                     color: '#1a1a1a',
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                                    fontFamily: 'Georgia, "Times New Roman", Times, serif'
                                   }}>
                                     {renderBoldText(bullet, imageDominantColors[index]?.light || imageDominantColors[index]?.original, story.category)}
                                     </li>
@@ -3615,24 +3267,25 @@ The article concludes with forward-looking analysis and what readers should watc
                         
                         {/* Details/Timeline Section - At end of article when detailed text is showing */}
                         <div 
-                          className={`glass-container glass-container--small ${getAvailableComponentsCount(story) > 1 ? 'news-meta' : ''}`} 
+                          className="news-meta" 
                         style={{ 
                           position: 'relative', 
-                          overflow: 'hidden', 
+                          overflow: 'visible', 
                           cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
                           display: 'flex',
                           visibility: 'visible',
                           minHeight: '85px',
                           zIndex: 99999,
                           opacity: 1,
-                          height: (showTimeline[index] && expandedTimeline[index]) ? '300px' : 
-                                  (showGraph[index] && expandedGraph[index]) ? '300px' : 
-                                  (showGraph[index] && !expandedGraph[index]) ? '120px' : '85px',
-                          maxHeight: (showTimeline[index] && expandedTimeline[index]) ? '300px' : 
-                                     (showGraph[index] && expandedGraph[index]) ? '300px' : 
-                                     (showGraph[index] && !expandedGraph[index]) ? '120px' : '85px',
-                          transition: 'height 0.3s ease-in-out, max-height 0.3s ease-in-out',
-                          width: '100%'
+                          height: showTimeline[index] ? (expandedTimeline[index] ? 'auto' : '85px') : '85px',
+                          maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
+                          backgroundColor: showTimeline[index] ? 'transparent' : '#ffffff',
+                          background: showTimeline[index] ? 'transparent' : '#ffffff',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                            border: 'none',
+                            borderRadius: showTimeline[index] ? '0' : '8px',
+                          boxShadow: showTimeline[index] ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.1)'
                         }}
                         onTouchStart={(e) => {
                           // Check if touch started on expand icon - if so, don't handle it
@@ -3707,14 +3360,6 @@ The article concludes with forward-looking analysis and what readers should watc
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        {/* Glass Filter Layer */}
-                        <div className="glass-filter"></div>
-                        {/* Glass Overlay Layer */}
-                        <div className="glass-overlay"></div>
-                        {/* Glass Specular Layer */}
-                        <div className="glass-specular"></div>
-                        {/* Glass Content Layer */}
-                        <div className="glass-content" style={{ flex: 1, flexDirection: 'row', padding: '16px 20px 12px 20px', width: '100%' }}>
                         {/* Content - Show one component at a time */}
                         {/* Default to first component from components array */}
                         {(() => {
@@ -3770,34 +3415,26 @@ The article concludes with forward-looking analysis and what readers should watc
                             // Show Graph - Similar to timeline with expand/collapse
                             return story.graph && (
                               <div 
-                                className="glass-container glass-container--small graph-container-desktop"
+                                className="graph-container-desktop"
                                 style={{
                                   position: 'absolute',
                                   bottom: '0',
                                   left: '0',
                                   right: '0',
-                                  height: expandedGraph[index] ? '300px' : '120px',
-                                  maxHeight: expandedGraph[index] ? '300px' : '120px',
-                                  transition: 'height 0.3s ease-in-out, max-height 0.3s ease-in-out',
-                                  minHeight: expandedGraph[index] ? '85px' : '120px',
+                                  height: expandedGraph[index] ? '300px' : '85px',
+                                  maxHeight: expandedGraph[index] ? '300px' : '85px',
+                                  transition: 'height 0.3s ease-in-out',
+                                  background: '#ffffff',
+                                  backdropFilter: 'none',
+                                  WebkitBackdropFilter: 'none',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  padding: '6px 20px 12px 20px',
+                                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                  minHeight: '85px',
                                   zIndex: '10',
-                                  overflow: 'hidden'
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
                                 }}>
-                              {/* Glass Filter Layer */}
-                              <div className="glass-filter"></div>
-                              {/* Glass Overlay Layer */}
-                              <div className="glass-overlay"></div>
-                              {/* Glass Specular Layer */}
-                              <div className="glass-specular"></div>
-                              {/* Glass Content Layer */}
-                              <div className="glass-content" style={{ 
-                                flex: 1, 
-                                flexDirection: 'column', 
-                                padding: '12px 20px 12px 20px',
-                                width: '100%',
-                                height: '100%',
-                                overflow: 'auto'
-                              }}>
                                 {/* Expand Icon */}
                                 <div 
                                   data-expand-icon="true"
@@ -3811,8 +3448,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     cursor: 'pointer',
-                                    zIndex: '100',
-                                    pointerEvents: 'auto',
+                                    zIndex: '20',
                                     transition: 'all 0.2s ease'
                                   }}
                                   onClick={(e) => {
@@ -3836,10 +3472,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                   <span style={{
                                     fontSize: '18px',
                                     fontWeight: 'bold',
-                                    color: '#000000',
+                                    color: '#666',
                                     transform: expandedGraph[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease',
-                                    opacity: 0.9
+                                    transition: 'transform 0.2s ease'
                                   }}>
                                     ↗
                                   </span>
@@ -3851,7 +3486,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   width: '100%',
                                   paddingRight: '8px',
                                   paddingLeft: '0px',
-                                  paddingTop: '4px',
+                                  paddingTop: '0px',
                               display: 'flex',
                               flexDirection: 'column',
                                   justifyContent: 'flex-start'
@@ -3860,9 +3495,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                   <div style={{
                                     fontSize: '12px',
                                     fontWeight: '700',
-                                    color: '#000000',
+                                    color: '#3b82f6',
                                     marginBottom: '8px',
-                                    marginTop: '0px',
                                     letterSpacing: '0.3px'
                                   }}>
                                     {story.graph.title || 'Data Visualization'}
@@ -3871,10 +3505,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                   {/* Chart Container */}
                                   <div style={{
                                     width: '100%',
-                                    height: expandedGraph[index] ? '240px' : '85px',
+                                    height: expandedGraph[index] ? '240px' : '65px',
                                     transition: 'height 0.3s ease-in-out',
-                                    overflow: expandedGraph[index] ? 'visible' : 'hidden',
-                                    marginTop: expandedGraph[index] ? '0px' : '0px'
+                                    overflow: expandedGraph[index] ? 'visible' : 'hidden'
                                   }}>
                                     {story.graph && story.graph.data && story.graph.data.length > 0 ? (
                                       <GraphChart graph={story.graph} expanded={expandedGraph[index]} />
@@ -3885,7 +3518,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                         display: 'flex',
                                         alignItems: 'center',
                               justifyContent: 'center',
-                                        color: '#000000',
+                                        color: '#64748b',
                                         fontSize: '12px'
                             }}>
                                         No graph data available
@@ -3893,15 +3526,13 @@ The article concludes with forward-looking analysis and what readers should watc
                                     )}
                                   </div>
                                 </div>
-                              </div>
-                              {/* End Glass Content Layer */}
                             </div>
                           );
                           } else if (showTimeline[index]) {
                             // Show Timeline
                             return story.timeline && (
                             <div 
-                              className="glass-container glass-container--small timeline-container-desktop"
+                              className="timeline-container-desktop"
                               style={{
                                 position: 'absolute',
                                 bottom: '0',
@@ -3909,25 +3540,17 @@ The article concludes with forward-looking analysis and what readers should watc
                                 right: '0',
                                 height: expandedTimeline[index] ? '300px' : '85px',
                                 maxHeight: expandedTimeline[index] ? '300px' : '85px',
-                                transition: 'height 0.3s ease-in-out, max-height 0.3s ease-in-out',
+                                transition: 'height 0.3s ease-in-out',
+                                background: '#ffffff',
+                                backdropFilter: 'none',
+                                WebkitBackdropFilter: 'none',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 20px 12px 20px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                 minHeight: '85px',
                                 zIndex: '10',
-                                overflow: 'hidden'
-                              }}>
-                              {/* Glass Filter Layer */}
-                              <div className="glass-filter"></div>
-                              {/* Glass Overlay Layer */}
-                              <div className="glass-overlay"></div>
-                              {/* Glass Specular Layer */}
-                              <div className="glass-specular"></div>
-                              {/* Glass Content Layer */}
-                              <div className="glass-content" style={{ 
-                                flex: 1, 
-                                flexDirection: 'column', 
-                                padding: '12px 20px 12px 20px',
-                                width: '100%',
-                                height: '100%',
-                                overflow: 'auto'
+                                  overflow: expandedTimeline[index] ? 'visible' : 'hidden'
                               }}>
                                {/* Expand Icon */}
                                <div 
@@ -3942,8 +3565,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                  alignItems: 'center',
                                  justifyContent: 'center',
                                  cursor: 'pointer',
-                                 zIndex: '100',
-                                 pointerEvents: 'auto',
+                                 zIndex: '20',
                                  transition: 'all 0.2s ease'
                                }}
                                onClick={(e) => {
@@ -3967,10 +3589,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                  <span style={{
                                    fontSize: '18px',
                                    fontWeight: 'bold',
-                                   color: '#000000',
+                                   color: '#666',
                                    transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                   transition: 'transform 0.2s ease',
-                                   opacity: 0.9
+                                   transition: 'transform 0.2s ease'
                                  }}>
                                    ↗
                                  </span>
@@ -3982,7 +3603,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                 overflow: expandedTimeline[index] ? 'visible' : 'hidden',
                                 paddingRight: '8px',
                                 paddingLeft: '20px',
-                                paddingTop: '4px',
+                                paddingTop: '0px',
                                 width: '100%',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -3991,13 +3612,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                 <div style={{
                                   position: 'absolute',
                                   left: '5.5px',
-                                  top: '4px',
+                                  top: '0px',
                                   bottom: '8px',
                                   width: '3px',
-                                  background: 'linear-gradient(180deg, #000000, rgba(0, 0, 0, 0.5))',
+                                  background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
                                   zIndex: '0',
-                                  borderRadius: '2px',
-                                  opacity: 0.6
+                                  borderRadius: '2px'
                                 }}></div>
                                 <div style={{
                                   display: 'flex',
@@ -4007,197 +3627,88 @@ The article concludes with forward-looking analysis and what readers should watc
                                   paddingTop: '0px',
                                   paddingBottom: '8px'
                                 }}>
-                                  {expandedTimeline[index] ? (
-                                    // EXPANDED VIEW - Show all events with full details
-                                    story.timeline.map((event, idx) => (
-                                      <div key={idx} style={{
-                                        position: 'relative',
-                                        marginBottom: '16px',
-                                        paddingLeft: '20px',
-                                        minHeight: '40px',
-                                        marginTop: idx === 0 ? '0px' : '0px'
-                                      }}>
-                                        <div style={{
-                                          position: 'absolute',
-                                          left: '-15px',
-                                          top: '2px',
-                                          width: '12px',
-                                          height: '12px',
-                                          borderRadius: '50%',
-                                          background: idx === story.timeline.length - 1 ? '#000000' : 'rgba(0, 0, 0, 0.3)',
-                                          border: '2.5px solid #000000',
-                                          zIndex: '2',
-                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                                        }}></div>
-                                        <div style={{
-                                          fontSize: '11px',
-                                          fontWeight: '700',
-                                          color: '#000000',
-                                          marginBottom: '4px',
-                                          letterSpacing: '0.5px',
-                                          marginTop: '0px',
-                                          opacity: 0.9,
-                                          textTransform: 'uppercase'
-                                        }}>{event.date}</div>
-                                        <div style={{
-                                          fontSize: '14px',
-                                          fontWeight: '500',
-                                          color: '#000000',
-                                          lineHeight: '1.5',
-                                          marginTop: '0px',
-                                          opacity: 0.9
-                                        }}>{event.event}</div>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    // COLLAPSED VIEW - Show elegant preview
-                                    <div style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '12px',
+                                  {story.timeline.map((event, idx) => (
+                                    <div key={idx} style={{
+                                      position: 'relative',
+                                      marginBottom: '12px',
                                       paddingLeft: '20px',
-                                      height: '100%',
-                                      minHeight: '60px',
-                                      justifyContent: 'flex-start'
+                                      minHeight: '36px',
+                                      marginTop: idx === 0 ? '0px' : '0px'
                                     }}>
-                                      <div style={{
-                                        position: 'relative',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        flex: 1
-                                      }}>
-                                        {/* Timeline indicator dot */}
-                                        <div style={{
-                                          position: 'absolute',
-                                          left: '-13px',
-                                          top: '50%',
-                                          transform: 'translateY(-50%)',
-                                          width: '10px',
-                                          height: '10px',
-                                          borderRadius: '50%',
-                                          background: '#000000',
-                                          border: '2px solid #000000',
-                                          zIndex: '2',
-                                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
-                                        }}></div>
-                                        
-                                        {/* First event preview */}
-                                        {story.timeline.length > 0 && (
-                                          <div style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '5px',
-                                            flex: 1
-                                          }}>
-                                            <div style={{
-                                              fontSize: '10px',
-                                              fontWeight: '600',
-                                              color: '#000000',
-                                              letterSpacing: '0.5px',
-                                              opacity: 0.7,
-                                              textTransform: 'uppercase'
-                                            }}>{story.timeline[0].date}</div>
-                                            <div style={{
-                                              fontSize: '14px',
-                                              fontWeight: '600',
-                                              color: '#000000',
-                                              lineHeight: '1.4',
-                                              opacity: 0.9,
-                                              display: '-webkit-box',
-                                              WebkitLineClamp: 2,
-                                              WebkitBoxOrient: 'vertical',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis'
-                                            }}>{story.timeline[0].event}</div>
-                                          </div>
-                                        )}
-                                        
-                                        {/* Event count indicator */}
-                                        {story.timeline.length > 1 && (
-                                          <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            paddingLeft: '12px',
-                                            borderLeft: '1px solid rgba(0, 0, 0, 0.15)'
-                                          }}>
-                                            <div style={{
-                                              fontSize: '11px',
-                                              fontWeight: '600',
-                                              color: '#000000',
-                                              opacity: 0.6,
-                                              letterSpacing: '0.3px'
-                                            }}>
-                                              +{story.timeline.length - 1} more
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
+                                    <div style={{
+                                      position: 'absolute',
+                                      left: '-15px',
+                                      top: '0px',
+                                      width: '12px',
+                                      height: '12px',
+                                      borderRadius: '50%',
+                                      background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
+                                      border: '2.5px solid #3b82f6',
+                                      zIndex: '2',
+                                      boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
+                                    }}></div>
+                                    <div style={{
+                                      fontSize: '12px',
+                                      fontWeight: '700',
+                                      color: '#3b82f6',
+                                      marginBottom: '3px',
+                                      letterSpacing: '0.3px',
+                                      marginTop: '0px'
+                                    }}>{event.date}</div>
+                                    <div style={{
+                                      fontSize: '13px',
+                                      fontWeight: '500',
+                                      color: darkMode ? '#e2e8f0' : '#1e293b',
+                                      lineHeight: '1.3',
+                                      marginTop: '0px'
+                                    }}>{event.event}</div>
+                                  </div>
+                                ))}
                                 </div>
                               </div>
-                              </div>
-                              {/* End Glass Content Layer */}
                             </div>
                           );
                           } else if (showMap[index]) {
                             // Show Map
                             return story.map && (
                             <div 
-                              className="glass-container glass-container--small map-container"
+                              className="map-container"
                               style={{
                                 position: 'absolute',
                                 bottom: '0',
                                 left: '0',
                                 right: '0',
                                 height: '200px',
+                                background: '#ffffff',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                                 zIndex: '10',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 flexDirection: 'column'
-                              }}>
-                              {/* Glass Filter Layer */}
-                              <div className="glass-filter"></div>
-                              {/* Glass Overlay Layer */}
-                              <div className="glass-overlay"></div>
-                              {/* Glass Specular Layer */}
-                              <div className="glass-specular"></div>
-                              {/* Glass Content Layer */}
-                              <div className="glass-content" style={{ 
-                                flex: 1, 
-                                flexDirection: 'column', 
-                                padding: '16px 12px 12px 12px',
-                                width: '100%',
-                                height: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
                               }}>
                               <div style={{
                                 fontSize: '14px',
                                 fontWeight: '600',
-                                color: '#000000',
+                                color: '#1e293b',
                                 marginBottom: '8px'
                               }}>📍 Location Map</div>
                               <div style={{
                                     width: '100%',
                                 height: '150px',
-                                background: 'rgba(255, 255, 255, 0.1)',
+                                background: '#f8fafc',
                                     borderRadius: '6px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                color: '#000000',
+                                border: '1px solid #e2e8f0',
+                                color: '#64748b',
                                 fontSize: '12px'
                               }}>
                                 Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
                                   </div>
-                              </div>
-                              {/* End Glass Content Layer */}
                             </div>
                             );
                           } else if (showDetails[index]) {
@@ -4216,11 +3727,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                 <div key={i} className="news-detail-item" style={{ 
                                       display: 'flex',
                                   flexDirection: 'column',
-                                      justifyContent: 'center'
+                                      justifyContent: 'center',
+                                  color: '#111827'
                                     }}>
-                                  <div className="news-detail-label">{cleanLabel}</div>
-                                  <div className="news-detail-value">{mainValue}</div>
-                                  {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                                  <div className="news-detail-label" style={{ color: '#6b7280' }}>{cleanLabel}</div>
+                                  <div className="news-detail-value" style={{ color: getAdaptiveHighlightColor(imageDominantColors[index]?.light || imageDominantColors[index]?.original) || '#111827' }}>{mainValue}</div>
+                                  {subtitle && <div className="news-detail-subtitle" style={{ color: '#6b7280' }}>{subtitle}</div>}
                                     </div>
                               );
                             });
@@ -4230,8 +3742,6 @@ The article concludes with forward-looking analysis and what readers should watc
                           }
                         })()}
                         
-                        </div>
-                        {/* End Glass Content Layer */}
                   </div>
                       
                       {/* Component Navigation Dots - Only show if multiple components available */}
