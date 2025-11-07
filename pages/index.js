@@ -2947,43 +2947,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Ease-In Blur Gradient - Starts at 20%, Maximum at 65% */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '20%',
-                        left: '0',
-                        width: '100%',
-                        height: '80%',
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(50px)',
-                        background: 'rgba(255, 255, 255, 0.01)',
-                        maskImage: `linear-gradient(
-                          to bottom,
-                          rgba(0, 0, 0, 0) 0%,
-                          rgba(0, 0, 0, 0.05) 12.5%,
-                          rgba(0, 0, 0, 0.19) 25%,
-                          rgba(0, 0, 0, 0.45) 37.5%,
-                          rgba(0, 0, 0, 0.79) 50%,
-                          rgba(0, 0, 0, 1) 56.25%,
-                          rgba(0, 0, 0, 1) 100%
-                        )`,
-                        WebkitMaskImage: `linear-gradient(
-                          to bottom,
-                          rgba(0, 0, 0, 0) 0%,
-                          rgba(0, 0, 0, 0.05) 12.5%,
-                          rgba(0, 0, 0, 0.19) 25%,
-                          rgba(0, 0, 0, 0.45) 37.5%,
-                          rgba(0, 0, 0, 0.79) 50%,
-                          rgba(0, 0, 0, 1) 56.25%,
-                          rgba(0, 0, 0, 1) 100%
-                        )`,
-                        pointerEvents: 'none',
-                        zIndex: 100000,
-                        isolation: 'isolate',
-                        willChange: 'backdrop-filter',
-                        transform: 'translateZ(0)'
-                      }}></div>
-                      
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
@@ -3035,6 +2998,45 @@ The article concludes with forward-looking analysis and what readers should watc
                         </div>
                       )}
                     </div>
+                    
+                    {/* Ease-In Blur Gradient - OUTSIDE image container, positioned over it */}
+                    <div style={{
+                      position: 'fixed',
+                      top: 'calc(3px + (38vh - 3px) * 0.20)',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc((38vh - 3px) * 0.80)',
+                      backdropFilter: 'blur(50px)',
+                      WebkitBackdropFilter: 'blur(50px)',
+                      background: 'rgba(255, 255, 255, 0.01)',
+                      maskImage: `linear-gradient(
+                        to bottom,
+                        rgba(0, 0, 0, 0) 0%,
+                        rgba(0, 0, 0, 0.05) 12.5%,
+                        rgba(0, 0, 0, 0.19) 25%,
+                        rgba(0, 0, 0, 0.45) 37.5%,
+                        rgba(0, 0, 0, 0.79) 50%,
+                        rgba(0, 0, 0, 1) 56.25%,
+                        rgba(0, 0, 0, 1) 100%
+                      )`,
+                      WebkitMaskImage: `linear-gradient(
+                        to bottom,
+                        rgba(0, 0, 0, 0) 0%,
+                        rgba(0, 0, 0, 0.05) 12.5%,
+                        rgba(0, 0, 0, 0.19) 25%,
+                        rgba(0, 0, 0, 0.45) 37.5%,
+                        rgba(0, 0, 0, 0.79) 50%,
+                        rgba(0, 0, 0, 1) 56.25%,
+                        rgba(0, 0, 0, 1) 100%
+                      )`,
+                      pointerEvents: 'none',
+                      zIndex: 100000,
+                      isolation: 'isolate',
+                      willChange: 'backdrop-filter',
+                      transform: 'translateZ(0)',
+                      borderRadius: '0 0 12px 12px'
+                    }}></div>
                     
                     {/* Emoji fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
