@@ -25,6 +25,7 @@
       "source": "TechCrunch",
       "url": "https://example.com/gpt5",
       "urlToImage": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=800&fit=crop",
+      "blurColor": "#5B7FD9",
       "published_at": "2025-11-06T09:00:00Z"
     },
     {
@@ -51,6 +52,7 @@
       "source": "Reuters",
       "url": "https://example.com/climate",
       "urlToImage": "https://images.unsplash.com/photo-1569163139394-de4798aa62b6?w=1200&h=800&fit=crop",
+      "blurColor": "#2D8B5F",
       "published_at": "2025-11-06T08:30:00Z"
     },
     {
@@ -77,6 +79,7 @@
       "source": "Nature Medicine",
       "url": "https://example.com/cancer-vaccine",
       "urlToImage": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&h=800&fit=crop",
+      "blurColor": "#D94B7F",
       "published_at": "2025-11-06T07:45:00Z"
     },
     {
@@ -103,6 +106,7 @@
       "source": "Space.com",
       "url": "https://example.com/mars-mission",
       "urlToImage": "https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?w=1200&h=800&fit=crop",
+      "blurColor": "#D96842",
       "published_at": "2025-11-06T06:00:00Z"
     },
     {
@@ -123,6 +127,7 @@
       "source": "Bloomberg",
       "url": "https://example.com/bitcoin",
       "urlToImage": "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1200&h=800&fit=crop",
+      "blurColor": "#E89F2A",
       "published_at": "2025-11-06T05:15:00Z"
     },
     {
@@ -149,6 +154,7 @@
       "source": "IGN",
       "url": "https://example.com/ps6",
       "urlToImage": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=1200&h=800&fit=crop",
+      "blurColor": "#6B5FD9",
       "published_at": "2025-11-06T04:30:00Z"
     },
     {
@@ -175,6 +181,7 @@
       "source": "BBC Sport",
       "url": "https://example.com/united",
       "urlToImage": "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200&h=800&fit=crop",
+      "blurColor": "#D93545",
       "published_at": "2025-11-06T03:00:00Z"
     },
     {
@@ -195,6 +202,7 @@
       "source": "Variety",
       "url": "https://example.com/avatar3",
       "urlToImage": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&h=800&fit=crop",
+      "blurColor": "#2AA8B8",
       "published_at": "2025-11-06T02:15:00Z"
     },
     {
@@ -221,6 +229,7 @@
       "source": "Nature",
       "url": "https://example.com/underground-ocean",
       "urlToImage": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=800&fit=crop",
+      "blurColor": "#1E6B9F",
       "published_at": "2025-11-06T01:00:00Z"
     },
     {
@@ -247,6 +256,7 @@
       "source": "Financial Times",
       "url": "https://example.com/eu-ubi",
       "urlToImage": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200&h=800&fit=crop",
+      "blurColor": "#3366CC",
       "published_at": "2025-11-06T00:30:00Z"
     }
   ],
@@ -255,4 +265,4 @@
   "displayDate": "WEDNESDAY, NOVEMBER 6, 2025",
   "generatedAt": "2025-11-06T09:00:00Z",
   "generatedAtUK": "2025-11-06T09:00:00Z"
-}
+      }

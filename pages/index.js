@@ -220,6 +220,143 @@ export default function Home() {
     }
   };
 
+  // Extract color candidates using enhanced frequency analysis
+  const extractColorCandidates = (pixels, width, height) => {
+    const candidates = [];
+    const hueBuckets = {}; // Group by hue ranges (36° buckets = 10 ranges)
+    const saturatedColors = [];
+    
+    // Sample pixels (every 10th pixel for performance)
+    for (let i = 0; i < pixels.length; i += 40) { // RGBA, step by 40 = every 10 pixels
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const alpha = pixels[i + 3];
+      
+      // Skip transparent, extreme light, or extreme dark pixels
+      if (alpha < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10)) {
+        continue;
+      }
+      
+      const [h, s, l] = rgbToHsl(r, g, b);
+      
+      // Track highly saturated colors
+      if (s > 40) {
+        saturatedColors.push({ r, g, b, h, s, l });
+      }
+      
+      // Group into hue buckets (10 ranges of 36°)
+      const hueRange = Math.floor(h / 36) * 36;
+      const satLevel = s > 60 ? 'high' : s > 30 ? 'medium' : 'low';
+      const bucketKey = `${hueRange}-${satLevel}`;
+      
+      if (!hueBuckets[bucketKey]) {
+        hueBuckets[bucketKey] = [];
+      }
+      hueBuckets[bucketKey].push({ r, g, b, h, s, l, count: 1 });
+    }
+    
+    // Get top colors from each bucket
+    Object.values(hueBuckets).forEach(bucket => {
+      if (bucket.length > 0) {
+        // Average the colors in this bucket
+        const avgR = Math.round(bucket.reduce((sum, c) => sum + c.r, 0) / bucket.length);
+        const avgG = Math.round(bucket.reduce((sum, c) => sum + c.g, 0) / bucket.length);
+        const avgB = Math.round(bucket.reduce((sum, c) => sum + c.b, 0) / bucket.length);
+        candidates.push({ r: avgR, g: avgG, b: avgB });
+      }
+    });
+    
+    // Add most saturated colors (top 5)
+    saturatedColors.sort((a, b) => b.s - a.s);
+    saturatedColors.slice(0, 5).forEach(color => {
+      candidates.push({ r: color.r, g: color.g, b: color.b });
+    });
+    
+    return candidates;
+  };
+
+  // Score a color candidate based on saturation, lightness, and hue
+  const scoreColorCandidate = (r, g, b) => {
+    const [h, s, l] = rgbToHsl(r, g, b);
+    let score = 0;
+    
+    // Rule 1: Saturation score (50 points max) - MOST IMPORTANT
+    if (s >= 40 && s <= 90) {
+      score += 50; // Best: vibrant but not overwhelming
+    } else if (s >= 30 && s < 40) {
+      score += 30; // Acceptable: somewhat muted
+    } else if (s < 30) {
+      score += 0; // Boring: grey/washed out - REJECT
+    } else if (s > 90) {
+      score += 35; // Very saturated: might be too intense
+    }
+    
+    // Rule 2: Lightness score (30 points max)
+    if (l >= 30 && l <= 70) {
+      score += 30; // Best: good contrast with white text
+    } else if ((l >= 20 && l < 30) || (l > 70 && l <= 85)) {
+      score += 15; // Acceptable but not ideal
+    } else {
+      score += 0; // Extreme: too dark or too light
+    }
+    
+    // Rule 3: Hue interest score (20 points max)
+    if (h >= 200 && h <= 260) {
+      score += 20; // Blues: professional, tech-focused
+    } else if ((h >= 0 && h <= 30) || (h >= 330 && h <= 360)) {
+      score += 20; // Reds/Oranges: warm, energetic
+    } else if (h >= 260 && h <= 330) {
+      score += 18; // Purples/Magentas: modern, creative
+    } else if (h >= 80 && h <= 160) {
+      score += 15; // Greens: natural, fresh
+    } else if (h >= 30 && h <= 80) {
+      score += 12; // Yellows: energetic, bright
+    }
+    
+    return score;
+  };
+
+  // Select the best blur background color from candidates
+  const selectBestBlurColor = (candidates) => {
+    if (candidates.length === 0) {
+      // Fallback: subtle blue-grey
+      const [r, g, b] = hslToRgb(210, 35, 50);
+      return { r, g, b };
+    }
+    
+    // Score all candidates
+    const scored = candidates.map(color => ({
+      ...color,
+      score: scoreColorCandidate(color.r, color.g, color.b)
+    }));
+    
+    // Sort by score (highest first)
+    scored.sort((a, b) => b.score - a.score);
+    
+    // Get best color
+    let best = scored[0];
+    const [h, s, l] = rgbToHsl(best.r, best.g, best.b);
+    
+    // Failsafe: if best color is still too boring (low saturation)
+    if (s < 25) {
+      // Check if any candidate has decent saturation
+      const maxSat = Math.max(...scored.map(c => rgbToHsl(c.r, c.g, c.b)[1]));
+      
+      if (maxSat < 20) {
+        // Image is truly monochrome - use subtle blue-grey
+        const [r, g, b] = hslToRgb(210, 35, 50);
+        return { r, g, b };
+      } else {
+        // Boost saturation of best color
+        const [r, g, b] = hslToRgb(h, 45, l);
+        return { r, g, b };
+      }
+    }
+    
+    return { r: best.r, g: best.g, b: best.b };
+  };
+
   // Function to extract dominant color from image
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -237,64 +374,43 @@ export default function Home() {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
       
-      // Sample pixels (every 10th pixel for performance)
-      const colorMap = {};
-      for (let i = 0; i < pixels.length; i += 40) { // RGBA, so step by 4, but sample every 10 pixels
-        const r = pixels[i];
-        const g = pixels[i + 1];
-        const b = pixels[i + 2];
-        const alpha = pixels[i + 3];
-        
-        // Skip transparent or very light/dark pixels
-        if (alpha < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10)) {
-          continue;
-        }
-        
-        // Round to nearest 10 to group similar colors
-        const rKey = Math.round(r / 10) * 10;
-        const gKey = Math.round(g / 10) * 10;
-        const bKey = Math.round(b / 10) * 10;
-        const key = `${rKey},${gKey},${bKey}`;
-        
-        colorMap[key] = (colorMap[key] || 0) + 1;
-      }
+      // Extract color candidates using new algorithm
+      const candidates = extractColorCandidates(pixels, canvas.width, canvas.height);
       
-      // Find most common color
-      let maxCount = 0;
-      let dominantColor = null;
-      for (const [color, count] of Object.entries(colorMap)) {
-        if (count > maxCount) {
-          maxCount = count;
-          dominantColor = color;
-        }
-      }
+      // Select best color using scoring algorithm
+      const bestColor = selectBestBlurColor(candidates);
+      const { r, g, b } = bestColor;
       
-      if (dominantColor) {
-        const [r, g, b] = dominantColor.split(',').map(Number);
-        
-        // Convert to HSL for color transformations
-        const baseHsl = rgbToHsl(r, g, b);
-        
-        // Create highlight color (for titles - light pastel)
-        const highlightHsl = createHighlightColor(baseHsl);
-        const [hR, hG, hB] = hslToRgb(...highlightHsl);
-        const highlightColor = `rgb(${hR}, ${hG}, ${hB})`;
-        
-        // Create link color (for bullet text - saturated readable)
-        const linkHsl = createLinkColor(baseHsl);
-        const [lR, lG, lB] = hslToRgb(...linkHsl);
-        const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
-        
-        // Store all color variants
-        setImageDominantColors(prev => ({ 
-          ...prev, 
-          [storyIndex]: { 
-            original: `rgba(${r}, ${g}, ${b}, 1.0)`,
-            highlight: highlightColor,
-            link: linkColor
-          }
-        }));
-      }
+      // Convert to hex for blur background
+      const toHex = (n) => {
+        const hex = Math.round(n).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      const blurColorHex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      
+      // Convert to HSL for highlight/link color transformations
+      const baseHsl = rgbToHsl(r, g, b);
+      
+      // Create highlight color (for titles - light pastel)
+      const highlightHsl = createHighlightColor(baseHsl);
+      const [hR, hG, hB] = hslToRgb(...highlightHsl);
+      const highlightColor = `rgb(${hR}, ${hG}, ${hB})`;
+      
+      // Create link color (for bullet text - saturated readable)
+      const linkHsl = createLinkColor(baseHsl);
+      const [lR, lG, lB] = hslToRgb(...linkHsl);
+      const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
+      
+      // Store all color variants including new blurColor
+      setImageDominantColors(prev => ({ 
+        ...prev, 
+        [storyIndex]: { 
+          original: `rgba(${r}, ${g}, ${b}, 1.0)`,
+          blurColor: blurColorHex,
+          highlight: highlightColor,
+          link: linkColor
+        }
+      }));
     } catch (error) {
       console.error('Error extracting dominant color:', error);
       // Fallback to dark color
@@ -518,6 +634,7 @@ The article concludes with forward-looking analysis and what readers should watc
                  source: article.source || 'Today+',
                  url: article.url || '#',
                  urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+                 blurColor: article.blurColor || null,  // Pre-computed blur color
                  map: article.map || null,
                  graph: article.graph || null,
                  timeline: sampleTimeline,
@@ -757,6 +874,54 @@ The article concludes with forward-looking analysis and what readers should watc
     }
 
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
+  // Calculate relative luminance for contrast checking
+  const getLuminance = (r, g, b) => {
+    const [rs, gs, bs] = [r, g, b].map(val => {
+      val = val / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (rgb1, rgb2) => {
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  // Check if color is too close to white
+  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
+    // Check RGB values - if all are above 230, it's very close to white
+    if (r > 230 && g > 230 && b > 230) return true;
+    
+    // Check lightness in HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    if (l > minLightness) return true;
+    
+    // Additional check: if saturation is very low and lightness is high
+    if (s < 5 && l > 80) return true;
+    
+    return false;
+  };
+
+  // Get fallback color based on background hue
+  const getFallbackColorByHue = (hue) => {
+    // Blue range: 200-260 degrees
+    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
+    
+    // Green range: 100-180 degrees
+    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
+    
+    // Orange/Red range: 0-50 and 320-360 degrees
+    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
+    
+    // Default: Gray/neutral
+    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
   };
 
   // Create light highlight color for titles (pastel, light version)
@@ -2799,7 +2964,20 @@ The article concludes with forward-looking analysis and what readers should watc
                                 return newSet;
                               });
                               
-                              // Only extract color if image loaded successfully
+                              // Use pre-computed blur color if available, otherwise extract
+                              if (story.blurColor) {
+                                // Use pre-computed color from article data
+                                setImageDominantColors(prev => ({ 
+                                  ...prev, 
+                                  [index]: { 
+                                    blurColor: story.blurColor,
+                                    // Still need to extract for highlight/link colors
+                                    ...(prev[index] || {})
+                                  }
+                                }));
+                              }
+                              
+                              // Always extract for highlight/link colors
                               if (e.target.complete && e.target.naturalWidth > 0) {
                                 try {
                                   extractDominantColor(e.target, index);
@@ -2898,7 +3076,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Ease-In Blur Gradient - Starts at 20%, Maximum at 65% */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
                       <div style={{
                         position: 'absolute',
                         top: '20%',
@@ -2907,26 +3085,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         height: '80%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: `linear-gradient(
-                          to bottom,
-                          rgba(0, 0, 0, 0) 0%,
-                          rgba(0, 0, 0, 0.05) 12.5%,
-                          rgba(0, 0, 0, 0.19) 25%,
-                          rgba(0, 0, 0, 0.45) 37.5%,
-                          rgba(0, 0, 0, 0.79) 50%,
-                          rgba(0, 0, 0, 1) 56.25%,
-                          rgba(0, 0, 0, 1) 100%
-                        )`,
-                        WebkitMaskImage: `linear-gradient(
-                          to bottom,
-                          rgba(0, 0, 0, 0) 0%,
-                          rgba(0, 0, 0, 0.05) 12.5%,
-                          rgba(0, 0, 0, 0.19) 25%,
-                          rgba(0, 0, 0, 0.45) 37.5%,
-                          rgba(0, 0, 0, 0.79) 50%,
-                          rgba(0, 0, 0, 1) 56.25%,
-                          rgba(0, 0, 0, 1) 100%
-                        )`,
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -2944,27 +3104,18 @@ The article concludes with forward-looking analysis and what readers should watc
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
-                        background: imageDominantColors[index]?.light 
+                        background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 80%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.98')} 90%, 
-                              ${imageDominantColors[index].light} 95%, 
-                              ${imageDominantColors[index].light} 100%)`
-                          : imageDominantColors[index]?.original
-                          ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 80%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
-                              ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
+                              ${imageDominantColors[index].blurColor}26 0%, 
+                              ${imageDominantColors[index].blurColor}40 10%, 
+                              ${imageDominantColors[index].blurColor}73 30%, 
+                              ${imageDominantColors[index].blurColor}A6 50%, 
+                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}F2 80%, 
+                              ${imageDominantColors[index].blurColor}FA 90%, 
+                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}FF 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
@@ -3278,7 +3429,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   {story.summary_bullets.map((bullet, i) => (
                                     <li key={i} style={{
                                     marginBottom: '12px',
-                                      fontSize: '17px',
+                                      fontSize: '15px',
                                     lineHeight: '1.55',
                                     fontWeight: '400',
                                     color: '#000000',
