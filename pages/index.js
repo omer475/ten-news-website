@@ -1456,6 +1456,7 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           height: 60px;
+          padding-top: env(safe-area-inset-top);
           background: ${darkMode ? 'rgba(0,0,0,0.97)' : 'rgba(255,255,255,0.97)'};
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
@@ -1463,7 +1464,9 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 20px;
+          padding-left: max(20px, env(safe-area-inset-left));
+          padding-right: max(20px, env(safe-area-inset-right));
+          padding-bottom: 0;
           border-bottom: 1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(148, 163, 184, 0.1)'};
           transition: background-color 0.3s ease, border-color 0.3s ease;
         }
@@ -1507,7 +1510,10 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 0 24px 200px 24px;
+          padding-top: max(0px, env(safe-area-inset-top));
+          padding-left: max(24px, env(safe-area-inset-left) + 24px);
+          padding-right: max(24px, env(safe-area-inset-right) + 24px);
+          padding-bottom: max(200px, env(safe-area-inset-bottom) + 200px);
           background: ${darkMode ? '#000000' : 'transparent'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
@@ -1773,7 +1779,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .progress-indicator {
           position: fixed;
-          right: 24px;
+          right: max(24px, calc(env(safe-area-inset-right) + 24px));
           top: 50%;
           transform: translateY(-50%);
           display: flex;
@@ -1801,7 +1807,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .scroll-hint {
           position: absolute;
-          bottom: 160px;
+          bottom: max(160px, calc(env(safe-area-inset-bottom) + 160px));
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -2788,7 +2794,7 @@ The article concludes with forward-looking analysis and what readers should watc
           }
           
           .scroll-hint {
-            bottom: 100px;
+            bottom: max(100px, calc(env(safe-area-inset-bottom) + 100px));
             font-size: 11px;
             letter-spacing: 1.5px;
           }
@@ -2900,10 +2906,10 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '3px',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
+                      top: 'max(3px, calc(env(safe-area-inset-top) + 3px))',
+                      left: 'max(6px, calc(env(safe-area-inset-left) + 6px))',
+                      right: 'max(6px, calc(env(safe-area-inset-right) + 6px))',
+                      width: 'calc(100vw - 12px - env(safe-area-inset-left) - env(safe-area-inset-right))',
                       height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
