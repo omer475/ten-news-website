@@ -2769,7 +2769,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       display: 'block',
                       zIndex: '1',
                       borderRadius: '12px',
-                      overflow: 'hidden',
+                      overflow: 'visible',
                       pointerEvents: 'none',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
@@ -2956,6 +2956,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         height: '80%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
+                        background: 'rgba(255, 255, 255, 0.01)',
                         maskImage: `linear-gradient(
                           to bottom,
                           rgba(0, 0, 0, 0) 0%,
@@ -2978,7 +2979,9 @@ The article concludes with forward-looking analysis and what readers should watc
                         )`,
                         pointerEvents: 'none',
                         zIndex: 100000,
-                        isolation: 'isolate'
+                        isolation: 'isolate',
+                        willChange: 'backdrop-filter',
+                        transform: 'translateZ(0)'
                       }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
