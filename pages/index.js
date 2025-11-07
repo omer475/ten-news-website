@@ -3415,7 +3415,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           {/* Show Only Bullet Text - Fixed Position */}
                           <div style={{ 
                             margin: 0,
-                            marginTop: '0px',
+                            marginTop: '-3px',
                             marginBottom: '0px',
                             position: 'relative',
                             width: '100%'
