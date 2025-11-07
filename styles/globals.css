@@ -6,7 +6,7 @@
 }
 
 html {
-  background: #FAFAFA;
+  background: #ffffff;
   padding: 0;
   margin: 0;
   min-height: 100vh;
@@ -15,7 +15,7 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  background: #FAFAFA;
+  background: #ffffff;
   color: #1d1d1f;
   overflow: hidden;
   position: fixed;
@@ -32,7 +32,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #FAFAFA;
+  background: #F8F9FB;
 }
 
 .loading-spinner {
@@ -61,7 +61,7 @@ body {
   left: 0;
   right: 0;
   height: 60px;
-  background: rgba(250,250,250,0.97);
+  background: rgba(255,255,255,0.97);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   z-index: 1000;
@@ -272,18 +272,6 @@ body {
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid #e5e5e7;
-}
-
-.news-meta {
-  display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: #86868b;
-}
-
-.news-meta strong {
-  color: #666;
-  font-weight: 600;
 }
 
 .progress-indicator {

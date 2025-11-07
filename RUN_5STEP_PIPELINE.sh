@@ -32,7 +32,7 @@ echo "✅ Claude API configured"
 echo "✅ Google Gemini API configured"
 echo "✅ Perplexity API configured"
 if [ -n "$SCRAPINGBEE_API_KEY" ]; then
-    echo "✅ ScrapingBee API configured"
+echo "✅ ScrapingBee API configured"
 fi
 echo ""
 

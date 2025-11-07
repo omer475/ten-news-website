@@ -40,23 +40,21 @@ class ComponentConfig:
 
 COMPONENT_SELECTION_PROMPT = """You are analyzing news article TITLES to select the MOST RELEVANT visual components for each story.
 
-CRITICAL RULES:
-1. You will ONLY see the article TITLE. Choose components based on the title alone.
-2. You MUST select AT LEAST 1 component for EVERY article. NEVER return empty components array.
-3. If unsure, ALWAYS include "details" as it's universally useful for facts and key information.
+CRITICAL: You will ONLY see the article TITLE. Choose components based on the title alone.
 
-AVAILABLE COMPONENTS (select 1-3 of these):
+AVAILABLE COMPONENTS (select 1-3 of these, ONLY if truly relevant):
 1. timeline - Historical events and chronology
-2. details - Key facts, numbers, statistics (RECOMMENDED: include this in most articles)
+2. details - Key facts, numbers, statistics
 3. graph - Data visualization and trends
 
 NOTE: Map component is currently disabled.
 
-SELECTION PHILOSOPHY: 
-- MINIMUM: Select at least 1 component (usually "details")
-- MAXIMUM: Select up to 3 components if all are genuinely relevant
-- DEFAULT: When uncertain, select ["details"] at minimum
-- NEVER return an empty components array []
+SELECTION PHILOSOPHY: QUALITY OVER QUANTITY
+- Choose ONLY components that add genuine value to understanding the story
+- If only 1 component is relevant, select only 1
+- If 2 are relevant, select 2
+- If 3 are relevant, select 3
+- NEVER select irrelevant components just to meet a minimum
 
 COMPONENT SELECTION GUIDE:
 
@@ -146,13 +144,13 @@ Examples:
 - "Nobel Prize winner announced" → 🏆
 
 CRITICAL RULES:
-1. MUST select AT LEAST 1 component - NEVER return empty array []
-2. Use ONLY these exact words: "timeline", "details", "graph"
-3. NO descriptive names like "Timeline of events" - just "timeline"
-4. Choose ONE emoji that best captures the story's essence
-5. Return 1-3 components (at least 1 is REQUIRED)
-6. When uncertain, ALWAYS include "details" as it's useful for all articles
-7. Order components by importance (most important first)
+1. Use ONLY these exact words: "timeline", "details", "graph", "map"
+2. NO descriptive names like "Timeline of events" - just "timeline"
+3. Choose ONE emoji that best captures the story's essence
+3. Return 1-4 components (choose ONLY relevant ones)
+4. Choose the MOST RELEVANT components for the title
+5. Quality over quantity - better to have 1 perfect component than 2 mediocre ones
+6. Ask yourself: "Does this component genuinely help understand this story?"
 
 EXAMPLES:
 
@@ -248,19 +246,16 @@ class GeminiComponentSelector:
         # Get article title only
         article_title = article.get('title', 'No title')
         
-        user_prompt = f"""Analyze this news title and select the MOST RELEVANT components.
+        user_prompt = f"""Analyze this news title and select the MOST RELEVANT components (1-4).
 
 TITLE: {article_title}
 
-MANDATORY REQUIREMENTS:
-- MUST select AT LEAST 1 component (minimum 1, maximum 3)
-- NEVER return empty components array []
+REQUIREMENTS:
 - Analyze ONLY the title above
-- Use exact keywords: "timeline", "details", "graph"
-- Order by importance (most important first)
-- If uncertain, ALWAYS include "details" at minimum
-
-RECOMMENDATION: "details" is useful for almost every article. When in doubt, include it.
+- Select 1-4 components that are TRULY relevant to this story
+- Quality over quantity - choose fewer but better components
+- Use exact keywords: "timeline", "details", "graph", "map"
+- Ask yourself: "Does this component genuinely help understand this story?"
 
 Return ONLY valid JSON with exact component keywords."""
 
@@ -368,14 +363,10 @@ Return ONLY valid JSON with exact component keywords."""
         
         components = filtered_components
         
-        # CRITICAL: Ensure minimum components - NEVER allow empty array
-        if len(components) < self.config.min_components or len(components) == 0:
-            print(f"  ⚠ Too few components ({len(components)}), using fallback with ['details']")
-            # Always return at least ["details"] as fallback
-            fallback = self._get_fallback_selection()
-            if not fallback.get('components') or len(fallback.get('components', [])) == 0:
-                fallback['components'] = ['details']  # Ensure at least details
-            return fallback
+        # Ensure minimum components - if empty or too few, use fallback (need article reference for smart fallback)
+        if len(components) < self.config.min_components:
+            print(f"  ⚠ Too few components ({len(components)}), using fallback")
+            return self._get_fallback_selection()
         
         # Ensure maximum components
         if len(components) > self.config.max_components:
