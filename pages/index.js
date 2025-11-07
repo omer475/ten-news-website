@@ -2977,7 +2977,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           rgba(0, 0, 0, 1) 100%
                         )`,
                         pointerEvents: 'none',
-                        zIndex: 2
+                        zIndex: 100000,
+                        isolation: 'isolate'
                       }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
@@ -2993,6 +2994,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
+                        zIndex: 100001,
                         background: imageDominantColors[index]?.light 
                           ? `linear-gradient(to bottom, 
                               ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
@@ -3014,7 +3016,6 @@ The article concludes with forward-looking analysis and what readers should watc
                               ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
                               ${imageDominantColors[index].original} 100%)`
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
