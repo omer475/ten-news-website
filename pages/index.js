@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
@@ -34,10 +34,6 @@ export default function Home() {
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-  
-  // Track touch positions for bullet and article taps
-  const bulletTouchStartRef = useRef({});
-  const articleTouchStartRef = useRef({});
 
   const minSwipeDistance = 50;
 
@@ -763,54 +759,6 @@ The article concludes with forward-looking analysis and what readers should watc
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   };
 
-  // Calculate relative luminance for contrast checking
-  const getLuminance = (r, g, b) => {
-    const [rs, gs, bs] = [r, g, b].map(val => {
-      val = val / 255;
-      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-  };
-
-  // Calculate contrast ratio between two colors
-  const getContrastRatio = (rgb1, rgb2) => {
-    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
-    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
-    const lighter = Math.max(l1, l2);
-    const darker = Math.min(l1, l2);
-    return (lighter + 0.05) / (darker + 0.05);
-  };
-
-  // Check if color is too close to white
-  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
-    // Check RGB values - if all are above 230, it's very close to white
-    if (r > 230 && g > 230 && b > 230) return true;
-    
-    // Check lightness in HSL
-    const [h, s, l] = rgbToHsl(r, g, b);
-    if (l > minLightness) return true;
-    
-    // Additional check: if saturation is very low and lightness is high
-    if (s < 5 && l > 80) return true;
-    
-    return false;
-  };
-
-  // Get fallback color based on background hue
-  const getFallbackColorByHue = (hue) => {
-    // Blue range: 200-260 degrees
-    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
-    
-    // Green range: 100-180 degrees
-    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
-    
-    // Orange/Red range: 0-50 and 320-360 degrees
-    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
-    
-    // Default: Gray/neutral
-    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
-  };
-
   // Create light highlight color for titles (pastel, light version)
   const createHighlightColor = (baseHsl) => {
     const [h, s, l] = baseHsl;
@@ -1240,12 +1188,11 @@ The article concludes with forward-looking analysis and what readers should watc
           font-weight: 600;
           color: #000;
           cursor: pointer;
+          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+          backdrop-filter: blur(12px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
           border-radius: 20px;
           box-sizing: border-box;
-          /* Create a proper stacking context for backdrop-filter to work */
-          isolation: isolate;
-          overflow: hidden;
-          /* Solid shadow for depth */
           box-shadow: 
             inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
             inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
@@ -1260,35 +1207,27 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
         }
 
-        /* Blur backdrop layer - positioned absolutely behind content */
-        .glass-container::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
-          backdrop-filter: blur(20px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(20px) saturate(var(--saturation));
-          z-index: 0;
-          border-radius: 20px;
-          /* Force hardware acceleration for better blur performance */
-          transform: translateZ(0);
-          will-change: backdrop-filter;
+        .glass-container .glass-filter {
+          display: none;
+        }
+
+        .glass-container .glass-overlay {
+          display: none;
+        }
+
+        .glass-container .glass-specular {
+          display: none;
         }
 
         .glass-container .glass-content {
           position: relative;
-          z-index: 1;
+          z-index: 3;
           display: flex;
           flex-direction: column;
           width: 100%;
           color: #000;
           padding: 6px 20px 12px 20px;
           line-height: 1.4;
-          /* Ensure content stays above the blur layer */
-          pointer-events: auto;
         }
 
         .loading-container {
@@ -2763,7 +2702,10 @@ The article concludes with forward-looking analysis and what readers should watc
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }}>
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                      // Toggle detailed text to show article under summary
+                      toggleDetailedText(index);
+                  }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -3334,56 +3276,15 @@ The article concludes with forward-looking analysis and what readers should watc
                                   listStyleType: 'disc'
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
-                                    <li 
-                                      key={i} 
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleDetailedText(index);
-                                      }}
-                                      onTouchStart={(e) => {
-                                        const bulletKey = `${index}-${i}`;
-                                        bulletTouchStartRef.current[bulletKey] = {
-                                          x: e.touches[0].clientX,
-                                          y: e.touches[0].clientY
-                                        };
-                                      }}
-                                      onTouchEnd={(e) => {
-                                        const bulletKey = `${index}-${i}`;
-                                        const touchStartPos = bulletTouchStartRef.current[bulletKey];
-                                        
-                                        if (!touchStartPos) return;
-                                        
-                                        const touchEnd = {
-                                          x: e.changedTouches[0].clientX,
-                                          y: e.changedTouches[0].clientY
-                                        };
-                                        
-                                        const deltaX = Math.abs(touchEnd.x - touchStartPos.x);
-                                        const deltaY = Math.abs(touchEnd.y - touchStartPos.y);
-                                        
-                                        // Only trigger if it's a tap (minimal movement)
-                                        if (deltaX < 10 && deltaY < 10) {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          toggleDetailedText(index);
-                                        }
-                                        
-                                        delete bulletTouchStartRef.current[bulletKey];
-                                      }}
-                                      style={{
-                                        marginBottom: '12px',
-                                        fontSize: '17px',
-                                        lineHeight: '1.55',
-                                        fontWeight: '400',
-                                        color: '#000000',
-                                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
-                                        cursor: 'pointer',
-                                        userSelect: 'none',
-                                        WebkitTapHighlightColor: 'transparent'
-                                      }}
-                                    >
-                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                    <li key={i} style={{
+                                    marginBottom: '12px',
+                                      fontSize: '17px',
+                                    lineHeight: '1.55',
+                                    fontWeight: '400',
+                                    color: '#000000',
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif'
+                                  }}>
+                                    {renderBoldText(bullet, imageDominantColors[index], story.category)}
                                     </li>
                                   ))}
                                 </ul>
@@ -3397,56 +3298,53 @@ The article concludes with forward-looking analysis and what readers should watc
                           {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
                           {showDetailedText[index] && (
                             <div 
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleDetailedText(index);
+                              style={{
+                                marginTop: '16px',
+                                marginBottom: '100px',
+                                fontSize: '16px',
+                                lineHeight: '1.8',
+                                color: '#1a1a1a',
+                                opacity: 1,
+                                transform: 'translateY(0)',
+                                transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                position: 'relative',
+                                zIndex: 1,
+                                width: '100%'
                               }}
                               onTouchStart={(e) => {
-                                articleTouchStartRef.current[index] = {
-                                  x: e.touches[0].clientX,
-                                  y: e.touches[0].clientY
+                                const startX = e.touches[0].clientX;
+                                const startY = e.touches[0].clientY;
+                                let hasMoved = false;
+                                
+                                const handleTouchMove = (moveEvent) => {
+                                  const currentX = moveEvent.touches[0].clientX;
+                                  const diffX = Math.abs(currentX - startX);
+                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
+                                  
+                                  if (diffX > 10 || diffY > 10) {
+                                    hasMoved = true;
+                                  }
                                 };
-                              }}
-                              onTouchEnd={(e) => {
-                                const touchStartPos = articleTouchStartRef.current[index];
                                 
-                                if (!touchStartPos) return;
-                                
-                                const touchEnd = {
-                                  x: e.changedTouches[0].clientX,
-                                  y: e.changedTouches[0].clientY
+                                const handleTouchEnd = (endEvent) => {
+                                  const endX = endEvent.changedTouches[0].clientX;
+                                  const diffX = endX - startX;
+                                  
+                                  // Swipe right to close article
+                                  if (hasMoved && diffX > 100) {
+                                    endEvent.preventDefault();
+                                    endEvent.stopPropagation();
+                                    toggleDetailedText(index); // Close article
+                                  }
+                                  
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
                                 };
                                 
-                                const deltaX = Math.abs(touchEnd.x - touchStartPos.x);
-                                const deltaY = Math.abs(touchEnd.y - touchStartPos.y);
-                                
-                                // Only close if it's a tap (minimal movement)
-                                if (deltaX < 10 && deltaY < 10) {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleDetailedText(index);
-                                }
-                                
-                                delete articleTouchStartRef.current[index];
+                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
                               }}
-                                style={{
-                                  marginTop: '16px',
-                                  marginBottom: '100px',
-                                  fontSize: '16px',
-                                  lineHeight: '1.8',
-                                  color: '#1a1a1a',
-                                  opacity: 1,
-                                  transform: 'translateY(0)',
-                                  transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                  animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                  position: 'relative',
-                                  zIndex: 1,
-                                  width: '100%',
-                                  cursor: 'pointer',
-                                  userSelect: 'none',
-                                  WebkitTapHighlightColor: 'transparent'
-                                }}
                             >
                               <div dangerouslySetInnerHTML={{
                                 __html: story.detailed_text
@@ -3674,6 +3572,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                   zIndex: '10',
                                   overflowY: expandedGraph[index] ? 'visible' : 'hidden'
                                 }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
                                 <div className="glass-content" style={{
                                   height: '100%',
                                   width: '100%',
@@ -3793,6 +3694,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                 zIndex: '10',
                                 overflow: expandedTimeline[index] ? 'visible' : 'hidden'
                               }}>
+                              <div className="glass-filter"></div>
+                              <div className="glass-overlay"></div>
+                              <div className="glass-specular"></div>
                               <div className="glass-content" style={{
                                 height: '100%',
                                 overflow: expandedTimeline[index] ? 'visible' : 'hidden',
@@ -3983,6 +3887,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                   overflow: 'hidden',
                                   display: 'flex'
                                 }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
                                 <div className="glass-content" style={{
                                   height: '100%',
                                   width: '100%',
