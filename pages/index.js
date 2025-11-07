@@ -520,26 +520,52 @@ export default function Home() {
     // Only run on client side
     if (typeof window === 'undefined') return;
     
-    // Check for stored session first
-    const storedUser = localStorage.getItem('tennews_user');
-    const storedSession = localStorage.getItem('tennews_session');
-
-    if (storedUser && storedSession) {
-      try {
-        const userData = JSON.parse(storedUser);
-        const sessionData = JSON.parse(storedSession);
-        setUser(userData);
-        setAuthLoading(false);
-        return; // Skip API check if we have stored session
-      } catch (error) {
-        // Invalid stored data, clear it
-        localStorage.removeItem('tennews_user');
-        localStorage.removeItem('tennews_session');
+    const checkAuth = async () => {
+      // First, try to get session from Supabase client
+      if (supabase) {
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (!error && session) {
+            // Session found in Supabase - user is logged in
+            console.log('✅ Session found in Supabase:', session.user.email);
+            setUser(session.user);
+            setAuthLoading(false);
+            
+            // Also save to localStorage for consistency
+            localStorage.setItem('tennews_session', JSON.stringify(session));
+            localStorage.setItem('tennews_user', JSON.stringify(session.user));
+            return;
+          }
+        } catch (error) {
+          console.log('⚠️ Error checking Supabase session:', error);
+        }
       }
-    }
+      
+      // Fallback: Check localStorage
+      const storedUser = localStorage.getItem('tennews_user');
+      const storedSession = localStorage.getItem('tennews_session');
 
-    // Fallback to API check
-    checkUser();
+      if (storedUser && storedSession) {
+        try {
+          const userData = JSON.parse(storedUser);
+          const sessionData = JSON.parse(storedSession);
+          setUser(userData);
+          setAuthLoading(false);
+          return;
+        } catch (error) {
+          // Invalid stored data, clear it
+          localStorage.removeItem('tennews_user');
+          localStorage.removeItem('tennews_session');
+        }
+      }
+
+      // Final fallback: API check
+      checkUser();
+    };
+    
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

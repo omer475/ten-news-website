@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Make Resend optional for local development
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -43,12 +44,18 @@ export default async function handler(req, res) {
 
     // Check if user already exists in profiles table
     console.log('🔍 Checking if user already exists...')
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('email', email)
-      .single()
-      .catch(() => ({ data: null }))
+    let existingProfile = null
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .single()
+      existingProfile = data
+    } catch (error) {
+      // Ignore error - user doesn't exist, which is fine
+      console.log('ℹ️ No existing profile found (expected for new users)')
+    }
 
     // Note: We'll let Supabase handle duplicate detection in auth.users, but log if found in profiles
     if (existingProfile) {
@@ -158,13 +165,14 @@ export default async function handler(req, res) {
       }
     }
 
-    // Send welcome email
-    try {
-      await resend.emails.send({
-        from: 'Ten News <onboarding@resend.dev>',
-        to: email,
-        subject: 'Welcome to Ten News! 🎉',
-        html: `
+    // Send welcome email (optional - skip if Resend not configured)
+    if (resend) {
+      try {
+        await resend.emails.send({
+          from: 'Ten News <onboarding@resend.dev>',
+          to: email,
+          subject: 'Welcome to Ten News! 🎉',
+          html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #1f2937; text-align: center;">Welcome to Ten News, ${fullName}! 🎉</h1>
 
@@ -199,11 +207,14 @@ export default async function handler(req, res) {
             </p>
           </div>
         `
-      })
-      console.log('Welcome email sent to:', email)
-    } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError)
-      // Don't fail signup if email fails
+        })
+        console.log('✅ Welcome email sent to:', email)
+      } catch (emailError) {
+        console.error('⚠️ Failed to send welcome email:', emailError)
+        // Don't fail signup if email fails
+      }
+    } else {
+      console.log('ℹ️ Resend not configured - skipping welcome email (verification email still sent by Supabase)')
     }
 
     return res.status(201).json({

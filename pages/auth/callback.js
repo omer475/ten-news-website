@@ -44,7 +44,7 @@ export default function AuthCallback() {
           // Redirect to home page
           addDebugInfo('🔄 Redirecting to home page...')
           setTimeout(() => {
-            window.location.href = '/?verified=true'
+            router.push('/?verified=true')
           }, 1500)
         }
       }
@@ -83,7 +83,7 @@ export default function AuthCallback() {
             
             addDebugInfo('🔄 Redirecting to home page...')
             setTimeout(() => {
-              window.location.href = '/?verified=true'
+              router.push('/?verified=true')
             }, 1500)
             return
           }
@@ -118,7 +118,7 @@ export default function AuthCallback() {
           
           addDebugInfo('🔄 Redirecting to home page...')
           setTimeout(() => {
-            window.location.href = '/?verified=true'
+            router.push('/?verified=true')
           }, 1500)
         } else {
           addDebugInfo('⏳ No session yet, waiting for auth state change...')
