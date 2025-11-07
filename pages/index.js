@@ -2769,7 +2769,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       display: 'block',
                       zIndex: '1',
                       borderRadius: '12px',
-                      overflow: 'visible',
+                      overflow: 'hidden',
                       pointerEvents: 'none',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
@@ -2947,6 +2947,48 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
+                      {/* Ease-In Blur Gradient - Starts at 20%, Maximum at 65% */}
+                      <div 
+                        key={`blur-gradient-${index}`}
+                        style={{
+                          position: 'fixed',
+                          top: 'calc(3px + 20% * (38vh - 3px))',
+                          left: '6px',
+                          right: '6px',
+                          width: 'calc(100vw - 12px)',
+                          height: 'calc(80% * (38vh - 3px))',
+                          backdropFilter: 'blur(50px)',
+                          WebkitBackdropFilter: 'blur(50px)',
+                          maskImage: `linear-gradient(
+                            to bottom,
+                            rgba(0, 0, 0, 0) 0%,
+                            rgba(0, 0, 0, 0.05) 12.5%,
+                            rgba(0, 0, 0, 0.19) 25%,
+                            rgba(0, 0, 0, 0.45) 37.5%,
+                            rgba(0, 0, 0, 0.79) 50%,
+                            rgba(0, 0, 0, 1) 56.25%,
+                            rgba(0, 0, 0, 1) 100%
+                          )`,
+                          WebkitMaskImage: `linear-gradient(
+                            to bottom,
+                            rgba(0, 0, 0, 0) 0%,
+                            rgba(0, 0, 0, 0.05) 12.5%,
+                            rgba(0, 0, 0, 0.19) 25%,
+                            rgba(0, 0, 0, 0.45) 37.5%,
+                            rgba(0, 0, 0, 0.79) 50%,
+                            rgba(0, 0, 0, 1) 56.25%,
+                            rgba(0, 0, 0, 1) 100%
+                          )`,
+                          pointerEvents: 'none',
+                          zIndex: 3,
+                          willChange: 'backdrop-filter',
+                          transform: 'translateZ(0)',
+                          isolation: 'isolate',
+                          borderRadius: '12px',
+                          overflow: 'hidden'
+                        }}
+                      ></div>
+                      
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
@@ -2960,30 +3002,28 @@ The article concludes with forward-looking analysis and what readers should watc
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
-                        zIndex: 100001,
                         background: imageDominantColors[index]?.light 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 20%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.05')} 40%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 60%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.30')} 75%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 85%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.60')} 92%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.75')} 96%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 100%)`
+                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 80%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.98')} 90%, 
+                              ${imageDominantColors[index].light} 95%, 
+                              ${imageDominantColors[index].light} 100%)`
                           : imageDominantColors[index]?.original
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 20%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.08')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.20')} 60%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 75%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.50')} 85%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.65')} 92%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 96%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.85')} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.35) 75%, rgba(0,0,0,0.50) 85%, rgba(0,0,0,0.65) 92%, rgba(0,0,0,0.75) 96%, rgba(0,0,0,0.85) 100%)',
+                              ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 80%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
+                              ${imageDominantColors[index].original} 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
+                        zIndex: 2,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
@@ -2998,45 +3038,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         </div>
                       )}
                     </div>
-                    
-                    {/* Ease-In Blur Gradient - OUTSIDE image container, positioned over it */}
-                    <div style={{
-                      position: 'fixed',
-                      top: 'calc(3px + (38vh - 3px) * 0.20)',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
-                      height: 'calc((38vh - 3px) * 0.80)',
-                      backdropFilter: 'blur(50px)',
-                      WebkitBackdropFilter: 'blur(50px)',
-                      background: 'rgba(255, 255, 255, 0.01)',
-                      maskImage: `linear-gradient(
-                        to bottom,
-                        rgba(0, 0, 0, 0) 0%,
-                        rgba(0, 0, 0, 0.05) 12.5%,
-                        rgba(0, 0, 0, 0.19) 25%,
-                        rgba(0, 0, 0, 0.45) 37.5%,
-                        rgba(0, 0, 0, 0.79) 50%,
-                        rgba(0, 0, 0, 1) 56.25%,
-                        rgba(0, 0, 0, 1) 100%
-                      )`,
-                      WebkitMaskImage: `linear-gradient(
-                        to bottom,
-                        rgba(0, 0, 0, 0) 0%,
-                        rgba(0, 0, 0, 0.05) 12.5%,
-                        rgba(0, 0, 0, 0.19) 25%,
-                        rgba(0, 0, 0, 0.45) 37.5%,
-                        rgba(0, 0, 0, 0.79) 50%,
-                        rgba(0, 0, 0, 1) 56.25%,
-                        rgba(0, 0, 0, 1) 100%
-                      )`,
-                      pointerEvents: 'none',
-                      zIndex: 100000,
-                      isolation: 'isolate',
-                      willChange: 'backdrop-filter',
-                      transform: 'translateZ(0)',
-                      borderRadius: '0 0 12px 12px'
-                    }}></div>
                     
                     {/* Emoji fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
