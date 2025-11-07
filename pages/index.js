@@ -2997,25 +2997,27 @@ The article concludes with forward-looking analysis and what readers should watc
                         zIndex: 100001,
                         background: imageDominantColors[index]?.light 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 0%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.25')} 10%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 30%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.65')} 50%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 70%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.95')} 80%, 
-                              ${imageDominantColors[index].light.replace('1.0', '0.98')} 90%, 
-                              ${imageDominantColors[index].light} 95%, 
-                              ${imageDominantColors[index].light} 100%)`
+                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.0')} 20%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.05')} 40%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.15')} 60%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.30')} 75%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.45')} 85%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.60')} 92%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.75')} 96%, 
+                              ${imageDominantColors[index].light.replace('1.0', '0.85')} 100%)`
                           : imageDominantColors[index]?.original
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.18')} 0%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 15%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.55')} 40%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 65%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.88')} 80%, 
-                              ${imageDominantColors[index].original.replace('1.0', '0.95')} 90%, 
-                              ${imageDominantColors[index].original} 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.93) 90%, rgba(0,0,0,0.98) 95%, rgba(0,0,0,1.0) 100%)',
+                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 0%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.0')} 20%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.08')} 40%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.20')} 60%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.35')} 75%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.50')} 85%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.65')} 92%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.75')} 96%, 
+                              ${imageDominantColors[index].original.replace('1.0', '0.85')} 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.0) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.35) 75%, rgba(0,0,0,0.50) 85%, rgba(0,0,0,0.65) 92%, rgba(0,0,0,0.75) 96%, rgba(0,0,0,0.85) 100%)',
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
