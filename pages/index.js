@@ -1240,11 +1240,12 @@ The article concludes with forward-looking analysis and what readers should watc
           font-weight: 600;
           color: #000;
           cursor: pointer;
-          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
-          backdrop-filter: blur(12px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
           border-radius: 20px;
           box-sizing: border-box;
+          /* Create a proper stacking context for backdrop-filter to work */
+          isolation: isolate;
+          overflow: hidden;
+          /* Solid shadow for depth */
           box-shadow: 
             inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
             inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
@@ -1259,27 +1260,35 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
         }
 
-        .glass-container .glass-filter {
-          display: none;
-        }
-
-        .glass-container .glass-overlay {
-          display: none;
-        }
-
-        .glass-container .glass-specular {
-          display: none;
+        /* Blur backdrop layer - positioned absolutely behind content */
+        .glass-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+          backdrop-filter: blur(20px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(20px) saturate(var(--saturation));
+          z-index: 0;
+          border-radius: 20px;
+          /* Force hardware acceleration for better blur performance */
+          transform: translateZ(0);
+          will-change: backdrop-filter;
         }
 
         .glass-container .glass-content {
           position: relative;
-          z-index: 3;
+          z-index: 1;
           display: flex;
           flex-direction: column;
           width: 100%;
           color: #000;
           padding: 6px 20px 12px 20px;
           line-height: 1.4;
+          /* Ensure content stays above the blur layer */
+          pointer-events: auto;
         }
 
         .loading-container {
@@ -2948,46 +2957,37 @@ The article concludes with forward-looking analysis and what readers should watc
                       })()}
                       
                       {/* Ease-In Blur Gradient - Starts at 20%, Maximum at 65% */}
-                      <div 
-                        key={`blur-gradient-${index}`}
-                        style={{
-                          position: 'fixed',
-                          top: 'calc(3px + 20% * (38vh - 3px))',
-                          left: '6px',
-                          right: '6px',
-                          width: 'calc(100vw - 12px)',
-                          height: 'calc(80% * (38vh - 3px))',
-                          backdropFilter: 'blur(50px)',
-                          WebkitBackdropFilter: 'blur(50px)',
-                          maskImage: `linear-gradient(
-                            to bottom,
-                            rgba(0, 0, 0, 0) 0%,
-                            rgba(0, 0, 0, 0.05) 12.5%,
-                            rgba(0, 0, 0, 0.19) 25%,
-                            rgba(0, 0, 0, 0.45) 37.5%,
-                            rgba(0, 0, 0, 0.79) 50%,
-                            rgba(0, 0, 0, 1) 56.25%,
-                            rgba(0, 0, 0, 1) 100%
-                          )`,
-                          WebkitMaskImage: `linear-gradient(
-                            to bottom,
-                            rgba(0, 0, 0, 0) 0%,
-                            rgba(0, 0, 0, 0.05) 12.5%,
-                            rgba(0, 0, 0, 0.19) 25%,
-                            rgba(0, 0, 0, 0.45) 37.5%,
-                            rgba(0, 0, 0, 0.79) 50%,
-                            rgba(0, 0, 0, 1) 56.25%,
-                            rgba(0, 0, 0, 1) 100%
-                          )`,
-                          pointerEvents: 'none',
-                          zIndex: 3,
-                          willChange: 'backdrop-filter',
-                          transform: 'translateZ(0)',
-                          isolation: 'isolate',
-                          borderRadius: '12px',
-                          overflow: 'hidden'
-                        }}
-                      ></div>
+                      <div style={{
+                        position: 'absolute',
+                        top: '20%',
+                        left: '0',
+                        width: '100%',
+                        height: '80%',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: `linear-gradient(
+                          to bottom,
+                          rgba(0, 0, 0, 0) 0%,
+                          rgba(0, 0, 0, 0.05) 12.5%,
+                          rgba(0, 0, 0, 0.19) 25%,
+                          rgba(0, 0, 0, 0.45) 37.5%,
+                          rgba(0, 0, 0, 0.79) 50%,
+                          rgba(0, 0, 0, 1) 56.25%,
+                          rgba(0, 0, 0, 1) 100%
+                        )`,
+                        WebkitMaskImage: `linear-gradient(
+                          to bottom,
+                          rgba(0, 0, 0, 0) 0%,
+                          rgba(0, 0, 0, 0.05) 12.5%,
+                          rgba(0, 0, 0, 0.19) 25%,
+                          rgba(0, 0, 0, 0.45) 37.5%,
+                          rgba(0, 0, 0, 0.79) 50%,
+                          rgba(0, 0, 0, 1) 56.25%,
+                          rgba(0, 0, 0, 1) 100%
+                        )`,
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
@@ -3674,9 +3674,6 @@ The article concludes with forward-looking analysis and what readers should watc
                                   zIndex: '10',
                                   overflowY: expandedGraph[index] ? 'visible' : 'hidden'
                                 }}>
-                                <div className="glass-filter"></div>
-                                <div className="glass-overlay"></div>
-                                <div className="glass-specular"></div>
                                 <div className="glass-content" style={{
                                   height: '100%',
                                   width: '100%',
@@ -3796,9 +3793,6 @@ The article concludes with forward-looking analysis and what readers should watc
                                 zIndex: '10',
                                 overflow: expandedTimeline[index] ? 'visible' : 'hidden'
                               }}>
-                              <div className="glass-filter"></div>
-                              <div className="glass-overlay"></div>
-                              <div className="glass-specular"></div>
                               <div className="glass-content" style={{
                                 height: '100%',
                                 overflow: expandedTimeline[index] ? 'visible' : 'hidden',
@@ -3989,9 +3983,6 @@ The article concludes with forward-looking analysis and what readers should watc
                                   overflow: 'hidden',
                                   display: 'flex'
                                 }}>
-                                <div className="glass-filter"></div>
-                                <div className="glass-overlay"></div>
-                                <div className="glass-specular"></div>
                                 <div className="glass-content" style={{
                                   height: '100%',
                                   width: '100%',
