@@ -1299,17 +1299,9 @@ The article concludes with forward-looking analysis and what readers should watc
   return (
     <>
       <Head>
-        {/* Viewport Configuration */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        
-        {/* iOS Safari Status Bar & Theme */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="light-content" />
         <meta name="theme-color" content="#ffffff" />
-        
-        {/* For iOS PWA */}
-        <meta name="apple-mobile-web-app-title" content="Ten News" />
-        
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1344,10 +1336,6 @@ The article concludes with forward-looking analysis and what readers should watc
           min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
-          /* iOS Safe Area Insets */
-          padding-bottom: env(safe-area-inset-bottom);
-          padding-left: env(safe-area-inset-left);
-          padding-right: env(safe-area-inset-right);
         }
         
         body::before {
@@ -2914,22 +2902,22 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: 'calc(38vh + env(safe-area-inset-top))',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      boxShadow: 'none',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: 'calc(38vh + env(safe-area-inset-top))'
+                      maxHeight: 'calc(38vh - 3px)'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -3176,11 +3164,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: 'calc(38vh + env(safe-area-inset-top))',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3188,7 +3176,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
@@ -3208,7 +3196,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + env(safe-area-inset-top) - 60px)',
+                        paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -4279,7 +4267,7 @@ The article concludes with forward-looking analysis and what readers should watc
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              backgroundColor: 'white',
               zIndex: 1000,
               display: 'flex',
               flexDirection: 'column',
@@ -4289,41 +4277,39 @@ The article concludes with forward-looking analysis and what readers should watc
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
           >
-            {/* Header with close button */}
+            {/* Hero Image Container */}
             <div style={{
-              position: 'sticky',
-              top: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.95)',
-              padding: '16px 20px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              zIndex: 1001
+              position: 'relative',
+              width: '100%',
+              height: '50vh',
+              marginTop: 'calc(-1 * env(safe-area-inset-top))',
+              paddingTop: 'env(safe-area-inset-top)',
+              overflow: 'hidden'
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  background: getCategoryColors(selectedArticle.category).lighter,
-                  color: getCategoryColors(selectedArticle.category).primary
-                }}>
-                  {selectedArticle.emoji} {selectedArticle.category}
-                </div>
-              </div>
+              {selectedArticle.image && (
+                <img 
+                  src={selectedArticle.image}
+                  alt={selectedArticle.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )}
               
+              {/* Close button positioned over hero image */}
               <button
                 onClick={closeDetailedArticle}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  position: 'absolute',
+                  top: 'calc(env(safe-area-inset-top) + 16px)',
+                  right: '16px',
+                  background: 'rgba(0, 0, 0, 0.6)',
+                  backdropFilter: 'blur(10px)',
                   border: 'none',
                   borderRadius: '50%',
                   width: '40px',
@@ -4333,37 +4319,59 @@ The article concludes with forward-looking analysis and what readers should watc
                   justifyContent: 'center',
                   cursor: 'pointer',
                   color: 'white',
-                  fontSize: '18px'
+                  fontSize: '18px',
+                  zIndex: 10
                 }}
               >
                 ✕
               </button>
+              
+              {/* Category badge over hero image */}
+              <div style={{
+                position: 'absolute',
+                top: 'calc(env(safe-area-inset-top) + 16px)',
+                left: '16px',
+                fontSize: '12px',
+                fontWeight: '600',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.95)',
+                color: getCategoryColors(selectedArticle.category).primary,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+              }}>
+                {selectedArticle.emoji} {selectedArticle.category}
+              </div>
             </div>
 
-            {/* Scrollable content */}
+            {/* Scrollable content with white background */}
             <div style={{
               flex: 1,
               overflowY: 'auto',
-              padding: '20px',
-              color: 'white'
+              padding: '24px 20px',
+              paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
+              backgroundColor: 'white',
+              color: '#1a1a1a'
             }}>
               {/* Article title */}
               <h1 style={{
-                fontSize: '24px',
+                fontSize: '28px',
                 fontWeight: '700',
-                lineHeight: '1.3',
-                margin: '0 0 20px 0',
-                color: 'white'
+                lineHeight: '1.2',
+                margin: '0 0 16px 0',
+                color: '#1a1a1a'
               }}>
                 {selectedArticle.title}
               </h1>
 
               {/* Detailed article text */}
               <div style={{
-                fontSize: '16px',
+                fontSize: '17px',
                 lineHeight: '1.6',
                 marginBottom: '30px',
-                color: 'rgba(255, 255, 255, 0.9)'
+                color: '#333'
               }}>
                 <div dangerouslySetInnerHTML={{
                   __html: selectedArticle.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -4374,11 +4382,11 @@ The article concludes with forward-looking analysis and what readers should watc
               {selectedArticle.timeline && selectedArticle.timeline.length > 0 && (
                 <div style={{ marginBottom: '30px' }}>
                   <h3 style={{
-                    fontSize: '18px',
+                    fontSize: '20px',
                     fontWeight: '600',
                     marginBottom: '16px',
-                    color: 'white',
-                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                    color: '#1a1a1a',
+                    borderBottom: '2px solid #e5e5e5',
                     paddingBottom: '8px'
                   }}>
                     Timeline
@@ -4393,16 +4401,16 @@ The article concludes with forward-looking analysis and what readers should watc
                         <div style={{
                           fontSize: '12px',
                           fontWeight: '600',
-                          color: 'rgba(255, 255, 255, 0.7)',
+                          color: '#666',
                           minWidth: '80px',
                           flexShrink: 0
                         }}>
                           {event.date}
                         </div>
                         <div style={{
-                          fontSize: '14px',
-                          lineHeight: '1.4',
-                          color: 'rgba(255, 255, 255, 0.9)'
+                          fontSize: '15px',
+                          lineHeight: '1.5',
+                          color: '#333'
                         }}>
                           {event.event}
                         </div>
@@ -4415,11 +4423,11 @@ The article concludes with forward-looking analysis and what readers should watc
               {selectedArticle.details && selectedArticle.details.length > 0 && (
                 <div style={{ marginBottom: '30px' }}>
                   <h3 style={{
-                    fontSize: '18px',
+                    fontSize: '20px',
                     fontWeight: '600',
                     marginBottom: '16px',
-                    color: 'white',
-                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                    color: '#1a1a1a',
+                    borderBottom: '2px solid #e5e5e5',
                     paddingBottom: '8px'
                   }}>
                     Key Details
@@ -4427,11 +4435,12 @@ The article concludes with forward-looking analysis and what readers should watc
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {selectedArticle.details.map((detail, index) => (
                       <div key={index} style={{
-                        fontSize: '14px',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        padding: '8px 12px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '6px'
+                        fontSize: '15px',
+                        color: '#333',
+                        padding: '12px 16px',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        borderLeft: `3px solid ${getCategoryColors(selectedArticle.category).primary}`
                       }}>
                         {detail}
                       </div>
@@ -4444,11 +4453,11 @@ The article concludes with forward-looking analysis and what readers should watc
               <div style={{
                 textAlign: 'center',
                 marginTop: '40px',
-                padding: '20px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                padding: '16px',
+                backgroundColor: '#f5f5f5',
                 borderRadius: '8px',
                 fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.7)'
+                color: '#666'
               }}>
                 Swipe left to right to return to articles
               </div>
