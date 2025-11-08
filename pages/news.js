@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 
 export default function SingleNewsPage() {
   const router = useRouter();
@@ -101,15 +100,7 @@ export default function SingleNewsPage() {
   }
 
   return (
-    <>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="light-content" />
-        <meta name="theme-color" content="#ffffff" />
-        <title>{article.title} | Ten News</title>
-      </Head>
-      
-      <div className="single-news-page">
+    <div className="single-news-page">
       {/* Header */}
       <header className="news-header">
         <div className="header-content">
@@ -543,6 +534,8 @@ export default function SingleNewsPage() {
 
         .hero-section {
           padding: 40px 24px;
+          margin-top: calc(-1 * env(safe-area-inset-top));
+          padding-top: calc(40px + env(safe-area-inset-top));
           background: linear-gradient(135deg, #F8F9FB 0%, #ffffff 100%);
         }
 
@@ -633,23 +626,21 @@ export default function SingleNewsPage() {
 
         .hero-image {
           position: relative;
-          width: 100%;
-          height: 50vh;
-          margin-top: calc(-1 * env(safe-area-inset-top));
-          padding-top: env(safe-area-inset-top);
+          top: calc(-1 * env(safe-area-inset-top));
+          margin-bottom: calc(-1 * env(safe-area-inset-top));
+          border-radius: 16px;
           overflow: hidden;
-          border-radius: 0;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
         .hero-image img {
           width: 100%;
-          height: 100%;
+          height: 300px;
           object-fit: cover;
         }
 
         .article-content {
           padding: 60px 24px;
-          padding-bottom: calc(60px + env(safe-area-inset-bottom));
           background: white;
           transform: translateY(100px);
           opacity: 0;
@@ -1003,6 +994,5 @@ export default function SingleNewsPage() {
         }
       `}</style>
     </div>
-    </>
   );
 }
