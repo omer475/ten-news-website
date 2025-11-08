@@ -1299,7 +1299,7 @@ The article concludes with forward-looking analysis and what readers should watc
   return (
     <>
       <Head>
-        {/* Updated Viewport Configuration */}
+        {/* Viewport Configuration */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         
         {/* iOS Safari Status Bar & Theme */}
@@ -1310,7 +1310,6 @@ The article concludes with forward-looking analysis and what readers should watc
         {/* For iOS PWA */}
         <meta name="apple-mobile-web-app-title" content="Ten News" />
         
-        {/* Existing font links */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1345,6 +1344,10 @@ The article concludes with forward-looking analysis and what readers should watc
           min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
+          /* iOS Safe Area Insets */
+          padding-bottom: env(safe-area-inset-bottom);
+          padding-left: env(safe-area-inset-left);
+          padding-right: env(safe-area-inset-right);
         }
         
         body::before {
@@ -2911,11 +2914,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '3px',
+                      top: '0',
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      height: 'calc(38vh + env(safe-area-inset-top))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2926,7 +2929,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       pointerEvents: 'none',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: 'calc(38vh - 3px)'
+                      maxHeight: 'calc(38vh + env(safe-area-inset-top))'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -3173,11 +3176,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '3px',
+                      top: '0',
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      height: 'calc(38vh + env(safe-area-inset-top))',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3205,7 +3208,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh - 60px)',
+                        paddingTop: 'calc(38vh + env(safe-area-inset-top) - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
