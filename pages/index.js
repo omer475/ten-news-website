@@ -1314,12 +1314,11 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: #ffffff;
+          background: ${darkMode ? '#000000' : '#ffffff'};
           padding: 0;
           margin: 0;
           height: 100%;
           min-height: 100vh;
-          min-height: 100dvh;
         }
 
         body {
@@ -1330,7 +1329,6 @@ The article concludes with forward-looking analysis and what readers should watc
           position: fixed;
           width: 100%;
           height: 100vh;
-          height: 100dvh;
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
           padding: 0;
