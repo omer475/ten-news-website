@@ -2915,19 +2915,19 @@ The article concludes with forward-looking analysis and what readers should watc
                     <div style={{
                       position: 'fixed',
                       top: '0',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
                       height: 'calc(38vh + env(safe-area-inset-top))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '12px',
+                      borderRadius: '0',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+                      boxShadow: 'none',
                       // Ensure image container doesn't interfere with information box
                       maxHeight: 'calc(38vh + env(safe-area-inset-top))'
                     }}>
@@ -3177,9 +3177,9 @@ The article concludes with forward-looking analysis and what readers should watc
                       <div style={{
                       position: 'fixed',
                       top: '0',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
                       height: 'calc(38vh + env(safe-area-inset-top))',
                       margin: 0,
                       padding: 0,
@@ -3188,7 +3188,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '12px',
+                      borderRadius: '0',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
