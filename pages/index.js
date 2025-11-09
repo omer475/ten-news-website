@@ -3712,8 +3712,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   transition: 'height 0.3s ease-in-out',
                                   minHeight: '85px',
                                   zIndex: '10',
-                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden',
-                                  '--c-glass': imageDominantColors[index]?.blurColor || '#ffffff'
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
@@ -3783,11 +3782,11 @@ The article concludes with forward-looking analysis and what readers should watc
                                   <div style={{
                                     fontSize: '10px',
                                     fontWeight: '700',
-                                    color: '#000000',
+                                    color: imageDominantColors[index]?.link || '#000000',
                                     marginBottom: '4px',
                                     letterSpacing: '0.3px',
                                     textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
-                                    opacity: 0.8
+                                    opacity: 0.9
                                   }}>
                                     {story.graph.title || 'Data Visualization'}
                                   </div>
@@ -3800,7 +3799,11 @@ The article concludes with forward-looking analysis and what readers should watc
                                     overflow: expandedGraph[index] ? 'visible' : 'hidden'
                                   }}>
                                     {story.graph && story.graph.data && story.graph.data.length > 0 ? (
-                                      <GraphChart graph={story.graph} expanded={expandedGraph[index]} />
+                                      <GraphChart 
+                                        graph={story.graph} 
+                                        expanded={expandedGraph[index]} 
+                                        accentColor={imageDominantColors[index]?.link || '#3b82f6'}
+                                      />
                                     ) : (
                                       <div style={{
                                         width: '100%',
@@ -3835,8 +3838,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                 transition: 'height 0.3s ease-in-out',
                                 minHeight: '85px',
                                 zIndex: '10',
-                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
-                                '--c-glass': imageDominantColors[index]?.blurColor || '#ffffff'
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden'
                               }}>
                               <div className="glass-filter"></div>
                               <div className="glass-overlay"></div>
@@ -3909,10 +3911,14 @@ The article concludes with forward-looking analysis and what readers should watc
                                   top: '0px',
                                   bottom: '8px',
                                   width: '2px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
+                                  background: imageDominantColors[index]?.link 
+                                    ? `linear-gradient(180deg, ${imageDominantColors[index].link}, ${imageDominantColors[index].highlight})`
+                                    : 'linear-gradient(180deg, #3b82f6, #93c5fd)',
                                   zIndex: '0',
                                   borderRadius: '2px',
-                                  boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
+                                  boxShadow: imageDominantColors[index]?.link 
+                                    ? `0 2px 4px ${imageDominantColors[index].link}40`
+                                    : '0 2px 4px rgba(59, 130, 246, 0.3)'
                                 }}></div>
                                 <div style={{
                                   display: 'flex',
@@ -3938,20 +3944,24 @@ The article concludes with forward-looking analysis and what readers should watc
                                       width: '8px',
                                       height: '8px',
                                       borderRadius: '50%',
-                                      background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
-                                      border: '2px solid #3b82f6',
+                                      background: idx === story.timeline.length - 1 
+                                        ? (imageDominantColors[index]?.link || '#3b82f6')
+                                        : 'white',
+                                      border: `2px solid ${imageDominantColors[index]?.link || '#3b82f6'}`,
                                       zIndex: '2',
-                                      boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
+                                      boxShadow: imageDominantColors[index]?.link 
+                                        ? `0 2px 4px ${imageDominantColors[index].link}33`
+                                        : '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
                                       fontSize: '10px',
                                       fontWeight: '700',
-                                      color: '#000000',
+                                      color: imageDominantColors[index]?.link || '#000000',
                                       marginBottom: '2px',
                                       letterSpacing: '0.3px',
                                       marginTop: '0px',
                                       textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
-                                      opacity: 0.8
+                                      opacity: 0.9
                                     }}>{event.date}</div>
                                     <div style={{
                                       fontSize: expandedTimeline[index] ? '13px' : '11px',
@@ -3982,9 +3992,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                 left: '0',
                                 right: '0',
                                 height: '200px',
-                                background: imageDominantColors[index]?.blurColor ? 
-                                  `color-mix(in srgb, ${imageDominantColors[index].blurColor} 25%, white)` : 
-                                  '#ffffff',
+                                background: '#ffffff',
                                 borderRadius: '8px',
                                 padding: '12px',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -3992,9 +4000,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                flexDirection: 'column',
-                                backdropFilter: 'blur(12px)',
-                                WebkitBackdropFilter: 'blur(12px)'
+                                flexDirection: 'column'
                               }}>
                               <div style={{
                                 fontSize: '14px',
@@ -4033,8 +4039,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   minHeight: '85px',
                                   zIndex: '10',
                                   overflow: 'hidden',
-                                  display: 'flex',
-                                  '--c-glass': imageDominantColors[index]?.blurColor || '#ffffff'
+                                  display: 'flex'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
@@ -4069,18 +4074,18 @@ The article concludes with forward-looking analysis and what readers should watc
                                         color: '#000000'
                                       }}>
                                         <div className="news-detail-label" style={{ 
-                                          color: '#000000',
+                                          color: imageDominantColors[index]?.link || '#000000',
                                           fontSize: '9px',
                                           fontWeight: '700',
                                           marginBottom: '3px',
                                           textAlign: 'center',
                                           textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
-                                          opacity: 0.7,
+                                          opacity: 0.85,
                                           textTransform: 'uppercase',
                                           letterSpacing: '0.5px'
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
-                                          color: '#000000',
+                                          color: imageDominantColors[index]?.link || '#000000',
                                           fontSize: '18px',
                                           fontWeight: '800',
                                           textAlign: 'center',

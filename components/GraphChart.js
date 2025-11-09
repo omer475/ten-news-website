@@ -2,7 +2,7 @@
 
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function GraphChart({ graph, expanded }) {
+export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' }) {
   if (!graph || !graph.data || graph.data.length === 0) {
     return (
       <div style={{
@@ -63,9 +63,9 @@ export default function GraphChart({ graph, expanded }) {
           <Line 
             type="monotone" 
             dataKey="value" 
-            stroke="#3b82f6" 
+            stroke={accentColor} 
             strokeWidth={2}
-            dot={{ fill: '#3b82f6', r: expanded ? 4 : 2 }}
+            dot={{ fill: accentColor, r: expanded ? 4 : 2 }}
             activeDot={{ r: 6 }}
           />
         </LineChart>
@@ -85,7 +85,7 @@ export default function GraphChart({ graph, expanded }) {
             } : null}
           />
           <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill="#3b82f6" />
+          <Bar dataKey="value" fill={accentColor} />
         </BarChart>
       );
     } else if (graph.type === 'area') {
@@ -103,7 +103,7 @@ export default function GraphChart({ graph, expanded }) {
             } : null}
           />
           <Tooltip {...tooltipProps} />
-          <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+          <Area type="monotone" dataKey="value" stroke={accentColor} fill={accentColor} fillOpacity={0.3} />
         </AreaChart>
       );
     } else if (graph.type === 'column') {
@@ -127,7 +127,7 @@ export default function GraphChart({ graph, expanded }) {
             width={60}
           />
           <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill="#3b82f6" />
+          <Bar dataKey="value" fill={accentColor} />
         </BarChart>
       );
     } else {
@@ -137,7 +137,7 @@ export default function GraphChart({ graph, expanded }) {
           <XAxis dataKey="date" {...axisProps} />
           <YAxis {...axisProps} />
           <Tooltip {...tooltipProps} />
-          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
+          <Line type="monotone" dataKey="value" stroke={accentColor} strokeWidth={2} />
         </LineChart>
       );
     }
