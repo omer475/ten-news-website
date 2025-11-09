@@ -10,89 +10,6 @@ const GraphChart = dynamic(() => import('../components/GraphChart'), {
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
   });
 
-// Fixed Color Arrays - 20 colors each, all indices share the same color family
-// BLUR_COLORS: Light/soft colors for blurred backgrounds
-const BLUR_COLORS = [
-  '#7AB8F5', // Index 0: Light Blue
-  '#EE7AB8', // Index 1: Light Pink
-  '#B87AF5', // Index 2: Light Purple
-  '#7AE5A8', // Index 3: Light Emerald
-  '#FF9966', // Index 4: Light Orange
-  '#52D4E8', // Index 5: Light Cyan
-  '#F0638C', // Index 6: Light Magenta
-  '#6B7FD7', // Index 7: Light Indigo
-  '#52C9B8', // Index 8: Light Teal
-  '#FF8A66', // Index 9: Light Deep Orange
-  '#9370DB', // Index 10: Light Deep Purple
-  '#A8D46E', // Index 11: Light Green
-  '#FFB84D', // Index 12: Light Amber
-  '#52D4C4', // Index 13: Light Turquoise
-  '#D64A7A', // Index 14: Light Dark Pink
-  '#5AADFF', // Index 15: Light Bright Blue
-  '#FF6B66', // Index 16: Light Red
-  '#5AC9BA', // Index 17: Light Teal Green
-  '#C76FD4', // Index 18: Light Purple
-  '#FF9470'  // Index 19: Light Coral
-];
-
-// TITLE_HIGHLIGHT_COLORS: Vibrant/eye-catching colors for highlighted words in titles
-const TITLE_HIGHLIGHT_COLORS = [
-  '#0D6EFD', // Index 0: Electric Blue
-  '#FF1493', // Index 1: Deep Pink
-  '#9D00FF', // Index 2: Vivid Purple
-  '#00FF7F', // Index 3: Spring Green
-  '#FF4500', // Index 4: Orange Red
-  '#00CED1', // Index 5: Dark Turquoise
-  '#FF1493', // Index 6: Deep Pink
-  '#4169E1', // Index 7: Royal Blue
-  '#008B8B', // Index 8: Dark Cyan
-  '#FF4500', // Index 9: Orange Red
-  '#8A2BE2', // Index 10: Blue Violet
-  '#32CD32', // Index 11: Lime Green
-  '#FF8C00', // Index 12: Dark Orange
-  '#00CED1', // Index 13: Dark Turquoise
-  '#DC143C', // Index 14: Crimson
-  '#1E90FF', // Index 15: Dodger Blue
-  '#FF0000', // Index 16: Pure Red
-  '#20B2AA', // Index 17: Light Sea Green
-  '#9932CC', // Index 18: Dark Orchid
-  '#FF6347'  // Index 19: Tomato
-];
-
-// BULLET_TEXT_COLORS: Medium saturation colors for links in bullet points
-const BULLET_TEXT_COLORS = [
-  '#2E7DD1', // Index 0: Medium Blue
-  '#E85BA3', // Index 1: Medium Pink
-  '#A860E8', // Index 2: Medium Purple
-  '#4AC98E', // Index 3: Medium Emerald
-  '#FF7A4D', // Index 4: Medium Orange
-  '#00B5C8', // Index 5: Medium Cyan
-  '#E83E7A', // Index 6: Medium Magenta
-  '#5468C4', // Index 7: Medium Indigo
-  '#00A896', // Index 8: Medium Teal
-  '#FF6B3D', // Index 9: Medium Deep Orange
-  '#7E50C4', // Index 10: Medium Deep Purple
-  '#7BB857', // Index 11: Medium Green
-  '#FF9F1C', // Index 12: Medium Amber
-  '#00B5A8', // Index 13: Medium Turquoise
-  '#C93368', // Index 14: Medium Dark Pink
-  '#3D9EF0', // Index 15: Medium Bright Blue
-  '#F4564D', // Index 16: Medium Red
-  '#3DB5A3', // Index 17: Medium Teal Green
-  '#B659C8', // Index 18: Medium Purple
-  '#FF7C5C'  // Index 19: Medium Coral
-];
-
-// Function to get colors for an article based on its index
-function getColorsForArticle(articleIndex) {
-  const colorIndex = articleIndex % 20;
-  return {
-    blurColor: BLUR_COLORS[colorIndex],
-    titleHighlight: TITLE_HIGHLIGHT_COLORS[colorIndex],
-    bulletColor: BULLET_TEXT_COLORS[colorIndex]
-  };
-}
-
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -300,6 +217,148 @@ export default function Home() {
       return `${weeks}w`;
     } catch (error) {
       return '';
+    }
+  };
+
+  // Extract color candidates using enhanced frequency analysis
+  // Step 1: Extract top 10 most frequent colors from image
+  const extractTop10DominantColors = (pixels) => {
+    const colorFrequency = {};
+    
+    // Sample every 10th pixel for performance (step by 40 in RGBA array)
+    for (let i = 0; i < pixels.length; i += 40) {
+      const r = Math.round(pixels[i] / 15) * 15;      // Quantize to nearest 15
+      const g = Math.round(pixels[i + 1] / 15) * 15;
+      const b = Math.round(pixels[i + 2] / 15) * 15;
+      const alpha = pixels[i + 3];
+      
+      // Skip transparent pixels
+      if (alpha < 125) continue;
+      
+      const key = `${r},${g},${b}`;
+      colorFrequency[key] = (colorFrequency[key] || 0) + 1;
+    }
+    
+    // Get top 10 colors by frequency
+    const top10Colors = Object.entries(colorFrequency)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([key]) => {
+        const [r, g, b] = key.split(',').map(Number);
+        return { r, g, b };
+      });
+    
+    return top10Colors;
+  };
+
+  // Step 2: Filter out boring colors (saturation < 35%)
+  const filterColorfulColors = (colors) => {
+    const colorfulColors = [];
+    
+    for (const color of colors) {
+      const [h, s, l] = rgbToHsl(color.r, color.g, color.b);
+      
+      // Keep only colors with saturation >= 35%
+      if (s >= 35) {
+        colorfulColors.push({
+          rgb: color,
+          hsl: { h, s, l }
+        });
+      }
+    }
+    
+    return colorfulColors;
+  };
+
+  // Step 3: Fallback - Find most saturated pixel in entire image
+  const findMostSaturatedColorInImage = (pixels) => {
+    let maxSaturation = 0;
+    let mostSaturatedColor = { r: 100, g: 100, b: 200 }; // Default blue
+    
+    // Sample every 40th pixel (step by 160 in RGBA array)
+    for (let i = 0; i < pixels.length; i += 160) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const alpha = pixels[i + 3];
+      
+      if (alpha < 125) continue;
+      
+      const [h, s, l] = rgbToHsl(r, g, b);
+      
+      // Find highest saturation with reasonable lightness
+      if (s > maxSaturation && l >= 20 && l <= 80) {
+        maxSaturation = s;
+        mostSaturatedColor = { r, g, b };
+      }
+    }
+    
+    const [h, s, l] = rgbToHsl(mostSaturatedColor.r, mostSaturatedColor.g, mostSaturatedColor.b);
+    
+    return {
+      rgb: mostSaturatedColor,
+      hsl: { h, s, l }
+    };
+  };
+
+  // Step 8: Main color extraction function with new workflow
+  const extractDominantColor = (imgElement, storyIndex) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Resize to 100x100 for fast processing
+      canvas.width = 100;
+      canvas.height = 100;
+      ctx.drawImage(imgElement, 0, 0, 100, 100);
+      
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, 100, 100);
+      const pixels = imageData.data;
+      
+      // Step 1: Extract top 10 most frequent colors
+      const top10Colors = extractTop10DominantColors(pixels);
+      
+      // Step 2: Filter to keep only colorful colors (saturation >= 35%)
+      let colorfulColors = filterColorfulColors(top10Colors);
+      
+      // Step 3: If no colorful colors found, search for most saturated pixel
+      if (colorfulColors.length === 0) {
+        colorfulColors = [findMostSaturatedColorInImage(pixels)];
+      }
+      
+      // Step 4: Use the first (most frequent) colorful color
+      const selectedColor = colorfulColors[0];
+      
+      // Step 5: Create blur color (dark + muted)
+      const blurColor = createBlurColor(selectedColor.hsl);
+      
+      // Step 6: Create title highlight color (lighter, subtle)
+      const titleHighlight = createTitleHighlightColor(blurColor.hsl);
+      
+      // Step 7: Create bullet text color (between blur and title)
+      const bulletColor = createBulletTextColor(blurColor.hsl, titleHighlight.hsl);
+      
+      // Store all three colors
+      setImageDominantColors(prev => ({ 
+        ...prev, 
+        [storyIndex]: { 
+          blurColor: blurColor.hex,
+          highlight: titleHighlight.hex,
+          link: bulletColor.hex
+        }
+      }));
+    } catch (error) {
+      console.error('Error extracting dominant color:', error);
+      // Fallback to dark blue-grey
+      setImageDominantColors(prev => ({ 
+        ...prev, 
+        [storyIndex]: { 
+          blurColor: '#3A4A5E',
+          highlight: '#A8C4E0',
+          link: '#5A6F8E'
+        }
+      }));
     }
   };
 
@@ -743,12 +802,172 @@ The article concludes with forward-looking analysis and what readers should watc
     }
   };
 
+  // Helper: Convert RGB to HSL
+  const rgbToHsl = (r, g, b) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+        default: h = 0;
+      }
+    }
+    return [h * 360, s * 100, l * 100];
+  };
+
+  // Helper: Convert HSL to RGB
+  const hslToRgb = (h, s, l) => {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
+  // Calculate relative luminance for contrast checking
+  const getLuminance = (r, g, b) => {
+    const [rs, gs, bs] = [r, g, b].map(val => {
+      val = val / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (rgb1, rgb2) => {
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  // Check if color is too close to white
+  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
+    // Check RGB values - if all are above 230, it's very close to white
+    if (r > 230 && g > 230 && b > 230) return true;
+    
+    // Check lightness in HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    if (l > minLightness) return true;
+    
+    // Additional check: if saturation is very low and lightness is high
+    if (s < 5 && l > 80) return true;
+    
+    return false;
+  };
+
+  // Get fallback color based on background hue
+  const getFallbackColorByHue = (hue) => {
+    // Blue range: 200-260 degrees
+    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
+    
+    // Green range: 100-180 degrees
+    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
+    
+    // Orange/Red range: 0-50 and 320-360 degrees
+    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
+    
+    // Default: Gray/neutral
+    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
+  };
+
+  // Step 4: RGB to Hex conversion
+  const rgbToHex = (r, g, b) => {
+    return '#' + [r, g, b].map(x => {
+      const hex = Math.round(x).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+  };
+
+  // Step 5: Create blur color (dark + muted from extracted color)
+  const createBlurColor = (hsl) => {
+    const { h, s, l } = hsl;
+    // Make it dark and muted
+    const blurHsl = {
+      h: h,                              // Keep same hue
+      s: Math.max(s * 0.5, 20),         // Reduce saturation to 50% (min 20%)
+      l: Math.min(l * 0.6, 35)          // Darken to 60% of original (max 35%)
+    };
+    
+    const [r, g, b] = hslToRgb(blurHsl.h, blurHsl.s, blurHsl.l);
+    return {
+      hex: rgbToHex(r, g, b),
+      hsl: blurHsl
+    };
+  };
+
+  // Step 6: Create title highlight color (light, subtle - like images 4-8)
+  const createTitleHighlightColor = (blurHsl) => {
+    const { h, s, l } = blurHsl;
+    // Make it lighter and slightly more saturated than blur
+    const highlightHsl = {
+      h: h,                              // Same hue family
+      s: Math.min(s * 1.3, 40),         // Slightly more saturated (max 40%)
+      l: Math.min(l + 35, 75)           // Much lighter (add 35%, max 75%)
+    };
+    
+    const [r, g, b] = hslToRgb(highlightHsl.h, highlightHsl.s, highlightHsl.l);
+    return {
+      hex: rgbToHex(r, g, b),
+      hsl: highlightHsl
+    };
+  };
+
+  // Step 7: Create bullet text color (between blur and title)
+  const createBulletTextColor = (blurHsl, titleHsl) => {
+    const { h } = blurHsl;
+    // Medium saturation and lightness - between blur and title
+    const bulletHsl = {
+      h: h,                                     // Same hue family
+      s: (blurHsl.s + titleHsl.s) / 2,        // Average of blur and title saturation
+      l: (blurHsl.l + titleHsl.l) / 2         // Average of blur and title lightness
+    };
+    
+    const [r, g, b] = hslToRgb(bulletHsl.h, bulletHsl.s, bulletHsl.l);
+    return {
+      hex: rgbToHex(r, g, b),
+      hsl: bulletHsl
+    };
+  };
+
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, colors, category = null) => {
     if (!text) return '';
     
-    // Use fixed color from color arrays (always provided)
-    const linkColor = colors?.link || '#000000';
+    const linkColor = colors?.link || 
+      (category ? getCategoryColors(category).primary : '#000000');
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -768,8 +987,8 @@ The article concludes with forward-looking analysis and what readers should watc
   const renderTitleWithHighlight = (text, colors, category = null) => {
     if (!text) return '';
     
-    // Use fixed color from color arrays (always provided)
-    const highlightColor = colors?.highlight || '#ffffff';
+    const highlightColor = colors?.highlight || 
+      (category ? getCategoryColors(category).primary : '#ffffff');
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -2780,16 +2999,14 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }));
                               }
                               
-                              // Assign colors from fixed color arrays
-                              const colors = getColorsForArticle(index);
-                              setImageDominantColors(prev => ({
-                                ...prev,
-                                [index]: {
-                                  blurColor: colors.blurColor,
-                                  highlight: colors.titleHighlight,
-                                  link: colors.bulletColor
+                              // Always extract for highlight/link colors
+                              if (e.target.complete && e.target.naturalWidth > 0) {
+                                try {
+                                  extractDominantColor(e.target, index);
+                                } catch (error) {
+                                  console.warn('Color extraction failed:', error);
                                 }
-                              }));
+                              }
                               // Ensure image is visible and persistent
                               e.target.style.opacity = '1';
                               e.target.style.visibility = 'visible';
@@ -2930,7 +3147,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff'
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                         </div>
                       )}
