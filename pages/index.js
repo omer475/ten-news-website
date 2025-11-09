@@ -332,6 +332,16 @@ export default function Home() {
     return [h, Math.min(75, midS), Math.min(70, midL)];
   };
 
+  // Create info component color (different from bullet text, same family)
+  const createInfoComponentColor = (blurHsl) => {
+    const [h, s, l] = blurHsl;
+    // Shift hue slightly (15 degrees) and adjust saturation/lightness for variety
+    const newH = (h + 15) % 360; // Slight hue shift for variety
+    const newS = Math.min(80, s * 1.3); // More saturated
+    const newL = Math.min(55, l + 25); // Lighter than blur
+    return [newH, newS, newL];
+  };
+
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -366,13 +376,19 @@ export default function Home() {
       const [lR, lG, lB] = hslToRgb(...linkHsl);
       const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
       
+      // Create info component color (different but same family)
+      const infoHsl = createInfoComponentColor(blurHsl);
+      const [iR, iG, iB] = hslToRgb(...infoHsl);
+      const infoColor = `rgb(${iR}, ${iG}, ${iB})`;
+      
       // Store all colors
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: blurColorHex,
           highlight: highlightColor,
-          link: linkColor
+          link: linkColor,
+          info: infoColor
         }
       }));
     } catch (error) {
@@ -383,7 +399,8 @@ export default function Home() {
         [storyIndex]: {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
-          link: '#5A6F8E'
+          link: '#5A6F8E',
+          info: '#4A7FA0'
         }
       }));
     }
@@ -3782,7 +3799,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   <div style={{
                                     fontSize: '10px',
                                     fontWeight: '700',
-                                    color: imageDominantColors[index]?.link || '#000000',
+                                    color: imageDominantColors[index]?.info || '#000000',
                                     marginBottom: '4px',
                                     letterSpacing: '0.3px',
                                     textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
@@ -3802,7 +3819,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                       <GraphChart 
                                         graph={story.graph} 
                                         expanded={expandedGraph[index]} 
-                                        accentColor={imageDominantColors[index]?.link || '#3b82f6'}
+                                        accentColor={imageDominantColors[index]?.info || '#3b82f6'}
                                       />
                                     ) : (
                                       <div style={{
@@ -3911,13 +3928,13 @@ The article concludes with forward-looking analysis and what readers should watc
                                   top: '0px',
                                   bottom: '8px',
                                   width: '2px',
-                                  background: imageDominantColors[index]?.link 
-                                    ? `linear-gradient(180deg, ${imageDominantColors[index].link}, ${imageDominantColors[index].highlight})`
+                                  background: imageDominantColors[index]?.info 
+                                    ? `linear-gradient(180deg, ${imageDominantColors[index].info}, ${imageDominantColors[index].highlight})`
                                     : 'linear-gradient(180deg, #3b82f6, #93c5fd)',
                                   zIndex: '0',
                                   borderRadius: '2px',
-                                  boxShadow: imageDominantColors[index]?.link 
-                                    ? `0 2px 4px ${imageDominantColors[index].link}40`
+                                  boxShadow: imageDominantColors[index]?.info 
+                                    ? `0 2px 4px ${imageDominantColors[index].info}40`
                                     : '0 2px 4px rgba(59, 130, 246, 0.3)'
                                 }}></div>
                                 <div style={{
@@ -3945,18 +3962,18 @@ The article concludes with forward-looking analysis and what readers should watc
                                       height: '8px',
                                       borderRadius: '50%',
                                       background: idx === story.timeline.length - 1 
-                                        ? (imageDominantColors[index]?.link || '#3b82f6')
+                                        ? (imageDominantColors[index]?.info || '#3b82f6')
                                         : 'white',
-                                      border: `2px solid ${imageDominantColors[index]?.link || '#3b82f6'}`,
+                                      border: `2px solid ${imageDominantColors[index]?.info || '#3b82f6'}`,
                                       zIndex: '2',
-                                      boxShadow: imageDominantColors[index]?.link 
-                                        ? `0 2px 4px ${imageDominantColors[index].link}33`
+                                      boxShadow: imageDominantColors[index]?.info 
+                                        ? `0 2px 4px ${imageDominantColors[index].info}33`
                                         : '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
                                       fontSize: '10px',
                                       fontWeight: '700',
-                                      color: imageDominantColors[index]?.link || '#000000',
+                                      color: imageDominantColors[index]?.info || '#000000',
                                       marginBottom: '2px',
                                       letterSpacing: '0.3px',
                                       marginTop: '0px',
@@ -4074,18 +4091,18 @@ The article concludes with forward-looking analysis and what readers should watc
                                         color: '#000000'
                                       }}>
                                         <div className="news-detail-label" style={{ 
-                                          color: imageDominantColors[index]?.link || '#000000',
+                                          color: '#000000',
                                           fontSize: '9px',
                                           fontWeight: '700',
                                           marginBottom: '3px',
                                           textAlign: 'center',
                                           textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
-                                          opacity: 0.85,
+                                          opacity: 0.7,
                                           textTransform: 'uppercase',
                                           letterSpacing: '0.5px'
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
-                                          color: imageDominantColors[index]?.link || '#000000',
+                                          color: imageDominantColors[index]?.info || '#000000',
                                           fontSize: '18px',
                                           fontWeight: '800',
                                           textAlign: 'center',
