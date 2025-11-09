@@ -648,6 +648,18 @@ Additional paragraphs would continue here, exploring various aspects of the stor
 
 The article concludes with forward-looking analysis and what readers should watch for in the coming days as this story continues to develop.`;
                
+               // Generate fallback bullets if none provided
+               let bulletPoints = article.summary_bullets || [];
+               if (!bulletPoints || bulletPoints.length === 0) {
+                 // Try to generate bullets from summary or detailed text
+                 const sourceText = article.summary || article.detailed_text || sampleDetailedText;
+                 if (sourceText && sourceText.length > 50) {
+                   // Split into sentences and take first few as bullets
+                   const sentences = sourceText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+                   bulletPoints = sentences.slice(0, Math.min(4, sentences.length)).map(s => s.trim());
+                 }
+               }
+
                const storyData = {
                  type: 'news',
                  number: article.rank || (index + 1),
@@ -655,7 +667,7 @@ The article concludes with forward-looking analysis and what readers should watc
                  emoji: article.emoji || '📰',
                  title: article.title || 'News Story',
                  detailed_text: sampleDetailedText,
-                 summary_bullets: article.summary_bullets || [],
+                 summary_bullets: bulletPoints,
                  details: sampleDetails,
                  source: article.source || 'Today+',
                  url: article.url || '#',
@@ -983,7 +995,7 @@ The article concludes with forward-looking analysis and what readers should watc
           </span>
         );
       }
-      return part;
+      return <span key={i}>{part}</span>;
     });
   };
 
@@ -1004,7 +1016,7 @@ The article concludes with forward-looking analysis and what readers should watc
           </span>
         );
       }
-      return part;
+      return <span key={i}>{part}</span>;
     });
   };
 
@@ -1314,11 +1326,12 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: #ffffff;
           padding: 0;
           margin: 0;
           height: 100%;
-          min-height: 100vh;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
 
         body {
@@ -1328,11 +1341,35 @@ The article concludes with forward-looking analysis and what readers should watc
           overflow: hidden;
           position: fixed;
           width: 100%;
-          height: 100vh;
+          height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
-          padding: 0;
-          margin: 0;
+        }
+        
+        body::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        body::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
         }
 
         /* Glassmorphism Variables */
@@ -1478,18 +1515,15 @@ The article concludes with forward-looking analysis and what readers should watc
         .story-container {
           position: absolute;
           width: 100%;
-          height: 100vh;
-          height: 100dvh;
+          height: 100%;
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 0 0 200px 0;
+          padding: 0 24px 200px 24px;
           background: ${darkMode ? '#000000' : 'transparent'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
           z-index: 10;
-          top: 0;
-          left: 0;
         }
         
         .story-container::after {
@@ -1606,12 +1640,11 @@ The article concludes with forward-looking analysis and what readers should watc
           text-align: center;
           max-width: 800px;
           margin: 0 auto;
-          padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+          padding: 0 20px;
           display: flex;
           flex-direction: column;
           justify-content: center;
-          min-height: 100vh;
-          min-height: 100dvh;
+          min-height: calc(100vh - 140px);
         }
 
         .date-header {
@@ -1780,7 +1813,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .scroll-hint {
           position: absolute;
-          bottom: calc(160px + env(safe-area-inset-bottom));
+          bottom: 160px;
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -2708,11 +2741,11 @@ The article concludes with forward-looking analysis and what readers should watc
           /* Show arrows on mobile/tablet - hide on desktop */
           
           .story-container {
-            padding: 0 0 calc(40px + env(safe-area-inset-bottom));
+            padding: 0 0 40px;
           }
           
           .news-item {
-            padding: 0 0 20px 0;
+            padding: 0 10px 20px 10px;
             max-width: 100%;
           }
           
@@ -2720,8 +2753,6 @@ The article concludes with forward-looking analysis and what readers should watc
             margin: 0 auto;
             max-width: 100%;
             width: 100%;
-            padding-left: 30px !important;
-            padding-right: 30px !important;
           }
           
           .news-number {
@@ -2764,13 +2795,12 @@ The article concludes with forward-looking analysis and what readers should watc
           }
           
           .opening-container {
-            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-            min-height: 100vh;
-            min-height: 100dvh;
+            padding: 0 20px;
+            min-height: calc(100vh - 120px);
           }
           
           .scroll-hint {
-            bottom: calc(100px + env(safe-area-inset-bottom));
+            bottom: 100px;
             font-size: 11px;
             letter-spacing: 1.5px;
           }
@@ -2795,7 +2825,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
       `}</style>
       
-      <div style={{ position: 'relative', width: '100%', height: '100vh', height: '100dvh', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -2882,23 +2912,22 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: 'calc(42vh + env(safe-area-inset-top))',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
-                      paddingTop: 'env(safe-area-inset-top)',
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      boxShadow: 'none',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: 'calc(42vh + env(safe-area-inset-top))'
+                      maxHeight: 'calc(38vh - 3px)'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -3145,20 +3174,19 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: 'calc(42vh + env(safe-area-inset-top))',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
-                      paddingTop: 'env(safe-area-inset-top)',
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         display: 'flex',
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
@@ -3178,10 +3206,9 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(42vh + env(safe-area-inset-top) - 60px)',
-                        paddingLeft: '24px',
-                        paddingRight: '24px',
-                        paddingBottom: 'calc(60px + env(safe-area-inset-bottom))',
+                        paddingTop: 'calc(38vh - 60px)',
+                        paddingLeft: '20px',
+                        paddingRight: '20px',
                         zIndex: '2',
                         background: 'transparent',
                         width: '100%',
