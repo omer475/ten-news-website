@@ -122,7 +122,7 @@ export default function Home() {
               title: article.title || 'News Story',
               summary: article.summary || 'News summary will appear here.',
               details: article.details || [],
-              source: article.source || 'Ten News',
+              source: article.source || 'Today+',
               url: article.url || '#'
               };
               
@@ -164,7 +164,7 @@ export default function Home() {
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: 'Ten News automation is working perfectly'
+              headline: 'Today+ automation is working perfectly'
             },
             {
               type: 'news',
@@ -172,9 +172,9 @@ export default function Home() {
               category: 'SYSTEM STATUS',
               emoji: '🤖',
               title: 'GitHub Actions Automation Active',
-              summary: 'Your Ten News system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
+              summary: 'Your Today+ system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
               details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
-              source: 'Ten News System',
+              source: 'Today+ System',
               url: '#',
               timeline: [
                 {"date": "Setup", "event": "GitHub Actions workflow configured"},
@@ -191,7 +191,7 @@ export default function Home() {
               title: 'GDELT Global News Integration Ready',
               summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
               details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
-              source: 'Ten News System',
+              source: 'Today+ System',
               url: '#',
               timeline: [
                 {"date": "Research", "event": "GDELT database identified as news source"},
@@ -208,7 +208,7 @@ export default function Home() {
               title: 'Claude AI Curation System Online',
               summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
               details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
-              source: 'Ten News System',
+              source: 'Today+ System',
               url: '#',
               timeline: [
                 {"date": "Planning", "event": "AI curation system designed"},
@@ -1618,7 +1618,7 @@ export default function Home() {
         {/* Header */}
         <div className="header">
           <div className="logo">
-            <span className="logo-ten">TEN</span> NEWS
+            Today<span className="logo-ten">+</span>
           </div>
           
           <div style={{ flex: 1 }}></div>
@@ -2109,7 +2109,7 @@ export default function Home() {
           <div className="auth-modal-overlay" onClick={() => setAuthModal(null)}>
             <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
               <div className="auth-modal-header">
-                <h2>{authModal === 'login' ? 'Login to Ten News' : 'Create Your Account'}</h2>
+                <h2>{authModal === 'login' ? 'Login to Today+' : 'Create Your Account'}</h2>
                 <button className="auth-close" onClick={() => setAuthModal(null)}>×</button>
               </div>
 
