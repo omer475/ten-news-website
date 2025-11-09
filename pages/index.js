@@ -2915,7 +2915,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+                      boxShadow: imageDominantColors[index]?.blurColor ? `0 8px 24px ${imageDominantColors[index].blurColor}40` : "0 8px 24px rgba(0, 0, 0, 0.25)",
                       // Ensure image container doesn't interfere with information box
                       maxHeight: 'calc(38vh - 3px)'
                     }}>
