@@ -1,18 +1,14 @@
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
+import dynamic from 'next/dynamic';
 
-// Fixed color palette for blur backgrounds
-const BLUR_COLORS = [
-  '#4A90E2', '#E24A90', '#9B51E0', '#50C878', '#FF6B35',
-  '#00BCD4', '#E91E63', '#3F51B5', '#009688', '#FF5722',
-  '#673AB7', '#8BC34A', '#FF9800', '#00BFA5', '#C2185B',
-  '#2196F3', '#F44336', '#26A69A', '#AB47BC', '#FF7043'
-];
-
-function getBlurColorForArticle(index) {
-  return BLUR_COLORS[index % 20];
-}
+// Dynamically import GraphChart to avoid SSR issues
+const GraphChart = dynamic(() => import('../components/GraphChart'), {
+    ssr: false,
+  loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
+  });
 
 export default function Home() {
   const [stories, setStories] = useState([]);
@@ -20,8 +16,484 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
+  const [showDetails, setShowDetails] = useState({});
+  const [showMap, setShowMap] = useState({});
+  const [showGraph, setShowGraph] = useState({});
   const [darkMode, setDarkMode] = useState(false);
-  const [articleBlurColors, setArticleBlurColors] = useState({});
+  const [readArticles, setReadArticles] = useState(new Set());
+  const [expandedTimeline, setExpandedTimeline] = useState({});
+  const [expandedGraph, setExpandedGraph] = useState({});
+  const [showBulletPoints, setShowBulletPoints] = useState({});
+  // Removed globalShowBullets - only showing summary text now
+  const [showDetailedArticle, setShowDetailedArticle] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
+  const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
+  const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
+
+  // Swipe handling for summary/bullet toggle and detailed article navigation
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+      return;
+    }
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+      return;
+    }
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = (e) => {
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+      return;
+    }
+    
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe || isRightSwipe) {
+      // Prevent click event when swiping
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // If detailed article is open, swipe left-to-right closes it
+      if (showDetailedArticle && isRightSwipe) {
+        setShowDetailedArticle(false);
+        setSelectedArticle(null);
+        return;
+      }
+      
+      // If detailed text is showing for current article, swipe right returns to summary
+      if (showDetailedText[currentIndex] && isRightSwipe) {
+        setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
+        return;
+      }
+      
+      // No more bullet/summary toggle - only detailed text navigation
+    }
+  };
+
+  // Function to open detailed article
+  const openDetailedArticle = (story) => {
+    setSelectedArticle(story);
+    setShowDetailedArticle(true);
+  };
+
+  // Function to close detailed article
+  const closeDetailedArticle = () => {
+    setShowDetailedArticle(false);
+    setSelectedArticle(null);
+  };
+
+  // Function to toggle detailed text for current article
+  const toggleDetailedText = (storyIndex) => {
+    setShowDetailedText(prev => ({ ...prev, [storyIndex]: !prev[storyIndex] }));
+  };
+
+  // Helper function to count available components for a story
+  const getAvailableComponentsCount = (story) => {
+    let count = 0;
+    if (story.details && story.details.length > 0) count++;
+    if (story.timeline && story.timeline.length > 0) count++;
+    if (story.map) count++;
+    if (story.graph) count++;
+    return count;
+  };
+
+  // Helper function to get available information types for a story
+  const getAvailableInformationTypes = (story) => {
+    // If components array exists, use it to determine order
+    if (story.components && Array.isArray(story.components) && story.components.length > 0) {
+      console.log(`📊 Story "${story.title?.substring(0, 30)}..." has components array:`, story.components);
+      // Filter to only include components that actually have data
+      const filtered = story.components.filter(type => {
+        switch (type) {
+          case 'details':
+            return story.details && story.details.length > 0;
+          case 'timeline':
+            return story.timeline && story.timeline.length > 0;
+          case 'map':
+            return story.map;
+          case 'graph':
+            return story.graph;
+          default:
+        return false;
+        }
+      });
+      console.log(`✅ Filtered components for this story:`, filtered);
+      return filtered;
+    }
+    
+    console.log(`⚠️  Story "${story.title?.substring(0, 30)}..." has NO components array, using fallback`);
+    // Fallback: check which components exist (old behavior)
+    const types = [];
+    if (story.details && story.details.length > 0) types.push('details');
+    if (story.timeline && story.timeline.length > 0) types.push('timeline');
+    if (story.map) types.push('map');
+    if (story.graph) types.push('graph');
+    return types;
+  };
+
+  // Helper function to get current information type for a story
+  const getCurrentInformationType = (story, index) => {
+    if (showTimeline[index]) return 'timeline';
+    if (showDetails[index]) return 'details';
+    if (showMap[index]) return 'map';
+    if (showGraph[index]) return 'graph';
+    
+    // If no state is set, default to the first component from the components array
+    const availableTypes = getAvailableInformationTypes(story);
+    return availableTypes.length > 0 ? availableTypes[0] : 'details';
+  };
+
+  // Helper function to switch to next information type
+  const switchToNextInformationType = (story, index) => {
+    const availableTypes = getAvailableInformationTypes(story);
+    const currentType = getCurrentInformationType(story, index);
+    const currentIndex = availableTypes.indexOf(currentType);
+    const nextIndex = (currentIndex + 1) % availableTypes.length;
+    const nextType = availableTypes[nextIndex];
+
+    // Reset all states
+    setShowTimeline(prev => ({ ...prev, [index]: false }));
+    setShowDetails(prev => ({ ...prev, [index]: false }));
+    setShowMap(prev => ({ ...prev, [index]: false }));
+    setShowGraph(prev => ({ ...prev, [index]: false }));
+    
+    // Reset expanded states - components should start collapsed
+    setExpandedTimeline(prev => ({ ...prev, [index]: false }));
+    setExpandedGraph(prev => ({ ...prev, [index]: false }));
+
+    // Set the new state
+    switch (nextType) {
+      case 'timeline':
+        setShowTimeline(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'details':
+        setShowDetails(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'map':
+        setShowMap(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'graph':
+        setShowGraph(prev => ({ ...prev, [index]: true }));
+        break;
+    }
+  };
+
+  // Function to calculate time since published
+  const getTimeAgo = (publishedAt) => {
+    if (!publishedAt) return '';
+    
+    try {
+      const publishedDate = new Date(publishedAt);
+      const now = new Date();
+      const diffInMs = now - publishedDate;
+      const diffInMinutes = Math.floor(diffInMs / 60000);
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      const diffInDays = Math.floor(diffInHours / 24);
+      
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes}m`;
+      if (diffInHours < 24) return `${diffInHours}h`;
+      if (diffInDays < 7) return `${diffInDays}d`;
+      
+      const weeks = Math.floor(diffInDays / 7);
+      return `${weeks}w`;
+    } catch (error) {
+      return '';
+    }
+  };
+
+  // Extract color candidates using enhanced frequency analysis
+  const extractColorCandidates = (pixels, width, height) => {
+    const candidates = [];
+    const hueBuckets = {}; // Group by hue ranges (36° buckets = 10 ranges)
+    const saturatedColors = [];
+    
+    // Sample pixels (every 10th pixel for performance)
+    for (let i = 0; i < pixels.length; i += 40) { // RGBA, step by 40 = every 10 pixels
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const alpha = pixels[i + 3];
+      
+      // Skip transparent, extreme light, or extreme dark pixels
+      if (alpha < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10)) {
+        continue;
+      }
+      
+      const [h, s, l] = rgbToHsl(r, g, b);
+      
+      // Track highly saturated colors
+      if (s > 40) {
+        saturatedColors.push({ r, g, b, h, s, l });
+      }
+      
+      // Group into hue buckets (10 ranges of 36°)
+      const hueRange = Math.floor(h / 36) * 36;
+      const satLevel = s > 60 ? 'high' : s > 30 ? 'medium' : 'low';
+      const bucketKey = `${hueRange}-${satLevel}`;
+      
+      if (!hueBuckets[bucketKey]) {
+        hueBuckets[bucketKey] = [];
+      }
+      hueBuckets[bucketKey].push({ r, g, b, h, s, l, count: 1 });
+    }
+    
+    // Get top colors from each bucket
+    Object.values(hueBuckets).forEach(bucket => {
+      if (bucket.length > 0) {
+        // Average the colors in this bucket
+        const avgR = Math.round(bucket.reduce((sum, c) => sum + c.r, 0) / bucket.length);
+        const avgG = Math.round(bucket.reduce((sum, c) => sum + c.g, 0) / bucket.length);
+        const avgB = Math.round(bucket.reduce((sum, c) => sum + c.b, 0) / bucket.length);
+        candidates.push({ r: avgR, g: avgG, b: avgB });
+      }
+    });
+    
+    // Add most saturated colors (top 5)
+    saturatedColors.sort((a, b) => b.s - a.s);
+    saturatedColors.slice(0, 5).forEach(color => {
+      candidates.push({ r: color.r, g: color.g, b: color.b });
+    });
+    
+    return candidates;
+  };
+
+  // Score a color candidate based on saturation, lightness, and hue
+  const scoreColorCandidate = (r, g, b) => {
+    const [h, s, l] = rgbToHsl(r, g, b);
+    let score = 0;
+    
+    // Rule 1: Saturation score (50 points max) - MOST IMPORTANT
+    if (s >= 40 && s <= 90) {
+      score += 50; // Best: vibrant but not overwhelming
+    } else if (s >= 30 && s < 40) {
+      score += 30; // Acceptable: somewhat muted
+    } else if (s < 30) {
+      score += 0; // Boring: grey/washed out - REJECT
+    } else if (s > 90) {
+      score += 35; // Very saturated: might be too intense
+    }
+    
+    // Rule 2: Lightness score (30 points max)
+    if (l >= 30 && l <= 70) {
+      score += 30; // Best: good contrast with white text
+    } else if ((l >= 20 && l < 30) || (l > 70 && l <= 85)) {
+      score += 15; // Acceptable but not ideal
+    } else {
+      score += 0; // Extreme: too dark or too light
+    }
+    
+    // Rule 3: Hue interest score (20 points max)
+    if (h >= 200 && h <= 260) {
+      score += 20; // Blues: professional, tech-focused
+    } else if ((h >= 0 && h <= 30) || (h >= 330 && h <= 360)) {
+      score += 20; // Reds/Oranges: warm, energetic
+    } else if (h >= 260 && h <= 330) {
+      score += 18; // Purples/Magentas: modern, creative
+    } else if (h >= 80 && h <= 160) {
+      score += 15; // Greens: natural, fresh
+    } else if (h >= 30 && h <= 80) {
+      score += 12; // Yellows: energetic, bright
+    }
+    
+    return score;
+  };
+
+  // Select the best blur background color from candidates
+  const selectBestBlurColor = (candidates) => {
+    if (candidates.length === 0) {
+      // Fallback: subtle blue-grey
+      const [r, g, b] = hslToRgb(210, 35, 50);
+      return { r, g, b };
+    }
+    
+    // Score all candidates
+    const scored = candidates.map(color => ({
+      ...color,
+      score: scoreColorCandidate(color.r, color.g, color.b)
+    }));
+    
+    // Sort by score (highest first)
+    scored.sort((a, b) => b.score - a.score);
+    
+    // Get best color
+    let best = scored[0];
+    const [h, s, l] = rgbToHsl(best.r, best.g, best.b);
+    
+    // Failsafe: if best color is still too boring (low saturation)
+    if (s < 25) {
+      // Check if any candidate has decent saturation
+      const maxSat = Math.max(...scored.map(c => rgbToHsl(c.r, c.g, c.b)[1]));
+      
+      if (maxSat < 20) {
+        // Image is truly monochrome - use subtle blue-grey
+        const [r, g, b] = hslToRgb(210, 35, 50);
+        return { r, g, b };
+      } else {
+        // Boost saturation of best color
+        const [r, g, b] = hslToRgb(h, 45, l);
+        return { r, g, b };
+      }
+    }
+    
+    return { r: best.r, g: best.g, b: best.b };
+  };
+
+  // Function to extract dominant color from image
+  const extractDominantColor = (imgElement, storyIndex) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size
+      canvas.width = imgElement.naturalWidth || imgElement.width;
+      canvas.height = imgElement.naturalHeight || imgElement.height;
+      
+      // Draw image on canvas
+      ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+      
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imageData.data;
+      
+      // Extract color candidates using new algorithm
+      const candidates = extractColorCandidates(pixels, canvas.width, canvas.height);
+      
+      // Select best color using scoring algorithm
+      const bestColor = selectBestBlurColor(candidates);
+      const { r, g, b } = bestColor;
+      
+      // Convert to hex for blur background
+      const toHex = (n) => {
+        const hex = Math.round(n).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      };
+      const blurColorHex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      
+      // Convert to HSL for highlight/link color transformations
+      const baseHsl = rgbToHsl(r, g, b);
+      
+      // Create highlight color (for titles - light pastel)
+      const highlightHsl = createHighlightColor(baseHsl);
+      const [hR, hG, hB] = hslToRgb(...highlightHsl);
+      const highlightColor = `rgb(${hR}, ${hG}, ${hB})`;
+      
+      // Create link color (for bullet text - saturated readable)
+      const linkHsl = createLinkColor(baseHsl);
+      const [lR, lG, lB] = hslToRgb(...linkHsl);
+      const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
+      
+      // Store all color variants including new blurColor
+      setImageDominantColors(prev => ({ 
+        ...prev, 
+        [storyIndex]: { 
+          original: `rgba(${r}, ${g}, ${b}, 1.0)`,
+          blurColor: blurColorHex,
+          highlight: highlightColor,
+          link: linkColor
+        }
+      }));
+    } catch (error) {
+      console.error('Error extracting dominant color:', error);
+      // Fallback to dark color
+      setImageDominantColors(prev => ({ 
+        ...prev, 
+        [storyIndex]: { original: 'rgba(0, 0, 0, 1.0)', light: 'rgba(50, 50, 50, 1.0)' }
+      }));
+    }
+  };
+
+  // Category color mapping system - Updated with exact brand colors
+  const getCategoryColors = (category) => {
+    const colorMap = {
+      'World': '#1E3A8A',           // Navy Blue - International news, global affairs, foreign policy
+      'Politics': '#DC2626',        // Crimson Red - Government, elections, policy, political developments
+      'Business': '#059669',        // Emerald Green - Economy, markets, finance, corporate news
+      'Technology': '#9333EA',      // Bright Purple - Tech industry, innovation, digital trends, gadgets
+      'Science': '#06B6D4',         // Cyan - Research, discoveries, environmental issues, health studies
+      'Health': '#EC4899',          // Pink - Medicine, wellness, public health, medical breakthroughs
+      'Sports': '#F97316',          // Vibrant Orange - Athletics, competitions, teams, sporting events
+      'Lifestyle': '#EAB308',       // Golden Yellow - Fashion, food, travel, home, personal interest
+      // Legacy/fallback categories
+      'Breaking News': '#DC2626',   // Use Politics color
+      'Environment': '#06B6D4',     // Use Science color
+      'General': '#1E3A8A'          // Use World color
+    };
+    
+    const baseColor = colorMap[category] || '#1E3A8A'; // Default to Navy Blue (World)
+    
+    // Helper function to convert hex to rgba
+    const hexToRgba = (hex, alpha) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+    
+    return {
+      primary: baseColor,
+      light: hexToRgba(baseColor, 0.2),    // 20% opacity for lighter version
+      lighter: hexToRgba(baseColor, 0.15), // 15% opacity for even lighter version (category badge background)
+      shadow: hexToRgba(baseColor, 0.3)    // 30% opacity for shadow
+    };
+  };
+
+  // Initialize default component display
+  useEffect(() => {
+    if (stories.length > 0) {
+      const newShowDetails = {};
+      const newShowTimeline = {};
+      const newShowMap = {};
+      const newShowGraph = {};
+      
+      stories.forEach((story, index) => {
+        // Get the first available component type from components array
+        const availableTypes = getAvailableInformationTypes(story);
+        if (availableTypes.length > 0) {
+          const firstType = availableTypes[0];
+          
+          // Set the appropriate state based on first component
+          switch (firstType) {
+            case 'details':
+              newShowDetails[index] = true;
+              break;
+            case 'timeline':
+              newShowTimeline[index] = true;
+              break;
+            case 'map':
+              newShowMap[index] = true;
+              break;
+            case 'graph':
+              newShowGraph[index] = true;
+              break;
+          }
+        }
+      });
+      
+      setShowDetails(newShowDetails);
+      setShowTimeline(newShowTimeline);
+      setShowMap(newShowMap);
+      setShowGraph(newShowGraph);
+    }
+  }, [stories]); 
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -38,208 +510,200 @@ export default function Home() {
     signupPassword: '',
     signupFullName: ''
   });
-  const [supabase] = useState(() => createClient());
+  const [supabase] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    return createClient();
+  });
 
   // Check authentication status on mount
   useEffect(() => {
-    // Check for stored session first
-    const storedUser = localStorage.getItem('tennews_user');
-    const storedSession = localStorage.getItem('tennews_session');
-
-    if (storedUser && storedSession) {
-      try {
-        const userData = JSON.parse(storedUser);
-        const sessionData = JSON.parse(storedSession);
-        setUser(userData);
-        setAuthLoading(false);
-        return; // Skip API check if we have stored session
-      } catch (error) {
-        // Invalid stored data, clear it
-        localStorage.removeItem('tennews_user');
-        localStorage.removeItem('tennews_session');
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    const checkAuth = async () => {
+      // First, try to get session from Supabase client
+      if (supabase) {
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (!error && session) {
+            // Session found in Supabase - user is logged in
+            console.log('✅ Session found in Supabase:', session.user.email);
+            setUser(session.user);
+            setAuthLoading(false);
+            
+            // Also save to localStorage for consistency
+            localStorage.setItem('tennews_session', JSON.stringify(session));
+            localStorage.setItem('tennews_user', JSON.stringify(session.user));
+            return;
+          }
+        } catch (error) {
+          console.log('⚠️ Error checking Supabase session:', error);
+        }
       }
-    }
+      
+      // Fallback: Check localStorage
+      const storedUser = localStorage.getItem('tennews_user');
+      const storedSession = localStorage.getItem('tennews_session');
 
-    // Fallback to API check
-    checkUser();
+      if (storedUser && storedSession) {
+        try {
+          const userData = JSON.parse(storedUser);
+          const sessionData = JSON.parse(storedSession);
+          setUser(userData);
+          setAuthLoading(false);
+          return;
+        } catch (error) {
+          // Invalid stored data, clear it
+          localStorage.removeItem('tennews_user');
+          localStorage.removeItem('tennews_session');
+        }
+      }
+
+      // Final fallback: API check
+      checkUser();
+    };
+    
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    console.log('🔄 useEffect starting...');
     const loadNewsData = async () => {
       try {
-        let newsData = null;
+        console.log('📡 About to fetch API...');
+        const response = await fetch(`/api/news?t=${Date.now()}`);
+        console.log('📡 Response status:', response.status);
         
-        // Try to fetch from API endpoint
-        try {
-          const response = await fetch('/api/news');
-          if (response.ok) {
-            newsData = await response.json();
-            console.log('✅ Loaded news from API');
-          }
-        } catch (error) {
-          console.log('📰 API not available, using fallback');
-        }
-        
-        // If API failed, try direct file access
-        if (!newsData) {
-          try {
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}_${(today.getMonth() + 1).toString().padStart(2, '0')}_${today.getDate().toString().padStart(2, '0')}`;
-            const response = await fetch(`/tennews_data_${dateStr}.json`);
-            if (response.ok) {
-              newsData = await response.json();
-              console.log('✅ Loaded news from direct file');
-            }
-          } catch (error) {
-            console.log('📰 Direct file access failed:', error);
-          }
-        }
-        
-        let processedStories = [];
-        
-        if (newsData && newsData.articles && newsData.articles.length > 0) {
-          // Create opening story from news data
-          const openingStory = {
-            type: 'opening',
-            date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long', 
-              day: 'numeric',
-              year: 'numeric'
-            }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News'
-          };
+        if (response.ok) {
+          const newsData = await response.json();
+          console.log('📰 API Response:', newsData);
+          console.log('📰 Articles count:', newsData.articles?.length);
           
-          processedStories.push(openingStory);
-          
-          // Convert news generator articles to website format
-          newsData.articles.forEach((article, index) => {
-              const storyData = {
-              type: 'news',
-              number: article.rank || (index + 1),
-              category: (article.category || 'WORLD NEWS').toUpperCase(),
-              emoji: article.emoji || '📰',
-              title: article.title || 'News Story',
-              summary: article.summary || 'News summary will appear here.',
-              details: article.details || [],
-              source: article.source || 'Today+',
-              url: article.url || '#'
-              };
-              
-              // Add timeline data (from generator or create fallback)
-              if (article.timeline) {
-                storyData.timeline = article.timeline;
-              } else {
-                // Create fallback timeline for all stories (variable length)
-                const timelineVariations = [
-                  [
-                    {"date": "Background", "event": "Initial situation develops"},
-                    {"date": "Today", "event": "Major developments break"},
-                    {"date": "Next week", "event": "Follow-up expected"}
-                  ],
-                  [
-                    {"date": "Recently", "event": "Key events unfold"},
-                    {"date": "Yesterday", "event": "Critical point reached"},
-                    {"date": "Today", "event": "Story breaks"},
-                    {"date": "Coming days", "event": "Developments continue"}
-                  ],
-                  [
-                    {"date": "Last month", "event": "Initial reports emerge"},
-                    {"date": "Today", "event": "Major announcement made"}
-                  ]
-                ];
-                storyData.timeline = timelineVariations[index % timelineVariations.length];
-              }
-              
-              processedStories.push(storyData);
-          });
-        } else {
-          // Fallback stories with sample data
-          processedStories = [
-            {
+          if (newsData.articles && newsData.articles.length > 0) {
+            // Create opening story
+            const openingStory = {
               type: 'opening',
-              date: new Date().toLocaleDateString('en-US', {
+              date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long', 
                 day: 'numeric',
                 year: 'numeric'
               }).toUpperCase(),
-              headline: 'Today+ automation is working perfectly'
-            },
-            {
-              type: 'news',
-              number: 1,
-              category: 'SYSTEM STATUS',
-              emoji: '🤖',
-              title: 'GitHub Actions Automation Active',
-              summary: 'Your Today+ system is running automatically. Fresh AI-curated content from GDELT and Claude will appear daily at 7 AM UK time.',
-              details: ['Schedule: Daily 7 AM UK', 'Source: GDELT API', 'AI: Claude curation'],
-              source: 'Today+ System',
-              url: '#',
-              timeline: [
-                {"date": "Setup", "event": "GitHub Actions workflow configured"},
-                {"date": "Integration", "event": "GDELT API and Claude AI connected"},
-                {"date": "Testing", "event": "Automation tested and verified"},
-                {"date": "Live", "event": "Daily news generation now active"}
-              ]
-            },
-            {
-              type: 'news',
-              number: 2,
-              category: 'SYSTEM STATUS', 
-              emoji: '🌍',
-              title: 'GDELT Global News Integration Ready',
-              summary: 'Connected to GDELT Project global database providing real-time access to worldwide news events from over 50 trusted sources.',
-              details: ['Sources: 50+ trusted outlets', 'Coverage: Global events', 'Processing: Real-time'],
-              source: 'Today+ System',
-              url: '#',
-              timeline: [
-                {"date": "Research", "event": "GDELT database identified as news source"},
-                {"date": "Development", "event": "API integration and filtering built"},
-                {"date": "Testing", "event": "Source verification and quality checks"},
-                {"date": "Active", "event": "Real-time global news processing online"}
-              ]
-            },
-            {
-              type: 'news',
-              number: 3,
-              category: 'SYSTEM STATUS',
-              emoji: '🧠', 
-              title: 'Claude AI Curation System Online',
-              summary: 'AI-powered article selection and rewriting system ready to curate the most important global stories for your daily digest.',
-              details: ['Selection: Top 10 stories', 'Processing: AI rewriting', 'Quality: Optimized summaries'],
-              source: 'Today+ System',
-              url: '#',
-              timeline: [
-                {"date": "Planning", "event": "AI curation system designed"},
-                {"date": "Implementation", "event": "Claude API integration completed"},
-                {"date": "Optimization", "event": "Story selection algorithms refined"},
-                {"date": "Production", "event": "AI curation now processing daily news"}
-              ]
-            }
-          ];
-        }
-        
-        
-        
-        setStories(processedStories);
-        
-        // Initialize blur colors for each article
-        const colorMap = {};
-        processedStories.forEach((story, index) => {
-          if (story.type === 'news') {
-            colorMap[index] = getBlurColorForArticle(index);
+              headline: newsData.dailyGreeting || 'Today Essential Global News'
+            };
+            
+            const processedStories = [openingStory];
+            
+             // Convert articles to story format
+             newsData.articles.forEach((article, index) => {
+               // Sample preview data
+               const sampleDetails = article.details && article.details.length > 0 ? article.details : [
+                 'Impact Score: 8.5/10 High significance',
+                 'Read Time: 4 min Estimated reading duration',
+                 'Source Credibility: Verified from trusted sources'
+               ];
+               
+               const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0) 
+                 ? article.timeline 
+                 : (article.timeline && typeof article.timeline === 'string' && article.timeline.trim() !== '')
+                   ? (() => {
+                       try {
+                         const parsed = JSON.parse(article.timeline);
+                         return Array.isArray(parsed) && parsed.length > 0 ? parsed : [
+                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                         ];
+                       } catch {
+                         return [
+                           {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                           {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                           {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                           {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                         ];
+                       }
+                     })()
+                   : [
+                     {"date": "3 days ago", "event": "Initial reports emerge about the developing situation"},
+                     {"date": "Yesterday", "event": "Key developments unfold as more information becomes available"},
+                     {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
+                     {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
+                   ];
+               
+               const sampleDetailedText = article.detailed_text || `**Breaking News Update**
+
+This is a preview of the full article content. In the complete version, you would see the detailed analysis and comprehensive coverage of today's top stories.
+
+The article delves into the key developments, providing context and background information that helps readers understand the broader implications. Expert opinions and multiple perspectives are included to give a well-rounded view of the situation.
+
+Additional paragraphs would continue here, exploring various aspects of the story, including historical context, potential future outcomes, and relevant statistics. The content is structured to be both informative and engaging, making complex topics accessible to a wide audience.
+
+**Key Takeaways:**
+- Important point one that summarizes a critical aspect
+- Second significant finding that provides insight
+- Third major conclusion that ties everything together
+
+The article concludes with forward-looking analysis and what readers should watch for in the coming days as this story continues to develop.`;
+               
+               // Generate fallback bullets if none provided
+               let bulletPoints = article.summary_bullets || [];
+               if (!bulletPoints || bulletPoints.length === 0) {
+                 // Try to generate bullets from summary or detailed text
+                 const sourceText = article.summary || article.detailed_text || sampleDetailedText;
+                 if (sourceText && sourceText.length > 50) {
+                   // Split into sentences and take first few as bullets
+                   const sentences = sourceText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+                   bulletPoints = sentences.slice(0, Math.min(4, sentences.length)).map(s => s.trim());
+                 }
+               }
+
+               const storyData = {
+                 type: 'news',
+                 number: article.rank || (index + 1),
+                 category: (article.category || 'WORLD NEWS').toUpperCase(),
+                 emoji: article.emoji || '📰',
+                 title: article.title || 'News Story',
+                 detailed_text: sampleDetailedText,
+                 summary_bullets: bulletPoints,
+                 details: sampleDetails,
+                 source: article.source || 'Today+',
+                 url: article.url || '#',
+                 urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+                 blurColor: article.blurColor || null,  // Pre-computed blur color
+                 map: article.map || null,
+                 graph: article.graph || null,
+                 timeline: sampleTimeline,
+                 components: article.components || null,  // CRITICAL: Include components array
+                 publishedAt: article.publishedAt || article.published_at || article.added_at,
+                 id: article.id || `article_${index}`
+               };
+               
+               processedStories.push(storyData);
+             });
+            
+            console.log('📰 Setting stories:', processedStories.length);
+            setStories(processedStories);
+            console.log('📰 Stories set successfully');
+          } else {
+            console.log('📰 No articles found in response');
+            setStories([]);
           }
-        });
-        setArticleBlurColors(colorMap);
-        
-        setLoading(false);
+        } else {
+          console.log('📡 Response not ok:', response.status);
+          setStories([]);
+        }
       } catch (error) {
         console.error('Error loading news:', error);
+        setStories([]);
+      } finally {
+        console.log('📰 Setting loading to false');
         setLoading(false);
       }
     };
-
+    
     loadNewsData();
   }, []);
 
@@ -247,6 +711,12 @@ export default function Home() {
     if (index >= 0 && index < stories.length) {
       setCurrentIndex(index);
       setMenuOpen(false);
+      
+      // Mark article as read when user navigates to it
+      const story = stories[index];
+      if (story && story.type === 'news' && story.id && user) {
+        markArticleAsRead(story.id);
+      }
     }
   };
 
@@ -261,10 +731,41 @@ export default function Home() {
     }));
   };
 
+  // Summary display mode toggle function - per story
+  const toggleSummaryDisplayMode = (storyIndex) => {
+    setShowBulletPoints(prev => ({
+      ...prev,
+      [storyIndex]: !prev[storyIndex]
+    }));
+    console.log(`🔄 Toggling summary display mode for story ${storyIndex}`);
+  };
+
   // Dark mode toggle function
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
   };
+
+  // Mark article as read
+  const markArticleAsRead = async (articleId) => {
+    if (!user || !articleId) return;
+    
+    try {
+      const response = await fetch('/api/reading-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ articleId }),
+      });
+
+      if (response.ok) {
+        setReadArticles(prev => new Set([...prev, articleId]));
+      }
+    } catch (error) {
+      console.error('Error marking article as read:', error);
+    }
+  };
+
 
 
   // Authentication functions
@@ -360,30 +861,162 @@ export default function Home() {
     }
   };
 
-  // Function to render text with bold markup and category-colored containers
-  const renderBoldText = (text, category) => {
+  // Helper: Convert RGB to HSL
+  const rgbToHsl = (r, g, b) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+        default: h = 0;
+      }
+    }
+    return [h * 360, s * 100, l * 100];
+  };
+
+  // Helper: Convert HSL to RGB
+  const hslToRgb = (h, s, l) => {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
+  // Calculate relative luminance for contrast checking
+  const getLuminance = (r, g, b) => {
+    const [rs, gs, bs] = [r, g, b].map(val => {
+      val = val / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (rgb1, rgb2) => {
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  // Check if color is too close to white
+  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
+    // Check RGB values - if all are above 230, it's very close to white
+    if (r > 230 && g > 230 && b > 230) return true;
+    
+    // Check lightness in HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    if (l > minLightness) return true;
+    
+    // Additional check: if saturation is very low and lightness is high
+    if (s < 5 && l > 80) return true;
+    
+    return false;
+  };
+
+  // Get fallback color based on background hue
+  const getFallbackColorByHue = (hue) => {
+    // Blue range: 200-260 degrees
+    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
+    
+    // Green range: 100-180 degrees
+    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
+    
+    // Orange/Red range: 0-50 and 320-360 degrees
+    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
+    
+    // Default: Gray/neutral
+    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
+  };
+
+  // Create light highlight color for titles (pastel, light version)
+  const createHighlightColor = (baseHsl) => {
+    const [h, s, l] = baseHsl;
+    const newL = l + (100 - l) * 0.5; // Lighten to pastel
+    const newS = Math.min(s * 1.15, 100); // Boost saturation
+    return [h, newS, newL];
+  };
+
+  // Create saturated link color for bullet text (readable on white)
+  const createLinkColor = (baseHsl) => {
+    const [h, s, l] = baseHsl;
+    let newL = l > 50 ? 40 : (l < 30 ? 35 : l);
+    const newS = 75;
+    return [h, newS, newL];
+  };
+
+  // Function to render text with highlighted important words (for bullet texts - bold + colored)
+  const renderBoldText = (text, colors, category = null) => {
     if (!text) return '';
     
-    const getCategoryBoldStyle = (category) => {
-      const styles = {
-        'WORLD NEWS': { background: '#fee2e2', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'BUSINESS': { background: '#fff7ed', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'MARKETS': { background: '#ecfeff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'TECH & AI': { background: '#eef2ff', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SCIENCE': { background: '#e0f2fe', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'HEALTH': { background: '#ecfdf5', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'CLIMATE': { background: '#f0fdf4', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'SPORTS': { background: '#fffbeb', color: '#000000', padding: '2px 6px', borderRadius: '4px' },
-        'ENTERTAINMENT': { background: '#fdf2f8', color: '#000000', padding: '2px 6px', borderRadius: '4px' }
-      };
-      return styles[category] || { background: '#f8fafc', color: '#000000', padding: '2px 6px', borderRadius: '4px' };
-    };
+    const linkColor = colors?.link || 
+      (category ? getCategoryColors(category).primary : '#000000');
     
-    return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} style={getCategoryBoldStyle(category)}>{part.slice(2, -2)}</strong>;
+        const content = part.replace(/\*\*/g, '');
+        return (
+          <span key={i} style={{ fontWeight: '700', color: linkColor }}>
+            {content}
+          </span>
+        );
       }
-      return <span key={index}>{part}</span>;
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  // Function to render title with highlighted important words (colored AND bold)
+  const renderTitleWithHighlight = (text, colors, category = null) => {
+    if (!text) return '';
+    
+    const highlightColor = colors?.highlight || 
+      (category ? getCategoryColors(category).primary : '#ffffff');
+    
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.replace(/\*\*/g, '');
+        return (
+          <span key={i} style={{ fontWeight: '700', color: highlightColor }}>
+            {content}
+          </span>
+        );
+      }
+      return <span key={i}>{part}</span>;
     });
   };
 
@@ -399,6 +1032,12 @@ export default function Home() {
 
     const handleTouchEnd = (e) => {
       if (isTransitioning) return;
+      
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen) {
+        return; // Don't allow story navigation when article is open
+      }
       
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
@@ -430,6 +1069,12 @@ export default function Home() {
     const handleWheel = (e) => {
       if (isTransitioning) return;
       
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen) {
+        return; // Don't allow story navigation when article is open
+      }
+      
       if (Math.abs(e.deltaY) > 30) {
         // Allow backward navigation, but prevent forward navigation when paywall is active
         const isPaywallActive = !user && currentIndex >= 5;
@@ -456,6 +1101,12 @@ export default function Home() {
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
 
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen && (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft')) {
+        return; // Don't allow story navigation when article is open
+      }
+
       const isPaywallActive = !user && currentIndex >= 5;
       
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
@@ -476,6 +1127,13 @@ export default function Home() {
         setTimeout(() => {
           isTransitioning = false;
         }, 500);
+      } else if (e.key === 's' || e.key === 'S') {
+        // Toggle summary/bullet points with 'S' key
+        e.preventDefault();
+        const currentStory = stories[currentIndex];
+        if (currentStory && currentStory.type === 'news') {
+          toggleSummaryDisplayMode(currentIndex);
+        }
       }
     };
 
@@ -490,7 +1148,7 @@ export default function Home() {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, stories.length]);
+  }, [currentIndex, stories.length, showDetailedText, user]);
 
   // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
   useEffect(() => {
@@ -510,6 +1168,45 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
+  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Temporary debug - force loading to false if stories exist
+  if (stories.length > 0 && loading) {
+    console.log('🔧 Debug: Forcing loading to false');
+    setLoading(false);
+  }
+  
+  // Temporary debug - show current state
+  console.log('🔧 Debug: Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Emergency fallback - if loading takes too long, show something
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading && stories.length === 0) {
+        console.log('🔧 Emergency: Setting loading to false after timeout');
+        setLoading(false);
+      }
+    }, 2000); // 2 second timeout
+    
+    return () => clearTimeout(timer);
+  }, [loading, stories.length]);
+  
+  // Force loading to false if we have stories but still loading
+  useEffect(() => {
+    if (stories.length > 0 && loading) {
+      console.log('🔧 Force: Setting loading to false because stories exist');
+      setLoading(false);
+    }
+  }, [stories.length, loading]);
+  
+  // Additional safety check - force render if we have data
+  useEffect(() => {
+    if (stories.length > 0) {
+      console.log('🔧 Safety: Stories exist, ensuring loading is false');
+      setLoading(false);
+    }
+  }, [stories.length]);
+  
   if (loading) {
     return (
       <div className="loading-container">
@@ -613,12 +1310,28 @@ export default function Home() {
 
   return (
     <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
+      </Head>
+      
       <style>{`
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
           -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+          background: #ffffff;
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
 
         body {
@@ -629,8 +1342,95 @@ export default function Home() {
           position: fixed;
           width: 100%;
           height: 100%;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        body::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          z-index: -1;
+          pointer-events: none;
+        }
+
+        /* Glassmorphism Variables */
+        :root {
+          --c-glass: #ffffff;
+          --c-light: #fff;
+          --c-dark: #000;
+          --c-content: #224;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 150%;
+        }
+
+        /* Glass Container - Matching Switch Button Design */
+        .glass-container {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          font-weight: 600;
+          color: #000;
+          cursor: pointer;
+          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+          backdrop-filter: blur(12px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
+          border-radius: 20px;
+          box-sizing: border-box;
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+        }
+
+        .glass-container .glass-filter {
+          display: none;
+        }
+
+        .glass-container .glass-overlay {
+          display: none;
+        }
+
+        .glass-container .glass-specular {
+          display: none;
+        }
+
+        .glass-container .glass-content {
+          position: relative;
+          z-index: 3;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          color: #000;
+          padding: 6px 20px 12px 20px;
+          line-height: 1.4;
         }
 
         .loading-container {
@@ -719,16 +1519,34 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 70px 24px 40px;
-          background: ${darkMode ? '#000000' : '#fff'};
+          padding: 0 24px 200px 24px;
+          background: ${darkMode ? '#000000' : 'transparent'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
+          z-index: 10;
+        }
+        
+        .story-container::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          /* Reduce height to leave space for information box at bottom */
+          height: calc(100vh - 250px);
+          background: ${darkMode ? '#000000' : '#fff'};
+          z-index: -1;
+          pointer-events: none;
+          /* Ensure it doesn't extend below the content area where information box is */
+          max-height: calc(100vh - 250px);
         }
 
         .story-content {
-          max-width: 1000px;
+          max-width: 100%;
           width: 100%;
-          margin: 0 auto;
+          margin: 0;
+          background: transparent !important;
+          background-color: transparent !important;
         }
 
         .paywall-overlay {
@@ -876,65 +1694,49 @@ export default function Home() {
         }
 
         .news-item {
-          display: grid;
-          grid-template-columns: 200px 1fr;
-          gap: 24px;
-          padding: 24px 0;
+          display: block;
+          padding: 0;
           border-bottom: 1px solid #e5e5e7;
           cursor: pointer;
           transition: all 0.2s;
+          border-radius: 8px;
           position: relative;
-          margin: 0 auto;
-          max-width: 950px;
+          margin: 0;
+          max-width: 100%;
         }
 
+        /* Removed first-news special styling to align all news cards */
+
         .news-item:hover {
-          padding-left: 8px;
+          background: linear-gradient(to right, rgba(59, 130, 246, 0.03), transparent);
         }
 
         .news-item:last-child {
           border-bottom: none;
         }
 
-        .news-image-container {
-          position: relative;
-          width: 200px;
-          height: 200px;
-          border-radius: 12px;
-          overflow: hidden;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .news-emoji-large {
-          font-size: 80px;
-          opacity: 0.9;
-        }
-
         .news-number {
           position: absolute;
-          top: 12px;
-          left: 12px;
+          top: 0;
+          left: 0;
           font-size: 24px;
           font-weight: 800;
-          color: white;
-          background: rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(10px);
-          padding: 4px 12px;
-          border-radius: 8px;
-          z-index: 2;
+          background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          opacity: 0.6;
+          z-index: 1;
         }
 
         .news-content {
-          padding-top: 4px;
-          padding-left: 0;
-          padding-right: 0;
+          padding-top: 0px;
           padding-bottom: 0;
+          margin: 0 auto;
+          max-width: 100%;
+          width: 100%;
           text-align: left;
+          background: transparent !important;
+          background-color: transparent !important;
         }
 
         .news-category {
@@ -961,15 +1763,17 @@ export default function Home() {
         }
 
         .news-title {
-          font-size: 36px;
-          font-weight: 800;
-          line-height: 1.2;
-          margin-bottom: 16px;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+          font-size: 48px;
+          font-weight: 900;
+          line-height: 1.1;
+          letter-spacing: -0.5px;
+          margin-bottom: 20px;
           color: ${darkMode ? '#ffffff' : '#000000'};
         }
 
         .news-summary {
-          font-size: 17px;
+          font-size: 16px;
           color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
           line-height: 1.6;
           margin-bottom: 16px;
@@ -978,58 +1782,6 @@ export default function Home() {
           padding-bottom: 0;
         }
 
-        .news-meta {
-          display: flex;
-          background: rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-radius: 16px;
-          padding: 12px 20px;
-          margin-top: 20px;
-          gap: 0;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-        }
-
-        .news-detail-item {
-          flex: 1;
-          text-align: center;
-          padding: 0 15px;
-          border-right: 1px solid #e2e8f0;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          min-height: 38px;
-        }
-
-        .news-detail-item:last-child,
-        .news-detail-item:nth-child(3) {
-          border-right: none;
-        }
-
-        .news-detail-label {
-          font-size: 10px;
-          color: #6b7280;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          font-weight: 600;
-          margin-bottom: 1px;
-        }
-
-        .news-detail-value {
-          font-size: 20px;
-          font-weight: 800;
-          color: ${darkMode ? '#f9fafb' : '#111827'};
-          line-height: 1.2;
-          margin: 0;
-        }
-
-        .news-detail-subtitle {
-          font-size: 11px;
-          color: #6b7280;
-          font-weight: 500;
-          margin-top: 0;
-        }
 
         .progress-indicator {
           position: fixed;
@@ -1348,7 +2100,7 @@ export default function Home() {
         .timeline-section {
           margin-top: 24px;
           padding-top: 24px;
-          border-top: 1px solid #e2e8f0;
+          border-top: 1px solid #e5e5e5;
           transform: translateX(100%);
           opacity: 0;
           transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1364,7 +2116,7 @@ export default function Home() {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 1px;
-          color: #94a3b8;
+          color: #666666;
           margin-bottom: 16px;
           display: flex;
           align-items: center;
@@ -1387,8 +2139,8 @@ export default function Home() {
           left: 6px;
           top: 8px;
           bottom: 8px;
-          width: 2px;
-          background: linear-gradient(180deg, #3b82f6, #e2e8f0);
+          width: 1px;
+          background: #cccccc;
         }
 
         .timeline-item {
@@ -1416,33 +2168,43 @@ export default function Home() {
           }
         }
 
+        @keyframes slideInFromBottom {
+          0% {
+            opacity: 0;
+            transform: translateY(100vh);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .timeline-item::before {
           content: '';
           position: absolute;
           left: -14px;
           top: 6px;
-          width: 12px;
-          height: 12px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: white;
-          border: 2px solid #3b82f6;
+          background: #000000;
           z-index: 1;
         }
 
         .timeline-item:last-child::before {
-          background: #3b82f6;
+          background: #000000;
         }
 
         .timeline-date {
           font-size: 11px;
           font-weight: 600;
-          color: #3b82f6;
+          color: #666666;
           margin-bottom: 4px;
         }
 
         .timeline-event {
           font-size: 14px;
-          color: #1e293b;
+          color: #000000;
           line-height: 1.4;
         }
 
@@ -1471,16 +2233,501 @@ export default function Home() {
           font-size: 12px;
         }
 
-        .news-meta {
+        .summary-mode-indicator {
+          position: absolute;
+          top: '-8px';
+          right: '12px';
+          font-size: '9px';
+          color: '#3b82f6';
+          font-weight: '600';
+          text-transform: 'uppercase';
+          letter-spacing: '0.5px';
+          opacity: '0.8';
+          background: 'rgba(59, 130, 246, 0.1)';
+          padding: '2px 6px';
+          borderRadius: '4px';
+        }
+
+        .summary-content {
+          transition: opacity 0.3s ease-in-out;
+        }
+
+        .summary-content.switching {
+          opacity: 0.7;
+        }
+
+        .switcher {
+          --c-glass: #ffffff;
+          --c-light: #fff;
+          --c-dark: #000;
+          --c-content: #224;
+          --c-action: #0052f5;
+          --c-bg: #E8E8E9;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 150%;
+
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          width: auto;
+          height: 34px;
+          box-sizing: border-box;
+          padding: 3px;
+          margin: 0;
+          border: none;
+          border-radius: 99em;
+          font-size: 10px;
+          font-family: "DM Sans", sans-serif;
+          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
+          backdrop-filter: blur(4px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .switcher__input {
+          clip: rect(0 0 0 0);
+          clip-path: inset(100%);
+          height: 1px;
+          width: 1px;
+          overflow: hidden;
+          position: absolute;
+          white-space: nowrap;
+        }
+
+        .switcher__option {
+          --c: var(--c-content);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0;
+          width: 36px;
+          height: 28px;
+          box-sizing: border-box;
+          border-radius: 99em;
+          opacity: 1;
+          transition: all 160ms;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+
+        .switcher__option:hover {
+          --c: var(--c-action);
+          cursor: pointer;
+        }
+
+        .switcher__option:hover .switcher__icon {
+          scale: 1.2;
+        }
+
+        .switcher__option.active {
+          --c: var(--c-content);
+          cursor: auto;
+        }
+
+        .switcher__option.active .switcher__icon {
+          scale: 1;
+        }
+
+        .switcher::after {
+          content: '';
+          position: absolute;
+          left: 3px;
+          top: 3px;
+          display: block;
+          width: 36px;
+          height: 28px;
+          border-radius: 99em;
+          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+          z-index: -1;
+          translate: 0 0;
+          opacity: 1;
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 1px 0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -0.75px -0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1px -3px 0.5px -2.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.5px 1px 1.5px -0.5px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px -2px 0.5px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 1.5px 3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            opacity 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .switcher:has(.switcher__option:nth-child(1).active)::after {
+          translate: 0 0;
+          transform-origin: right;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle 440ms ease; 
+        }
+
+        .switcher:has(.switcher__option:nth-child(2).active)::after {
+          translate: 38px 0;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle2 440ms ease; 
+        }
+
+        .switcher:has(.switcher__option:nth-child(3).active)::after {
+          translate: 76px 0;
+          transform-origin: left;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle3 440ms ease; 
+        }
+
+        .switcher:has(.switcher__option:nth-child(4).active)::after {
+          translate: 114px 0;
+          transform-origin: left;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle4 440ms ease; 
+        }
+
+        @keyframes scaleToggle {
+          0% { scale: 1 1; }
+          50% { scale: 1.1 1; }
+          100% { scale: 1 1; }
+        }
+
+        @keyframes scaleToggle2 {
+          0% { scale: 1 1; }
+          50% { scale: 1.2 1; }
+          100% { scale: 1 1; }
+        } 
+
+        @keyframes scaleToggle3 {
+          0% { scale: 1 1; }
+          50% { scale: 1.1 1; }
+          100% { scale: 1 1; }
+        }
+
+        @keyframes scaleToggle4 {
+          0% { scale: 1 1; }
+          50% { scale: 1.1 1; }
+          100% { scale: 1 1; }
+        }
+
+        /* Timeline Animations */
+        @keyframes timelineSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes timelineItemFadeIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes timelineDotPulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+          }
+          50% {
+            transform: scale(1.15);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+          }
+        }
+
+        @keyframes timelineLineGrow {
+          from {
+            transform: scaleY(0);
+            transform-origin: top;
+          }
+          to {
+            transform: scaleY(1);
+            transform-origin: top;
+          }
+        }
+
+        .timeline-container-animated {
+          animation: timelineSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .timeline-item-animated {
+          animation: timelineItemFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+
+        .timeline-item-animated:nth-child(1) {
+          animation-delay: 0.1s;
+        }
+
+        .timeline-item-animated:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .timeline-item-animated:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+
+        .timeline-item-animated:nth-child(4) {
+          animation-delay: 0.4s;
+        }
+
+        .timeline-item-animated:nth-child(5) {
+          animation-delay: 0.5s;
+        }
+
+        .timeline-item-animated:nth-child(6) {
+          animation-delay: 0.6s;
+        }
+
+        .timeline-line-animated {
+          animation: timelineLineGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .timeline-dot-animated {
+          animation: timelineDotPulse 2s ease-in-out infinite;
+        }
+
+        /* Details Animations */
+        @keyframes detailsSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes detailsItemScale {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes detailsValuePop {
+          0% {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .details-container-animated {
+          animation: detailsSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .details-item-animated {
+          animation: detailsItemScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+
+        .details-item-animated:nth-child(1) {
+          animation-delay: 0.1s;
+        }
+
+        .details-item-animated:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .details-item-animated:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+
+        .details-value-animated {
+          animation: detailsValuePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          opacity: 0;
+        }
+
+        .details-value-animated:nth-child(1) {
+          animation-delay: 0.2s;
+        }
+
+        .details-value-animated:nth-child(2) {
+          animation-delay: 0.3s;
+        }
+
+        .details-value-animated:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        .switcher__icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+          transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .grid-icon {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 2px;
+          width: 14px;
+          height: 14px;
+          padding: 0.5px;
+        }
+
+        .grid-square {
+          background: #666666;
+          border-radius: 2px;
+          width: 100%;
+          height: 100%;
+          transition: all 0.2s ease;
+        }
+
+        .switcher__option.active .grid-square {
+          background: #000000;
+        }
+
+        .switcher__option:hover:not(.active) .grid-square {
+          background: #888888;
+        }
+
+        .list-icon {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: center;
+          gap: 3px;
+          width: 14px;
+          height: 14px;
           position: relative;
         }
 
+        .list-icon::before {
+          content: '';
+          position: absolute;
+          left: 3px;
+          top: 0;
+          bottom: 0;
+          width: 1.5px;
+          background: #666666;
+          border-radius: 1px;
+          z-index: 0;
+        }
 
-        /* Desktop timeline - no height limit */
+        .list-line {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          position: relative;
+          z-index: 1;
+          width: 100%;
+        }
+
+        .list-dot {
+          width: 4px;
+          height: 4px;
+          background: #ffffff;
+          border: 1.5px solid #666666;
+          border-radius: 50%;
+          flex-shrink: 0;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
+        }
+
+        .list-bar {
+          width: 6px;
+          height: 2px;
+          background: #666666;
+          border-radius: 1px;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .switcher__option.active .list-dot {
+          background: #000000;
+          border-color: #000000;
+        }
+
+        .switcher__option.active .list-bar {
+          background: #000000;
+        }
+
+        .switcher__option.active .list-icon::before {
+          background: #000000;
+        }
+
+        .switcher__option:hover:not(.active) .list-dot {
+          border-color: #888888;
+        }
+
+        .switcher__option:hover:not(.active) .list-bar {
+          background: #888888;
+        }
+
+        .switcher__option:hover:not(.active) .list-icon::before {
+          background: #888888;
+        }
+
+        .map-icon {
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .graph-icon {
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+
+        /* Desktop timeline - controlled by React state for expand/collapse */
         @media (min-width: 769px) {
           .timeline-container-desktop {
-            max-height: none !important;
-            height: auto !important;
+            /* Height controlled by inline styles - do not override */
           }
 
           /* Hide arrows on desktop - show on mobile/tablet */
@@ -1494,39 +2741,28 @@ export default function Home() {
           /* Show arrows on mobile/tablet - hide on desktop */
           
           .story-container {
-            padding: 60px 12px 40px;
+            padding: 0 0 40px;
           }
           
           .news-item {
-            grid-template-columns: 120px 1fr;
-            gap: 16px;
-            padding: 20px 0;
+            padding: 0 10px 20px 10px;
             max-width: 100%;
-          }
-
-          .news-image-container {
-            width: 120px;
-            height: 120px;
-          }
-
-          .news-emoji-large {
-            font-size: 50px;
-          }
-
-          .news-number {
-            font-size: 16px;
-            top: 8px;
-            left: 8px;
-            padding: 3px 8px;
           }
           
           .news-content {
-            margin: 0;
-            padding-right: 0;
+            margin: 0 auto;
+            max-width: 100%;
+            width: 100%;
+          }
+          
+          .news-number {
+            font-size: 20px;
+            top: 0;
+            left: 0;
           }
           
           .news-title {
-            font-size: 24px;
+            font-size: 30px;
           }
           
           .main-headline {
@@ -1586,112 +2822,37 @@ export default function Home() {
             background: linear-gradient(180deg, #1f2937, #000000);
           }
           
-          .news-meta {
-            padding: 10px 15px;
-            margin-top: 15px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-          }
-          
-          .news-detail-item {
-            padding: 0 10px;
-          }
-          
-          .news-detail-label {
-            font-size: 9px;
-          }
-          
-          .news-detail-value {
-            font-size: 16px;
-          }
-          
-          .news-detail-subtitle {
-            font-size: 10px;
-          }
         }
       `}</style>
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
-        {/* Header */}
-        <div className="header">
-          <div className="logo">
-            Today<span className="logo-ten">+</span>
+        {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
+
+        {/* Full Header for First Page */}
+        {currentIndex === 0 && (
+          <div className="header">
+            <div className="logo">
+              Today<span className="logo-ten">+</span>
+            </div>
+            
+            <div style={{ flex: 1 }}></div>
+            
+            <div className="header-right">
+              <span className="time">{currentTime}</span>
+              {user ? (
+                <>
+                  <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
+                  <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
+                </>
+              ) : (
+                <>
+                  <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
+                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+                </>
+              )}
+            </div>
           </div>
-          
-          <div style={{ flex: 1 }}></div>
-          
-          <div className="header-right">
-            <span className="time">{currentTime}</span>
-            {user ? (
-              <>
-                <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
-                <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
-              </>
-            ) : (
-              <>
-                <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
-                <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
-                {currentIndex === 0 && (
-                  <button
-                    onClick={toggleDarkMode}
-                    style={{
-                      marginLeft: '4px',
-                      padding: '8px',
-                      borderRadius: '50%',
-                      background: darkMode ? '#1f2937' : '#f8fafc',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.3)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                      backdropFilter: 'blur(8px)'
-                    }}
-                    aria-label="Toggle dark mode"
-                  >
-                    <div style={{
-                      transition: 'all 0.3s ease',
-                      transform: darkMode ? 'rotate(0deg)' : 'rotate(0deg)',
-                      opacity: 1
-                    }}>
-                      {darkMode ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' }}>
-                          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="url(#moon-gradient)"/>
-                          <defs>
-                            <linearGradient id="moon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" style={{stopColor:'#60a5fa', stopOpacity:1}} />
-                              <stop offset="100%" style={{stopColor:'#3b82f6', stopOpacity:1}} />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2))' }}>
-                          <circle cx="12" cy="12" r="4" fill="url(#sun-gradient)"/>
-                          <path d="M12 2v2m0 16v2m8.485-8.485l-1.414 1.414M4.929 4.929L3.515 6.343M22 12h-2M4 12H2m16.485 8.485l-1.414-1.414M4.929 19.071l-1.414-1.414"
-                            stroke="url(#sun-stroke-gradient)" strokeWidth="1.5" strokeLinecap="round"/>
-                          <defs>
-                            <linearGradient id="sun-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:1}} />
-                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:1}} />
-                            </linearGradient>
-                            <linearGradient id="sun-stroke-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" style={{stopColor:'#fbbf24', stopOpacity:0.8}} />
-                              <stop offset="100%" style={{stopColor:'#f59e0b', stopOpacity:0.8}} />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                      )}
-                    </div>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+        )}
 
 
         {/* Stories */}
@@ -1710,6 +2871,7 @@ export default function Home() {
               opacity: index === currentIndex ? 1 : 0,
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
+              background: 'transparent'
             }}
           >
             {/* Paywall for stories 6+ (index >= 5) */}
@@ -1729,183 +2891,744 @@ export default function Home() {
             <div
               className="story-content"
                               style={{
+                background: 'transparent',
+                backgroundColor: 'transparent',
                 filter: index >= 5 && !user ? 'blur(5px)' : 'none',
                 pointerEvents: index >= 5 && !user ? 'none' : 'auto',
               }}
             >
               {story.type === 'opening' ? (
                 <NewFirstPage 
-                  darkMode={darkMode} 
-                  toggleDarkMode={toggleDarkMode}
                   onContinue={nextStory}
                 />
               ) : story.type === 'news' ? (
-                <div className="news-grid">
+                <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
-                  <div className="news-item" onClick={() => {
-                    console.log('Clicked story URL:', story.url);
-                    if (story.url && story.url !== '#') {
-                      window.open(story.url, '_blank');
-                    } else {
-                      console.log('No valid URL found for this story');
-                    }
+                    // Original News Item View - Everything stays the same
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                      // Toggle detailed text to show article under summary
+                      toggleDetailedText(index);
                   }}>
-                    {/* Image container on the left side */}
-                    <div className="news-image-container" style={{
-                      background: story.category === 'WORLD NEWS' ? 'linear-gradient(135deg, #dc2626 0%, #f87171 100%)' :
-                                 story.category === 'BUSINESS' ? 'linear-gradient(135deg, #FF6B35 0%, #f59e0b 100%)' :
-                                 story.category === 'MARKETS' ? 'linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%)' :
-                                 story.category === 'TECH & AI' ? 'linear-gradient(135deg, #667EEA 0%, #764ba2 100%)' :
-                                 story.category === 'SCIENCE' ? 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)' :
-                                 story.category === 'HEALTH' ? 'linear-gradient(135deg, #00D2A0 0%, #10b981 100%)' :
-                                 story.category === 'CLIMATE' ? 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)' :
-                                 story.category === 'SPORTS' ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)' :
-                                 story.category === 'ENTERTAINMENT' ? 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)' :
-                                 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      boxShadow: story.category === 'WORLD NEWS' ? '0 4px 12px rgba(220, 38, 38, 0.3)' :
-                                 story.category === 'BUSINESS' ? '0 4px 12px rgba(255, 107, 53, 0.3)' :
-                                 story.category === 'MARKETS' ? '0 4px 12px rgba(6, 182, 212, 0.3)' :
-                                 story.category === 'TECH & AI' ? '0 4px 12px rgba(102, 126, 234, 0.3)' :
-                                 story.category === 'SCIENCE' ? '0 4px 12px rgba(14, 165, 233, 0.3)' :
-                                 story.category === 'HEALTH' ? '0 4px 12px rgba(0, 210, 160, 0.3)' :
-                                 story.category === 'CLIMATE' ? '0 4px 12px rgba(34, 197, 94, 0.3)' :
-                                 story.category === 'SPORTS' ? '0 4px 12px rgba(245, 158, 11, 0.3)' :
-                                 story.category === 'ENTERTAINMENT' ? '0 4px 12px rgba(236, 72, 153, 0.3)' :
-                                 '0 4px 12px rgba(102, 126, 234, 0.3)'
+                    {/* News Image - With Rounded Corners and Spacing */}
+                    <div style={{
+                      position: 'fixed',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
+                      margin: 0,
+                      padding: 0,
+                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'block',
+                      zIndex: '1',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      pointerEvents: 'none',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+                      // Ensure image container doesn't interfere with information box
+                      maxHeight: 'calc(38vh - 3px)'
                     }}>
-                      <div className="news-number">{story.number}</div>
-                      <div className="news-emoji-large">{story.emoji}</div>
+                      {(() => {
+                        // Always try to show image if URL exists - be very lenient with validation
+                        // Only reject if clearly invalid (null, empty, or too short to be a URL)
+                        const rawUrl = story.urlToImage;
+                        const hasImageUrl = rawUrl && 
+                                          (typeof rawUrl === 'string' || typeof rawUrl === 'object') && 
+                                          String(rawUrl).trim() !== '' && 
+                                          String(rawUrl).toLowerCase() !== 'null' && 
+                                          String(rawUrl).toLowerCase() !== 'undefined' &&
+                                          String(rawUrl).toLowerCase() !== 'none' &&
+                                          String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
+                        
+                        if (!hasImageUrl) {
+                          return (
+                            <div style={{
+                              fontSize: '72px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '100%',
+                              height: '100%'
+                            }}>
+                              {story.emoji || '📰'}
+                            </div>
+                          );
+                        }
+                        
+                        const imageUrl = String(story.urlToImage).trim();
+                        // Use stable key based on story ID and URL hash, NOT timestamp
+                        const urlHash = imageUrl.substring(0, 50).replace(/[^a-zA-Z0-9]/g, '');
+                        const imageKey = `img-${story.id || index}-${urlHash}`;
+                        const isImageLoaded = loadedImages.has(imageUrl);
+                        
+                        return (
+                          <img 
+                            key={imageKey}
+                            src={imageUrl}
+                            alt={story.title || 'News image'}
+                            loading={isImageLoaded ? "eager" : "lazy"}
+                            decoding="async"
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              minWidth: '100%',
+                              minHeight: '100%',
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              display: 'block',
+                              margin: 0,
+                              padding: 0,
+                              flexShrink: 0,
+                              flexGrow: 1,
+                              opacity: 1,
+                              visibility: 'visible',
+                              pointerEvents: 'auto',
+                              position: 'relative',
+                              zIndex: 1
+                            }}
+                            onLoad={(e) => {
+                              console.log('✅ Image loaded successfully:', imageUrl);
+                              console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
+                              
+                              // Mark this image as successfully loaded
+                              setLoadedImages(prev => {
+                                const newSet = new Set(prev);
+                                newSet.add(imageUrl);
+                                return newSet;
+                              });
+                              
+                              // Use pre-computed blur color if available, otherwise extract
+                              if (story.blurColor) {
+                                // Use pre-computed color from article data
+                                setImageDominantColors(prev => ({ 
+                                  ...prev, 
+                                  [index]: { 
+                                    blurColor: story.blurColor,
+                                    // Still need to extract for highlight/link colors
+                                    ...(prev[index] || {})
+                                  }
+                                }));
+                              }
+                              
+                              // Always extract for highlight/link colors
+                              if (e.target.complete && e.target.naturalWidth > 0) {
+                                try {
+                                  extractDominantColor(e.target, index);
+                                } catch (error) {
+                                  console.warn('Color extraction failed:', error);
+                                }
+                              }
+                              // Ensure image is visible and persistent
+                              e.target.style.opacity = '1';
+                              e.target.style.visibility = 'visible';
+                              e.target.style.display = 'block';
+                              e.target.style.minWidth = '100%';
+                              e.target.style.minHeight = '100%';
+                            }}
+                            onError={(e) => {
+                              console.error('❌ Image failed to load:', imageUrl);
+                              console.error('   Story title:', story.title);
+                              const imgElement = e.target;
+                              const parentElement = imgElement.parentElement;
+                              
+                              // More aggressive retry strategy
+                              let retryCount = parseInt(imgElement.dataset.retryCount || '0');
+                              const maxRetries = 5; // Increased retries
+                              
+                              const tryLoadImage = () => {
+                                if (retryCount < maxRetries && imageUrl && !imageUrl.includes('data:') && !imageUrl.includes('blob:')) {
+                                  retryCount++;
+                                  imgElement.dataset.retryCount = retryCount.toString();
+                                  
+                                  // Try different CORS settings
+                                  if (retryCount % 2 === 0) {
+                                    imgElement.crossOrigin = 'anonymous';
+                                  } else {
+                                    imgElement.crossOrigin = undefined;
+                                  }
+                                  
+                                  // Try different referrer policies
+                                  if (retryCount === 3) {
+                                    imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                                  } else if (retryCount === 4) {
+                                    imgElement.referrerPolicy = 'origin';
+                                  } else {
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                  }
+                                  
+                                  // Try with timestamp to bypass cache
+                                  const separator = imageUrl.includes('?') ? '&' : '?';
+                                  const newSrc = imageUrl + separator + '_retry=' + retryCount + '&_t=' + Date.now();
+                                  console.log(`🔄 Retry ${retryCount}/${maxRetries}: ${newSrc.substring(0, 80)}...`);
+                                  imgElement.src = newSrc;
+                                  return;
+                                }
+                                
+                                // Only show fallback after all retries exhausted
+                                if (retryCount >= maxRetries) {
+                                  console.warn('⚠️ All image load attempts failed, showing fallback');
+                                  // Remove from loaded images set if it was previously loaded
+                                  setLoadedImages(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(imageUrl);
+                                    return newSet;
+                                  });
+                                  imgElement.style.display = 'none';
+                                  if (parentElement) {
+                                    const existingFallback = parentElement.querySelector('.image-fallback');
+                                    if (!existingFallback) {
+                                      parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                      const fallback = document.createElement('div');
+                                      fallback.className = 'image-fallback';
+                                      fallback.style.cssText = `
+                                        font-size: 72px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        width: 100%;
+                                        height: 100%;
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        z-index: 1;
+                                      `;
+                                      fallback.textContent = story.emoji || '📰';
+                                      parentElement.appendChild(fallback);
+                                    }
+                                  }
+                                }
+                              };
+                              
+                              // Try loading again with increasing delays
+                              setTimeout(tryLoadImage, 300 * retryCount);
+                            }}
+                            onLoadStart={() => {
+                              console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
+                            }}
+                          />
+                        );
+                      })()}
+                      
+                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '20%',
+                        left: '0',
+                        width: '100%',
+                        height: '80%',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}></div>
+                      
+                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '24px 16px 20px 16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-end',
+                        background: imageDominantColors[index]?.blurColor 
+                          ? `linear-gradient(to bottom, 
+                              ${imageDominantColors[index].blurColor}26 0%, 
+                              ${imageDominantColors[index].blurColor}40 10%, 
+                              ${imageDominantColors[index].blurColor}73 30%, 
+                              ${imageDominantColors[index].blurColor}A6 50%, 
+                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}F2 80%, 
+                              ${imageDominantColors[index].blurColor}FA 90%, 
+                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}FF 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
+                        zIndex: 2,
+                        pointerEvents: 'none'
+                      }}>
+                        <h3 style={{ 
+                          margin: 0,
+                          fontSize: '22px',
+                          fontWeight: '800',
+                          lineHeight: '1.2',
+                          letterSpacing: '-0.5px',
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
+                        </div>
+                      )}
                     </div>
                     
-                    {/* Content on the right side */}
-                    <div className="news-content">
-                      <div className="news-category" style={{
-                        background: story.category === 'WORLD NEWS' ? 'rgba(220, 38, 38, 0.1)' :
-                                   story.category === 'BUSINESS' ? 'rgba(255, 107, 53, 0.1)' :
-                                   story.category === 'MARKETS' ? 'rgba(6, 182, 212, 0.1)' :
-                                   story.category === 'TECH & AI' ? 'rgba(102, 126, 234, 0.1)' :
-                                   story.category === 'SCIENCE' ? 'rgba(14, 165, 233, 0.1)' :
-                                   story.category === 'HEALTH' ? 'rgba(0, 210, 160, 0.1)' :
-                                   story.category === 'CLIMATE' ? 'rgba(34, 197, 94, 0.1)' :
-                                   story.category === 'SPORTS' ? 'rgba(245, 158, 11, 0.1)' :
-                                   story.category === 'ENTERTAINMENT' ? 'rgba(236, 72, 153, 0.1)' : 
-                                   'rgba(100, 116, 139, 0.1)',
-                        color: story.category === 'WORLD NEWS' ? '#dc2626' :
-                               story.category === 'BUSINESS' ? '#FF6B35' :
-                               story.category === 'MARKETS' ? '#06b6d4' :
-                               story.category === 'TECH & AI' ? '#667EEA' :
-                               story.category === 'SCIENCE' ? '#0ea5e9' :
-                               story.category === 'HEALTH' ? '#00D2A0' :
-                               story.category === 'CLIMATE' ? '#22c55e' :
-                               story.category === 'SPORTS' ? '#f59e0b' :
-                               story.category === 'ENTERTAINMENT' ? '#ec4899' : '#64748b'
-                      }}>
-                        {story.category}
-                      </div>
-                      <h3 className="news-title">{story.title}</h3>
-                      <p className="news-summary">{renderBoldText(story.summary, story.category)}</p>
-                      
-                      {/* Fixed Position Toggle and Content Area - Very Bottom */}
+                    {/* Emoji fallback when no image */}
+                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
-                        position: 'fixed',
-                          bottom: '80px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
+                      position: 'fixed',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
+                      margin: 0,
+                      padding: 0,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: '1',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      pointerEvents: 'none'
+                    }}>
+                        <div style={{
+                        fontSize: '72px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         width: '100%',
-                        maxWidth: '950px',
-                        paddingLeft: '15px',
-                        paddingRight: '15px',
-                        zIndex: '50'
+                        height: '100%'
                       }}>
-                        {/* Modern Segmented Control */}
-                        {story.timeline && (
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            marginBottom: '16px'
-                          }}>
-                          <div style={{
-                            display: 'flex',
-                            background: 'linear-gradient(-75deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
-                            backdropFilter: 'blur(2px)',
-                            WebkitBackdropFilter: 'blur(2px)',
-                            border: '1px solid rgba(255, 255, 255, 0.5)',
-                            borderRadius: '999vw',
-                            padding: '2px',
-                            boxShadow: 'inset 0 2px 2px rgba(0, 0, 0, 0.05), inset 0 -2px 2px rgba(255, 255, 255, 0.5), 0 4px 2px -2px rgba(0, 0, 0, 0.2), 0 0 1.6px 4px inset rgba(255, 255, 255, 0.2)',
-                            width: '100px'
-                          }}>
-                            {/* Details Button - Icons Only */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '999vw',
-                              background: !showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-                              cursor: 'pointer',
-                              transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-                              boxShadow: !showTimeline[index] ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
-                            }} onClick={(e) => {
-                              e.stopPropagation();
-                              if (showTimeline[index]) {
-                                setShowTimeline(prev => ({ ...prev, [index]: false }));
-                              }
-                            }}>
-                              {/* Details Icon - Grid/Chart */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <rect x="3" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="14" y="3" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="3" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                                <rect x="14" y="14" width="7" height="7" fill={!showTimeline[index] ? '#3b82f6' : '#94a3b8'} rx="1"/>
-                              </svg>
-                            </div>
-                            
-                            {/* Timeline Button - Icons Only */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '999vw',
-                              background: showTimeline[index] ? 'rgba(255, 255, 255, 0.3)' : 'transparent',
-                              cursor: 'pointer',
-                              transition: 'all 400ms cubic-bezier(0.25, 1, 0.5, 1)',
-                              boxShadow: showTimeline[index] ? 'inset 0 1px 2px rgba(0, 0, 0, 0.1)' : 'none'
-                            }} onClick={(e) => {
-                              e.stopPropagation();
-                              if (!showTimeline[index]) {
-                                setShowTimeline(prev => ({ ...prev, [index]: true }));
-                              }
-                            }}>
-                              {/* Timeline Icon - Connected Dots */}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <circle cx="4" cy="4" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <circle cx="4" cy="12" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <circle cx="4" cy="20" r="2" fill={showTimeline[index] ? '#8b5cf6' : '#94a3b8'}/>
-                                <line x1="6" y1="4" x2="20" y2="4" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                                <line x1="6" y1="12" x2="20" y2="12" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                                <line x1="6" y1="20" x2="20" y2="20" stroke={showTimeline[index] ? '#8b5cf6' : '#94a3b8'} strokeWidth="1.5"/>
-                              </svg>
-                            </div>
-                          </div>
+                        {story.emoji || '📰'}
                         </div>
+                    </div>
+                    )}
+                    
+                    {/* Content Area - Starts After Image */}
+                    <div className="news-content" style={{
+                      position: 'relative',
+                        paddingTop: 'calc(38vh - 60px)',
+                        paddingLeft: '20px',
+                        paddingRight: '20px',
+                        zIndex: '2',
+                        background: 'transparent',
+                        width: '100%',
+                        maxWidth: '100%',
+                        margin: '0 auto'
+                      }}>
+                      
+                      {/* Time Since Published and Timeline Button Row - Fixed Position */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '8px',
+                        marginTop: '32px',
+                        width: '100%',
+                        position: 'relative',
+                        zIndex: 10
+                      }}>
+                        {/* Time Since Published - Left Side */}
+                        <div style={{
+                          fontSize: '11px',
+                          fontWeight: '400',
+                          color: '#86868b',
+                          letterSpacing: '0.3px',
+                          flex: '0 0 auto'
+                        }}>
+                          {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
+                        </div>
+
+                        {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
+                        {getAvailableComponentsCount(story) > 1 && (
+                          <div className="switcher" style={{ 
+                            position: 'relative',
+                            flex: '0 0 auto'
+                          }}>
+                            {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
+                              const isActive = getCurrentInformationType(story, index) === infoType;
+                              return (
+                                <button
+                                  key={infoType}
+                                  className={`switcher__option ${isActive ? 'active' : ''}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log(`${infoType} option clicked for story`, index);
+                                    
+                                    // Reset all states
+                                    setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: false }));
+                                    setShowMap(prev => ({ ...prev, [index]: false }));
+                                    setShowGraph(prev => ({ ...prev, [index]: false }));
+
+                                    // Set the selected state
+                                    switch (infoType) {
+                                      case 'timeline':
+                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'details':
+                                        setShowDetails(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'map':
+                                        setShowMap(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'graph':
+                                        setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                    }
+                                  }}
+                                >
+                                  <div className="switcher__icon">
+                                    {infoType === 'details' && (
+                                      <div className="grid-icon">
+                                        <div className="grid-square"></div>
+                                        <div className="grid-square"></div>
+                                        <div className="grid-square"></div>
+                                        <div className="grid-square"></div>
+                                      </div>
+                                    )}
+                                    {infoType === 'timeline' && (
+                                      <div className="list-icon">
+                                        <div className="list-line">
+                                          <div className="list-dot"></div>
+                                          <div className="list-bar"></div>
+                                        </div>
+                                        <div className="list-line">
+                                          <div className="list-dot"></div>
+                                          <div className="list-bar"></div>
+                                        </div>
+                                        <div className="list-line">
+                                          <div className="list-dot"></div>
+                                          <div className="list-bar"></div>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {infoType === 'map' && (
+                                      <div className="map-icon" style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      }}>
+                                        <div style={{
+                                          width: '10px',
+                                          height: '10px',
+                                          border: `2px solid ${isActive ? '#000000' : '#666666'}`,
+                                          borderRadius: '50%',
+                                          position: 'relative'
+                                        }}>
+                                          <div style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            width: '4px',
+                                            height: '4px',
+                                            background: isActive ? '#000000' : '#666666',
+                                            borderRadius: '50%'
+                                          }}></div>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {infoType === 'graph' && (
+                                      <div className="graph-icon" style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      }}>
+                                        <div style={{
+                                          width: '12px',
+                                          height: '8px',
+                                          display: 'flex',
+                                          alignItems: 'end',
+                                          gap: '1px'
+                                        }}>
+                                          <div style={{
+                                            width: '2px',
+                                            height: '3px',
+                                            background: isActive ? '#000000' : '#666666',
+                                            borderRadius: '1px'
+                                          }}></div>
+                                          <div style={{
+                                            width: '2px',
+                                            height: '6px',
+                                            background: isActive ? '#000000' : '#666666',
+                                            borderRadius: '1px'
+                                          }}></div>
+                                          <div style={{
+                                            width: '2px',
+                                            height: '4px',
+                                            background: isActive ? '#000000' : '#666666',
+                                            borderRadius: '1px'
+                                          }}></div>
+                                          <div style={{
+                                            width: '2px',
+                                            height: '8px',
+                                            background: isActive ? '#000000' : '#666666',
+                                            borderRadius: '1px'
+                                          }}></div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
                         )}
-                        
-                        {/* Fixed Position Details/Timeline Section */}
+                      </div>
+                      
+                      {/* Summary/Bullet Points - Swipeable - Fixed Position */}
+                      <div 
+                        className="news-summary" 
+                        style={{ 
+                          marginTop: '0px',
+                          marginBottom: '32px',
+                          fontSize: '16px',
+                          lineHeight: '1.6',
+                          color: '#4a4a4a',
+                          opacity: '1',
+                          minHeight: '60px',
+                          padding: '16px 0',
+                          position: 'relative',
+                          zIndex: 10
+                        }}
+                        onTouchStart={(e) => {
+                          const startX = e.touches[0].clientX;
+                          const startY = e.touches[0].clientY;
+                          let hasMoved = false;
+                          let swipeDirection = null;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
+                            
+                            if (diffX > 10 || diffY > 10) {
+                              hasMoved = true;
+                              
+                              // Determine swipe direction
+                              if (diffX > diffY && diffX > 50) {
+                                swipeDirection = 'horizontal';
+                                moveEvent.preventDefault();
+                                moveEvent.stopPropagation();
+                              } else if (diffY > diffX && diffY > 30) {
+                                swipeDirection = 'vertical';
+                              }
+                            }
+                          };
+                          
+                          const handleTouchEnd = (endEvent) => {
+                            const endX = endEvent.changedTouches[0].clientX;
+                            const diffX = Math.abs(startX - endX);
+                            
+                            // Only handle horizontal swipes for summary/bullet points toggle
+                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
+                              console.log('Horizontal summary swipe detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              toggleSummaryDisplayMode(index);
+                            }
+                            
+                            // Clean up listeners
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                        }}
+                      >
                         <div 
-                          className="news-meta" 
+                          className="summary-content"
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {/* Show Only Bullet Text - Fixed Position */}
+                          <div style={{ 
+                            margin: 0,
+                            marginTop: '-3px',
+                            marginBottom: '0px',
+                            position: 'relative',
+                            width: '100%'
+                          }}>
+                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
+                                <ul style={{
+                                  margin: 0,
+                                  paddingLeft: '20px',
+                                  listStyleType: 'disc'
+                                }}>
+                                  {story.summary_bullets.map((bullet, i) => (
+                                    <li key={i} style={{
+                                    marginBottom: '12px',
+                                      fontSize: '15px',
+                                    lineHeight: '1.55',
+                                    fontWeight: '400',
+                                    color: '#000000',
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif'
+                                  }}>
+                                    {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                  No bullet points available
+                                </p>
+                              )}
+                          </div>
+                          
+                          {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
+                          {showDetailedText[index] && (
+                            <div 
+                              style={{
+                                marginTop: '16px',
+                                marginBottom: '100px',
+                                fontSize: '16px',
+                                lineHeight: '1.8',
+                                color: '#1a1a1a',
+                                opacity: 1,
+                                transform: 'translateY(0)',
+                                transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                position: 'relative',
+                                zIndex: 1,
+                                width: '100%'
+                              }}
+                              onTouchStart={(e) => {
+                                const startX = e.touches[0].clientX;
+                                const startY = e.touches[0].clientY;
+                                let hasMoved = false;
+                                
+                                const handleTouchMove = (moveEvent) => {
+                                  const currentX = moveEvent.touches[0].clientX;
+                                  const diffX = Math.abs(currentX - startX);
+                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
+                                  
+                                  if (diffX > 10 || diffY > 10) {
+                                    hasMoved = true;
+                                  }
+                                };
+                                
+                                const handleTouchEnd = (endEvent) => {
+                                  const endX = endEvent.changedTouches[0].clientX;
+                                  const diffX = endX - startX;
+                                  
+                                  // Swipe right to close article
+                                  if (hasMoved && diffX > 100) {
+                                    endEvent.preventDefault();
+                                    endEvent.stopPropagation();
+                                    toggleDetailedText(index); // Close article
+                                  }
+                                  
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
+                                };
+                                
+                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                              }}
+                            >
+                              <div dangerouslySetInnerHTML={{
+                                __html: story.detailed_text
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  .split('. ')
+                                  .reduce((acc, sentence, i, arr) => {
+                                    // Group every 2-3 sentences into a paragraph
+                                    if (i % 3 === 0) {
+                                      const paragraph = arr.slice(i, i + 3).join('. ') + (i + 3 < arr.length ? '.' : '');
+                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + paragraph + '</p>';
+                                    } else if (i % 3 === 1 && i === arr.length - 1) {
+                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + sentence + '</p>';
+                                    }
+                                    return acc;
+                                  }, '')
+                              }} />
+                            </div>
+                          )}
+                        </div>
+                        
+                      </div>
+                      
+                    </div>
+                    {/* End of news-content div */}
+                      
+                      {/* Fixed Position Toggle and Content Area - Lower Position */}
+                    {/* Always show information box if there are any available components, regardless of image presence */}
+                    {/* MOVED OUTSIDE news-content to fix stacking context issue */}
+                    {(() => {
+                        const componentCount = getAvailableComponentsCount(story);
+                        // Debug logging
+                        if (componentCount === 0) {
+                          console.log(`⚠️ Story ${index} (${story.title?.substring(0, 50)}) has NO components:`, {
+                            hasDetails: !!(story.details && story.details.length > 0),
+                            hasTimeline: !!(story.timeline && story.timeline.length > 0),
+                            hasMap: !!story.map,
+                            hasGraph: !!story.graph,
+                            urlToImage: story.urlToImage
+                          });
+                        } else {
+                          // Log when components exist to help debug visibility issues
+                          console.log(`✅ Story ${index} (${story.title?.substring(0, 30)}) has ${componentCount} component(s), image: ${!!story.urlToImage}`);
+                        }
+                        return componentCount > 0;
+                      })() && (
+                      <div style={{
+                        position: showDetailedText[index] ? 'relative' : 'fixed',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
+                        left: showDetailedText[index] ? '0' : '50%',
+                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
+                        width: '100%',
+                        maxWidth: showDetailedText[index] ? '1200px' : '1200px',
+                        paddingLeft: '8px',
+                        paddingRight: '8px',
+                        zIndex: 99999,
+                        marginTop: showDetailedText[index] ? '0' : '0',
+                        marginLeft: showDetailedText[index] ? 'auto' : '0',
+                        marginRight: showDetailedText[index] ? 'auto' : '0',
+                        pointerEvents: 'auto',
+                        display: 'block',
+                        visibility: 'visible',
+                        opacity: 1,
+                        isolation: 'isolate'
+                      }}>
+                        
+                        {/* Details/Timeline Section - At end of article when detailed text is showing */}
+                        <div 
                         style={{ 
                           position: 'relative', 
                           overflow: 'visible', 
-                          cursor: 'pointer',
-                          minHeight: '90px',
-                          height: '90px',
-                          background: showTimeline[index] ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
-                          border: showTimeline[index] ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                          boxShadow: showTimeline[index] ? 'none' : '0 8px 32px rgba(31, 38, 135, 0.15)'
+                          cursor: getAvailableComponentsCount(story) > 1 ? 'pointer' : 'default',
+                          display: 'flex',
+                          visibility: 'visible',
+                          minHeight: '85px',
+                          zIndex: 99999,
+                          opacity: 1,
+                          height: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
+                          maxHeight: showTimeline[index] ? (expandedTimeline[index] ? '300px' : '85px') : '85px',
+                          backgroundColor: 'transparent',
+                          background: 'transparent',
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                          border: 'none',
+                          borderRadius: '0',
+                          boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
+                          // Check if touch started on expand icon - if so, don't handle it
+                          const touchTarget = e.target;
+                          const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                          if (isExpandIcon) return;
+                          
+                          // Only handle if there are multiple information types
+                          if (getAvailableComponentsCount(story) <= 1) return;
+                          
                           const startX = e.touches[0].clientX;
                           const startY = e.touches[0].clientY;
                           let hasMoved = false;
@@ -1939,18 +3662,24 @@ export default function Home() {
                             const diffX = startX - endX;
                             const diffY = startY - endY;
                             
-                            // Only handle horizontal swipes for timeline
+                            // Only handle horizontal swipes for information switching
                             if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              console.log('Horizontal timeline swipe detected for story', index);
+                              console.log('Horizontal information swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
-                              toggleTimeline(index);
+                              switchToNextInformationType(story, index);
                             } else if (!hasMoved) {
-                              // Single tap toggles timeline
-                              console.log('Timeline tap detected for story', index);
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
-                              toggleTimeline(index);
+                              // Check if the touch target is the expand icon
+                              const touchTarget = endEvent.target;
+                              const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                              
+                              if (!isExpandIcon) {
+                                // Single tap switches information type
+                                console.log('Information box tap detected for story', index);
+                                endEvent.preventDefault();
+                                endEvent.stopPropagation();
+                                switchToNextInformationType(story, index);
+                              }
                             }
                             // If it's vertical swipe, let it pass through for story navigation
                             
@@ -1964,145 +3693,537 @@ export default function Home() {
                           document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
-                        {/* Content - Either Details OR Timeline (never both visible) */}
-                        {!showTimeline[index] ? (
-                          // Show Details Only
-                          story.details && story.details.map((detail, i) => {
-                          const [label, value] = detail.split(':');
-                          const cleanLabel = label?.trim() || '';
-                          const cleanValue = value?.trim() || '';
-                          
-                          // Extract main number/value and subtitle
-                          const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
-                          const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
-                          const subtitle = valueMatch ? valueMatch[2].trim() : '';
-                          
-                          return (
-                            <div key={i} className="news-detail-item">
-                              <div className="news-detail-label">{cleanLabel}</div>
-                              <div className="news-detail-value">{mainValue}</div>
-                              {subtitle && <div className="news-detail-subtitle">{subtitle}</div>}
+                        {/* Content - Show one component at a time */}
+                        {/* Default to first component from components array */}
+                        {(() => {
+                          // If no state is set, default to first component in the components array
+                          if (!showDetails[index] && !showTimeline[index] && !showMap[index] && !showGraph[index]) {
+                            const availableTypes = getAvailableInformationTypes(story);
+                            if (availableTypes.length > 0) {
+                              const firstType = availableTypes[0];
+                              
+                              switch (firstType) {
+                                case 'details':
+                                  setShowDetails(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'timeline':
+                                  setShowTimeline(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'map':
+                                  setShowMap(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'graph':
+                                  setShowGraph(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                              }
+                            }
+                          }
+                          return null;
+                        })()}
+                        {/* Render components based on what's active, respecting components array order */}
+                        {(() => {
+                          // Determine which component to show based on active state
+                          // If a state is explicitly set, show that component
+                          if (showGraph[index]) {
+                            // Show Graph - Similar to timeline with expand/collapse
+                            return story.graph && (
+                              <div 
+                                className="glass-container graph-container-desktop"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: expandedGraph[index] ? '300px' : '85px',
+                                  maxHeight: expandedGraph[index] ? '300px' : '85px',
+                                  transition: 'height 0.3s ease-in-out',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
+                                }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
+                                <div className="glass-content" style={{
+                                  height: '100%',
+                                  width: '100%',
+                                  padding: '8px 12px',
+                                  justifyContent: 'flex-start',
+                                  position: 'relative'
+                                }}>
+                                {/* Expand Icon */}
+                                <div 
+                                  data-expand-icon="true"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '6px',
+                                    width: '24px',
+                                    height: '24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    zIndex: '20',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('Expand graph icon clicked for story', index);
+                                    setExpandedGraph(prev => ({
+                                      ...prev,
+                                      [index]: !prev[index]
+                                    }));
+                                  }}
+                                  onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('Expand graph icon touched for story', index);
+                                    setExpandedGraph(prev => ({
+                                      ...prev,
+                                      [index]: !prev[index]
+                                    }));
+                                  }}>
+                                  <span style={{
+                                    fontSize: '16px',
+                                    fontWeight: 'bold',
+                                    color: '#000000',
+                                    transform: expandedGraph[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.2s ease',
+                                    textShadow: '1px 1px 2px rgba(255, 255, 255, 0.8)'
+                                  }}>
+                                    ↗
+                                  </span>
+                                </div>
+                                
+                                <div style={{
+                                  position: 'relative',
+                                  height: '100%',
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'flex-start'
+                                }}>
+                                  {/* Graph Title - Minimal */}
+                                  <div style={{
+                                    fontSize: '10px',
+                                    fontWeight: '700',
+                                    color: '#000000',
+                                    marginBottom: '4px',
+                                    letterSpacing: '0.3px',
+                                    textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                    opacity: 0.8
+                                  }}>
+                                    {story.graph.title || 'Data Visualization'}
+                                  </div>
+                                  
+                                  {/* Chart Container */}
+                                  <div style={{
+                                    width: '100%',
+                                    height: expandedGraph[index] ? '260px' : '55px',
+                                    transition: 'height 0.3s ease-in-out',
+                                    overflow: expandedGraph[index] ? 'visible' : 'hidden'
+                                  }}>
+                                    {story.graph && story.graph.data && story.graph.data.length > 0 ? (
+                                      <GraphChart graph={story.graph} expanded={expandedGraph[index]} />
+                                    ) : (
+                                      <div style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                              justifyContent: 'center',
+                                        color: '#000000',
+                                        fontSize: '12px',
+                                        textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)'
+                            }}>
+                                        No graph data available
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                </div>
                             </div>
                           );
-                          })
-                        ) : (
-                          // Show Timeline Only - Starts at same level, extends downward
-                          story.timeline && (
+                          } else if (showTimeline[index]) {
+                            // Show Timeline
+                            return story.timeline && (
                             <div 
-                              className="timeline-container-desktop"
+                              className="glass-container timeline-container-desktop timeline-container-animated"
                               style={{
                                 position: 'absolute',
-                                top: '0',
+                                bottom: '0',
                                 left: '0',
                                 right: '0',
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: '16px',
-                                padding: '12px 20px',
-                                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.15)',
-                                minHeight: '90px',
-                                maxHeight: '110px',
-                                overflowY: 'auto',
-                                zIndex: '10'
+                                height: expandedTimeline[index] ? '300px' : '85px',
+                                maxHeight: expandedTimeline[index] ? '300px' : '85px',
+                                transition: 'height 0.3s ease-in-out',
+                                minHeight: '85px',
+                                zIndex: '10',
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden'
                               }}>
+                              <div className="glass-filter"></div>
+                              <div className="glass-overlay"></div>
+                              <div className="glass-specular"></div>
+                              <div className="glass-content" style={{
+                                height: '100%',
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
+                                padding: '8px 12px',
+                                justifyContent: 'flex-start',
+                                position: 'relative'
+                              }}>
+                               {/* Expand Icon */}
+                               <div 
+                                 data-expand-icon="true"
+                                 style={{
+                                 position: 'absolute',
+                                 top: '6px',
+                                 right: '6px',
+                                 width: '24px',
+                                 height: '24px',
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 justifyContent: 'center',
+                                 cursor: 'pointer',
+                                 zIndex: '20',
+                                 transition: 'all 0.2s ease'
+                               }}
+                               onClick={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 console.log('Expand icon clicked for story', index, 'current state:', expandedTimeline[index], 'will toggle to:', !expandedTimeline[index]);
+                                 setExpandedTimeline(prev => ({
+                                   ...prev,
+                                   [index]: !prev[index]
+                                 }));
+                               }}
+                               onTouchEnd={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 console.log('Expand icon touched for story', index);
+                                 setExpandedTimeline(prev => ({
+                                   ...prev,
+                                   [index]: !prev[index]
+                                 }));
+                               }}>
+                                 <span style={{
+                                   fontSize: '16px',
+                                   fontWeight: 'bold',
+                                   color: '#000000',
+                                   transform: expandedTimeline[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                                   transition: 'transform 0.2s ease',
+                                   textShadow: '1px 1px 2px rgba(255, 255, 255, 0.8)'
+                                 }}>
+                                   ↗
+                                 </span>
+                               </div>
+                              
                               <div style={{
                                 position: 'relative',
-                                paddingLeft: '20px',
-                                width: '100%'
+                                height: '100%',
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'flex-start'
                               }}>
-                                <div style={{
+                                <div className="timeline-line-animated" style={{
                                   position: 'absolute',
-                                  left: '6px',
-                                  top: '8px',
+                                  left: '8px',
+                                  top: '0px',
                                   bottom: '8px',
                                   width: '2px',
-                                  background: 'linear-gradient(180deg, #3b82f6, #e2e8f0)',
-                                  zIndex: '0'
+                                  background: 'linear-gradient(180deg, #3b82f6, #93c5fd)',
+                                  zIndex: '0',
+                                  borderRadius: '2px',
+                                  boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
                                 }}></div>
-                                {story.timeline.map((event, idx) => (
-                                  <div key={idx} style={{
-                                    position: 'relative',
-                                    marginBottom: '8px',
-                                    paddingLeft: '20px',
-                                    minHeight: '32px'
-                                  }}>
-                                    <div style={{
+                                <div style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'flex-start',
+                                  height: '100%',
+                                  paddingLeft: '20px',
+                                  paddingTop: '0px',
+                                  paddingBottom: '8px'
+                                }}>
+                                  {story.timeline.slice(0, expandedTimeline[index] ? story.timeline.length : 2).map((event, idx) => (
+                                    <div key={idx} className="timeline-item-animated" style={{
+                                      position: 'relative',
+                                      marginBottom: expandedTimeline[index] ? '12px' : '8px',
+                                      paddingLeft: '0px',
+                                      minHeight: expandedTimeline[index] ? '36px' : '24px',
+                                      marginTop: idx === 0 ? '0px' : '0px'
+                                    }}>
+                                    <div className="timeline-dot-animated" style={{
                                       position: 'absolute',
-                                      left: '-14px',
-                                      top: '6px',
-                                      width: '10px',
-                                      height: '10px',
+                                      left: '-15px',
+                                      top: '2px',
+                                      width: '8px',
+                                      height: '8px',
                                       borderRadius: '50%',
                                       background: idx === story.timeline.length - 1 ? '#3b82f6' : 'white',
                                       border: '2px solid #3b82f6',
-                                      zIndex: '2'
+                                      zIndex: '2',
+                                      boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
                                       fontSize: '10px',
-                                      fontWeight: '600',
-                                      color: '#3b82f6',
-                                      marginBottom: '3px'
+                                      fontWeight: '700',
+                                      color: '#000000',
+                                      marginBottom: '2px',
+                                      letterSpacing: '0.3px',
+                                      marginTop: '0px',
+                                      textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                      opacity: 0.8
                                     }}>{event.date}</div>
                                     <div style={{
-                                      fontSize: '12px',
-                                      color: darkMode ? '#e2e8f0' : '#1e293b',
-                                      lineHeight: '1.3'
+                                      fontSize: expandedTimeline[index] ? '13px' : '11px',
+                                      fontWeight: '500',
+                                      color: '#000000',
+                                      lineHeight: '1.3',
+                                      marginTop: '0px',
+                                      textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                      overflow: expandedTimeline[index] ? 'visible' : 'hidden',
+                                      textOverflow: expandedTimeline[index] ? 'clip' : 'ellipsis',
+                                      whiteSpace: expandedTimeline[index] ? 'normal' : 'nowrap'
                                     }}>{event.event}</div>
-                      </div>
+                                  </div>
                                 ))}
-                                
-                                {/* Scroll hint at bottom */}
-                                {story.timeline.length > 3 && (
-                                  <div style={{
-                                    position: 'sticky',
-                                    bottom: '0',
-                                    textAlign: 'center',
-                                    fontSize: '9px',
-                                    color: '#94a3b8',
-                                    background: darkMode ? 'linear-gradient(transparent, #000000)' : 'linear-gradient(transparent, #ffffff)',
-                                    padding: '8px 0 4px',
-                                    fontWeight: '500',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
-                                  }}>
-                                    ↓ SCROLL FOR MORE ↓
-                    </div>
-                                )}
-                  </div>
-                </div>
-                          )
-                        )}
+                                </div>
+                              </div>
+                              </div>
+                            </div>
+                          );
+                          } else if (showMap[index]) {
+                            // Show Map
+                            return story.map && (
+                            <div 
+                              className="map-container"
+                              style={{
+                                position: 'absolute',
+                                bottom: '0',
+                                left: '0',
+                                right: '0',
+                                height: '200px',
+                                background: '#ffffff',
+                                borderRadius: '8px',
+                                padding: '12px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                zIndex: '10',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                flexDirection: 'column'
+                              }}>
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#1e293b',
+                                marginBottom: '8px'
+                              }}>📍 Location Map</div>
+                              <div style={{
+                                    width: '100%',
+                                height: '150px',
+                                background: '#f8fafc',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                border: '1px solid #e2e8f0',
+                                color: '#64748b',
+                                fontSize: '12px'
+                              }}>
+                                Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
+                                  </div>
+                            </div>
+                            );
+                          } else if (showDetails[index]) {
+                            // Show Details
+                            return story.details && (
+                              <div 
+                                className="glass-container details-container-desktop details-container-animated"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: '85px',
+                                  maxHeight: '85px',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflow: 'hidden',
+                                  display: 'flex'
+                                }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
+                                <div className="glass-content" style={{
+                                  height: '100%',
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-around',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '10px 16px'
+                                }}>
+                                  {story.details.slice(0, 3).map((detail, i) => {
+                                    const [label, value] = detail.split(':');
+                                    const cleanLabel = label?.trim() || '';
+                                    const cleanValue = value?.trim() || '';
+                                    
+                                    // Extract main number/value and subtitle
+                                    const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
+                                    const mainValue = valueMatch ? valueMatch[1].trim() : cleanValue;
+                                    const subtitle = valueMatch ? valueMatch[2].trim() : '';
+                                    
+                                    return (
+                                      <div key={i} className="news-detail-item details-item-animated" style={{ 
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        flex: 1,
+                                        color: '#000000'
+                                      }}>
+                                        <div className="news-detail-label" style={{ 
+                                          color: '#000000',
+                                          fontSize: '9px',
+                                          fontWeight: '700',
+                                          marginBottom: '3px',
+                                          textAlign: 'center',
+                                          textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                          opacity: 0.7,
+                                          textTransform: 'uppercase',
+                                          letterSpacing: '0.5px'
+                                        }}>{cleanLabel}</div>
+                                        <div className="news-detail-value details-value-animated" style={{ 
+                                          color: '#000000',
+                                          fontSize: '18px',
+                                          fontWeight: '800',
+                                          textAlign: 'center',
+                                          textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                          lineHeight: '1.1'
+                                        }}>{mainValue}</div>
+                                        {subtitle && <div className="news-detail-subtitle" style={{ 
+                                          color: '#333333',
+                                          fontSize: '9px',
+                                          marginTop: '2px',
+                                          textAlign: 'center',
+                                          textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                          opacity: 0.8
+                                        }}>{subtitle}</div>}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            // No state set - fallback to default based on available components
+                            return null;
+                          }
+                        })()}
                         
                   </div>
-                      </div> {/* Close fixed position container */}
+                      
+                      {/* Component Navigation Dots - Only show if multiple components available */}
+                      {getAvailableComponentsCount(story) > 1 && (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginTop: '14px'
+                        }}>
+                          {/* Dynamically render dots based on components array order */}
+                          {getAvailableInformationTypes(story).map((componentType, dotIndex) => {
+                            const handleClick = (type) => {
+                              // Reset all states
+                              setShowDetails(prev => ({ ...prev, [index]: false }));
+                                setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                setShowMap(prev => ({ ...prev, [index]: false }));
+                                setShowGraph(prev => ({ ...prev, [index]: false }));
+                              // Reset expanded states
+                              setExpandedTimeline(prev => ({ ...prev, [index]: false }));
+                              setExpandedGraph(prev => ({ ...prev, [index]: false }));
+                              
+                              // Set the clicked one
+                              switch (type) {
+                                case 'details':
+                                  setShowDetails(prev => ({ ...prev, [index]: true }));
+                                  break;
+                                case 'timeline':
+                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                  break;
+                                case 'map':
+                                setShowMap(prev => ({ ...prev, [index]: true }));
+                                  break;
+                                case 'graph':
+                                  setShowGraph(prev => ({ ...prev, [index]: true }));
+                                  break;
+                              }
+                            };
+                            
+                            const isActive = 
+                              (componentType === 'details' && showDetails[index]) ||
+                              (componentType === 'timeline' && showTimeline[index]) ||
+                              (componentType === 'map' && showMap[index]) ||
+                              (componentType === 'graph' && showGraph[index]);
+                            
+                            return (
+                            <div
+                                key={`${index}-${componentType}-${dotIndex}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                  handleClick(componentType);
+                              }}
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                  background: isActive 
+                                  ? 'rgba(0, 0, 0, 0.6)' 
+                                  : 'rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            />
+                            );
+                          })}
+                        </div>
+                      )}
+                      
                     </div>
+                    )}
                   </div>
                 </div>
               ) : null}
             </div>
           </div>
         ))}
-
-        {/* Progress Indicator */}
-        <div className="progress-indicator">
-          {stories.map((_, index) => (
-            <div
-              key={index}
-              className={`progress-dot ${index === currentIndex ? 'active' : ''}`}
-              onClick={() => {
-                const isPaywallActive = !user && currentIndex >= 5;
-                const isForwardNavigation = index > currentIndex; // Clicking on a higher index (forward)
-
-                // Allow backward navigation, but prevent forward navigation when paywall is active
-                if (!(isPaywallActive && isForwardNavigation)) {
-                  goToStory(index);
-                }
-              }}
-            />
-          ))}
-        </div>
 
         {/* Authentication Modal */}
         {authModal && (
@@ -2143,6 +4264,193 @@ export default function Home() {
               email={emailConfirmation.email}
               onBack={() => setEmailConfirmation(null)}
             />
+          </div>
+        )}
+
+        {/* Detailed Article Overlay */}
+        {showDetailedArticle && selectedArticle && (
+          <div 
+            className="detailed-article-overlay"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              zIndex: 1000,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {/* Header with close button */}
+            <div style={{
+              position: 'sticky',
+              top: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.95)',
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              zIndex: 1001
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  background: getCategoryColors(selectedArticle.category).lighter,
+                  color: getCategoryColors(selectedArticle.category).primary
+                }}>
+                  {selectedArticle.emoji} {selectedArticle.category}
+                </div>
+              </div>
+              
+              <button
+                onClick={closeDetailedArticle}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: '18px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '20px',
+              color: 'white'
+            }}>
+              {/* Article title */}
+              <h1 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                lineHeight: '1.3',
+                margin: '0 0 20px 0',
+                color: 'white'
+              }}>
+                {selectedArticle.title}
+              </h1>
+
+              {/* Detailed article text */}
+              <div style={{
+                fontSize: '16px',
+                lineHeight: '1.6',
+                marginBottom: '30px',
+                color: 'rgba(255, 255, 255, 0.9)'
+              }}>
+                <div dangerouslySetInnerHTML={{
+                  __html: selectedArticle.detailed_text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                }} />
+              </div>
+
+              {/* Additional components if available */}
+              {selectedArticle.timeline && selectedArticle.timeline.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h3 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    marginBottom: '16px',
+                    color: 'white',
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                    paddingBottom: '8px'
+                  }}>
+                    Timeline
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {selectedArticle.timeline.map((event, index) => (
+                      <div key={index} style={{
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'flex-start'
+                      }}>
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          minWidth: '80px',
+                          flexShrink: 0
+                        }}>
+                          {event.date}
+                        </div>
+                        <div style={{
+                          fontSize: '14px',
+                          lineHeight: '1.4',
+                          color: 'rgba(255, 255, 255, 0.9)'
+                        }}>
+                          {event.event}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedArticle.details && selectedArticle.details.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h3 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    marginBottom: '16px',
+                    color: 'white',
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
+                    paddingBottom: '8px'
+                  }}>
+                    Key Details
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedArticle.details.map((detail, index) => (
+                      <div key={index} style={{
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        padding: '8px 12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '6px'
+                      }}>
+                        {detail}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Swipe instruction */}
+              <div style={{
+                textAlign: 'center',
+                marginTop: '40px',
+                padding: '20px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                Swipe left to right to return to articles
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -2409,4 +4717,4 @@ function EmailConfirmation({ email, onBack }) {
       </div>
     </div>
   );
-}
+}// Force deployment - Thu Oct 23 15:14:36 BST 2025
