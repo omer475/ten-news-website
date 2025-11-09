@@ -284,23 +284,25 @@ export default function Home() {
       colorfulColors = sortedBySaturation.slice(0, 1);
     }
     
-    // Use article index to cycle through colors
-    const colorIndex = articleIndex % colorfulColors.length;
+    // ALWAYS apply aggressive hue variation based on article index
+    // This ensures every article gets a different color
+    const colorIndex = articleIndex % Math.max(colorfulColors.length, 1);
     const selectedColor = { ...colorfulColors[colorIndex] };
     
-    // Add hue variation if limited colors available
-    if (colorfulColors.length < 3) {
-      const hueShift = (articleIndex * 30) % 360;
-      selectedColor.hsl = [...selectedColor.hsl];
-      selectedColor.hsl[0] = (selectedColor.hsl[0] + hueShift) % 360;
-      
-      // Convert back to RGB after hue shift
-      const [r, g, b] = hslToRgb(...selectedColor.hsl);
-      selectedColor.rgb = { r, g, b };
-      selectedColor.r = r;
-      selectedColor.g = g;
-      selectedColor.b = b;
-    }
+    // Apply hue shift to create variety - multiply by 50 degrees per article
+    const hueShift = (articleIndex * 50) % 360;
+    selectedColor.hsl = [...selectedColor.hsl];
+    selectedColor.hsl[0] = (selectedColor.hsl[0] + hueShift) % 360;
+    
+    // Also boost saturation slightly for more vibrant colors
+    selectedColor.hsl[1] = Math.min(100, selectedColor.hsl[1] * 1.1);
+    
+    // Convert back to RGB after hue shift
+    const [r, g, b] = hslToRgb(...selectedColor.hsl);
+    selectedColor.rgb = { r, g, b };
+    selectedColor.r = r;
+    selectedColor.g = g;
+    selectedColor.b = b;
     
     return selectedColor;
   };
