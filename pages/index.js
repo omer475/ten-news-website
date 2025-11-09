@@ -10,89 +10,6 @@ const GraphChart = dynamic(() => import('../components/GraphChart'), {
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
   });
 
-// Fixed Color Arrays - 20 colors each, all indices share the same color family
-// BLUR_COLORS: Light/soft colors for blurred backgrounds
-const BLUR_COLORS = [
-  '#7AB8F5', // Index 0: Light Blue
-  '#EE7AB8', // Index 1: Light Pink
-  '#B87AF5', // Index 2: Light Purple
-  '#7AE5A8', // Index 3: Light Emerald
-  '#FF9966', // Index 4: Light Orange
-  '#52D4E8', // Index 5: Light Cyan
-  '#F0638C', // Index 6: Light Magenta
-  '#6B7FD7', // Index 7: Light Indigo
-  '#52C9B8', // Index 8: Light Teal
-  '#FF8A66', // Index 9: Light Deep Orange
-  '#9370DB', // Index 10: Light Deep Purple
-  '#A8D46E', // Index 11: Light Green
-  '#FFB84D', // Index 12: Light Amber
-  '#52D4C4', // Index 13: Light Turquoise
-  '#D64A7A', // Index 14: Light Dark Pink
-  '#5AADFF', // Index 15: Light Bright Blue
-  '#FF6B66', // Index 16: Light Red
-  '#5AC9BA', // Index 17: Light Teal Green
-  '#C76FD4', // Index 18: Light Purple
-  '#FF9470'  // Index 19: Light Coral
-];
-
-// TITLE_HIGHLIGHT_COLORS: Vibrant/eye-catching colors for highlighted words in titles
-const TITLE_HIGHLIGHT_COLORS = [
-  '#0D6EFD', // Index 0: Electric Blue
-  '#FF1493', // Index 1: Deep Pink
-  '#9D00FF', // Index 2: Vivid Purple
-  '#00FF7F', // Index 3: Spring Green
-  '#FF4500', // Index 4: Orange Red
-  '#00CED1', // Index 5: Dark Turquoise
-  '#FF1493', // Index 6: Deep Pink
-  '#4169E1', // Index 7: Royal Blue
-  '#008B8B', // Index 8: Dark Cyan
-  '#FF4500', // Index 9: Orange Red
-  '#8A2BE2', // Index 10: Blue Violet
-  '#32CD32', // Index 11: Lime Green
-  '#FF8C00', // Index 12: Dark Orange
-  '#00CED1', // Index 13: Dark Turquoise
-  '#DC143C', // Index 14: Crimson
-  '#1E90FF', // Index 15: Dodger Blue
-  '#FF0000', // Index 16: Pure Red
-  '#20B2AA', // Index 17: Light Sea Green
-  '#9932CC', // Index 18: Dark Orchid
-  '#FF6347'  // Index 19: Tomato
-];
-
-// BULLET_TEXT_COLORS: Medium saturation colors for links in bullet points
-const BULLET_TEXT_COLORS = [
-  '#2E7DD1', // Index 0: Medium Blue
-  '#E85BA3', // Index 1: Medium Pink
-  '#A860E8', // Index 2: Medium Purple
-  '#4AC98E', // Index 3: Medium Emerald
-  '#FF7A4D', // Index 4: Medium Orange
-  '#00B5C8', // Index 5: Medium Cyan
-  '#E83E7A', // Index 6: Medium Magenta
-  '#5468C4', // Index 7: Medium Indigo
-  '#00A896', // Index 8: Medium Teal
-  '#FF6B3D', // Index 9: Medium Deep Orange
-  '#7E50C4', // Index 10: Medium Deep Purple
-  '#7BB857', // Index 11: Medium Green
-  '#FF9F1C', // Index 12: Medium Amber
-  '#00B5A8', // Index 13: Medium Turquoise
-  '#C93368', // Index 14: Medium Dark Pink
-  '#3D9EF0', // Index 15: Medium Bright Blue
-  '#F4564D', // Index 16: Medium Red
-  '#3DB5A3', // Index 17: Medium Teal Green
-  '#B659C8', // Index 18: Medium Purple
-  '#FF7C5C'  // Index 19: Medium Coral
-];
-
-// Function to get colors for an article based on its index
-function getColorsForArticle(articleIndex) {
-  const colorIndex = articleIndex % 20;
-  return {
-    blurColor: BLUR_COLORS[colorIndex],
-    titleHighlight: TITLE_HIGHLIGHT_COLORS[colorIndex],
-    bulletColor: BULLET_TEXT_COLORS[colorIndex]
-  };
-}
-
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -302,6 +219,89 @@ export default function Home() {
       return '';
     }
   };
+
+  // Fixed 20-color muted palette system
+  const BLUR_COLORS = [
+    '#5A7A9E', // 1. Muted Blue
+    '#9E6B7A', // 2. Muted Pink
+    '#8B7A9E', // 3. Muted Purple
+    '#6B9E7A', // 4. Muted Emerald
+    '#9E7A5A', // 5. Muted Orange
+    '#5A8E9E', // 6. Muted Cyan
+    '#9E5A7A', // 7. Muted Magenta
+    '#6B7A9E', // 8. Muted Indigo
+    '#5A9E8E', // 9. Muted Teal
+    '#9E6B5A', // 10. Muted Deep Orange
+    '#7A6B9E', // 11. Muted Deep Purple
+    '#7A9E6B', // 12. Muted Green
+    '#9E8B5A', // 13. Muted Amber
+    '#5A9E8B', // 14. Muted Turquoise
+    '#9E5A6B', // 15. Muted Dark Pink
+    '#5A7A9E', // 16. Muted Bright Blue
+    '#9E5A5A', // 17. Muted Red
+    '#5A9E8B', // 18. Muted Teal Green
+    '#8B6B9E', // 19. Muted Light Purple
+    '#9E7A6B'  // 20. Muted Coral
+  ];
+
+  const TITLE_HIGHLIGHT_COLORS = [
+    '#D4DDE6', // 1. Very Light Blue
+    '#E6D4DD', // 2. Very Light Pink
+    '#DDD4E6', // 3. Very Light Purple
+    '#D4E6DD', // 4. Very Light Emerald
+    '#E6DDD4', // 5. Very Light Orange
+    '#D4E1E6', // 6. Very Light Cyan
+    '#E6D4E1', // 7. Very Light Magenta
+    '#D4D9E6', // 8. Very Light Indigo
+    '#D4E6E1', // 9. Very Light Teal
+    '#E6D9D4', // 10. Very Light Deep Orange
+    '#DDD4E6', // 11. Very Light Deep Purple
+    '#DDE6D4', // 12. Very Light Green
+    '#E6E1D4', // 13. Very Light Amber
+    '#D4E6E1', // 14. Very Light Turquoise
+    '#E6D4D9', // 15. Very Light Dark Pink
+    '#D4DDE6', // 16. Very Light Bright Blue
+    '#E6D4D4', // 17. Very Light Red
+    '#D4E6E1', // 18. Very Light Teal Green
+    '#E1D4E6', // 19. Very Light Purple
+    '#E6DDD9'  // 20. Very Light Coral
+  ];
+
+  const BULLET_TEXT_COLORS = [
+    '#6B8FB5', // 1. Slightly Saturated Blue
+    '#B5788F', // 2. Slightly Saturated Pink
+    '#A287B5', // 3. Slightly Saturated Purple
+    '#78B58F', // 4. Slightly Saturated Emerald
+    '#B58F6B', // 5. Slightly Saturated Orange
+    '#6BA3B5', // 6. Slightly Saturated Cyan
+    '#B56B8F', // 7. Slightly Saturated Magenta
+    '#788FB5', // 8. Slightly Saturated Indigo
+    '#6BB5A3', // 9. Slightly Saturated Teal
+    '#B5786B', // 10. Slightly Saturated Deep Orange
+    '#8F78B5', // 11. Slightly Saturated Deep Purple
+    '#8FB578', // 12. Slightly Saturated Green
+    '#B5A26B', // 13. Slightly Saturated Amber
+    '#6BB5A2', // 14. Slightly Saturated Turquoise
+    '#B56B78', // 15. Slightly Saturated Dark Pink
+    '#6B8FB5', // 16. Slightly Saturated Bright Blue
+    '#B56B6B', // 17. Slightly Saturated Red
+    '#6BB5A2', // 18. Slightly Saturated Teal Green
+    '#A278B5', // 19. Slightly Saturated Light Purple
+    '#B58F78'  // 20. Slightly Saturated Coral
+  ];
+
+  // Get colors for an article based on its index
+  const getColorsForArticle = (articleIndex) => {
+    const colorIndex = articleIndex % 20;
+    
+    return {
+      blurColor: BLUR_COLORS[colorIndex],
+      highlight: TITLE_HIGHLIGHT_COLORS[colorIndex],
+      link: BULLET_TEXT_COLORS[colorIndex]
+    };
+  };
+
+  // Old dynamic color extraction functions removed - now using fixed muted color palette
 
   // Category color mapping system - Updated with exact brand colors
   const getCategoryColors = (category) => {
@@ -743,12 +743,115 @@ The article concludes with forward-looking analysis and what readers should watc
     }
   };
 
+  // Helper: Convert RGB to HSL
+  const rgbToHsl = (r, g, b) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+        default: h = 0;
+      }
+    }
+    return [h * 360, s * 100, l * 100];
+  };
+
+  // Helper: Convert HSL to RGB
+  const hslToRgb = (h, s, l) => {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  };
+
+  // Calculate relative luminance for contrast checking
+  const getLuminance = (r, g, b) => {
+    const [rs, gs, bs] = [r, g, b].map(val => {
+      val = val / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  // Calculate contrast ratio between two colors
+  const getContrastRatio = (rgb1, rgb2) => {
+    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
+    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  // Check if color is too close to white
+  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
+    // Check RGB values - if all are above 230, it's very close to white
+    if (r > 230 && g > 230 && b > 230) return true;
+    
+    // Check lightness in HSL
+    const [h, s, l] = rgbToHsl(r, g, b);
+    if (l > minLightness) return true;
+    
+    // Additional check: if saturation is very low and lightness is high
+    if (s < 5 && l > 80) return true;
+    
+    return false;
+  };
+
+  // Get fallback color based on background hue
+  const getFallbackColorByHue = (hue) => {
+    // Blue range: 200-260 degrees
+    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
+    
+    // Green range: 100-180 degrees
+    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
+    
+    // Orange/Red range: 0-50 and 320-360 degrees
+    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
+    
+    // Default: Gray/neutral
+    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
+  };
+
+  // Color transformation helpers removed - now using fixed muted color palette
+
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, colors, category = null) => {
     if (!text) return '';
     
-    // Use fixed color from color arrays (always provided)
-    const linkColor = colors?.link || '#000000';
+    const linkColor = colors?.link || 
+      (category ? getCategoryColors(category).primary : '#000000');
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -768,8 +871,8 @@ The article concludes with forward-looking analysis and what readers should watc
   const renderTitleWithHighlight = (text, colors, category = null) => {
     if (!text) return '';
     
-    // Use fixed color from color arrays (always provided)
-    const highlightColor = colors?.highlight || '#ffffff';
+    const highlightColor = colors?.highlight || 
+      (category ? getCategoryColors(category).primary : '#ffffff');
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -2767,28 +2870,11 @@ The article concludes with forward-looking analysis and what readers should watc
                                 return newSet;
                               });
                               
-                              // Use pre-computed blur color if available, otherwise extract
-                              if (story.blurColor) {
-                                // Use pre-computed color from article data
-                                setImageDominantColors(prev => ({ 
-                                  ...prev, 
-                                  [index]: { 
-                                    blurColor: story.blurColor,
-                                    // Still need to extract for highlight/link colors
-                                    ...(prev[index] || {})
-                                  }
-                                }));
-                              }
-                              
-                              // Assign colors from fixed color arrays
+                              // Use fixed muted color palette based on article index
                               const colors = getColorsForArticle(index);
-                              setImageDominantColors(prev => ({
-                                ...prev,
-                                [index]: {
-                                  blurColor: colors.blurColor,
-                                  highlight: colors.titleHighlight,
-                                  link: colors.bulletColor
-                                }
+                              setImageDominantColors(prev => ({ 
+                                ...prev, 
+                                [index]: colors
                               }));
                               // Ensure image is visible and persistent
                               e.target.style.opacity = '1';
@@ -2930,7 +3016,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
-                          color: '#ffffff'
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                         </div>
                       )}
