@@ -383,7 +383,7 @@ export default function Home() {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={index} style={getCategoryBoldStyle(category)}>{part.slice(2, -2)}</strong>;
       }
-      return <span key={i}>{part}</span>;
+      return <span key={index}>{part}</span>;
     });
   };
 
