@@ -221,139 +221,164 @@ export default function Home() {
   };
 
   // Extract color candidates using enhanced frequency analysis
-  // Step 1: Extract top 10 most frequent colors from image
-  const extractTop10DominantColors = (pixels) => {
-    const colorFrequency = {};
-    
-    // Sample every 10th pixel for performance (step by 40 in RGBA array)
-    for (let i = 0; i < pixels.length; i += 40) {
-      const r = Math.round(pixels[i] / 15) * 15;      // Quantize to nearest 15
-      const g = Math.round(pixels[i + 1] / 15) * 15;
-      const b = Math.round(pixels[i + 2] / 15) * 15;
-      const alpha = pixels[i + 3];
-      
-      // Skip transparent pixels
-      if (alpha < 125) continue;
-      
-      const key = `${r},${g},${b}`;
-      colorFrequency[key] = (colorFrequency[key] || 0) + 1;
-    }
-    
-    // Get top 10 colors by frequency
-    const top10Colors = Object.entries(colorFrequency)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([key]) => {
-        const [r, g, b] = key.split(',').map(Number);
-        return { r, g, b };
-      });
-    
-    return top10Colors;
+  // Helper function for hex conversion
+  const toHex = (n) => {
+    const hex = Math.round(n).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
   };
 
-  // Step 2: Filter out boring colors (saturation < 35%)
+  // Filter colors to keep only colorful ones (saturation >= 35%)
   const filterColorfulColors = (colors) => {
-    const colorfulColors = [];
-    
-    for (const color of colors) {
-      const [h, s, l] = rgbToHsl(color.r, color.g, color.b);
-      
-      // Keep only colors with saturation >= 35%
-      if (s >= 35) {
-        colorfulColors.push({
-          rgb: color,
-          hsl: { h, s, l }
-        });
-      }
-    }
-    
-    return colorfulColors;
+    return colors.filter(color => {
+      const [h, s, l] = color.hsl;
+      return s >= 35 && l >= 20 && l <= 80; // Colorful, not too dark/light
+    });
   };
 
-  // Step 3: Fallback - Find most saturated pixel in entire image
-  const findMostSaturatedColorInImage = (pixels) => {
-    let maxSaturation = 0;
-    let mostSaturatedColor = { r: 100, g: 100, b: 200 }; // Default blue
+  // Extract diverse color candidates from image
+  const extractColorfulCandidates = (pixels, width, height) => {
+    const colorMap = {};
     
-    // Sample every 40th pixel (step by 160 in RGBA array)
-    for (let i = 0; i < pixels.length; i += 160) {
+    // Sample pixels (every 10th pixel)
+    for (let i = 0; i < pixels.length; i += 40) {
       const r = pixels[i];
       const g = pixels[i + 1];
       const b = pixels[i + 2];
       const alpha = pixels[i + 3];
       
-      if (alpha < 125) continue;
-      
-      const [h, s, l] = rgbToHsl(r, g, b);
-      
-      // Find highest saturation with reasonable lightness
-      if (s > maxSaturation && l >= 20 && l <= 80) {
-        maxSaturation = s;
-        mostSaturatedColor = { r, g, b };
+      // Skip transparent or extreme pixels
+      if (alpha < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10)) {
+        continue;
       }
+      
+      // Round to group similar colors
+      const rKey = Math.round(r / 15) * 15;
+      const gKey = Math.round(g / 15) * 15;
+      const bKey = Math.round(b / 15) * 15;
+      const key = `${rKey},${gKey},${bKey}`;
+      
+      colorMap[key] = (colorMap[key] || 0) + 1;
     }
     
-    const [h, s, l] = rgbToHsl(mostSaturatedColor.r, mostSaturatedColor.g, mostSaturatedColor.b);
+    // Get top 20 most frequent colors
+    const sortedColors = Object.entries(colorMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([key]) => {
+        const [r, g, b] = key.split(',').map(Number);
+        const hsl = rgbToHsl(r, g, b);
+        return { r, g, b, hsl, rgb: { r, g, b } };
+      });
     
-    return {
-      rgb: mostSaturatedColor,
-      hsl: { h, s, l }
-    };
+    return sortedColors;
   };
 
-  // Step 8: Main color extraction function with new workflow
+  // Select color based on article index for variety
+  const selectColorForArticle = (colorCandidates, articleIndex) => {
+    // Filter to colorful only
+    let colorfulColors = filterColorfulColors(colorCandidates);
+    
+    // If no colorful colors, use most saturated from all candidates
+    if (colorfulColors.length === 0) {
+      const sortedBySaturation = colorCandidates.sort((a, b) => b.hsl[1] - a.hsl[1]);
+      colorfulColors = sortedBySaturation.slice(0, 1);
+    }
+    
+    // Use article index to cycle through colors
+    const colorIndex = articleIndex % colorfulColors.length;
+    const selectedColor = { ...colorfulColors[colorIndex] };
+    
+    // Add hue variation if limited colors available
+    if (colorfulColors.length < 3) {
+      const hueShift = (articleIndex * 30) % 360;
+      selectedColor.hsl = [...selectedColor.hsl];
+      selectedColor.hsl[0] = (selectedColor.hsl[0] + hueShift) % 360;
+      
+      // Convert back to RGB after hue shift
+      const [r, g, b] = hslToRgb(...selectedColor.hsl);
+      selectedColor.rgb = { r, g, b };
+      selectedColor.r = r;
+      selectedColor.g = g;
+      selectedColor.b = b;
+    }
+    
+    return selectedColor;
+  };
+
+  // Create blur color (dark + muted)
+  const createBlurColor = (hsl) => {
+    const [h, s, l] = hsl;
+    const newL = Math.max(15, Math.min(35, l * 0.4)); // Dark: 15-35%
+    const newS = Math.min(60, s * 0.8); // Muted saturation
+    return [h, newS, newL];
+  };
+
+  // Create title highlight color (lighter, subtle)
+  const createTitleHighlightColor = (blurHsl) => {
+    const [h, s, l] = blurHsl;
+    const newL = Math.min(85, l + 50); // Much lighter
+    const newS = Math.min(70, s * 1.2); // Slightly more saturated
+    return [h, newS, newL];
+  };
+
+  // Create bullet text color (between blur and title)
+  const createBulletTextColor = (blurHsl, titleHsl) => {
+    const [h, s1, l1] = blurHsl;
+    const [, s2, l2] = titleHsl;
+    const midL = (l1 + l2) / 2 + 10; // Between the two, slightly lighter
+    const midS = (s1 + s2) / 2 + 5; // Average saturation
+    return [h, Math.min(75, midS), Math.min(70, midL)];
+  };
+
+  // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Resize to 100x100 for fast processing
-      canvas.width = 100;
-      canvas.height = 100;
-      ctx.drawImage(imgElement, 0, 0, 100, 100);
+      canvas.width = imgElement.naturalWidth || imgElement.width;
+      canvas.height = imgElement.naturalHeight || imgElement.height;
+      ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
       
-      // Get image data
-      const imageData = ctx.getImageData(0, 0, 100, 100);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
       
-      // Step 1: Extract top 10 most frequent colors
-      const top10Colors = extractTop10DominantColors(pixels);
+      // Extract colorful candidates
+      const candidates = extractColorfulCandidates(pixels, canvas.width, canvas.height);
       
-      // Step 2: Filter to keep only colorful colors (saturation >= 35%)
-      let colorfulColors = filterColorfulColors(top10Colors);
+      // Select color based on article index
+      const selectedColor = selectColorForArticle(candidates, storyIndex);
       
-      // Step 3: If no colorful colors found, search for most saturated pixel
-      if (colorfulColors.length === 0) {
-        colorfulColors = [findMostSaturatedColorInImage(pixels)];
-      }
+      // Create blur color
+      const blurHsl = createBlurColor(selectedColor.hsl);
+      const [bR, bG, bB] = hslToRgb(...blurHsl);
+      const blurColorHex = `#${toHex(bR)}${toHex(bG)}${toHex(bB)}`;
       
-      // Step 4: Use the first (most frequent) colorful color
-      const selectedColor = colorfulColors[0];
+      // Create title highlight color  
+      const highlightHsl = createTitleHighlightColor(blurHsl);
+      const [hR, hG, hB] = hslToRgb(...highlightHsl);
+      const highlightColor = `rgb(${hR}, ${hG}, ${hB})`;
       
-      // Step 5: Create blur color (dark + muted)
-      const blurColor = createBlurColor(selectedColor.hsl);
+      // Create bullet text color
+      const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
+      const [lR, lG, lB] = hslToRgb(...linkHsl);
+      const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
       
-      // Step 6: Create title highlight color (lighter, subtle)
-      const titleHighlight = createTitleHighlightColor(blurColor.hsl);
-      
-      // Step 7: Create bullet text color (between blur and title)
-      const bulletColor = createBulletTextColor(blurColor.hsl, titleHighlight.hsl);
-      
-      // Store all three colors
-      setImageDominantColors(prev => ({ 
-        ...prev, 
-        [storyIndex]: { 
-          blurColor: blurColor.hex,
-          highlight: titleHighlight.hex,
-          link: bulletColor.hex
+      // Store all colors
+      setImageDominantColors(prev => ({
+        ...prev,
+        [storyIndex]: {
+          blurColor: blurColorHex,
+          highlight: highlightColor,
+          link: linkColor
         }
       }));
     } catch (error) {
-      console.error('Error extracting dominant color:', error);
-      // Fallback to dark blue-grey
-      setImageDominantColors(prev => ({ 
-        ...prev, 
-        [storyIndex]: { 
+      console.error('Color extraction error:', error);
+      // Fallback colors
+      setImageDominantColors(prev => ({
+        ...prev,
+        [storyIndex]: {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
           link: '#5A6F8E'
@@ -903,64 +928,6 @@ The article concludes with forward-looking analysis and what readers should watc
     return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
   };
 
-  // Step 4: RGB to Hex conversion
-  const rgbToHex = (r, g, b) => {
-    return '#' + [r, g, b].map(x => {
-      const hex = Math.round(x).toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
-  };
-
-  // Step 5: Create blur color (dark + muted from extracted color)
-  const createBlurColor = (hsl) => {
-    const { h, s, l } = hsl;
-    // Make it dark and muted
-    const blurHsl = {
-      h: h,                              // Keep same hue
-      s: Math.max(s * 0.5, 20),         // Reduce saturation to 50% (min 20%)
-      l: Math.min(l * 0.6, 35)          // Darken to 60% of original (max 35%)
-    };
-    
-    const [r, g, b] = hslToRgb(blurHsl.h, blurHsl.s, blurHsl.l);
-    return {
-      hex: rgbToHex(r, g, b),
-      hsl: blurHsl
-    };
-  };
-
-  // Step 6: Create title highlight color (light, subtle - like images 4-8)
-  const createTitleHighlightColor = (blurHsl) => {
-    const { h, s, l } = blurHsl;
-    // Make it lighter and slightly more saturated than blur
-    const highlightHsl = {
-      h: h,                              // Same hue family
-      s: Math.min(s * 1.3, 40),         // Slightly more saturated (max 40%)
-      l: Math.min(l + 35, 75)           // Much lighter (add 35%, max 75%)
-    };
-    
-    const [r, g, b] = hslToRgb(highlightHsl.h, highlightHsl.s, highlightHsl.l);
-    return {
-      hex: rgbToHex(r, g, b),
-      hsl: highlightHsl
-    };
-  };
-
-  // Step 7: Create bullet text color (between blur and title)
-  const createBulletTextColor = (blurHsl, titleHsl) => {
-    const { h } = blurHsl;
-    // Medium saturation and lightness - between blur and title
-    const bulletHsl = {
-      h: h,                                     // Same hue family
-      s: (blurHsl.s + titleHsl.s) / 2,        // Average of blur and title saturation
-      l: (blurHsl.l + titleHsl.l) / 2         // Average of blur and title lightness
-    };
-    
-    const [r, g, b] = hslToRgb(bulletHsl.h, bulletHsl.s, bulletHsl.l);
-    return {
-      hex: rgbToHex(r, g, b),
-      hsl: bulletHsl
-    };
-  };
 
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, colors, category = null) => {
