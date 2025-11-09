@@ -3712,7 +3712,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                   transition: 'height 0.3s ease-in-out',
                                   minHeight: '85px',
                                   zIndex: '10',
-                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden',
+                                  '--c-glass': imageDominantColors[index]?.blurColor || '#ffffff'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
@@ -3834,7 +3835,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                 transition: 'height 0.3s ease-in-out',
                                 minHeight: '85px',
                                 zIndex: '10',
-                                overflow: expandedTimeline[index] ? 'visible' : 'hidden'
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
+                                '--c-glass': imageDominantColors[index]?.blurColor || '#ffffff'
                               }}>
                               <div className="glass-filter"></div>
                               <div className="glass-overlay"></div>
@@ -3980,7 +3982,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                 left: '0',
                                 right: '0',
                                 height: '200px',
-                                background: '#ffffff',
+                                background: imageDominantColors[index]?.blurColor ? 
+                                  `color-mix(in srgb, ${imageDominantColors[index].blurColor} 25%, white)` : 
+                                  '#ffffff',
                                 borderRadius: '8px',
                                 padding: '12px',
                                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -3988,7 +3992,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                flexDirection: 'column'
+                                flexDirection: 'column',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)'
                               }}>
                               <div style={{
                                 fontSize: '14px',
@@ -4027,7 +4033,8 @@ The article concludes with forward-looking analysis and what readers should watc
                                   minHeight: '85px',
                                   zIndex: '10',
                                   overflow: 'hidden',
-                                  display: 'flex'
+                                  display: 'flex',
+                                  '--c-glass': imageDominantColors[index]?.blurColor || '#ffffff'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
