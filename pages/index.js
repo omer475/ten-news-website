@@ -10,6 +10,89 @@ const GraphChart = dynamic(() => import('../components/GraphChart'), {
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
   });
 
+// Fixed Color Arrays - 20 colors each, all indices share the same color family
+// BLUR_COLORS: Light/soft colors for blurred backgrounds
+const BLUR_COLORS = [
+  '#7AB8F5', // Index 0: Light Blue
+  '#EE7AB8', // Index 1: Light Pink
+  '#B87AF5', // Index 2: Light Purple
+  '#7AE5A8', // Index 3: Light Emerald
+  '#FF9966', // Index 4: Light Orange
+  '#52D4E8', // Index 5: Light Cyan
+  '#F0638C', // Index 6: Light Magenta
+  '#6B7FD7', // Index 7: Light Indigo
+  '#52C9B8', // Index 8: Light Teal
+  '#FF8A66', // Index 9: Light Deep Orange
+  '#9370DB', // Index 10: Light Deep Purple
+  '#A8D46E', // Index 11: Light Green
+  '#FFB84D', // Index 12: Light Amber
+  '#52D4C4', // Index 13: Light Turquoise
+  '#D64A7A', // Index 14: Light Dark Pink
+  '#5AADFF', // Index 15: Light Bright Blue
+  '#FF6B66', // Index 16: Light Red
+  '#5AC9BA', // Index 17: Light Teal Green
+  '#C76FD4', // Index 18: Light Purple
+  '#FF9470'  // Index 19: Light Coral
+];
+
+// TITLE_HIGHLIGHT_COLORS: Vibrant/eye-catching colors for highlighted words in titles
+const TITLE_HIGHLIGHT_COLORS = [
+  '#0D6EFD', // Index 0: Electric Blue
+  '#FF1493', // Index 1: Deep Pink
+  '#9D00FF', // Index 2: Vivid Purple
+  '#00FF7F', // Index 3: Spring Green
+  '#FF4500', // Index 4: Orange Red
+  '#00CED1', // Index 5: Dark Turquoise
+  '#FF1493', // Index 6: Deep Pink
+  '#4169E1', // Index 7: Royal Blue
+  '#008B8B', // Index 8: Dark Cyan
+  '#FF4500', // Index 9: Orange Red
+  '#8A2BE2', // Index 10: Blue Violet
+  '#32CD32', // Index 11: Lime Green
+  '#FF8C00', // Index 12: Dark Orange
+  '#00CED1', // Index 13: Dark Turquoise
+  '#DC143C', // Index 14: Crimson
+  '#1E90FF', // Index 15: Dodger Blue
+  '#FF0000', // Index 16: Pure Red
+  '#20B2AA', // Index 17: Light Sea Green
+  '#9932CC', // Index 18: Dark Orchid
+  '#FF6347'  // Index 19: Tomato
+];
+
+// BULLET_TEXT_COLORS: Medium saturation colors for links in bullet points
+const BULLET_TEXT_COLORS = [
+  '#2E7DD1', // Index 0: Medium Blue
+  '#E85BA3', // Index 1: Medium Pink
+  '#A860E8', // Index 2: Medium Purple
+  '#4AC98E', // Index 3: Medium Emerald
+  '#FF7A4D', // Index 4: Medium Orange
+  '#00B5C8', // Index 5: Medium Cyan
+  '#E83E7A', // Index 6: Medium Magenta
+  '#5468C4', // Index 7: Medium Indigo
+  '#00A896', // Index 8: Medium Teal
+  '#FF6B3D', // Index 9: Medium Deep Orange
+  '#7E50C4', // Index 10: Medium Deep Purple
+  '#7BB857', // Index 11: Medium Green
+  '#FF9F1C', // Index 12: Medium Amber
+  '#00B5A8', // Index 13: Medium Turquoise
+  '#C93368', // Index 14: Medium Dark Pink
+  '#3D9EF0', // Index 15: Medium Bright Blue
+  '#F4564D', // Index 16: Medium Red
+  '#3DB5A3', // Index 17: Medium Teal Green
+  '#B659C8', // Index 18: Medium Purple
+  '#FF7C5C'  // Index 19: Medium Coral
+];
+
+// Function to get colors for an article based on its index
+function getColorsForArticle(articleIndex) {
+  const colorIndex = articleIndex % 20;
+  return {
+    blurColor: BLUR_COLORS[colorIndex],
+    titleHighlight: TITLE_HIGHLIGHT_COLORS[colorIndex],
+    bulletColor: BULLET_TEXT_COLORS[colorIndex]
+  };
+}
+
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -217,207 +300,6 @@ export default function Home() {
       return `${weeks}w`;
     } catch (error) {
       return '';
-    }
-  };
-
-  // Extract color candidates using enhanced frequency analysis
-  const extractColorCandidates = (pixels, width, height) => {
-    const candidates = [];
-    const hueBuckets = {}; // Group by hue ranges (36° buckets = 10 ranges)
-    const saturatedColors = [];
-    
-    // Sample pixels (every 10th pixel for performance)
-    for (let i = 0; i < pixels.length; i += 40) { // RGBA, step by 40 = every 10 pixels
-      const r = pixels[i];
-      const g = pixels[i + 1];
-      const b = pixels[i + 2];
-      const alpha = pixels[i + 3];
-      
-      // Skip transparent, extreme light, or extreme dark pixels
-      if (alpha < 125 || (r > 250 && g > 250 && b > 250) || (r < 10 && g < 10 && b < 10)) {
-        continue;
-      }
-      
-      const [h, s, l] = rgbToHsl(r, g, b);
-      
-      // Track highly saturated colors
-      if (s > 40) {
-        saturatedColors.push({ r, g, b, h, s, l });
-      }
-      
-      // Group into hue buckets (10 ranges of 36°)
-      const hueRange = Math.floor(h / 36) * 36;
-      const satLevel = s > 60 ? 'high' : s > 30 ? 'medium' : 'low';
-      const bucketKey = `${hueRange}-${satLevel}`;
-      
-      if (!hueBuckets[bucketKey]) {
-        hueBuckets[bucketKey] = [];
-      }
-      hueBuckets[bucketKey].push({ r, g, b, h, s, l, count: 1 });
-    }
-    
-    // Get top colors from each bucket
-    Object.values(hueBuckets).forEach(bucket => {
-      if (bucket.length > 0) {
-        // Average the colors in this bucket
-        const avgR = Math.round(bucket.reduce((sum, c) => sum + c.r, 0) / bucket.length);
-        const avgG = Math.round(bucket.reduce((sum, c) => sum + c.g, 0) / bucket.length);
-        const avgB = Math.round(bucket.reduce((sum, c) => sum + c.b, 0) / bucket.length);
-        candidates.push({ r: avgR, g: avgG, b: avgB });
-      }
-    });
-    
-    // Add most saturated colors (top 5)
-    saturatedColors.sort((a, b) => b.s - a.s);
-    saturatedColors.slice(0, 5).forEach(color => {
-      candidates.push({ r: color.r, g: color.g, b: color.b });
-    });
-    
-    return candidates;
-  };
-
-  // Score a color candidate based on saturation, lightness, and hue
-  const scoreColorCandidate = (r, g, b) => {
-    const [h, s, l] = rgbToHsl(r, g, b);
-    let score = 0;
-    
-    // Rule 1: Saturation score (50 points max) - MOST IMPORTANT
-    if (s >= 40 && s <= 90) {
-      score += 50; // Best: vibrant but not overwhelming
-    } else if (s >= 30 && s < 40) {
-      score += 30; // Acceptable: somewhat muted
-    } else if (s < 30) {
-      score += 0; // Boring: grey/washed out - REJECT
-    } else if (s > 90) {
-      score += 35; // Very saturated: might be too intense
-    }
-    
-    // Rule 2: Lightness score (30 points max)
-    if (l >= 30 && l <= 70) {
-      score += 30; // Best: good contrast with white text
-    } else if ((l >= 20 && l < 30) || (l > 70 && l <= 85)) {
-      score += 15; // Acceptable but not ideal
-    } else {
-      score += 0; // Extreme: too dark or too light
-    }
-    
-    // Rule 3: Hue interest score (20 points max)
-    if (h >= 200 && h <= 260) {
-      score += 20; // Blues: professional, tech-focused
-    } else if ((h >= 0 && h <= 30) || (h >= 330 && h <= 360)) {
-      score += 20; // Reds/Oranges: warm, energetic
-    } else if (h >= 260 && h <= 330) {
-      score += 18; // Purples/Magentas: modern, creative
-    } else if (h >= 80 && h <= 160) {
-      score += 15; // Greens: natural, fresh
-    } else if (h >= 30 && h <= 80) {
-      score += 12; // Yellows: energetic, bright
-    }
-    
-    return score;
-  };
-
-  // Select the best blur background color from candidates
-  const selectBestBlurColor = (candidates) => {
-    if (candidates.length === 0) {
-      // Fallback: subtle blue-grey
-      const [r, g, b] = hslToRgb(210, 35, 50);
-      return { r, g, b };
-    }
-    
-    // Score all candidates
-    const scored = candidates.map(color => ({
-      ...color,
-      score: scoreColorCandidate(color.r, color.g, color.b)
-    }));
-    
-    // Sort by score (highest first)
-    scored.sort((a, b) => b.score - a.score);
-    
-    // Get best color
-    let best = scored[0];
-    const [h, s, l] = rgbToHsl(best.r, best.g, best.b);
-    
-    // Failsafe: if best color is still too boring (low saturation)
-    if (s < 25) {
-      // Check if any candidate has decent saturation
-      const maxSat = Math.max(...scored.map(c => rgbToHsl(c.r, c.g, c.b)[1]));
-      
-      if (maxSat < 20) {
-        // Image is truly monochrome - use subtle blue-grey
-        const [r, g, b] = hslToRgb(210, 35, 50);
-        return { r, g, b };
-      } else {
-        // Boost saturation of best color
-        const [r, g, b] = hslToRgb(h, 45, l);
-        return { r, g, b };
-      }
-    }
-    
-    return { r: best.r, g: best.g, b: best.b };
-  };
-
-  // Function to extract dominant color from image
-  const extractDominantColor = (imgElement, storyIndex) => {
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Set canvas size
-      canvas.width = imgElement.naturalWidth || imgElement.width;
-      canvas.height = imgElement.naturalHeight || imgElement.height;
-      
-      // Draw image on canvas
-      ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
-      
-      // Get image data
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const pixels = imageData.data;
-      
-      // Extract color candidates using new algorithm
-      const candidates = extractColorCandidates(pixels, canvas.width, canvas.height);
-      
-      // Select best color using scoring algorithm
-      const bestColor = selectBestBlurColor(candidates);
-      const { r, g, b } = bestColor;
-      
-      // Convert to hex for blur background
-      const toHex = (n) => {
-        const hex = Math.round(n).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-      };
-      const blurColorHex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-      
-      // Convert to HSL for highlight/link color transformations
-      const baseHsl = rgbToHsl(r, g, b);
-      
-      // Create highlight color (for titles - light pastel)
-      const highlightHsl = createHighlightColor(baseHsl);
-      const [hR, hG, hB] = hslToRgb(...highlightHsl);
-      const highlightColor = `rgb(${hR}, ${hG}, ${hB})`;
-      
-      // Create link color (for bullet text - saturated readable)
-      const linkHsl = createLinkColor(baseHsl);
-      const [lR, lG, lB] = hslToRgb(...linkHsl);
-      const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
-      
-      // Store all color variants including new blurColor
-      setImageDominantColors(prev => ({ 
-        ...prev, 
-        [storyIndex]: { 
-          original: `rgba(${r}, ${g}, ${b}, 1.0)`,
-          blurColor: blurColorHex,
-          highlight: highlightColor,
-          link: linkColor
-        }
-      }));
-    } catch (error) {
-      console.error('Error extracting dominant color:', error);
-      // Fallback to dark color
-      setImageDominantColors(prev => ({ 
-        ...prev, 
-        [storyIndex]: { original: 'rgba(0, 0, 0, 1.0)', light: 'rgba(50, 50, 50, 1.0)' }
-      }));
     }
   };
 
@@ -861,129 +743,12 @@ The article concludes with forward-looking analysis and what readers should watc
     }
   };
 
-  // Helper: Convert RGB to HSL
-  const rgbToHsl = (r, g, b) => {
-    r /= 255;
-    g /= 255;
-    b /= 255;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-
-    if (max === min) {
-      h = s = 0; // achromatic
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-        default: h = 0;
-      }
-    }
-    return [h * 360, s * 100, l * 100];
-  };
-
-  // Helper: Convert HSL to RGB
-  const hslToRgb = (h, s, l) => {
-    h /= 360;
-    s /= 100;
-    l /= 100;
-    let r, g, b;
-
-    if (s === 0) {
-      r = g = b = l; // achromatic
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-      };
-
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
-    }
-
-    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-  };
-
-  // Calculate relative luminance for contrast checking
-  const getLuminance = (r, g, b) => {
-    const [rs, gs, bs] = [r, g, b].map(val => {
-      val = val / 255;
-      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-  };
-
-  // Calculate contrast ratio between two colors
-  const getContrastRatio = (rgb1, rgb2) => {
-    const l1 = getLuminance(rgb1[0], rgb1[1], rgb1[2]);
-    const l2 = getLuminance(rgb2[0], rgb2[1], rgb2[2]);
-    const lighter = Math.max(l1, l2);
-    const darker = Math.min(l1, l2);
-    return (lighter + 0.05) / (darker + 0.05);
-  };
-
-  // Check if color is too close to white
-  const isTooCloseToWhite = (r, g, b, minLightness = 85) => {
-    // Check RGB values - if all are above 230, it's very close to white
-    if (r > 230 && g > 230 && b > 230) return true;
-    
-    // Check lightness in HSL
-    const [h, s, l] = rgbToHsl(r, g, b);
-    if (l > minLightness) return true;
-    
-    // Additional check: if saturation is very low and lightness is high
-    if (s < 5 && l > 80) return true;
-    
-    return false;
-  };
-
-  // Get fallback color based on background hue
-  const getFallbackColorByHue = (hue) => {
-    // Blue range: 200-260 degrees
-    if (hue >= 200 && hue <= 260) return { r: 26, g: 39, b: 57 }; // #1A2739 dark navy
-    
-    // Green range: 100-180 degrees
-    if (hue >= 100 && hue <= 180) return { r: 30, g: 56, b: 42 }; // #1E382A forest green
-    
-    // Orange/Red range: 0-50 and 320-360 degrees
-    if ((hue >= 0 && hue <= 50) || (hue >= 320 && hue <= 360)) return { r: 59, g: 36, b: 26 }; // #3B241A deep brown
-    
-    // Default: Gray/neutral
-    return { r: 43, g: 43, b: 43 }; // #2B2B2B graphite gray
-  };
-
-  // Create light highlight color for titles (pastel, light version)
-  const createHighlightColor = (baseHsl) => {
-    const [h, s, l] = baseHsl;
-    const newL = l + (100 - l) * 0.5; // Lighten to pastel
-    const newS = Math.min(s * 1.15, 100); // Boost saturation
-    return [h, newS, newL];
-  };
-
-  // Create saturated link color for bullet text (readable on white)
-  const createLinkColor = (baseHsl) => {
-    const [h, s, l] = baseHsl;
-    let newL = l > 50 ? 40 : (l < 30 ? 35 : l);
-    const newS = 75;
-    return [h, newS, newL];
-  };
-
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, colors, category = null) => {
     if (!text) return '';
     
-    const linkColor = colors?.link || 
-      (category ? getCategoryColors(category).primary : '#000000');
+    // Use fixed color from color arrays (always provided)
+    const linkColor = colors?.link || '#000000';
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -1003,8 +768,8 @@ The article concludes with forward-looking analysis and what readers should watc
   const renderTitleWithHighlight = (text, colors, category = null) => {
     if (!text) return '';
     
-    const highlightColor = colors?.highlight || 
-      (category ? getCategoryColors(category).primary : '#ffffff');
+    // Use fixed color from color arrays (always provided)
+    const highlightColor = colors?.highlight || '#ffffff';
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -3015,14 +2780,16 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }));
                               }
                               
-                              // Always extract for highlight/link colors
-                              if (e.target.complete && e.target.naturalWidth > 0) {
-                                try {
-                                  extractDominantColor(e.target, index);
-                                } catch (error) {
-                                  console.warn('Color extraction failed:', error);
+                              // Assign colors from fixed color arrays
+                              const colors = getColorsForArticle(index);
+                              setImageDominantColors(prev => ({
+                                ...prev,
+                                [index]: {
+                                  blurColor: colors.blurColor,
+                                  highlight: colors.titleHighlight,
+                                  link: colors.bulletColor
                                 }
-                              }
+                              }));
                               // Ensure image is visible and persistent
                               e.target.style.opacity = '1';
                               e.target.style.visibility = 'visible';
