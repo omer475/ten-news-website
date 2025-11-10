@@ -332,16 +332,6 @@ export default function Home() {
     return [h, Math.min(75, midS), Math.min(70, midL)];
   };
 
-  // Create info component color (different from bullet text, same family)
-  const createInfoComponentColor = (blurHsl) => {
-    const [h, s, l] = blurHsl;
-    // Shift hue slightly (15 degrees) and adjust saturation/lightness for variety
-    const newH = (h + 15) % 360; // Slight hue shift for variety
-    const newS = Math.min(80, s * 1.3); // More saturated
-    const newL = Math.min(55, l + 25); // Lighter than blur
-    return [newH, newS, newL];
-  };
-
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -376,19 +366,13 @@ export default function Home() {
       const [lR, lG, lB] = hslToRgb(...linkHsl);
       const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
       
-      // Create info component color (different but same family)
-      const infoHsl = createInfoComponentColor(blurHsl);
-      const [iR, iG, iB] = hslToRgb(...infoHsl);
-      const infoColor = `rgb(${iR}, ${iG}, ${iB})`;
-      
       // Store all colors
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: blurColorHex,
           highlight: highlightColor,
-          link: linkColor,
-          info: infoColor
+          link: linkColor
         }
       }));
     } catch (error) {
@@ -399,8 +383,7 @@ export default function Home() {
         [storyIndex]: {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
-          link: '#5A6F8E',
-          info: '#4A7FA0'
+          link: '#5A6F8E'
         }
       }));
     }
@@ -2879,25 +2862,25 @@ The article concludes with forward-looking analysis and what readers should watc
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Full Width, No Gaps */}
+                    {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: '38vh',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      boxShadow: 'none',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: '38vh'
+                      maxHeight: 'calc(38vh - 3px)'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -3084,48 +3067,47 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Extended Blur Overlay - Continues from image to switch button */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
                       <div style={{
-                        position: 'fixed',
-                        top: 'calc(38vh * 0.6)',
+                        position: 'absolute',
+                        top: '20%',
                         left: '0',
-                        right: '0',
-                        height: 'calc(38vh * 0.4 + 100px)',
+                        width: '100%',
+                        height: '80%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 8%, rgba(0,0,0,0.6) 15%, rgba(0,0,0,0.85) 25%, rgba(0,0,0,1) 35%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0.15) 92%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 8%, rgba(0,0,0,0.6) 15%, rgba(0,0,0,0.85) 25%, rgba(0,0,0,1) 35%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0.15) 92%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
-                        zIndex: 3
+                        zIndex: 2
                       }}></div>
                       
-                      {/* Title Overlay with Image-Based Color Gradient - Starts at 30% */}
-                      {/* Extended below image to keep title visible */}
+                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
-                        position: 'fixed',
-                        top: 'calc(38vh * 0.3)',
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
                         left: 0,
                         right: 0,
-                        height: 'calc(38vh * 0.7 + 60px)',
-                        padding: '0 16px 4px 16px',
+                        padding: '24px 16px 20px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}00 0%, 
-                              ${imageDominantColors[index].blurColor}33 10%, 
-                              ${imageDominantColors[index].blurColor}66 20%, 
-                              ${imageDominantColors[index].blurColor}99 35%, 
-                              ${imageDominantColors[index].blurColor}CC 50%, 
-                              ${imageDominantColors[index].blurColor}E6 65%, 
-                              ${imageDominantColors[index].blurColor}F2 75%, 
-                              ${imageDominantColors[index].blurColor}FA 85%, 
-                              ${imageDominantColors[index].blurColor}FF 92%, 
+                              ${imageDominantColors[index].blurColor}26 0%, 
+                              ${imageDominantColors[index].blurColor}40 10%, 
+                              ${imageDominantColors[index].blurColor}73 30%, 
+                              ${imageDominantColors[index].blurColor}A6 50%, 
+                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}F2 80%, 
+                              ${imageDominantColors[index].blurColor}FA 90%, 
+                              ${imageDominantColors[index].blurColor}FF 95%, 
                               ${imageDominantColors[index].blurColor}FF 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.95) 75%, rgba(0,0,0,0.98) 85%, rgba(0,0,0,1.0) 92%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 4,
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
+                        zIndex: 2,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
@@ -3145,11 +3127,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: '38vh',
+                      top: '3px',
+                      left: '6px',
+                      right: '6px',
+                      width: 'calc(100vw - 12px)',
+                      height: 'calc(38vh - 3px)',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3157,7 +3139,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
@@ -3800,7 +3782,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   <div style={{
                                     fontSize: '10px',
                                     fontWeight: '700',
-                                    color: imageDominantColors[index]?.info || '#000000',
+                                    color: imageDominantColors[index]?.highlight || '#000000',
                                     marginBottom: '4px',
                                     letterSpacing: '0.3px',
                                     textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
@@ -3820,7 +3802,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                       <GraphChart 
                                         graph={story.graph} 
                                         expanded={expandedGraph[index]} 
-                                        accentColor={imageDominantColors[index]?.info || '#3b82f6'}
+                                        accentColor={imageDominantColors[index]?.highlight || '#3b82f6'}
                                       />
                                     ) : (
                                       <div style={{
@@ -3929,13 +3911,13 @@ The article concludes with forward-looking analysis and what readers should watc
                                   top: '0px',
                                   bottom: '8px',
                                   width: '2px',
-                                  background: imageDominantColors[index]?.info 
-                                    ? `linear-gradient(180deg, ${imageDominantColors[index].info}, ${imageDominantColors[index].highlight})`
+                                  background: imageDominantColors[index]?.highlight 
+                                    ? `linear-gradient(180deg, ${imageDominantColors[index].highlight}, ${imageDominantColors[index].blurColor})`
                                     : 'linear-gradient(180deg, #3b82f6, #93c5fd)',
                                   zIndex: '0',
                                   borderRadius: '2px',
-                                  boxShadow: imageDominantColors[index]?.info 
-                                    ? `0 2px 4px ${imageDominantColors[index].info}40`
+                                  boxShadow: imageDominantColors[index]?.highlight 
+                                    ? `0 2px 4px ${imageDominantColors[index].highlight}40`
                                     : '0 2px 4px rgba(59, 130, 246, 0.3)'
                                 }}></div>
                                 <div style={{
@@ -3963,18 +3945,18 @@ The article concludes with forward-looking analysis and what readers should watc
                                       height: '8px',
                                       borderRadius: '50%',
                                       background: idx === story.timeline.length - 1 
-                                        ? (imageDominantColors[index]?.info || '#3b82f6')
+                                        ? (imageDominantColors[index]?.highlight || '#3b82f6')
                                         : 'white',
-                                      border: `2px solid ${imageDominantColors[index]?.info || '#3b82f6'}`,
+                                      border: `2px solid ${imageDominantColors[index]?.highlight || '#3b82f6'}`,
                                       zIndex: '2',
-                                      boxShadow: imageDominantColors[index]?.info 
-                                        ? `0 2px 4px ${imageDominantColors[index].info}33`
+                                      boxShadow: imageDominantColors[index]?.highlight 
+                                        ? `0 2px 4px ${imageDominantColors[index].highlight}33`
                                         : '0 2px 4px rgba(59, 130, 246, 0.2)'
                                     }}></div>
                                     <div style={{
                                       fontSize: '10px',
                                       fontWeight: '700',
-                                      color: imageDominantColors[index]?.info || '#000000',
+                                      color: imageDominantColors[index]?.highlight || '#000000',
                                       marginBottom: '2px',
                                       letterSpacing: '0.3px',
                                       marginTop: '0px',
@@ -4103,7 +4085,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                           letterSpacing: '0.5px'
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
-                                          color: imageDominantColors[index]?.info || '#000000',
+                                          color: imageDominantColors[index]?.highlight || '#000000',
                                           fontSize: '18px',
                                           fontWeight: '800',
                                           textAlign: 'center',
