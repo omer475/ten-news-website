@@ -3090,13 +3090,13 @@ The article concludes with forward-looking analysis and what readers should watc
                         top: 'calc(38vh * 0.6)',
                         left: '0',
                         right: '0',
-                        height: 'calc(38vh * 0.4 + 70px)',
+                        height: 'calc(38vh * 0.4 + 100px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.75) 30%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.75) 30%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 8%, rgba(0,0,0,0.6) 15%, rgba(0,0,0,0.85) 25%, rgba(0,0,0,1) 35%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0.15) 92%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 8%, rgba(0,0,0,0.6) 15%, rgba(0,0,0,0.85) 25%, rgba(0,0,0,1) 35%, rgba(0,0,0,1) 55%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0.15) 92%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
-                        zIndex: 2
+                        zIndex: 3
                       }}></div>
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
