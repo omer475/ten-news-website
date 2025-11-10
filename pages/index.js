@@ -3108,10 +3108,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 40px 16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
                               ${imageDominantColors[index].blurColor}26 0%, 
@@ -3126,6 +3122,23 @@ The article concludes with forward-looking analysis and what readers should watc
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
+                      }}></div>
+                      )}
+                      
+                      {/* Title - Centered at 38vh line (image bottom edge) */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'fixed',
+                        top: '38vh',
+                        left: '0',
+                        right: '0',
+                        transform: 'translateY(-50%)',
+                        padding: '0 16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 3,
+                        pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
@@ -3134,7 +3147,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
                           color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)',
+                          textAlign: 'center'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                         </div>
                       )}
