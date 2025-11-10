@@ -3140,6 +3140,32 @@ The article concludes with forward-looking analysis and what readers should watc
                       )}
                     </div>
                     
+                    {/* Smooth Blur Continuation - Fades from image to bullet text */}
+                    {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'fixed',
+                        top: 'calc(38vh - 3px)',
+                        left: '6px',
+                        right: '6px',
+                        height: '120px',
+                        background: imageDominantColors[index]?.blurColor
+                          ? `linear-gradient(to bottom,
+                              ${imageDominantColors[index].blurColor}FF 0%,
+                              ${imageDominantColors[index].blurColor}F5 8%,
+                              ${imageDominantColors[index].blurColor}E6 16%,
+                              ${imageDominantColors[index].blurColor}CC 25%,
+                              ${imageDominantColors[index].blurColor}A6 35%,
+                              ${imageDominantColors[index].blurColor}73 45%,
+                              ${imageDominantColors[index].blurColor}40 60%,
+                              ${imageDominantColors[index].blurColor}1A 75%,
+                              ${imageDominantColors[index].blurColor}00 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,1.0) 0%, rgba(0,0,0,0.95) 8%, rgba(0,0,0,0.85) 16%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.05) 75%, rgba(0,0,0,0) 100%)',
+                        zIndex: 1,
+                        pointerEvents: 'none',
+                        borderRadius: '0 0 0 0'
+                      }}></div>
+                    )}
+                    
                     {/* Emoji fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
