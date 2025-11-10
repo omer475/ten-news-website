@@ -3065,13 +3065,13 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (starts at 60%) */}
                       <div style={{
                         position: 'absolute',
-                        top: '20%',
+                        top: '60%',
                         left: '0',
                         width: '100%',
-                        height: '80%',
+                        height: '40%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
@@ -3089,7 +3089,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 20px 16px',
+                        padding: '24px 16px 8px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
@@ -3161,7 +3161,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         left: '0',
                         right: '0',
                         width: '100vw',
-                        height: '12vh',       // Extend to 50vh total (viewport center)
+                        height: '20vh',       // Extended further for smoother, longer fade
                         background: `linear-gradient(to bottom, 
                           ${imageDominantColors[index].blurColor} 0%, 
                           color-mix(in srgb, ${imageDominantColors[index].blurColor} 92%, white 8%) 10%, 
@@ -3176,8 +3176,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           white 100%)`,
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 1
                       }}>
@@ -3192,12 +3192,12 @@ The article concludes with forward-looking analysis and what readers should watc
                         left: '0',
                         right: '0',
                         width: '100vw',
-                        height: '12vh',
+                        height: '20vh',
                         background: 'linear-gradient(to bottom, rgb(102, 126, 234) 0%, color-mix(in srgb, rgb(102, 126, 234) 92%, white 8%) 10%, color-mix(in srgb, rgb(102, 126, 234) 80%, white 20%) 20%, color-mix(in srgb, rgb(102, 126, 234) 65%, white 35%) 30%, color-mix(in srgb, rgb(102, 126, 234) 50%, white 50%) 40%, color-mix(in srgb, rgb(102, 126, 234) 35%, white 65%) 50%, color-mix(in srgb, rgb(102, 126, 234) 22%, white 78%) 60%, color-mix(in srgb, rgb(102, 126, 234) 12%, white 88%) 70%, color-mix(in srgb, rgb(102, 126, 234) 6%, white 94%) 80%, color-mix(in srgb, rgb(102, 126, 234) 2%, white 98%) 90%, white 100%)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 1
                       }}>
