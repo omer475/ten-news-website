@@ -2862,7 +2862,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Full Screen Without Rounded Corners */}
+                    {/* News Image - Full Screen Edge to Edge */}
                     <div style={{
                       position: 'fixed',
                       top: '0',
@@ -2875,7 +2875,6 @@ The article concludes with forward-looking analysis and what readers should watc
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '0',
                       overflow: 'hidden',
                       pointerEvents: 'none',
                       // Ensure image container doesn't interfere with information box
@@ -3065,85 +3064,72 @@ The article concludes with forward-looking analysis and what readers should watc
                           />
                         );
                       })()}
+                      
+                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '20%',
+                        left: '0',
+                        width: '100%',
+                        height: '80%',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}></div>
+                      
+                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '24px 16px 20px 16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-end',
+                        background: imageDominantColors[index]?.blurColor 
+                          ? `linear-gradient(to bottom, 
+                              ${imageDominantColors[index].blurColor}26 0%, 
+                              ${imageDominantColors[index].blurColor}40 10%, 
+                              ${imageDominantColors[index].blurColor}73 30%, 
+                              ${imageDominantColors[index].blurColor}A6 50%, 
+                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}F2 80%, 
+                              ${imageDominantColors[index].blurColor}FA 90%, 
+                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}FF 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
+                        zIndex: 2,
+                        pointerEvents: 'none'
+                      }}>
+                        <h3 style={{ 
+                          margin: 0,
+                          fontSize: '22px',
+                          fontWeight: '800',
+                          lineHeight: '1.2',
+                          letterSpacing: '-0.5px',
+                          color: '#ffffff',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Title Background Gradient - Below blur */}
-                    {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      width: '100vw',
-                      height: '38vh',
-                      background: imageDominantColors[index]?.blurColor 
-                        ? `linear-gradient(to bottom, 
-                            ${imageDominantColors[index].blurColor}26 0%, 
-                            ${imageDominantColors[index].blurColor}40 10%, 
-                            ${imageDominantColors[index].blurColor}73 30%, 
-                            ${imageDominantColors[index].blurColor}A6 50%, 
-                            ${imageDominantColors[index].blurColor}D9 70%, 
-                            ${imageDominantColors[index].blurColor}F2 80%, 
-                            ${imageDominantColors[index].blurColor}FA 90%, 
-                            ${imageDominantColors[index].blurColor}FF 95%, 
-                            ${imageDominantColors[index].blurColor}FF 100%)`
-                        : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
-                      zIndex: 2,
-                      pointerEvents: 'none'
-                    }}></div>
-                    )}
-                    
-                    {/* Graduated Blur Overlay - Increases to 100% at title position, stays 100% through title, then decreases to 0% at bullet text */}
-                    <div style={{
-                      position: 'fixed',
-                      top: '15.2vh',
-                      left: '0',
-                      width: '100vw',
-                      height: 'calc(22.8vh + 120px)',
-                      backdropFilter: 'blur(50px)',
-                      WebkitBackdropFilter: 'blur(50px)',
-                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 15%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.4) 88%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 15%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.4) 88%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
-                      pointerEvents: 'none',
-                      zIndex: 50
-                    }}></div>
-                    
-                    {/* Title Text - Above blur */}
-                    {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
-                    <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      width: '100vw',
-                      height: '38vh',
-                      padding: '24px 16px 0px 16px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-end',
-                      zIndex: 100,
-                      pointerEvents: 'none'
-                    }}>
-                      <h3 style={{ 
-                        margin: 0,
-                        fontSize: '22px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        letterSpacing: '-0.5px',
-                        color: '#ffffff',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)',
-                        transform: 'translateY(10px)'
-                      }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
-                    </div>
-                    )}
                     
                     {/* Emoji fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '3px',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
+                      height: '38vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3151,7 +3137,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
@@ -3174,7 +3159,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
-                        zIndex: '100',
+                        zIndex: '2',
                         background: 'transparent',
                         width: '100%',
                         maxWidth: '100%',
@@ -3190,7 +3175,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         marginTop: '32px',
                         width: '100%',
                         position: 'relative',
-                        zIndex: 100
+                        zIndex: 10
                       }}>
                         {/* Time Since Published - Left Side */}
                         <div style={{
