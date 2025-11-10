@@ -3114,16 +3114,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}26 0%, 
-                              ${imageDominantColors[index].blurColor}40 10%, 
-                              ${imageDominantColors[index].blurColor}73 30%, 
-                              ${imageDominantColors[index].blurColor}A6 50%, 
-                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}33 0%, 
+                              ${imageDominantColors[index].blurColor}59 10%, 
+                              ${imageDominantColors[index].blurColor}80 25%, 
+                              ${imageDominantColors[index].blurColor}A6 40%, 
+                              ${imageDominantColors[index].blurColor}CC 55%, 
+                              ${imageDominantColors[index].blurColor}E6 70%, 
                               ${imageDominantColors[index].blurColor}F2 80%, 
                               ${imageDominantColors[index].blurColor}FA 90%, 
                               ${imageDominantColors[index].blurColor}FF 95%, 
                               ${imageDominantColors[index].blurColor}FF 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.35) 10%, rgba(0,0,0,0.5) 25%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.8) 55%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
