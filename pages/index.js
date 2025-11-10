@@ -3108,10 +3108,10 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 100px 16px',
+                        padding: '0',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-end',
+                        justifyContent: 'flex-start',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
                               ${imageDominantColors[index].blurColor}26 0%, 
@@ -3124,18 +3124,25 @@ The article concludes with forward-looking analysis and what readers should watc
                               ${imageDominantColors[index].blurColor}FF 95%, 
                               ${imageDominantColors[index].blurColor}FF 100%)`
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2,
+                        zIndex: 3,
                         pointerEvents: 'none'
                       }}>
-                        <h3 style={{ 
-                          margin: 0,
-                          fontSize: '22px',
-                          fontWeight: '800',
-                          lineHeight: '1.2',
-                          letterSpacing: '-0.5px',
-                          color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 'calc(100vh - 38vh + 28px)',
+                          left: '16px',
+                          right: '16px'
+                        }}>
+                          <h3 style={{ 
+                            margin: 0,
+                            fontSize: '22px',
+                            fontWeight: '800',
+                            lineHeight: '1.2',
+                            letterSpacing: '-0.5px',
+                            color: '#ffffff',
+                            textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                          }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
+                        </div>
                         </div>
                       )}
                     </div>
