@@ -3084,58 +3084,89 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Starts at 70% for maximum visible image */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '70%',
-                        left: '0',
-                        width: '100%',
-                        height: '30%',
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 80%, rgba(0,0,0,1) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 80%, rgba(0,0,0,1) 100%)',
-                        pointerEvents: 'none',
-                        zIndex: 2
-                      }}></div>
-                      
-                      {/* Combined Blur and Title Overlay - Extends from image into content area */}
+                      {/* Unified Blur Overlay - Extends from image through content area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(70% * 38vh / 100)',
+                        top: 'calc(38vh * 0.6)',
+                        left: '0',
+                        right: '0',
+                        height: '180px',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        background: imageDominantColors[index]?.blurColor
+                          ? `linear-gradient(to bottom,
+                              transparent 0%,
+                              ${imageDominantColors[index].blurColor}00 0%,
+                              ${imageDominantColors[index].blurColor}26 5%,
+                              ${imageDominantColors[index].blurColor}40 10%,
+                              ${imageDominantColors[index].blurColor}66 20%,
+                              ${imageDominantColors[index].blurColor}99 35%,
+                              ${imageDominantColors[index].blurColor}CC 50%,
+                              ${imageDominantColors[index].blurColor}E6 60%,
+                              ${imageDominantColors[index].blurColor}F2 70%,
+                              ${imageDominantColors[index].blurColor}F5 80%,
+                              ${imageDominantColors[index].blurColor}E6 88%,
+                              ${imageDominantColors[index].blurColor}A6 93%,
+                              ${imageDominantColors[index].blurColor}40 97%,
+                              ${imageDominantColors[index].blurColor}00 100%)`
+                          : `linear-gradient(to bottom,
+                              transparent 0%,
+                              rgba(0,0,0,0) 0%,
+                              rgba(0,0,0,0.15) 5%,
+                              rgba(0,0,0,0.25) 10%,
+                              rgba(0,0,0,0.4) 20%,
+                              rgba(0,0,0,0.6) 35%,
+                              rgba(0,0,0,0.8) 50%,
+                              rgba(0,0,0,0.9) 60%,
+                              rgba(0,0,0,0.95) 70%,
+                              rgba(0,0,0,0.96) 80%,
+                              rgba(0,0,0,0.9) 88%,
+                              rgba(0,0,0,0.65) 93%,
+                              rgba(0,0,0,0.25) 97%,
+                              rgba(0,0,0,0) 100%)`,
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 8%, rgba(0,0,0,0.4) 16%, rgba(0,0,0,0.65) 25%, rgba(0,0,0,0.85) 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, rgba(0,0,0,0.3) 95%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 8%, rgba(0,0,0,0.4) 16%, rgba(0,0,0,0.65) 25%, rgba(0,0,0,0.85) 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, rgba(0,0,0,0.3) 95%, rgba(0,0,0,0) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}></div>
+                      )}
+                      
+                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
+                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
                         left: 0,
                         right: 0,
-                        height: 'calc(30% * 38vh / 100 + 120px)',
+                        padding: '24px 16px 4px 16px',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}00 0%,
-                              ${imageDominantColors[index].blurColor}40 15%, 
-                              ${imageDominantColors[index].blurColor}80 30%, 
-                              ${imageDominantColors[index].blurColor}D9 45%, 
-                              ${imageDominantColors[index].blurColor}FF 55%, 
-                              ${imageDominantColors[index].blurColor}FF 70%, 
-                              ${imageDominantColors[index].blurColor}E6 80%, 
-                              ${imageDominantColors[index].blurColor}A6 88%, 
-                              ${imageDominantColors[index].blurColor}40 94%, 
-                              ${imageDominantColors[index].blurColor}00 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,1.0) 55%, rgba(0,0,0,1.0) 70%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.5) 88%, rgba(0,0,0,0.2) 94%, rgba(0,0,0,0) 100%)',
+                              ${imageDominantColors[index].blurColor}26 0%, 
+                              ${imageDominantColors[index].blurColor}40 10%, 
+                              ${imageDominantColors[index].blurColor}73 30%, 
+                              ${imageDominantColors[index].blurColor}A6 50%, 
+                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}F2 80%, 
+                              ${imageDominantColors[index].blurColor}FA 90%, 
+                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}FF 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          padding: '0 16px',
                           fontSize: '22px',
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
                           color: '#ffffff',
-                          textAlign: 'center',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                         </div>
