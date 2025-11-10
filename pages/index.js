@@ -3099,33 +3099,33 @@ The article concludes with forward-looking analysis and what readers should watc
                         zIndex: 3
                       }}></div>
                       
-                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
-                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {/* Title Overlay with Image-Based Color Gradient - Starts at 30% */}
+                      {/* Extended below image to keep title visible */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
+                        position: 'fixed',
+                        top: 'calc(38vh * 0.3)',
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 4px 16px',
+                        height: 'calc(38vh * 0.7 + 60px)',
+                        padding: '0 16px 4px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}33 0%, 
-                              ${imageDominantColors[index].blurColor}59 10%, 
-                              ${imageDominantColors[index].blurColor}80 25%, 
-                              ${imageDominantColors[index].blurColor}A6 40%, 
-                              ${imageDominantColors[index].blurColor}CC 55%, 
-                              ${imageDominantColors[index].blurColor}E6 70%, 
-                              ${imageDominantColors[index].blurColor}F2 80%, 
-                              ${imageDominantColors[index].blurColor}FA 90%, 
-                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}00 0%, 
+                              ${imageDominantColors[index].blurColor}33 10%, 
+                              ${imageDominantColors[index].blurColor}66 20%, 
+                              ${imageDominantColors[index].blurColor}99 35%, 
+                              ${imageDominantColors[index].blurColor}CC 50%, 
+                              ${imageDominantColors[index].blurColor}E6 65%, 
+                              ${imageDominantColors[index].blurColor}F2 75%, 
+                              ${imageDominantColors[index].blurColor}FA 85%, 
+                              ${imageDominantColors[index].blurColor}FF 92%, 
                               ${imageDominantColors[index].blurColor}FF 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.35) 10%, rgba(0,0,0,0.5) 25%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.8) 55%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2,
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.4) 20%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.95) 75%, rgba(0,0,0,0.98) 85%, rgba(0,0,0,1.0) 92%, rgba(0,0,0,1.0) 100%)',
+                        zIndex: 4,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
