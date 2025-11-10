@@ -3092,7 +3092,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     }}></div>
                     )}
                     
-                    {/* Graduated Blur Overlay - Increases to 100% at image end, stays 100% until 92%, then decreases to 0% at bullet text */}
+                    {/* Graduated Blur Overlay - Increases to 100% at title position, stays 100% through title, then decreases to 0% at bullet text */}
                     <div style={{
                       position: 'fixed',
                       top: '15.2vh',
@@ -3101,8 +3101,8 @@ The article concludes with forward-looking analysis and what readers should watc
                       height: 'calc(22.8vh + 120px)',
                       backdropFilter: 'blur(50px)',
                       WebkitBackdropFilter: 'blur(50px)',
-                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.6) 42%, rgba(0,0,0,0.8) 52%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 78%, rgba(0,0,0,1) 86%, rgba(0,0,0,1) 92%, rgba(0,0,0,0.1) 97%, rgba(0,0,0,0) 100%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0.6) 42%, rgba(0,0,0,0.8) 52%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 78%, rgba(0,0,0,1) 86%, rgba(0,0,0,1) 92%, rgba(0,0,0,0.1) 97%, rgba(0,0,0,0) 100%)',
+                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 15%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.4) 88%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 15%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.4) 88%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
                       pointerEvents: 'none',
                       zIndex: 50
                     }}></div>
@@ -3115,7 +3115,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       left: 0,
                       width: '100vw',
                       height: '38vh',
-                      padding: '24px 16px 8px 16px',
+                      padding: '24px 16px 0px 16px',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'flex-end',
@@ -3129,7 +3129,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         lineHeight: '1.2',
                         letterSpacing: '-0.5px',
                         color: '#ffffff',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                        textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)',
+                        transform: 'translateY(10px)'
                       }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                     </div>
                     )}
