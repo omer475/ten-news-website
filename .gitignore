@@ -48,4 +48,5 @@ Thumbs.db
 # Processing logs will be committed to track the process
 
 # Temporary files
-run_news_generation.py
+run_news_generation.py.env.save
+.env.local.backup
