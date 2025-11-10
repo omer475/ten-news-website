@@ -2882,7 +2882,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - Full Width, No Gaps */}
                     <div style={{
                       position: 'fixed',
-                      top: '10px',
+                      top: '0',
                       left: '0',
                       right: '0',
                       width: '100vw',
@@ -3084,17 +3084,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
+                      {/* Graduated Blur Overlay - Starts at 50% for more visible image */}
                       <div style={{
                         position: 'absolute',
-                        top: '20%',
+                        top: '50%',
                         left: '0',
                         width: '100%',
-                        height: '80%',
+                        height: '50%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,1) 65%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,1) 65%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -3144,7 +3144,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(38vh + 10px)',
+                        top: '38vh',
                         left: '0',
                         right: '0',
                         height: '120px',
@@ -3170,7 +3170,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '10px',
+                      top: '0',
                       left: '0',
                       right: '0',
                       width: '100vw',
@@ -3202,7 +3202,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh - 50px)',
+                        paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
