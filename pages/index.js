@@ -3084,56 +3084,58 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Starts at 60% for balanced visibility */}
+                      {/* Graduated Blur Overlay - Starts at 70% for maximum visible image */}
                       <div style={{
                         position: 'absolute',
-                        top: '60%',
+                        top: '70%',
                         left: '0',
                         width: '100%',
-                        height: '40%',
+                        height: '30%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 12.5%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,1) 75%, rgba(0,0,0,1) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 12.5%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,1) 75%, rgba(0,0,0,1) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 80%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 80%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
                       
-                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
-                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {/* Combined Blur and Title Overlay - Extends from image into content area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
+                        position: 'fixed',
+                        top: 'calc(70% * 38vh / 100)',
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 4px 16px',
+                        height: 'calc(30% * 38vh / 100 + 120px)',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'flex-end',
+                        justifyContent: 'center',
+                        alignItems: 'center',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}26 0%, 
-                              ${imageDominantColors[index].blurColor}40 10%, 
-                              ${imageDominantColors[index].blurColor}73 30%, 
-                              ${imageDominantColors[index].blurColor}A6 50%, 
-                              ${imageDominantColors[index].blurColor}D9 70%, 
-                              ${imageDominantColors[index].blurColor}F2 80%, 
-                              ${imageDominantColors[index].blurColor}FA 90%, 
-                              ${imageDominantColors[index].blurColor}FF 95%, 
-                              ${imageDominantColors[index].blurColor}FF 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
+                              ${imageDominantColors[index].blurColor}00 0%,
+                              ${imageDominantColors[index].blurColor}40 15%, 
+                              ${imageDominantColors[index].blurColor}80 30%, 
+                              ${imageDominantColors[index].blurColor}D9 45%, 
+                              ${imageDominantColors[index].blurColor}FF 55%, 
+                              ${imageDominantColors[index].blurColor}FF 70%, 
+                              ${imageDominantColors[index].blurColor}E6 80%, 
+                              ${imageDominantColors[index].blurColor}A6 88%, 
+                              ${imageDominantColors[index].blurColor}40 94%, 
+                              ${imageDominantColors[index].blurColor}00 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.9) 45%, rgba(0,0,0,1.0) 55%, rgba(0,0,0,1.0) 70%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.5) 88%, rgba(0,0,0,0.2) 94%, rgba(0,0,0,0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
+                          padding: '0 16px',
                           fontSize: '22px',
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
                           color: '#ffffff',
+                          textAlign: 'center',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                         </div>
