@@ -342,6 +342,53 @@ export default function Home() {
     return [newH, newS, newL];
   };
 
+  // Extract average color from a specific edge of the image
+  const extractEdgeColor = (ctx, width, height, edge) => {
+    let x, y, w, h;
+    
+    // Define sampling region for each edge (5px strip)
+    switch(edge) {
+      case 'top':
+        x = 0; y = 0; w = width; h = 5;
+        break;
+      case 'bottom':
+        x = 0; y = height - 5; w = width; h = 5;
+        break;
+      case 'left':
+        x = 0; y = 0; w = 5; h = height;
+        break;
+      case 'right':
+        x = width - 5; y = 0; w = 5; h = height;
+        break;
+      default:
+        return { r: 0, g: 0, b: 0 };
+    }
+    
+    const imageData = ctx.getImageData(x, y, w, h);
+    const pixels = imageData.data;
+    
+    let totalR = 0, totalG = 0, totalB = 0, count = 0;
+    
+    // Average all pixels in the edge region
+    for (let i = 0; i < pixels.length; i += 4) {
+      const alpha = pixels[i + 3];
+      if (alpha > 125) { // Skip transparent pixels
+        totalR += pixels[i];
+        totalG += pixels[i + 1];
+        totalB += pixels[i + 2];
+        count++;
+      }
+    }
+    
+    if (count === 0) return { r: 0, g: 0, b: 0 };
+    
+    return {
+      r: Math.round(totalR / count),
+      g: Math.round(totalG / count),
+      b: Math.round(totalB / count)
+    };
+  };
+
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -381,14 +428,26 @@ export default function Home() {
       const [iR, iG, iB] = hslToRgb(...infoHsl);
       const infoColor = `rgb(${iR}, ${iG}, ${iB})`;
       
-      // Store all colors
+      // Extract edge colors for blur effects
+      const topEdge = extractEdgeColor(ctx, canvas.width, canvas.height, 'top');
+      const bottomEdge = extractEdgeColor(ctx, canvas.width, canvas.height, 'bottom');
+      const leftEdge = extractEdgeColor(ctx, canvas.width, canvas.height, 'left');
+      const rightEdge = extractEdgeColor(ctx, canvas.width, canvas.height, 'right');
+      
+      // Store all colors including edge colors
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: blurColorHex,
           highlight: highlightColor,
           link: linkColor,
-          info: infoColor
+          info: infoColor,
+          edges: {
+            top: `rgb(${topEdge.r}, ${topEdge.g}, ${topEdge.b})`,
+            bottom: `rgb(${bottomEdge.r}, ${bottomEdge.g}, ${bottomEdge.b})`,
+            left: `rgb(${leftEdge.r}, ${leftEdge.g}, ${leftEdge.b})`,
+            right: `rgb(${rightEdge.r}, ${rightEdge.g}, ${rightEdge.b})`
+          }
         }
       }));
     } catch (error) {
@@ -400,7 +459,13 @@ export default function Home() {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
           link: '#5A6F8E',
-          info: '#4A7FA0'
+          info: '#4A7FA0',
+          edges: {
+            top: 'rgb(100, 100, 100)',
+            bottom: 'rgb(100, 100, 100)',
+            left: 'rgb(100, 100, 100)',
+            right: 'rgb(100, 100, 100)'
+          }
         }
       }));
     }
@@ -3164,6 +3229,57 @@ The article concludes with forward-looking analysis and what readers should watc
                         pointerEvents: 'none',
                         borderRadius: '0 0 0 0'
                       }}></div>
+                    )}
+                    
+                    {/* Edge Blur Effects - Top, Left, Right (outside image) */}
+                    {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && imageDominantColors[index]?.edges && (
+                      <>
+                        {/* Top Edge Blur */}
+                        <div style={{
+                          position: 'fixed',
+                          top: '-25px',
+                          left: '6px',
+                          right: '6px',
+                          height: '28px',
+                          background: `linear-gradient(to bottom,
+                            ${imageDominantColors[index].edges.top}00 0%,
+                            ${imageDominantColors[index].edges.top}40 50%,
+                            ${imageDominantColors[index].edges.top}80 100%)`,
+                          zIndex: 0,
+                          pointerEvents: 'none',
+                          borderRadius: '12px 12px 0 0'
+                        }}></div>
+                        
+                        {/* Left Edge Blur */}
+                        <div style={{
+                          position: 'fixed',
+                          top: '3px',
+                          left: '-25px',
+                          width: '31px',
+                          height: 'calc(38vh - 3px)',
+                          background: `linear-gradient(to right,
+                            ${imageDominantColors[index].edges.left}00 0%,
+                            ${imageDominantColors[index].edges.left}40 50%,
+                            ${imageDominantColors[index].edges.left}80 100%)`,
+                          zIndex: 0,
+                          pointerEvents: 'none'
+                        }}></div>
+                        
+                        {/* Right Edge Blur */}
+                        <div style={{
+                          position: 'fixed',
+                          top: '3px',
+                          right: '-25px',
+                          width: '31px',
+                          height: 'calc(38vh - 3px)',
+                          background: `linear-gradient(to left,
+                            ${imageDominantColors[index].edges.right}00 0%,
+                            ${imageDominantColors[index].edges.right}40 50%,
+                            ${imageDominantColors[index].edges.right}80 100%)`,
+                          zIndex: 0,
+                          pointerEvents: 'none'
+                        }}></div>
+                      </>
                     )}
                     
                     {/* Emoji fallback when no image */}
