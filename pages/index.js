@@ -3153,6 +3153,57 @@ The article concludes with forward-looking analysis and what readers should watc
                     </div>
                     )}
                     
+                    {/* Extended Blur Overlay - Continues Beyond Image Bottom with Same Color */}
+                    {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && imageDominantColors[index]?.blurColor && (
+                      <div style={{
+                        position: 'fixed',
+                        top: '38vh',          // Start at image bottom
+                        left: '0',
+                        right: '0',
+                        width: '100vw',
+                        height: '12vh',       // Extend to 50vh total (viewport center)
+                        background: `linear-gradient(to bottom, 
+                          ${imageDominantColors[index].blurColor} 0%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 92%, white 8%) 10%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 80%, white 20%) 20%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 65%, white 35%) 30%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 50%, white 50%) 40%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 35%, white 65%) 50%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 22%, white 78%) 60%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 12%, white 88%) 70%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 6%, white 94%) 80%, 
+                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 2%, white 98%) 90%, 
+                          white 100%)`,
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 1
+                      }}>
+                      </div>
+                    )}
+                    
+                    {/* Fallback extended overlay for emoji articles (no image) */}
+                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                      <div style={{
+                        position: 'fixed',
+                        top: '38vh',
+                        left: '0',
+                        right: '0',
+                        width: '100vw',
+                        height: '12vh',
+                        background: 'linear-gradient(to bottom, rgb(102, 126, 234) 0%, color-mix(in srgb, rgb(102, 126, 234) 92%, white 8%) 10%, color-mix(in srgb, rgb(102, 126, 234) 80%, white 20%) 20%, color-mix(in srgb, rgb(102, 126, 234) 65%, white 35%) 30%, color-mix(in srgb, rgb(102, 126, 234) 50%, white 50%) 40%, color-mix(in srgb, rgb(102, 126, 234) 35%, white 65%) 50%, color-mix(in srgb, rgb(102, 126, 234) 22%, white 78%) 60%, color-mix(in srgb, rgb(102, 126, 234) 12%, white 88%) 70%, color-mix(in srgb, rgb(102, 126, 234) 6%, white 94%) 80%, color-mix(in srgb, rgb(102, 126, 234) 2%, white 98%) 90%, white 100%)',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.15) 85%, rgba(0,0,0,0) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 1
+                      }}>
+                      </div>
+                    )}
+                    
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
