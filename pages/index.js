@@ -2882,7 +2882,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - Full Width, No Gaps */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: '10px',
                       left: '0',
                       right: '0',
                       width: '100vw',
@@ -3108,7 +3108,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 31px 16px',
+                        padding: '24px 16px 40px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
@@ -3144,7 +3144,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'fixed',
-                        top: '38vh',
+                        top: 'calc(38vh + 10px)',
                         left: '0',
                         right: '0',
                         height: '120px',
@@ -3170,7 +3170,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: '10px',
                       left: '0',
                       right: '0',
                       width: '100vw',
@@ -3202,7 +3202,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh - 60px)',
+                        paddingTop: 'calc(38vh - 50px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
