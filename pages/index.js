@@ -3065,17 +3065,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Ease-In Curve (starts at 60%) */}
+                      {/* Graduated Blur Overlay - Bell Curve peaking at 70% in middle of text */}
                       <div style={{
-                        position: 'absolute',
-                        top: '60%',
+                        position: 'fixed',
+                        top: '0',
                         left: '0',
                         width: '100%',
-                        height: '40%',
+                        height: '80vh',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.45) 68%, rgba(0,0,0,0.25) 78%, rgba(0,0,0,0.1) 88%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.45) 68%, rgba(0,0,0,0.25) 78%, rgba(0,0,0,0.1) 88%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -3089,7 +3089,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 8px 16px',
+                        padding: '24px 16px 20px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
@@ -3151,57 +3151,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         {story.emoji || '📰'}
                         </div>
                     </div>
-                    )}
-                    
-                    {/* Extended Blur Overlay - Continues Beyond Image Bottom with Same Color */}
-                    {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && imageDominantColors[index]?.blurColor && (
-                      <div style={{
-                        position: 'fixed',
-                        top: '38vh',          // Start at image bottom
-                        left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: '20vh',       // Extended further for smoother, longer fade
-                        background: `linear-gradient(to bottom, 
-                          ${imageDominantColors[index].blurColor} 0%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 92%, white 8%) 10%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 80%, white 20%) 20%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 65%, white 35%) 30%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 50%, white 50%) 40%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 35%, white 65%) 50%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 22%, white 78%) 60%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 12%, white 88%) 70%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 6%, white 94%) 80%, 
-                          color-mix(in srgb, ${imageDominantColors[index].blurColor} 2%, white 98%) 90%, 
-                          white 100%)`,
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
-                        pointerEvents: 'none',
-                        zIndex: 1
-                      }}>
-                      </div>
-                    )}
-                    
-                    {/* Fallback extended overlay for emoji articles (no image) */}
-                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                      <div style={{
-                        position: 'fixed',
-                        top: '38vh',
-                        left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: '20vh',
-                        background: 'linear-gradient(to bottom, rgb(102, 126, 234) 0%, color-mix(in srgb, rgb(102, 126, 234) 92%, white 8%) 10%, color-mix(in srgb, rgb(102, 126, 234) 80%, white 20%) 20%, color-mix(in srgb, rgb(102, 126, 234) 65%, white 35%) 30%, color-mix(in srgb, rgb(102, 126, 234) 50%, white 50%) 40%, color-mix(in srgb, rgb(102, 126, 234) 35%, white 65%) 50%, color-mix(in srgb, rgb(102, 126, 234) 22%, white 78%) 60%, color-mix(in srgb, rgb(102, 126, 234) 12%, white 88%) 70%, color-mix(in srgb, rgb(102, 126, 234) 6%, white 94%) 80%, color-mix(in srgb, rgb(102, 126, 234) 2%, white 98%) 90%, white 100%)',
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 33%, rgba(0,0,0,0.98) 36%, rgba(0,0,0,0.95) 39%, rgba(0,0,0,0.92) 42%, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.84) 48%, rgba(0,0,0,0.79) 51%, rgba(0,0,0,0.74) 54%, rgba(0,0,0,0.69) 57%, rgba(0,0,0,0.64) 60%, rgba(0,0,0,0.58) 63%, rgba(0,0,0,0.53) 66%, rgba(0,0,0,0.47) 69%, rgba(0,0,0,0.42) 72%, rgba(0,0,0,0.36) 75%, rgba(0,0,0,0.31) 78%, rgba(0,0,0,0.26) 81%, rgba(0,0,0,0.21) 84%, rgba(0,0,0,0.17) 87%, rgba(0,0,0,0.13) 90%, rgba(0,0,0,0.095) 92.5%, rgba(0,0,0,0.068) 94.5%, rgba(0,0,0,0.046) 96%, rgba(0,0,0,0.03) 97%, rgba(0,0,0,0.018) 97.8%, rgba(0,0,0,0.01) 98.4%, rgba(0,0,0,0.005) 98.9%, rgba(0,0,0,0.002) 99.4%, rgba(0,0,0,0.0005) 99.7%, rgba(0,0,0,0) 100%)',
-                        pointerEvents: 'none',
-                        zIndex: 1
-                      }}>
-                      </div>
                     )}
                     
                     {/* Content Area - Starts After Image */}
