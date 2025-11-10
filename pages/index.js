@@ -2892,7 +2892,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '12px',
+                      borderRadius: '12px 12px 0 0',
                       overflow: 'hidden',
                       pointerEvents: 'none',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
@@ -3108,7 +3108,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 20px 16px',
+                        padding: '24px 16px 40px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
@@ -3182,7 +3182,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '12px',
+                      borderRadius: '12px 12px 0 0',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
