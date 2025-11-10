@@ -3084,53 +3084,20 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Unified Blur Overlay - Extends from image through content area */}
-                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      {/* Extended Blur Overlay - Continues from image to switch button */}
                       <div style={{
                         position: 'fixed',
                         top: 'calc(38vh * 0.6)',
                         left: '0',
                         right: '0',
-                        height: '180px',
+                        height: 'calc(38vh * 0.4 + 70px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        background: imageDominantColors[index]?.blurColor
-                          ? `linear-gradient(to bottom,
-                              transparent 0%,
-                              ${imageDominantColors[index].blurColor}00 0%,
-                              ${imageDominantColors[index].blurColor}26 5%,
-                              ${imageDominantColors[index].blurColor}40 10%,
-                              ${imageDominantColors[index].blurColor}66 20%,
-                              ${imageDominantColors[index].blurColor}99 35%,
-                              ${imageDominantColors[index].blurColor}CC 50%,
-                              ${imageDominantColors[index].blurColor}E6 60%,
-                              ${imageDominantColors[index].blurColor}F2 70%,
-                              ${imageDominantColors[index].blurColor}F5 80%,
-                              ${imageDominantColors[index].blurColor}E6 88%,
-                              ${imageDominantColors[index].blurColor}A6 93%,
-                              ${imageDominantColors[index].blurColor}40 97%,
-                              ${imageDominantColors[index].blurColor}00 100%)`
-                          : `linear-gradient(to bottom,
-                              transparent 0%,
-                              rgba(0,0,0,0) 0%,
-                              rgba(0,0,0,0.15) 5%,
-                              rgba(0,0,0,0.25) 10%,
-                              rgba(0,0,0,0.4) 20%,
-                              rgba(0,0,0,0.6) 35%,
-                              rgba(0,0,0,0.8) 50%,
-                              rgba(0,0,0,0.9) 60%,
-                              rgba(0,0,0,0.95) 70%,
-                              rgba(0,0,0,0.96) 80%,
-                              rgba(0,0,0,0.9) 88%,
-                              rgba(0,0,0,0.65) 93%,
-                              rgba(0,0,0,0.25) 97%,
-                              rgba(0,0,0,0) 100%)`,
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 8%, rgba(0,0,0,0.4) 16%, rgba(0,0,0,0.65) 25%, rgba(0,0,0,0.85) 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, rgba(0,0,0,0.3) 95%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 8%, rgba(0,0,0,0.4) 16%, rgba(0,0,0,0.65) 25%, rgba(0,0,0,0.85) 35%, rgba(0,0,0,1) 45%, rgba(0,0,0,1) 70%, rgba(0,0,0,0.8) 85%, rgba(0,0,0,0.3) 95%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.75) 30%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 10%, rgba(0,0,0,0.5) 20%, rgba(0,0,0,0.75) 30%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.8) 70%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
-                      )}
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
