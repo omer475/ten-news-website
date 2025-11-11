@@ -3081,14 +3081,14 @@ The article concludes with forward-looking analysis and what readers should watc
                         zIndex: 2
                       }}></div>
                       
-                      {/* Second Blur Overlay - Starts where first blur ends, decreases from 90% to 0% until bullet text */}
+                      {/* Second Blur Overlay - Starts where first blur ends at 90%, decreases to 0% at 40% of page */}
                       <div style={{
                         position: 'fixed',
                         top: 'calc(38vh * 0.88)',
                         left: '0',
                         right: '0',
                         width: '100vw',
-                        height: 'calc(38vh * 0.12 + 80px)',
+                        height: 'calc(40vh - 33.44vh)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.15) 80%, rgba(0,0,0,0.05) 95%, rgba(0,0,0,0) 100%)',
