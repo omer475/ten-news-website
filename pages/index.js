@@ -2862,24 +2862,24 @@ The article concludes with forward-looking analysis and what readers should watc
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Full Screen Edge to Edge */}
-                    <div style={{
-                      position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: '38vh',
-                      margin: 0,
-                      padding: 0,
-                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'block',
-                      zIndex: '1',
-                      overflow: 'hidden',
-                      pointerEvents: 'none',
-                      // Ensure image container doesn't interfere with information box
-                      maxHeight: '38vh'
-                    }}>
+                     {/* News Image - Full Screen Edge to Edge */}
+                      <div style={{
+                        position: 'fixed',
+                        top: '0',
+                        left: '0',
+                        right: '0',
+                        width: '100vw',
+                        height: '38vh',
+                        margin: 0,
+                        padding: 0,
+                        background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'block',
+                        zIndex: '1',
+                        overflow: 'hidden',
+                        pointerEvents: 'none',
+                        // Ensure image container doesn't interfere with information box
+                        maxHeight: '38vh'
+                      }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
                         // Only reject if clearly invalid (null, empty, or too short to be a URL)
@@ -3065,63 +3065,20 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - 90% at title start, stays 90% through title, ends right after */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
                       <div style={{
                         position: 'absolute',
-                        top: '30%',
+                        top: '20%',
                         left: '0',
                         width: '100%',
-                        height: '58%',
+                        height: '80%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
-                      
-                      {/* Second Blur Overlay - Starts where first blur ends (88% of image = 33.44vh), decreases to 0% at 40vh */}
-                      {index === currentIndex && (
-                      <>
-                      <div style={{
-                        position: 'fixed',
-                        top: '33.44vh',
-                        left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: 'calc(40vh - 33.44vh)',
-                        backdropFilter: 'blur(50px)',
-                        WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
-                        pointerEvents: 'none',
-                        zIndex: 5
-                      }}></div>
-                      
-                      {/* Second Blur Colored Gradient Overlay - Matches blur opacity gradient */}
-                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && imageDominantColors[index]?.blurColor && (
-                      <div style={{
-                        position: 'fixed',
-                        top: '33.44vh',
-                        left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: 'calc(40vh - 33.44vh)',
-                        background: `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}E6 0%, 
-                              ${imageDominantColors[index].blurColor}CC 15%, 
-                              ${imageDominantColors[index].blurColor}99 30%, 
-                              ${imageDominantColors[index].blurColor}66 45%, 
-                              ${imageDominantColors[index].blurColor}40 60%, 
-                              ${imageDominantColors[index].blurColor}26 75%, 
-                              ${imageDominantColors[index].blurColor}0D 90%, 
-                              ${imageDominantColors[index].blurColor}00 100%)`,
-                        pointerEvents: 'none',
-                        zIndex: 5
-                      }}></div>
-                      )}
-                      </>
-                      )}
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
@@ -3138,18 +3095,16 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}00 0%, 
-                              ${imageDominantColors[index].blurColor}00 40%, 
-                              ${imageDominantColors[index].blurColor}1A 50%, 
-                              ${imageDominantColors[index].blurColor}40 60%, 
-                              ${imageDominantColors[index].blurColor}73 70%, 
-                              ${imageDominantColors[index].blurColor}B3 80%, 
-                              ${imageDominantColors[index].blurColor}E6 85%, 
-                              ${imageDominantColors[index].blurColor}E6 88%, 
-                              ${imageDominantColors[index].blurColor}B3 92%, 
-                              ${imageDominantColors[index].blurColor}66 96%, 
-                              ${imageDominantColors[index].blurColor}00 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.45) 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 88%, rgba(0,0,0,0.7) 92%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0) 100%)',
+                              ${imageDominantColors[index].blurColor}26 0%, 
+                              ${imageDominantColors[index].blurColor}40 10%, 
+                              ${imageDominantColors[index].blurColor}73 30%, 
+                              ${imageDominantColors[index].blurColor}A6 50%, 
+                              ${imageDominantColors[index].blurColor}D9 70%, 
+                              ${imageDominantColors[index].blurColor}F2 80%, 
+                              ${imageDominantColors[index].blurColor}FA 90%, 
+                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}FF 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
@@ -3166,25 +3121,25 @@ The article concludes with forward-looking analysis and what readers should watc
                       )}
                     </div>
                     
-                    {/* Emoji fallback when no image */}
-                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                      <div style={{
-                      position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: '38vh',
-                      margin: 0,
-                      padding: 0,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: '1',
-                      overflow: 'hidden',
-                      pointerEvents: 'none'
-                    }}>
+                      {/* Emoji fallback when no image */}
+                      {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                        <div style={{
+                        position: 'fixed',
+                        top: '0',
+                        left: '0',
+                        right: '0',
+                        width: '100vw',
+                        height: '38vh',
+                        margin: 0,
+                        padding: 0,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: '1',
+                        overflow: 'hidden',
+                        pointerEvents: 'none'
+                      }}>
                         <div style={{
                         fontSize: '72px',
                         display: 'flex',
