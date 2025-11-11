@@ -3074,8 +3074,23 @@ The article concludes with forward-looking analysis and what readers should watc
                         height: '58%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,0.9) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,0.9) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}></div>
+                      
+                      {/* Second Blur Overlay - Starts where first blur ends, decreases from 90% to 0% until bullet text */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '88%',
+                        left: '0',
+                        width: '100%',
+                        height: '12%',
+                        backdropFilter: 'blur(50px)',
+                        WebkitBackdropFilter: 'blur(50px)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.15) 80%, rgba(0,0,0,0.05) 95%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.15) 80%, rgba(0,0,0,0.05) 95%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
