@@ -3065,17 +3065,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Starts from top, 90% at title, decreases to 0% at bullet text */}
+                      {/* Graduated Blur Overlay - 90% at title start, stays 90% through title, ends right after */}
                       <div style={{
-                        position: 'fixed',
-                        top: '0',
+                        position: 'absolute',
+                        top: '20%',
                         left: '0',
-                        width: '100vw',
-                        height: 'calc(38vh + 120px)',
+                        width: '100%',
+                        height: '68%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 92%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0.7) 96%, rgba(0,0,0,0.5) 97%, rgba(0,0,0,0.3) 98%, rgba(0,0,0,0.15) 99%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 92%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0.7) 96%, rgba(0,0,0,0.5) 97%, rgba(0,0,0,0.3) 98%, rgba(0,0,0,0.15) 99%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -3095,16 +3095,18 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}26 0%, 
-                              ${imageDominantColors[index].blurColor}40 10%, 
-                              ${imageDominantColors[index].blurColor}73 30%, 
-                              ${imageDominantColors[index].blurColor}A6 50%, 
-                              ${imageDominantColors[index].blurColor}D9 70%, 
-                              ${imageDominantColors[index].blurColor}F2 80%, 
-                              ${imageDominantColors[index].blurColor}FA 90%, 
-                              ${imageDominantColors[index].blurColor}FF 95%, 
-                              ${imageDominantColors[index].blurColor}FF 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
+                              ${imageDominantColors[index].blurColor}00 0%, 
+                              ${imageDominantColors[index].blurColor}00 40%, 
+                              ${imageDominantColors[index].blurColor}1A 50%, 
+                              ${imageDominantColors[index].blurColor}40 60%, 
+                              ${imageDominantColors[index].blurColor}73 70%, 
+                              ${imageDominantColors[index].blurColor}B3 80%, 
+                              ${imageDominantColors[index].blurColor}E6 85%, 
+                              ${imageDominantColors[index].blurColor}E6 88%, 
+                              ${imageDominantColors[index].blurColor}B3 92%, 
+                              ${imageDominantColors[index].blurColor}66 96%, 
+                              ${imageDominantColors[index].blurColor}00 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.45) 70%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 88%, rgba(0,0,0,0.7) 92%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
