@@ -3065,7 +3065,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Starts at 40% */}
+                      {/* Graduated Blur Overlay - Starts at 40% and continues to bottom */}
                       <div style={{
                         position: 'absolute',
                         top: '40%',
@@ -3153,13 +3153,31 @@ The article concludes with forward-looking analysis and what readers should watc
                     </div>
                     )}
                     
+                    {/* Continuation Blur Overlay - Extends below image and fades to 0% at switcher */}
+                    <div style={{
+                      position: 'fixed',
+                      top: '38vh',
+                      left: '0',
+                      width: '100vw',
+                      height: '25vh',
+                      background: imageDominantColors[index]?.blurColor 
+                        ? `linear-gradient(to bottom, ${imageDominantColors[index].blurColor}, transparent)`
+                        : 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent)',
+                      backdropFilter: 'blur(50px)',
+                      WebkitBackdropFilter: 'blur(50px)',
+                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.02) 90%, rgba(0,0,0,0) 100%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.02) 90%, rgba(0,0,0,0) 100%)',
+                      pointerEvents: 'none',
+                      zIndex: 50
+                    }}></div>
+                    
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
                         paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
-                        zIndex: '2',
+                        zIndex: '100',
                         background: 'transparent',
                         width: '100%',
                         maxWidth: '100%',
@@ -3175,7 +3193,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         marginTop: '32px',
                         width: '100%',
                         position: 'relative',
-                        zIndex: 10
+                        zIndex: 100
                       }}>
                         {/* Time Since Published - Left Side */}
                         <div style={{
@@ -3192,7 +3210,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         {getAvailableComponentsCount(story) > 1 && (
                           <div className="switcher" style={{ 
                             position: 'relative',
-                            flex: '0 0 auto'
+                            flex: '0 0 auto',
+                            zIndex: 100
                           }}>
                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                               const isActive = getCurrentInformationType(story, index) === infoType;
