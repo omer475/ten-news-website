@@ -3067,35 +3067,57 @@ The article concludes with forward-looking analysis and what readers should watc
                       
                       {/* Graduated Blur Overlay - 90% at title start, stays 90% through title, ends right after */}
                       <div style={{
-                        position: 'fixed',
-                        top: 'calc(38vh * 0.30)',
+                        position: 'absolute',
+                        top: '30%',
                         left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: 'calc(38vh * 0.58)',
+                        width: '100%',
+                        height: '58%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,0.9) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,0.9) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 15%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.7) 90%, rgba(0,0,0,0.4) 95%, rgba(0,0,0,0.1) 98%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
                       
-                      {/* Second Blur Overlay - Starts where first blur ends at 90%, decreases to 0% at 40% of page */}
+                      {/* Second Blur Overlay - Starts where first blur ends (88% of image = 33.44vh), decreases to 0% at 40vh */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(38vh * 0.88)',
+                        top: '33.44vh',
                         left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: 'calc(40vh - 33.44vh)',
+                        width: '100%',
+                        height: '6.56vh',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.15) 80%, rgba(0,0,0,0.05) 95%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.15) 80%, rgba(0,0,0,0.05) 95%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
+                      
+                      {/* Second Blur Colored Gradient Overlay - Matches blur opacity gradient */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'fixed',
+                        top: '33.44vh',
+                        left: '0',
+                        width: '100%',
+                        height: '6.56vh',
+                        background: imageDominantColors[index]?.blurColor 
+                          ? `linear-gradient(to bottom, 
+                              ${imageDominantColors[index].blurColor}E6 0%, 
+                              ${imageDominantColors[index].blurColor}CC 15%, 
+                              ${imageDominantColors[index].blurColor}99 30%, 
+                              ${imageDominantColors[index].blurColor}66 45%, 
+                              ${imageDominantColors[index].blurColor}40 60%, 
+                              ${imageDominantColors[index].blurColor}26 75%, 
+                              ${imageDominantColors[index].blurColor}0D 90%, 
+                              ${imageDominantColors[index].blurColor}00 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}></div>
+                      )}
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
