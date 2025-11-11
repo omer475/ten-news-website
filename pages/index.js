@@ -3065,17 +3065,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - 90% plateau at title, gradual decrease to bullet text */}
+                      {/* Graduated Blur Overlay - Starts from top, 90% at title, decreases to 0% at bullet text */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(38vh * 0.20)',
+                        top: '0',
                         left: '0',
                         width: '100vw',
-                        height: 'calc(42vh - 38vh * 0.20)',
+                        height: 'calc(38vh + 120px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.3) 90%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.3) 90%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 92%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0.7) 96%, rgba(0,0,0,0.5) 97%, rgba(0,0,0,0.3) 98%, rgba(0,0,0,0.15) 99%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.9) 85%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.9) 92%, rgba(0,0,0,0.85) 94%, rgba(0,0,0,0.7) 96%, rgba(0,0,0,0.5) 97%, rgba(0,0,0,0.3) 98%, rgba(0,0,0,0.15) 99%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
