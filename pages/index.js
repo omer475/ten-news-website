@@ -2863,23 +2863,23 @@ The article concludes with forward-looking analysis and what readers should watc
                       toggleDetailedText(index);
                   }}>
                      {/* News Image - Full Screen Edge to Edge */}
-                      <div style={{
-                        position: 'fixed',
-                        top: '0',
-                        left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: '38vh',
-                        margin: 0,
-                        padding: 0,
-                        background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'block',
-                        zIndex: '1',
-                        overflow: 'hidden',
-                        pointerEvents: 'none',
-                        // Ensure image container doesn't interfere with information box
-                        maxHeight: '38vh'
-                      }}>
+                     <div style={{
+                       position: 'fixed',
+                       top: '0',
+                       left: '0',
+                       right: '0',
+                       width: '100vw',
+                       height: '38vh',
+                       margin: 0,
+                       padding: 0,
+                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                       display: 'block',
+                       zIndex: '1',
+                       overflow: 'hidden',
+                       pointerEvents: 'none',
+                       // Ensure image container doesn't interfere with information box
+                       maxHeight: '38vh'
+                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
                         // Only reject if clearly invalid (null, empty, or too short to be a URL)
@@ -3065,17 +3065,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Starts at 40% and continues to bottom */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
                       <div style={{
                         position: 'absolute',
-                        top: '40%',
+                        top: '20%',
                         left: '0',
                         width: '100%',
-                        height: '60%',
+                        height: '80%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,1) 60%, rgba(0,0,0,1) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -3121,25 +3121,25 @@ The article concludes with forward-looking analysis and what readers should watc
                       )}
                     </div>
                     
-                      {/* Emoji fallback when no image */}
-                      {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                        <div style={{
-                        position: 'fixed',
-                        top: '0',
-                        left: '0',
-                        right: '0',
-                        width: '100vw',
-                        height: '38vh',
-                        margin: 0,
-                        padding: 0,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: '1',
-                        overflow: 'hidden',
-                        pointerEvents: 'none'
-                      }}>
+                     {/* Emoji fallback when no image */}
+                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                       <div style={{
+                       position: 'fixed',
+                       top: '0',
+                       left: '0',
+                       right: '0',
+                       width: '100vw',
+                       height: '38vh',
+                       margin: 0,
+                       padding: 0,
+                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                         display: 'flex',
+                         alignItems: 'center',
+                       justifyContent: 'center',
+                       zIndex: '1',
+                       overflow: 'hidden',
+                       pointerEvents: 'none'
+                     }}>
                         <div style={{
                         fontSize: '72px',
                         display: 'flex',
@@ -3153,31 +3153,13 @@ The article concludes with forward-looking analysis and what readers should watc
                     </div>
                     )}
                     
-                    {/* Continuation Blur Overlay - Extends below image and fades to 0% at switcher */}
-                    <div style={{
-                      position: 'fixed',
-                      top: '38vh',
-                      left: '0',
-                      width: '100vw',
-                      height: '25vh',
-                      background: imageDominantColors[index]?.blurColor 
-                        ? `linear-gradient(to bottom, ${imageDominantColors[index].blurColor}, transparent)`
-                        : 'linear-gradient(to bottom, rgba(0,0,0,0.3), transparent)',
-                      backdropFilter: 'blur(50px)',
-                      WebkitBackdropFilter: 'blur(50px)',
-                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.02) 90%, rgba(0,0,0,0) 100%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.02) 90%, rgba(0,0,0,0) 100%)',
-                      pointerEvents: 'none',
-                      zIndex: 50
-                    }}></div>
-                    
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
                         paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
-                        zIndex: '100',
+                        zIndex: '2',
                         background: 'transparent',
                         width: '100%',
                         maxWidth: '100%',
@@ -3193,7 +3175,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         marginTop: '32px',
                         width: '100%',
                         position: 'relative',
-                        zIndex: 100
+                        zIndex: 10
                       }}>
                         {/* Time Since Published - Left Side */}
                         <div style={{
@@ -3210,8 +3192,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         {getAvailableComponentsCount(story) > 1 && (
                           <div className="switcher" style={{ 
                             position: 'relative',
-                            flex: '0 0 auto',
-                            zIndex: 100
+                            flex: '0 0 auto'
                           }}>
                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                               const isActive = getCurrentInformationType(story, index) === infoType;
