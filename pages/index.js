@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
 import dynamic from 'next/dynamic';
+import ReadArticleTracker from '../lib/ReadArticleTracker';
 
 // Dynamically import GraphChart to avoid SSR issues
 const GraphChart = dynamic(() => import('../components/GraphChart'), {
@@ -30,6 +31,13 @@ export default function Home() {
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
+  
+  // Initialize ReadArticleTracker (persistent across component lifecycle)
+  const readTrackerRef = useRef(null);
+  if (readTrackerRef.current === null) {
+    readTrackerRef.current = new ReadArticleTracker();
+  }
+  const readTracker = readTrackerRef.current;
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -652,8 +660,12 @@ The article concludes with forward-looking analysis and what readers should watc
                processedStories.push(storyData);
              });
             
-            console.log('📰 Setting stories:', processedStories.length);
-            setStories(processedStories);
+            // Filter out already read articles before displaying
+            const unreadStories = readTracker.filterUnreadArticles(processedStories);
+            
+            console.log('📰 Total stories:', processedStories.length);
+            console.log('📰 Unread stories:', unreadStories.length);
+            setStories(unreadStories);
             console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
@@ -674,6 +686,29 @@ The article concludes with forward-looking analysis and what readers should watc
     
     loadNewsData();
   }, []);
+
+  // Track when user views an article (when currentIndex changes)
+  useEffect(() => {
+    if (stories.length === 0 || currentIndex < 0 || currentIndex >= stories.length) {
+      return; // No valid story to track
+    }
+
+    const currentStory = stories[currentIndex];
+    
+    // Only track news articles (not opening page or other types)
+    if (currentStory && currentStory.type === 'news') {
+      const articleId = readTracker.getArticleId(currentStory);
+      
+      if (articleId) {
+        // Mark as read after a short delay to ensure user actually viewed it
+        const timer = setTimeout(() => {
+          readTracker.markAsRead(articleId);
+        }, 500); // 500ms delay - article must be visible for half a second
+        
+        return () => clearTimeout(timer); // Cleanup timer on unmount or index change
+      }
+    }
+  }, [currentIndex, stories, readTracker]);
 
   const goToStory = (index) => {
     if (index >= 0 && index < stories.length) {
