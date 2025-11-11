@@ -3081,6 +3081,8 @@ The article concludes with forward-looking analysis and what readers should watc
                       }}></div>
                       
                       {/* Second Blur Overlay - Starts where first blur ends (88% of image = 33.44vh), decreases to 0% at 40vh */}
+                      {index === currentIndex && (
+                      <>
                       <div style={{
                         position: 'fixed',
                         top: '33.44vh',
@@ -3117,6 +3119,8 @@ The article concludes with forward-looking analysis and what readers should watc
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
+                      )}
+                      </>
                       )}
                       
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
