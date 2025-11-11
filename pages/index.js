@@ -3065,17 +3065,17 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) - Max 70% */}
+                      {/* Graduated Blur Overlay - 90% plateau at title, gradual decrease to bullet text */}
                       <div style={{
-                        position: 'absolute',
-                        top: '20%',
+                        position: 'fixed',
+                        top: 'calc(38vh * 0.20)',
                         left: '0',
-                        width: '100%',
-                        height: '80%',
+                        width: '100vw',
+                        height: 'calc(42vh - 38vh * 0.20)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.035) 12.5%, rgba(0,0,0,0.133) 25%, rgba(0,0,0,0.315) 37.5%, rgba(0,0,0,0.553) 50%, rgba(0,0,0,0.7) 56.25%, rgba(0,0,0,0.7) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.035) 12.5%, rgba(0,0,0,0.133) 25%, rgba(0,0,0,0.315) 37.5%, rgba(0,0,0,0.553) 50%, rgba(0,0,0,0.7) 56.25%, rgba(0,0,0,0.7) 100%)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.3) 90%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 10%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.9) 65%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.3) 90%, rgba(0,0,0,0.15) 95%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -3102,9 +3102,9 @@ The article concludes with forward-looking analysis and what readers should watc
                               ${imageDominantColors[index].blurColor}D9 70%, 
                               ${imageDominantColors[index].blurColor}F2 80%, 
                               ${imageDominantColors[index].blurColor}FA 90%, 
-                              ${imageDominantColors[index].blurColor}B3 95%, 
-                              ${imageDominantColors[index].blurColor}B3 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,0.7) 95%, rgba(0,0,0,0.7) 100%)',
+                              ${imageDominantColors[index].blurColor}FF 95%, 
+                              ${imageDominantColors[index].blurColor}FF 100%)`
+                          : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
