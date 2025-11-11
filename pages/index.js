@@ -3087,26 +3087,27 @@ The article concludes with forward-looking analysis and what readers should watc
                         position: 'fixed',
                         top: '33.44vh',
                         left: '0',
-                        width: '100%',
-                        height: '6.56vh',
+                        right: '0',
+                        width: '100vw',
+                        height: 'calc(40vh - 33.44vh)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
                         WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
                         pointerEvents: 'none',
-                        zIndex: 2
+                        zIndex: 5
                       }}></div>
                       
                       {/* Second Blur Colored Gradient Overlay - Matches blur opacity gradient */}
-                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && imageDominantColors[index]?.blurColor && (
                       <div style={{
                         position: 'fixed',
                         top: '33.44vh',
                         left: '0',
-                        width: '100%',
-                        height: '6.56vh',
-                        background: imageDominantColors[index]?.blurColor 
-                          ? `linear-gradient(to bottom, 
+                        right: '0',
+                        width: '100vw',
+                        height: 'calc(40vh - 33.44vh)',
+                        background: `linear-gradient(to bottom, 
                               ${imageDominantColors[index].blurColor}E6 0%, 
                               ${imageDominantColors[index].blurColor}CC 15%, 
                               ${imageDominantColors[index].blurColor}99 30%, 
@@ -3114,10 +3115,9 @@ The article concludes with forward-looking analysis and what readers should watc
                               ${imageDominantColors[index].blurColor}40 60%, 
                               ${imageDominantColors[index].blurColor}26 75%, 
                               ${imageDominantColors[index].blurColor}0D 90%, 
-                              ${imageDominantColors[index].blurColor}00 100%)`
-                          : 'linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.05) 90%, rgba(0,0,0,0) 100%)',
+                              ${imageDominantColors[index].blurColor}00 100%)`,
                         pointerEvents: 'none',
-                        zIndex: 2
+                        zIndex: 5
                       }}></div>
                       )}
                       </>
