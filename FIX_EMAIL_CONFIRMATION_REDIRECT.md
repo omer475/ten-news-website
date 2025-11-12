@@ -119,3 +119,4 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 **After updating Supabase dashboard settings, your confirmation emails will redirect to the correct production URL!** 🚀
 
 
+

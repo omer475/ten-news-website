@@ -263,3 +263,4 @@ Once emails are working again:
 **Remember: Email confirmations must be ENABLED in Supabase Settings for emails to be sent!** 🎯
 
 
+

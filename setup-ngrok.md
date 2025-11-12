@@ -30,3 +30,4 @@ Terminal'de göreceğiniz URL'yi (örnek: `https://abc123.ngrok.io`) telefonunuz
 **Not:** ngrok URL'si her başlatışta değişir. Sabit bir URL isterseniz ngrok'a ödeme yapmanız gerekir.
 
 
+

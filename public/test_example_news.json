@@ -25,7 +25,9 @@
       "source": "Global News Network",
       "url": "https://example.com/climate-summit",
       "urlToImage": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800",
-      "published_at": "2025-11-12T08:00:00Z"
+      "published_at": "2025-11-12T08:00:00Z",
+      "final_score": 985,
+      "publishedAt": "2025-11-12T08:00:00Z"
     },
     {
       "id": "test_article_2",
@@ -44,7 +46,9 @@
       "source": "Tech Today",
       "url": "https://example.com/ai-assistant",
       "urlToImage": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800",
-      "published_at": "2025-11-12T07:30:00Z"
+      "published_at": "2025-11-12T07:30:00Z",
+      "final_score": 972,
+      "publishedAt": "2025-11-12T07:30:00Z"
     },
     {
       "id": "test_article_3",
@@ -63,7 +67,9 @@
       "source": "Medical Journal",
       "url": "https://example.com/cancer-breakthrough",
       "urlToImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800",
-      "published_at": "2025-11-12T07:00:00Z"
+      "published_at": "2025-11-12T07:00:00Z",
+      "final_score": 998,
+      "publishedAt": "2025-11-12T07:00:00Z"
     },
     {
       "id": "test_article_4",
@@ -82,7 +88,9 @@
       "source": "Emergency Alert Network",
       "url": "https://example.com/earthquake-alert",
       "urlToImage": "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800",
-      "published_at": "2025-11-12T06:30:00Z"
+      "published_at": "2025-11-12T06:30:00Z",
+      "final_score": 995,
+      "publishedAt": "2025-11-12T06:30:00Z"
     },
     {
       "id": "test_article_5",
@@ -101,7 +109,9 @@
       "source": "Space News Agency",
       "url": "https://example.com/mars-mission",
       "urlToImage": "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=800",
-      "published_at": "2025-11-12T06:00:00Z"
+      "published_at": "2025-11-12T06:00:00Z",
+      "final_score": 963,
+      "publishedAt": "2025-11-12T06:00:00Z"
     },
     {
       "id": "test_article_6",
@@ -120,7 +130,9 @@
       "source": "Financial Times",
       "url": "https://example.com/economy-recovery",
       "urlToImage": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800",
-      "published_at": "2025-11-12T05:30:00Z"
+      "published_at": "2025-11-12T05:30:00Z",
+      "final_score": 854,
+      "publishedAt": "2025-11-12T05:30:00Z"
     },
     {
       "id": "test_article_7",
@@ -234,7 +246,9 @@
       "source": "Auto Tech News",
       "url": "https://example.com/battery-breakthrough",
       "urlToImage": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800",
-      "published_at": "2025-11-12T02:30:00Z"
+      "published_at": "2025-11-12T02:30:00Z",
+      "final_score": 955,
+      "publishedAt": "2025-11-12T02:30:00Z"
     },
     {
       "id": "test_article_13",
@@ -348,7 +362,9 @@
       "source": "Energy Research",
       "url": "https://example.com/fusion-breakthrough",
       "urlToImage": "https://images.unsplash.com/photo-1518987048-93e29699e79a?w=800",
-      "published_at": "2025-11-11T23:30:00Z"
+      "published_at": "2025-11-11T23:30:00Z",
+      "final_score": 978,
+      "publishedAt": "2025-11-11T23:30:00Z"
     },
     {
       "id": "test_article_19",

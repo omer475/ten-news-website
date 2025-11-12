@@ -813,26 +813,27 @@ The article concludes with forward-looking analysis and what readers should watc
                  }
                }
 
-               const storyData = {
-                 type: 'news',
-                 number: article.rank || (index + 1),
-                 category: (article.category || 'WORLD NEWS').toUpperCase(),
-                 emoji: article.emoji || '📰',
-                 title: article.title || 'News Story',
-                 detailed_text: sampleDetailedText,
-                 summary_bullets: bulletPoints,
-                 details: sampleDetails,
-                 source: article.source || 'Today+',
-                 url: article.url || '#',
-                 urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
-                 blurColor: article.blurColor || null,  // Pre-computed blur color
-                 map: article.map || null,
-                 graph: article.graph || null,
-                 timeline: sampleTimeline,
-                 components: article.components || null,  // CRITICAL: Include components array
-                 publishedAt: article.publishedAt || article.published_at || article.added_at,
-                 id: article.id || `article_${index}`
-               };
+              const storyData = {
+                type: 'news',
+                number: article.rank || (index + 1),
+                category: (article.category || 'WORLD NEWS').toUpperCase(),
+                emoji: article.emoji || '📰',
+                title: article.title || 'News Story',
+                detailed_text: sampleDetailedText,
+                summary_bullets: bulletPoints,
+                details: sampleDetails,
+                source: article.source || 'Today+',
+                url: article.url || '#',
+                urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+                blurColor: article.blurColor || null,  // Pre-computed blur color
+                map: article.map || null,
+                graph: article.graph || null,
+                timeline: sampleTimeline,
+                components: article.components || null,  // CRITICAL: Include components array
+                publishedAt: article.publishedAt || article.published_at || article.added_at,
+                id: article.id || `article_${index}`,
+                final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
+              };
                
                processedStories.push(storyData);
              });
@@ -3061,7 +3062,13 @@ The article concludes with forward-looking analysis and what readers should watc
               opacity: index === currentIndex ? 1 : 0,
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
-              background: 'transparent'
+              background: 'transparent',
+              // Red gradient border for important news (score >= 950)
+              ...(story.type === 'news' && story.final_score >= 950 && {
+                border: '4px solid',
+                borderImage: 'linear-gradient(135deg, black 0%, #1a0000 5%, #330000 10%, #4d0000 15%, #660000 20%, #800000 25%, #990000 30%, #b30000 35%, #cc0000 40%, #e60000 45%, red 50%, #e60000 55%, #cc0000 60%, #b30000 65%, #990000 70%, #800000 75%, #660000 80%, #4d0000 85%, #330000 90%, #1a0000 95%, black 100%) 1',
+                boxShadow: '0 0 20px rgba(255, 0, 0, 0.3)'
+              })
             }}
           >
             {/* Paywall for stories 6+ (index >= 5) */}
