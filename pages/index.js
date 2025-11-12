@@ -277,9 +277,9 @@ export default function Home() {
     return sortedColors;
   };
 
-  // Select color based on article index for variety
+  // Select the most dominant color from the image
   const selectColorForArticle = (colorCandidates, articleIndex) => {
-    // Filter to colorful only
+    // Filter to colorful only (saturation >= 30%, lightness 20-80%)
     let colorfulColors = filterColorfulColors(colorCandidates);
     
     // If no colorful colors, use most saturated from all candidates
@@ -288,20 +288,22 @@ export default function Home() {
       colorfulColors = sortedBySaturation.slice(0, 1);
     }
     
-    // ALWAYS apply aggressive hue variation based on article index
-    // This ensures every article gets a different color
-    const colorIndex = articleIndex % Math.max(colorfulColors.length, 1);
-    const selectedColor = { ...colorfulColors[colorIndex] };
+    // Sort by frequency and vibrancy to get the TRUE dominant color from the image
+    // Vibrancy = saturation * (1 - distance from mid-lightness)
+    colorfulColors.sort((a, b) => {
+      const vibrancyA = a.hsl[1] * (1 - Math.abs(a.hsl[2] - 50) / 50);
+      const vibrancyB = b.hsl[1] * (1 - Math.abs(b.hsl[2] - 50) / 50);
+      return vibrancyB - vibrancyA;
+    });
     
-    // Apply hue shift to create variety - multiply by 50 degrees per article
-    const hueShift = (articleIndex * 50) % 360;
+    // Select the FIRST (most vibrant) color - this is the actual dominant color
+    const selectedColor = { ...colorfulColors[0] };
+    
+    // Only boost saturation slightly, NO hue shifting
     selectedColor.hsl = [...selectedColor.hsl];
-    selectedColor.hsl[0] = (selectedColor.hsl[0] + hueShift) % 360;
+    selectedColor.hsl[1] = Math.min(100, selectedColor.hsl[1] * 1.15);
     
-    // Also boost saturation slightly for more vibrant colors
-    selectedColor.hsl[1] = Math.min(100, selectedColor.hsl[1] * 1.1);
-    
-    // Convert back to RGB after hue shift
+    // Convert to RGB
     const [r, g, b] = hslToRgb(...selectedColor.hsl);
     selectedColor.rgb = { r, g, b };
     selectedColor.r = r;
@@ -2932,22 +2934,20 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '3px',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
+                      height: '38vh',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: 'calc(38vh - 3px)'
+                      maxHeight: '38vh'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -3134,13 +3134,13 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Ease-In Curve (20-65%) */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (40-100%) */}
                       <div style={{
                         position: 'absolute',
-                        top: '20%',
+                        top: '40%',
                         left: '0',
                         width: '100%',
-                        height: '80%',
+                        height: '60%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
@@ -3194,11 +3194,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '3px',
-                      left: '6px',
-                      right: '6px',
-                      width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
+                      height: '38vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3206,7 +3206,6 @@ The article concludes with forward-looking analysis and what readers should watc
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
-                      borderRadius: '12px',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
