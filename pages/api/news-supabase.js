@@ -40,16 +40,46 @@ export default async function handler(req, res) {
       throw error
     }
 
-    // Filter out any test/placeholder records
+    // Filter out test records AND articles older than 24 hours
+    const now = Date.now();
+    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+    
     const filteredArticles = (articles || []).filter(a => {
+      // Filter out test articles
       const url = a?.url || ''
       const title = a?.title || ''
       const source = a?.source || ''
-      return url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source)
+      const isNotTest = url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source);
+      
+      if (!isNotTest) return false;
+      
+      // Filter out articles older than 24 hours
+      const articleDate = a.added_at || a.published_at || a.published_date;
+      if (!articleDate) {
+        console.warn('⚠️ Article missing date, excluding:', title);
+        return false; // Exclude articles without dates
+      }
+      
+      const articleTime = new Date(articleDate).getTime();
+      const ageMs = now - articleTime;
+      
+      if (isNaN(articleTime)) {
+        console.warn('⚠️ Invalid article date, excluding:', title);
+        return false;
+      }
+      
+      const isRecent = ageMs < twentyFourHoursMs;
+      
+      if (!isRecent) {
+        const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
+        console.log(`🗑️ Filtering out old article (${hoursOld}h old):`, title);
+      }
+      
+      return isRecent;
     })
 
     console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
-    console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests`)
+    console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests and old articles`)
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
