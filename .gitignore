@@ -14,6 +14,8 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.save
+.env.*.backup
 
 # Python
 __pycache__/
@@ -48,4 +50,7 @@ Thumbs.db
 # Processing logs will be committed to track the process
 
 # Temporary files
-run_news_generation.py
+
+# Database files (too large for GitHub)
+ten_news.db
+*.db

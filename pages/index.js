@@ -4,6 +4,7 @@ import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
+import { sortArticlesByScore } from '../utils/sortArticles';
 
 // Dynamically import GraphChart to avoid SSR issues
 const GraphChart = dynamic(() => import('../components/GraphChart'), {
@@ -550,6 +551,104 @@ export default function Home() {
     }
   }, []);
 
+  // Add debug helpers for sorting (with access to stories state)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.debugSorting) {
+      // Extend debugSorting with functions that have access to current stories
+      window.debugSorting.showTopArticles = (n = 10) => {
+        if (stories.length === 0) {
+          console.log('ℹ️ No articles loaded yet');
+          return;
+        }
+        
+        const newsStories = stories.filter(s => s.type === 'news');
+        const topN = newsStories.slice(0, n);
+        
+        console.log(`📊 Top ${Math.min(n, newsStories.length)} articles (out of ${newsStories.length} total):`);
+        console.table(topN.map((story, idx) => ({
+          rank: idx + 1,
+          score: story.final_score ?? 'N/A',
+          title: story.title?.substring(0, 60) || 'No title',
+          date: story.publishedAt || 'N/A',
+          category: story.category || 'N/A'
+        })));
+        
+        return topN;
+      };
+      
+      window.debugSorting.checkIfSorted = () => {
+        const newsStories = stories.filter(s => s.type === 'news');
+        if (newsStories.length === 0) {
+          console.log('ℹ️ No news articles loaded');
+          return true;
+        }
+        
+        let isSorted = true;
+        let outOfOrder = [];
+        
+        for (let i = 0; i < newsStories.length - 1; i++) {
+          const currentScore = newsStories[i].final_score ?? 0;
+          const nextScore = newsStories[i + 1].final_score ?? 0;
+          
+          if (currentScore < nextScore) {
+            isSorted = false;
+            outOfOrder.push({
+              index: i,
+              current: {
+                title: newsStories[i].title?.substring(0, 40),
+                score: currentScore
+              },
+              next: {
+                title: newsStories[i + 1].title?.substring(0, 40),
+                score: nextScore
+              }
+            });
+          }
+        }
+        
+        if (isSorted) {
+          console.log('✅ Articles are correctly sorted by score!');
+          console.log(`📊 Score range: ${newsStories[0]?.final_score ?? 'N/A'} (highest) to ${newsStories[newsStories.length - 1]?.final_score ?? 'N/A'} (lowest)`);
+        } else {
+          console.error('❌ Articles are NOT sorted correctly!');
+          console.table(outOfOrder);
+        }
+        
+        return isSorted;
+      };
+      
+      window.debugSorting.checkArticleScores = () => {
+        const newsStories = stories.filter(s => s.type === 'news');
+        console.log(`📊 All article scores (${newsStories.length} articles):`);
+        console.table(newsStories.map((story, idx) => ({
+          index: idx,
+          score: story.final_score ?? 'N/A',
+          title: story.title?.substring(0, 50) || 'No title',
+          date: story.publishedAt || 'N/A'
+        })));
+        
+        // Show statistics
+        const scores = newsStories
+          .map(s => s.final_score)
+          .filter(s => typeof s === 'number');
+        
+        if (scores.length > 0) {
+          const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+          const max = Math.max(...scores);
+          const min = Math.min(...scores);
+          
+          console.log('\n📈 Score Statistics:');
+          console.log(`   Highest: ${max}`);
+          console.log(`   Lowest: ${min}`);
+          console.log(`   Average: ${avg.toFixed(2)}`);
+          console.log(`   Total articles with scores: ${scores.length}/${newsStories.length}`);
+        }
+      };
+      
+      console.log('🐛 Debug helpers updated with access to current stories');
+    }
+  }, [stories]);
+
   // Track article when currentIndex changes (mark as read after 2 seconds)
   useEffect(() => {
     if (!readTrackerRef.current || !stories[currentIndex]) {
@@ -615,8 +714,43 @@ export default function Home() {
             
             const processedStories = [openingStory];
             
+            // Filter out articles older than 24 hours
+            const now = Date.now();
+            const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+            
+            const recentArticles = newsData.articles.filter(article => {
+              const articleDate = article.added_at || article.published_at || article.publishedAt;
+              
+              if (!articleDate) {
+                console.warn('⚠️ Article missing date, keeping it:', article.title);
+                return true; // Keep articles without dates
+              }
+              
+              const articleTime = new Date(articleDate).getTime();
+              const ageMs = now - articleTime;
+              
+              if (isNaN(articleTime)) {
+                console.warn('⚠️ Invalid article date, keeping it:', article.title, articleDate);
+                return true;
+              }
+              
+              const isRecent = ageMs < twentyFourHoursMs;
+              
+              if (!isRecent) {
+                const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
+                console.log(`🗑️ Filtering out old article (${hoursOld}h old):`, article.title);
+              }
+              
+              return isRecent;
+            });
+            
+            const filteredOutCount = newsData.articles.length - recentArticles.length;
+            if (filteredOutCount > 0) {
+              console.log(`🗑️ Removed ${filteredOutCount} articles older than 24 hours`);
+            }
+            
              // Convert articles to story format
-             newsData.articles.forEach((article, index) => {
+             recentArticles.forEach((article, index) => {
                // Sample preview data
                const sampleDetails = article.details && article.details.length > 0 ? article.details : [
                  'Impact Score: 8.5/10 High significance',
@@ -721,8 +855,22 @@ The article concludes with forward-looking analysis and what readers should watc
               }
             }
             
-            console.log('📰 Setting stories:', unreadStories.length);
-            setStories(unreadStories);
+            // Sort articles by score (highest first), with date tie-breaking
+            // Keep opening story first, sort only the news articles
+            let finalStories = unreadStories;
+            if (unreadStories.length > 1) {
+              const openingStory = unreadStories[0]; // First story (opening page)
+              const newsArticles = unreadStories.slice(1); // All news articles
+              
+              console.log('📊 Sorting news articles by score...');
+              const sortedNews = sortArticlesByScore(newsArticles);
+              
+              // Combine: opening story first, then sorted news
+              finalStories = [openingStory, ...sortedNews];
+            }
+            
+            console.log('📰 Setting stories:', finalStories.length);
+            setStories(finalStories);
             console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
