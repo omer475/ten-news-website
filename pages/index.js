@@ -550,22 +550,39 @@ export default function Home() {
 
   // Track article when currentIndex changes (mark as read after 2 seconds)
   useEffect(() => {
-    if (!readTrackerRef.current || !stories[currentIndex]) return;
+    if (!readTrackerRef.current || !stories[currentIndex]) {
+      console.log('⚠️ Tracking skipped - tracker or story missing');
+      return;
+    }
     
     const story = stories[currentIndex];
+    console.log('🔍 Checking story for tracking:', { 
+      type: story.type, 
+      hasId: !!story.id, 
+      id: story.id,
+      index: currentIndex 
+    });
     
     // Only track news articles (not opening story)
-    if (story.type !== 'news' || !story.id) return;
+    if (story.type !== 'news' || !story.id) {
+      console.log('⏭️ Skipping tracking - not a news article or missing ID');
+      return;
+    }
+    
+    console.log('⏱️ Starting 2-second timer for article:', story.id);
     
     // Mark as read after 2 seconds of viewing
     const timer = setTimeout(() => {
       if (readTrackerRef.current && story.id) {
         readTrackerRef.current.markAsRead(story.id);
-        console.log('📖 Article marked as read:', story.id);
+        console.log('✅ Article marked as read:', story.id);
       }
     }, 2000);
     
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🧹 Cleanup timer for:', story.id);
+      clearTimeout(timer);
+    };
   }, [currentIndex, stories]);
 
   useEffect(() => {
