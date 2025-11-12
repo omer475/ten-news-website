@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       .from('articles')
       .select('*')
       .eq('published', true)
-      .gte('published_at', twentyFourHoursAgo)
+      .gte('created_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsLast: true })
       .order('published_at', { ascending: false })
       .limit(500)
@@ -54,10 +54,10 @@ export default async function handler(req, res) {
       if (!isNotTest) return false;
       
       // Filter out articles older than 24 hours
-      const articleDate = a.added_at || a.published_at || a.published_date;
+      const articleDate = a.created_at || a.added_at || a.published_at || a.published_date;
       if (!articleDate) {
-        console.warn('⚠️ Article missing date, excluding:', title);
-        return false; // Exclude articles without dates
+        console.warn('⚠️ Article missing date, keeping it:', title);
+        return true; // Keep articles without dates
       }
       
       const articleTime = new Date(articleDate).getTime();

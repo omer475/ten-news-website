@@ -714,40 +714,8 @@ export default function Home() {
             
             const processedStories = [openingStory];
             
-            // Filter out articles older than 24 hours
-            const now = Date.now();
-            const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-            
-            const recentArticles = newsData.articles.filter(article => {
-              const articleDate = article.added_at || article.published_at || article.publishedAt;
-              
-              if (!articleDate) {
-                console.warn('⚠️ Article missing date, keeping it:', article.title);
-                return true; // Keep articles without dates
-              }
-              
-              const articleTime = new Date(articleDate).getTime();
-              const ageMs = now - articleTime;
-              
-              if (isNaN(articleTime)) {
-                console.warn('⚠️ Invalid article date, keeping it:', article.title, articleDate);
-                return true;
-              }
-              
-              const isRecent = ageMs < twentyFourHoursMs;
-              
-              if (!isRecent) {
-                const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
-                console.log(`🗑️ Filtering out old article (${hoursOld}h old):`, article.title);
-              }
-              
-              return isRecent;
-            });
-            
-            const filteredOutCount = newsData.articles.length - recentArticles.length;
-            if (filteredOutCount > 0) {
-              console.log(`🗑️ Removed ${filteredOutCount} articles older than 24 hours`);
-            }
+            // API already filters articles older than 24 hours
+            const recentArticles = newsData.articles;
             
              // Convert articles to story format
              recentArticles.forEach((article, index) => {
