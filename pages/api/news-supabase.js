@@ -23,14 +23,14 @@ export default async function handler(req, res) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch published articles from Supabase - only last 24 hours, sorted by score
+    // Fetch published articles from Supabase - only news published in last 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
     const { data: articles, error } = await supabase
       .from('articles')
       .select('*')
       .eq('published', true)
-      .gte('created_at', twentyFourHoursAgo)
+      .gte('published_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsLast: true })
       .order('published_at', { ascending: false })
       .limit(500)
@@ -53,11 +53,11 @@ export default async function handler(req, res) {
       
       if (!isNotTest) return false;
       
-      // Filter out articles older than 24 hours
-      const articleDate = a.created_at || a.added_at || a.published_at || a.published_date;
+      // Filter by when news was originally published (not when added to database)
+      const articleDate = a.published_at || a.published_date || a.added_at;
       if (!articleDate) {
-        console.warn('⚠️ Article missing date, keeping it:', title);
-        return true; // Keep articles without dates
+        console.warn('⚠️ Article missing publication date, excluding:', title);
+        return false; // Exclude articles without publication dates
       }
       
       const articleTime = new Date(articleDate).getTime();
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       
       if (!isRecent) {
         const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
-        console.log(`🗑️ Filtering out old article (${hoursOld}h old):`, title);
+        console.log(`🗑️ Filtering out old news (${hoursOld}h old):`, title);
       }
       
       return isRecent;
