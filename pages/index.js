@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
 import dynamic from 'next/dynamic';
-import ReadArticleTracker from '../lib/ReadArticleTracker';
+import ReadArticleTracker from '../utils/ReadArticleTracker';
 
 // Dynamically import GraphChart to avoid SSR issues
 const GraphChart = dynamic(() => import('../components/GraphChart'), {
@@ -32,12 +32,8 @@ export default function Home() {
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
   
-  // Initialize ReadArticleTracker (persistent across component lifecycle)
+  // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
-  if (readTrackerRef.current === null) {
-    readTrackerRef.current = new ReadArticleTracker();
-  }
-  const readTracker = readTrackerRef.current;
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -544,6 +540,34 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Initialize ReadArticleTracker
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      readTrackerRef.current = new ReadArticleTracker();
+      console.log('✅ ReadArticleTracker initialized');
+    }
+  }, []);
+
+  // Track article when currentIndex changes (mark as read after 2 seconds)
+  useEffect(() => {
+    if (!readTrackerRef.current || !stories[currentIndex]) return;
+    
+    const story = stories[currentIndex];
+    
+    // Only track news articles (not opening story)
+    if (story.type !== 'news' || !story.id) return;
+    
+    // Mark as read after 2 seconds of viewing
+    const timer = setTimeout(() => {
+      if (readTrackerRef.current && story.id) {
+        readTrackerRef.current.markAsRead(story.id);
+        console.log('📖 Article marked as read:', story.id);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [currentIndex, stories]);
+
   useEffect(() => {
     console.log('🔄 useEffect starting...');
     const loadNewsData = async () => {
@@ -660,11 +684,25 @@ The article concludes with forward-looking analysis and what readers should watc
                processedStories.push(storyData);
              });
             
-            // Filter out already read articles before displaying
-            const unreadStories = readTracker.filterUnreadArticles(processedStories);
+            // Filter out read articles using ReadArticleTracker
+            let unreadStories = processedStories;
+            if (readTrackerRef.current) {
+              unreadStories = processedStories.filter((story, index) => {
+                // Always keep opening story
+                if (index === 0) return true;
+                // Keep non-news stories
+                if (story.type !== 'news') return true;
+                // Filter out read articles
+                return !readTrackerRef.current.hasBeenRead(story.id);
+              });
+              
+              const filteredCount = processedStories.length - unreadStories.length;
+              if (filteredCount > 0) {
+                console.log(`🔍 Filtered out ${filteredCount} read articles`);
+              }
+            }
             
-            console.log('📰 Total stories:', processedStories.length);
-            console.log('📰 Unread stories:', unreadStories.length);
+            console.log('📰 Setting stories:', unreadStories.length);
             setStories(unreadStories);
             console.log('📰 Stories set successfully');
           } else {
@@ -686,29 +724,6 @@ The article concludes with forward-looking analysis and what readers should watc
     
     loadNewsData();
   }, []);
-
-  // Track when user views an article (when currentIndex changes)
-  useEffect(() => {
-    if (stories.length === 0 || currentIndex < 0 || currentIndex >= stories.length) {
-      return; // No valid story to track
-    }
-
-    const currentStory = stories[currentIndex];
-    
-    // Only track news articles (not opening page or other types)
-    if (currentStory && currentStory.type === 'news') {
-      const articleId = readTracker.getArticleId(currentStory);
-      
-      if (articleId) {
-        // Mark as read after a short delay to ensure user actually viewed it
-        const timer = setTimeout(() => {
-          readTracker.markAsRead(articleId);
-        }, 500); // 500ms delay - article must be visible for half a second
-        
-        return () => clearTimeout(timer); // Cleanup timer on unmount or index change
-      }
-    }
-  }, [currentIndex, stories, readTracker]);
 
   const goToStory = (index) => {
     if (index >= 0 && index < stories.length) {

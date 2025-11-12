@@ -1,268 +1,487 @@
 {
-  "digest_date": "November 6, 2025",
+  "status": "ok",
+  "totalResults": 25,
+  "digest_date": "November 12, 2025",
+  "dailyGreeting": "Today's Essential Global News - TEST DATA",
+  "readingTime": "25 articles",
+  "displayDate": "TUESDAY, NOVEMBER 12, 2025",
+  "generatedAt": "2025-11-12T10:00:00.000Z",
+  "generatedAtUK": "2025-11-12T10:00:00.000Z",
   "articles": [
     {
+      "id": "test_article_1",
       "rank": 1,
-      "id": "test-1",
-      "emoji": "🤖",
-      "title": "**OpenAI** Releases **GPT-5** with Revolutionary **Reasoning Capabilities**",
-      "summary": "OpenAI unveils GPT-5, featuring enhanced reasoning and multimodal capabilities that outperform previous models across all benchmarks.",
+      "title": "Global Climate Summit Reaches Historic Agreement",
+      "summary": "World leaders have reached a groundbreaking agreement on climate action, committing to net-zero emissions by 2040. The deal includes unprecedented funding for developing nations and strict enforcement mechanisms.",
+      "detailed_text": "In a historic move, representatives from 195 countries have signed the most ambitious climate accord in history. The agreement, negotiated over two weeks of intense discussions, sets binding targets for carbon reduction and establishes a $500 billion fund to help developing nations transition to clean energy.",
       "summary_bullets": [
-        "**GPT-5** achieves **98% accuracy** on complex reasoning tasks, surpassing human expert performance",
-        "New **multimodal architecture** seamlessly processes text, images, audio, and video simultaneously",
-        "**OpenAI** reports 10x improvement in computational efficiency compared to GPT-4",
-        "Model features **real-time learning** capabilities with built-in fact-checking mechanisms"
+        "195 countries commit to net-zero emissions by 2040",
+        "$500 billion fund established for developing nations",
+        "Binding enforcement mechanisms included",
+        "Fossil fuel subsidies to be phased out by 2030"
       ],
-      "detailed_text": "OpenAI has launched GPT-5, marking a significant leap in artificial intelligence capabilities. The new model demonstrates unprecedented reasoning abilities, achieving near-perfect scores on complex mathematical and logical problems. Industry experts suggest this release could accelerate AI adoption across scientific research, education, and professional services.",
-      "details": ["Release Date: November 2025", "Parameters: 2 Trillion", "Training Time: 6 months"],
-      "timeline": [
-        {"date": "June 2025", "event": "GPT-5 development announced"},
-        {"date": "September 2025", "event": "Beta testing begins with select partners"},
-        {"date": "November 2025", "event": "Public release and API access"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Technology",
-      "source": "TechCrunch",
-      "url": "https://example.com/gpt5",
-      "urlToImage": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=800&fit=crop",
-      "blurColor": "#5B7FD9",
-      "published_at": "2025-11-06T09:00:00Z"
-    },
-    {
-      "rank": 2,
-      "id": "test-2",
+      "category": "ENVIRONMENT",
       "emoji": "🌍",
-      "title": "**UN Climate Summit** Achieves Historic **Carbon Neutrality Agreement** by **130 Nations**",
-      "summary": "World leaders reach groundbreaking consensus on aggressive carbon reduction targets at COP30 summit.",
-      "summary_bullets": [
-        "**130 countries** commit to achieving **net-zero emissions** by 2040, five years ahead of previous targets",
-        "**$500 billion** climate fund established to support developing nations' green transition",
-        "Agreement includes **mandatory reporting** and **penalties** for non-compliance",
-        "**Renewable energy** investment pledges exceed **$2 trillion** over next decade"
-      ],
-      "detailed_text": "The COP30 summit in Dubai has produced the most comprehensive climate agreement in history. With 130 nations signing on, the deal represents over 85% of global emissions. The agreement includes binding commitments, regular progress reviews, and significant financial support for nations transitioning to clean energy.",
-      "details": ["Participating Countries: 130", "Investment Pledged: $2 Trillion", "Target Year: 2040"],
-      "timeline": [
-        {"date": "October 2025", "event": "Pre-summit negotiations begin"},
-        {"date": "November 3, 2025", "event": "Summit officially opens in Dubai"},
-        {"date": "November 5, 2025", "event": "Historic agreement signed"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Environment",
-      "source": "Reuters",
-      "url": "https://example.com/climate",
-      "urlToImage": "https://images.unsplash.com/photo-1569163139394-de4798aa62b6?w=1200&h=800&fit=crop",
-      "blurColor": "#2D8B5F",
-      "published_at": "2025-11-06T08:30:00Z"
+      "source": "Global News Network",
+      "url": "https://example.com/climate-summit",
+      "urlToImage": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800",
+      "published_at": "2025-11-12T08:00:00Z"
     },
     {
+      "id": "test_article_2",
+      "rank": 2,
+      "title": "Tech Giant Unveils Revolutionary AI Assistant",
+      "summary": "A major technology company has launched an AI assistant that can understand and respond to complex human emotions, marking a significant breakthrough in artificial intelligence development.",
+      "detailed_text": "The new AI system uses advanced neural networks to detect subtle emotional cues in voice, text, and facial expressions, allowing it to provide more empathetic and contextually appropriate responses.",
+      "summary_bullets": [
+        "AI can detect and respond to human emotions",
+        "Uses multimodal analysis of voice, text, and expressions",
+        "Privacy-focused with on-device processing",
+        "Available in 50 languages at launch"
+      ],
+      "category": "TECHNOLOGY",
+      "emoji": "🤖",
+      "source": "Tech Today",
+      "url": "https://example.com/ai-assistant",
+      "urlToImage": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800",
+      "published_at": "2025-11-12T07:30:00Z"
+    },
+    {
+      "id": "test_article_3",
       "rank": 3,
-      "id": "test-3",
+      "title": "Breakthrough in Cancer Treatment Shows 95% Success Rate",
+      "summary": "A new immunotherapy treatment has shown remarkable success in clinical trials, with 95% of patients achieving complete remission in previously untreatable cancers.",
+      "detailed_text": "Researchers at leading medical institutions have developed a revolutionary cancer treatment that harnesses the body's immune system to target and destroy cancer cells with unprecedented precision.",
+      "summary_bullets": [
+        "95% success rate in clinical trials",
+        "Targets previously untreatable cancers",
+        "Minimal side effects compared to chemotherapy",
+        "Could be available to patients within 2 years"
+      ],
+      "category": "HEALTH",
       "emoji": "🏥",
-      "title": "**FDA Approves** First **Universal Cancer Vaccine** with **89% Success Rate**",
-      "summary": "Revolutionary mRNA-based vaccine shows remarkable efficacy across multiple cancer types in final trials.",
-      "summary_bullets": [
-        "**Phase 3 trials** demonstrate **89% tumor reduction** across seven different cancer types",
-        "**mRNA technology** enables personalized treatment based on individual tumor genetics",
-        "Vaccine shows **minimal side effects** compared to traditional chemotherapy",
-        "**Mass production** begins next month with global distribution planned for early 2026"
-      ],
-      "detailed_text": "The FDA has granted accelerated approval for a groundbreaking cancer vaccine that represents a paradigm shift in oncology treatment. Developed using advanced mRNA technology, the vaccine teaches the immune system to recognize and destroy cancer cells. Initial rollout will prioritize patients with late-stage cancers.",
-      "details": ["Success Rate: 89%", "Cancer Types: 7", "Approval Date: November 2025"],
-      "timeline": [
-        {"date": "2023", "event": "Phase 1 trials begin"},
-        {"date": "2024", "event": "Phase 2 trials show promise"},
-        {"date": "November 2025", "event": "FDA approval granted"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Health",
-      "source": "Nature Medicine",
-      "url": "https://example.com/cancer-vaccine",
-      "urlToImage": "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&h=800&fit=crop",
-      "blurColor": "#D94B7F",
-      "published_at": "2025-11-06T07:45:00Z"
+      "source": "Medical Journal",
+      "url": "https://example.com/cancer-breakthrough",
+      "urlToImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800",
+      "published_at": "2025-11-12T07:00:00Z"
     },
     {
+      "id": "test_article_4",
       "rank": 4,
-      "id": "test-4",
-      "emoji": "🚀",
-      "title": "**SpaceX** Successfully Launches **First Commercial Mars Mission** with **4 Astronauts**",
-      "summary": "Private space company makes history with crewed mission to establish first permanent settlement on Mars.",
+      "title": "Major Earthquake Strikes Pacific Region",
+      "summary": "A magnitude 7.8 earthquake has hit the Pacific coast, triggering tsunami warnings across multiple countries. Emergency services are mobilizing for rescue operations.",
+      "detailed_text": "The powerful earthquake struck at dawn, causing widespread damage across coastal communities. Authorities have issued evacuation orders for low-lying areas as a precautionary measure.",
       "summary_bullets": [
-        "**Starship vehicle** carrying **four commercial astronauts** successfully departs Earth orbit",
-        "**9-month journey** to Mars marks beginning of permanent human presence on red planet",
-        "Mission includes **advanced life support systems** and **3D printing technology** for construction",
-        "**SpaceX** plans **supply missions** every 26 months during optimal launch windows"
+        "Magnitude 7.8 earthquake hits Pacific coast",
+        "Tsunami warnings issued for multiple countries",
+        "Emergency response teams deployed",
+        "Thousands evacuated from coastal areas"
       ],
-      "detailed_text": "SpaceX has achieved a historic milestone with the successful launch of its first crewed mission to Mars. The four-person crew includes two scientists, an engineer, and a medical doctor. They will spend 30 months on Mars establishing infrastructure for future missions before returning to Earth.",
-      "details": ["Crew Size: 4 astronauts", "Journey Time: 9 months", "Mission Duration: 30 months"],
-      "timeline": [
-        {"date": "2024", "event": "Crew selection and training begins"},
-        {"date": "October 2025", "event": "Final systems check completed"},
-        {"date": "November 6, 2025", "event": "Successful launch from Cape Canaveral"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Science",
-      "source": "Space.com",
-      "url": "https://example.com/mars-mission",
-      "urlToImage": "https://images.unsplash.com/photo-1516339901601-2e1b62dc0c45?w=1200&h=800&fit=crop",
-      "blurColor": "#D96842",
-      "published_at": "2025-11-06T06:00:00Z"
+      "category": "BREAKING NEWS",
+      "emoji": "⚠️",
+      "source": "Emergency Alert Network",
+      "url": "https://example.com/earthquake-alert",
+      "urlToImage": "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800",
+      "published_at": "2025-11-12T06:30:00Z"
     },
     {
+      "id": "test_article_5",
       "rank": 5,
-      "id": "test-5",
-      "emoji": "💰",
-      "title": "**Bitcoin** Surges Past **$150,000** Following **Fed's Digital Currency Announcement**",
-      "summary": "Cryptocurrency markets rally as Federal Reserve reveals plans for US central bank digital currency.",
+      "title": "Historic Space Mission Successfully Reaches Mars",
+      "summary": "The first crewed mission to Mars has successfully entered orbit around the red planet, marking a milestone in human space exploration.",
+      "detailed_text": "After a nine-month journey through space, the international crew of six astronauts has achieved a historic milestone by reaching Mars orbit. The mission will conduct extensive research before attempting a landing.",
       "summary_bullets": [
-        "**Bitcoin** reaches all-time high of **$152,000**, up 45% in past month",
-        "**Federal Reserve** announces **digital dollar** rollout starting Q2 2026",
-        "Major institutions increase **crypto holdings** by **$89 billion** in October alone",
-        "**Ethereum** and other altcoins gain 20-30% on positive regulatory clarity"
+        "First crewed mission reaches Mars orbit",
+        "Nine-month journey completed successfully",
+        "International crew of six astronauts",
+        "Landing attempt planned for next month"
       ],
-      "detailed_text": "The cryptocurrency market is experiencing unprecedented growth following the Federal Reserve's surprise announcement of a US central bank digital currency. Bitcoin led the surge, breaking through psychological barriers as institutional investors view the news as validation of digital currencies. Analysts predict continued volatility but long-term stability.",
-      "details": ["Bitcoin Price: $152,000", "Market Cap: $3 Trillion", "Monthly Gain: 45%"],
-      "category": "Business",
-      "source": "Bloomberg",
-      "url": "https://example.com/bitcoin",
-      "urlToImage": "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=1200&h=800&fit=crop",
-      "blurColor": "#E89F2A",
-      "published_at": "2025-11-06T05:15:00Z"
+      "category": "SPACE",
+      "emoji": "🚀",
+      "source": "Space News Agency",
+      "url": "https://example.com/mars-mission",
+      "urlToImage": "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=800",
+      "published_at": "2025-11-12T06:00:00Z"
     },
     {
+      "id": "test_article_6",
       "rank": 6,
-      "id": "test-6",
-      "emoji": "🎮",
-      "title": "**Sony** Unveils **PlayStation 6** with **Photorealistic Graphics** and **AI-Generated Content**",
-      "summary": "Next-generation console promises revolutionary gaming experience with real-time AI-created worlds.",
+      "title": "Global Economy Shows Strong Recovery Signs",
+      "summary": "Major economic indicators point to a robust recovery, with unemployment rates falling to pre-pandemic levels across developed nations.",
+      "detailed_text": "Economic analysts are optimistic about the global recovery, citing strong consumer spending, rising business investment, and improved supply chain conditions as key drivers.",
       "summary_bullets": [
-        "**PlayStation 6** features **custom neural processor** capable of generating infinite game content",
-        "Console delivers **true 8K resolution** at 240fps with ray-tracing on all games",
-        "Built-in **AI assistant** creates personalized storylines and adaptive difficulty",
-        "Launch lineup includes **15 exclusive titles** with **backwards compatibility** for all PS5 games"
+        "Unemployment falls to pre-pandemic levels",
+        "Consumer spending at record highs",
+        "Business investment increases significantly",
+        "Supply chain disruptions largely resolved"
       ],
-      "detailed_text": "Sony Interactive Entertainment has revealed the PlayStation 6, showcasing technology that blurs the line between video games and reality. The console's AI capabilities can generate unique quests, characters, and entire worlds in real-time, ensuring no two gaming experiences are ever the same. Pre-orders begin next week.",
-      "details": ["Release Date: March 2026", "Launch Price: $599", "Storage: 4TB SSD"],
-      "timeline": [
-        {"date": "September 2025", "event": "First teaser released"},
-        {"date": "November 6, 2025", "event": "Official reveal event in Tokyo"},
-        {"date": "March 2026", "event": "Global launch scheduled"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Technology",
-      "source": "IGN",
-      "url": "https://example.com/ps6",
-      "urlToImage": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=1200&h=800&fit=crop",
-      "blurColor": "#6B5FD9",
-      "published_at": "2025-11-06T04:30:00Z"
-    },
-    {
-      "rank": 7,
-      "id": "test-7",
-      "emoji": "⚽",
-      "title": "**Manchester United** Wins **Premier League** Title After **Historic 38-Game Unbeaten Season**",
-      "summary": "Red Devils complete perfect season under new manager, breaking 150-year-old record.",
-      "summary_bullets": [
-        "**Manchester United** secures league title with **5 games remaining**, earliest in history",
-        "Team achieves **38 consecutive matches** without defeat, surpassing Arsenal's invincibles",
-        "Star striker scores **47 goals**, breaking Premier League single-season record",
-        "**£2 billion** valuation surge expected following unprecedented season performance"
-      ],
-      "detailed_text": "Manchester United has written a new chapter in football history by completing an unbeaten Premier League season. Under the guidance of their new manager and with a revitalized squad, the team dominated opponents with attractive, attacking football. The achievement has sparked celebrations across Manchester and secured numerous sponsorship deals.",
-      "details": ["Wins: 33", "Draws: 5", "Goals Scored: 121"],
-      "timeline": [
-        {"date": "August 2025", "event": "Season begins with 3-0 victory"},
-        {"date": "December 2025", "event": "Halfway point - still unbeaten"},
-        {"date": "April 2026", "event": "Title mathematically secured"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Sports",
-      "source": "BBC Sport",
-      "url": "https://example.com/united",
-      "urlToImage": "https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200&h=800&fit=crop",
-      "blurColor": "#D93545",
-      "published_at": "2025-11-06T03:00:00Z"
-    },
-    {
-      "rank": 8,
-      "id": "test-8",
-      "emoji": "🎬",
-      "title": "**Avatar 3** Breaks **Box Office Records** with **$2.1 Billion Opening Weekend**",
-      "summary": "James Cameron's latest installment shatters all previous records in unprecedented global release.",
-      "summary_bullets": [
-        "Film earns **$2.1 billion** in opening weekend, doubling previous record",
-        "**Revolutionary technology** allows viewers to experience film in **true 3D** without glasses",
-        "**150 countries** simultaneous release marks largest theatrical event in history",
-        "**Streaming rights** sold for record **$500 million** to Disney+"
-      ],
-      "detailed_text": "James Cameron's Avatar 3 has redefined what's possible at the box office. The film's groundbreaking visual effects and immersive storytelling attracted massive audiences worldwide. Theater owners report sold-out shows for the next three weeks, and industry analysts predict the film will become the highest-grossing movie of all time.",
-      "details": ["Opening Weekend: $2.1B", "Theater Count: 15,000", "Runtime: 3h 28min"],
-      "category": "Entertainment",
-      "source": "Variety",
-      "url": "https://example.com/avatar3",
-      "urlToImage": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&h=800&fit=crop",
-      "blurColor": "#2AA8B8",
-      "published_at": "2025-11-06T02:15:00Z"
-    },
-    {
-      "rank": 9,
-      "id": "test-9",
-      "emoji": "🌊",
-      "title": "**Scientists Discover** Massive **Ocean Beneath Earth's Surface** with **3x More Water** Than All Seas",
-      "summary": "Groundbreaking research reveals hidden reservoir 400 miles underground, revolutionizing understanding of Earth's water cycle.",
-      "summary_bullets": [
-        "**Underground ocean** located in transition zone **400 miles beneath surface** contains more water than all surface oceans combined",
-        "Discovery explains **mysterious earthquake patterns** and **volcanic activity** in specific regions",
-        "**Ringwoodite mineral** acts as massive sponge, holding water in crystal structure",
-        "Finding has **implications for life origins** and **planetary formation** theories"
-      ],
-      "detailed_text": "An international team of geologists has made a stunning discovery that challenges our understanding of Earth's structure. Using advanced seismic imaging, they've confirmed the existence of a massive ocean trapped in rock 400 miles underground. This discovery could explain various geological phenomena and has profound implications for theories about how our planet formed.",
-      "details": ["Depth: 400 miles", "Volume: 3x surface oceans", "Discovery Date: November 2025"],
-      "timeline": [
-        {"date": "2023", "event": "Initial seismic anomalies detected"},
-        {"date": "2024", "event": "Ringwoodite samples analyzed"},
-        {"date": "November 2025", "event": "Major discovery announced"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Science",
-      "source": "Nature",
-      "url": "https://example.com/underground-ocean",
-      "urlToImage": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=800&fit=crop",
-      "blurColor": "#1E6B9F",
-      "published_at": "2025-11-06T01:00:00Z"
-    },
-    {
-      "rank": 10,
-      "id": "test-10",
-      "emoji": "🏛️",
-      "title": "**EU** Announces **Universal Basic Income** Trial in **6 Member States** Covering **5 Million Citizens**",
-      "summary": "European Union launches largest UBI experiment in history, providing €1,200 monthly to participants.",
-      "summary_bullets": [
-        "**6 EU countries** including Germany, Spain, and Netherlands to implement **2-year trial**",
-        "Each participant receives **€1,200 monthly** with no strings attached",
-        "**€72 billion budget** allocated for comprehensive study of economic and social impacts",
-        "Research will measure effects on **employment, health, education, and entrepreneurship**"
-      ],
-      "detailed_text": "The European Union has approved the world's largest universal basic income trial, involving 5 million citizens across six member states. The two-year experiment will provide crucial data on whether UBI can address income inequality, job displacement from automation, and social welfare challenges. Results will inform potential EU-wide implementation.",
-      "details": ["Participants: 5 Million", "Monthly Payment: €1,200", "Duration: 2 years"],
-      "timeline": [
-        {"date": "May 2025", "event": "EU Parliament approves UBI trial"},
-        {"date": "September 2025", "event": "Participant selection begins"},
-        {"date": "January 2026", "event": "First payments scheduled"}
-      ],
-      "components": ["details", "timeline"],
-      "category": "Politics",
+      "category": "BUSINESS",
+      "emoji": "📈",
       "source": "Financial Times",
-      "url": "https://example.com/eu-ubi",
-      "urlToImage": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=1200&h=800&fit=crop",
-      "blurColor": "#3366CC",
-      "published_at": "2025-11-06T00:30:00Z"
+      "url": "https://example.com/economy-recovery",
+      "urlToImage": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800",
+      "published_at": "2025-11-12T05:30:00Z"
+    },
+    {
+      "id": "test_article_7",
+      "rank": 7,
+      "title": "Renewable Energy Surpasses Fossil Fuels Globally",
+      "summary": "For the first time in history, renewable energy sources have generated more electricity globally than fossil fuels, marking a turning point in the energy transition.",
+      "detailed_text": "The milestone represents years of investment in solar, wind, and hydroelectric power. Experts say this shift is accelerating faster than predicted.",
+      "summary_bullets": [
+        "Renewables generate more power than fossil fuels",
+        "Solar and wind leading the transition",
+        "Energy costs dropping significantly",
+        "100 countries now carbon-neutral in electricity"
+      ],
+      "category": "ENERGY",
+      "emoji": "⚡",
+      "source": "Energy Watch",
+      "url": "https://example.com/renewable-energy",
+      "urlToImage": "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800",
+      "published_at": "2025-11-12T05:00:00Z"
+    },
+    {
+      "id": "test_article_8",
+      "rank": 8,
+      "title": "Educational Revolution: Virtual Reality Classrooms Launch Worldwide",
+      "summary": "Schools across 80 countries are implementing VR-based learning systems that allow students to experience historical events and scientific concepts firsthand.",
+      "detailed_text": "The new educational technology enables immersive learning experiences, from walking through ancient civilizations to exploring the human body at a molecular level.",
+      "summary_bullets": [
+        "VR classrooms launched in 80 countries",
+        "Students can experience historical events",
+        "Significant improvement in retention rates",
+        "Free access provided to underfunded schools"
+      ],
+      "category": "EDUCATION",
+      "emoji": "🎓",
+      "source": "Education Today",
+      "url": "https://example.com/vr-education",
+      "urlToImage": "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=800",
+      "published_at": "2025-11-12T04:30:00Z"
+    },
+    {
+      "id": "test_article_9",
+      "rank": 9,
+      "title": "Ocean Cleanup Project Removes 50% of Pacific Plastic",
+      "summary": "A massive ocean cleanup initiative has successfully removed half of the plastic waste from the Great Pacific Garbage Patch, exceeding all expectations.",
+      "detailed_text": "Using innovative floating barriers and collection systems, the project has removed millions of tons of plastic debris from the ocean, significantly benefiting marine ecosystems.",
+      "summary_bullets": [
+        "50% of Pacific plastic waste removed",
+        "Marine life populations recovering",
+        "Plastic recycled into new products",
+        "Expansion to other ocean regions planned"
+      ],
+      "category": "ENVIRONMENT",
+      "emoji": "🌊",
+      "source": "Ocean Conservation",
+      "url": "https://example.com/ocean-cleanup",
+      "urlToImage": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800",
+      "published_at": "2025-11-12T04:00:00Z"
+    },
+    {
+      "id": "test_article_10",
+      "rank": 10,
+      "title": "Quantum Computer Solves Previously Impossible Problem",
+      "summary": "Scientists using a quantum computer have solved a mathematical problem that would take classical computers thousands of years to compute.",
+      "detailed_text": "The breakthrough demonstrates the practical potential of quantum computing and could revolutionize fields from drug discovery to financial modeling.",
+      "summary_bullets": [
+        "Quantum computer achieves major breakthrough",
+        "Solves problem in minutes vs. millennia",
+        "Applications in medicine and finance",
+        "Commercial quantum computers coming in 2026"
+      ],
+      "category": "SCIENCE",
+      "emoji": "⚛️",
+      "source": "Science Daily",
+      "url": "https://example.com/quantum-breakthrough",
+      "urlToImage": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800",
+      "published_at": "2025-11-12T03:30:00Z"
+    },
+    {
+      "id": "test_article_11",
+      "rank": 11,
+      "title": "Universal Basic Income Trial Shows Remarkable Success",
+      "summary": "A five-year universal basic income experiment across multiple cities has shown significant improvements in health, education, and economic stability.",
+      "detailed_text": "Participants receiving monthly unconditional payments showed better physical and mental health outcomes, pursued more education, and started businesses at higher rates.",
+      "summary_bullets": [
+        "5-year UBI trial exceeds expectations",
+        "Improved health and education outcomes",
+        "Higher entrepreneurship rates observed",
+        "10 countries considering nationwide implementation"
+      ],
+      "category": "POLITICS",
+      "emoji": "💰",
+      "source": "Policy Review",
+      "url": "https://example.com/ubi-trial",
+      "urlToImage": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800",
+      "published_at": "2025-11-12T03:00:00Z"
+    },
+    {
+      "id": "test_article_12",
+      "rank": 12,
+      "title": "Breakthrough Battery Technology Enables 1000-Mile Range",
+      "summary": "A new solid-state battery technology promises to revolutionize electric vehicles with a single-charge range exceeding 1000 miles and 10-minute charging times.",
+      "detailed_text": "The revolutionary battery uses a solid electrolyte instead of liquid, dramatically increasing energy density while improving safety and reducing costs.",
+      "summary_bullets": [
+        "1000+ mile range on single charge",
+        "10-minute fast charging capability",
+        "50% cheaper than current batteries",
+        "Production begins next quarter"
+      ],
+      "category": "TECHNOLOGY",
+      "emoji": "🔋",
+      "source": "Auto Tech News",
+      "url": "https://example.com/battery-breakthrough",
+      "urlToImage": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800",
+      "published_at": "2025-11-12T02:30:00Z"
+    },
+    {
+      "id": "test_article_13",
+      "rank": 13,
+      "title": "Global Hunger Falls to Historic Low",
+      "summary": "International cooperation and innovative agricultural techniques have reduced global hunger to its lowest level ever recorded.",
+      "detailed_text": "A combination of vertical farming, precision agriculture, and improved distribution networks has ensured food security for previously vulnerable populations.",
+      "summary_bullets": [
+        "Global hunger at historic low",
+        "Vertical farming feeding millions",
+        "Food waste reduced by 60%",
+        "Malnutrition rates dropping rapidly"
+      ],
+      "category": "WORLD",
+      "emoji": "🌾",
+      "source": "World Food Program",
+      "url": "https://example.com/hunger-reduction",
+      "urlToImage": "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800",
+      "published_at": "2025-11-12T02:00:00Z"
+    },
+    {
+      "id": "test_article_14",
+      "rank": 14,
+      "title": "Ancient City Discovered Using Satellite Technology",
+      "summary": "Archaeologists have discovered a previously unknown ancient civilization using advanced satellite imaging, revealing a city that housed over 100,000 people.",
+      "detailed_text": "The discovery in Central America reveals sophisticated urban planning, advanced water management systems, and evidence of a previously unknown written language.",
+      "summary_bullets": [
+        "Lost city discovered via satellite imaging",
+        "Housed over 100,000 people at its peak",
+        "Advanced engineering discovered",
+        "New written language identified"
+      ],
+      "category": "ARCHAEOLOGY",
+      "emoji": "🏛️",
+      "source": "Archaeological Review",
+      "url": "https://example.com/ancient-city",
+      "urlToImage": "https://images.unsplash.com/photo-1582553352515-6e8cbbfee5f2?w=800",
+      "published_at": "2025-11-12T01:30:00Z"
+    },
+    {
+      "id": "test_article_15",
+      "rank": 15,
+      "title": "New Treatment Reverses Alzheimer's in Clinical Trials",
+      "summary": "A groundbreaking treatment has shown the ability to reverse cognitive decline in Alzheimer's patients, offering hope to millions of families worldwide.",
+      "detailed_text": "The therapy combines targeted antibodies with genetic modification to clear amyloid plaques and restore neural connections damaged by the disease.",
+      "summary_bullets": [
+        "Treatment reverses cognitive decline",
+        "70% of patients show improvement",
+        "Memory function restored in many cases",
+        "FDA fast-track approval expected"
+      ],
+      "category": "HEALTH",
+      "emoji": "🧠",
+      "source": "Medical Breakthrough",
+      "url": "https://example.com/alzheimers-treatment",
+      "urlToImage": "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800",
+      "published_at": "2025-11-12T01:00:00Z"
+    },
+    {
+      "id": "test_article_16",
+      "rank": 16,
+      "title": "Flying Taxis Begin Commercial Operations in Major Cities",
+      "summary": "Electric vertical takeoff and landing aircraft have begun commercial passenger service in five major cities, revolutionizing urban transportation.",
+      "detailed_text": "The autonomous flying taxis can transport up to four passengers across cities in minutes, bypassing ground traffic entirely while producing zero emissions.",
+      "summary_bullets": [
+        "Flying taxis operational in 5 cities",
+        "Zero emissions, fully autonomous",
+        "Reduces commute times by 75%",
+        "Expanding to 20 more cities next year"
+      ],
+      "category": "TRANSPORTATION",
+      "emoji": "🚁",
+      "source": "Urban Mobility",
+      "url": "https://example.com/flying-taxis",
+      "urlToImage": "https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800",
+      "published_at": "2025-11-12T00:30:00Z"
+    },
+    {
+      "id": "test_article_17",
+      "rank": 17,
+      "title": "Coral Reefs Show Unprecedented Recovery",
+      "summary": "Marine biologists report that coral reefs around the world are recovering at unprecedented rates thanks to coordinated conservation efforts.",
+      "detailed_text": "Innovative reef restoration techniques, combined with reduced ocean temperatures and pollution, have led to a remarkable comeback for coral ecosystems.",
+      "summary_bullets": [
+        "Coral coverage increased 40% globally",
+        "Fish populations rebounding rapidly",
+        "Restoration techniques highly effective",
+        "Tourism revenues supporting conservation"
+      ],
+      "category": "ENVIRONMENT",
+      "emoji": "🐠",
+      "source": "Marine Conservation",
+      "url": "https://example.com/coral-recovery",
+      "urlToImage": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800",
+      "published_at": "2025-11-12T00:00:00Z"
+    },
+    {
+      "id": "test_article_18",
+      "rank": 18,
+      "title": "Breakthrough in Fusion Energy Achieves Net Gain",
+      "summary": "Scientists have achieved a fusion reaction that produces more energy than it consumes, marking a historic milestone toward unlimited clean energy.",
+      "detailed_text": "The experimental fusion reactor maintained a stable reaction for 15 minutes, producing 3 times more energy than was used to initiate it.",
+      "summary_bullets": [
+        "Fusion reaction achieves net energy gain",
+        "Maintained for 15 minutes continuously",
+        "3x more energy out than in",
+        "Commercial reactors possible by 2030"
+      ],
+      "category": "SCIENCE",
+      "emoji": "☢️",
+      "source": "Energy Research",
+      "url": "https://example.com/fusion-breakthrough",
+      "urlToImage": "https://images.unsplash.com/photo-1518987048-93e29699e79a?w=800",
+      "published_at": "2025-11-11T23:30:00Z"
+    },
+    {
+      "id": "test_article_19",
+      "rank": 19,
+      "title": "Global Internet Access Reaches 95% of Population",
+      "summary": "Satellite internet networks and expanded infrastructure have brought reliable high-speed internet to 95% of the world's population.",
+      "detailed_text": "The achievement represents a major leap forward in bridging the digital divide, enabling access to education, healthcare, and economic opportunities for billions.",
+      "summary_bullets": [
+        "95% of world now has internet access",
+        "Satellite networks key to expansion",
+        "Education and healthcare benefits massive",
+        "Economic opportunities growing in rural areas"
+      ],
+      "category": "TECHNOLOGY",
+      "emoji": "📡",
+      "source": "Digital Divide Report",
+      "url": "https://example.com/internet-access",
+      "urlToImage": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800",
+      "published_at": "2025-11-11T23:00:00Z"
+    },
+    {
+      "id": "test_article_20",
+      "rank": 20,
+      "title": "Universal Vaccine Protects Against All Flu Strains",
+      "summary": "Researchers have developed a universal flu vaccine that provides protection against all known influenza strains, potentially ending annual flu shots.",
+      "detailed_text": "The breakthrough vaccine targets conserved regions of the influenza virus that don't mutate, providing long-lasting immunity across all variants.",
+      "summary_bullets": [
+        "Single vaccine covers all flu strains",
+        "Protection lasts 10+ years",
+        "Clinical trials show 99% effectiveness",
+        "Could save millions of lives annually"
+      ],
+      "category": "HEALTH",
+      "emoji": "💉",
+      "source": "Health Innovation",
+      "url": "https://example.com/universal-vaccine",
+      "urlToImage": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800",
+      "published_at": "2025-11-11T22:30:00Z"
+    },
+    {
+      "id": "test_article_21",
+      "rank": 21,
+      "title": "Historic Peace Agreement Ends Decades-Long Conflict",
+      "summary": "Two neighboring nations have signed a comprehensive peace treaty, ending a conflict that has lasted for over 40 years.",
+      "detailed_text": "The agreement includes provisions for economic cooperation, cultural exchange, and joint infrastructure projects that will benefit both populations.",
+      "summary_bullets": [
+        "40-year conflict officially ends",
+        "Comprehensive peace treaty signed",
+        "Joint economic development planned",
+        "Refugees to return home safely"
+      ],
+      "category": "WORLD",
+      "emoji": "🕊️",
+      "source": "International Relations",
+      "url": "https://example.com/peace-agreement",
+      "urlToImage": "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800",
+      "published_at": "2025-11-11T22:00:00Z"
+    },
+    {
+      "id": "test_article_22",
+      "rank": 22,
+      "title": "3D Printed Organs Save Thousands on Transplant Lists",
+      "summary": "Bioprinted organs are now being successfully transplanted into patients, dramatically reducing wait times and saving lives.",
+      "detailed_text": "Using patients' own cells, scientists can now print functional organs that are not rejected by the immune system, revolutionizing transplant medicine.",
+      "summary_bullets": [
+        "Bioprinted organs successfully transplanted",
+        "No rejection issues with custom organs",
+        "Transplant wait lists cut by 80%",
+        "Cost 70% less than traditional organs"
+      ],
+      "category": "HEALTH",
+      "emoji": "🫀",
+      "source": "Medical Innovation",
+      "url": "https://example.com/bioprinted-organs",
+      "urlToImage": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800",
+      "published_at": "2025-11-11T21:30:00Z"
+    },
+    {
+      "id": "test_article_23",
+      "rank": 23,
+      "title": "Artificial Photosynthesis Creates Fuel from Sunlight",
+      "summary": "Scientists have perfected artificial photosynthesis, enabling the direct conversion of sunlight and CO2 into clean fuel.",
+      "detailed_text": "The technology mimics plant photosynthesis to create liquid fuel that can power existing vehicles and aircraft while removing carbon from the atmosphere.",
+      "summary_bullets": [
+        "Artificial photosynthesis now commercially viable",
+        "Removes CO2 while creating fuel",
+        "Compatible with existing engines",
+        "Cost-competitive with fossil fuels"
+      ],
+      "category": "SCIENCE",
+      "emoji": "🔬",
+      "source": "Clean Energy Journal",
+      "url": "https://example.com/artificial-photosynthesis",
+      "urlToImage": "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800",
+      "published_at": "2025-11-11T21:00:00Z"
+    },
+    {
+      "id": "test_article_24",
+      "rank": 24,
+      "title": "Global Literacy Rate Reaches 98% Milestone",
+      "summary": "International education efforts have pushed global literacy rates to an unprecedented 98%, with digital learning tools playing a crucial role.",
+      "detailed_text": "The achievement represents decades of investment in education infrastructure and innovative teaching methods adapted to local contexts.",
+      "summary_bullets": [
+        "98% global literacy rate achieved",
+        "Digital tools crucial to success",
+        "Gender gap in education nearly closed",
+        "Focus shifts to advanced skills training"
+      ],
+      "category": "EDUCATION",
+      "emoji": "📚",
+      "source": "UNESCO Report",
+      "url": "https://example.com/global-literacy",
+      "urlToImage": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800",
+      "published_at": "2025-11-11T20:30:00Z"
+    },
+    {
+      "id": "test_article_25",
+      "rank": 25,
+      "title": "Asteroid Mining Operation Begins Commercial Production",
+      "summary": "The first space mining operation has successfully extracted valuable minerals from an asteroid, opening a new era of space industry.",
+      "detailed_text": "The robotic mining platform has begun shipping rare earth elements back to Earth, potentially solving critical material shortages.",
+      "summary_bullets": [
+        "First commercial asteroid mining successful",
+        "Rare earth elements being shipped to Earth",
+        "Value estimated at $2 trillion",
+        "5 more mining missions launching next year"
+      ],
+      "category": "SPACE",
+      "emoji": "🛰️",
+      "source": "Space Industry News",
+      "url": "https://example.com/asteroid-mining",
+      "urlToImage": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800",
+      "published_at": "2025-11-11T20:00:00Z"
     }
-  ],
-  "dailyGreeting": "Today's Essential Global News",
-  "readingTime": "35 minutes total reading time",
-  "displayDate": "WEDNESDAY, NOVEMBER 6, 2025",
-  "generatedAt": "2025-11-06T09:00:00Z",
-  "generatedAtUK": "2025-11-06T09:00:00Z"
-      }
+  ]
+}

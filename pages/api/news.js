@@ -12,6 +12,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Pagination support
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 20;
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+
    // Check for test mode (for testing Timeline & Graph components)
   if (req.query.test === 'true') {
     try {
@@ -130,6 +136,24 @@ export default async function handler(req, res) {
     if (supabaseResponse.ok) {
       const supabaseData = await supabaseResponse.json();
       console.log(`✅ Serving LIVE RSS news from Supabase (${supabaseData.articles?.length || 0} articles with images!)`);
+      
+      // Apply pagination if articles exist
+      if (supabaseData.articles && Array.isArray(supabaseData.articles)) {
+        const paginatedArticles = supabaseData.articles.slice(startIndex, endIndex);
+        const hasMore = endIndex < supabaseData.articles.length;
+        
+        return res.status(200).json({
+          ...supabaseData,
+          articles: paginatedArticles,
+          pagination: {
+            page,
+            pageSize,
+            total: supabaseData.articles.length,
+            hasMore
+          }
+        });
+      }
+      
       return res.status(200).json(supabaseData);
     }
   } catch (fetchError) {
@@ -142,6 +166,24 @@ export default async function handler(req, res) {
     if (fs.existsSync(testFilePath)) {
       const testData = JSON.parse(fs.readFileSync(testFilePath, 'utf8'));
       console.log('✅ Serving TEST EXAMPLE news with photos and content');
+      
+      // Apply pagination if articles exist
+      if (testData.articles && Array.isArray(testData.articles)) {
+        const paginatedArticles = testData.articles.slice(startIndex, endIndex);
+        const hasMore = endIndex < testData.articles.length;
+        
+        return res.status(200).json({
+          ...testData,
+          articles: paginatedArticles,
+          pagination: {
+            page,
+            pageSize,
+            total: testData.articles.length,
+            hasMore
+          }
+        });
+      }
+      
       return res.status(200).json(testData);
     }
   } catch (error) {
@@ -159,6 +201,24 @@ export default async function handler(req, res) {
     if (fs.existsSync(newsFilePath)) {
       const newsData = JSON.parse(fs.readFileSync(newsFilePath, 'utf8'));
       console.log(`✅ Serving news data from file: ${newsFileName}`);
+      
+      // Apply pagination if articles exist
+      if (newsData.articles && Array.isArray(newsData.articles)) {
+        const paginatedArticles = newsData.articles.slice(startIndex, endIndex);
+        const hasMore = endIndex < newsData.articles.length;
+        
+        return res.status(200).json({
+          ...newsData,
+          articles: paginatedArticles,
+          pagination: {
+            page,
+            pageSize,
+            total: newsData.articles.length,
+            hasMore
+          }
+        });
+      }
+      
       return res.status(200).json(newsData);
     }
   } catch (error) {
@@ -179,6 +239,24 @@ export default async function handler(req, res) {
       const latestNewsPath = path.join(publicDir, latestNewsFile);
       const newsData = JSON.parse(fs.readFileSync(latestNewsPath, 'utf8'));
       console.log(`✅ Serving recent news data from file: ${latestNewsFile}`);
+      
+      // Apply pagination if articles exist
+      if (newsData.articles && Array.isArray(newsData.articles)) {
+        const paginatedArticles = newsData.articles.slice(startIndex, endIndex);
+        const hasMore = endIndex < newsData.articles.length;
+        
+        return res.status(200).json({
+          ...newsData,
+          articles: paginatedArticles,
+          pagination: {
+            page,
+            pageSize,
+            total: newsData.articles.length,
+            hasMore
+          }
+        });
+      }
+      
       return res.status(200).json(newsData);
     }
   } catch (error) {
