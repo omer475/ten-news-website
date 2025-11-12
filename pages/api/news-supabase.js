@@ -23,13 +23,14 @@ export default async function handler(req, res) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch published articles from Supabase
+    // Fetch published articles from Supabase - sorted by score
     const { data: articles, error } = await supabase
       .from('articles')
       .select('*')
       .eq('published', true)
+      .order('ai_final_score', { ascending: false, nullsLast: true })
       .order('published_at', { ascending: false })
-      .limit(100)
+      .limit(500)
 
     if (error) {
       console.error('Supabase error:', error)

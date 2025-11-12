@@ -12,9 +12,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Pagination support
+  // Pagination support (increased default to show all articles)
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 20;
+  const pageSize = parseInt(req.query.pageSize) || 500;
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
