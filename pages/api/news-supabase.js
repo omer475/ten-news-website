@@ -23,16 +23,13 @@ export default async function handler(req, res) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch published articles from Supabase - only news published in last 24 hours
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
+    // Fetch published articles from Supabase - filter by date in JavaScript (not SQL)
+    // because published_at field may be null or use published_date instead
     const { data: articles, error } = await supabase
       .from('articles')
       .select('*')
       .eq('published', true)
-      .gte('published_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsLast: true })
-      .order('published_at', { ascending: false })
       .limit(500)
 
     if (error) {
@@ -53,26 +50,28 @@ export default async function handler(req, res) {
       
       if (!isNotTest) return false;
       
-      // Filter by when news was originally published (not when added to database)
-      const articleDate = a.published_at || a.published_date || a.added_at;
+      // Filter by when news was originally published
+      // Check all possible date fields (published_date, published_at, added_at, created_at)
+      const articleDate = a.published_date || a.published_at || a.added_at || a.created_at;
+      
       if (!articleDate) {
         console.warn('⚠️ Article missing publication date, excluding:', title);
-        return false; // Exclude articles without publication dates
+        return false;
       }
       
       const articleTime = new Date(articleDate).getTime();
-      const ageMs = now - articleTime;
-      
       if (isNaN(articleTime)) {
         console.warn('⚠️ Invalid article date, excluding:', title);
         return false;
       }
       
+      const ageMs = now - articleTime;
       const isRecent = ageMs < twentyFourHoursMs;
       
       if (!isRecent) {
         const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
-        console.log(`🗑️ Filtering out old news (${hoursOld}h old):`, title);
+        const daysOld = (hoursOld / 24).toFixed(1);
+        console.log(`🗑️ Filtering out old news (${hoursOld}h / ${daysOld}d old):`, title);
       }
       
       return isRecent;
