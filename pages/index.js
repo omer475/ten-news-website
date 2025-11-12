@@ -865,8 +865,28 @@ The article concludes with forward-looking analysis and what readers should watc
               console.log('📊 Sorting news articles by score...');
               const sortedNews = sortArticlesByScore(newsArticles);
               
-              // Combine: opening story first, then sorted news
-              finalStories = [openingStory, ...sortedNews];
+              // Combine: opening story first, then sorted news, then "all caught up" page
+              const allCaughtUpStory = {
+                type: 'all-read',
+                title: "All Caught Up",
+                message: "You've read all today's articles",
+                subtitle: "Come back tomorrow for fresh news"
+              };
+              
+              finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
+            } else if (unreadStories.length === 1) {
+              // Only opening story left, all articles have been read
+              console.log('✅ All articles have been read!');
+              
+              // Create a special "all caught up" story after opening page
+              const allCaughtUpStory = {
+                type: 'all-read',
+                title: "All Caught Up",
+                message: "You've read all today's articles",
+                subtitle: "Come back tomorrow for fresh news"
+              };
+              
+              finalStories = [unreadStories[0], allCaughtUpStory];
             }
             
             console.log('📰 Setting stories:', finalStories.length);
@@ -3071,6 +3091,98 @@ The article concludes with forward-looking analysis and what readers should watc
                 <NewFirstPage 
                   onContinue={nextStory}
                 />
+              ) : story.type === 'all-read' ? (
+                // Minimal "All Caught Up" page - White background, clean design
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '100vh',
+                  padding: '60px 30px',
+                  textAlign: 'center',
+                  background: '#ffffff',
+                  color: '#1d1d1f'
+                }}>
+                  {/* Checkmark Icon */}
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: '#f5f5f7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '32px'
+                  }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  
+                  <h1 style={{
+                    fontSize: '28px',
+                    fontWeight: '600',
+                    marginBottom: '12px',
+                    lineHeight: '1.2',
+                    color: '#1d1d1f',
+                    letterSpacing: '-0.5px'
+                  }}>
+                    {story.title}
+                  </h1>
+                  
+                  <p style={{
+                    fontSize: '17px',
+                    fontWeight: '400',
+                    marginBottom: '8px',
+                    color: '#6e6e73',
+                    lineHeight: '1.4',
+                    maxWidth: '280px'
+                  }}>
+                    {story.message}
+                  </p>
+                  
+                  <p style={{
+                    fontSize: '15px',
+                    fontWeight: '400',
+                    marginBottom: '40px',
+                    color: '#86868b',
+                    lineHeight: '1.4'
+                  }}>
+                    {story.subtitle}
+                  </p>
+                  
+                  <button
+                    onClick={() => {
+                      if (readTrackerRef.current) {
+                        readTrackerRef.current.clearHistory();
+                        window.location.reload();
+                      }
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      color: '#ffffff',
+                      background: '#1d1d1f',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s, transform 0.1s',
+                      letterSpacing: '-0.2px'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.background = '#333333';
+                      e.target.style.transform = 'scale(1.02)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.background = '#1d1d1f';
+                      e.target.style.transform = 'scale(1)';
+                    }}
+                  >
+                    Refresh Reading List
+                  </button>
+                </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
                   
@@ -3306,7 +3418,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 20px 16px',
+                        padding: '24px 16px 12px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
@@ -3389,7 +3501,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '8px',
-                        marginTop: '32px',
+                        marginTop: '16px',
                         width: '100%',
                         position: 'relative',
                         zIndex: 10
