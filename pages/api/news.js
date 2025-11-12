@@ -126,9 +126,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // TEMPORARY: Skip Supabase for local testing with high-score articles
-  // Uncomment this section to re-enable Supabase in production
-  /*
   // Try Supabase first (for production)
   try {
     console.log('🔄 Attempting to fetch from Supabase...');
@@ -162,8 +159,6 @@ export default async function handler(req, res) {
   } catch (fetchError) {
     console.log(`⚠️  Supabase not available: ${fetchError.message}`);
   }
-  */
-  console.log('🧪 Testing mode: Skipping Supabase, using test JSON file');
 
   // FALLBACK 1: Try test example news (for development/testing only)
   try {
