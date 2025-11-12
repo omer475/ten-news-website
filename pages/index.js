@@ -870,7 +870,7 @@ The article concludes with forward-looking analysis and what readers should watc
                 type: 'all-read',
                 title: "All Caught Up",
                 message: "You've read all today's articles",
-                subtitle: "Come back tomorrow for fresh news"
+                subtitle: "Come back in a few minutes"
               };
               
               finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
@@ -883,7 +883,7 @@ The article concludes with forward-looking analysis and what readers should watc
                 type: 'all-read',
                 title: "All Caught Up",
                 message: "You've read all today's articles",
-                subtitle: "Come back tomorrow for fresh news"
+                subtitle: "Come back in a few minutes"
               };
               
               finalStories = [unreadStories[0], allCaughtUpStory];
