@@ -126,6 +126,7 @@ export default async function handler(req, res) {
         source: article.source,
         description: article.description,
         content: article.content,
+        created_at: article.created_at,  // DEBUG: Include to check if this field exists
         // Ensure image URL is always passed if it exists and is valid
         urlToImage: (() => {
           const imgUrl = article.image_url;
