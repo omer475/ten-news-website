@@ -3063,11 +3063,11 @@ The article concludes with forward-looking analysis and what readers should watc
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
               background: 'transparent',
-              // Red-Orange gradient border for important news (score >= 950)
+              // Red gradient border for important news (score >= 950)
               ...(story.type === 'news' && story.final_score >= 950 && {
-                border: '8px solid',
-                borderImage: 'linear-gradient(135deg, #ff4500 0%, #ff5722 10%, #ff6347 20%, #ff7043 30%, #ff8a65 40%, #ff6f00 50%, #ff8a65 60%, #ff7043 70%, #ff6347 80%, #ff5722 90%, #ff4500 100%) 1',
-                boxShadow: '0 0 25px rgba(255, 69, 0, 0.5)'
+                border: '4px solid',
+                borderImage: 'linear-gradient(135deg, black 0%, #1a0000 5%, #330000 10%, #4d0000 15%, #660000 20%, #800000 25%, #990000 30%, #b30000 35%, #cc0000 40%, #e60000 45%, red 50%, #e60000 55%, #cc0000 60%, #b30000 65%, #990000 70%, #800000 75%, #660000 80%, #4d0000 85%, #330000 90%, #1a0000 95%, black 100%) 1',
+                boxShadow: '0 0 20px rgba(255, 0, 0, 0.3)'
               })
             }}
           >
