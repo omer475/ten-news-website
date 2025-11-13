@@ -23,12 +23,14 @@ export default async function handler(req, res) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch published articles from Supabase - filter by date in JavaScript (not SQL)
-    // because published_at field may be null or use published_date instead
+    // Fetch published articles from last 24 hours, sorted by score
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
     const { data: articles, error } = await supabase
       .from('articles')
       .select('*')
       .eq('published', true)
+      .gte('created_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsLast: true })
       .limit(500)
 
