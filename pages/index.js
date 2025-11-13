@@ -1485,12 +1485,11 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         html {
-          background: #ffffff;
+          background: ${darkMode ? '#000000' : '#ffffff'};
           padding: 0;
           margin: 0;
           height: 100%;
           min-height: 100dvh;
-          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
 
         body {
@@ -1502,37 +1501,20 @@ The article concludes with forward-looking analysis and what readers should watc
           width: 100%;
           height: 100%;
           min-height: 100dvh;
-          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: calc(-1 * max(env(safe-area-inset-top), 44px));
-          left: 0;
-          right: 0;
-          height: max(env(safe-area-inset-top), 44px);
-          background: ${darkMode ? '#000000' : '#ffffff'};
-          z-index: -1;
-          pointer-events: none;
-        }
-        
-        body::after {
-          content: '';
-          position: fixed;
-          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
-          left: 0;
-          right: 0;
-          height: max(env(safe-area-inset-bottom), 34px);
-          background: ${darkMode ? '#000000' : '#ffffff'};
-          z-index: -1;
-          pointer-events: none;
+          /* iOS Safe Area Insets - Background extends behind status bar */
+          padding-bottom: env(safe-area-inset-bottom);
+          padding-left: env(safe-area-inset-left);
+          padding-right: env(safe-area-inset-right);
         }
 
-        /* Glassmorphism Variables */
+        /* Safe Area and Glassmorphism Variables */
         :root {
+          --safe-top: env(safe-area-inset-top);
+          --safe-bottom: env(safe-area-inset-bottom);
+          --safe-left: env(safe-area-inset-left);
+          --safe-right: env(safe-area-inset-right);
           --c-glass: #ffffff;
           --c-light: #fff;
           --c-dark: #000;
@@ -1597,7 +1579,7 @@ The article concludes with forward-looking analysis and what readers should watc
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          height: 100vh;
+          height: 100dvh;
           background: ${darkMode ? '#000000' : '#fff'};
         }
 
@@ -1622,20 +1604,23 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .header {
-          position: fixed;
+          position: sticky;
           top: 0;
           left: 0;
           right: 0;
           height: 60px;
-          background: ${darkMode ? 'rgba(0,0,0,0.97)' : 'rgba(255,255,255,0.97)'};
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: ${darkMode ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'};
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 20px;
-          border-bottom: 1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(148, 163, 184, 0.1)'};
+          padding-top: max(env(safe-area-inset-top), 8px);
+          padding-left: 20px;
+          padding-right: 20px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid ${darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'};
           transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
@@ -1678,7 +1663,10 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding: 0 24px 200px 24px;
+          padding-top: calc(60px + env(safe-area-inset-top));
+          padding-bottom: 200px;
+          padding-left: 24px;
+          padding-right: 24px;
           background: ${darkMode ? '#000000' : 'transparent'};
           transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
           overflow-y: auto;
@@ -1692,12 +1680,12 @@ The article concludes with forward-looking analysis and what readers should watc
           left: 0;
           right: 0;
           /* Reduce height to leave space for information box at bottom */
-          height: calc(100vh - 250px);
+          height: calc(100dvh - 250px);
           background: ${darkMode ? '#000000' : '#fff'};
           z-index: -1;
           pointer-events: none;
           /* Ensure it doesn't extend below the content area where information box is */
-          max-height: calc(100vh - 250px);
+          max-height: calc(100dvh - 250px);
         }
 
         .story-content {
@@ -3031,15 +3019,11 @@ The article concludes with forward-looking analysis and what readers should watc
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
               background: 'transparent',
-              // Blurry red glow effect for important news (score >= 950)
+              // Red gradient border for important news (score >= 950)
               ...(story.type === 'news' && story.final_score >= 950 && {
-                boxShadow: `
-                  0 0 8px 2px rgba(255, 0, 0, 0.8),
-                  0 0 16px 4px rgba(255, 0, 0, 0.6),
-                  0 0 24px 6px rgba(255, 0, 0, 0.4),
-                  0 0 32px 8px rgba(255, 0, 0, 0.2),
-                  0 0 40px 10px rgba(255, 0, 0, 0.1)
-                `
+                border: '4px solid',
+                borderImage: 'linear-gradient(135deg, black 0%, #1a0000 5%, #330000 10%, #4d0000 15%, #660000 20%, #800000 25%, #990000 30%, #b30000 35%, #cc0000 40%, #e60000 45%, red 50%, #e60000 55%, #cc0000 60%, #b30000 65%, #990000 70%, #800000 75%, #660000 80%, #4d0000 85%, #330000 90%, #1a0000 95%, black 100%) 1',
+                boxShadow: '0 0 20px rgba(255, 0, 0, 0.3)'
               })
             }}
           >
@@ -3170,7 +3154,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - With Rounded Corners and Spacing */}
+                    {/* News Image - With Rounded Bottom Corners */}
                     <div style={{
                       position: 'fixed',
                       top: '0',
@@ -3185,8 +3169,9 @@ The article concludes with forward-looking analysis and what readers should watc
                       zIndex: '1',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      // Ensure image container doesn't interfere with information box
-                      maxHeight: '38vh'
+                      maxHeight: '38vh',
+                      borderBottomLeftRadius: '20px',
+                      borderBottomRightRadius: '20px'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
