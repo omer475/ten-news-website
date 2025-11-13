@@ -3717,7 +3717,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     marginBottom: '12px',
                                       fontSize: '15px',
                                     lineHeight: '1.55',
-                                    fontWeight: '400',
+                                    fontWeight: '600',
                                     color: '#000000',
                                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif'
                                   }}>
