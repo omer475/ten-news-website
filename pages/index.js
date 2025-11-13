@@ -3033,13 +3033,13 @@ The article concludes with forward-looking analysis and what readers should watc
               background: 'transparent',
               // Red border with fade-out effect for important news (score >= 950)
               ...(story.type === 'news' && story.final_score >= 950 && {
+                border: '3px solid #FF0000',
                 boxShadow: `
-                  0 0 0 2px rgba(255, 0, 0, 1),
-                  0 0 0 4px rgba(255, 0, 0, 0.8),
-                  0 0 0 6px rgba(255, 0, 0, 0.6),
-                  0 0 0 8px rgba(255, 0, 0, 0.4),
-                  0 0 0 10px rgba(255, 0, 0, 0.2),
-                  0 0 0 12px rgba(255, 0, 0, 0)
+                  0 0 0 3px rgba(255, 0, 0, 0.6),
+                  0 0 0 6px rgba(255, 0, 0, 0.4),
+                  0 0 0 9px rgba(255, 0, 0, 0.2),
+                  0 0 0 12px rgba(255, 0, 0, 0.1),
+                  0 0 0 15px rgba(255, 0, 0, 0)
                 `
               })
             }}
