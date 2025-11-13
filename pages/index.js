@@ -478,6 +478,7 @@ export default function Home() {
 
   // Authentication state
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authModal, setAuthModal] = useState(null); // 'login', 'signup', or null
   const [authError, setAuthError] = useState('');
@@ -511,6 +512,18 @@ export default function Home() {
             // Session found in Supabase - user is logged in
             console.log('✅ Session found in Supabase:', session.user.email);
             setUser(session.user);
+            
+            // Fetch user profile
+            try {
+              const profileResponse = await fetch('/api/auth/user');
+              const profileData = await profileResponse.json();
+              if (profileResponse.ok && profileData.profile) {
+                setUserProfile(profileData.profile);
+              }
+            } catch (profileError) {
+              console.log('⚠️ Error fetching profile:', profileError);
+            }
+            
             setAuthLoading(false);
             
             // Also save to localStorage for consistency
@@ -532,6 +545,18 @@ export default function Home() {
           const userData = JSON.parse(storedUser);
           const sessionData = JSON.parse(storedSession);
           setUser(userData);
+          
+          // Fetch profile from API
+          try {
+            const profileResponse = await fetch('/api/auth/user');
+            const profileData = await profileResponse.json();
+            if (profileResponse.ok && profileData.profile) {
+              setUserProfile(profileData.profile);
+            }
+          } catch (profileError) {
+            console.log('⚠️ Error fetching profile:', profileError);
+          }
+          
           setAuthLoading(false);
           return;
         } catch (error) {
@@ -1030,12 +1055,15 @@ The article concludes with forward-looking analysis and what readers should watc
 
       if (response.ok) {
         setUser(data.user);
+        setUserProfile(data.profile);
       } else {
         setUser(null);
+        setUserProfile(null);
       }
     } catch (error) {
       console.error('Check user error:', error);
       setUser(null);
+      setUserProfile(null);
     } finally {
       setAuthLoading(false);
     }
@@ -3059,6 +3087,10 @@ The article concludes with forward-looking analysis and what readers should watc
               {story.type === 'opening' ? (
                 <NewFirstPage 
                   onContinue={nextStory}
+                  user={user}
+                  userProfile={userProfile}
+                  stories={stories}
+                  readTracker={readTrackerRef.current}
                 />
               ) : story.type === 'all-read' ? (
                 // Minimal "All Caught Up" page - White background, clean design
@@ -3365,15 +3397,18 @@ The article concludes with forward-looking analysis and what readers should watc
                       
                       {/* Graduated Blur Overlay - Ease-In Curve (40-100%) */}
                       <div style={{
-                        position: 'absolute',
-                        top: '40%',
+                        position: 'fixed',
+                        top: 'calc(38vh * 0.4)',
                         left: '0',
                         width: '100%',
-                        height: '60%',
+                        height: 'calc(38vh * 0.6 + 20px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 12.5%, rgba(0,0,0,0.19) 25%, rgba(0,0,0,0.45) 37.5%, rgba(0,0,0,0.79) 50%, rgba(0,0,0,1) 56.25%, rgba(0,0,0,1) 100%)',
+                        background: imageDominantColors[index]?.blurColor 
+                          ? imageDominantColors[index].blurColor
+                          : 'rgba(0,0,0,0.5)',
+                        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 10%, rgba(0,0,0,0.19) 20%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.79) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,1) 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 10%, rgba(0,0,0,0.19) 20%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.79) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,1) 100%)',
                         pointerEvents: 'none',
                         zIndex: 2
                       }}></div>
@@ -3450,6 +3485,20 @@ The article concludes with forward-looking analysis and what readers should watc
                         </div>
                     </div>
                     )}
+                    
+                    {/* White rounded container that sits on top of blur */}
+                    <div style={{
+                      position: 'fixed',
+                      top: '38vh',
+                      left: '0',
+                      right: '0',
+                      bottom: '0',
+                      background: '#ffffff',
+                      borderTopLeftRadius: '24px',
+                      borderTopRightRadius: '24px',
+                      zIndex: '1',
+                      pointerEvents: 'none'
+                    }}></div>
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
