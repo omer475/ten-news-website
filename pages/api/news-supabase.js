@@ -37,12 +37,15 @@ export default async function handler(req, res) {
       throw error
     }
 
+    console.log(`\n🔍 RAW SUPABASE QUERY RESULT: ${articles?.length || 0} articles fetched`)
+
     // Filter out test records AND articles older than 24 hours
     const now = Date.now();
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
     
     let testFilteredCount = 0;
     let dateFilteredCount = 0;
+    let noDateCount = 0;
     
     const filteredArticles = (articles || []).filter(a => {
       // Filter out test articles
@@ -61,7 +64,8 @@ export default async function handler(req, res) {
       const articleDate = a.created_at || a.added_at || a.published_date || a.published_at;
       
       if (!articleDate) {
-        console.warn('⚠️ Article missing publication date, excluding:', title);
+        noDateCount++;
+        console.warn('⚠️ Article missing ALL date fields, excluding:', title);
         return false;
       }
       
@@ -84,12 +88,14 @@ export default async function handler(req, res) {
       return isRecent;
     })
 
-    console.log(`\n📊 FILTER STATS:`)
+    console.log(`\n📊 DETAILED FILTER STATS:`)
     console.log(`  ✅ Fetched from Supabase: ${articles?.length || 0} articles`)
     console.log(`  🧪 Filtered as test articles: ${testFilteredCount}`)
     console.log(`  📅 Filtered (added > 24h ago): ${dateFilteredCount}`)
+    console.log(`  ⏰ Missing ALL date fields: ${noDateCount}`)
     console.log(`  ✅ Final count: ${filteredArticles.length} articles`)
-    console.log(`  🔍 Expected: ~136 articles added in last 24 hours\n`)
+    console.log(`  🔍 Expected: ~136 articles added in last 24 hours`)
+    console.log(`  ❓ Missing articles: ${136 - filteredArticles.length}\n`)
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
