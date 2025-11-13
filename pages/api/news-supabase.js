@@ -41,6 +41,9 @@ export default async function handler(req, res) {
     const now = Date.now();
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
     
+    let testFilteredCount = 0;
+    let dateFilteredCount = 0;
+    
     const filteredArticles = (articles || []).filter(a => {
       // Filter out test articles
       const url = a?.url || ''
@@ -48,7 +51,10 @@ export default async function handler(req, res) {
       const source = a?.source || ''
       const isNotTest = url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source);
       
-      if (!isNotTest) return false;
+      if (!isNotTest) {
+        testFilteredCount++;
+        return false;
+      }
       
       // Filter by when news was originally published
       // Check all possible date fields (published_date, published_at, added_at, created_at)
@@ -69,6 +75,7 @@ export default async function handler(req, res) {
       const isRecent = ageMs < twentyFourHoursMs;
       
       if (!isRecent) {
+        dateFilteredCount++;
         const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
         const daysOld = (hoursOld / 24).toFixed(1);
         console.log(`🗑️ Filtering out old news (${hoursOld}h / ${daysOld}d old):`, title);
@@ -77,8 +84,12 @@ export default async function handler(req, res) {
       return isRecent;
     })
 
-    console.log(`✅ Fetched ${articles?.length || 0} articles from Supabase`)
-    console.log(`✅ Serving ${filteredArticles.length} articles after filtering tests and old articles`)
+    console.log(`\n📊 FILTER STATS:`)
+    console.log(`  ✅ Fetched from Supabase: ${articles?.length || 0} articles`)
+    console.log(`  🧪 Filtered as test articles: ${testFilteredCount}`)
+    console.log(`  📅 Filtered as old news: ${dateFilteredCount}`)
+    console.log(`  ✅ Final count: ${filteredArticles.length} articles`)
+    console.log(`  🔍 Expected: 41 recent articles (from SQL query)\n`)
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
