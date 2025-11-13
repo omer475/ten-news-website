@@ -56,9 +56,9 @@ export default async function handler(req, res) {
         return false;
       }
       
-      // Filter by when news was originally published
-      // Check all possible date fields (published_date, published_at, added_at, created_at)
-      const articleDate = a.published_date || a.published_at || a.added_at || a.created_at;
+      // Filter by when article was added to database (not when originally published)
+      // This shows all articles added in last 24h, even if news is older
+      const articleDate = a.created_at || a.added_at || a.published_date || a.published_at;
       
       if (!articleDate) {
         console.warn('⚠️ Article missing publication date, excluding:', title);
@@ -87,9 +87,9 @@ export default async function handler(req, res) {
     console.log(`\n📊 FILTER STATS:`)
     console.log(`  ✅ Fetched from Supabase: ${articles?.length || 0} articles`)
     console.log(`  🧪 Filtered as test articles: ${testFilteredCount}`)
-    console.log(`  📅 Filtered as old news: ${dateFilteredCount}`)
+    console.log(`  📅 Filtered (added > 24h ago): ${dateFilteredCount}`)
     console.log(`  ✅ Final count: ${filteredArticles.length} articles`)
-    console.log(`  🔍 Expected: 41 recent articles (from SQL query)\n`)
+    console.log(`  🔍 Expected: ~136 articles added in last 24 hours\n`)
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
