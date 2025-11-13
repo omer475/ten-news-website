@@ -3031,17 +3031,14 @@ The article concludes with forward-looking analysis and what readers should watc
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
               background: 'transparent',
-              // Red border with fade-out effect for important news (score >= 950)
+              // Blurry red glow effect for important news (score >= 950)
               ...(story.type === 'news' && story.final_score >= 950 && {
-                border: '3px solid #FF0000',
                 boxShadow: `
-                  0 0 0 4px rgba(255, 0, 0, 0.7),
-                  0 0 0 7px rgba(255, 0, 0, 0.5),
-                  0 0 0 10px rgba(255, 0, 0, 0.3),
-                  0 0 0 13px rgba(255, 0, 0, 0.15),
-                  0 0 0 16px rgba(255, 0, 0, 0.07),
-                  0 0 0 19px rgba(255, 0, 0, 0.03),
-                  0 0 0 22px rgba(255, 0, 0, 0)
+                  0 0 8px 2px rgba(255, 0, 0, 0.8),
+                  0 0 16px 4px rgba(255, 0, 0, 0.6),
+                  0 0 24px 6px rgba(255, 0, 0, 0.4),
+                  0 0 32px 8px rgba(255, 0, 0, 0.2),
+                  0 0 40px 10px rgba(255, 0, 0, 0.1)
                 `
               })
             }}
