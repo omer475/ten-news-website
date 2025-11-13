@@ -314,11 +314,17 @@ export default function Home() {
     return selectedColor;
   };
 
-  // Create blur color (dark + muted)
+  // Create blur color (dark but more vibrant and varied)
   const createBlurColor = (hsl) => {
     const [h, s, l] = hsl;
-    const newL = Math.max(15, Math.min(35, l * 0.4)); // Dark: 15-35%
-    const newS = Math.min(60, s * 0.8); // Muted saturation
+    
+    // More varied darkness range based on original lightness
+    const newL = Math.max(20, Math.min(45, l * 0.5)); // Dark: 20-45%
+    
+    // Keep more saturation for vibrant colors, reduce less
+    // If original is very saturated, keep it high
+    const newS = Math.min(85, s * 1.0); // Preserve saturation, cap at 85%
+    
     return [h, newS, newL];
   };
 
@@ -3154,7 +3160,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - With Rounded Bottom Corners */}
+                    {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
                       top: '0',
@@ -3169,9 +3175,8 @@ The article concludes with forward-looking analysis and what readers should watc
                       zIndex: '1',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      maxHeight: '38vh',
-                      borderBottomLeftRadius: '20px',
-                      borderBottomRightRadius: '20px'
+                      // Ensure image container doesn't interfere with information box
+                      maxHeight: '38vh'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
