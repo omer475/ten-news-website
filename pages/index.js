@@ -3401,7 +3401,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         top: 'calc(38vh * 0.4)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(38vh * 0.6 + 34px)',
+                        height: 'calc(38vh * 0.6 + 54px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
