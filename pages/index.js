@@ -2453,13 +2453,13 @@ The article concludes with forward-looking analysis and what readers should watc
           align-items: center;
           gap: 2px;
           width: auto;
-          height: 38px;
+          height: 34px;
           box-sizing: border-box;
           padding: 3px;
           margin: 0;
           border: none;
           border-radius: 99em;
-          font-size: 11px;
+          font-size: 10px;
           font-family: "DM Sans", sans-serif;
           background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
           backdrop-filter: blur(4px) saturate(var(--saturation));
@@ -3519,7 +3519,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '8px',
-                        marginTop: '32px',
+                        marginTop: '12px',
                         width: '100%',
                         position: 'relative',
                         zIndex: 10
@@ -3684,7 +3684,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         style={{ 
                           marginTop: '0px',
                           marginBottom: '32px',
-                          fontSize: '17px',
+                          fontSize: '16px',
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
