@@ -3441,6 +3441,19 @@ The article concludes with forward-looking analysis and what readers should watc
                         zIndex: 2,
                         pointerEvents: 'none'
                       }}>
+                        </div>
+                      )}
+                      
+                      {/* Title - In front of everything */}
+                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
+                      <div style={{
+                        position: 'fixed',
+                        bottom: 'calc(100vh - 38vh + 12px)',
+                        left: '16px',
+                        right: '16px',
+                        zIndex: 10,
+                        pointerEvents: 'none'
+                      }}>
                         <h3 style={{ 
                           margin: 0,
                           fontSize: '24px',
@@ -3450,7 +3463,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           color: '#ffffff',
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
-                        </div>
+                      </div>
                       )}
                     </div>
                     
