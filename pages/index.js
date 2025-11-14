@@ -3447,7 +3447,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       {/* Title - In front of everything */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 38vh - 4px)',
+                        bottom: 'calc(100vh - 38vh - 16px)',
                         left: '16px',
                         right: '16px',
                         zIndex: 10,
