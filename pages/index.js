@@ -3443,7 +3443,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          fontSize: '22px',
+                          fontSize: '26px',
                           fontWeight: '800',
                           lineHeight: '1.2',
                           letterSpacing: '-0.5px',
