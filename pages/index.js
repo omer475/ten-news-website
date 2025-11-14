@@ -3489,7 +3489,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* White rounded container that sits on top of blur */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(38vh + 10px)',
+                      top: 'calc(38vh + 20px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
