@@ -3419,7 +3419,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       <div style={{
                         position: 'absolute',
                         top: 0,
-                        bottom: 0,
+                        bottom: '-12px',
                         left: 0,
                         right: 0,
                         padding: '24px 16px 4px 16px',
