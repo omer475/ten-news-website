@@ -3445,10 +3445,9 @@ The article concludes with forward-looking analysis and what readers should watc
                       )}
                       
                       {/* Title - In front of everything */}
-                      {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 38vh + 12px)',
+                        bottom: 'calc(100vh - 38vh + 8px)',
                         left: '16px',
                         right: '16px',
                         zIndex: 10,
@@ -3464,7 +3463,6 @@ The article concludes with forward-looking analysis and what readers should watc
                           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                       </div>
-                      )}
                     </div>
                     
                     {/* Emoji fallback when no image */}
