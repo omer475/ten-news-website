@@ -3519,7 +3519,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '8px',
-                        marginTop: '18px',
+                        marginTop: '24px',
                         width: '100%',
                         position: 'relative',
                         zIndex: 10
