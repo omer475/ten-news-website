@@ -3401,7 +3401,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         top: 'calc(38vh * 0.4)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(38vh * 0.6 + 20px)',
+                        height: 'calc(38vh * 0.6 + 34px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -3489,7 +3489,7 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* White rounded container that sits on top of blur */}
                     <div style={{
                       position: 'fixed',
-                      top: '38vh',
+                      top: 'calc(38vh + 10px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -3519,7 +3519,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '8px',
-                        marginTop: '22px',
+                        marginTop: '-50px',
                         width: '100%',
                         position: 'relative',
                         zIndex: 10
