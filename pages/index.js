@@ -3395,13 +3395,13 @@ The article concludes with forward-looking analysis and what readers should watc
                         );
                       })()}
                       
-                      {/* Graduated Blur Overlay - Ease-In Curve (40-100%) */}
+                      {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(38vh * 0.4)',
+                        top: 'calc(38vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(38vh * 0.6 + 54px)',
+                        height: 'calc(38vh * 0.45 + 54px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -3422,7 +3422,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 12px 16px',
+                        padding: '24px 16px 4px 16px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
