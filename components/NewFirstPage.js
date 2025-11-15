@@ -92,9 +92,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           left: 0;
           width: 100%;
           height: 100%;
-          backdrop-filter: blur(80px);
-          -webkit-backdrop-filter: blur(80px);
-          background: rgba(255, 255, 255, 0.25);
           z-index: 1;
         }
 
@@ -106,6 +103,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           display: flex;
           flex-direction: column;
           align-items: flex-start;
+          padding: 48px 40px;
+          border-radius: 24px;
+          backdrop-filter: blur(100px);
+          -webkit-backdrop-filter: blur(100px);
+          background: rgba(255, 255, 255, 0.35);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .greeting-line {
