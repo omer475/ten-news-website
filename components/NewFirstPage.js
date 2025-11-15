@@ -80,8 +80,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 40px 20px;
+          justify-content: flex-start;
+          padding: 120px 20px 40px 20px;
           cursor: pointer;
         }
 
