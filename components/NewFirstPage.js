@@ -6,6 +6,32 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     { year: '1985', event: 'Microsoft Windows 1.0 released' }
   ];
 
+  // Get latest articles (filter out opening/closing stories and limit to 5)
+  const getLatestArticles = () => {
+    return stories
+      .filter(story => story.type === 'news')
+      .slice(0, 5);
+  };
+
+  // Calculate time ago from published date
+  const getTimeAgo = (publishedAt) => {
+    if (!publishedAt) return 'Just now';
+    
+    const now = new Date();
+    const published = new Date(publishedAt);
+    const diffMs = now - published;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  const latestArticles = getLatestArticles();
+
   // Calculate important news count
   const getImportantNewsCount = () => {
     // Filter out opening and all-read stories, only get news
@@ -174,6 +200,78 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           margin: 16px 0;
         }
 
+        .timeline-section {
+          width: 100%;
+          max-width: 600px;
+          margin-top: 60px;
+        }
+
+        .timeline-title {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          color: #808080;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin: 0 0 24px 0;
+        }
+
+        .timeline-items {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .timeline-item {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+          padding: 12px;
+          border-radius: 12px;
+          transition: background-color 0.2s ease;
+          cursor: pointer;
+        }
+
+        .timeline-item:hover {
+          background-color: #f8f8f8;
+        }
+
+        .timeline-image {
+          width: 60px;
+          height: 60px;
+          border-radius: 8px;
+          object-fit: cover;
+          flex-shrink: 0;
+          background-color: #e5e5e5;
+        }
+
+        .timeline-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .timeline-article-title {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          font-size: 15px;
+          font-weight: 500;
+          color: #000000;
+          line-height: 1.4;
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .timeline-time {
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          font-size: 13px;
+          font-weight: 400;
+          color: #999999;
+        }
+
         @media (max-width: 768px) {
           .greeting-line,
           .message-line {
@@ -182,6 +280,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
 
           .history-section {
             margin-top: 60px;
+          }
+
+          .timeline-section {
+            margin-top: 50px;
           }
         }
 
@@ -203,6 +305,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           .history-event {
             font-size: 14px;
           }
+
+          .timeline-section {
+            margin-top: 40px;
+          }
+
+          .timeline-image {
+            width: 50px;
+            height: 50px;
+          }
+
+          .timeline-article-title {
+            font-size: 14px;
+          }
+
+          .timeline-time {
+            font-size: 12px;
+          }
         }
       `}</style>
 
@@ -222,6 +341,31 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
                   <p className="history-event">{item.event}</p>
                 </div>
                 {index < historyEvents.length - 1 && <div className="history-divider" />}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="timeline-section">
+          <h3 className="timeline-title">Latest Articles</h3>
+          <div className="timeline-items">
+            {latestArticles.map((article) => (
+              <div 
+                key={article.id} 
+                className="timeline-item"
+                onClick={onContinue}
+              >
+                {article.image_url && (
+                  <img 
+                    src={article.image_url} 
+                    alt={article.title}
+                    className="timeline-image"
+                  />
+                )}
+                <div className="timeline-content">
+                  <h4 className="timeline-article-title">{article.title}</h4>
+                  <span className="timeline-time">{getTimeAgo(article.published_at)}</span>
+                </div>
               </div>
             ))}
           </div>
