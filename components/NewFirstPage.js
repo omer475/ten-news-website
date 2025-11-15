@@ -8,9 +8,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
 
   // Get latest articles (filter out opening/closing stories and limit to 5)
   const getLatestArticles = () => {
-    return stories
-      .filter(story => story.type === 'news')
-      .slice(0, 5);
+    if (!stories || stories.length === 0) return [];
+    
+    const newsStories = stories.filter(story => story.type === 'news');
+    console.log('Total news stories:', newsStories.length);
+    console.log('First 5 stories:', newsStories.slice(0, 5));
+    
+    return newsStories.slice(0, 5);
   };
 
   // Calculate time ago from published date
@@ -108,13 +112,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
       <style jsx>{`
         .welcome-container {
           width: 100%;
-          min-height: 100vh;
+          height: 100vh;
           background: #ffffff;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-start;
-          padding: 120px 20px 40px 20px;
+          overflow-y: auto;
+          padding: 80px 20px 40px 20px;
         }
 
         .main-content {
@@ -150,7 +154,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         .history-section {
           width: 100%;
           max-width: 600px;
-          margin-top: 80px;
+          margin-top: 60px;
+          flex-shrink: 0;
         }
 
         .history-title {
@@ -203,7 +208,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         .timeline-section {
           width: 100%;
           max-width: 600px;
-          margin-top: 60px;
+          margin-top: 50px;
+          margin-bottom: 20px;
+          flex-shrink: 0;
         }
 
         .timeline-title {
@@ -349,25 +356,29 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         <div className="timeline-section">
           <h3 className="timeline-title">Latest Articles</h3>
           <div className="timeline-items">
-            {latestArticles.map((article) => (
-              <div 
-                key={article.id} 
-                className="timeline-item"
-                onClick={onContinue}
-              >
-                {article.image_url && (
-                  <img 
-                    src={article.image_url} 
-                    alt={article.title}
-                    className="timeline-image"
-                  />
-                )}
-                <div className="timeline-content">
-                  <h4 className="timeline-article-title">{article.title}</h4>
-                  <span className="timeline-time">{getTimeAgo(article.published_at)}</span>
+            {latestArticles.length > 0 ? (
+              latestArticles.map((article) => (
+                <div 
+                  key={article.id} 
+                  className="timeline-item"
+                  onClick={onContinue}
+                >
+                  {article.image_url && (
+                    <img 
+                      src={article.image_url} 
+                      alt={article.title}
+                      className="timeline-image"
+                    />
+                  )}
+                  <div className="timeline-content">
+                    <h4 className="timeline-article-title">{article.title}</h4>
+                    <span className="timeline-time">{getTimeAgo(article.published_at)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p style={{ color: '#999', fontSize: '14px' }}>Loading articles...</p>
+            )}
           </div>
         </div>
       </div>
