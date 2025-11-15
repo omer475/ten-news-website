@@ -3057,7 +3057,8 @@ The article concludes with forward-looking analysis and what readers should watc
               ...(story.type === 'news' && story.final_score >= 950 && {
                 border: '4px solid',
                 borderImage: 'linear-gradient(135deg, black 0%, #1a0000 5%, #330000 10%, #4d0000 15%, #660000 20%, #800000 25%, #990000 30%, #b30000 35%, #cc0000 40%, #e60000 45%, red 50%, #e60000 55%, #cc0000 60%, #b30000 65%, #990000 70%, #800000 75%, #660000 80%, #4d0000 85%, #330000 90%, #1a0000 95%, black 100%) 1',
-                boxShadow: '0 0 20px rgba(255, 0, 0, 0.3)'
+                boxShadow: '0 0 20px rgba(255, 0, 0, 0.3)',
+                margin: '-4px'
               })
             }}
           >
