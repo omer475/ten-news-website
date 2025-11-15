@@ -1,4 +1,17 @@
 export default function NewFirstPage({ onContinue, user, userProfile, stories, readTracker }) {
+  // All categories
+  const categories = [
+    { name: 'All', emoji: '📰' },
+    { name: 'World', emoji: '🌍' },
+    { name: 'Politics', emoji: '🏛️' },
+    { name: 'Business', emoji: '💼' },
+    { name: 'Technology', emoji: '💻' },
+    { name: 'Science', emoji: '🔬' },
+    { name: 'Health', emoji: '🏥' },
+    { name: 'Sports', emoji: '⚽' },
+    { name: 'Lifestyle', emoji: '✨' }
+  ];
+
   // Calculate important news count
   const getImportantNewsCount = () => {
     // Filter out opening and all-read stories, only get news
@@ -142,12 +155,94 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           font-size: 48px;
           font-weight: 400;
           color: #ffffff;
-          margin: 0;
+          margin: 0 0 32px 0;
           padding: 0;
           line-height: 1.1;
           text-align: left;
           width: 100%;
           text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .categories-scroll-container {
+          width: 100%;
+          overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          margin-top: 24px;
+        }
+
+        .categories-scroll-container::-webkit-scrollbar {
+          display: none;
+        }
+
+        .categories-wrapper {
+          display: flex;
+          gap: 8px;
+          padding: 4px 0;
+          min-width: min-content;
+        }
+
+        .category-item {
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 20px;
+          border-radius: 99em;
+          background-color: color-mix(in srgb, #ffffff 12%, transparent);
+          backdrop-filter: blur(4px) saturate(150%);
+          -webkit-backdrop-filter: blur(4px) saturate(150%);
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, #fff 10%, transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, #fff 90%, transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, #fff 80%, transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, #fff 60%, transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, #000 12%, transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, #000 20%, transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, #000 20%, transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, #000 10%, transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, #000 10%, transparent), 
+            0px 3px 8px 0px color-mix(in srgb, #000 8%, transparent);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: none;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          font-size: 15px;
+          font-weight: 500;
+          color: #ffffff;
+          white-space: nowrap;
+          user-select: none;
+        }
+
+        .category-item:hover {
+          transform: translateY(-1px);
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, #fff 15%, transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, #fff 95%, transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, #fff 85%, transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, #fff 65%, transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, #000 15%, transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, #000 25%, transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, #000 25%, transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, #000 15%, transparent), 
+            0px 1px 4px 0px color-mix(in srgb, #000 15%, transparent), 
+            0px 5px 12px 0px color-mix(in srgb, #000 12%, transparent);
+        }
+
+        .category-item:active {
+          transform: translateY(0px);
+        }
+
+        .category-emoji {
+          font-size: 18px;
+          line-height: 1;
+        }
+
+        .category-name {
+          font-size: 15px;
+          line-height: 1;
         }
 
         @media (max-width: 768px) {
@@ -170,6 +265,25 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         <div className="content-wrapper">
           <p className="greeting-line">{greetingLine}</p>
           <p className="message-line">{messageLine}</p>
+          
+          <div className="categories-scroll-container">
+            <div className="categories-wrapper">
+              {categories.map((category) => (
+                <button
+                  key={category.name}
+                  className="category-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Handle category selection here
+                    console.log('Category selected:', category.name);
+                  }}
+                >
+                  <span className="category-emoji">{category.emoji}</span>
+                  <span className="category-name">{category.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </>
