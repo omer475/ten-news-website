@@ -8,10 +8,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
 
   // Get latest articles (filter out opening/closing stories and limit to 5)
   const getLatestArticles = () => {
-    if (!stories || stories.length === 0) return [];
+    console.log('Stories received:', stories);
+    console.log('Stories length:', stories?.length);
+    
+    if (!stories || stories.length === 0) {
+      console.log('No stories available');
+      return [];
+    }
     
     const newsStories = stories.filter(story => story.type === 'news');
-    console.log('Total news stories:', newsStories.length);
+    console.log('Total news stories after filter:', newsStories.length);
     console.log('First 5 stories:', newsStories.slice(0, 5));
     
     return newsStories.slice(0, 5);
@@ -209,8 +215,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           width: 100%;
           max-width: 600px;
           margin-top: 50px;
-          margin-bottom: 20px;
+          margin-bottom: 40px;
           flex-shrink: 0;
+          background: rgba(255, 0, 0, 0.05);
+          padding: 20px;
+          border-radius: 12px;
         }
 
         .timeline-title {
