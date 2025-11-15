@@ -108,10 +108,20 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           align-items: flex-start;
           padding: 48px 40px;
           border-radius: 24px;
-          backdrop-filter: blur(100px);
-          -webkit-backdrop-filter: blur(100px);
-          background: rgba(255, 255, 255, 0.35);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+          background-color: color-mix(in srgb, #ffffff 12%, transparent);
+          backdrop-filter: blur(4px) saturate(150%);
+          -webkit-backdrop-filter: blur(4px) saturate(150%);
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, #fff 10%, transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, #fff 90%, transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, #fff 80%, transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, #fff 60%, transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, #000 12%, transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, #000 20%, transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, #000 20%, transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, #000 10%, transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, #000 10%, transparent), 
+            0px 3px 8px 0px color-mix(in srgb, #000 8%, transparent);
         }
 
         .greeting-line {
