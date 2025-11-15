@@ -3844,19 +3844,38 @@ The article concludes with forward-looking analysis and what readers should watc
                               }}
                             >
                               <div dangerouslySetInnerHTML={{
-                                __html: story.detailed_text
-                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                  .split('. ')
-                                  .reduce((acc, sentence, i, arr) => {
-                                    // Group every 2-3 sentences into a paragraph
-                                    if (i % 3 === 0) {
-                                      const paragraph = arr.slice(i, i + 3).join('. ') + (i + 3 < arr.length ? '.' : '');
-                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + paragraph + '</p>';
-                                    } else if (i % 3 === 1 && i === arr.length - 1) {
-                                      return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + sentence + '</p>';
+                                __html: (() => {
+                                  // Get a darker version of the blur color
+                                  const blurColor = imageDominantColors[index]?.blurColor || '#000000';
+                                  // Function to darken the color
+                                  const darkenColor = (color) => {
+                                    if (color.startsWith('rgb')) {
+                                      const match = color.match(/\d+/g);
+                                      if (match && match.length >= 3) {
+                                        const r = Math.max(0, parseInt(match[0]) - 80);
+                                        const g = Math.max(0, parseInt(match[1]) - 80);
+                                        const b = Math.max(0, parseInt(match[2]) - 80);
+                                        return `rgb(${r}, ${g}, ${b})`;
+                                      }
                                     }
-                                    return acc;
-                                  }, '')
+                                    return '#1a1a1a';
+                                  };
+                                  const darkColor = darkenColor(blurColor);
+                                  
+                                  return story.detailed_text
+                                    .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
+                                    .split('. ')
+                                    .reduce((acc, sentence, i, arr) => {
+                                      // Group every 2-3 sentences into a paragraph
+                                      if (i % 3 === 0) {
+                                        const paragraph = arr.slice(i, i + 3).join('. ') + (i + 3 < arr.length ? '.' : '');
+                                        return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + paragraph + '</p>';
+                                      } else if (i % 3 === 1 && i === arr.length - 1) {
+                                        return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + sentence + '</p>';
+                                      }
+                                      return acc;
+                                    }, '');
+                                })()
                               }} />
                             </div>
                           )}
