@@ -1175,7 +1175,7 @@ The article concludes with forward-looking analysis and what readers should watc
   const renderBoldText = (text, colors, category = null) => {
     if (!text) return '';
     
-    const linkColor = colors?.link || 
+    const linkColor = colors?.blurColor || 
       (category ? getCategoryColors(category).primary : '#000000');
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -1183,7 +1183,7 @@ The article concludes with forward-looking analysis and what readers should watc
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '700', color: linkColor }}>
+          <span key={i} style={{ fontWeight: '500', color: linkColor }}>
             {content}
           </span>
         );
@@ -3777,7 +3777,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     marginBottom: '12px',
                                       fontSize: '15px',
                                     lineHeight: '1.55',
-                                    fontWeight: '600',
+                                    fontWeight: '500',
                                     color: '#000000',
                                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif'
                                   }}>
