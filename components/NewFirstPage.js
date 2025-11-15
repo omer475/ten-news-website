@@ -101,7 +101,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         .message-line {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           font-size: 48px;
-          font-weight: 700;
+          font-weight: 400;
           color: #000000;
           margin: 0;
           padding: 0;
