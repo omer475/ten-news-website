@@ -2796,7 +2796,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .grid-square {
-          background: #666666;
+          background: #000000;
           border-radius: 2px;
           width: 100%;
           height: 100%;
@@ -2808,7 +2808,7 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .switcher__option:hover:not(.active) .grid-square {
-          background: #888888;
+          background: #000000;
         }
 
         .list-icon {
@@ -2829,7 +2829,7 @@ The article concludes with forward-looking analysis and what readers should watc
           top: 0;
           bottom: 0;
           width: 1.5px;
-          background: #666666;
+          background: #000000;
           border-radius: 1px;
           z-index: 0;
         }
@@ -2847,7 +2847,7 @@ The article concludes with forward-looking analysis and what readers should watc
           width: 4px;
           height: 4px;
           background: #ffffff;
-          border: 1.5px solid #666666;
+          border: 1.5px solid #000000;
           border-radius: 50%;
           flex-shrink: 0;
           transition: all 0.2s ease;
@@ -2857,7 +2857,7 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-bar {
           width: 6px;
           height: 2px;
-          background: #666666;
+          background: #000000;
           border-radius: 1px;
           transition: all 0.2s ease;
           flex-shrink: 0;
@@ -2877,15 +2877,15 @@ The article concludes with forward-looking analysis and what readers should watc
         }
 
         .switcher__option:hover:not(.active) .list-dot {
-          border-color: #888888;
+          border-color: #000000;
         }
 
         .switcher__option:hover:not(.active) .list-bar {
-          background: #888888;
+          background: #000000;
         }
 
         .switcher__option:hover:not(.active) .list-icon::before {
-          background: #888888;
+          background: #000000;
         }
 
         .map-icon {
@@ -3623,7 +3623,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                         <div style={{
                                           width: '10px',
                                           height: '10px',
-                                          border: `2px solid ${isActive ? '#000000' : '#666666'}`,
+                                          border: `2px solid #000000`,
                                           borderRadius: '50%',
                                           position: 'relative'
                                         }}>
@@ -3634,7 +3634,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                             transform: 'translate(-50%, -50%)',
                                             width: '4px',
                                             height: '4px',
-                                            background: isActive ? '#000000' : '#666666',
+                                            background: '#000000',
                                             borderRadius: '50%'
                                           }}></div>
                                         </div>
@@ -3658,25 +3658,25 @@ The article concludes with forward-looking analysis and what readers should watc
                                           <div style={{
                                             width: '2px',
                                             height: '3px',
-                                            background: isActive ? '#000000' : '#666666',
+                                            background: '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '6px',
-                                            background: isActive ? '#000000' : '#666666',
+                                            background: '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '4px',
-                                            background: isActive ? '#000000' : '#666666',
+                                            background: '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '8px',
-                                            background: isActive ? '#000000' : '#666666',
+                                            background: '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                         </div>
