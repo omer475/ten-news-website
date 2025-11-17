@@ -1,16 +1,13 @@
+import { useState } from 'react';
+
 export default function NewFirstPage({ onContinue, user, userProfile, stories, readTracker }) {
-  // All categories
-  const categories = [
-    { name: 'All', emoji: '📰' },
-    { name: 'World', emoji: '🌍' },
-    { name: 'Politics', emoji: '🏛️' },
-    { name: 'Business', emoji: '💼' },
-    { name: 'Technology', emoji: '💻' },
-    { name: 'Science', emoji: '🔬' },
-    { name: 'Health', emoji: '🏥' },
-    { name: 'Sports', emoji: '⚽' },
-    { name: 'Lifestyle', emoji: '✨' }
-  ];
+  // Safety check for stories
+  if (!stories || !Array.isArray(stories)) {
+    stories = [];
+  }
+
+  // Timeline fullscreen state
+  const [todayFullscreen, setTodayFullscreen] = useState(false);
 
   // Calculate important news count
   const getImportantNewsCount = () => {
@@ -59,6 +56,37 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
   const totalNewsCount = getTotalNewsCount();
   const firstName = getFirstName();
 
+  // Helper function to format time since published
+  const formatTimeSince = (publishedDate) => {
+    const now = new Date();
+    const published = new Date(publishedDate);
+    const diffMs = now - published;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) {
+      return `${diffMins}m`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h`;
+    } else {
+      return `${diffDays}d`;
+    }
+  };
+
+  // Get all news stories with images (randomized)
+  const storiesWithImages = stories
+    .filter(story => story.type === 'news' && story.urlToImage)
+    .sort(() => Math.random() - 0.5);
+
+  // Get For You articles (5 random articles with images)
+  const forYouArticles = storiesWithImages.slice(0, 5);
+
+  // Get Today timeline stories (first 20 news articles)
+  const todayStories = stories
+    .filter(story => story.type === 'news')
+    .slice(0, 20);
+
   // Determine the message to display
   let greetingLine = '';
   let messageLine = '';
@@ -86,204 +114,397 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
   return (
     <>
       <style jsx>{`
-        .welcome-container {
-          width: 100%;
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: flex-start;
-          padding: 120px 20px 40px 20px;
-          cursor: pointer;
-          position: relative;
-        }
-
-        .blur-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          backdrop-filter: blur(80px);
-          -webkit-backdrop-filter: blur(80px);
-          background: rgba(255, 255, 255, 0.25);
-          z-index: 1;
-        }
-
-        .content-wrapper {
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          max-width: 600px;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          padding: 48px 40px;
-          border-radius: 24px;
-          background-color: color-mix(in srgb, #ffffff 12%, transparent);
-          backdrop-filter: blur(4px) saturate(150%);
-          -webkit-backdrop-filter: blur(4px) saturate(150%);
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, #fff 10%, transparent),
-            inset 0.9px 1.5px 0px -1px color-mix(in srgb, #fff 90%, transparent), 
-            inset -1px -1px 0px -1px color-mix(in srgb, #fff 80%, transparent), 
-            inset -1.5px -4px 0.5px -3px color-mix(in srgb, #fff 60%, transparent), 
-            inset -0.15px -0.5px 2px 0px color-mix(in srgb, #000 12%, transparent), 
-            inset -0.75px 1.25px 0px -1px color-mix(in srgb, #000 20%, transparent), 
-            inset 0px 1.5px 2px -1px color-mix(in srgb, #000 20%, transparent), 
-            inset 1px -3.25px 0.5px -2px color-mix(in srgb, #000 10%, transparent), 
-            0px 0.5px 2.5px 0px color-mix(in srgb, #000 10%, transparent), 
-            0px 3px 8px 0px color-mix(in srgb, #000 8%, transparent);
-        }
-
-        .greeting-line {
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          font-size: 48px;
-          font-weight: 400;
-          color: #ffffff;
+        * {
           margin: 0;
           padding: 0;
-          line-height: 1.1;
-          text-align: left;
-          width: 100%;
-          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          box-sizing: border-box;
         }
 
-        .message-line {
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          font-size: 48px;
+        .container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          padding: 20px;
+          overflow: hidden;
+          height: 100vh;
+          background: #ffffff;
+        }
+
+        /* Section 1: Hello Header */
+        .hello-section {
+          flex-shrink: 0;
+          margin-bottom: 32px;
+          padding-top: 20px;
+        }
+
+        .hello-text {
+          font-size: 40px;
+          color: #999;
+          margin-bottom: 4px;
           font-weight: 400;
-          color: #ffffff;
-          margin: 0 0 32px 0;
-          padding: 0;
-          line-height: 1.1;
-          text-align: left;
-          width: 100%;
-          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .categories-scroll-container {
-          width: 100%;
+        .important-news {
+          font-size: 32px;
+          font-weight: 700;
+          color: #000;
+          line-height: 1.2;
+        }
+
+        /* Section 2: For You */
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #000;
+          margin: 16px 0 12px;
+          flex-shrink: 0;
+        }
+
+        .section-icon {
+          width: 18px;
+          height: 18px;
+          stroke: url(#iconGradient);
+          fill: none;
+          stroke-width: 2;
+        }
+
+        .for-you-container {
+          flex-shrink: 0;
+          margin-bottom: 16px;
+        }
+
+        .for-you-scroll {
+          display: flex;
+          gap: 12px;
           overflow-x: auto;
           overflow-y: hidden;
+          scroll-snap-type: x mandatory;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
-          -ms-overflow-style: none;
-          margin-top: 24px;
+          padding-bottom: 4px;
         }
 
-        .categories-scroll-container::-webkit-scrollbar {
+        .for-you-scroll::-webkit-scrollbar {
           display: none;
         }
 
-        .categories-wrapper {
-          display: flex;
-          gap: 8px;
-          padding: 4px 0;
-          min-width: min-content;
+        .for-you-card {
+          flex: 0 0 85%;
+          background: #ffffff;
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid #f0f0f0;
+          scroll-snap-align: start;
+          cursor: pointer;
         }
 
-        .category-item {
+        .card-image {
+          width: 100%;
+          height: 140px;
+          object-fit: cover;
+        }
+
+        .card-content {
+          padding: 12px;
+          background: #ffffff;
+        }
+
+        .card-category {
+          font-size: 10px;
+          font-weight: 600;
+          color: #667eea;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 6px;
+        }
+
+        .card-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #000;
+          line-height: 1.3;
+        }
+
+        /* Section 3: Today Timeline */
+        .timeline {
+          flex: 1;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 0;
+        }
+
+        .timeline-item {
+          padding: 8px 0;
+          border-bottom: 1px solid #f0f0f0;
+          cursor: pointer;
+        }
+
+        .timeline-item:last-child {
+          border-bottom: none;
+        }
+
+        .timeline-content {
+          flex: 1;
+        }
+
+        .timeline-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1a1a1a;
+          line-height: 1.3;
+          margin-bottom: 4px;
+        }
+
+        .timeline-meta {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .timeline-category {
+          display: inline-block;
+          font-size: 10px;
+          font-weight: 600;
+          color: #667eea;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .timeline-dot {
+          width: 2px;
+          height: 2px;
+          background: #d0d0d0;
+          border-radius: 50%;
+        }
+
+        .timeline-time {
+          font-size: 10px;
+          color: #999;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .timeline::-webkit-scrollbar {
+          display: none;
+        }
+        .timeline {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        /* Full Screen Today View */
+        .today-fullscreen {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: white;
+          z-index: 200;
+          display: none;
+          flex-direction: column;
+          animation: slideUp 0.3s ease;
+        }
+
+        .today-fullscreen.active {
+          display: flex;
+        }
+
+        @keyframes slideUp {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+
+        .fullscreen-header {
+          padding: 16px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid #f0f0f0;
           flex-shrink: 0;
+        }
+
+        .back-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: #f5f5f5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          border: none;
+          font-size: 18px;
+        }
+
+        .fullscreen-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #000;
+        }
+
+        .fullscreen-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: 20px;
+        }
+
+        .fullscreen-item {
+          padding: 12px 0;
+          border-bottom: 1px solid #f0f0f0;
+          cursor: pointer;
+        }
+
+        .fullscreen-item:last-child {
+          border-bottom: none;
+        }
+
+        .fullscreen-item-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: #1a1a1a;
+          line-height: 1.4;
+          margin-bottom: 6px;
+        }
+
+        .fullscreen-item-meta {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 12px 20px;
-          border-radius: 99em;
-          background-color: color-mix(in srgb, #ffffff 12%, transparent);
-          backdrop-filter: blur(4px) saturate(150%);
-          -webkit-backdrop-filter: blur(4px) saturate(150%);
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, #fff 10%, transparent),
-            inset 0.9px 1.5px 0px -1px color-mix(in srgb, #fff 90%, transparent), 
-            inset -1px -1px 0px -1px color-mix(in srgb, #fff 80%, transparent), 
-            inset -1.5px -4px 0.5px -3px color-mix(in srgb, #fff 60%, transparent), 
-            inset -0.15px -0.5px 2px 0px color-mix(in srgb, #000 12%, transparent), 
-            inset -0.75px 1.25px 0px -1px color-mix(in srgb, #000 20%, transparent), 
-            inset 0px 1.5px 2px -1px color-mix(in srgb, #000 20%, transparent), 
-            inset 1px -3.25px 0.5px -2px color-mix(in srgb, #000 10%, transparent), 
-            0px 0.5px 2.5px 0px color-mix(in srgb, #000 10%, transparent), 
-            0px 3px 8px 0px color-mix(in srgb, #000 8%, transparent);
+        }
+
+        .fullscreen-category {
+          font-size: 10px;
+          font-weight: 600;
+          color: #667eea;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .fullscreen-dot {
+          width: 2px;
+          height: 2px;
+          background: #d0d0d0;
+          border-radius: 50%;
+        }
+
+        .fullscreen-time {
+          font-size: 11px;
+          color: #999;
+        }
+
+        .today-title-clickable {
           cursor: pointer;
-          transition: all 0.2s ease;
-          border: none;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          font-size: 15px;
-          font-weight: 500;
-          color: #ffffff;
-          white-space: nowrap;
-          user-select: none;
-        }
-
-        .category-item:hover {
-          transform: translateY(-1px);
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, #fff 15%, transparent),
-            inset 0.9px 1.5px 0px -1px color-mix(in srgb, #fff 95%, transparent), 
-            inset -1px -1px 0px -1px color-mix(in srgb, #fff 85%, transparent), 
-            inset -1.5px -4px 0.5px -3px color-mix(in srgb, #fff 65%, transparent), 
-            inset -0.15px -0.5px 2px 0px color-mix(in srgb, #000 15%, transparent), 
-            inset -0.75px 1.25px 0px -1px color-mix(in srgb, #000 25%, transparent), 
-            inset 0px 1.5px 2px -1px color-mix(in srgb, #000 25%, transparent), 
-            inset 1px -3.25px 0.5px -2px color-mix(in srgb, #000 15%, transparent), 
-            0px 1px 4px 0px color-mix(in srgb, #000 15%, transparent), 
-            0px 5px 12px 0px color-mix(in srgb, #000 12%, transparent);
-        }
-
-        .category-item:active {
-          transform: translateY(0px);
-        }
-
-        .category-emoji {
-          font-size: 18px;
-          line-height: 1;
-        }
-
-        .category-name {
-          font-size: 15px;
-          line-height: 1;
-        }
-
-        @media (max-width: 768px) {
-          .greeting-line,
-          .message-line {
-            font-size: 36px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .greeting-line,
-          .message-line {
-            font-size: 28px;
-          }
         }
       `}</style>
 
-      <div className="welcome-container" onClick={onContinue}>
-        <div className="blur-overlay"></div>
-        <div className="content-wrapper">
-          <p className="greeting-line">{greetingLine}</p>
-          <p className="message-line">{messageLine}</p>
-          
-          <div className="categories-scroll-container">
-            <div className="categories-wrapper">
-              {categories.map((category) => (
-                <button
-                  key={category.name}
-                  className="category-item"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle category selection here
-                    console.log('Category selected:', category.name);
-                  }}
-                >
-                  <span className="category-emoji">{category.emoji}</span>
-                  <span className="category-name">{category.name}</span>
-                </button>
-              ))}
-            </div>
+      {/* SVG Gradient Definition */}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div className="container">
+        {/* Section 1: Hello Header */}
+        <div className="hello-section">
+          <div className="hello-text">{greetingLine}</div>
+          <div className="important-news">{messageLine}</div>
+        </div>
+
+        {/* Section 2: For You */}
+        <div className="for-you-container">
+          <div className="section-title">
+            <svg className="section-icon" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <circle cx="12" cy="17" r="0.5" fill="url(#iconGradient)"/>
+            </svg>
+            For You
           </div>
+          <div className="for-you-scroll">
+            {forYouArticles.map((article, index) => (
+              <div
+                key={article.id || index}
+                className="for-you-card"
+                onClick={() => window.location.href = `/?story=${article.rank}`}
+              >
+                <img
+                  src={article.urlToImage}
+                  alt={article.title}
+                  className="card-image"
+                />
+                <div className="card-content">
+                  <div className="card-category">{article.category}</div>
+                  <div className="card-title">
+                    {article.title.length > 60 ? article.title.substring(0, 60) + '...' : article.title}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 3: Today Timeline */}
+        <div className="section-title today-title-clickable" onClick={() => setTodayFullscreen(true)}>
+          <svg className="section-icon" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Today
+        </div>
+        <div className="timeline">
+          {todayStories.map((story, index) => (
+            <div
+              key={story.id || index}
+              className="timeline-item"
+              onClick={() => window.location.href = `/?story=${story.rank}`}
+            >
+              <div className="timeline-content">
+                <div className="timeline-title">{story.title}</div>
+                <div className="timeline-meta">
+                  <span className="timeline-category">{story.category}</span>
+                  <span className="timeline-dot"></span>
+                  <span className="timeline-time">{formatTimeSince(story.publishedAt)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Full Screen Today View */}
+      <div className={`today-fullscreen ${todayFullscreen ? 'active' : ''}`}>
+        <div className="fullscreen-header">
+          <button className="back-btn" onClick={() => setTodayFullscreen(false)}>
+            ←
+          </button>
+          <div className="fullscreen-title">Today</div>
+          <div style={{ width: '32px' }}></div>
+        </div>
+        <div className="fullscreen-content">
+          {todayStories.map((story, index) => (
+            <div
+              key={story.id || index}
+              className="fullscreen-item"
+              onClick={() => window.location.href = `/?story=${story.rank}`}
+            >
+              <div className="fullscreen-item-title">{story.title}</div>
+              <div className="fullscreen-item-meta">
+                <span className="fullscreen-category">{story.category}</span>
+                <span className="fullscreen-dot"></span>
+                <span className="fullscreen-time">{formatTimeSince(story.publishedAt)}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </>
