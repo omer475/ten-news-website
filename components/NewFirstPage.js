@@ -95,6 +95,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
 
   // Debug logging
   console.log('NewFirstPage - Total stories:', stories.length);
+  console.log('NewFirstPage - Stories types:', stories.map(s => s.type));
+  console.log('NewFirstPage - News stories:', stories.filter(s => s.type === 'news').length);
   console.log('NewFirstPage - For You articles:', forYouArticles.length);
   console.log('NewFirstPage - Today stories:', todayStories.length);
   console.log('NewFirstPage - First today story:', todayStories[0]);
@@ -476,6 +478,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
             For You
           </div>
           <div className="for-you-scroll">
+            {forYouArticles.length === 0 && (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#999', width: '100%' }}>
+                Loading articles...
+              </div>
+            )}
             {forYouArticles.map((article, index) => (
               <div
                 key={article.id || index}
@@ -506,6 +513,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           Today
         </div>
         <div className="timeline">
+          {todayStories.length === 0 && (
+            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+              Loading articles...
+            </div>
+          )}
           {todayStories.map((story, index) => (
             <div
               key={story.id || index}
