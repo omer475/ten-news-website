@@ -81,13 +81,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     }
   };
 
-  // Get all news stories with images (randomized)
-  const storiesWithImages = stories
-    .filter(story => story.type === 'news' && story.urlToImage)
-    .sort(() => Math.random() - 0.5);
-
-  // Get For You articles (5 random articles with images)
-  const forYouArticles = storiesWithImages.slice(0, 5);
+  // Get For You articles (first 5 from latest 20 articles that have images)
+  const forYouArticles = stories
+    .filter(story => story.type === 'news')
+    .slice(0, 20)  // Take first 20 latest articles
+    .filter(story => story.urlToImage)  // Filter only those with images
+    .slice(0, 5);  // Take first 5 with images
 
   // Get Today timeline stories (first 20 news articles)
   const todayStories = stories
@@ -135,6 +134,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           overflow: hidden;
           height: 100vh;
           background: #ffffff;
+          border: none !important;
         }
 
         /* Section 1: Hello Header */
@@ -241,24 +241,30 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           padding: 0;
-          border-left: none;
+          border: none !important;
+          border-left: none !important;
         }
         
         .timeline::before,
         .timeline::after {
-          display: none;
+          content: none !important;
+          display: none !important;
         }
 
         .timeline-item {
           padding: 8px 0;
           border-bottom: 1px solid #f0f0f0;
-          border-left: none;
+          border-left: none !important;
+          border-right: none !important;
+          border-top: none !important;
           cursor: pointer;
+          position: relative;
         }
         
         .timeline-item::before,
         .timeline-item::after {
-          display: none;
+          content: none !important;
+          display: none !important;
         }
 
         .timeline-item:last-child {
@@ -267,12 +273,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
 
         .timeline-content {
           flex: 1;
-          border-left: none;
+          border: none !important;
+          border-left: none !important;
         }
         
         .timeline-content::before,
         .timeline-content::after {
-          display: none;
+          content: none !important;
+          display: none !important;
         }
 
         .timeline-title {
@@ -281,12 +289,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           color: #1a1a1a;
           line-height: 1.3;
           margin-bottom: 4px;
+          border: none !important;
         }
 
         .timeline-meta {
           display: flex;
           align-items: center;
           gap: 6px;
+          border: none !important;
         }
 
         .timeline-category {
@@ -296,6 +306,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           color: #667eea;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          border: none !important;
         }
 
         .timeline-dot {
@@ -303,11 +314,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           height: 2px;
           background: #d0d0d0;
           border-radius: 50%;
+          border: none !important;
         }
 
         .timeline-time {
           font-size: 10px;
           color: #999;
+          border: none !important;
         }
 
         /* Hide scrollbar but keep functionality */
