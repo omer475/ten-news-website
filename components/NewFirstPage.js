@@ -160,7 +160,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           top: 20px;
           width: 4px;
           height: calc(100% - 20px);
-          background: linear-gradient(to bottom, #ff4444 0%, #d0d0d0 100%);
+          background: linear-gradient(to bottom, #ff4444 0%, #4444ff 100%);
           border-radius: 2px;
         }
 
