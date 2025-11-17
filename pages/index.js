@@ -1419,7 +1419,10 @@ The article concludes with forward-looking analysis and what readers should watc
     // Check if there are multiple information components to rotate through
     const componentsCount = getAvailableComponentsCount(currentStory);
     
-    if (!isRotationEnabled || componentsCount <= 1) {
+    // Stop auto-rotation if timeline or graph is expanded
+    const isExpanded = expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+    
+    if (!isRotationEnabled || componentsCount <= 1 || isExpanded) {
       return;
     }
 
@@ -1440,7 +1443,7 @@ The article concludes with forward-looking analysis and what readers should watc
     return () => {
       clearInterval(intervalId);
     };
-  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph]);
+  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
   
   if (loading) {
     return (
@@ -4253,7 +4256,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                 {/* Progress bar for auto-rotation */}
                                 {autoRotationEnabled[index] !== false && 
                                  getAvailableComponentsCount(story) > 1 && 
-                                 !showDetailedArticle && (
+                                 !showDetailedArticle && 
+                                 !expandedTimeline[index] && 
+                                 !expandedGraph[index] && (
                                   <div
                                     key={progressBarKey[index] || 'initial'}
                                     style={{
@@ -4430,7 +4435,9 @@ The article concludes with forward-looking analysis and what readers should watc
                               {/* Progress bar for auto-rotation */}
                               {autoRotationEnabled[index] !== false && 
                                getAvailableComponentsCount(story) > 1 && 
-                               !showDetailedArticle && (
+                               !showDetailedArticle && 
+                               !expandedTimeline[index] && 
+                               !expandedGraph[index] && (
                                 <div
                                   key={progressBarKey[index] || 'initial'}
                                   style={{
@@ -4492,7 +4499,9 @@ The article concludes with forward-looking analysis and what readers should watc
                               {/* Progress bar for auto-rotation */}
                               {autoRotationEnabled[index] !== false && 
                                getAvailableComponentsCount(story) > 1 && 
-                               !showDetailedArticle && (
+                               !showDetailedArticle && 
+                               !expandedTimeline[index] && 
+                               !expandedGraph[index] && (
                                 <div
                                   key={progressBarKey[index] || 'initial'}
                                   style={{
@@ -4593,7 +4602,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                 {/* Progress bar for auto-rotation */}
                                 {autoRotationEnabled[index] !== false && 
                                  getAvailableComponentsCount(story) > 1 && 
-                                 !showDetailedArticle && (
+                                 !showDetailedArticle && 
+                                 !expandedTimeline[index] && 
+                                 !expandedGraph[index] && (
                                   <div
                                     key={progressBarKey[index] || 'initial'}
                                     style={{
