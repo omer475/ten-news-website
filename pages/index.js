@@ -33,6 +33,10 @@ export default function Home() {
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
   
+  // Auto-rotation state for information boxes
+  const [autoRotationEnabled, setAutoRotationEnabled] = useState({}); // Track which articles have auto-rotation active
+  const [progressBarKey, setProgressBarKey] = useState({}); // Track progress bar resets
+  
   // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
 
@@ -1399,6 +1403,44 @@ The article concludes with forward-looking analysis and what readers should watc
       setLoading(false);
     }
   }, [stories.length]);
+
+  // Auto-rotation for information boxes
+  useEffect(() => {
+    // Only run if we're not in detailed article view and have stories
+    if (showDetailedArticle || stories.length === 0 || !stories[currentIndex]) {
+      return;
+    }
+
+    const currentStory = stories[currentIndex];
+    
+    // Check if auto-rotation is enabled for this article (default to true if not set)
+    const isRotationEnabled = autoRotationEnabled[currentIndex] !== false;
+    
+    // Check if there are multiple information components to rotate through
+    const componentsCount = getAvailableComponentsCount(currentStory);
+    
+    if (!isRotationEnabled || componentsCount <= 1) {
+      return;
+    }
+
+    // Initialize progress bar key if not set
+    if (!progressBarKey[currentIndex]) {
+      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
+    }
+
+    // Set up interval to rotate every 4 seconds
+    const intervalId = setInterval(() => {
+      console.log(`🔄 Auto-rotating information box for article ${currentIndex}`);
+      switchToNextInformationType(currentStory, currentIndex);
+      // Reset progress bar animation
+      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
+    }, 4000);
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph]);
   
   if (loading) {
     return (
@@ -3564,6 +3606,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                     e.stopPropagation();
                                     console.log(`${infoType} option clicked for story`, index);
                                     
+                                    // Disable auto-rotation for this article when user manually interacts
+                                    setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                                    
                                     // Reset all states
                                     setShowTimeline(prev => ({ ...prev, [index]: false }));
                                     setShowDetails(prev => ({ ...prev, [index]: false }));
@@ -3995,6 +4040,10 @@ The article concludes with forward-looking analysis and what readers should watc
                               console.log('Horizontal information swipe detected for story', index);
                               endEvent.preventDefault();
                               endEvent.stopPropagation();
+                              
+                              // Disable auto-rotation for this article when user manually interacts
+                              setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                              
                               switchToNextInformationType(story, index);
                             } else if (!hasMoved) {
                               // Check if the touch target is the expand icon
@@ -4006,6 +4055,10 @@ The article concludes with forward-looking analysis and what readers should watc
                                 console.log('Information box tap detected for story', index);
                                 endEvent.preventDefault();
                                 endEvent.stopPropagation();
+                                
+                                // Disable auto-rotation for this article when user manually interacts
+                                setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                                
                                 switchToNextInformationType(story, index);
                               }
                             }
@@ -4196,6 +4249,25 @@ The article concludes with forward-looking analysis and what readers should watc
                                   </div>
                                 </div>
                                 </div>
+                                
+                                {/* Progress bar for auto-rotation */}
+                                {autoRotationEnabled[index] !== false && 
+                                 getAvailableComponentsCount(story) > 1 && 
+                                 !showDetailedArticle && (
+                                  <div
+                                    key={progressBarKey[index] || 'initial'}
+                                    style={{
+                                      position: 'absolute',
+                                      bottom: '0',
+                                      left: '0',
+                                      height: '3px',
+                                      width: '0%',
+                                      backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
+                                      animation: 'progressFill 4s linear forwards',
+                                      zIndex: 100000
+                                    }}
+                                  />
+                                )}
                             </div>
                           );
                           } else if (showTimeline[index]) {
@@ -4354,6 +4426,25 @@ The article concludes with forward-looking analysis and what readers should watc
                                 </div>
                               </div>
                               </div>
+                              
+                              {/* Progress bar for auto-rotation */}
+                              {autoRotationEnabled[index] !== false && 
+                               getAvailableComponentsCount(story) > 1 && 
+                               !showDetailedArticle && (
+                                <div
+                                  key={progressBarKey[index] || 'initial'}
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: '0',
+                                    left: '0',
+                                    height: '3px',
+                                    width: '0%',
+                                    backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
+                                    animation: 'progressFill 4s linear forwards',
+                                    zIndex: 100000
+                                  }}
+                                />
+                              )}
                             </div>
                           );
                           } else if (showMap[index]) {
@@ -4397,6 +4488,25 @@ The article concludes with forward-looking analysis and what readers should watc
                               }}>
                                 Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
                                   </div>
+                              
+                              {/* Progress bar for auto-rotation */}
+                              {autoRotationEnabled[index] !== false && 
+                               getAvailableComponentsCount(story) > 1 && 
+                               !showDetailedArticle && (
+                                <div
+                                  key={progressBarKey[index] || 'initial'}
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: '0',
+                                    left: '0',
+                                    height: '3px',
+                                    width: '0%',
+                                    backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
+                                    animation: 'progressFill 4s linear forwards',
+                                    zIndex: 100000
+                                  }}
+                                />
+                              )}
                             </div>
                             );
                           } else if (showDetails[index]) {
@@ -4479,6 +4589,25 @@ The article concludes with forward-looking analysis and what readers should watc
                                     );
                                   })}
                                 </div>
+                                
+                                {/* Progress bar for auto-rotation */}
+                                {autoRotationEnabled[index] !== false && 
+                                 getAvailableComponentsCount(story) > 1 && 
+                                 !showDetailedArticle && (
+                                  <div
+                                    key={progressBarKey[index] || 'initial'}
+                                    style={{
+                                      position: 'absolute',
+                                      bottom: '0',
+                                      left: '0',
+                                      height: '3px',
+                                      width: '0%',
+                                      backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
+                                      animation: 'progressFill 4s linear forwards',
+                                      zIndex: 100000
+                                    }}
+                                  />
+                                )}
                               </div>
                             );
                           } else {
