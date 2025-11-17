@@ -93,6 +93,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     .filter(story => story.type === 'news')
     .slice(0, 20);
 
+  // Debug logging
+  console.log('NewFirstPage - Total stories:', stories.length);
+  console.log('NewFirstPage - For You articles:', forYouArticles.length);
+  console.log('NewFirstPage - Today stories:', todayStories.length);
+  console.log('NewFirstPage - First today story:', todayStories[0]);
+
   // Determine the message to display
   let greetingLine = '';
   let messageLine = '';
@@ -474,7 +480,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
               <div
                 key={article.id || index}
                 className="for-you-card"
-                onClick={() => window.location.href = `/?story=${article.rank}`}
+                onClick={() => window.location.href = `/?story=${article.number || article.rank || index + 1}`}
               >
                 <img
                   src={article.urlToImage}
@@ -504,14 +510,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
             <div
               key={story.id || index}
               className="timeline-item"
-              onClick={() => window.location.href = `/?story=${story.rank}`}
+              onClick={() => window.location.href = `/?story=${story.number || story.rank || index + 1}`}
             >
               <div className="timeline-content">
                 <div className="timeline-title">{cleanTitle(story.title)}</div>
                 <div className="timeline-meta">
                   <span className="timeline-category">{story.category}</span>
                   <span className="timeline-dot"></span>
-                  <span className="timeline-time">{formatTimeSince(story.publishedAt)}</span>
+                  <span className="timeline-time">{formatTimeSince(story.publishedAt || story.published_at || story.published_date)}</span>
                 </div>
               </div>
             </div>
@@ -533,13 +539,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
             <div
               key={story.id || index}
               className="fullscreen-item"
-              onClick={() => window.location.href = `/?story=${story.rank}`}
+              onClick={() => window.location.href = `/?story=${story.number || story.rank || index + 1}`}
             >
               <div className="fullscreen-item-title">{cleanTitle(story.title)}</div>
               <div className="fullscreen-item-meta">
                 <span className="fullscreen-category">{story.category}</span>
                 <span className="fullscreen-dot"></span>
-                <span className="fullscreen-time">{formatTimeSince(story.publishedAt)}</span>
+                <span className="fullscreen-time">{formatTimeSince(story.publishedAt || story.published_at || story.published_date)}</span>
               </div>
             </div>
           ))}
