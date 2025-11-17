@@ -150,6 +150,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           flex-shrink: 0;
           margin-bottom: 32px;
           padding-top: 20px;
+          position: relative;
+          padding-left: 24px;
+        }
+
+        .hello-gradient-line {
+          position: absolute;
+          left: 0;
+          top: 20px;
+          width: 4px;
+          height: calc(100% - 52px);
+          background: linear-gradient(to bottom, #667eea 0%, #d0d0d0 100%);
+          border-radius: 2px;
         }
 
         .hello-text {
@@ -463,6 +475,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
       <div className="container">
         {/* Section 1: Hello Header */}
         <div className="hello-section">
+          <div className="hello-gradient-line"></div>
           <div className="hello-text">{greetingLine}</div>
           <div className="important-news">{messageLine}</div>
         </div>
