@@ -241,12 +241,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           padding: 0;
+          border-left: none;
+        }
+        
+        .timeline::before,
+        .timeline::after {
+          display: none;
         }
 
         .timeline-item {
           padding: 8px 0;
           border-bottom: 1px solid #f0f0f0;
+          border-left: none;
           cursor: pointer;
+        }
+        
+        .timeline-item::before,
+        .timeline-item::after {
+          display: none;
         }
 
         .timeline-item:last-child {
@@ -255,6 +267,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
 
         .timeline-content {
           flex: 1;
+          border-left: none;
+        }
+        
+        .timeline-content::before,
+        .timeline-content::after {
+          display: none;
         }
 
         .timeline-title {
