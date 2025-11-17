@@ -159,8 +159,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           left: 0;
           top: 20px;
           width: 4px;
-          height: calc(100% - 52px);
-          background: linear-gradient(to bottom, #667eea 0%, #d0d0d0 100%);
+          height: calc(100% - 20px);
+          background: linear-gradient(to bottom, #ff4444 0%, #d0d0d0 100%);
           border-radius: 2px;
         }
 
