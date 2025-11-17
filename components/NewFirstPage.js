@@ -56,6 +56,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
   const totalNewsCount = getTotalNewsCount();
   const firstName = getFirstName();
 
+  // Helper function to clean title from markdown
+  const cleanTitle = (title) => {
+    if (!title) return '';
+    // Remove markdown bold markers
+    return title.replace(/\*\*/g, '');
+  };
+
   // Helper function to format time since published
   const formatTimeSince = (publishedDate) => {
     const now = new Date();
@@ -446,7 +453,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
                 <div className="card-content">
                   <div className="card-category">{article.category}</div>
                   <div className="card-title">
-                    {article.title.length > 60 ? article.title.substring(0, 60) + '...' : article.title}
+                    {cleanTitle(article.title).length > 60 ? cleanTitle(article.title).substring(0, 60) + '...' : cleanTitle(article.title)}
                   </div>
                 </div>
               </div>
@@ -469,7 +476,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
               onClick={() => window.location.href = `/?story=${story.rank}`}
             >
               <div className="timeline-content">
-                <div className="timeline-title">{story.title}</div>
+                <div className="timeline-title">{cleanTitle(story.title)}</div>
                 <div className="timeline-meta">
                   <span className="timeline-category">{story.category}</span>
                   <span className="timeline-dot"></span>
@@ -497,7 +504,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
               className="fullscreen-item"
               onClick={() => window.location.href = `/?story=${story.rank}`}
             >
-              <div className="fullscreen-item-title">{story.title}</div>
+              <div className="fullscreen-item-title">{cleanTitle(story.title)}</div>
               <div className="fullscreen-item-meta">
                 <span className="fullscreen-category">{story.category}</span>
                 <span className="fullscreen-dot"></span>
