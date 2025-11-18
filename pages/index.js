@@ -2466,7 +2466,7 @@ The article concludes with forward-looking analysis and what readers should watc
           opacity: 0.7;
         }
 
-        /* Glassmorphism Switcher - Original Design */
+        /* Glassmorphism Switcher - Subtle Rounded Corners */
         .switcher {
           --c-glass: #ffffff;
           --c-light: #fff;
@@ -2488,7 +2488,7 @@ The article concludes with forward-looking analysis and what readers should watc
           padding: 3px;
           margin: 0;
           border: none;
-          border-radius: 99em;
+          border-radius: 12px;
           font-size: 10px;
           font-family: "DM Sans", sans-serif;
           background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
@@ -2520,7 +2520,7 @@ The article concludes with forward-looking analysis and what readers should watc
           white-space: nowrap;
         }
 
-        /* Glassmorphism Switcher Button - Original Design */
+        /* Glassmorphism Switcher Button - Subtle Rounded Corners */
         .switcher__option {
           --c: var(--c-content);
           display: flex;
@@ -2530,7 +2530,7 @@ The article concludes with forward-looking analysis and what readers should watc
           width: 36px;
           height: 28px;
           box-sizing: border-box;
-          border-radius: 99em;
+          border-radius: 9px;
           opacity: 1;
           transition: all 160ms;
           background: none;
@@ -2556,7 +2556,7 @@ The article concludes with forward-looking analysis and what readers should watc
           scale: 1;
         }
 
-        /* Glassmorphism Active Indicator - Original Design */
+        /* Glassmorphism Active Indicator - Subtle Rounded Corners */
         .switcher::after {
           content: '';
           position: absolute;
@@ -2565,7 +2565,7 @@ The article concludes with forward-looking analysis and what readers should watc
           display: block;
           width: 36px;
           height: 28px;
-          border-radius: 99em;
+          border-radius: 9px;
           background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
           z-index: -1;
           translate: 0 0;
