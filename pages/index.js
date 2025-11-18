@@ -44,6 +44,19 @@ export default function Home() {
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
 
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Check if click is outside the language button
+      if (!e.target.closest('.language-icon-btn') && !e.target.closest('.language-dropdown-box')) {
+        setShowLanguageOptions({});
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -3436,7 +3449,7 @@ The article concludes with forward-looking analysis and what readers should watc
                   </button>
                 </div>
               ) : story.type === 'news' ? (
-                <div className="news-grid" style={{ overflow: 'hidden', padding: 0, margin: 0 }}>
+                <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
@@ -3812,7 +3825,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           <div 
                             style={{ 
                               position: 'relative',
-                              flex: '0 0 auto'
+                              flex: '0 0 auto',
+                              zIndex: 10001
                             }}
                           >
                             {/* Icon Button */}
@@ -3840,7 +3854,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                   position: 'absolute',
                                   top: 'calc(100% + 8px)',
                                   left: '50%',
-                                  transform: 'translateX(-50%)'
+                                  transform: 'translateX(-50%)',
+                                  zIndex: 10002,
+                                  pointerEvents: 'auto'
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -3849,37 +3865,47 @@ The article concludes with forward-looking analysis and what readers should watc
                                 <button
                                   key="b2"
                                   className={`language-switcher__option ${languageMode[index] === 'b2' ? 'active' : ''}`}
+                                  style={{
+                                    pointerEvents: 'auto',
+                                    cursor: 'pointer'
+                                  }}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    console.log('B2/Easy button clicked!', index);
                                     setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
                                     setTimeout(() => {
                                       setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
                                     }, 200);
                                   }}
                                 >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
                                     <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                   </svg>
-                                  <span>Easy</span>
+                                  <span style={{ pointerEvents: 'none' }}>Easy</span>
                                 </button>
                                 
                                 <button
                                   key="advanced"
                                   className={`language-switcher__option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
+                                  style={{
+                                    pointerEvents: 'auto',
+                                    cursor: 'pointer'
+                                  }}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    console.log('Advanced button clicked!', index);
                                     setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
                                     setTimeout(() => {
                                       setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
                                     }, 200);
                                   }}
                                 >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
                                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                   </svg>
-                                  <span>Adv</span>
+                                  <span style={{ pointerEvents: 'none' }}>Adv</span>
                                 </button>
                               </div>
                             )}

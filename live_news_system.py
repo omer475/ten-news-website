@@ -166,37 +166,63 @@ class LiveNewsSystem:
             
             # Step 2.5: Generate Dual-Language Content (titles, summaries, full articles)
             print("🔄 Step 2.5: Generating dual-language content (Advanced + B2)...")
-            for i, article in enumerate(full_articles):
-                try:
-                    print(f"  Processing {i+1}/{len(full_articles)}: {article.get('title', '')[:50]}...")
-                    
-                    # Prepare article data for dual-language generation
-                    article_data = {
-                        'title': article.get('title', ''),
-                        'description': article.get('description', ''),
-                        'text': article.get('text', article.get('content', ''))
-                    }
-                    
-                    # Generate dual-language content
-                    dual_lang_result = claude_write_title_summary(article_data)
-                    
-                    if dual_lang_result:
-                        # Add dual-language fields to article
-                        article['title_news'] = dual_lang_result['title_news']
-                        article['title_b2'] = dual_lang_result['title_b2']
-                        article['summary_bullets_news'] = dual_lang_result['summary_bullets_news']
-                        article['summary_bullets_b2'] = dual_lang_result['summary_bullets_b2']
-                        article['content_news'] = dual_lang_result['content_news']
-                        article['content_b2'] = dual_lang_result['content_b2']
-                        print(f"  ✅ Generated dual-language content for article {i+1}")
-                    else:
-                        print(f"  ⚠️  Failed to generate dual-language content for article {i+1}")
-                        
-                except Exception as e:
-                    print(f"  ❌ Error generating dual-language content: {e}")
-                    continue
+            success_count = 0
+            fail_count = 0
             
-            print(f"✅ Dual-language content generated for {len(full_articles)} articles")
+            for i, article in enumerate(full_articles):
+                retry_count = 0
+                max_retries = 2
+                success = False
+                
+                while retry_count <= max_retries and not success:
+                    try:
+                        if retry_count > 0:
+                            print(f"  🔄 Retry {retry_count}/{max_retries} for article {i+1}")
+                            time.sleep(2)  # Wait before retry
+                        else:
+                            print(f"  Processing {i+1}/{len(full_articles)}: {article.get('title', '')[:50]}...")
+                        
+                        # Prepare article data for dual-language generation
+                        article_data = {
+                            'title': article.get('title', ''),
+                            'description': article.get('description', ''),
+                            'text': article.get('text', article.get('content', ''))
+                        }
+                        
+                        # Validate input data
+                        if not article_data['title'] or not article_data['text']:
+                            print(f"  ⚠️  Skipping article {i+1}: Missing title or text")
+                            break
+                        
+                        # Generate dual-language content
+                        dual_lang_result = claude_write_title_summary(article_data)
+                        
+                        if dual_lang_result and all(key in dual_lang_result for key in ['title_news', 'title_b2', 'summary_bullets_news', 'summary_bullets_b2', 'content_news', 'content_b2']):
+                            # Add dual-language fields to article
+                            article['title_news'] = dual_lang_result['title_news']
+                            article['title_b2'] = dual_lang_result['title_b2']
+                            article['summary_bullets_news'] = dual_lang_result['summary_bullets_news']
+                            article['summary_bullets_b2'] = dual_lang_result['summary_bullets_b2']
+                            article['content_news'] = dual_lang_result['content_news']
+                            article['content_b2'] = dual_lang_result['content_b2']
+                            print(f"  ✅ Generated dual-language content for article {i+1}")
+                            success = True
+                            success_count += 1
+                        else:
+                            print(f"  ⚠️  Incomplete dual-language result for article {i+1}")
+                            retry_count += 1
+                            
+                    except Exception as e:
+                        print(f"  ❌ Error generating dual-language content: {e}")
+                        import traceback
+                        print(f"     Error details: {traceback.format_exc()[:200]}")
+                        retry_count += 1
+                
+                if not success:
+                    print(f"  ❌ Failed to generate dual-language content for article {i+1} after {max_retries + 1} attempts")
+                    fail_count += 1
+            
+            print(f"✅ Dual-language generation complete: {success_count} succeeded, {fail_count} failed")
             
             # Step 3: Component Selection
             print("🔄 Step 3: Gemini component selection...")

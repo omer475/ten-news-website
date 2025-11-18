@@ -232,14 +232,31 @@ Return only valid JSON with all 6 fields. No explanations."""
         
         result = json.loads(response_text)
         
+        # Validate that all required fields are present
+        required_fields = ['title_news', 'title_b2', 'summary_bullets_news', 'summary_bullets_b2', 'content_news', 'content_b2']
+        missing_fields = [field for field in required_fields if field not in result]
+        
+        if missing_fields:
+            error_msg = f"Missing required fields: {', '.join(missing_fields)}"
+            print(f"❌ Validation error: {error_msg}")
+            print(f"   Available fields: {list(result.keys())}")
+            raise ValueError(error_msg)
+        
+        # Validate that text fields are not empty
+        empty_fields = [field for field in required_fields if not result[field]]
+        if empty_fields:
+            error_msg = f"Empty fields: {', '.join(empty_fields)}"
+            print(f"❌ Validation error: {error_msg}")
+            raise ValueError(error_msg)
+        
         return result
         
     except json.JSONDecodeError as e:
-        print(f"JSON decode error: {e}")
-        print(f"Response: {response_text}")
+        print(f"❌ JSON decode error: {e}")
+        print(f"   Response text: {response_text[:200]}...")
         raise
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"❌ Error in claude_write_title_summary: {e}")
         raise
 
 
