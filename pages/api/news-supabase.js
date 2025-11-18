@@ -137,7 +137,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // Parse dual-language bullet arrays
+      // Parse dual-language summary_bullets
       let summaryBulletsNews = [];
       if (article.summary_bullets_news) {
         try {
@@ -198,13 +198,13 @@ export default async function handler(req, res) {
         final_score: article.ai_final_score,
         detailed_text: article.article || article.summary || article.description || '',  // NEW: Use 'article' field
         summary_bullets: summaryBullets,
-        // Dual-language fields for Advanced/B2 modes
-        title_news: article.title_news || null,
-        title_b2: article.title_b2 || null,
+        // Dual-language fields
+        title_news: article.title_news,
+        title_b2: article.title_b2,
         summary_bullets_news: summaryBulletsNews,
         summary_bullets_b2: summaryBulletsB2,
-        content_news: article.content_news || null,
-        content_b2: article.content_b2 || null,
+        content_news: article.content_news,
+        content_b2: article.content_b2,
         timeline: timelineData,
         graph: graphData,  // Include graph data
         components: article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null,  // Include component order
