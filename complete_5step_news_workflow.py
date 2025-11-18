@@ -130,8 +130,12 @@ class CompleteNewsWorkflow:
                     
                     step3_results.append({
                         'original_article': article,
-                        'claude_title': claude_result['title'],
-                        'claude_summary': claude_result['summary']
+                        'title_news': claude_result['title_news'],
+                        'title_b2': claude_result['title_b2'],
+                        'summary_bullets_news': claude_result['summary_bullets_news'],
+                        'summary_bullets_b2': claude_result['summary_bullets_b2'],
+                        'content_news': claude_result['content_news'],
+                        'content_b2': claude_result['content_b2']
                     })
                     
                 except Exception as e:
@@ -159,12 +163,13 @@ class CompleteNewsWorkflow:
             
             step4_results = []
             for i, article in enumerate(step3_results):
-                print(f"  Searching context {i+1}/{len(step3_results)}: {article['claude_title'][:50]}...")
+                print(f"  Searching context {i+1}/{len(step3_results)}: {article['title_news'][:50]}...")
                 
                 try:
+                    # Use title_news and content_news for context search
                     perplexity_result = search_perplexity_context(
-                        article['claude_title'],
-                        article['claude_summary']
+                        article['title_news'],
+                        article['content_news']
                     )
                     
                     step4_results.append({
@@ -198,12 +203,13 @@ class CompleteNewsWorkflow:
             
             final_articles = []
             for i, article in enumerate(step4_results):
-                print(f"  Formatting {i+1}/{len(step4_results)}: {article['step3_data']['claude_title'][:50]}...")
+                print(f"  Formatting {i+1}/{len(step4_results)}: {article['step3_data']['title_news'][:50]}...")
                 
                 try:
+                    # Use title_news and content_news for timeline/details generation
                     timeline_details = claude_format_timeline_details(
-                        article['step3_data']['claude_title'],
-                        article['step3_data']['claude_summary'],
+                        article['step3_data']['title_news'],
+                        article['step3_data']['content_news'],
                         article['perplexity_context']
                     )
                     
@@ -212,8 +218,12 @@ class CompleteNewsWorkflow:
                         'url': article['step3_data']['original_article']['url'],
                         'original_title': article['step3_data']['original_article']['title'],
                         'score': article['step3_data']['original_article']['score'],
-                        'title': article['step3_data']['claude_title'],
-                        'summary': article['step3_data']['claude_summary'],
+                        'title_news': article['step3_data']['title_news'],
+                        'title_b2': article['step3_data']['title_b2'],
+                        'summary_bullets_news': article['step3_data']['summary_bullets_news'],
+                        'summary_bullets_b2': article['step3_data']['summary_bullets_b2'],
+                        'content_news': article['step3_data']['content_news'],
+                        'content_b2': article['step3_data']['content_b2'],
                         'timeline': timeline_details['timeline'],
                         'details': timeline_details['details'],
                         'citations': article['citations'],
@@ -289,13 +299,18 @@ class CompleteNewsWorkflow:
         print("=" * 80)
         
         for i, article in enumerate(results['final_articles'], 1):
-            print(f"\n{i}. {article['title']}")
+            print(f"\n{i}. {article['title_news']}")
+            print(f"   B2 Title: {article['title_b2']}")
             print(f"   Original: {article['original_title']}")
             print(f"   Score: {article['score']}")
             print(f"   URL: {article['url']}")
             
-            print(f"\n   📄 Summary:")
-            print(f"   {article['summary']}")
+            print(f"\n   📄 Content (News):")
+            print(f"   {article['content_news'][:200]}...")
+            
+            print(f"\n   📄 Bullets (News):")
+            for bullet in article['summary_bullets_news']:
+                print(f"   • {bullet}")
             
             print(f"\n   ⏰ Timeline:")
             for event in article['timeline']:

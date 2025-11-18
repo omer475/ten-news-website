@@ -18,22 +18,28 @@ def generate_complete_news_content(article):
     print("🚀 STARTING COMPLETE 3-STEP NEWS GENERATION WORKFLOW")
     print("=" * 60)
     
-    # Step 1: Claude writes title and summary
-    print("\n📝 STEP 1: Claude writing title and summary...")
+    # Step 1: Claude writes title and content (dual language)
+    print("\n📝 STEP 1: Claude writing title and content (News + B2)...")
     try:
         step1_result = claude_write_title_summary(article)
-        title = step1_result['title']
-        summary = step1_result['summary']
-        print(f"✅ Title: {title}")
-        print(f"✅ Summary: {summary}")
+        title_news = step1_result['title_news']
+        title_b2 = step1_result['title_b2']
+        content_news = step1_result['content_news']
+        content_b2 = step1_result['content_b2']
+        summary_bullets_news = step1_result['summary_bullets_news']
+        summary_bullets_b2 = step1_result['summary_bullets_b2']
+        print(f"✅ Title (News): {title_news}")
+        print(f"✅ Title (B2): {title_b2}")
+        print(f"✅ Content (News): {len(content_news.split())} words")
+        print(f"✅ Content (B2): {len(content_b2.split())} words")
     except Exception as e:
         print(f"❌ Step 1 failed: {e}")
         return None
     
-    # Step 2: Perplexity searches for context
+    # Step 2: Perplexity searches for context (using News version)
     print("\n🔍 STEP 2: Perplexity searching for context...")
     try:
-        step2_result = search_perplexity_context(title, summary)
+        step2_result = search_perplexity_context(title_news, content_news)
         context = step2_result['results']
         citations = step2_result.get('citations', [])
         print(f"✅ Found {len(context)} characters of contextual information")
@@ -45,7 +51,7 @@ def generate_complete_news_content(article):
     # Step 3: Claude formats timeline and details
     print("\n📊 STEP 3: Claude formatting timeline and details...")
     try:
-        step3_result = claude_format_timeline_details(title, summary, context)
+        step3_result = claude_format_timeline_details(title_news, content_news, context)
         timeline = step3_result['timeline']
         details = step3_result['details']
         print(f"✅ Timeline: {len(timeline)} events")
@@ -56,8 +62,12 @@ def generate_complete_news_content(article):
     
     # Combine everything into final result
     final_result = {
-        "title": title,
-        "summary": summary,
+        "title_news": title_news,
+        "title_b2": title_b2,
+        "summary_bullets_news": summary_bullets_news,
+        "summary_bullets_b2": summary_bullets_b2,
+        "content_news": content_news,
+        "content_b2": content_b2,
         "timeline": timeline,
         "details": details,
         "citations": citations,
@@ -81,11 +91,18 @@ def display_final_output(result):
     print("\n📰 FINAL NEWS CONTENT")
     print("=" * 60)
     
-    print(f"\n🏷️  TITLE:")
-    print(f"   {result['title']}")
+    print(f"\n🏷️  TITLE (News):")
+    print(f"   {result['title_news']}")
     
-    print(f"\n📄 SUMMARY:")
-    print(f"   {result['summary']}")
+    print(f"\n🏷️  TITLE (B2):")
+    print(f"   {result['title_b2']}")
+    
+    print(f"\n📄 CONTENT (News) - {len(result['content_news'].split())} words:")
+    print(f"   {result['content_news'][:200]}...")
+    
+    print(f"\n📄 BULLETS (News):")
+    for i, bullet in enumerate(result['summary_bullets_news'], 1):
+        print(f"   {i}. {bullet}")
     
     print(f"\n⏰ TIMELINE:")
     for i, event in enumerate(result['timeline'], 1):

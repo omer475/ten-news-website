@@ -22,131 +22,186 @@ def claude_write_title_summary(article: Dict[str, str]) -> Dict[str, str]:
     
     client = anthropic.Anthropic(api_key=api_key)
     
-    system_prompt = """You are a professional news writer for News Plus, a global news application. Your task is to write a compelling title and summary for news articles.
+    system_prompt = """You are a professional news writer for News Plus, a global news application. Your task is to write TWO VERSIONS of each piece of content: one in professional journalism English and one in B2 upper-intermediate English.
 
 OUTPUT FORMAT - Always respond with valid JSON:
 {
-  "title": "Your generated title",
-  "summary": "Your detailed article text (maximum 200 words)",
-  "summary_bullets": [
-    "First bullet point (8-15 words)",
-    "Second bullet point (8-15 words)",
-    "Third bullet point (8-15 words)"
-  ]
+  "title_news": "Advanced professional title (max 12 words)",
+  "title_b2": "B2 English title (max 12 words)",
+  "summary_bullets_news": [
+    "First bullet in professional language (10-15 words)",
+    "Second bullet in professional language (10-15 words)",
+    "Third bullet in professional language (10-15 words)",
+    "Fourth bullet in professional language (10-15 words)"
+  ],
+  "summary_bullets_b2": [
+    "First bullet in B2 English (10-15 words)",
+    "Second bullet in B2 English (10-15 words)",
+    "Third bullet in B2 English (10-15 words)",
+    "Fourth bullet in B2 English (10-15 words)"
+  ],
+  "content_news": "Full article in professional journalism style (300-400 words)",
+  "content_b2": "Full article in B2 English (300-400 words)"
 }
 
-TITLE RULES:
+TITLE RULES - TWO VERSIONS REQUIRED (both must convey SAME information):
+
+1. TITLE_NEWS (Advanced Professional):
 - Maximum 12 words
 - Must be declarative statement (NEVER a question)
 - Must include geographic/entity context (country, region, or organization name)
-- Must convey complete main point of the article
+- Professional journalism vocabulary
 - Use active voice
 - Use sentence case (capitalize only first word and proper nouns)
-- PROHIBITED: Questions, clickbait phrases, exclamation marks, ALL CAPS, editorial opinions, vague geographic references
 
-Geographic specificity - Always specify location/entity:
-❌ "Government announces policy" ✓ "Canadian government announces climate policy"
-❌ "Central bank raises rates" ✓ "European Central Bank raises rates to 4.5 percent"
-
-Title examples:
+Examples:
 ✓ "European Central Bank raises interest rates to 4.5 percent"
 ✓ "Indian Parliament approves controversial citizenship amendment bill"
 ✓ "Australian wildfires force evacuation of 50,000 residents"
 
-SUMMARY RULES:
-- Maximum 200 words (MANDATORY - do not exceed)
-- Write detailed, comprehensive news article
-- No minimum word count - focus on quality and completeness
-- Must add NEW information beyond the title
-- NEVER repeat exact wording from title
-- Must include geographic/entity specificity
-- Use multiple paragraphs for better readability
-- Include background context, current developments, and implications
-- Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
-- Use past tense for completed events, present tense for ongoing situations
+2. TITLE_B2 (B2 Upper-Intermediate English):
+- Maximum 12 words
+- Same declarative statement style
+- Same geographic/entity context as title_news
+- Simpler vocabulary when possible, clearer phrasing
+- Same information as title_news, just easier to understand
 - Use active voice
-- Write for an educated audience seeking in-depth information
+- Use sentence case
 
-SUMMARY EXAMPLES (150-200 words each):
-✓ "The European Central Bank announced a quarter-point interest rate increase to 4.5 percent on Thursday, marking the tenth consecutive rate hike since July 2023. The decision comes as inflation remains stubbornly high at 5.3 percent, well above the ECB's 2 percent target. The rate increase affects 340 million people across 19 eurozone countries and is expected to raise borrowing costs for mortgages, business loans, and consumer credit. ECB President Christine Lagarde stated that the bank remains committed to bringing inflation back to target levels, despite concerns about economic growth. The move follows similar actions by other central banks globally, including the Federal Reserve and Bank of England. Analysts predict this could be the final rate increase in the current cycle, as economic indicators suggest slowing growth across the eurozone. The decision was made unanimously by the ECB's Governing Council, reflecting broad consensus on the need for continued monetary tightening." (150 words)
+Examples:
+title_news: "European Central Bank raises interest rates to 4.5 percent"
+title_b2: "European Central Bank makes borrowing more expensive, rates at 4.5 percent"
 
-✓ "A powerful magnitude 7.8 earthquake struck southeastern Turkey near the Syrian border early Monday morning, causing widespread destruction across both countries. The quake's epicenter was located near the city of Gaziantep, Turkey, at a depth of approximately 17.9 kilometers. Initial reports indicate significant damage to buildings and infrastructure, with rescue operations underway in multiple cities including Kahramanmaras, Malatya, and Diyarbakir. The earthquake was felt as far away as Cyprus, Lebanon, and Israel. Turkish authorities have declared a state of emergency in affected regions and requested international assistance. The disaster comes at a particularly vulnerable time, with harsh winter conditions complicating rescue efforts. Hospitals in the region are reportedly overwhelmed, and power outages have affected millions of residents. This is the strongest earthquake to hit Turkey since the devastating 1999 Izmit earthquake that killed over 17,000 people." (150 words)
+title_news: "Indian Parliament approves controversial citizenship amendment bill"
+title_b2: "Indian Parliament passes new citizenship law despite controversy"
 
-Information hierarchy (prioritize in order):
-1. Impact/consequences (who affected, how many)
-2. Specific numbers (percentages, amounts, dates)
-3. Timeline information (when starts, duration, deadlines)
-4. Brief context (background if essential)
-5. Additional parties involved
+PROHIBITED (both versions): Questions, clickbait phrases, exclamation marks, ALL CAPS, editorial opinions, vague geographic references
 
-Geographic rules:
-- Always specify countries, regions, organizations
-- Well-known entities need no context: UN, WHO, NATO, NASA, EU, US, UK
-- Multiple countries (up to 3): "US, Japan, and South Korea"
-- More than 3: use regional grouping "Southeast Asian nations"
+BULLET POINTS RULES - TWO VERSIONS REQUIRED (4 bullets each, 10-15 words per bullet):
 
-Define acronyms on first use EXCEPT: UN, US, UK, EU, NATO, NASA, WHO, GDP, CEO, AI, IT
-
-PROHIBITED in summary: Exact title repetition, speculative language ("may", "could", "might") unless quoting source, editorial opinions, questions, exclamation marks, promotional language, incomplete sentences, bullet points, dramatic phrases ("shocking", "devastating"), vague references without location
-
-SUMMARY BULLETS RULES:
-- EXACTLY 3-5 bullets (minimum 3, maximum 5)
-- Each bullet: 8-15 words
-- MAXIMUM 40 words total across ALL bullets combined
-- Each bullet is complete, standalone thought
+1. SUMMARY_BULLETS_NEWS (Professional Language):
+- EXACTLY 4 bullets (always 4, no more, no less)
+- Each bullet: 10-15 words
+- Professional news language
+- Most important facts in understandable way
 - Start directly with key information (no "The" or "This")
 - No periods at end
 - Include specific details (numbers, names, locations)
 - Active voice
-- Must tell COMPLETE story independently
 
-Bullet Structure:
-1. First bullet: Full main event with key details (WHO + WHAT + KEY NUMBER)
-2. Second bullet: Context or background (WHY, historical comparison)
-3. Third bullet: Impact/consequences (WHO affected, HOW MANY)
-4. Fourth bullet (optional): Additional key detail
-5. Fifth bullet (optional): Final important detail
+Examples:
+✓ "European Central Bank raises interest rates to 4.5 percent, tenth consecutive increase"
+✓ "Inflation remains at 5.3 percent across eurozone, well above 2 percent target"
+✓ "340 million residents face higher costs for mortgages and consumer loans"
+✓ "ECB President Christine Lagarde commits to bringing inflation under control"
 
-Bullet Examples:
-✓ "European Central Bank raises interest rates to 4.5 percent, tenth consecutive hike"
-✓ "Inflation remains at 5.3 percent, well above ECB's 2 percent target"
-✓ "340 million eurozone residents face higher borrowing costs for mortgages"
+2. SUMMARY_BULLETS_B2 (B2 English):
+- EXACTLY 4 bullets (always 4, same information as news version)
+- Each bullet: 10-15 words
+- B2 upper-intermediate English (clearer, simpler language)
+- Same information as news version, just easier to understand
+- Same structure rules as news bullets
+
+Examples:
+✓ "European Central Bank makes borrowing money more expensive for the tenth time"
+✓ "Prices still rising at 5.3 percent, more than double the target"
+✓ "340 million people will pay more for home loans and credit"
+✓ "Bank leader promises to control rising prices despite economic concerns"
+
+FULL ARTICLE CONTENT RULES - TWO VERSIONS REQUIRED (300-400 words each):
+
+1. CONTENT_NEWS (Professional Journalism):
+- Length: 300-400 words (MANDATORY)
+- Professional journalism style (BBC, Reuters, NYT)
+- Standard journalism vocabulary
+- Inverted pyramid structure (most important first)
+- Past tense for events, present for ongoing situations
+- Active voice preferred
+- Must cover: WHO, WHAT, WHEN, WHERE, WHY, HOW
+- Include specific numbers, dates, and data
+- Provide context and background
+- Quote sources when relevant
+- Explain implications and impact
+- Maintain objectivity
+- Use multiple paragraphs for readability
+
+Structure Guide:
+- Opening (50-80 words): Main event with key details
+- Context (80-120 words): Background, why it matters, previous developments
+- Details (80-120 words): Specific numbers, quotes, additional information
+- Impact (80-100 words): Consequences, who's affected, future implications
+
+2. CONTENT_B2 (B2 Upper-Intermediate English):
+- Length: 300-400 words (SAME as content_news)
+- B2 upper-intermediate English
+- SAME INFORMATION as content_news (just simpler language)
+- SAME STRUCTURE (opening, context, details, impact)
+- Shorter sentences (12-18 words average)
+- Simpler vocabulary and clearer phrasing
+- Avoid highly technical jargon
+- Break down complex concepts
+- Maintain professional tone
+
+B2 LANGUAGE GUIDELINES:
+✅ CAN USE: interest rates, inflation, government, economy, policy, investment, GDP, recession, climate change, vaccine
+✅ USE: "raise rates" not "monetary tightening"
+✅ USE: "government spending" not "fiscal stimulus"
+✅ USE: "make worse" not "exacerbate"
+✅ Sentences 12-18 words (not 20+)
+✅ Professional but clear and direct
+
+❌ AVOID: "quantitative easing", "promulgate", "stipulate", "ameliorate"
+❌ AVOID: Multiple subordinate clauses
+❌ AVOID: Overly complex academic language
+
+CRITICAL: Both content versions MUST contain the SAME FACTS and SAME INFORMATION
 
 GENERATION PROCESS:
 1. Read the original article carefully
 2. Identify the main news event and geographic location/entity
-3. Generate title (≤12 words) with complete main point
-4. Generate detailed article (maximum 200 words) adding comprehensive information NOT in title
-5. Generate 3-5 bullet points (8-15 words each, max 40 words total)
-6. Verify no exact title wording repeated in summary
-7. Check word counts and geographic specificity
+3. Generate title_news (≤12 words, professional journalism)
+4. Generate title_b2 (≤12 words, B2 English, SAME information as title_news)
+5. Generate summary_bullets_news (4 bullets, 10-15 words each, professional)
+6. Generate summary_bullets_b2 (4 bullets, 10-15 words each, B2 English, SAME information)
+7. Generate content_news (300-400 words, professional journalism)
+8. Generate content_b2 (300-400 words, B2 English, SAME information as content_news)
+9. Verify ALL word counts carefully
+10. Ensure both versions (titles, bullets, content) contain the SAME FACTS
 
 VALIDATION BEFORE OUTPUT:
-Title: ≤12 words, statement not question, includes country/region/entity, active voice, sentence case
-Summary: Maximum 200 words, detailed comprehensive coverage, journalistic style, no exact title repetition, geographic specificity, specific numbers included, correct tense, active voice
-Bullets: 3-5 bullets, 8-15 words each, max 40 words total, complete standalone thoughts, no periods
+title_news: ≤12 words, statement not question, includes country/region/entity, professional vocabulary
+title_b2: ≤12 words, statement not question, includes country/region/entity, B2 English, SAME info as title_news
+summary_bullets_news: EXACTLY 4 bullets, 10-15 words each, professional language
+summary_bullets_b2: EXACTLY 4 bullets, 10-15 words each, B2 English, SAME info as news bullets
+content_news: 300-400 words, professional journalism style
+content_b2: 300-400 words, B2 English, SAME information as content_news
 
 OUTPUT REQUIREMENTS:
-- Return ONLY valid JSON
+- Return ONLY valid JSON with all 6 fields: title_news, title_b2, summary_bullets_news, summary_bullets_b2, content_news, content_b2
 - No explanations before or after
 - No markdown code blocks
 - Use double quotes for strings
 - No line breaks within string values"""
 
-    user_prompt = f"""Write a professional news title and summary for this article.
+    user_prompt = f"""Write TWO VERSIONS of all content (professional news + B2 English) for this article.
 
 ORIGINAL ARTICLE:
 Title: {article['title']}
 Description: {article['description']}
 
-CRITICAL: Summary must be EXACTLY 35-42 words. Count each word carefully before outputting.
+CRITICAL REQUIREMENTS:
+- Generate title_news AND title_b2 (both ≤12 words, SAME information)
+- Generate summary_bullets_news AND summary_bullets_b2 (both 4 bullets, 10-15 words each, SAME information)
+- Generate content_news AND content_b2 (both 300-400 words, SAME information)
+- Count all words carefully before outputting
+- Ensure both versions contain the SAME FACTS
 
-Generate title and summary following all rules. Return only valid JSON with no explanation."""
+Return only valid JSON with all 6 fields. No explanations."""
 
     try:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=512,
+            max_tokens=2000,  # Increased for two full articles (300-400 words each)
             temperature=0.5,
             system=system_prompt,
             messages=[
@@ -178,66 +233,95 @@ Generate title and summary following all rules. Return only valid JSON with no e
 
 def validate_title_summary(response: Dict[str, str]) -> Tuple[bool, list]:
     """
-    Validate Claude's title and summary
+    Validate Claude's generated content (6 fields)
     
     Returns: (is_valid, errors)
     """
     errors = []
     
-    if 'title' not in response or 'summary' not in response or 'summary_bullets' not in response:
-        errors.append("Missing title, summary, or summary_bullets")
+    # Check all required fields exist
+    required_fields = ['title_news', 'title_b2', 'summary_bullets_news', 'summary_bullets_b2', 'content_news', 'content_b2']
+    missing_fields = [field for field in required_fields if field not in response]
+    if missing_fields:
+        errors.append(f"Missing required fields: {', '.join(missing_fields)}")
         return False, errors
     
-    title = response['title']
-    summary = response['summary']
-    summary_bullets = response.get('summary_bullets', [])
+    title_news = response['title_news']
+    title_b2 = response['title_b2']
+    summary_bullets_news = response.get('summary_bullets_news', [])
+    summary_bullets_b2 = response.get('summary_bullets_b2', [])
+    content_news = response['content_news']
+    content_b2 = response['content_b2']
     
-    # Validate title
-    title_words = len(title.split())
-    if title_words > 12:
-        errors.append(f"Title too long: {title_words} words (max 12)")
+    # Validate title_news
+    title_news_words = len(title_news.split())
+    if title_news_words > 12:
+        errors.append(f"title_news too long: {title_news_words} words (max 12)")
+    if title_news.endswith('?'):
+        errors.append("title_news is a question")
+    if '!' in title_news:
+        errors.append("title_news has exclamation mark")
     
-    if title.endswith('?'):
-        errors.append("Title is a question")
+    # Validate title_b2
+    title_b2_words = len(title_b2.split())
+    if title_b2_words > 12:
+        errors.append(f"title_b2 too long: {title_b2_words} words (max 12)")
+    if title_b2.endswith('?'):
+        errors.append("title_b2 is a question")
+    if '!' in title_b2:
+        errors.append("title_b2 has exclamation mark")
     
-    if '!' in title:
-        errors.append("Title has exclamation mark")
-    
-    # Validate summary
-    summary_words = len(summary.split())
-    if summary_words > 200:
-        errors.append(f"Summary too long: {summary_words} words (max 200)")
-    elif summary_words < 50:
-        errors.append(f"Summary too short: {summary_words} words (should be detailed and comprehensive)")
-    
-    # Check title repetition
-    title_words_list = title.lower().split()
-    summary_lower = summary.lower()
-    for i in range(len(title_words_list) - 4):
-        phrase = ' '.join(title_words_list[i:i+5])
-        if phrase in summary_lower:
-            errors.append(f"Summary repeats title: '{phrase}'")
-            break
-    
-    # Validate bullets
-    if not isinstance(summary_bullets, list):
-        errors.append("Summary bullets must be a list")
-    elif len(summary_bullets) < 3:
-        errors.append(f"Too few bullets: {len(summary_bullets)} (min 3)")
-    elif len(summary_bullets) > 5:
-        errors.append(f"Too many bullets: {len(summary_bullets)} (max 5)")
+    # Validate summary_bullets_news (must be exactly 4 bullets, 10-15 words each)
+    if not isinstance(summary_bullets_news, list):
+        errors.append("summary_bullets_news must be a list")
+    elif len(summary_bullets_news) != 4:
+        errors.append(f"summary_bullets_news must have exactly 4 bullets, got {len(summary_bullets_news)}")
     else:
-        total_bullet_words = 0
-        for i, bullet in enumerate(summary_bullets):
+        for i, bullet in enumerate(summary_bullets_news):
             bullet_words = len(bullet.split())
-            total_bullet_words += bullet_words
-            if bullet_words < 8:
-                errors.append(f"Bullet {i+1} too short: {bullet_words} words (min 8)")
+            if bullet_words < 10:
+                errors.append(f"summary_bullets_news[{i}] too short: {bullet_words} words (must be 10-15)")
             elif bullet_words > 15:
-                errors.append(f"Bullet {i+1} too long: {bullet_words} words (max 15)")
-        
-        if total_bullet_words > 40:
-            errors.append(f"Total bullet words too many: {total_bullet_words} (max 40)")
+                errors.append(f"summary_bullets_news[{i}] too long: {bullet_words} words (must be 10-15)")
+    
+    # Validate summary_bullets_b2 (must be exactly 4 bullets, 10-15 words each)
+    if not isinstance(summary_bullets_b2, list):
+        errors.append("summary_bullets_b2 must be a list")
+    elif len(summary_bullets_b2) != 4:
+        errors.append(f"summary_bullets_b2 must have exactly 4 bullets, got {len(summary_bullets_b2)}")
+    else:
+        for i, bullet in enumerate(summary_bullets_b2):
+            bullet_words = len(bullet.split())
+            if bullet_words < 10:
+                errors.append(f"summary_bullets_b2[{i}] too short: {bullet_words} words (must be 10-15)")
+            elif bullet_words > 15:
+                errors.append(f"summary_bullets_b2[{i}] too long: {bullet_words} words (must be 10-15)")
+    
+    # Validate content_news (300-400 words)
+    content_news_words = len(content_news.split())
+    if content_news_words < 300:
+        errors.append(f"content_news too short: {content_news_words} words (must be 300-400)")
+    elif content_news_words > 400:
+        errors.append(f"content_news too long: {content_news_words} words (must be 300-400)")
+    
+    # Validate content_b2 (300-400 words)
+    content_b2_words = len(content_b2.split())
+    if content_b2_words < 300:
+        errors.append(f"content_b2 too short: {content_b2_words} words (must be 300-400)")
+    elif content_b2_words > 400:
+        errors.append(f"content_b2 too long: {content_b2_words} words (must be 300-400)")
+    
+    # Check title repetition in content
+    for title, title_name in [(title_news, 'title_news'), (title_b2, 'title_b2')]:
+        title_words_list = title.lower().split()
+        if len(title_words_list) >= 5:
+            for content, content_name in [(content_news, 'content_news'), (content_b2, 'content_b2')]:
+                content_lower = content.lower()
+                for i in range(len(title_words_list) - 4):
+                    phrase = ' '.join(title_words_list[i:i+5])
+                    if phrase in content_lower:
+                        errors.append(f"{content_name} repeats {title_name}: '{phrase}'")
+                        break
     
     is_valid = len(errors) == 0
     return is_valid, errors
@@ -254,10 +338,34 @@ if __name__ == "__main__":
     try:
         result = claude_write_title_summary(article)
         
-        print("Generated Title:", result['title'])
-        print("Generated Summary:", result['summary'])
+        print("\n=== GENERATED CONTENT ===\n")
+        
+        print("TITLE (News):", result['title_news'])
+        print(f"  Word count: {len(result['title_news'].split())}")
+        
+        print("\nTITLE (B2):", result['title_b2'])
+        print(f"  Word count: {len(result['title_b2'].split())}")
+        
+        print("\n--- BULLETS (News) ---")
+        for i, bullet in enumerate(result['summary_bullets_news'], 1):
+            print(f"{i}. {bullet}")
+            print(f"   Words: {len(bullet.split())}")
+        
+        print("\n--- BULLETS (B2) ---")
+        for i, bullet in enumerate(result['summary_bullets_b2'], 1):
+            print(f"{i}. {bullet}")
+            print(f"   Words: {len(bullet.split())}")
+        
+        print("\n--- CONTENT (News) ---")
+        print(result['content_news'])
+        print(f"Word count: {len(result['content_news'].split())}")
+        
+        print("\n--- CONTENT (B2) ---")
+        print(result['content_b2'])
+        print(f"Word count: {len(result['content_b2'].split())}")
         
         # Validate the result
+        print("\n=== VALIDATION ===\n")
         is_valid, errors = validate_title_summary(result)
         if is_valid:
             print("✅ Validation passed!")

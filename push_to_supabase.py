@@ -90,7 +90,15 @@ def push_to_supabase():
                 'category': article['category'],
                 'emoji': article['emoji'] if article['emoji'] else '📰',
                 
-                # Enhanced content
+                # Enhanced content - NEW DUAL LANGUAGE STRUCTURE
+                'title_news': article['title_news'] if 'title_news' in article.keys() else None,
+                'title_b2': article['title_b2'] if 'title_b2' in article.keys() else None,
+                'summary_bullets_news': article['summary_bullets_news'] if 'summary_bullets_news' in article.keys() else None,
+                'summary_bullets_b2': article['summary_bullets_b2'] if 'summary_bullets_b2' in article.keys() else None,
+                'content_news': article['content_news'] if 'content_news' in article.keys() else None,
+                'content_b2': article['content_b2'] if 'content_b2' in article.keys() else None,
+                
+                # Legacy fields (keep for backward compatibility)
                 'timeline': article['timeline'],
                 'details_section': article['details_section'],
                 'summary': article['summary'] if article['summary'] else '',

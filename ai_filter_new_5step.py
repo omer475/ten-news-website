@@ -216,8 +216,12 @@ class AINewsFilter:
                     
                     step3_results.append({
                         'processed_article': article,
-                        'claude_title': claude_result['title'],
-                        'claude_summary': claude_result['summary']
+                        'title_news': claude_result['title_news'],
+                        'title_b2': claude_result['title_b2'],
+                        'summary_bullets_news': claude_result['summary_bullets_news'],
+                        'summary_bullets_b2': claude_result['summary_bullets_b2'],
+                        'content_news': claude_result['content_news'],
+                        'content_b2': claude_result['content_b2']
                     })
                     
                 except Exception as e:
@@ -240,12 +244,13 @@ class AINewsFilter:
             
             step4_results = []
             for i, article in enumerate(step3_results):
-                self.logger.info(f"  Searching context {i+1}/{len(step3_results)}: {article['claude_title'][:50]}...")
+                self.logger.info(f"  Searching context {i+1}/{len(step3_results)}: {article['title_news'][:50]}...")
                 
                 try:
+                    # Use title_news and content_news for context search
                     perplexity_result = search_perplexity_context(
-                        article['claude_title'],
-                        article['claude_summary']
+                        article['title_news'],
+                        article['content_news']
                     )
                     
                     step4_results.append({
@@ -276,12 +281,13 @@ class AINewsFilter:
             
             final_articles = []
             for i, article in enumerate(step4_results):
-                self.logger.info(f"  Formatting {i+1}/{len(step4_results)}: {article['step3_data']['claude_title'][:50]}...")
+                self.logger.info(f"  Formatting {i+1}/{len(step4_results)}: {article['step3_data']['title_news'][:50]}...")
                 
                 try:
+                    # Use title_news and content_news for timeline/details generation
                     timeline_details = claude_format_timeline_details(
-                        article['step3_data']['claude_title'],
-                        article['step3_data']['claude_summary'],
+                        article['step3_data']['title_news'],
+                        article['step3_data']['content_news'],
                         article['perplexity_context']
                     )
                     
@@ -292,8 +298,12 @@ class AINewsFilter:
                     final_article = {
                         'db_article': db_article,
                         'score': score,
-                        'title': article['step3_data']['claude_title'],
-                        'summary': article['step3_data']['claude_summary'],
+                        'title_news': article['step3_data']['title_news'],
+                        'title_b2': article['step3_data']['title_b2'],
+                        'summary_bullets_news': article['step3_data']['summary_bullets_news'],
+                        'summary_bullets_b2': article['step3_data']['summary_bullets_b2'],
+                        'content_news': article['step3_data']['content_news'],
+                        'content_b2': article['step3_data']['content_b2'],
                         'timeline': timeline_details['timeline'],
                         'details': timeline_details['details'],
                         'citations': article['citations']
@@ -340,16 +350,14 @@ class AINewsFilter:
         for article in final_articles:
             db_article = article['db_article']
             
-            # Convert timeline to JSON string
+            # Convert arrays to JSON strings
             timeline_json = json.dumps(article['timeline'])
-            
-            # Convert details to JSON string
             details_json = json.dumps(article['details'])
-            
-            # Convert citations to JSON string
             citations_json = json.dumps(article['citations'])
+            summary_bullets_news_json = json.dumps(article['summary_bullets_news'])
+            summary_bullets_b2_json = json.dumps(article['summary_bullets_b2'])
             
-            # Update database
+            # Update database with new dual-language fields
             conn = self._get_db_connection()
             cursor = conn.cursor()
             
@@ -360,8 +368,12 @@ class AINewsFilter:
                     ai_category = 'must_know',
                     ai_reasoning = '5-step workflow: Gemini-Jina-Claude-Perplexity-Claude',
                     published = TRUE,
-                    ai_title = ?,
-                    ai_summary = ?,
+                    title_news = ?,
+                    title_b2 = ?,
+                    summary_bullets_news = ?,
+                    summary_bullets_b2 = ?,
+                    content_news = ?,
+                    content_b2 = ?,
                     ai_timeline = ?,
                     ai_details = ?,
                     ai_citations = ?,
@@ -369,8 +381,12 @@ class AINewsFilter:
                 WHERE id = ?
             ''', (
                 article['score'],
-                article['title'],
-                article['summary'],
+                article['title_news'],
+                article['title_b2'],
+                summary_bullets_news_json,
+                summary_bullets_b2_json,
+                article['content_news'],
+                article['content_b2'],
                 timeline_json,
                 details_json,
                 citations_json,
@@ -380,7 +396,7 @@ class AINewsFilter:
             conn.commit()
             conn.close()
             
-            self.logger.info(f"✅ Published: {article['title']}")
+            self.logger.info(f"✅ Published: {article['title_news']}")
             self.logger.info(f"   Score: {article['score']}")
             self.logger.info(f"   Timeline: {len(article['timeline'])} events")
             self.logger.info(f"   Details: {len(article['details'])} items")
