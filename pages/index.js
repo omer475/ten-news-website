@@ -917,37 +917,8 @@ The article concludes with forward-looking analysis and what readers should watc
             
             console.log('📰 Setting stories:', finalStories.length);
             
-            // Add example dual-language data for testing if fields are missing
-            finalStories = finalStories.map(story => {
-              if (story.type === 'news' && !story.title_news) {
-                return {
-                  ...story,
-                  // Example ADVANCED PROFESSIONAL NEWS ENGLISH
-                  title_news: "**ADVANCED VERSION**: " + (story.title || "**Breaking News** Story Unfolds with Unprecedented Developments"),
-                  summary_bullets_news: [
-                    "**ADVANCED**: Unprecedented developments emerge in international crisis",
-                    "**ADVANCED**: Economists forecast significant ramifications for global trade",
-                    "**ADVANCED**: Government officials convene emergency summit addressing concerns",
-                    "**ADVANCED**: Decisive action anticipated within upcoming 48-hour period"
-                  ],
-                  content_news: "**ADVANCED PROFESSIONAL VERSION**: This is the sophisticated, professional news English version. The **international community** is meticulously monitoring unprecedented developments. **Government officials** have promulgated a comprehensive statement addressing burgeoning public apprehension. **Leading economists** prognosticate substantial ramifications for **global financial markets** throughout subsequent weeks. The **macroeconomic implications** are anticipated to be considerable, permeating multiple industrial sectors. **Key stakeholders** are convening to deliberate prospective countermeasures and strategic responses. Additional intelligence will be disseminated as circumstances continue to evolve and develop.",
-                  
-                  // Example B2 SIMPLE ENGLISH
-                  title_b2: "**B2 EASY VERSION**: " + (story.title || "**Big News** Event Is Happening Right Now"),
-                  summary_bullets_b2: [
-                    "**B2 EASY**: New things happening in world news story",
-                    "**B2 EASY**: Money experts think this will change world business",
-                    "**B2 EASY**: Government leaders answer people's worries and questions",
-                    "**B2 EASY**: Big decisions will happen in the next 2 days"
-                  ],
-                  content_b2: "**B2 EASY ENGLISH VERSION**: This is the simple, easy-to-understand B2 level English version. **Important news** is happening right now around the world. **Countries** are watching this situation very carefully. **Government leaders** have made an official announcement to answer what people are worried about. **Money experts** believe this will change **world markets** in the next few weeks. The **effects on jobs and the economy** will be significant and will touch many different areas of business. **Important decision makers** are having meetings to discuss what actions to take next. We will give you more updates when we learn new information about what is happening."
-                };
-              }
-              return story;
-            });
-            
             setStories(finalStories);
-            console.log('📰 Stories set successfully with dual-language data');
+            console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
             setStories([]);
