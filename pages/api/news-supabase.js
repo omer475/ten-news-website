@@ -137,6 +137,31 @@ export default async function handler(req, res) {
         }
       }
 
+      // Parse dual-language bullet arrays
+      let summaryBulletsNews = [];
+      if (article.summary_bullets_news) {
+        try {
+          summaryBulletsNews = typeof article.summary_bullets_news === 'string'
+            ? JSON.parse(article.summary_bullets_news)
+            : article.summary_bullets_news;
+        } catch (e) {
+          console.error('Error parsing summary_bullets_news:', e);
+          summaryBulletsNews = [];
+        }
+      }
+
+      let summaryBulletsB2 = [];
+      if (article.summary_bullets_b2) {
+        try {
+          summaryBulletsB2 = typeof article.summary_bullets_b2 === 'string'
+            ? JSON.parse(article.summary_bullets_b2)
+            : article.summary_bullets_b2;
+        } catch (e) {
+          console.error('Error parsing summary_bullets_b2:', e);
+          summaryBulletsB2 = [];
+        }
+      }
+
       return {
         id: article.id,
         title: article.title,
@@ -173,6 +198,13 @@ export default async function handler(req, res) {
         final_score: article.ai_final_score,
         detailed_text: article.article || article.summary || article.description || '',  // NEW: Use 'article' field
         summary_bullets: summaryBullets,
+        // Dual-language fields for Advanced/B2 modes
+        title_news: article.title_news || null,
+        title_b2: article.title_b2 || null,
+        summary_bullets_news: summaryBulletsNews,
+        summary_bullets_b2: summaryBulletsB2,
+        content_news: article.content_news || null,
+        content_b2: article.content_b2 || null,
         timeline: timelineData,
         graph: graphData,  // Include graph data
         components: article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null,  // Include component order
