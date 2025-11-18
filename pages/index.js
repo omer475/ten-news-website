@@ -3067,7 +3067,6 @@ The article concludes with forward-looking analysis and what readers should watc
               <span className="time">{currentTime}</span>
               {user ? (
                 <>
-                  <span className="user-welcome">Welcome, {user.user_metadata?.full_name || user.email}</span>
                   <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
                 </>
               ) : (
