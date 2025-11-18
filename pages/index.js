@@ -1549,7 +1549,7 @@ The article concludes with forward-looking analysis and what readers should watc
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1582,18 +1582,10 @@ The article concludes with forward-looking analysis and what readers should watc
           min-height: 100dvh;
           touch-action: none;
           transition: background-color 0.3s ease, color 0.3s ease;
-          /* iOS Safe Area Insets - Background extends behind status bar */
-          padding-bottom: env(safe-area-inset-bottom);
-          padding-left: env(safe-area-inset-left);
-          padding-right: env(safe-area-inset-right);
         }
 
-        /* Safe Area and Glassmorphism Variables */
+        /* Glassmorphism Variables */
         :root {
-          --safe-top: env(safe-area-inset-top);
-          --safe-bottom: env(safe-area-inset-bottom);
-          --safe-left: env(safe-area-inset-left);
-          --safe-right: env(safe-area-inset-right);
           --c-glass: #ffffff;
           --c-light: #fff;
           --c-dark: #000;
@@ -1695,7 +1687,7 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: max(env(safe-area-inset-top), 8px);
+          padding-top: 8px;
           padding-left: 20px;
           padding-right: 20px;
           padding-bottom: 8px;
@@ -1742,7 +1734,7 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: calc(60px + env(safe-area-inset-top));
+          padding-top: 60px;
           padding-bottom: 200px;
           padding-left: 24px;
           padding-right: 24px;
@@ -4251,27 +4243,6 @@ The article concludes with forward-looking analysis and what readers should watc
                                   </div>
                                 </div>
                                 </div>
-                                
-                                {/* Progress bar for auto-rotation */}
-                                {autoRotationEnabled[index] !== false && 
-                                 getAvailableComponentsCount(story) > 1 && 
-                                 !showDetailedArticle && 
-                                 !expandedTimeline[index] && 
-                                 !expandedGraph[index] && (
-                                  <div
-                                    key={progressBarKey[index] || 'initial'}
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: '0',
-                                      left: '0',
-                                      height: '3px',
-                                      width: '0%',
-                                      backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
-                                      animation: 'progressFill 4s linear forwards',
-                                      zIndex: 100000
-                                    }}
-                                  />
-                                )}
                             </div>
                           );
                           } else if (showTimeline[index]) {
@@ -4430,27 +4401,6 @@ The article concludes with forward-looking analysis and what readers should watc
                                 </div>
                               </div>
                               </div>
-                              
-                              {/* Progress bar for auto-rotation */}
-                              {autoRotationEnabled[index] !== false && 
-                               getAvailableComponentsCount(story) > 1 && 
-                               !showDetailedArticle && 
-                               !expandedTimeline[index] && 
-                               !expandedGraph[index] && (
-                                <div
-                                  key={progressBarKey[index] || 'initial'}
-                                  style={{
-                                    position: 'absolute',
-                                    bottom: '0',
-                                    left: '0',
-                                    height: '3px',
-                                    width: '0%',
-                                    backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
-                                    animation: 'progressFill 4s linear forwards',
-                                    zIndex: 100000
-                                  }}
-                                />
-                              )}
                             </div>
                           );
                           } else if (showMap[index]) {
@@ -4494,27 +4444,6 @@ The article concludes with forward-looking analysis and what readers should watc
                               }}>
                                 Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
                                   </div>
-                              
-                              {/* Progress bar for auto-rotation */}
-                              {autoRotationEnabled[index] !== false && 
-                               getAvailableComponentsCount(story) > 1 && 
-                               !showDetailedArticle && 
-                               !expandedTimeline[index] && 
-                               !expandedGraph[index] && (
-                                <div
-                                  key={progressBarKey[index] || 'initial'}
-                                  style={{
-                                    position: 'absolute',
-                                    bottom: '0',
-                                    left: '0',
-                                    height: '3px',
-                                    width: '0%',
-                                    backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
-                                    animation: 'progressFill 4s linear forwards',
-                                    zIndex: 100000
-                                  }}
-                                />
-                              )}
                             </div>
                             );
                           } else if (showDetails[index]) {
@@ -4597,27 +4526,6 @@ The article concludes with forward-looking analysis and what readers should watc
                                     );
                                   })}
                                 </div>
-                                
-                                {/* Progress bar for auto-rotation */}
-                                {autoRotationEnabled[index] !== false && 
-                                 getAvailableComponentsCount(story) > 1 && 
-                                 !showDetailedArticle && 
-                                 !expandedTimeline[index] && 
-                                 !expandedGraph[index] && (
-                                  <div
-                                    key={progressBarKey[index] || 'initial'}
-                                    style={{
-                                      position: 'absolute',
-                                      bottom: '0',
-                                      left: '0',
-                                      height: '3px',
-                                      width: '0%',
-                                      backgroundColor: imageDominantColors[index]?.highlight || 'rgba(255, 255, 255, 0.8)',
-                                      animation: 'progressFill 4s linear forwards',
-                                      zIndex: 100000
-                                    }}
-                                  />
-                                )}
                               </div>
                             );
                           } else {
