@@ -1,381 +1,408 @@
 """
-TEN NEWS - RSS SOURCES CONFIGURATION
-200+ High-Quality RSS Feeds
-Organized by category
+TEN NEWS - PREMIUM RSS SOURCES CONFIGURATION
+Comprehensive collection of premium news sources
+Organized by category and tier
 """
 
-# BREAKING NEWS & WORLD NEWS (25 sources)
+# MAJOR INTERNATIONAL NEWS AGENCIES
 BREAKING_NEWS_SOURCES = [
-    # Tier 1 - Highest Priority
-    # DISABLED - DNS/Connection errors
-    # ('Reuters World', 'https://www.reuters.com/rssfeed/worldNews'),
-    # ('Reuters Breaking News', 'https://www.reuters.com/rssfeed/topNews'),
-    # ('Associated Press', 'https://feeds.apnews.com/rss/apf-topnews'),
-    ('BBC World News', 'http://feeds.bbci.co.uk/news/world/rss.xml'),
-    ('BBC Breaking News', 'http://feeds.bbci.co.uk/news/rss.xml'),
-    ('Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml'),
-    
-    # Tier 2
-    ('CNN Top Stories', 'http://rss.cnn.com/rss/edition.rss'),
-    ('CNN World', 'http://rss.cnn.com/rss/edition_world.rss'),
-    ('The Guardian World', 'https://www.theguardian.com/world/rss'),
-    ('The Guardian UK', 'https://www.theguardian.com/uk/rss'),
-    ('The Guardian US', 'https://www.theguardian.com/us-news/rss'),
-    ('ABC News', 'https://abcnews.go.com/abcnews/topstories'),
-    ('NBC News', 'https://feeds.nbcnews.com/nbcnews/public/news'),
-    ('CBS News', 'https://www.cbsnews.com/latest/rss/main'),
-    ('NPR News', 'https://feeds.npr.org/1001/rss.xml'),
-    
-    # International
-    ('Deutsche Welle', 'https://rss.dw.com/rdf/rss-en-all'),
-    ('France 24', 'https://www.france24.com/en/rss'),
-    ('The Japan Times', 'https://www.japantimes.co.jp/feed/'),
-    ('South China Morning Post', 'https://www.scmp.com/rss/91/feed'),
-    ('Times of India', 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms'),
-    ('The Hindu', 'https://www.thehindu.com/news/national/feeder/default.rss'),
-    ('Straits Times', 'https://www.straitstimes.com/news/world/rss.xml'),
-    ('Arab News', 'https://www.arabnews.com/rss.xml'),
-    ('Jerusalem Post', 'https://www.jpost.com/rss/rssfeedsheadlines.aspx'),
-    ('Sydney Morning Herald', 'https://www.smh.com.au/rss/feed.xml'),
+    ('Reuters World', 'https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best'),
+    ('Reuters Breaking News', 'https://www.reutersagency.com/feed/?best-topics=breaking-news'),
+    ('Associated Press Top News', 'https://feeds.apnews.com/rss/apf-topnews'),
+    ('Associated Press International', 'https://feeds.apnews.com/rss/apf-international'),
+    ('Associated Press US News', 'https://feeds.apnews.com/rss/apf-usnews'),
+    ('Agence France-Presse (AFP)', 'https://www.afp.com/en/news/rss'),
 ]
 
-# SCIENCE & RESEARCH (45 sources)
+# US PREMIUM NEWS
+US_NEWS_SOURCES = [
+    ('The New York Times World', 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml'),
+    ('The New York Times US', 'https://rss.nytimes.com/services/xml/rss/nyt/US.xml'),
+    ('The New York Times Homepage', 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'),
+    ('Washington Post World', 'https://feeds.washingtonpost.com/rss/world'),
+    ('Washington Post National', 'https://feeds.washingtonpost.com/rss/national'),
+    ('USA Today', 'https://www.usatoday.com/rss/'),
+    ('Los Angeles Times', 'https://www.latimes.com/rss'),
+    ('Chicago Tribune', 'https://www.chicagotribune.com/rss/'),
+    ('The Boston Globe', 'https://www.bostonglobe.com/rss'),
+]
+
+# UK PREMIUM NEWS
+UK_NEWS_SOURCES = [
+    ('BBC News World', 'http://feeds.bbci.co.uk/news/world/rss.xml'),
+    ('BBC News UK', 'http://feeds.bbci.co.uk/news/uk/rss.xml'),
+    ('BBC News Top Stories', 'http://feeds.bbci.co.uk/news/rss.xml'),
+    ('The Guardian World', 'https://www.theguardian.com/world/rss'),
+    ('The Guardian UK', 'https://www.theguardian.com/uk-news/rss'),
+    ('The Guardian US', 'https://www.theguardian.com/us-news/rss'),
+    ('The Times (UK)', 'https://www.thetimes.co.uk/rss'),
+    ('The Telegraph', 'https://www.telegraph.co.uk/rss.xml'),
+    ('The Independent', 'https://www.independent.co.uk/rss'),
+    ('The Economist World', 'https://www.economist.com/world/rss.xml'),
+]
+
+# INTERNATIONAL PREMIUM NEWS
+INTERNATIONAL_NEWS_SOURCES = [
+    ('Al Jazeera English', 'https://www.aljazeera.com/xml/rss/all.xml'),
+    ('Deutsche Welle', 'https://rss.dw.com/xml/rss-en-all'),
+    ('France 24', 'https://www.france24.com/en/rss'),
+    ('Euronews', 'https://www.euronews.com/rss'),
+    ('The Japan Times', 'https://www.japantimes.co.jp/feed/'),
+    ('South China Morning Post', 'https://www.scmp.com/rss/91/feed'),
+    ('The Straits Times', 'https://www.straitstimes.com/news/world/rss.xml'),
+    ('The Times of India', 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms'),
+    ('The Hindu', 'https://www.thehindu.com/news/national/feeder/default.rss'),
+    ('The Sydney Morning Herald', 'https://www.smh.com.au/rss/feed.xml'),
+    ('The Australian', 'https://www.theaustralian.com.au/feed/'),
+    ('Toronto Star', 'https://www.thestar.com/rss'),
+    ('Globe and Mail (Canada)', 'https://www.theglobeandmail.com/rss/'),
+]
+
+# PREMIUM NEWS MAGAZINES
+NEWS_MAGAZINES_SOURCES = [
+    ('TIME Magazine', 'https://time.com/feed/'),
+    ('Newsweek', 'https://www.newsweek.com/rss'),
+    ('The Atlantic', 'https://www.theatlantic.com/feed/all/'),
+    ('The New Yorker', 'https://www.newyorker.com/feed/everything'),
+    ('Vanity Fair', 'https://www.vanityfair.com/feed/rss'),
+    ('Axios', 'https://www.axios.com/feeds/feed.rss'),
+    ('ProPublica', 'https://www.propublica.org/feeds/propublica/main'),
+]
+
+# FINANCIAL NEWS LEADERS
+FINANCIAL_SOURCES = [
+    ('Bloomberg Markets', 'https://www.bloomberg.com/feed/sitemap_news.xml'),
+    ('Financial Times', 'https://www.ft.com/?format=rss'),
+    ('Financial Times Companies', 'https://www.ft.com/companies?format=rss'),
+    ('The Economist Business', 'https://www.economist.com/business/rss.xml'),
+    ('The Economist Finance', 'https://www.economist.com/finance-and-economics/rss.xml'),
+    ('Wall Street Journal', 'https://feeds.a.dj.com/rss/RSSWorldNews.xml'),
+    ('Wall Street Journal Markets', 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'),
+    ('Barron\'s', 'https://www.barrons.com/rss'),
+]
+
+# BUSINESS NEWS & ANALYSIS
+BUSINESS_SOURCES = [
+    ('Forbes', 'https://www.forbes.com/real-time/feed2/'),
+    ('Forbes Leadership', 'https://www.forbes.com/leadership/feed/'),
+    ('Fortune', 'https://fortune.com/feed/'),
+    ('Fortune 500', 'https://fortune.com/fortune500/feed/'),
+    ('Business Insider', 'https://www.businessinsider.com/rss'),
+    ('Business Insider Markets', 'https://markets.businessinsider.com/rss/news'),
+    ('Fast Company', 'https://www.fastcompany.com/latest/rss'),
+    ('Inc. Magazine', 'https://www.inc.com/rss/'),
+    ('Entrepreneur', 'https://www.entrepreneur.com/latest.rss'),
+    ('Harvard Business Review', 'https://hbr.org/feed'),
+]
+
+# MARKET & INVESTMENT NEWS
+MARKET_SOURCES = [
+    ('CNBC Top News', 'https://www.cnbc.com/id/100003114/device/rss/rss.html'),
+    ('CNBC Markets', 'https://www.cnbc.com/id/10000664/device/rss/rss.html'),
+    ('CNBC Business', 'https://www.cnbc.com/id/10001147/device/rss/rss.html'),
+    ('MarketWatch', 'https://www.marketwatch.com/rss/'),
+    ('MarketWatch Markets', 'https://www.marketwatch.com/rss/marketpulse'),
+    ('Yahoo Finance', 'https://finance.yahoo.com/news/rssindex'),
+    ('Seeking Alpha Market News', 'https://seekingalpha.com/feed.xml'),
+    ('Investor\'s Business Daily', 'https://www.investors.com/feed/'),
+    ('Morningstar', 'https://www.morningstar.com/rss'),
+]
+
+# GLOBAL BUSINESS NEWS
+GLOBAL_BUSINESS_SOURCES = [
+    ('Reuters Business', 'https://www.reutersagency.com/feed/?best-topics=business-finance'),
+    ('Financial Times Global Economy', 'https://www.ft.com/global-economy?format=rss'),
+    ('Nikkei Asia', 'https://asia.nikkei.com/rss'),
+    ('South China Morning Post Business', 'https://www.scmp.com/rss/2/feed'),
+]
+
+# CRYPTOCURRENCY & FINTECH
+CRYPTO_FINTECH_SOURCES = [
+    ('CoinDesk', 'https://www.coindesk.com/arc/outboundfeeds/rss/'),
+    ('Cointelegraph', 'https://cointelegraph.com/rss'),
+    ('The Block', 'https://www.theblockcrypto.com/rss.xml'),
+    ('Decrypt', 'https://decrypt.co/feed'),
+    ('Fintech News', 'https://www.fintechnews.org/feed/'),
+]
+
+# MAJOR TECH NEWS
+TECHNOLOGY_SOURCES = [
+    ('The Verge', 'https://www.theverge.com/rss/index.xml'),
+    ('Wired', 'https://www.wired.com/feed/rss'),
+    ('Wired Business', 'https://www.wired.com/feed/category/business/rss'),
+    ('Ars Technica', 'https://feeds.arstechnica.com/arstechnica/index'),
+    ('TechCrunch', 'https://techcrunch.com/feed/'),
+    ('TechCrunch Startups', 'https://techcrunch.com/startups/feed/'),
+    ('CNET News', 'https://www.cnet.com/rss/news/'),
+    ('ZDNet', 'https://www.zdnet.com/news/rss.xml'),
+    ('Engadget', 'https://www.engadget.com/rss.xml'),
+    ('TechRadar', 'https://www.techradar.com/rss'),
+    ('PCMag', 'https://www.pcmag.com/feed'),
+    ('Tom\'s Hardware', 'https://www.tomshardware.com/feeds/all'),
+    ('AnandTech', 'https://www.anandtech.com/rss/'),
+]
+
+# TECH INDUSTRY & BUSINESS
+TECH_INDUSTRY_SOURCES = [
+    ('MIT Technology Review', 'https://www.technologyreview.com/feed/'),
+    ('IEEE Spectrum', 'https://spectrum.ieee.org/feeds/feed.rss'),
+    ('VentureBeat', 'https://venturebeat.com/feed/'),
+    ('The Next Web', 'https://thenextweb.com/feed/'),
+    ('Mashable Tech', 'https://mashable.com/feeds/rss/tech'),
+    ('Gizmodo', 'https://gizmodo.com/rss'),
+    ('The Information', 'https://www.theinformation.com/feed'),
+    ('Protocol', 'https://www.protocol.com/feeds/feed.rss'),
+    ('Rest of World', 'https://restofworld.org/feed/latest/'),
+]
+
+# AI & MACHINE LEARNING
+AI_ML_SOURCES = [
+    ('Google AI Blog', 'https://blog.google/technology/ai/rss/'),
+    ('DeepMind Blog', 'https://deepmind.google/blog/rss.xml'),
+    ('OpenAI Blog', 'https://openai.com/blog/rss/'),
+    ('Anthropic News', 'https://www.anthropic.com/news/rss'),
+    ('MIT CSAIL', 'https://www.csail.mit.edu/news/rss.xml'),
+    ('Stanford HAI', 'https://hai.stanford.edu/news/rss.xml'),
+]
+
+# DEVELOPER & PROGRAMMING
+DEVELOPER_SOURCES = [
+    ('GitHub Blog', 'https://github.blog/feed/'),
+    ('Stack Overflow Blog', 'https://stackoverflow.blog/feed/'),
+    ('Hacker News', 'https://hnrss.org/frontpage'),
+    ('Slashdot', 'http://rss.slashdot.org/Slashdot/slashdotMain'),
+]
+
+# COMPANY TECH BLOGS
+COMPANY_TECH_SOURCES = [
+    ('Apple Newsroom', 'https://www.apple.com/newsroom/rss-feed.rss'),
+    ('Microsoft News', 'https://news.microsoft.com/feed/'),
+    ('Google Developers Blog', 'https://developers.googleblog.com/feeds/posts/default'),
+    ('Meta Engineering', 'https://engineering.fb.com/feed/'),
+    ('Netflix Tech Blog', 'https://netflixtechblog.com/feed'),
+    ('Uber Engineering', 'https://eng.uber.com/feed/'),
+    ('Amazon AWS News', 'https://aws.amazon.com/blogs/aws/feed/'),
+    ('Spotify Engineering', 'https://engineering.atspotify.com/feed/'),
+]
+
+# CYBERSECURITY
+CYBERSECURITY_SOURCES = [
+    ('Krebs on Security', 'https://krebsonsecurity.com/feed/'),
+    ('Schneier on Security', 'https://www.schneier.com/feed/atom/'),
+    ('The Hacker News', 'https://feeds.feedburner.com/TheHackersNews'),
+    ('Dark Reading', 'https://www.darkreading.com/rss_simple.asp'),
+]
+
+# TOP SCIENCE JOURNALS
 SCIENCE_SOURCES = [
-    # Top Tier Journals
-    ('Nature News', 'http://feeds.nature.com/nature/rss/current'),
-    ('Nature Research Highlights', 'http://feeds.nature.com/nature/rss/research_highlights'),
-    ('Science Magazine', 'https://www.science.org/rss/news_current.xml'),
+    ('Nature News', 'https://www.nature.com/nature.rss'),
+    ('Nature Research Highlights', 'https://www.nature.com/nature/research-highlights.rss'),
+    ('Science Magazine News', 'https://www.science.org/rss/news_current.xml'),
     ('Science Daily', 'https://www.sciencedaily.com/rss/all.xml'),
     ('PNAS', 'https://www.pnas.org/rss/current.xml'),
     ('Cell', 'https://www.cell.com/cell/current.rss'),
-    ('The Lancet', 'https://www.thelancet.com/rssfeed/lancet_current.xml'),
-    ('NEJM', 'https://www.nejm.org/action/showFeed?type=etoc&feed=rss&jc=nejm'),
-    
-    # Nature Family
-    ('Nature Biotechnology', 'http://feeds.nature.com/nbt/rss/current'),
-    ('Nature Medicine', 'http://feeds.nature.com/nm/rss/current'),
-    ('Nature Physics', 'http://feeds.nature.com/nphys/rss/current'),
-    ('Nature Chemistry', 'http://feeds.nature.com/nchem/rss/current'),
-    ('Nature Materials', 'http://feeds.nature.com/nmat/rss/current'),
-    ('Nature Neuroscience', 'http://feeds.nature.com/neuro/rss/current'),
-    ('Nature Genetics', 'http://feeds.nature.com/ng/rss/current'),
-    ('Nature Climate Change', 'http://feeds.nature.com/nclimate/rss/current'),
-    ('Nature Communications', 'http://feeds.nature.com/ncomms/rss/current'),
-    ('Scientific Reports', 'http://feeds.nature.com/srep/rss/current'),
-    
-    # arXiv Categories
-    ('arXiv Physics', 'https://rss.arxiv.org/rss/physics'),
-    ('arXiv Computer Science', 'https://rss.arxiv.org/rss/cs'),
-    ('arXiv Mathematics', 'https://rss.arxiv.org/rss/math'),
-    ('arXiv Quantitative Biology', 'https://rss.arxiv.org/rss/q-bio'),
-    ('arXiv Astrophysics', 'https://rss.arxiv.org/rss/astro-ph'),
-    ('arXiv Quantum Physics', 'https://rss.arxiv.org/rss/quant-ph'),
-    
-    # Science Publishers
     ('PLOS Biology', 'https://journals.plos.org/plosbiology/feed/atom'),
     ('PLOS ONE', 'https://journals.plos.org/plosone/feed/atom'),
-    ('BMJ', 'https://www.bmj.com/rss/recent.xml'),
-    
-    # Popular Science
-    ('Scientific American', 'http://rss.sciam.com/ScientificAmerican-Global'),
+]
+
+# NATURE FAMILY JOURNALS
+NATURE_FAMILY_SOURCES = [
+    ('Nature Medicine', 'https://www.nature.com/nm.rss'),
+    ('Nature Biotechnology', 'https://www.nature.com/nbt.rss'),
+    ('Nature Physics', 'https://www.nature.com/nphys.rss'),
+    ('Nature Chemistry', 'https://www.nature.com/nchem.rss'),
+    ('Nature Neuroscience', 'https://www.nature.com/neuro.rss'),
+    ('Nature Genetics', 'https://www.nature.com/ng.rss'),
+    ('Nature Climate Change', 'https://www.nature.com/nclimate.rss'),
+    ('Nature Communications', 'https://www.nature.com/ncomms.rss'),
+]
+
+# POPULAR SCIENCE PUBLICATIONS
+POPULAR_SCIENCE_SOURCES = [
+    ('Scientific American', 'https://www.scientificamerican.com/feed/'),
     ('New Scientist', 'https://www.newscientist.com/feed/home'),
-    ('Phys.org', 'https://phys.org/rss-feed/'),
+    ('Popular Science', 'https://www.popsci.com/feed/'),
+    ('Popular Mechanics', 'https://www.popularmechanics.com/rss/all.xml/'),
+    ('Discover Magazine', 'https://www.discovermagazine.com/rss'),
     ('Quanta Magazine', 'https://www.quantamagazine.org/feed/'),
-    ('Live Science', 'https://www.livescience.com/feeds/all'),
-    ('Space.com', 'https://www.space.com/feeds/all'),
+    ('Smithsonian Magazine Science', 'https://www.smithsonianmag.com/rss/science/'),
+    ('National Geographic Science', 'https://www.nationalgeographic.com/science/rss'),
+]
+
+# SPACE & ASTRONOMY
+SPACE_ASTRONOMY_SOURCES = [
     ('NASA', 'https://www.nasa.gov/rss/dyn/breaking_news.rss'),
-    ('ESA', 'https://www.esa.int/rssfeed/Our_Activities/Space_Science'),
-    
-    # Medical
-    # DISABLED - 404/Malformed XML errors
-    # ('Medical News Today', 'https://www.medicalnewstoday.com/rss'),
-    # ('WebMD', 'https://rssfeeds.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC'),
-    # ('Johns Hopkins Medicine', 'https://www.hopkinsmedicine.org/news/feed'),
-    # ('Mayo Clinic', 'https://newsnetwork.mayoclinic.org/feed/'),
-    # ('eLife', 'https://elifesciences.org/rss/recent.xml'),
-    
-    # Climate & Environment Science
-    # DISABLED - 403/404 errors
-    # ('Climate Central', 'https://www.climatecentral.org/feed'),
-    # ('Carbon Brief', 'https://www.carbonbrief.org/feed/'),
-    ('RealClimate', 'http://www.realclimate.org/index.php/feed/'),
+    ('NASA Science', 'https://science.nasa.gov/rss/science.rss'),
+    ('ESA (European Space Agency)', 'https://www.esa.int/rssfeed/Our_Activities/Space_News'),
+    ('Space.com', 'https://www.space.com/feeds/all'),
+    ('Astronomy Magazine', 'https://www.astronomy.com/feed/'),
+    ('Sky & Telescope', 'https://skyandtelescope.org/astronomy-news/feed/'),
+]
+
+# PHYSICS & MATHEMATICS
+PHYSICS_MATH_SOURCES = [
+    ('Physics World', 'https://physicsworld.com/feed/'),
+    ('Phys.org', 'https://phys.org/rss-feed/'),
+    ('APS Physics', 'https://physics.aps.org/feed'),
+    ('Quanta Magazine Math', 'https://www.quantamagazine.org/tag/mathematics/feed/'),
+]
+
+# BIOLOGY & MEDICINE RESEARCH
+BIOLOGY_MEDICINE_SOURCES = [
+    ('The Lancet', 'https://www.thelancet.com/rssfeed/lancet_current.xml'),
+    ('New England Journal of Medicine', 'https://www.nejm.org/action/showFeed?type=etoc&feed=rss&jc=nejm'),
+    ('British Medical Journal (BMJ)', 'https://www.bmj.com/rss'),
+    ('JAMA', 'https://jamanetwork.com/rss/site_3/1.xml'),
+    ('Nature Medicine', 'https://www.nature.com/nm.rss'),
+]
+
+# ENVIRONMENTAL SCIENCE
+ENVIRONMENTAL_SOURCES = [
+    ('Environmental Science & Technology (ACS)', 'https://pubs.acs.org/action/showFeed?type=axatoc&feed=rss&jc=esthag'),
+    ('Nature Climate Change', 'https://www.nature.com/nclimate.rss'),
     ('IPCC', 'https://www.ipcc.ch/feed/'),
+    ('NOAA News', 'https://www.noaa.gov/feed'),
 ]
 
-# TECHNOLOGY (35 sources)
-TECHNOLOGY_SOURCES = [
-    # Major Tech News
-    ('TechCrunch', 'http://feeds.feedburner.com/TechCrunch/'),
-    ('The Verge', 'https://www.theverge.com/rss/index.xml'),
-    ('Wired', 'https://www.wired.com/feed/rss'),
-    ('Ars Technica', 'http://feeds.arstechnica.com/arstechnica/index'),
-    ('Engadget', 'https://www.engadget.com/rss.xml'),
-    ('CNET', 'https://www.cnet.com/rss/news/'),
-    ('TechRadar', 'https://www.techradar.com/rss'),
-    ('ZDNet', 'http://www.zdnet.com/news/rss.xml'),
-    ('VentureBeat', 'https://venturebeat.com/feed/'),
-    ('The Next Web', 'https://thenextweb.com/feed/'),
-    
-    # Specific Tech Areas
-    ('MIT Technology Review', 'https://www.technologyreview.com/feed/'),
-    ('IEEE Spectrum', 'https://spectrum.ieee.org/feeds/feed.rss'),
-    ('Hacker News', 'https://hnrss.org/frontpage'),
-    ('Slashdot', 'http://rss.slashdot.org/Slashdot/slashdotMain'),
-    ('Gizmodo', 'https://gizmodo.com/rss'),
-    ('Mashable Tech', 'https://mashable.com/feeds/rss/tech'),
-    
-    # AI & Machine Learning
-    # DISABLED - 403/Connection errors
-    # ('OpenAI Blog', 'https://openai.com/blog/rss/'),
-    # ('AI News', 'https://artificialintelligence-news.com/feed/'),
-    ('Google AI Blog', 'http://feeds.feedburner.com/blogspot/gJZg'),
-    ('DeepMind Blog', 'https://deepmind.com/blog/feed/basic/'),
-    ('Machine Learning Mastery', 'https://machinelearningmastery.com/feed/'),
-    
-    # Developer & Coding
-    ('GitHub Blog', 'https://github.blog/feed/'),
-    ('Stack Overflow Blog', 'https://stackoverflow.blog/feed/'),
-    ('Dev.to', 'https://dev.to/feed/'),
-    ('freeCodeCamp', 'https://www.freecodecamp.org/news/rss/'),
-    ('CSS Tricks', 'https://css-tricks.com/feed/'),
-    
-    # Company Blogs
-    ('Google Developers', 'https://developers.googleblog.com/feeds/posts/default'),
-    ('AWS News', 'https://aws.amazon.com/blogs/aws/feed/'),
-    ('Apple Newsroom', 'https://www.apple.com/newsroom/rss-feed.rss'),
-    ('Meta Engineering', 'https://engineering.fb.com/feed/'),
-    # DISABLED - 404/SSL errors
-    # ('Netflix Tech Blog', 'https://netflixtechblog.com/feed'),
-    # ('Uber Engineering', 'https://eng.uber.com/feed/'),
-    # ('Airbnb Engineering', 'https://medium.com/feed/airbnb-engineering'),
-    ('Spotify Engineering', 'https://engineering.atspotify.com/feed/'),
-    ('Dropbox Tech Blog', 'https://dropbox.tech/feed'),
-]
-
-# BUSINESS & FINANCE (30 sources)
-BUSINESS_SOURCES = [
-    # Major Business News
-    # DISABLED - DNS/401 errors
-    # ('Reuters Business', 'https://www.reuters.com/rssfeed/businessNews'),
-    ('CNBC', 'https://www.cnbc.com/id/100003114/device/rss/rss.html'),
-    ('MarketWatch', 'http://feeds.marketwatch.com/marketwatch/topstories/'),
-    ('Forbes', 'https://www.forbes.com/real-time/feed2/'),
-    ('Fortune', 'https://fortune.com/feed/'),
-    ('Business Insider', 'https://www.businessinsider.com/rss'),
-    ('Fast Company', 'https://www.fastcompany.com/latest/rss'),
-    
-    # Markets & Trading
-    ('Yahoo Finance', 'https://finance.yahoo.com/news/rssindex'),
-    ('Seeking Alpha', 'https://seekingalpha.com/feed.xml'),
-    ('Benzinga', 'https://www.benzinga.com/feed'),
-    ('The Motley Fool', 'https://www.fool.com/feeds/index.aspx'),
-    # DISABLED - 404 error
-    # ('Morningstar', 'https://www.morningstar.com/rss'),
-    
-    # Crypto & Fintech
-    ('CoinDesk', 'https://www.coindesk.com/arc/outboundfeeds/rss/'),
-    ('Cointelegraph', 'https://cointelegraph.com/rss'),
-    ('The Block', 'https://www.theblock.co/rss.xml'),
-    ('Decrypt', 'https://decrypt.co/feed'),
-    ('Fintech News', 'https://www.fintechnews.org/feed/'),
-    
-    # Economics
-    # DISABLED - 403/404 errors
-    # ('The World Bank', 'https://www.worldbank.org/en/news/rss'),
-    # ('Trading Economics', 'https://tradingeconomics.com/rss/news.aspx'),
-    ('IMF', 'https://www.imf.org/en/News/RSS'),
-    ('Federal Reserve', 'https://www.federalreserve.gov/feeds/press_all.xml'),
-    
-    # Industry News
-    ('TechCrunch Startups', 'https://techcrunch.com/startups/feed/'),
-    ('VentureBeat Business', 'https://venturebeat.com/category/business/feed/'),
-    # DISABLED - 404/403 errors
-    # ('The Hustle', 'https://thehustle.co/feed/'),
-    # ('Morning Brew', 'https://www.morningbrew.com/daily/feed'),
-    # ('Protocol', 'https://www.protocol.com/feeds/feed.rss'),
-    # ('Axios Business', 'https://www.axios.com/business/feed'),
-    # ('Bloomberg Markets', 'https://www.bloomberg.com/feed/markets/index.xml'),
-    ('CNBC World Markets', 'https://www.cnbc.com/id/15839135/device/rss/rss.html'),
-    ('Financial Times Markets', 'https://www.ft.com/markets?format=rss'),
-]
-
-# ENVIRONMENT & CLIMATE (20 sources)
-ENVIRONMENT_SOURCES = [
-    # Climate News
-    ('Climate Home News', 'https://www.climatechangenews.com/feed/'),
-    ('Inside Climate News', 'https://insideclimatenews.org/feed/'),
-    # DISABLED - 404 error
-    # ('Yale Environment 360', 'https://e360.yale.edu/feed'),
-    ('The Guardian Environment', 'https://www.theguardian.com/environment/rss'),
-    ('Grist', 'https://grist.org/feed/'),
-    
-    # Conservation
-    # DISABLED - 403 error
-    # ('WWF News', 'https://www.worldwildlife.org/rss/news.xml'),
-    ('Conservation International', 'https://www.conservation.org/blog/feed'),
-    ('The Nature Conservancy', 'https://blog.nature.org/feed/'),
-    # DISABLED - 404 error
-    # ('Sierra Club', 'https://www.sierraclub.org/rss/national.xml'),
-    ('Greenpeace', 'https://www.greenpeace.org/international/feed/'),
-    ('Rainforest Alliance', 'https://www.rainforest-alliance.org/feed/'),
-    
-    # Energy & Sustainability
-    ('Renewable Energy World', 'https://www.renewableenergyworld.com/feeds/all/'),
-    # DISABLED - 403/404 errors
-    # ('Clean Technica', 'https://cleantechnica.com/feed/'),
-    # ('Mongabay', 'https://news.mongabay.com/feed/'),
-    # ('Environmental Health News', 'https://www.ehn.org/rss-articles'),
-    ('Green Tech Media', 'https://www.greentechmedia.com/rss/all'),
-    ('Energy News Network', 'https://energynews.us/feed/'),
-    ('DeSmog', 'https://www.desmog.com/feed/'),
-    # DISABLED - 404 error
-    # ('TreeHugger', 'https://www.treehugger.com/feeds/rss'),
-    ('Earth911', 'https://earth911.com/feed/'),
-]
-
-# DATA SCIENCE & STATISTICS (15 sources)
-DATA_SOURCES = [
-    # Data Science
-    # DISABLED - 403 errors
-    # ('Towards Data Science', 'https://towardsdatascience.com/feed'),
-    # ('Data Science Central', 'https://www.datasciencecentral.com/feed/'),
-    ('KDnuggets', 'https://www.kdnuggets.com/feed'),
-    ('Analytics Vidhya', 'https://www.analyticsvidhya.com/feed/'),
-    ('R-bloggers', 'https://www.r-bloggers.com/feed/'),
-    ('Real Python', 'https://realpython.com/atom.xml'),
-    
-    # Statistics & Research
-    ('FiveThirtyEight', 'https://fivethirtyeight.com/feed/'),
-    ('Pew Research', 'https://www.pewresearch.org/feed/'),
-    ('Our World in Data', 'https://ourworldindata.org/atom.xml'),
-    ('The Pudding', 'https://pudding.cool/feed/index.xml'),
-    ('Flowing Data', 'https://flowingdata.com/feed'),
-    
-    # Big Data
-    ('Data Innovation', 'https://www.datainnovation.org/feed/'),
-    # DISABLED - 404/DNS errors
-    # ('Data Science Weekly', 'https://www.datascienceweekly.org/feed'),
-    # ('Big Data Analytics News', 'https://bigdata-madesimple.com/feed/'),
-    ('Data Informed', 'https://data-informed.com/feed/'),
-]
-
-# POLITICS (20 sources)
-POLITICS_SOURCES = [
-    # US Politics
-    # DISABLED - 403 errors
-    # ('Politico', 'https://www.politico.com/rss/politicopicks.xml'),
-    # ('Axios Politics', 'https://www.axios.com/politics/feed'),
-    ('The Hill', 'https://thehill.com/feed/'),
-    ('Roll Call', 'https://www.rollcall.com/feed/'),
-    ('RealClearPolitics', 'http://www.realclearpolitics.com/index.xml'),
-    ('The Atlantic Politics', 'https://www.theatlantic.com/feed/channel/politics/'),
-    ('VOX Politics', 'https://www.vox.com/rss/policy-and-politics/index.xml'),
-    
-    # International Politics
-    ('Foreign Policy', 'https://foreignpolicy.com/feed/'),
-    ('Foreign Affairs', 'https://www.foreignaffairs.com/rss.xml'),
-    ('The Diplomat', 'https://thediplomat.com/feed/'),
-    # DISABLED - 404 error
-    # ('Council on Foreign Relations', 'https://www.cfr.org/rss/index.xml'),
-    ('Brookings', 'https://www.brookings.edu/feed/'),
-    # DISABLED - 404 error
-    # ('CSIS', 'https://www.csis.org/analysis/feed'),
-    
-    # EU & UK
-    # DISABLED - Redirect loop
-    # ('Euronews', 'https://www.euronews.com/rss'),
-    ('EUobserver', 'https://euobserver.com/rss.xml'),
-    # DISABLED - 403 error
-    # ('UK Parliament', 'https://www.parliament.uk/site-information/rss-feeds/'),
-    
-    # Think Tanks
-    ('Atlantic Council', 'https://www.atlanticcouncil.org/feed/'),
-    ('Carnegie Endowment', 'https://carnegieendowment.org/rss/feed.xml'),
-    ('RAND', 'https://www.rand.org/news/press.xml'),
-    # DISABLED - 404 error
-    # ('Heritage Foundation', 'https://www.heritage.org/rss/commentary-op-eds'),
-]
-
-# GENERAL NEWS & OPINION (15 sources)
-GENERAL_SOURCES = [
-    ('New York Times', 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'),
-    ('Washington Post', 'http://feeds.washingtonpost.com/rss/national'),
-    ('Los Angeles Times', 'https://www.latimes.com/local/rss2.0.xml'),
-    ('USA Today', 'http://rssfeeds.usatoday.com/usatoday-NewsTopStories'),
-    # DISABLED - 403 error
-    # ('Chicago Tribune', 'https://www.chicagotribune.com/arcio/rss/'),
-    # DISABLED - 404 error
-    # ('The Times (UK)', 'https://www.thetimes.co.uk/rss'),
-    ('The Independent', 'https://www.independent.co.uk/rss'),
-    # DISABLED - 403 error
-    # ('The Telegraph', 'https://www.telegraph.co.uk/rss.xml'),
-    ('Huffington Post', 'https://www.huffpost.com/section/front-page/feed'),
-    ('Slate', 'http://www.slate.com/all.fulltext.all.rss'),
-    ('Salon', 'https://www.salon.com/feed/'),
-    # DISABLED - 404 error
-    # ('The Daily Beast', 'https://www.thedailybeast.com/rss'),
-    ('Medium Top Stories', 'https://medium.com/feed/tag/top-stories'),
-    ('Axios', 'https://www.axios.com/feeds/feed.rss'),
-    ('ProPublica', 'https://www.propublica.org/feeds/propublica/main'),
+# SCIENCE NEWS ORGANIZATIONS
+SCIENCE_NEWS_SOURCES = [
+    ('ScienceNews.org', 'https://www.sciencenews.org/feed'),
+    ('Live Science', 'https://www.livescience.com/feeds/all'),
+    ('EurekAlert! (AAAS)', 'https://www.eurekalert.org/rss/technology_engineering.xml'),
+    ('NIH Research Matters', 'https://www.nih.gov/news-events/nih-research-matters/feed'),
 ]
 
 # Combine all sources
 ALL_SOURCES = (
     BREAKING_NEWS_SOURCES +
-    SCIENCE_SOURCES +
-    TECHNOLOGY_SOURCES +
+    US_NEWS_SOURCES +
+    UK_NEWS_SOURCES +
+    INTERNATIONAL_NEWS_SOURCES +
+    NEWS_MAGAZINES_SOURCES +
+    FINANCIAL_SOURCES +
     BUSINESS_SOURCES +
-    ENVIRONMENT_SOURCES +
-    DATA_SOURCES +
-    POLITICS_SOURCES +
-    GENERAL_SOURCES
+    MARKET_SOURCES +
+    GLOBAL_BUSINESS_SOURCES +
+    CRYPTO_FINTECH_SOURCES +
+    TECHNOLOGY_SOURCES +
+    TECH_INDUSTRY_SOURCES +
+    AI_ML_SOURCES +
+    DEVELOPER_SOURCES +
+    COMPANY_TECH_SOURCES +
+    CYBERSECURITY_SOURCES +
+    SCIENCE_SOURCES +
+    NATURE_FAMILY_SOURCES +
+    POPULAR_SCIENCE_SOURCES +
+    SPACE_ASTRONOMY_SOURCES +
+    PHYSICS_MATH_SOURCES +
+    BIOLOGY_MEDICINE_SOURCES +
+    ENVIRONMENTAL_SOURCES +
+    SCIENCE_NEWS_SOURCES
 )
 
 # Source credibility scores (for AI weighting)
 SOURCE_CREDIBILITY = {
-    # Tier 1: Gold Standard (9-10 points)
+    # Tier 1: Gold Standard (9-10 points) - Major International Agencies
     'Reuters World': 10,
     'Reuters Breaking News': 10,
     'Reuters Business': 10,
-    'Associated Press': 10,
-    'BBC World News': 10,
-    'BBC Breaking News': 10,
-    'Nature News': 10,
-    'Science Magazine': 10,
-    'NPR News': 9,
+    'Associated Press Top News': 10,
+    'Associated Press International': 10,
+    'Associated Press US News': 10,
+    'Agence France-Presse (AFP)': 10,
+    'BBC News World': 10,
+    'BBC News UK': 10,
+    'BBC News Top Stories': 10,
+    
+    # Tier 1: Premium News Organizations
+    'The New York Times World': 10,
+    'The New York Times US': 10,
+    'The New York Times Homepage': 10,
+    'Washington Post World': 9,
+    'Washington Post National': 9,
     'The Guardian World': 9,
-    'New York Times': 9,
-    'Washington Post': 9,
-    'Financial Times Markets': 9,
+    'The Guardian UK': 9,
+    'The Guardian US': 9,
+    'The Economist World': 9,
+    'The Economist Business': 9,
+    'The Economist Finance': 9,
     
-    # Tier 2: Highly Credible (7-8 points)
-    'Al Jazeera': 8,
-    'CNN Top Stories': 8,
-    'CNN World': 8,
-    'NBC News': 8,
-    'CBS News': 8,
-    'The Economist': 8,
-    'Scientific American': 8,
-    'MIT Technology Review': 8,
-    'Foreign Affairs': 8,
-    'The Atlantic Politics': 8,
+    # Tier 1: Top Science Journals
+    'Nature News': 10,
+    'Nature Research Highlights': 10,
+    'Science Magazine News': 10,
+    'The Lancet': 10,
+    'New England Journal of Medicine': 10,
+    'Cell': 10,
+    'PNAS': 10,
     
-    # Tier 3: Credible (5-6 points) - most sources default to this
-    # Tier 4: Lower Credibility (3-4 points)
+    # Tier 1: Financial News
+    'Bloomberg Markets': 10,
+    'Financial Times': 10,
+    'Financial Times Companies': 10,
+    'Wall Street Journal': 10,
+    'Wall Street Journal Markets': 10,
+    
+    # Tier 2: Highly Credible (8-9 points)
+    'Al Jazeera English': 9,
+    'Deutsche Welle': 9,
+    'France 24': 8,
+    'The Times (UK)': 9,
+    'The Telegraph': 8,
+    'The Independent': 8,
+    'USA Today': 8,
+    'Los Angeles Times': 8,
+    'Chicago Tribune': 8,
+    'The Boston Globe': 8,
+    'Forbes': 8,
+    'Fortune': 8,
+    'Business Insider': 8,
+    'Harvard Business Review': 9,
+    'MIT Technology Review': 9,
+    'Wired': 8,
+    'The Verge': 8,
+    'Ars Technica': 8,
+    'Scientific American': 9,
+    'Nature Medicine': 10,
+    'Nature Biotechnology': 10,
+    'JAMA': 10,
+    'British Medical Journal (BMJ)': 10,
+    'NASA': 9,
+    'ESA (European Space Agency)': 9,
+    'The Atlantic': 9,
+    'TIME Magazine': 8,
+    'ProPublica': 9,
+    
+    # Tier 3: Credible (6-7 points) - most sources default to this
 }
 
 def get_source_credibility(source_name):
-    """Get credibility score for a source (default 6)"""
-    return SOURCE_CREDIBILITY.get(source_name, 6)
+    """Get credibility score for a source (default 7)"""
+    return SOURCE_CREDIBILITY.get(source_name, 7)
 
 # Statistics
-print(f"📊 Total RSS Sources: {len(ALL_SOURCES)}")
-print(f"   Breaking News: {len(BREAKING_NEWS_SOURCES)}")
-print(f"   Science: {len(SCIENCE_SOURCES)}")
+print(f"📊 Total Premium RSS Sources: {len(ALL_SOURCES)}")
+print(f"   Major International News Agencies: {len(BREAKING_NEWS_SOURCES)}")
+print(f"   US Premium News: {len(US_NEWS_SOURCES)}")
+print(f"   UK Premium News: {len(UK_NEWS_SOURCES)}")
+print(f"   International News: {len(INTERNATIONAL_NEWS_SOURCES)}")
+print(f"   News Magazines: {len(NEWS_MAGAZINES_SOURCES)}")
+print(f"   Financial News: {len(FINANCIAL_SOURCES)}")
+print(f"   Business News: {len(BUSINESS_SOURCES)}")
+print(f"   Market News: {len(MARKET_SOURCES)}")
+print(f"   Global Business: {len(GLOBAL_BUSINESS_SOURCES)}")
+print(f"   Crypto & Fintech: {len(CRYPTO_FINTECH_SOURCES)}")
 print(f"   Technology: {len(TECHNOLOGY_SOURCES)}")
-print(f"   Business: {len(BUSINESS_SOURCES)}")
-print(f"   Environment: {len(ENVIRONMENT_SOURCES)}")
-print(f"   Data Science: {len(DATA_SOURCES)}")
-print(f"   Politics: {len(POLITICS_SOURCES)}")
-print(f"   General: {len(GENERAL_SOURCES)}")
-
+print(f"   Tech Industry: {len(TECH_INDUSTRY_SOURCES)}")
+print(f"   AI & Machine Learning: {len(AI_ML_SOURCES)}")
+print(f"   Developer: {len(DEVELOPER_SOURCES)}")
+print(f"   Company Tech Blogs: {len(COMPANY_TECH_SOURCES)}")
+print(f"   Cybersecurity: {len(CYBERSECURITY_SOURCES)}")
+print(f"   Science Journals: {len(SCIENCE_SOURCES)}")
+print(f"   Nature Family: {len(NATURE_FAMILY_SOURCES)}")
+print(f"   Popular Science: {len(POPULAR_SCIENCE_SOURCES)}")
+print(f"   Space & Astronomy: {len(SPACE_ASTRONOMY_SOURCES)}")
+print(f"   Physics & Math: {len(PHYSICS_MATH_SOURCES)}")
+print(f"   Biology & Medicine: {len(BIOLOGY_MEDICINE_SOURCES)}")
+print(f"   Environmental Science: {len(ENVIRONMENTAL_SOURCES)}")
+print(f"   Science News: {len(SCIENCE_NEWS_SOURCES)}")

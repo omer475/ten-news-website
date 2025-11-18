@@ -27,6 +27,7 @@ from step3_gemini_component_selection import GeminiComponentSelector, ComponentC
 from step4_perplexity_dynamic_context_search import PerplexityContextSearcher, PerplexityConfig
 from step5_claude_final_writing_formatting import ClaudeFinalWriter, WriterConfig
 from supabase_storage import save_articles_to_supabase
+from step1_claude_title_summary import claude_write_title_summary  # Dual-language content generation
 
 class LiveNewsSystem:
     def __init__(self):
@@ -163,6 +164,40 @@ class LiveNewsSystem:
             
             print(f"✅ {len(full_articles)} articles fetched")
             
+            # Step 2.5: Generate Dual-Language Content (titles, summaries, full articles)
+            print("🔄 Step 2.5: Generating dual-language content (Advanced + B2)...")
+            for i, article in enumerate(full_articles):
+                try:
+                    print(f"  Processing {i+1}/{len(full_articles)}: {article.get('title', '')[:50]}...")
+                    
+                    # Prepare article data for dual-language generation
+                    article_data = {
+                        'title': article.get('title', ''),
+                        'description': article.get('description', ''),
+                        'text': article.get('text', article.get('content', ''))
+                    }
+                    
+                    # Generate dual-language content
+                    dual_lang_result = claude_write_title_summary(article_data)
+                    
+                    if dual_lang_result:
+                        # Add dual-language fields to article
+                        article['title_news'] = dual_lang_result['title_news']
+                        article['title_b2'] = dual_lang_result['title_b2']
+                        article['summary_bullets_news'] = dual_lang_result['summary_bullets_news']
+                        article['summary_bullets_b2'] = dual_lang_result['summary_bullets_b2']
+                        article['content_news'] = dual_lang_result['content_news']
+                        article['content_b2'] = dual_lang_result['content_b2']
+                        print(f"  ✅ Generated dual-language content for article {i+1}")
+                    else:
+                        print(f"  ⚠️  Failed to generate dual-language content for article {i+1}")
+                        
+                except Exception as e:
+                    print(f"  ❌ Error generating dual-language content: {e}")
+                    continue
+            
+            print(f"✅ Dual-language content generated for {len(full_articles)} articles")
+            
             # Step 3: Component Selection
             print("🔄 Step 3: Gemini component selection...")
             articles_with_components = self.component_selector.select_components_batch(full_articles)
@@ -205,7 +240,7 @@ class LiveNewsSystem:
                     'url': article.get('url', ''),
                     'guid': article.get('guid', ''),
                     'source': article.get('source', 'Unknown'),
-                    'title': article.get('title', ''),
+                    'title': article.get('title_news', article.get('title', '')),  # Use title_news as fallback for old system
                     'description': article.get('description', ''),
                     'content': article.get('text', ''),
                     'image_url': article.get('image_url', ''),
@@ -221,12 +256,20 @@ class LiveNewsSystem:
                     'category': article.get('category', 'World News'),
                     'emoji': article.get('emoji', '📰'),
                     
-                    # Enhanced content
-                    'article': article.get('detailed_text', ''),  # NEW: Detailed article text (max 200 words)
-                    'summary_bullets': article.get('summary_bullets', []),  # NEW: Bullet points
+                    # Enhanced content - DEPRECATED (use dual-language fields instead)
+                    # 'article': None,  # No longer used - use content_news/content_b2
+                    # 'summary_bullets': None,  # No longer used - use summary_bullets_news/summary_bullets_b2
                     'timeline': article.get('timeline', []),
                     'details': article.get('details', []),
                     'graph': article.get('graph', {}),
+                    
+                    # DUAL-LANGUAGE CONTENT - NEW FIELDS
+                    'title_news': article.get('title_news'),  # Advanced professional title
+                    'title_b2': article.get('title_b2'),  # B2 English title
+                    'summary_bullets_news': article.get('summary_bullets_news'),  # Advanced bullets (4 items)
+                    'summary_bullets_b2': article.get('summary_bullets_b2'),  # B2 bullets (4 items)
+                    'content_news': article.get('content_news'),  # Advanced full article (300-400 words)
+                    'content_b2': article.get('content_b2'),  # B2 full article (300-400 words)
                     'map': article.get('map', {}),
                     'components': article.get('components', []),  # NEW: Component order array
                     

@@ -46,7 +46,7 @@ You will receive:
 You must write:
 1. Title (≤12 words)
 2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
-3. Summary bullets (3-5 bullets, 8-15 words each, max 40 words total)
+3. Summary bullets (exactly 4 bullets, 10-17 words each, max 60 words total)
 4. Timeline (if selected, 2-4 events)
 5. Details (if selected, exactly 3 data points)
 6. Graph (if selected, formatted data)
@@ -100,13 +100,13 @@ Writing style:
 - Proper attribution when mentioning sources
 - Avoid speculation unless clearly labeled as such
 
-=== SUMMARY BULLETS (3-5 bullets, 8-15 words each, MAX 40 words total) ===
+=== SUMMARY BULLETS (exactly 4 bullets, 10-17 words each, MAX 60 words total) ===
 CRITICAL: Bullets must tell COMPLETE story independently.
 
 Rules:
-- 3-5 bullets (minimum 3, maximum 5)
-- 8-15 words per bullet
-- MAXIMUM 40 words total across ALL bullets combined
+- Exactly 4 bullets (no more, no less)
+- 10-17 words per bullet
+- MAXIMUM 60 words total across ALL bullets combined
 - Each bullet is complete, standalone thought
 - Start directly with key information (no "The" or "This")
 - No periods at end
@@ -117,8 +117,7 @@ Structure:
 1. First bullet: Full main event with key details (WHO + WHAT + KEY NUMBER)
 2. Second bullet: Context or background (WHY, historical comparison)
 3. Third bullet: Impact/consequences (WHO affected, HOW MANY)
-4. Fourth bullet: Additional key detail
-5. Fifth bullet (optional): Final important detail
+4. Fourth bullet: Additional key detail or future implications
 
 Each bullet must be understandable on its own. User should fully understand news from ONLY bullets.
 
@@ -248,9 +247,10 @@ Return ONLY valid JSON:
   "title": "...with **bold** markup for 2-4 key terms",
   "detailed_text": "Detailed comprehensive article (max 200 words)...",
   "summary_bullets": [
-    "Bullet 1 (8-15 words) with **bold** markup",
-    "Bullet 2 (8-15 words) with **bold** markup",
-    "Bullet 3 (8-15 words) with **bold** markup"
+    "Bullet 1 (10-17 words) with **bold** markup",
+    "Bullet 2 (10-17 words) with **bold** markup",
+    "Bullet 3 (10-17 words) with **bold** markup",
+    "Bullet 4 (10-17 words) with **bold** markup"
   ],
   "timeline": [...],  // Only if timeline selected
   "details": [...],   // Only if details selected
@@ -260,7 +260,7 @@ Return ONLY valid JSON:
 VALIDATION CHECKLIST:
 - Title: ≤12 words, declarative, geographic specificity, **bold** markup for 2-4 key terms
 - Detailed text: Maximum 200 words, detailed comprehensive coverage, journalistic style
-- Bullets: 3-5 bullets, 8-15 words each, MAX 40 words total, complete story, no periods, **bold** markup for key terms
+- Bullets: Exactly 4 bullets, 10-17 words each, MAX 60 words total, complete story, no periods, **bold** markup for key terms
 - Timeline: 2-4 events, chronological, ≤14 words per event
 - Details: Exactly 3, all have numbers, <8 words each
 - Graph: At least 4 data points, correct format
@@ -413,7 +413,7 @@ Type: {article.get('graph_type', 'line')}
         prompt += """Generate complete article with:
 1. Title (≤12 words)
 2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
-3. Summary bullets (3-5, 8-15 words each, max 40 words total)
+3. Summary bullets (exactly 4 bullets, 10-17 words each, max 60 words total)
 4. Timeline (if selected)
 5. Details (if selected, exactly 3 with numbers)
 6. Graph (if selected)
@@ -453,22 +453,22 @@ Return ONLY valid JSON."""
             errors.append("Missing summary_bullets")
         else:
             bullets = result['summary_bullets']
-            if len(bullets) < 3 or len(bullets) > 5:
-                errors.append(f"Bullet count: {len(bullets)} (need 3-5)")
+            if len(bullets) != 4:
+                errors.append(f"Bullet count: {len(bullets)} (need exactly 4)")
             
             # Check total word count across all bullets
             total_words = 0
             for i, bullet in enumerate(bullets):
                 words = len(bullet.split())
                 total_words += words
-                if words < 8 or words > 15:
-                    errors.append(f"Bullet {i+1} word count: {words} (need 8-15)")
+                if words < 10 or words > 17:
+                    errors.append(f"Bullet {i+1} word count: {words} (need 10-17)")
                 
                 if bullet.endswith('.'):
                     errors.append(f"Bullet {i+1} ends with period")
             
-            if total_words > 40:
-                errors.append(f"Total bullet words: {total_words} (max 40)")
+            if total_words > 60:
+                errors.append(f"Total bullet words: {total_words} (max 60)")
         
         # Check selected components - support both field names
         components = article.get('components', article.get('selected_components', []))
@@ -527,7 +527,7 @@ Return ONLY valid JSON."""
             formatted = self.write_article(article)
             
             if formatted:
-                # Combine with original metadata - PRESERVE ALL FIELDS
+                # Combine with original metadata - PRESERVE ALL FIELDS INCLUDING DUAL-LANGUAGE
                 complete_article = {
                     'id': article.get('id', f"article_{i}"),
                     'url': article['url'],  # Keep original URL
@@ -543,6 +543,15 @@ Return ONLY valid JSON."""
                     'emoji': article.get('emoji', '📰'),
                     'image_extraction_method': article.get('image_extraction_method', ''),
                     'components': article.get('components', article.get('selected_components', [])),  # NEW: Preserve component order
+                    
+                    # DUAL-LANGUAGE CONTENT - Preserve from Step 2.5
+                    'title_news': article.get('title_news'),
+                    'title_b2': article.get('title_b2'),
+                    'summary_bullets_news': article.get('summary_bullets_news'),
+                    'summary_bullets_b2': article.get('summary_bullets_b2'),
+                    'content_news': article.get('content_news'),
+                    'content_b2': article.get('content_b2'),
+                    
                     **formatted  # Add Claude-generated content
                 }
                 results.append(complete_article)
@@ -598,7 +607,7 @@ def validate_final_articles(articles: List[Dict]) -> tuple[bool, List[str]]:
             bullets = article['summary']['bullets']
             for j, bullet in enumerate(bullets):
                 # Check if bullet is complete (has subject + verb + detail)
-                if len(bullet.split()) < 8:
+                if len(bullet.split()) < 10:
                     errors.append(f"Article {i} bullet {j+1} too short (may be incomplete)")
     
     return len(errors) == 0, errors

@@ -53,11 +53,13 @@ TITLE RULES - TWO VERSIONS REQUIRED (both must convey SAME information):
 - Professional journalism vocabulary
 - Use active voice
 - Use sentence case (capitalize only first word and proper nouns)
+- **BOLD MARKUP**: Add **bold** markdown around 1-3 key terms (names, numbers, places, organizations, important concepts)
+  - Use **bold** for: organization names, person names, numbers/percentages, key locations, important terms
 
 Examples:
-✓ "European Central Bank raises interest rates to 4.5 percent"
-✓ "Indian Parliament approves controversial citizenship amendment bill"
-✓ "Australian wildfires force evacuation of 50,000 residents"
+✓ "**European Central Bank** raises interest rates to **4.5 percent**"
+✓ "**Indian Parliament** approves controversial **citizenship amendment bill**"
+✓ "Australian wildfires force evacuation of **50,000 residents**"
 
 2. TITLE_B2 (B2 Upper-Intermediate English):
 - Maximum 12 words
@@ -67,13 +69,14 @@ Examples:
 - Same information as title_news, just easier to understand
 - Use active voice
 - Use sentence case
+- **BOLD MARKUP**: Add **bold** markdown around 1-3 key terms (same rules as title_news)
 
 Examples:
-title_news: "European Central Bank raises interest rates to 4.5 percent"
-title_b2: "European Central Bank makes borrowing more expensive, rates at 4.5 percent"
+title_news: "**European Central Bank** raises interest rates to **4.5 percent**"
+title_b2: "**European Central Bank** makes borrowing more expensive, rates at **4.5 percent**"
 
-title_news: "Indian Parliament approves controversial citizenship amendment bill"
-title_b2: "Indian Parliament passes new citizenship law despite controversy"
+title_news: "**Indian Parliament** approves controversial **citizenship amendment bill**"
+title_b2: "**Indian Parliament** passes new citizenship law despite controversy"
 
 PROHIBITED (both versions): Questions, clickbait phrases, exclamation marks, ALL CAPS, editorial opinions, vague geographic references
 
@@ -88,12 +91,14 @@ BULLET POINTS RULES - TWO VERSIONS REQUIRED (4 bullets each, 10-15 words per bul
 - No periods at end
 - Include specific details (numbers, names, locations)
 - Active voice
+- **BOLD MARKUP**: Add **bold** markdown around 1-2 key terms PER BULLET (4-8 highlights total across all bullets)
+  - Highlight: numbers, percentages, key names, important terms, locations
 
 Examples:
-✓ "European Central Bank raises interest rates to 4.5 percent, tenth consecutive increase"
-✓ "Inflation remains at 5.3 percent across eurozone, well above 2 percent target"
-✓ "340 million residents face higher costs for mortgages and consumer loans"
-✓ "ECB President Christine Lagarde commits to bringing inflation under control"
+✓ "**European Central Bank** raises interest rates to **4.5 percent**, tenth consecutive increase"
+✓ "Inflation remains at **5.3 percent** across eurozone, well above **2 percent** target"
+✓ "**340 million residents** face higher costs for mortgages and consumer loans"
+✓ "ECB President **Christine Lagarde** commits to bringing inflation under control"
 
 2. SUMMARY_BULLETS_B2 (B2 English):
 - EXACTLY 4 bullets (always 4, same information as news version)
@@ -101,12 +106,13 @@ Examples:
 - B2 upper-intermediate English (clearer, simpler language)
 - Same information as news version, just easier to understand
 - Same structure rules as news bullets
+- **BOLD MARKUP**: Add **bold** markdown around 1-2 key terms PER BULLET (4-8 highlights total)
 
 Examples:
-✓ "European Central Bank makes borrowing money more expensive for the tenth time"
-✓ "Prices still rising at 5.3 percent, more than double the target"
-✓ "340 million people will pay more for home loans and credit"
-✓ "Bank leader promises to control rising prices despite economic concerns"
+✓ "**European Central Bank** makes borrowing money more expensive for the **tenth time**"
+✓ "Prices still rising at **5.3 percent**, more than double the target"
+✓ "**340 million people** will pay more for home loans and credit"
+✓ "Bank leader promises to control **rising prices** despite economic concerns"
 
 FULL ARTICLE CONTENT RULES - TWO VERSIONS REQUIRED (300-400 words each):
 
@@ -124,6 +130,10 @@ FULL ARTICLE CONTENT RULES - TWO VERSIONS REQUIRED (300-400 words each):
 - Explain implications and impact
 - Maintain objectivity
 - Use multiple paragraphs for readability
+- **BOLD MARKUP**: Add **bold** markdown around important terms throughout the article
+  - Highlight: key organization names, person names, numbers, percentages, locations, dates, important concepts
+  - Use bold naturally throughout to emphasize the most important facts
+  - Don't overuse - only highlight truly important terms
 
 Structure Guide:
 - Opening (50-80 words): Main event with key details
@@ -141,6 +151,8 @@ Structure Guide:
 - Avoid highly technical jargon
 - Break down complex concepts
 - Maintain professional tone
+- **BOLD MARKUP**: Add **bold** markdown around important terms (same rules as content_news)
+  - Highlight the same types of information, just with simpler language
 
 B2 LANGUAGE GUIDELINES:
 ✅ CAN USE: interest rates, inflation, government, economy, policy, investment, GDP, recession, climate change, vaccine

@@ -110,15 +110,23 @@ def save_articles_to_supabase(articles, source_part):
                 'category': article.get('category', 'World News'),
                 'emoji': article.get('emoji', '📰'),
 
-                # Enhanced content - NEW FIELD NAMES
-                'article': detailed_text,  # NEW: Detailed article text (max 200 words)
-                'summary_bullets': summary_bullets_data,  # NEW: Bullet points array
+                # Enhanced content - DEPRECATED FIELDS (use dual-language instead)
+                # 'article': None,  # DEPRECATED - use content_news/content_b2
+                # 'summary_bullets': None,  # DEPRECATED - use summary_bullets_news/summary_bullets_b2
                 'timeline': json.dumps(article.get('timeline', [])),
                 'details_section': '\n'.join(normalized_details),
                 # JSONB fields: pass native structures
                 'graph': article.get('graph', {}),
                 'map': article.get('map', {}),
                 'components': article.get('components', []),  # NEW: Component order array
+                
+                # DUAL-LANGUAGE CONTENT - PRIMARY FIELDS (use these instead of old article/summary_bullets)
+                'title_news': article.get('title_news'),  # Advanced professional title
+                'title_b2': article.get('title_b2'),  # B2 English title
+                'summary_bullets_news': article.get('summary_bullets_news'),  # Advanced bullets (4 items)
+                'summary_bullets_b2': article.get('summary_bullets_b2'),  # B2 bullets (4 items)
+                'content_news': article.get('content_news'),  # Advanced full article (300-400 words)
+                'content_b2': article.get('content_b2'),  # B2 full article (300-400 words)
 
                 # Engagement / image metadata
                 'view_count': article.get('view_count', 0),

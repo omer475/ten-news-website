@@ -898,8 +898,38 @@ The article concludes with forward-looking analysis and what readers should watc
             }
             
             console.log('📰 Setting stories:', finalStories.length);
+            
+            // Add example dual-language data for testing if fields are missing
+            finalStories = finalStories.map(story => {
+              if (story.type === 'news' && !story.title_news) {
+                return {
+                  ...story,
+                  // Example Advanced English
+                  title_news: story.title || "**Breaking News** Story Unfolds",
+                  summary_bullets_news: story.summary_bullets || [
+                    "**Key development** in major international story",
+                    "**Experts** analyze impact on **global markets**",
+                    "**Government officials** respond to public concern",
+                    "**Next steps** expected within **48 hours**"
+                  ],
+                  content_news: story.article || story.detailed_text || "**Breaking news** continues to develop. The **international community** is closely monitoring the situation. **Government officials** have released a statement addressing public concerns. **Experts** predict significant implications for **global markets** in the coming weeks. The **economic impact** is expected to be substantial, affecting multiple sectors. **Stakeholders** are meeting to discuss potential responses. Further updates will be provided as the situation evolves.",
+                  
+                  // Example B2 English
+                  title_b2: story.title || "**Big News** Event Happening Now",
+                  summary_bullets_b2: story.summary_bullets || [
+                    "**Important change** in big world story",
+                    "**Specialists** look at effects on **world business**",
+                    "**Leaders** answer people's questions",
+                    "**More action** coming in **2 days**"
+                  ],
+                  content_b2: story.article || story.detailed_text || "**Important news** is happening right now. **Countries around the world** are watching carefully. **Government leaders** have made a statement to answer people's worries. **Specialists** think this will change **world markets** soon. The **effects on money and jobs** will be big, touching many areas. **Important people** are meeting to talk about what to do. We will share more information when we learn it."
+                };
+              }
+              return story;
+            });
+            
             setStories(finalStories);
-            console.log('📰 Stories set successfully');
+            console.log('📰 Stories set successfully with dual-language data');
           } else {
             console.log('📰 No articles found in response');
             setStories([]);
@@ -2652,31 +2682,24 @@ The article concludes with forward-looking analysis and what readers should watc
           100% { scale: 1 1; }
         }
 
-        /* Language Toggle Button - EXACT Same Glass Design as Switcher */
-        .language-toggle-btn {
+        /* Language Icon Button */
+        .language-icon-btn {
           --c-glass: #ffffff;
           --c-light: #fff;
           --c-dark: #000;
-          --c-content: #224;
           --glass-reflex-dark: 1;
           --glass-reflex-light: 1;
           --saturation: 150%;
-          
+
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
+          width: 36px;
           height: 34px;
-          padding: 0 14px;
+          padding: 0;
           border: none;
           border-radius: 12px;
-          font-size: 12px;
-          font-weight: 500;
-          font-family: "DM Sans", sans-serif;
-          color: var(--c-content);
           cursor: pointer;
-          
-          /* EXACT Glass Effect from Switcher */
           background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
           backdrop-filter: blur(4px) saturate(var(--saturation));
           -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
@@ -2691,50 +2714,55 @@ The article concludes with forward-looking analysis and what readers should watc
             inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
             0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
             0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          transition: all 0.2s ease;
         }
 
-        .language-toggle-btn:hover {
+        .language-icon-btn:hover {
           background-color: color-mix(in srgb, var(--c-glass) 18%, transparent);
         }
 
-        .language-toggle-btn svg {
-          width: 14px;
-          height: 14px;
+        .language-icon-btn svg {
+          width: 16px;
+          height: 16px;
           opacity: 0.8;
         }
 
-        .language-toggle-btn span {
-          font-size: 12px;
-          letter-spacing: -0.01em;
+        /* Dropdown Box Animation */
+        .language-dropdown-box {
+          animation: langDropdownFade 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+          z-index: 10000;
         }
 
-        /* Language Dropdown - EXACT Same Glass Design */
-        .language-dropdown {
+        @keyframes langDropdownFade {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+
+        /* Language Switcher - EXACT Copy of Info Switcher */
+        .language-switcher {
           --c-glass: #ffffff;
           --c-light: #fff;
           --c-dark: #000;
           --c-content: #224;
+          --c-action: #0052f5;
           --glass-reflex-dark: 1;
           --glass-reflex-light: 1;
           --saturation: 150%;
-          
-          position: absolute;
-          top: calc(100% + 6px);
-          left: 0;
+
+          position: relative;
           display: flex;
           align-items: center;
           gap: 2px;
           width: auto;
           height: 34px;
           padding: 3px;
-          border: none;
           border-radius: 12px;
-          z-index: 1000;
-          
-          /* EXACT Glass Effect from Switcher */
           background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
           backdrop-filter: blur(4px) saturate(var(--saturation));
           -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
@@ -2749,30 +2777,17 @@ The article concludes with forward-looking analysis and what readers should watc
             inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
             0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
             0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          animation: slideDown 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+          transition: all 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* Language Option Buttons - Match Switcher Option */
-        .language-option {
+        .language-switcher__option {
           --c: var(--c-content);
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 6px;
+          gap: 4px;
           padding: 0 12px;
-          width: auto;
-          min-width: 70px;
+          min-width: 60px;
           height: 28px;
           border-radius: 9px;
           border: none;
@@ -2785,34 +2800,33 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: all 160ms;
         }
 
-        .language-option svg {
-          width: 13px;
-          height: 13px;
-          opacity: 0.7;
-        }
-
-        .language-option:hover {
+        .language-switcher__option:hover {
           --c: var(--c-action);
-          transform: scale(1.1);
         }
 
-        .language-option.active {
+        .language-switcher__option.active {
           --c: var(--c-content);
           cursor: auto;
         }
 
-        /* Active indicator for dropdown */
-        .language-dropdown::after {
+        .language-switcher__option svg {
+          width: 12px;
+          height: 12px;
+          opacity: 0.7;
+        }
+
+        /* Active Indicator */
+        .language-switcher::after {
           content: '';
           position: absolute;
           left: 3px;
           top: 3px;
-          display: block;
-          width: 70px;
+          width: 60px;
           height: 28px;
           border-radius: 9px;
           background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
           z-index: -1;
+          translate: 0 0;
           box-shadow: 
             inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
             inset 1px 0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
@@ -2821,17 +2835,15 @@ The article concludes with forward-looking analysis and what readers should watc
             inset -0.5px 1px 1.5px -0.5px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
             inset 0px -2px 0.5px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
             0px 1.5px 3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            opacity 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          transition: translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
-        .language-dropdown:has(.language-option:nth-child(1).active)::after {
+        .language-switcher:has(.language-switcher__option:nth-child(1).active)::after {
           translate: 0 0;
         }
 
-        .language-dropdown:has(.language-option:nth-child(2).active)::after {
-          translate: 74px 0;
+        .language-switcher:has(.language-switcher__option:nth-child(2).active)::after {
+          translate: 64px 0;
         }
 
         /* Timeline Animations */
@@ -2843,6 +2855,18 @@ The article concludes with forward-looking analysis and what readers should watc
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+        
+        /* Animation for language switch */
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
           }
         }
 
@@ -3349,9 +3373,14 @@ The article concludes with forward-looking analysis and what readers should watc
                     marginBottom: '12px',
                     lineHeight: '1.2',
                     color: '#1d1d1f',
-                    letterSpacing: '-0.5px'
+                    letterSpacing: '-0.5px',
+                    transition: 'opacity 0.3s ease, transform 0.3s ease',
+                    opacity: 1,
+                    transform: 'translateY(0)'
                   }}>
-                    {story.title}
+                    {languageMode[index] === 'b2' 
+                      ? (story.title_b2 || story.title)
+                      : (story.title_news || story.title)}
                   </h1>
                   
                   <p style={{
@@ -3779,63 +3808,82 @@ The article concludes with forward-looking analysis and what readers should watc
                           gap: '8px',
                           flex: '0 0 auto'
                         }}>
-                          {/* Language Toggle Button - EXACT Same Glass Design as Switcher */}
-                          <div className="language-toggle-wrapper" style={{ 
-                            position: 'relative', 
-                            flex: '0 0 auto'
-                          }}>
-                          <button
-                            className="language-toggle-btn"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowLanguageOptions(prev => ({
-                                ...prev,
-                                [index]: !prev[index]
-                              }));
+                          {/* Language Icon Button with Working Switcher Dropdown */}
+                          <div 
+                            style={{ 
+                              position: 'relative',
+                              flex: '0 0 auto'
                             }}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                            </svg>
-                            <span>{languageMode[index] === 'b2' ? 'Easy' : 'Adv'}</span>
-                          </button>
-                          
-                          {/* Dropdown - EXACT Same Glass Design as Switcher */}
-                          {showLanguageOptions[index] && (
-                            <div className="language-dropdown">
-                              <button
-                                className={`language-option ${languageMode[index] === 'b2' ? 'active' : ''}`}
+                            {/* Icon Button */}
+                            <button
+                              className="language-icon-btn"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowLanguageOptions(prev => ({
+                                  ...prev,
+                                  [index]: !prev[index]
+                                }));
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                              </svg>
+                            </button>
+                            
+                            {/* Dropdown with Working Switcher */}
+                            {showLanguageOptions[index] && (
+                              <div 
+                                className="language-switcher language-dropdown-box" 
+                                style={{ 
+                                  position: 'absolute',
+                                  top: 'calc(100% + 8px)',
+                                  left: '50%',
+                                  transform: 'translateX(-50%)'
+                                }}
                                 onClick={(e) => {
-                                  e.preventDefault();
                                   e.stopPropagation();
-                                  setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
-                                  setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
                                 }}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                </svg>
-                                <span>Easy</span>
-                              </button>
-                              
-                              <button
-                                className={`language-option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
-                                  setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
-                                }}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                <span>Adv</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                                <button
+                                  key="b2"
+                                  className={`language-switcher__option ${languageMode[index] === 'b2' ? 'active' : ''}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
+                                    setTimeout(() => {
+                                      setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
+                                    }, 200);
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                  </svg>
+                                  <span>Easy</span>
+                                </button>
+                                
+                                <button
+                                  key="advanced"
+                                  className={`language-switcher__option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
+                                    setTimeout(() => {
+                                      setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
+                                    }, 200);
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                  </svg>
+                                  <span>Adv</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
@@ -4061,31 +4109,42 @@ The article concludes with forward-looking analysis and what readers should watc
                             position: 'relative',
                             width: '100%'
                           }}>
-                              {story.summary_bullets && story.summary_bullets.length > 0 ? (
-                                <ul style={{
-                                  margin: 0,
-                                  paddingLeft: '20px',
-                                  listStyleType: 'disc'
-                                }}>
-                                  {story.summary_bullets.map((bullet, i) => (
-                                    <li key={i} style={{
-                                    marginBottom: '16px',
-                                      fontSize: '17px',
-                                    lineHeight: '1.47',
-                                    fontWeight: '400',
-                                    color: darkMode ? '#f5f5f7' : '#1d1d1f',
-                                    letterSpacing: '-0.022em',
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif'
+                              {(() => {
+                                // Get bullets based on language mode
+                                const bullets = languageMode[index] === 'b2'
+                                  ? (story.summary_bullets_b2 || story.summary_bullets || [])
+                                  : (story.summary_bullets_news || story.summary_bullets || []);
+                                
+                                return bullets && bullets.length > 0 ? (
+                                  <ul style={{
+                                    margin: 0,
+                                    paddingLeft: '20px',
+                                    listStyleType: 'disc',
+                                    transition: 'opacity 0.3s ease'
                                   }}>
-                                    {renderBoldText(bullet, imageDominantColors[index], story.category)}
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
-                                  No bullet points available
-                                </p>
-                              )}
+                                    {bullets.map((bullet, i) => (
+                                      <li key={`${languageMode[index]}-${i}`} style={{
+                                      marginBottom: '16px',
+                                        fontSize: '17px',
+                                      lineHeight: '1.47',
+                                      fontWeight: '400',
+                                      color: darkMode ? '#f5f5f7' : '#1d1d1f',
+                                      letterSpacing: '-0.022em',
+                                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+                                      animation: 'fadeSlideIn 0.4s ease',
+                                      animationDelay: `${i * 0.1}s`,
+                                      animationFillMode: 'both'
+                                    }}>
+                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                    No bullet points available
+                                  </p>
+                                );
+                              })()}
                           </div>
                           
                           {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
@@ -4161,7 +4220,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                   };
                                   const darkColor = darkenColor(blurColor);
                                   
-                                  return story.detailed_text
+                                  // Get article content based on language mode
+                                  const articleText = languageMode[index] === 'b2'
+                                    ? (story.content_b2 || story.detailed_text || story.article || '')
+                                    : (story.content_news || story.detailed_text || story.article || '');
+                                  
+                                  return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
                                     .split('. ')
                                     .reduce((acc, sentence, i, arr) => {

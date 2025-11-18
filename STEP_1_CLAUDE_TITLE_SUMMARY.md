@@ -70,15 +70,31 @@ Title examples:
 ✓ "Indian Parliament approves controversial citizenship amendment bill"
 ✓ "Australian wildfires force evacuation of 50,000 residents"
 
-SUMMARY RULES:
-- 35-40 words (maximum 42 words allowed)
+SUMMARY RULES - TWO VERSIONS REQUIRED:
+
+1. SUMMARY_NEWS (Normal News English - 30-36 words):
+- EXACTLY 30-36 words (CRITICAL - count carefully)
+- Professional news writing style
+- Use standard journalism vocabulary
+- Include key numbers, dates, and specific details
+- Past tense for completed events, present for ongoing
+- Use **bold** markdown for 2-3 key terms
+- Assume reader has high reading comprehension
+
+2. SUMMARY_B2 (Easy to Understand B2 English - 30-36 words):
+- EXACTLY 30-36 words (CRITICAL - count carefully)
+- Simple, clear language (B2 English level)
+- Shorter sentences and simpler structure
+- Avoid complex vocabulary - use common words
+- Break down complex concepts into simple terms
+- Use **bold** markdown for 2-3 key terms
+- Focus on main impact and what it means for people
+
+BOTH SUMMARIES:
 - Must add NEW information beyond the title
 - NEVER repeat exact wording from title
 - Must include geographic/entity specificity
-- Flexible sentence structure (1-4 sentences)
 - Prioritize impact and consequences
-- Use past tense for completed events, present tense for ongoing situations
-- Use active voice
 
 Information hierarchy (prioritize in order):
 1. Impact/consequences (who affected, how many)
@@ -179,15 +195,31 @@ Title examples:
 ✓ "Indian Parliament approves controversial citizenship amendment bill"
 ✓ "Australian wildfires force evacuation of 50,000 residents"
 
-SUMMARY RULES:
-- 35-40 words (maximum 42 words allowed)
+SUMMARY RULES - TWO VERSIONS REQUIRED:
+
+1. SUMMARY_NEWS (Normal News English - 30-36 words):
+- EXACTLY 30-36 words (CRITICAL - count carefully)
+- Professional news writing style
+- Use standard journalism vocabulary
+- Include key numbers, dates, and specific details
+- Past tense for completed events, present for ongoing
+- Use **bold** markdown for 2-3 key terms
+- Assume reader has high reading comprehension
+
+2. SUMMARY_B2 (Easy to Understand B2 English - 30-36 words):
+- EXACTLY 30-36 words (CRITICAL - count carefully)
+- Simple, clear language (B2 English level)
+- Shorter sentences and simpler structure
+- Avoid complex vocabulary - use common words
+- Break down complex concepts into simple terms
+- Use **bold** markdown for 2-3 key terms
+- Focus on main impact and what it means for people
+
+BOTH SUMMARIES:
 - Must add NEW information beyond the title
 - NEVER repeat exact wording from title
 - Must include geographic/entity specificity
-- Flexible sentence structure (1-4 sentences)
 - Prioritize impact and consequences
-- Use past tense for completed events, present tense for ongoing situations
-- Use active voice
 
 Information hierarchy (prioritize in order):
 1. Impact/consequences (who affected, how many)

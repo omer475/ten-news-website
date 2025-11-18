@@ -82,49 +82,67 @@ Return ONLY this JSON:
 
 ---
 
-## 2. 📝 DETAILED ARTICLE TEXT (Claude 3.5 Sonnet)
+## 2. 📝 TITLE AND SUMMARIES (Claude Sonnet 4)
 
-### Model: `claude-3-5-sonnet-20241022`
-### Temperature: Default
+### Model: `claude-sonnet-4-20250514`
+### Temperature: 0.5
 ### Max Tokens: 800
 
-### Prompt:
+### Output Format:
+```json
+{
+  "title": "Article title (max 12 words)",
+  "summary": "Long detailed summary (max 200 words)",
+  "summary_news": "Professional news English summary (30-36 words)",
+  "summary_b2": "Simple B2 English summary (30-36 words)",
+  "summary_bullets": ["bullet 1", "bullet 2", "bullet 3"]
+}
 ```
-Rewrite this news article as a comprehensive, detailed news article.
 
-STRICT REQUIREMENTS:
-- MUST be between 150-200 words (tolerance: +/- 10 words)
-- Write in detailed, journalistic style
-- Provide comprehensive coverage of the story
-- Include background context, current developments, and implications
-- Use multiple paragraphs for better readability
-- Include specific details, quotes, statistics, and expert opinions
-- Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
-- Use bold markdown (**text**) to emphasize 2-3 key terms
+### Summary Types:
 
-Article Title: {article['title']}
-Article: {article['description']}
-{article['content'][:1000] if article['content'] else ''}
+#### 1. Long Detailed Summary (summary):
+- **Word count**: Maximum 200 words
+- **Style**: Detailed, comprehensive journalistic coverage
+- **Content**: Background context, current developments, implications
+- **Format**: Multiple paragraphs for readability
+- **Coverage**: WHO, WHAT, WHEN, WHERE, WHY, HOW
 
-Write the 150-200 word detailed article now:
-```
+#### 2. Summary News (summary_news):
+- **Word count**: EXACTLY 30-36 words (strict)
+- **Style**: Professional news writing
+- **Vocabulary**: Standard journalism vocabulary
+- **Format**: Include key numbers, dates, specific details
+- **Markdown**: 2-3 **bold** key terms
+- **Audience**: Readers with high comprehension
+
+**Example** (34 words):
+"The **European Central Bank** raised interest rates to **4.5 percent** on Thursday, the tenth consecutive increase since July 2023. The decision affects **340 million** eurozone residents as inflation remains at 5.3 percent."
+
+#### 3. Summary B2 (summary_b2):
+- **Word count**: EXACTLY 30-36 words (strict)
+- **Style**: Simple, clear B2 English
+- **Vocabulary**: Common, everyday words
+- **Sentences**: Shorter (under 15 words when possible)
+- **Markdown**: 2-3 **bold** key terms
+- **Approach**: Break down complex concepts
+- **Audience**: Readers learning English or preferring simpler language
+
+**B2 Language Guidelines**:
+- ✅ "raise rates" NOT "monetary tightening"
+- ✅ "prices going up" NOT "inflation pressures"  
+- ✅ "borrow money" NOT "credit markets"
+- ✅ "cost more" NOT "increased expenditure"
+
+**Example** (33 words):
+"The **European Central Bank** made borrowing money more expensive again. This is the **tenth time** they raised rates since July 2023. The change affects **340 million people** in countries using the euro."
 
 ### Rules:
-- **Word count**: 150-200 words (strict validation: 140-210 acceptable)
-- **Format**: Multiple paragraphs for readability
-- **Markdown**: Use **bold** for 2-3 key terms/numbers
-- **Tone**: Comprehensive, journalistic, factual
-
-### Output Example:
-```
-Scientists have discovered a **new human organ** in the digestive system, potentially affecting **90% of the population**. The breakthrough, published in Nature Medicine, identifies the mesentery as a distinct organ that plays crucial roles in immune function and nutrient absorption.
-
-The discovery emerged from detailed anatomical studies conducted at University College Dublin, where researchers examined the mesentery's structure and function. Previously considered fragmented tissue, the mesentery is now recognized as a continuous organ connecting the intestine to the abdominal wall.
-
-This finding could revolutionize treatment for chronic diseases including Crohn's disease, diabetes, and certain cancers. The mesentery's role in immune system regulation suggests new therapeutic targets for autoimmune conditions. Medical textbooks will require updates to reflect this fundamental change in human anatomy understanding.
-
-The research team, led by Dr. Calvin Coffey, spent over four years mapping the organ's structure using advanced imaging techniques. Their work demonstrates how modern technology continues to reveal previously unknown aspects of human biology, potentially opening new avenues for medical treatment and disease prevention.
-```
+- **Title**: ≤12 words, declarative statement, geographic context
+- **Long Summary**: Max 200 words, detailed coverage, journalistic
+- **Summary News**: 30-36 words, professional news English, **bold** terms
+- **Summary B2**: 30-36 words, simple B2 English, **bold** terms
+- **Bullets**: 3-5 bullets, 8-15 words each, max 40 total
 
 ---
 

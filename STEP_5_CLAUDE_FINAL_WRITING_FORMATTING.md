@@ -33,13 +33,13 @@ Step 5 is the final step that writes everything in one comprehensive Claude call
 - Use past tense for completed events
 - Include impact, consequences, key numbers
 
-### 3. Summary Bullets (3-5 bullets, 8-15 words each, MAX 32 words total)
+### 3. Summary Bullets (exactly 4 bullets, 10-17 words each, MAX 60 words total)
 **Critical**: Bullets must tell COMPLETE story independently.
 
 **Rules**:
-- 3-5 bullets (minimum 3, maximum 5)
-- 8-15 words per bullet
-- MAXIMUM 32 words total across ALL bullets combined
+- Exactly 4 bullets (no more, no less)
+- 10-17 words per bullet
+- MAXIMUM 60 words total across ALL bullets combined
 - Each bullet is complete, standalone thought
 - Start directly with key information (no "The" or "This")
 - No periods at end
@@ -144,8 +144,9 @@ Each article contains:
 ## Validation & Quality Control
 - **Title Length**: Enforces ≤12 words
 - **Paragraph Length**: Enforces 35-42 words
-- **Bullet Count**: Enforces 3-5 bullets
-- **Bullet Length**: Enforces 8-15 words each
+- **Bullet Count**: Enforces exactly 4 bullets
+- **Bullet Length**: Enforces 10-17 words each
+- **Total Bullet Words**: Enforces MAX 60 words total
 - **Bullet Format**: No periods at end
 - **Details Count**: Exactly 3 data points
 - **Details Numbers**: All must contain numbers

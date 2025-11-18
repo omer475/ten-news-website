@@ -108,15 +108,31 @@ TITLE RULES:
 - Use sentence case (capitalize only first word and proper nouns)
 - PROHIBITED: Questions, clickbait phrases, exclamation marks, ALL CAPS
 
-SUMMARY RULES:
-- 35-40 words (maximum 42 words allowed)
+SUMMARY RULES - TWO VERSIONS REQUIRED:
+
+1. SUMMARY_NEWS (Normal News English - 30-36 words):
+- EXACTLY 30-36 words (CRITICAL - count carefully)
+- Professional news writing style
+- Use standard journalism vocabulary
+- Include key numbers, dates, and specific details
+- Past tense for completed events, present for ongoing
+- Use **bold** markdown for 2-3 key terms
+- Assume reader has high reading comprehension
+
+2. SUMMARY_B2 (Easy to Understand B2 English - 30-36 words):
+- EXACTLY 30-36 words (CRITICAL - count carefully)
+- Simple, clear language (B2 English level)
+- Shorter sentences and simpler structure
+- Avoid complex vocabulary - use common words
+- Break down complex concepts into simple terms
+- Use **bold** markdown for 2-3 key terms
+- Focus on main impact and what it means for people
+
+BOTH SUMMARIES:
 - Must add NEW information beyond the title
 - NEVER repeat exact wording from title
 - Must include geographic/entity specificity
 - Prioritize impact and consequences
-- Use past tense for completed events, present tense for ongoing situations
-- Use active voice
-- Use **bold** markdown for 2-3 key terms
 - PROHIBITED: Exact title repetition, speculation, questions, exclamation marks
 
 TIMELINE RULES:
@@ -195,11 +211,27 @@ Generate all content following the rules in the system prompt. Return only valid
 - **Voice**: Active voice, sentence case
 - **Prohibited**: Questions, clickbait, exclamation marks, ALL CAPS
 
-### **Summary Requirements**:
-- **Length**: 35-40 words (maximum 42)
-- **Content**: NEW information beyond title
-- **Style**: Past tense for completed events, present for ongoing
+### **Summary Requirements** (TWO VERSIONS):
+
+#### **Summary News** (Professional News English):
+- **Length**: EXACTLY 30-36 words (strict)
+- **Style**: Professional news writing with standard journalism vocabulary
 - **Formatting**: 2-3 **bold** terms using markdown
+- **Audience**: Readers with high comprehension
+- **Content**: Include key numbers, dates, specific details
+
+#### **Summary B2** (Easy to Understand):
+- **Length**: EXACTLY 30-36 words (strict)
+- **Style**: Simple, clear B2 English level
+- **Language**: Common, everyday words - avoid jargon
+- **Sentences**: Shorter (under 15 words when possible)
+- **Formatting**: 2-3 **bold** terms using markdown
+- **Approach**: Break down complex concepts into simple terms
+- **Audience**: Readers learning English or preferring simpler language
+
+**Both Summaries**:
+- **Content**: NEW information beyond title
+- **Tense**: Past tense for completed events, present for ongoing
 - **Prohibited**: Exact title repetition, speculation, questions
 
 ### **Timeline Requirements**:
