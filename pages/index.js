@@ -40,6 +40,10 @@ export default function Home() {
   // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
 
+  // Language mode for summaries (advanced vs B2)
+  const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
+  const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
+
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -2648,6 +2652,188 @@ The article concludes with forward-looking analysis and what readers should watc
           100% { scale: 1 1; }
         }
 
+        /* Language Toggle Button - EXACT Same Glass Design as Switcher */
+        .language-toggle-btn {
+          --c-glass: #ffffff;
+          --c-light: #fff;
+          --c-dark: #000;
+          --c-content: #224;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 150%;
+          
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          height: 34px;
+          padding: 0 14px;
+          border: none;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+          font-family: "DM Sans", sans-serif;
+          color: var(--c-content);
+          cursor: pointer;
+          
+          /* EXACT Glass Effect from Switcher */
+          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
+          backdrop-filter: blur(4px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .language-toggle-btn:hover {
+          background-color: color-mix(in srgb, var(--c-glass) 18%, transparent);
+        }
+
+        .language-toggle-btn svg {
+          width: 14px;
+          height: 14px;
+          opacity: 0.8;
+        }
+
+        .language-toggle-btn span {
+          font-size: 12px;
+          letter-spacing: -0.01em;
+        }
+
+        /* Language Dropdown - EXACT Same Glass Design */
+        .language-dropdown {
+          --c-glass: #ffffff;
+          --c-light: #fff;
+          --c-dark: #000;
+          --c-content: #224;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 150%;
+          
+          position: absolute;
+          top: calc(100% + 6px);
+          left: 0;
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          width: auto;
+          height: 34px;
+          padding: 3px;
+          border: none;
+          border-radius: 12px;
+          z-index: 1000;
+          
+          /* EXACT Glass Effect from Switcher */
+          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
+          backdrop-filter: blur(4px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          animation: slideDown 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Language Option Buttons - Match Switcher Option */
+        .language-option {
+          --c: var(--c-content);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 6px;
+          padding: 0 12px;
+          width: auto;
+          min-width: 70px;
+          height: 28px;
+          border-radius: 9px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          font-size: 11px;
+          font-weight: 500;
+          font-family: "DM Sans", sans-serif;
+          color: var(--c);
+          transition: all 160ms;
+        }
+
+        .language-option svg {
+          width: 13px;
+          height: 13px;
+          opacity: 0.7;
+        }
+
+        .language-option:hover {
+          --c: var(--c-action);
+          transform: scale(1.1);
+        }
+
+        .language-option.active {
+          --c: var(--c-content);
+          cursor: auto;
+        }
+
+        /* Active indicator for dropdown */
+        .language-dropdown::after {
+          content: '';
+          position: absolute;
+          left: 3px;
+          top: 3px;
+          display: block;
+          width: 70px;
+          height: 28px;
+          border-radius: 9px;
+          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+          z-index: -1;
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 1px 0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -0.75px -0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1px -3px 0.5px -2.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.5px 1px 1.5px -0.5px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px -2px 0.5px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 1.5px 3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            opacity 400ms cubic-bezier(1, 0.0, 0.4, 1);
+        }
+
+        .language-dropdown:has(.language-option:nth-child(1).active)::after {
+          translate: 0 0;
+        }
+
+        .language-dropdown:has(.language-option:nth-child(2).active)::after {
+          translate: 74px 0;
+        }
+
         /* Timeline Animations */
         @keyframes timelineSlideUp {
           from {
@@ -3586,6 +3772,71 @@ The article concludes with forward-looking analysis and what readers should watc
                           {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
                         </div>
 
+                        {/* Right Side Buttons Group - Language Toggle + Switcher */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flex: '0 0 auto'
+                        }}>
+                          {/* Language Toggle Button - EXACT Same Glass Design as Switcher */}
+                          <div className="language-toggle-wrapper" style={{ 
+                            position: 'relative', 
+                            flex: '0 0 auto'
+                          }}>
+                          <button
+                            className="language-toggle-btn"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowLanguageOptions(prev => ({
+                                ...prev,
+                                [index]: !prev[index]
+                              }));
+                            }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                            </svg>
+                            <span>{languageMode[index] === 'b2' ? 'Easy' : 'Adv'}</span>
+                          </button>
+                          
+                          {/* Dropdown - EXACT Same Glass Design as Switcher */}
+                          {showLanguageOptions[index] && (
+                            <div className="language-dropdown">
+                              <button
+                                className={`language-option ${languageMode[index] === 'b2' ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
+                                  setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <span>Easy</span>
+                              </button>
+                              
+                              <button
+                                className={`language-option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
+                                  setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>Adv</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
                           <div className="switcher" style={{ 
@@ -3730,6 +3981,7 @@ The article concludes with forward-looking analysis and what readers should watc
                             })}
                           </div>
                         )}
+                        </div>
                       </div>
                       
                       {/* Summary/Bullet Points - Swipeable - Fixed Position */}

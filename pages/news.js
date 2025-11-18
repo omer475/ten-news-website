@@ -9,6 +9,8 @@ export default function SingleNewsPage() {
   const [showTimeline, setShowTimeline] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [isReading, setIsReading] = useState(false);
+  const [languageMode, setLanguageMode] = useState('advanced'); // 'advanced' or 'b2'
+  const [showLanguageOptions, setShowLanguageOptions] = useState(false);
 
   useEffect(() => {
     const loadArticle = async () => {
@@ -47,6 +49,18 @@ export default function SingleNewsPage() {
     loadArticle();
   }, [router.query.id]);
 
+  // Close language options when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showLanguageOptions && !event.target.closest('.reading-mode-wrapper')) {
+        setShowLanguageOptions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showLanguageOptions]);
+
   const handleBack = () => {
     router.push('/');
   };
@@ -74,6 +88,15 @@ export default function SingleNewsPage() {
         content.scrollIntoView({ behavior: 'smooth' });
       }
     }, 500);
+  };
+
+  const toggleLanguageOptions = () => {
+    setShowLanguageOptions(!showLanguageOptions);
+  };
+
+  const setLanguage = (mode) => {
+    setLanguageMode(mode);
+    setShowLanguageOptions(false);
   };
 
   if (loading) {
@@ -126,6 +149,62 @@ export default function SingleNewsPage() {
           </div>
           
           <div className="header-actions">
+            {/* Language Toggle - Liquid Glass Button */}
+            <div className="reading-mode-wrapper" style={{ display: 'flex', position: 'relative' }}>
+              <button 
+                className="toggle-button glass-btn" 
+                onClick={toggleLanguageOptions}
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '7px 14px',
+                  background: 'rgba(255, 255, 255, 0.25)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.5)',
+                  borderRadius: '980px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#1d1d1f',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  letterSpacing: '-0.01em',
+                  zIndex: 1
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="toggle-button-icon">
+                  <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                </svg>
+                {languageMode === 'advanced' ? 'Advanced' : 'Easy'}
+              </button>
+              
+              {showLanguageOptions && (
+                <div className="options-container">
+                  <button 
+                    className={`option-button easy-mode ${languageMode === 'b2' ? 'active' : ''}`}
+                    onClick={() => setLanguage('b2')}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="option-icon">
+                      <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span className="option-text">Easy Read (B2)</span>
+                  </button>
+                  
+                  <button 
+                    className={`option-button normal-mode ${languageMode === 'advanced' ? 'active' : ''}`}
+                    onClick={() => setLanguage('advanced')}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="option-icon">
+                      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span className="option-text">Advanced News</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             <button className="action-btn" onClick={toggleTimeline}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
@@ -161,7 +240,9 @@ export default function SingleNewsPage() {
             </h1>
             
             <p className="article-summary">
-              {article.summary || 'Article summary will appear here...'}
+              {languageMode === 'b2' 
+                ? (article.summary_b2 || article.summary || 'Article summary will appear here...')
+                : (article.summary_news || article.summary || 'Article summary will appear here...')}
             </p>
             
             <div className="hero-actions">
@@ -979,6 +1060,226 @@ export default function SingleNewsPage() {
           transform: translateY(-1px);
         }
 
+        /* Reading Mode Toggle Styles - Liquid Glass Effect */
+        .reading-mode-wrapper {
+          position: relative;
+        }
+
+        /* Liquid Glass Toggle Button */
+        .glass-btn {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 7px 14px;
+          overflow: hidden;
+          border: none;
+          
+          /* Liquid Glass Effect */
+          background: rgba(255, 255, 255, 0.25);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15),
+                      inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+          
+          border-radius: 980px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #1d1d1f;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          letter-spacing: -0.01em;
+          z-index: 1;
+          
+          /* Gradient overlay */
+          background-image: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.35) 0%, 
+            rgba(255, 255, 255, 0.15) 100%);
+        }
+
+        /* Content should be above shimmer */
+        .glass-btn > * {
+          position: relative;
+          z-index: 2;
+        }
+
+        .glass-btn:hover {
+          background: rgba(255, 255, 255, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.2),
+                      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+          transform: translateY(-2px);
+        }
+
+        .glass-btn:active {
+          transform: translateY(0) scale(0.98);
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .toggle-button-icon {
+          width: 1rem;
+          height: 1rem;
+          transition: all 0.3s ease;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        }
+
+        /* Liquid Glass Dropdown Container */
+        .options-container {
+          position: absolute;
+          top: calc(100% + 0.75rem);
+          right: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          overflow: hidden;
+          
+          /* Liquid Glass Effect */
+          background: rgba(255, 255, 255, 0.3);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.2),
+                      inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+          
+          border-radius: 16px;
+          padding: 0.5rem;
+          min-width: 200px;
+          animation: slideDown 0.3s ease-out forwards;
+          z-index: 1000;
+          
+          /* Gradient overlay */
+          background-image: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.4) 0%, 
+            rgba(255, 255, 255, 0.2) 100%);
+        }
+
+        /* Content above shimmer in dropdown */
+        .options-container > * {
+          position: relative;
+          z-index: 2;
+        }
+
+        /* Glass Option Buttons */
+        .option-button {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.875rem 1rem;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          
+          /* Glass effect */
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          
+          color: #1d1d1f;
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+          box-shadow: 0 2px 8px rgba(31, 38, 135, 0.1);
+        }
+
+        .option-button:hover {
+          transform: translateY(-2px) scale(1.02);
+          background: rgba(255, 255, 255, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 4px 16px rgba(31, 38, 135, 0.15);
+        }
+
+        /* Easy Read Button - Blue Glass Active */
+        .option-button.easy-mode:hover {
+          background: rgba(59, 130, 246, 0.15);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .option-button.easy-mode.active {
+          background: linear-gradient(135deg, 
+            rgba(59, 130, 246, 0.85) 0%, 
+            rgba(37, 99, 235, 0.9) 100%);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(59, 130, 246, 0.5);
+          color: white;
+          box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4),
+                      inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Normal News Button - Dark Glass Active */
+        .option-button.normal-mode:hover {
+          background: rgba(51, 65, 85, 0.15);
+          border: 1px solid rgba(51, 65, 85, 0.3);
+        }
+
+        .option-button.normal-mode.active {
+          background: linear-gradient(135deg, 
+            rgba(51, 65, 85, 0.9) 0%, 
+            rgba(30, 41, 59, 0.95) 100%);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(51, 65, 85, 0.5);
+          color: white;
+          box-shadow: 0 4px 20px rgba(51, 65, 85, 0.4),
+                      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Option Icons and Text */
+        .option-icon {
+          width: 1.125rem;
+          height: 1.125rem;
+          flex-shrink: 0;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        }
+
+        .option-text {
+          font-size: 0.875rem;
+          font-weight: 500;
+          white-space: nowrap;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Shimmer effect on hover */
+        .glass-btn::before,
+        .options-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, 
+            transparent, 
+            rgba(255, 255, 255, 0.3), 
+            transparent);
+          transition: left 0.5s;
+          border-radius: 980px;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .glass-btn:hover::before {
+          left: 100%;
+        }
+
+        .options-container::before {
+          border-radius: 16px;
+        }
+
         @media (max-width: 768px) {
           .header-content {
             flex-direction: column;
@@ -988,6 +1289,22 @@ export default function SingleNewsPage() {
 
           .header-actions {
             justify-content: center;
+            flex-wrap: wrap;
+          }
+
+          .reading-mode-wrapper {
+            width: 100%;
+          }
+
+          .glass-btn {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .options-container {
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
           }
 
           .hero-content {
