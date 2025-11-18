@@ -44,6 +44,11 @@ export default function Home() {
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
 
+  // Debug: Log language mode changes
+  useEffect(() => {
+    console.log('🔄 languageMode state changed:', languageMode);
+  }, [languageMode]);
+
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -3745,7 +3750,14 @@ The article concludes with forward-looking analysis and what readers should watc
                           color: '#ffffff',
                           textShadow: '0 1px 4px rgba(0,0,0,0.3)',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-                        }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
+                        }}>{(() => {
+                          const mode = languageMode[index] || 'advanced';
+                          const title = mode === 'b2' 
+                            ? (story.title_b2 || story.title)
+                            : (story.title_news || story.title);
+                          console.log(`📰 NEWS TITLE for article ${index}:`, { mode, title_b2: story.title_b2, title_news: story.title_news, selected: title });
+                          return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
+                        })()}</h3>
                       </div>
                     </div>
                     
@@ -3893,7 +3905,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                     e.preventDefault();
                                     e.stopPropagation();
                                     console.log('B2/Easy button clicked!', index);
-                                    setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
+                                    console.log('Before update, languageMode:', languageMode);
+                                    setLanguageMode(prev => {
+                                      const updated = { ...prev, [index]: 'b2' };
+                                      console.log('After update, languageMode:', updated);
+                                      return updated;
+                                    });
                                     // Don't auto-close - let user click outside or icon button to close
                                   }}
                                 >
@@ -3914,7 +3931,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                     e.preventDefault();
                                     e.stopPropagation();
                                     console.log('Advanced button clicked!', index);
-                                    setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
+                                    console.log('Before update, languageMode:', languageMode);
+                                    setLanguageMode(prev => {
+                                      const updated = { ...prev, [index]: 'advanced' };
+                                      console.log('After update, languageMode:', updated);
+                                      return updated;
+                                    });
                                     // Don't auto-close - let user click outside or icon button to close
                                   }}
                                 >
