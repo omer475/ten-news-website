@@ -2466,30 +2466,48 @@ The article concludes with forward-looking analysis and what readers should watc
           opacity: 0.7;
         }
 
-        /* Apple HIG - Segmented Control (Switcher) */
+        /* Glassmorphism Switcher - Original Design */
         .switcher {
           --c-glass: #ffffff;
-          --c-content: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
-          --c-action: ${darkMode ? '#0a84ff' : '#007aff'};
+          --c-light: #fff;
+          --c-dark: #000;
+          --c-content: #224;
+          --c-action: #0052f5;
+          --c-bg: #E8E8E9;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 150%;
 
           position: relative;
           display: flex;
           align-items: center;
           gap: 2px;
           width: auto;
-          height: 32px;
+          height: 34px;
           box-sizing: border-box;
-          padding: 2px;
+          padding: 3px;
           margin: 0;
           border: none;
-          border-radius: 8px;
+          border-radius: 99em;
           font-size: 10px;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-          background-color: ${darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'};
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-          box-shadow: none;
-          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          font-family: "DM Sans", sans-serif;
+          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
+          backdrop-filter: blur(4px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
         .switcher__input {
@@ -2502,77 +2520,108 @@ The article concludes with forward-looking analysis and what readers should watc
           white-space: nowrap;
         }
 
-        /* Apple HIG - Segmented Control Button */
+        /* Glassmorphism Switcher Button - Original Design */
         .switcher__option {
           --c: var(--c-content);
           display: flex;
           justify-content: center;
           align-items: center;
           padding: 0;
-          width: 32px;
+          width: 36px;
           height: 28px;
           box-sizing: border-box;
-          border-radius: 6px;
-          opacity: 0.6;
-          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          border-radius: 99em;
+          opacity: 1;
+          transition: all 160ms;
           background: none;
           border: none;
           cursor: pointer;
         }
 
         .switcher__option:hover {
-          opacity: 0.8;
+          --c: var(--c-action);
           cursor: pointer;
         }
 
         .switcher__option:hover .switcher__icon {
-          transform: scale(1.05);
+          scale: 1.2;
         }
 
         .switcher__option.active {
           --c: var(--c-content);
-          opacity: 1;
           cursor: auto;
         }
 
         .switcher__option.active .switcher__icon {
-          transform: scale(1);
+          scale: 1;
         }
 
-        /* Apple HIG - Segmented Control Active Indicator */
+        /* Glassmorphism Active Indicator - Original Design */
         .switcher::after {
           content: '';
           position: absolute;
-          left: 2px;
-          top: 2px;
+          left: 3px;
+          top: 3px;
           display: block;
-          width: 32px;
+          width: 36px;
           height: 28px;
-          border-radius: 6px;
-          background-color: ${darkMode ? 'rgba(255,255,255,0.24)' : '#ffffff'};
+          border-radius: 99em;
+          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
           z-index: -1;
           translate: 0 0;
           opacity: 1;
           box-shadow: 
-            0 1px 2px 0 rgba(0, 0, 0, 0.05),
-            0 1px 3px 0 rgba(0, 0, 0, 0.08);
-          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 1px 0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -0.75px -0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1px -3px 0.5px -2.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.5px 1px 1.5px -0.5px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px -2px 0.5px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 1.5px 3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            opacity 400ms cubic-bezier(1, 0.0, 0.4, 1);
         }
 
         .switcher:has(.switcher__option:nth-child(1).active)::after {
           translate: 0 0;
+          transform-origin: right;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle 440ms ease; 
         }
 
         .switcher:has(.switcher__option:nth-child(2).active)::after {
-          translate: 34px 0;
+          translate: 38px 0;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle2 440ms ease; 
         }
 
         .switcher:has(.switcher__option:nth-child(3).active)::after {
-          translate: 68px 0;
+          translate: 76px 0;
+          transform-origin: left;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle3 440ms ease; 
         }
 
         .switcher:has(.switcher__option:nth-child(4).active)::after {
-          translate: 102px 0;
+          translate: 114px 0;
+          transform-origin: left;
+          transition: 
+            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
+            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          animation: scaleToggle4 440ms ease; 
         }
 
         @keyframes scaleToggle {
@@ -2769,39 +2818,39 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
-        /* Apple HIG - Grid Icon (SF Symbols Style) */
+        /* Original Grid Icon */
         .grid-icon {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.5px;
+          gap: 2px;
           width: 14px;
           height: 14px;
-          padding: 0;
+          padding: 0.5px;
         }
 
         .grid-square {
-          background: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
-          border-radius: 1.5px;
+          background: #000000;
+          border-radius: 2px;
           width: 100%;
           height: 100%;
-          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          transition: all 0.2s ease;
         }
 
         .switcher__option.active .grid-square {
-          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          background: #000000;
         }
 
         .switcher__option:hover:not(.active) .grid-square {
-          opacity: 0.8;
+          background: #000000;
         }
 
-        /* Apple HIG - List Icon (SF Symbols Style) */
+        /* Original List Icon */
         .list-icon {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           justify-content: center;
-          gap: 2.5px;
+          gap: 3px;
           width: 14px;
           height: 14px;
           position: relative;
@@ -2810,61 +2859,67 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-icon::before {
           content: '';
           position: absolute;
-          left: 2.5px;
-          top: 1px;
-          bottom: 1px;
-          width: 1.25px;
-          background: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
-          border-radius: 0.75px;
+          left: 3px;
+          top: 0;
+          bottom: 0;
+          width: 1.5px;
+          background: #000000;
+          border-radius: 1px;
           z-index: 0;
         }
 
         .list-line {
           display: flex;
           align-items: center;
-          gap: 3.5px;
+          gap: 4px;
           position: relative;
           z-index: 1;
           width: 100%;
         }
 
         .list-dot {
-          width: 3.5px;
-          height: 3.5px;
-          background: ${darkMode ? 'rgba(29,29,31,0.1)' : 'rgba(255,255,255,0.1)'};
-          border: 1.25px solid ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
+          width: 4px;
+          height: 4px;
+          background: #ffffff;
+          border: 1.5px solid #000000;
           border-radius: 50%;
           flex-shrink: 0;
-          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          transition: all 0.2s ease;
           box-sizing: border-box;
         }
 
         .list-bar {
-          width: 5.5px;
-          height: 1.75px;
-          background: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
-          border-radius: 0.75px;
-          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          width: 6px;
+          height: 2px;
+          background: #000000;
+          border-radius: 1px;
+          transition: all 0.2s ease;
           flex-shrink: 0;
         }
 
         .switcher__option.active .list-dot {
-          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          border-color: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          background: #000000;
+          border-color: #000000;
         }
 
         .switcher__option.active .list-bar {
-          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          background: #000000;
         }
 
         .switcher__option.active .list-icon::before {
-          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          background: #000000;
         }
 
-        .switcher__option:hover:not(.active) .list-dot,
-        .switcher__option:hover:not(.active) .list-bar,
+        .switcher__option:hover:not(.active) .list-dot {
+          border-color: #000000;
+        }
+
+        .switcher__option:hover:not(.active) .list-bar {
+          background: #000000;
+        }
+
         .switcher__option:hover:not(.active) .list-icon::before {
-          opacity: 0.8;
+          background: #000000;
         }
 
         /* Apple HIG - Map Icon (SF Symbols Style) */
@@ -3610,7 +3665,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                         <div style={{
                                           width: '10px',
                                           height: '10px',
-                                          border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'}`,
+                                          border: `2px solid #000000`,
                                           borderRadius: '50%',
                                           position: 'relative'
                                         }}>
@@ -3619,9 +3674,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                             top: '50%',
                                             left: '50%',
                                             transform: 'translate(-50%, -50%)',
-                                            width: '3.5px',
-                                            height: '3.5px',
-                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
+                                            width: '4px',
+                                            height: '4px',
+                                            background: '#000000',
                                             borderRadius: '50%'
                                           }}></div>
                                         </div>
@@ -3636,7 +3691,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                         justifyContent: 'center'
                                       }}>
                                         <div style={{
-                                          width: '11px',
+                                          width: '12px',
                                           height: '8px',
                                           display: 'flex',
                                           alignItems: 'end',
@@ -3645,26 +3700,26 @@ The article concludes with forward-looking analysis and what readers should watc
                                           <div style={{
                                             width: '2px',
                                             height: '3px',
-                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
-                                            borderRadius: '0.75px'
+                                            background: '#000000',
+                                            borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '6px',
-                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
-                                            borderRadius: '0.75px'
+                                            background: '#000000',
+                                            borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '4px',
-                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
-                                            borderRadius: '0.75px'
+                                            background: '#000000',
+                                            borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '8px',
-                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
-                                            borderRadius: '0.75px'
+                                            background: '#000000',
+                                            borderRadius: '1px'
                                           }}></div>
                                         </div>
                                       </div>
