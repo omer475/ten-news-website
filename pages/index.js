@@ -1563,25 +1563,29 @@ The article concludes with forward-looking analysis and what readers should watc
           -webkit-font-smoothing: antialiased;
         }
 
+        /* Apple HIG - Base Styles */
         html {
-          background: ${darkMode ? '#000000' : '#ffffff'};
+          background: ${darkMode ? '#000000' : '#f5f5f7'};
           padding: 0;
           margin: 0;
           height: 100%;
           min-height: 100dvh;
         }
 
+        /* Apple HIG - Body Typography & Colors */
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          background: ${darkMode ? '#000000' : '#ffffff'};
-          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+          background: ${darkMode ? '#000000' : '#f5f5f7'};
+          color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           overflow: hidden;
           position: fixed;
           width: 100%;
           height: 100%;
           min-height: 100dvh;
           touch-action: none;
-          transition: background-color 0.3s ease, color 0.3s ease;
+          transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         /* Glassmorphism Variables */
@@ -1674,59 +1678,68 @@ The article concludes with forward-looking analysis and what readers should watc
           100% { transform: rotate(360deg); }
         }
 
+        /* Apple HIG - Header Design */
         .header {
           position: sticky;
           top: 0;
           left: 0;
           right: 0;
-          height: 60px;
-          background: ${darkMode ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'};
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          height: 52px;
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: 8px;
-          padding-left: 20px;
-          padding-right: 20px;
-          padding-bottom: 8px;
-          border-bottom: 1px solid ${darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'};
-          transition: background-color 0.3s ease, border-color 0.3s ease;
+          padding: 0 max(env(safe-area-inset-left, 20px), 20px) 0 max(env(safe-area-inset-right, 20px), 20px);
+          border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
+          transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
         }
 
+        /* Logo - Apple-inspired Typography */
         .logo {
-          font-size: 20px;
-          font-weight: 800;
-          letter-spacing: -0.5px;
+          font-size: 21px;
+          font-weight: 600;
+          letter-spacing: -0.6px;
           cursor: pointer;
-          transition: opacity 0.2s;
+          transition: opacity 0.25s cubic-bezier(0.28, 0, 0.4, 1);
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          display: flex;
+          align-items: center;
+          gap: 2px;
         }
 
         .logo:hover {
-          opacity: 0.8;
+          opacity: 0.7;
         }
 
         .logo-ten {
-          color: ${darkMode ? '#ffffff' : '#0f172a'};
-          font-weight: 900;
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          font-weight: 700;
+          font-size: 22px;
         }
 
-
+        /* Header Right - Navigation */
         .header-right {
           display: flex;
           align-items: center;
-          gap: 20px;
-          font-size: 13px;
-          font-weight: 500;
+          gap: 16px;
+          font-size: 14px;
+          font-weight: 400;
         }
 
+        /* Time Display - Apple Style */
         .time {
-          color: ${darkMode ? '#94a3b8' : '#94a3b8'};
-          font-weight: 500;
+          color: ${darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.56)'};
+          font-weight: 400;
+          font-size: 14px;
+          letter-spacing: -0.2px;
+          font-variant-numeric: tabular-nums;
         }
 
 
+        /* Apple HIG - Story Container */
         .story-container {
           position: absolute;
           width: 100%;
@@ -1734,12 +1747,12 @@ The article concludes with forward-looking analysis and what readers should watc
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 60px;
+          padding-top: 68px;
           padding-bottom: 200px;
-          padding-left: 24px;
-          padding-right: 24px;
-          background: ${darkMode ? '#000000' : 'transparent'};
-          transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+          padding-left: max(env(safe-area-inset-left, 20px), 20px);
+          padding-right: max(env(safe-area-inset-right, 20px), 20px);
+          background: ${darkMode ? '#000000' : '#f5f5f7'};
+          transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
           z-index: 10;
         }
@@ -2062,80 +2075,59 @@ The article concludes with forward-looking analysis and what readers should watc
           initial-value: -45deg;
         }
 
-        .auth-btn, .subscribe-btn {
+        /* Apple HIG - Button Styles */
+        .auth-btn {
           all: unset;
           cursor: pointer;
           position: relative;
-          -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+          -webkit-tap-highlight-color: transparent;
           pointer-events: auto;
-          z-index: 3;
-          background: linear-gradient(
-            -75deg,
-            rgba(255, 255, 255, 0.05),
-            rgba(255, 255, 255, 0.2),
-            rgba(255, 255, 255, 0.05)
-          );
-          border-radius: 999vw;
-          box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
-            inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
-            0 0.25em 0.125em -0.125em rgba(0, 0, 0, 0.2),
-            0 0 0.1em 0.25em inset rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(2px);
-          -webkit-backdrop-filter: blur(2px);
-          transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1);
-          padding: 10px 20px;
-          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-          letter-spacing: -0.05em;
-          font-weight: 500;
-          font-size: 12px;
-          color: rgba(50, 50, 50, 1);
-          text-shadow: 0em 0.25em 0.05em rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          text-transform: uppercase;
+          padding: 7px 16px;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+          letter-spacing: -0.01em;
+          font-weight: 400;
+          font-size: 14px;
+          color: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
+          background: transparent;
+          border-radius: 980px;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          border: none;
         }
 
-        .auth-btn:hover, .subscribe-btn:hover {
-          transform: scale(0.975);
-          backdrop-filter: blur(0.5px);
-          -webkit-backdrop-filter: blur(0.5px);
-          box-shadow: inset 0 0.125em 0.125em rgba(0, 0, 0, 0.05),
-            inset 0 -0.125em 0.125em rgba(255, 255, 255, 0.5),
-            0 0.15em 0.05em -0.1em rgba(0, 0, 0, 0.25),
-            0 0 0.05em 0.1em inset rgba(255, 255, 255, 0.5);
-          text-shadow: 0.025em 0.025em 0.025em rgba(0, 0, 0, 0.12);
+        .auth-btn:hover {
+          background: ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'};
         }
 
-        .auth-btn::after, .subscribe-btn::after {
-          content: "";
-          position: absolute;
-          z-index: 1;
-          inset: 0;
-          border-radius: 999vw;
-          width: calc(100% + 1px);
-          height: calc(100% + 1px);
-          top: calc(0% - 0.5px);
-          left: calc(0% - 0.5px);
-          padding: 1px;
-          box-sizing: border-box;
-          background: conic-gradient(
-              from var(--angle-1) at 50% 50%,
-              rgba(0, 0, 0, 0.5),
-              rgba(0, 0, 0, 0) 5% 40%,
-              rgba(0, 0, 0, 0.5) 50%,
-              rgba(0, 0, 0, 0) 60% 95%,
-              rgba(0, 0, 0, 0.5)
-            ),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5));
-          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          mask-composite: exclude;
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          transition: all 400ms cubic-bezier(0.25, 1, 0.5, 1), --angle-1 500ms ease;
-          box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.5);
+        .auth-btn:active {
+          transform: scale(0.96);
+          background: ${darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'};
         }
 
-        .auth-btn:hover::after, .subscribe-btn:hover::after {
-          --angle-1: -125deg;
+        .subscribe-btn {
+          all: unset;
+          cursor: pointer;
+          position: relative;
+          -webkit-tap-highlight-color: transparent;
+          pointer-events: auto;
+          padding: 7px 16px;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+          letter-spacing: -0.01em;
+          font-weight: 400;
+          font-size: 14px;
+          color: #ffffff;
+          background: ${darkMode ? '#0a84ff' : '#007aff'};
+          border-radius: 980px;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          border: none;
+        }
+
+        .subscribe-btn:hover {
+          background: ${darkMode ? '#409cff' : '#0051d5'};
+        }
+
+        .subscribe-btn:active {
+          transform: scale(0.96);
+          background: ${darkMode ? '#66b0ff' : '#003ea7'};
         }
 
         .user-welcome {
@@ -2474,47 +2466,30 @@ The article concludes with forward-looking analysis and what readers should watc
           opacity: 0.7;
         }
 
+        /* Apple HIG - Segmented Control (Switcher) */
         .switcher {
           --c-glass: #ffffff;
-          --c-light: #fff;
-          --c-dark: #000;
-          --c-content: #224;
-          --c-action: #0052f5;
-          --c-bg: #E8E8E9;
-          --glass-reflex-dark: 1;
-          --glass-reflex-light: 1;
-          --saturation: 150%;
+          --c-content: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
+          --c-action: ${darkMode ? '#0a84ff' : '#007aff'};
 
           position: relative;
           display: flex;
           align-items: center;
           gap: 2px;
           width: auto;
-          height: 34px;
+          height: 32px;
           box-sizing: border-box;
-          padding: 3px;
+          padding: 2px;
           margin: 0;
           border: none;
-          border-radius: 99em;
+          border-radius: 8px;
           font-size: 10px;
-          font-family: "DM Sans", sans-serif;
-          background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
-          backdrop-filter: blur(4px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(4px) saturate(var(--saturation));
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+          background-color: ${darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'};
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          box-shadow: none;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
         }
 
         .switcher__input {
@@ -2527,106 +2502,77 @@ The article concludes with forward-looking analysis and what readers should watc
           white-space: nowrap;
         }
 
+        /* Apple HIG - Segmented Control Button */
         .switcher__option {
           --c: var(--c-content);
           display: flex;
           justify-content: center;
           align-items: center;
           padding: 0;
-          width: 36px;
+          width: 32px;
           height: 28px;
           box-sizing: border-box;
-          border-radius: 99em;
-          opacity: 1;
-          transition: all 160ms;
+          border-radius: 6px;
+          opacity: 0.6;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
           background: none;
           border: none;
           cursor: pointer;
         }
 
         .switcher__option:hover {
-          --c: var(--c-action);
+          opacity: 0.8;
           cursor: pointer;
         }
 
         .switcher__option:hover .switcher__icon {
-          scale: 1.2;
+          transform: scale(1.05);
         }
 
         .switcher__option.active {
           --c: var(--c-content);
+          opacity: 1;
           cursor: auto;
         }
 
         .switcher__option.active .switcher__icon {
-          scale: 1;
+          transform: scale(1);
         }
 
+        /* Apple HIG - Segmented Control Active Indicator */
         .switcher::after {
           content: '';
           position: absolute;
-          left: 3px;
-          top: 3px;
+          left: 2px;
+          top: 2px;
           display: block;
-          width: 36px;
+          width: 32px;
           height: 28px;
-          border-radius: 99em;
-          background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+          border-radius: 6px;
+          background-color: ${darkMode ? 'rgba(255,255,255,0.24)' : '#ffffff'};
           z-index: -1;
           translate: 0 0;
           opacity: 1;
           box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 1px 0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -0.75px -0.5px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -1px -3px 0.5px -2.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            inset -0.5px 1px 1.5px -0.5px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            inset 0px -2px 0.5px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 1.5px 3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            opacity 400ms cubic-bezier(1, 0.0, 0.4, 1);
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 1px 3px 0 rgba(0, 0, 0, 0.08);
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
         }
 
         .switcher:has(.switcher__option:nth-child(1).active)::after {
           translate: 0 0;
-          transform-origin: right;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle 440ms ease; 
         }
 
         .switcher:has(.switcher__option:nth-child(2).active)::after {
-          translate: 38px 0;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle2 440ms ease; 
+          translate: 34px 0;
         }
 
         .switcher:has(.switcher__option:nth-child(3).active)::after {
-          translate: 76px 0;
-          transform-origin: left;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle3 440ms ease; 
+          translate: 68px 0;
         }
 
         .switcher:has(.switcher__option:nth-child(4).active)::after {
-          translate: 114px 0;
-          transform-origin: left;
-          transition: 
-            background-color 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1),
-            translate 400ms cubic-bezier(1, 0.0, 0.4, 1);
-          animation: scaleToggle4 440ms ease; 
+          translate: 102px 0;
         }
 
         @keyframes scaleToggle {
@@ -2823,37 +2769,39 @@ The article concludes with forward-looking analysis and what readers should watc
           transition: scale 200ms cubic-bezier(0.5, 0, 0, 1);
         }
 
+        /* Apple HIG - Grid Icon (SF Symbols Style) */
         .grid-icon {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 2px;
+          gap: 1.5px;
           width: 14px;
           height: 14px;
-          padding: 0.5px;
+          padding: 0;
         }
 
         .grid-square {
-          background: #000000;
-          border-radius: 2px;
+          background: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
+          border-radius: 1.5px;
           width: 100%;
           height: 100%;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
         }
 
         .switcher__option.active .grid-square {
-          background: #000000;
+          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
         }
 
         .switcher__option:hover:not(.active) .grid-square {
-          background: #000000;
+          opacity: 0.8;
         }
 
+        /* Apple HIG - List Icon (SF Symbols Style) */
         .list-icon {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           justify-content: center;
-          gap: 3px;
+          gap: 2.5px;
           width: 14px;
           height: 14px;
           position: relative;
@@ -2862,69 +2810,64 @@ The article concludes with forward-looking analysis and what readers should watc
         .list-icon::before {
           content: '';
           position: absolute;
-          left: 3px;
-          top: 0;
-          bottom: 0;
-          width: 1.5px;
-          background: #000000;
-          border-radius: 1px;
+          left: 2.5px;
+          top: 1px;
+          bottom: 1px;
+          width: 1.25px;
+          background: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
+          border-radius: 0.75px;
           z-index: 0;
         }
 
         .list-line {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 3.5px;
           position: relative;
           z-index: 1;
           width: 100%;
         }
 
         .list-dot {
-          width: 4px;
-          height: 4px;
-          background: #ffffff;
-          border: 1.5px solid #000000;
+          width: 3.5px;
+          height: 3.5px;
+          background: ${darkMode ? 'rgba(29,29,31,0.1)' : 'rgba(255,255,255,0.1)'};
+          border: 1.25px solid ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
           border-radius: 50%;
           flex-shrink: 0;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
           box-sizing: border-box;
         }
 
         .list-bar {
-          width: 6px;
-          height: 2px;
-          background: #000000;
-          border-radius: 1px;
-          transition: all 0.2s ease;
+          width: 5.5px;
+          height: 1.75px;
+          background: ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'};
+          border-radius: 0.75px;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
           flex-shrink: 0;
         }
 
         .switcher__option.active .list-dot {
-          background: #000000;
-          border-color: #000000;
+          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          border-color: ${darkMode ? '#ffffff' : '#1d1d1f'};
         }
 
         .switcher__option.active .list-bar {
-          background: #000000;
+          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
         }
 
         .switcher__option.active .list-icon::before {
-          background: #000000;
+          background: ${darkMode ? '#ffffff' : '#1d1d1f'};
         }
 
-        .switcher__option:hover:not(.active) .list-dot {
-          border-color: #000000;
-        }
-
-        .switcher__option:hover:not(.active) .list-bar {
-          background: #000000;
-        }
-
+        .switcher__option:hover:not(.active) .list-dot,
+        .switcher__option:hover:not(.active) .list-bar,
         .switcher__option:hover:not(.active) .list-icon::before {
-          background: #000000;
+          opacity: 0.8;
         }
 
+        /* Apple HIG - Map Icon (SF Symbols Style) */
         .map-icon {
           width: 14px;
           height: 14px;
@@ -2933,6 +2876,7 @@ The article concludes with forward-looking analysis and what readers should watc
           justify-content: center;
         }
 
+        /* Apple HIG - Graph Icon (SF Symbols Style) */
         .graph-icon {
           width: 14px;
           height: 14px;
@@ -3482,22 +3426,24 @@ The article concludes with forward-looking analysis and what readers should watc
                       )}
                       
                       {/* Title - In front of everything */}
+                      {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
                         bottom: 'calc(100vh - 38vh - 12px)',
-                        left: '16px',
-                        right: '16px',
+                        left: '20px',
+                        right: '20px',
                         zIndex: 10,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          fontSize: '24px',
-                          fontWeight: '800',
-                          lineHeight: '1.2',
-                          letterSpacing: '-0.5px',
+                          fontSize: '28px',
+                          fontWeight: '700',
+                          lineHeight: '1.14',
+                          letterSpacing: '-0.8px',
                           color: '#ffffff',
-                          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2)'
+                          textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}>{renderTitleWithHighlight(story.title, imageDominantColors[index], story.category)}</h3>
                       </div>
                     </div>
@@ -3534,18 +3480,19 @@ The article concludes with forward-looking analysis and what readers should watc
                     </div>
                     )}
                     
-                    {/* White rounded container that sits on top of blur */}
+                    {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
                       top: 'calc(38vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
-                      background: '#ffffff',
-                      borderTopLeftRadius: '24px',
-                      borderTopRightRadius: '24px',
+                      background: darkMode ? '#000000' : '#ffffff',
+                      borderTopLeftRadius: '22px',
+                      borderTopRightRadius: '22px',
                       zIndex: '1',
-                      pointerEvents: 'none'
+                      pointerEvents: 'none',
+                      boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
                     
                     {/* Content Area - Starts After Image */}
@@ -3572,13 +3519,14 @@ The article concludes with forward-looking analysis and what readers should watc
                         position: 'relative',
                         zIndex: 10
                       }}>
-                        {/* Time Since Published - Left Side */}
+                        {/* Apple HIG - Time Display */}
                         <div style={{
-                          fontSize: '11px',
+                          fontSize: '13px',
                           fontWeight: '400',
-                          color: '#86868b',
-                          letterSpacing: '0.3px',
-                          flex: '0 0 auto'
+                          color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.56)',
+                          letterSpacing: '-0.08px',
+                          flex: '0 0 auto',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
                         }}>
                           {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
                         </div>
@@ -3662,7 +3610,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                         <div style={{
                                           width: '10px',
                                           height: '10px',
-                                          border: `2px solid #000000`,
+                                          border: `1.5px solid ${darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f'}`,
                                           borderRadius: '50%',
                                           position: 'relative'
                                         }}>
@@ -3671,9 +3619,9 @@ The article concludes with forward-looking analysis and what readers should watc
                                             top: '50%',
                                             left: '50%',
                                             transform: 'translate(-50%, -50%)',
-                                            width: '4px',
-                                            height: '4px',
-                                            background: '#000000',
+                                            width: '3.5px',
+                                            height: '3.5px',
+                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
                                             borderRadius: '50%'
                                           }}></div>
                                         </div>
@@ -3688,7 +3636,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                         justifyContent: 'center'
                                       }}>
                                         <div style={{
-                                          width: '12px',
+                                          width: '11px',
                                           height: '8px',
                                           display: 'flex',
                                           alignItems: 'end',
@@ -3697,26 +3645,26 @@ The article concludes with forward-looking analysis and what readers should watc
                                           <div style={{
                                             width: '2px',
                                             height: '3px',
-                                            background: '#000000',
-                                            borderRadius: '1px'
+                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
+                                            borderRadius: '0.75px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '6px',
-                                            background: '#000000',
-                                            borderRadius: '1px'
+                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
+                                            borderRadius: '0.75px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '4px',
-                                            background: '#000000',
-                                            borderRadius: '1px'
+                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
+                                            borderRadius: '0.75px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '8px',
-                                            background: '#000000',
-                                            borderRadius: '1px'
+                                            background: darkMode ? 'rgba(255,255,255,0.92)' : '#1d1d1f',
+                                            borderRadius: '0.75px'
                                           }}></div>
                                         </div>
                                       </div>
@@ -3814,12 +3762,13 @@ The article concludes with forward-looking analysis and what readers should watc
                                 }}>
                                   {story.summary_bullets.map((bullet, i) => (
                                     <li key={i} style={{
-                                    marginBottom: '12px',
-                                      fontSize: '15px',
-                                    lineHeight: '1.55',
-                                    fontWeight: '500',
-                                    color: '#000000',
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif'
+                                    marginBottom: '16px',
+                                      fontSize: '17px',
+                                    lineHeight: '1.47',
+                                    fontWeight: '400',
+                                    color: darkMode ? '#f5f5f7' : '#1d1d1f',
+                                    letterSpacing: '-0.022em',
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif'
                                   }}>
                                     {renderBoldText(bullet, imageDominantColors[index], story.category)}
                                     </li>
@@ -3833,21 +3782,24 @@ The article concludes with forward-looking analysis and what readers should watc
                           </div>
                           
                           {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
+                          {/* Apple HIG - Article Text */}
                           {showDetailedText[index] && (
                             <div 
                               style={{
-                                marginTop: '16px',
+                                marginTop: '24px',
                                 marginBottom: '100px',
-                                fontSize: '16px',
-                                lineHeight: '1.8',
-                                color: '#1a1a1a',
+                                fontSize: '17px',
+                                lineHeight: '1.53',
+                                color: darkMode ? '#f5f5f7' : '#1d1d1f',
+                                letterSpacing: '-0.022em',
                                 opacity: 1,
                                 transform: 'translateY(0)',
-                                transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                animation: 'slideInFromBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                transition: 'all 0.5s cubic-bezier(0.28, 0, 0.4, 1)',
+                                animation: 'slideInFromBottom 0.5s cubic-bezier(0.28, 0, 0.4, 1)',
                                 position: 'relative',
                                 zIndex: 1,
-                                width: '100%'
+                                width: '100%',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
                               }}
                               onTouchStart={(e) => {
                                 const startX = e.touches[0].clientX;

@@ -362,25 +362,30 @@ export default function SingleNewsPage() {
       </footer>
 
       <style jsx>{`
+        /* Apple HIG - Page Base Styles */
         .single-news-page {
           min-height: 100vh;
-          background: #ffffff;
+          background: #f5f5f7;
           color: #1d1d1f;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
+        /* Apple HIG - Loading State */
         .loading-container {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background: #F8F9FB;
+          background: #f5f5f7;
         }
 
         .loading-spinner {
           width: 40px;
           height: 40px;
-          border: 3px solid #f3f3f3;
+          border: 3px solid rgba(0, 0, 0, 0.08);
           border-top: 3px solid #1d1d1f;
           border-radius: 50%;
           animation: spin 1s linear infinite;
@@ -388,8 +393,10 @@ export default function SingleNewsPage() {
         }
 
         .loading-text {
-          font-size: 16px;
-          color: #86868b;
+          font-size: 17px;
+          color: rgba(0, 0, 0, 0.56);
+          font-weight: 400;
+          letter-spacing: -0.022em;
         }
 
         @keyframes spin {
@@ -441,100 +448,119 @@ export default function SingleNewsPage() {
           transform: translateY(-1px);
         }
 
+        /* Apple HIG - Header */
         .news-header {
           position: sticky;
           top: 0;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+          background: rgba(251, 251, 253, 0.8);
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
+          border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
           z-index: 100;
         }
 
         .header-content {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 16px 24px;
+          padding: 12px max(env(safe-area-inset-left, 20px), 20px) 12px max(env(safe-area-inset-right, 20px), 20px);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 24px;
+          gap: 20px;
+          min-height: 52px;
         }
 
+        /* Apple HIG - Back Button */
         .back-button {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
+          gap: 6px;
+          padding: 7px 14px;
           background: none;
-          border: 1px solid #e5e5e7;
-          border-radius: 8px;
+          border: none;
+          border-radius: 980px;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 400;
           color: #1d1d1f;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          letter-spacing: -0.01em;
         }
 
         .back-button:hover {
-          background: #f5f5f7;
-          border-color: #d2d2d7;
+          background: rgba(0, 0, 0, 0.04);
+        }
+
+        .back-button:active {
+          transform: scale(0.96);
+          background: rgba(0, 0, 0, 0.06);
         }
 
         .header-info {
           flex: 1;
         }
 
+        /* Apple HIG - Article Meta */
         .article-meta {
           display: flex;
-          gap: 16px;
+          gap: 12px;
           font-size: 13px;
-          color: #666666;
+          color: rgba(0, 0, 0, 0.56);
+          letter-spacing: -0.08px;
         }
 
         .article-meta span {
-          font-weight: 500;
+          font-weight: 400;
         }
 
         .category {
-          background: #000000;
+          background: #1d1d1f;
           color: #ffffff;
           font-weight: 600;
-          padding: 4px 8px;
+          padding: 3px 8px;
           border-radius: 4px;
           font-size: 11px;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.6px;
         }
 
+        /* Apple HIG - Header Actions */
         .header-actions {
           display: flex;
-          gap: 12px;
+          gap: 8px;
         }
 
         .action-btn {
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 8px 12px;
-          background: #000000;
+          gap: 5px;
+          padding: 7px 14px;
+          background: #007aff;
           border: none;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 500;
+          border-radius: 980px;
+          font-size: 14px;
+          font-weight: 400;
           color: #ffffff;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          letter-spacing: -0.01em;
         }
 
         .action-btn:hover {
-          background: #333333;
-          color: #ffffff;
+          background: #0051d5;
         }
 
+        .action-btn:active {
+          transform: scale(0.96);
+          background: #003ea7;
+        }
+
+        /* Apple HIG - Hero Section */
         .hero-section {
-          padding: 40px 24px;
-          background: linear-gradient(135deg, #F8F9FB 0%, #ffffff 100%);
+          padding: 48px max(env(safe-area-inset-left, 24px), 24px) 48px max(env(safe-area-inset-right, 24px), 24px);
+          margin-top: calc(-1 * env(safe-area-inset-top));
+          padding-top: calc(48px + env(safe-area-inset-top));
+          background: #ffffff;
         }
 
         .hero-content {
@@ -542,91 +568,110 @@ export default function SingleNewsPage() {
           margin: 0 auto;
           display: grid;
           grid-template-columns: 1fr 400px;
-          gap: 60px;
+          gap: 64px;
           align-items: center;
         }
 
         .hero-text {
-          max-width: 600px;
+          max-width: 640px;
         }
 
+        /* Apple HIG - Article Number */
         .article-number {
-          font-size: 14px;
-          font-weight: 700;
-          color: #86868b;
-          letter-spacing: 2px;
+          font-size: 13px;
+          font-weight: 600;
+          color: rgba(0, 0, 0, 0.56);
+          letter-spacing: 0.8px;
           text-transform: uppercase;
           margin-bottom: 16px;
         }
 
+        /* Apple HIG - Article Title */
         .article-title {
           font-size: 48px;
-          font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -1.5px;
-          margin-bottom: 24px;
+          font-weight: 700;
+          line-height: 1.08;
+          letter-spacing: -1.2px;
+          margin-bottom: 20px;
           color: #1d1d1f;
         }
 
+        /* Apple HIG - Article Summary */
         .article-summary {
-          font-size: 20px;
-          line-height: 1.6;
-          color: #666;
+          font-size: 21px;
+          line-height: 1.48;
+          font-weight: 400;
+          color: rgba(0, 0, 0, 0.72);
           margin-bottom: 32px;
+          letter-spacing: -0.03em;
         }
 
+        /* Apple HIG - Hero Actions */
         .hero-actions {
           display: flex;
-          gap: 16px;
+          gap: 12px;
         }
 
+        /* Apple HIG - Primary Button */
         .read-btn {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 16px 24px;
-          background: #1d1d1f;
-          color: white;
+          padding: 12px 24px;
+          background: #007aff;
+          color: #ffffff;
           border: none;
-          border-radius: 12px;
-          font-size: 16px;
-          font-weight: 600;
+          border-radius: 980px;
+          font-size: 17px;
+          font-weight: 400;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          letter-spacing: -0.022em;
         }
 
         .read-btn:hover {
-          background: #000;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+          background: #0051d5;
         }
 
+        .read-btn:active {
+          transform: scale(0.96);
+          background: #003ea7;
+        }
+
+        /* Apple HIG - Secondary Button */
         .external-btn {
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 16px 24px;
-          background: white;
+          gap: 7px;
+          padding: 12px 24px;
+          background: transparent;
           color: #1d1d1f;
-          border: 1px solid #e5e5e7;
-          border-radius: 12px;
-          font-size: 16px;
-          font-weight: 600;
+          border: none;
+          border-radius: 980px;
+          font-size: 17px;
+          font-weight: 400;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s cubic-bezier(0.28, 0, 0.4, 1);
+          letter-spacing: -0.022em;
         }
 
         .external-btn:hover {
-          background: #f5f5f7;
-          border-color: #d2d2d7;
-          transform: translateY(-2px);
+          background: rgba(0, 0, 0, 0.04);
         }
 
+        .external-btn:active {
+          transform: scale(0.96);
+          background: rgba(0, 0, 0, 0.06);
+        }
+
+        /* Apple HIG - Hero Image */
         .hero-image {
           position: relative;
-          border-radius: 16px;
+          top: calc(-1 * env(safe-area-inset-top));
+          margin-bottom: calc(-1 * env(safe-area-inset-top));
+          border-radius: 18px;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
         }
 
         .hero-image img {
@@ -635,12 +680,13 @@ export default function SingleNewsPage() {
           object-fit: cover;
         }
 
+        /* Apple HIG - Article Content */
         .article-content {
-          padding: 60px 24px;
-          background: white;
+          padding: 64px max(env(safe-area-inset-left, 24px), 24px) 64px max(env(safe-area-inset-right, 24px), 24px);
+          background: #f5f5f7;
           transform: translateY(100px);
           opacity: 0;
-          transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
         }
 
         .article-content.active {
@@ -649,7 +695,7 @@ export default function SingleNewsPage() {
         }
 
         .content-wrapper {
-          max-width: 800px;
+          max-width: 820px;
           margin: 0 auto;
         }
 
