@@ -917,25 +917,25 @@ The article concludes with forward-looking analysis and what readers should watc
               if (story.type === 'news' && !story.title_news) {
                 return {
                   ...story,
-                  // Example Advanced English
-                  title_news: story.title || "**Breaking News** Story Unfolds",
-                  summary_bullets_news: story.summary_bullets || [
-                    "**Key development** in major international story",
-                    "**Experts** analyze impact on **global markets**",
-                    "**Government officials** respond to public concern",
-                    "**Next steps** expected within **48 hours**"
+                  // Example ADVANCED PROFESSIONAL NEWS ENGLISH
+                  title_news: "**ADVANCED VERSION**: " + (story.title || "**Breaking News** Story Unfolds with Unprecedented Developments"),
+                  summary_bullets_news: [
+                    "**ADVANCED**: Unprecedented developments emerge in international crisis",
+                    "**ADVANCED**: Economists forecast significant ramifications for global trade",
+                    "**ADVANCED**: Government officials convene emergency summit addressing concerns",
+                    "**ADVANCED**: Decisive action anticipated within upcoming 48-hour period"
                   ],
-                  content_news: story.article || story.detailed_text || "**Breaking news** continues to develop. The **international community** is closely monitoring the situation. **Government officials** have released a statement addressing public concerns. **Experts** predict significant implications for **global markets** in the coming weeks. The **economic impact** is expected to be substantial, affecting multiple sectors. **Stakeholders** are meeting to discuss potential responses. Further updates will be provided as the situation evolves.",
+                  content_news: "**ADVANCED PROFESSIONAL VERSION**: This is the sophisticated, professional news English version. The **international community** is meticulously monitoring unprecedented developments. **Government officials** have promulgated a comprehensive statement addressing burgeoning public apprehension. **Leading economists** prognosticate substantial ramifications for **global financial markets** throughout subsequent weeks. The **macroeconomic implications** are anticipated to be considerable, permeating multiple industrial sectors. **Key stakeholders** are convening to deliberate prospective countermeasures and strategic responses. Additional intelligence will be disseminated as circumstances continue to evolve and develop.",
                   
-                  // Example B2 English
-                  title_b2: story.title || "**Big News** Event Happening Now",
-                  summary_bullets_b2: story.summary_bullets || [
-                    "**Important change** in big world story",
-                    "**Specialists** look at effects on **world business**",
-                    "**Leaders** answer people's questions",
-                    "**More action** coming in **2 days**"
+                  // Example B2 SIMPLE ENGLISH
+                  title_b2: "**B2 EASY VERSION**: " + (story.title || "**Big News** Event Is Happening Right Now"),
+                  summary_bullets_b2: [
+                    "**B2 EASY**: New things happening in world news story",
+                    "**B2 EASY**: Money experts think this will change world business",
+                    "**B2 EASY**: Government leaders answer people's worries and questions",
+                    "**B2 EASY**: Big decisions will happen in the next 2 days"
                   ],
-                  content_b2: story.article || story.detailed_text || "**Important news** is happening right now. **Countries around the world** are watching carefully. **Government leaders** have made a statement to answer people's worries. **Specialists** think this will change **world markets** soon. The **effects on money and jobs** will be big, touching many areas. **Important people** are meeting to talk about what to do. We will share more information when we learn it."
+                  content_b2: "**B2 EASY ENGLISH VERSION**: This is the simple, easy-to-understand B2 level English version. **Important news** is happening right now around the world. **Countries** are watching this situation very carefully. **Government leaders** have made an official announcement to answer what people are worried about. **Money experts** believe this will change **world markets** in the next few weeks. The **effects on jobs and the economy** will be significant and will touch many different areas of business. **Important decision makers** are having meetings to discuss what actions to take next. We will give you more updates when we learn new information about what is happening."
                 };
               }
               return story;
@@ -3397,9 +3397,14 @@ The article concludes with forward-looking analysis and what readers should watc
                     opacity: 1,
                     transform: 'translateY(0)'
                   }}>
-                    {languageMode[index] === 'b2' 
-                      ? (story.title_b2 || story.title)
-                      : (story.title_news || story.title)}
+                    {(() => {
+                      const mode = languageMode[index] || 'advanced';
+                      const title = mode === 'b2' 
+                        ? (story.title_b2 || story.title)
+                        : (story.title_news || story.title);
+                      console.log(`Title for article ${index}:`, { mode, title_b2: story.title_b2, title_news: story.title_news, selected: title });
+                      return title;
+                    })()}
                   </h1>
                   
                   <p style={{
@@ -4148,9 +4153,12 @@ The article concludes with forward-looking analysis and what readers should watc
                           }}>
                               {(() => {
                                 // Get bullets based on language mode
-                                const bullets = languageMode[index] === 'b2'
+                                const mode = languageMode[index] || 'advanced';
+                                const bullets = mode === 'b2'
                                   ? (story.summary_bullets_b2 || story.summary_bullets || [])
                                   : (story.summary_bullets_news || story.summary_bullets || []);
+                                
+                                console.log(`Bullets for article ${index}:`, { mode, bullets_b2: story.summary_bullets_b2, bullets_news: story.summary_bullets_news, selected: bullets });
                                 
                                 return bullets && bullets.length > 0 ? (
                                   <ul style={{
@@ -4258,9 +4266,12 @@ The article concludes with forward-looking analysis and what readers should watc
                                   const darkColor = darkenColor(blurColor);
                                   
                                   // Get article content based on language mode
-                                  const articleText = languageMode[index] === 'b2'
+                                  const mode = languageMode[index] || 'advanced';
+                                  const articleText = mode === 'b2'
                                     ? (story.content_b2 || story.detailed_text || story.article || '')
                                     : (story.content_news || story.detailed_text || story.article || '');
+                                  
+                                  console.log(`Article for ${index}:`, { mode, content_b2_length: story.content_b2?.length, content_news_length: story.content_news?.length, selected_length: articleText.length });
                                   
                                   return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
