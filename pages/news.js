@@ -534,8 +534,6 @@ export default function SingleNewsPage() {
 
         .hero-section {
           padding: 40px 24px;
-          margin-top: calc(-1 * env(safe-area-inset-top));
-          padding-top: calc(40px + env(safe-area-inset-top));
           background: linear-gradient(135deg, #F8F9FB 0%, #ffffff 100%);
         }
 
@@ -626,8 +624,6 @@ export default function SingleNewsPage() {
 
         .hero-image {
           position: relative;
-          top: calc(-1 * env(safe-area-inset-top));
-          margin-bottom: calc(-1 * env(safe-area-inset-top));
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
