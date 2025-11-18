@@ -2704,6 +2704,7 @@ The article concludes with forward-looking analysis and what readers should watc
           --glass-reflex-light: 1;
           --saturation: 150%;
 
+          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2712,6 +2713,7 @@ The article concludes with forward-looking analysis and what readers should watc
           padding: 0;
           border: none;
           border-radius: 12px;
+          z-index: 10001 !important;
           cursor: pointer;
           background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
           backdrop-filter: blur(4px) saturate(var(--saturation));
@@ -2743,7 +2745,8 @@ The article concludes with forward-looking analysis and what readers should watc
         /* Dropdown Box Animation */
         .language-dropdown-box {
           animation: langDropdownFade 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
-          z-index: 10000;
+          z-index: 10002 !important;
+          pointer-events: all !important;
         }
 
         @keyframes langDropdownFade {
@@ -2795,6 +2798,7 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .language-switcher__option {
           --c: var(--c-content);
+          position: relative;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -2806,6 +2810,8 @@ The article concludes with forward-looking analysis and what readers should watc
           border: none;
           background: none;
           cursor: pointer;
+          z-index: 10003 !important;
+          pointer-events: all !important;
           font-size: 11px;
           font-weight: 500;
           font-family: "DM Sans", sans-serif;
@@ -3452,7 +3458,14 @@ The article concludes with forward-looking analysis and what readers should watc
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={(e) => {
+                      // Ignore clicks on language button, dropdown, and switcher buttons
+                      if (e.target.closest('.language-icon-btn') || 
+                          e.target.closest('.language-dropdown-box') || 
+                          e.target.closest('.language-switcher__option') ||
+                          e.target.closest('.switcher')) {
+                        return;
+                      }
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
@@ -3800,7 +3813,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         marginTop: '28px',
                         width: '100%',
                         position: 'relative',
-                        zIndex: 10
+                        zIndex: 10000
                       }}>
                         {/* Apple HIG - Time Display */}
                         <div style={{
@@ -3819,7 +3832,9 @@ The article concludes with forward-looking analysis and what readers should watc
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
-                          flex: '0 0 auto'
+                          flex: '0 0 auto',
+                          position: 'relative',
+                          zIndex: 10000
                         }}>
                           {/* Language Icon Button with Working Switcher Dropdown */}
                           <div 
@@ -3874,9 +3889,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     e.stopPropagation();
                                     console.log('B2/Easy button clicked!', index);
                                     setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
-                                    setTimeout(() => {
-                                      setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
-                                    }, 200);
+                                    // Don't auto-close - let user click outside or icon button to close
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
@@ -3897,9 +3910,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     e.stopPropagation();
                                     console.log('Advanced button clicked!', index);
                                     setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
-                                    setTimeout(() => {
-                                      setShowLanguageOptions(prev => ({ ...prev, [index]: false }));
-                                    }, 200);
+                                    // Don't auto-close - let user click outside or icon button to close
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
