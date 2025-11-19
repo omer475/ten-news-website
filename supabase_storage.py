@@ -90,7 +90,7 @@ def save_articles_to_supabase(articles, source_part):
                 'url': article.get('url', ''),
                 'guid': article.get('guid', ''),
                 'source': article.get('source', 'Unknown'),
-                'title': article.get('title', ''),
+                'title': article.get('title_news', article.get('title', '')),  # Use title_news if available
                 'description': article.get('description', ''),
                 'content': article.get('content', article.get('text', '')),
                 'image_url': article.get('image_url', ''),
@@ -102,11 +102,11 @@ def save_articles_to_supabase(articles, source_part):
                 'ai_score_raw': article.get('ai_score_raw'),
                 'ai_category': article.get('ai_category'),
                 'ai_reasoning': article.get('ai_reasoning'),
-                'ai_final_score': article.get('score', article.get('final_score', 0)),
+                'ai_final_score': article.get('score', article.get('final_score', article.get('ai_final_score', 0))),
 
                 # Publishing status
                 'published': True,
-                'published_at': article.get('publishedAt', datetime.now().isoformat()),
+                'published_at': article.get('publishedAt', article.get('published_at', datetime.now().isoformat())),
                 'category': article.get('category', 'World News'),
                 'emoji': article.get('emoji', '📰'),
 
@@ -132,6 +132,11 @@ def save_articles_to_supabase(articles, source_part):
                 'view_count': article.get('view_count', 0),
                 'image_extraction_method': article.get('image_extraction_method', ''),
             }
+            
+            # DEBUG: Verify dual-language fields made it to db_article
+            print(f"  ✅ db_article has title_news: {bool(db_article.get('title_news'))}")
+            print(f"  ✅ db_article has content_news: {bool(db_article.get('content_news'))} ({len(db_article.get('content_news') or '')} chars)")
+            print(f"  ✅ db_article has summary_bullets_news: {bool(db_article.get('summary_bullets_news'))}")
             
             # Insert into database (upsert to handle duplicates)
             response = supabase.table('articles').upsert(

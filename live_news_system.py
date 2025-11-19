@@ -208,71 +208,16 @@ class LiveNewsSystem:
         print("-" * 40)
         
         try:
-            # Convert articles to Supabase format - FULL FIELD MAPPING
-            articles_to_publish = []
+            # Pass raw articles to supabase_storage.py - it handles all field mapping
+            # Just track article IDs for local database update
             article_ids = []
-            for i, article in enumerate(articles, 1):
-                # DEBUG: Check what fields are in the article from Step 6
-                print(f"\n  🔍 DEBUG [publish_to_supabase {i}/{len(articles)}]:")
-                print(f"     Article keys: {list(article.keys())[:20]}")
-                print(f"     ✓ title_news: {bool(article.get('title_news'))}")
-                print(f"     ✓ content_news: {bool(article.get('content_news'))}")
-                print(f"     ✓ summary_bullets_news: {bool(article.get('summary_bullets_news'))}")
-                
-                db_article = {
-                    # Core fields
-                    'url': article.get('url', ''),
-                    'guid': article.get('guid', ''),
-                    'source': article.get('source', 'Unknown'),
-                    'title': article.get('title_news', article.get('title', '')),  # Use title_news as fallback for old system
-                    'description': article.get('description', ''),
-                    'content': article.get('text', ''),
-                    'image_url': article.get('image_url', ''),
-                    'author': article.get('author', ''),
-                    'published_date': article.get('published_date') or article.get('published_time'),
-                    
-                    # AI scoring
-                    'score': float(article.get('score', 0)),
-                    'ai_final_score': float(article.get('score', 0)),
-                    'ai_category': article.get('category', 'World News'),
-                    
-                    # Publishing
-                    'category': article.get('category', 'World News'),
-                    'emoji': article.get('emoji', '📰'),
-                    
-                    # Enhanced content - DEPRECATED (use dual-language fields instead)
-                    # 'article': None,  # No longer used - use content_news/content_b2
-                    # 'summary_bullets': None,  # No longer used - use summary_bullets_news/summary_bullets_b2
-                    'timeline': article.get('timeline', []),
-                    'details': article.get('details', []),
-                    'graph': article.get('graph', {}),
-                    
-                    # DUAL-LANGUAGE CONTENT - NEW FIELDS
-                    'title_news': article.get('title_news'),  # Advanced professional title
-                    'title_b2': article.get('title_b2'),  # B2 English title
-                    'summary_bullets_news': article.get('summary_bullets_news'),  # Advanced bullets (4 items)
-                    'summary_bullets_b2': article.get('summary_bullets_b2'),  # B2 bullets (4 items)
-                    'content_news': article.get('content_news'),  # Advanced full article (300-400 words)
-                    'content_b2': article.get('content_b2'),  # B2 full article (300-400 words)
-                    'map': article.get('map', {}),
-                    'components': article.get('components', []),  # NEW: Component order array
-                    
-                    # Timestamps
-                    'publishedAt': datetime.now().isoformat(),
-                    'image_extraction_method': article.get('image_extraction_method', '')
-                }
-                
-                # DEBUG: Verify db_article has the fields
-                print(f"     ➡️  db_article has title_news: {bool(db_article.get('title_news'))}")
-                print(f"     ➡️  db_article has content_news: {bool(db_article.get('content_news'))}")
-                
-                articles_to_publish.append(db_article)
+            for article in articles:
                 if 'id' in article:
                     article_ids.append(article['id'])
             
-            # Publish to Supabase
-            success = save_articles_to_supabase(articles_to_publish, source_part=1)
-            success_count = len(articles_to_publish) if success else 0
+            # Publish to Supabase (supabase_storage.py does all mapping)
+            success = save_articles_to_supabase(articles, source_part=1)
+            success_count = len(articles) if success else 0
             
             # Mark articles as published in local database
             if success and article_ids:
