@@ -24,7 +24,7 @@ from dataclasses import dataclass
 class WriterConfig:
     """Configuration for Claude writer"""
     model: str = "claude-sonnet-4-20250514"
-    max_tokens: int = 2048
+    max_tokens: int = 4096  # Increased for dual-language content (2 articles of 300-400 words each)
     temperature: float = 0.3
     timeout: int = 60
     retry_attempts: int = 3
@@ -43,48 +43,76 @@ You will receive:
 2. Selected components (timeline, details, graph) - ordered by importance
 3. Context data from web searches (for selected components only)
 
-You must write:
-1. Title (≤12 words)
-2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
-3. Summary bullets (exactly 4 bullets, 10-17 words each, max 60 words total)
+You must write DUAL-LANGUAGE CONTENT (Advanced + B2 English):
+1. Titles (2 versions: Advanced & B2)
+2. Full Articles (2 versions: 300-400 words each)
+3. Summary Bullets (2 versions: 4 bullets each, 10-15 words per bullet)
 4. Timeline (if selected, 2-4 events)
 5. Details (if selected, exactly 3 data points)
 6. Graph (if selected, formatted data)
 
 NOTE: Map component is currently disabled.
 
-=== TITLE RULES ===
+=== DUAL-LANGUAGE REQUIREMENTS ===
+
+Generate TWO versions of title, article, and bullets:
+
+**ADVANCED VERSION** (Professional News English):
+- Target audience: Educated adults, native English speakers
+- Professional journalism tone (BBC, Reuters, NYT style)
+- Can use complex vocabulary, subordinate clauses, passive voice when appropriate
+- May reference cultural/political context without explanation
+
+**B2 VERSION** (Upper-Intermediate English):
+- Target audience: B2-level English learners (CEFR B2)
+- Simpler sentence structures (mostly simple & compound sentences)
+- More common vocabulary (but NOT "too easy" - can use words like "interest", "inflation", "legislation")
+- Avoid idioms, cultural references, complex subordinate clauses
+- Explain technical terms briefly if needed
+- Same information as Advanced, just clearer language
+
+IMPORTANT: Both versions MUST contain the same factual information, just different complexity levels.
+
+=== TITLE_NEWS (Advanced Version) ===
 - Maximum 12 words
 - Declarative statement (NEVER a question)
 - Include geographic/entity context (country, region, organization)
 - Complete main point of article
 - Active voice, sentence case
 - NO clickbait, questions, exclamation marks
-- **BOLD MARKUP**: Add **bold** markdown around 2-4 key terms (names, numbers, places, organizations, important concepts)
+- Professional journalism tone
+- **BOLD MARKUP**: Add **bold** markdown around 1-3 key terms (names, numbers, places, organizations)
   - Example: "**European Central Bank** raises interest rates to **4.5 percent**"
-  - Example: "**Magnitude 7.8** earthquake strikes **Turkey** near Syrian border"
-  - Use **bold** for: person names, organization names, numbers/percentages, key locations, important technical terms
+  - Use **bold** for: person names, organization names, numbers/percentages, key locations
+
+=== TITLE_B2 (B2 English Version) ===
+- Maximum 12 words
+- Same rules as TITLE_NEWS but with simpler language
+- Use more common vocabulary
+- Avoid complex phrasing
+- Still include geographic/entity context
+- **BOLD MARKUP**: Add **bold** markdown around 1-3 key terms
+  - Example: "**European Central Bank** increases **interest rates** to **4.5 percent**"
 
 Examples:
-✓ "**European Central Bank** raises interest rates to **4.5 percent**"
-✓ "**Magnitude 7.8** earthquake strikes **Turkey** near Syrian border"
-✓ "**Donald Trump** wins **2024** presidential election with **312 electoral votes**"
+✓ Advanced: "**European Central Bank** raises interest rates to **4.5 percent**"
+✓ B2: "**European Central Bank** increases **interest rates** to **4.5 percent**"
 
-=== DETAILED ARTICLE TEXT (Maximum 200 words) ===
-CRITICAL: Write a comprehensive, detailed news article that provides complete information about the story.
+=== CONTENT_NEWS (Advanced Version, 300-400 words) ===
+CRITICAL: Write a comprehensive, detailed news article for educated readers.
 
 Rules:
-- Maximum 200 words (MANDATORY - do not exceed)
-- Write detailed, comprehensive journalistic coverage
-- No minimum word count - focus on quality and completeness
-- Provide comprehensive coverage of the story
+- **300-400 words** (MANDATORY range)
+- Professional journalism tone (BBC, Reuters, NYT style)
+- Detailed, comprehensive journalistic coverage
 - Include background context, current developments, and implications
 - Use multiple paragraphs for better readability
 - Include specific details, quotes, statistics, and expert opinions
 - Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
+- Complex vocabulary and sentence structures allowed
 - Use past tense for completed events, present tense for ongoing situations
-- Use active voice
-- Write for an educated audience seeking in-depth information
+- **BOLD MARKUP**: Add **bold** markdown around important terms throughout
+  - Highlight: organization names, person names, numbers, percentages, locations, dates, key concepts
 
 Structure:
 1. Opening paragraph: Main event with key details and immediate impact
@@ -96,22 +124,39 @@ Writing style:
 - Professional journalism tone
 - Factual and objective
 - Engaging but not sensational
-- Clear and accessible language
+- Can use complex language
 - Proper attribution when mentioning sources
-- Avoid speculation unless clearly labeled as such
 
-=== SUMMARY BULLETS (exactly 4 bullets, 10-17 words each, MAX 60 words total) ===
+=== CONTENT_B2 (B2 English Version, 300-400 words) ===
+CRITICAL: Write the SAME article but in simpler B2-level English.
+
+Rules:
+- **300-400 words** (MANDATORY range - same length as CONTENT_NEWS)
+- Same information as CONTENT_NEWS, just simpler language
+- Simpler sentence structures (mostly simple and compound sentences)
+- More common vocabulary (but NOT "too easy" - words like "interest", "inflation" are fine)
+- Avoid idioms and complex cultural references
+- Explain technical terms briefly if needed
+- Use shorter paragraphs
+- **BOLD MARKUP**: Add **bold** markdown around important terms throughout
+  - Highlight: organization names, person names, numbers, percentages, locations, dates, key concepts
+
+Structure: Same as CONTENT_NEWS
+Writing style: Same tone, just clearer language
+
+=== SUMMARY_BULLETS_NEWS (Advanced Version, 4 bullets, 10-15 words each) ===
 CRITICAL: Bullets must tell COMPLETE story independently.
 
 Rules:
 - Exactly 4 bullets (no more, no less)
-- 10-17 words per bullet
-- MAXIMUM 60 words total across ALL bullets combined
+- **10-15 words per bullet** (MANDATORY range)
 - Each bullet is complete, standalone thought
 - Start directly with key information (no "The" or "This")
 - No periods at end
 - Include specific details (numbers, names, locations)
 - Active voice
+- Professional news language
+- **BOLD MARKUP**: Add **bold** markdown around 1-2 key terms PER BULLET (4-8 highlights total across all bullets)
 
 Structure:
 1. First bullet: Full main event with key details (WHO + WHAT + KEY NUMBER)
@@ -119,13 +164,21 @@ Structure:
 3. Third bullet: Impact/consequences (WHO affected, HOW MANY)
 4. Fourth bullet: Additional key detail or future implications
 
-Each bullet must be understandable on its own. User should fully understand news from ONLY bullets.
+=== SUMMARY_BULLETS_B2 (B2 English Version, 4 bullets, 10-15 words each) ===
+CRITICAL: Same rules as SUMMARY_BULLETS_NEWS but simpler language.
+
+Rules:
+- Exactly 4 bullets
+- **10-15 words per bullet** (MANDATORY range)
+- Same information as SUMMARY_BULLETS_NEWS, just simpler language
+- More common vocabulary
+- Simpler sentence structures
+- Still include all key facts and numbers
+- **BOLD MARKUP**: Add **bold** markdown around 1-2 key terms PER BULLET (4-8 highlights total across all bullets)
 
 Examples:
-✓ "ECB raises interest rates to 4.5%, tenth consecutive increase since July 2023"
-✓ "Current inflation at 5.3%, well above the 2% target rate"
-✓ "Decision affects 340 million people across 20 eurozone countries"
-✓ "Higher borrowing costs expected for mortgages and business loans"
+✓ Advanced: "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since July"
+✓ B2: "**ECB** increases interest rates to **4.5%**, tenth time in a row since July"
 
 === TIMELINE (if selected) ===
 - 2-4 events in chronological order (oldest first)
@@ -241,16 +294,24 @@ Zoom levels:
 -->
 
 === OUTPUT FORMAT ===
-Return ONLY valid JSON:
+Return ONLY valid JSON with DUAL-LANGUAGE content:
 
 {
-  "title": "...with **bold** markup for 2-4 key terms",
-  "detailed_text": "Detailed comprehensive article (max 200 words)...",
-  "summary_bullets": [
-    "Bullet 1 (10-17 words) with **bold** markup",
-    "Bullet 2 (10-17 words) with **bold** markup",
-    "Bullet 3 (10-17 words) with **bold** markup",
-    "Bullet 4 (10-17 words) with **bold** markup"
+  "title_news": "Advanced version with **bold** markup for 1-3 key terms",
+  "title_b2": "B2 simple version with **bold** markup for 1-3 key terms",
+  "content_news": "Advanced article 300-400 words with **bold** markup throughout...",
+  "content_b2": "B2 simple article 300-400 words with **bold** markup throughout...",
+  "summary_bullets_news": [
+    "Advanced bullet 1 (10-15 words) with **bold** markup",
+    "Advanced bullet 2 (10-15 words) with **bold** markup",
+    "Advanced bullet 3 (10-15 words) with **bold** markup",
+    "Advanced bullet 4 (10-15 words) with **bold** markup"
+  ],
+  "summary_bullets_b2": [
+    "B2 bullet 1 (10-15 words) with **bold** markup",
+    "B2 bullet 2 (10-15 words) with **bold** markup",
+    "B2 bullet 3 (10-15 words) with **bold** markup",
+    "B2 bullet 4 (10-15 words) with **bold** markup"
   ],
   "timeline": [...],  // Only if timeline selected
   "details": [...],   // Only if details selected
@@ -258,12 +319,14 @@ Return ONLY valid JSON:
 }
 
 VALIDATION CHECKLIST:
-- Title: ≤12 words, declarative, geographic specificity, **bold** markup for 2-4 key terms
-- Detailed text: Maximum 200 words, detailed comprehensive coverage, journalistic style
-- Bullets: Exactly 4 bullets, 10-17 words each, MAX 60 words total, complete story, no periods, **bold** markup for key terms
-- Timeline: 2-4 events, chronological, ≤14 words per event
-- Details: Exactly 3, all have numbers, <8 words each
-- Graph: At least 4 data points, correct format
+- TITLE_NEWS & TITLE_B2: ≤12 words each, declarative, geographic specificity, **bold** markup for 1-3 key terms
+- CONTENT_NEWS & CONTENT_B2: 300-400 words each, detailed comprehensive coverage, **bold** markup throughout
+- SUMMARY_BULLETS_NEWS & SUMMARY_BULLETS_B2: Exactly 4 bullets each, 10-15 words per bullet, **bold** markup 1-2 per bullet
+- Timeline: 2-4 events, chronological, ≤14 words per event (if selected)
+- Details: Exactly 3, all have numbers, <8 words each (if selected)
+- Graph: At least 4 data points, correct format (if selected)
+
+CRITICAL: Both language versions must contain THE SAME INFORMATION, just different complexity levels.
 
 Return ONLY valid JSON, no markdown, no explanations."""
 
@@ -432,43 +495,43 @@ Return ONLY valid JSON."""
         """
         errors = []
         
-        # Check required fields
-        if 'title' not in result:
-            errors.append("Missing title")
-        elif len(result['title'].split()) > 12:
-            errors.append(f"Title too long: {len(result['title'].split())} words")
+        # Check required dual-language fields
+        required_fields = ['title_news', 'title_b2', 'content_news', 'content_b2', 
+                          'summary_bullets_news', 'summary_bullets_b2']
         
-        # Validate detailed text
-        if 'detailed_text' not in result:
-            errors.append("Missing detailed_text")
-        else:
-            detailed_words = len(result['detailed_text'].split())
-            if detailed_words > 200:
-                errors.append(f"Detailed text word count: {detailed_words} (maximum 200)")
-            elif detailed_words < 50:
-                errors.append(f"Detailed text too short: {detailed_words} words (should be detailed and comprehensive)")
+        for field in required_fields:
+            if field not in result:
+                errors.append(f"Missing {field}")
         
-        # Validate summary bullets
-        if 'summary_bullets' not in result:
-            errors.append("Missing summary_bullets")
-        else:
-            bullets = result['summary_bullets']
-            if len(bullets) != 4:
-                errors.append(f"Bullet count: {len(bullets)} (need exactly 4)")
-            
-            # Check total word count across all bullets
-            total_words = 0
-            for i, bullet in enumerate(bullets):
-                words = len(bullet.split())
-                total_words += words
-                if words < 10 or words > 17:
-                    errors.append(f"Bullet {i+1} word count: {words} (need 10-17)")
+        # Validate titles
+        if 'title_news' in result and len(result['title_news'].split()) > 12:
+            errors.append(f"Title_news too long: {len(result['title_news'].split())} words")
+        if 'title_b2' in result and len(result['title_b2'].split()) > 12:
+            errors.append(f"Title_b2 too long: {len(result['title_b2'].split())} words")
+        
+        # Validate content articles (300-400 words each)
+        for content_field in ['content_news', 'content_b2']:
+            if content_field in result:
+                content_words = len(result[content_field].split())
+                if content_words < 300:
+                    errors.append(f"{content_field} too short: {content_words} words (need 300-400)")
+                elif content_words > 450:  # Allow 10% buffer
+                    errors.append(f"{content_field} too long: {content_words} words (need 300-400)")
+        
+        # Validate summary bullets (both versions)
+        for bullets_field in ['summary_bullets_news', 'summary_bullets_b2']:
+            if bullets_field in result:
+                bullets = result[bullets_field]
+                if len(bullets) != 4:
+                    errors.append(f"{bullets_field} count: {len(bullets)} (need exactly 4)")
                 
-                if bullet.endswith('.'):
-                    errors.append(f"Bullet {i+1} ends with period")
-            
-            if total_words > 60:
-                errors.append(f"Total bullet words: {total_words} (max 60)")
+                for i, bullet in enumerate(bullets):
+                    words = len(bullet.split())
+                    if words < 10 or words > 15:
+                        errors.append(f"{bullets_field} bullet {i+1} word count: {words} (need 10-15)")
+                    
+                    if bullet.endswith('.'):
+                        errors.append(f"{bullets_field} bullet {i+1} ends with period")
         
         # Check selected components - support both field names
         components = article.get('components', article.get('selected_components', []))
@@ -527,7 +590,7 @@ Return ONLY valid JSON."""
             formatted = self.write_article(article)
             
             if formatted:
-                # Combine with original metadata - PRESERVE ALL FIELDS INCLUDING DUAL-LANGUAGE
+                # Combine with original metadata
                 complete_article = {
                     'id': article.get('id', f"article_{i}"),
                     'url': article['url'],  # Keep original URL
@@ -544,15 +607,7 @@ Return ONLY valid JSON."""
                     'image_extraction_method': article.get('image_extraction_method', ''),
                     'components': article.get('components', article.get('selected_components', [])),  # NEW: Preserve component order
                     
-                    # DUAL-LANGUAGE CONTENT - Preserve from Step 2.5
-                    'title_news': article.get('title_news'),
-                    'title_b2': article.get('title_b2'),
-                    'summary_bullets_news': article.get('summary_bullets_news'),
-                    'summary_bullets_b2': article.get('summary_bullets_b2'),
-                    'content_news': article.get('content_news'),
-                    'content_b2': article.get('content_b2'),
-                    
-                    **formatted  # Add Claude-generated content
+                    **formatted  # Add Claude-generated content (includes all dual-language fields)
                 }
                 results.append(complete_article)
                 print(f"✓")

@@ -27,7 +27,7 @@ from step3_gemini_component_selection import GeminiComponentSelector, ComponentC
 from step4_perplexity_dynamic_context_search import PerplexityContextSearcher, PerplexityConfig
 from step5_claude_final_writing_formatting import ClaudeFinalWriter, WriterConfig
 from supabase_storage import save_articles_to_supabase
-from step1_claude_title_summary import claude_write_title_summary  # Dual-language content generation
+# Dual-language content now generated in Step 5 (not Step 1)
 
 class LiveNewsSystem:
     def __init__(self):
@@ -163,76 +163,6 @@ class LiveNewsSystem:
                 return []
             
             print(f"✅ {len(full_articles)} articles fetched")
-            
-            # Step 2.5: Generate Dual-Language Content (titles, summaries, full articles)
-            print("🔄 Step 2.5: Generating dual-language content (Advanced + B2)...")
-            success_count = 0
-            fail_count = 0
-            
-            for i, article in enumerate(full_articles):
-                retry_count = 0
-                max_retries = 2
-                success = False
-                
-                while retry_count <= max_retries and not success:
-                    try:
-                        if retry_count > 0:
-                            print(f"  🔄 Retry {retry_count}/{max_retries} for article {i+1}")
-                            time.sleep(2)  # Wait before retry
-                        else:
-                            print(f"  Processing {i+1}/{len(full_articles)}: {article.get('title', '')[:50]}...")
-                        
-                        # Prepare article data for dual-language generation
-                        article_data = {
-                            'title': article.get('title', ''),
-                            'description': article.get('description', ''),
-                            'text': article.get('text', article.get('content', ''))
-                        }
-                        
-                        # Validate input data
-                        if not article_data['title'] or not article_data['text']:
-                            print(f"  ⚠️  Skipping article {i+1}: Missing title or text")
-                            print(f"      Title: {article_data['title'][:50] if article_data['title'] else 'EMPTY'}")
-                            print(f"      Text length: {len(article_data['text']) if article_data['text'] else 0} chars")
-                            print(f"      Available keys in article: {list(article.keys())[:10]}")
-                            break
-                        
-                        # Generate dual-language content
-                        dual_lang_result = claude_write_title_summary(article_data)
-                        
-                        if dual_lang_result and all(key in dual_lang_result for key in ['title_news', 'title_b2', 'summary_bullets_news', 'summary_bullets_b2', 'content_news', 'content_b2']):
-                            # Add dual-language fields to article
-                            article['title_news'] = dual_lang_result['title_news']
-                            article['title_b2'] = dual_lang_result['title_b2']
-                            article['summary_bullets_news'] = dual_lang_result['summary_bullets_news']
-                            article['summary_bullets_b2'] = dual_lang_result['summary_bullets_b2']
-                            article['content_news'] = dual_lang_result['content_news']
-                            article['content_b2'] = dual_lang_result['content_b2']
-                            print(f"  ✅ Generated dual-language content for article {i+1}")
-                            success = True
-                            success_count += 1
-                        else:
-                            print(f"  ⚠️  Incomplete dual-language result for article {i+1}")
-                            retry_count += 1
-                            
-                    except Exception as e:
-                        print(f"  ❌ Error generating dual-language content: {e}")
-                        import traceback
-                        print(f"     Error details: {traceback.format_exc()[:200]}")
-                        retry_count += 1
-                
-                if not success:
-                    print(f"  ❌ Failed to generate dual-language content for article {i+1} after {max_retries + 1} attempts")
-                    fail_count += 1
-            
-            total_processed = success_count + fail_count
-            success_rate = (success_count / total_processed * 100) if total_processed > 0 else 0
-            
-            print(f"\n📊 DUAL-LANGUAGE GENERATION SUMMARY:")
-            print(f"   Total articles processed: {total_processed}")
-            print(f"   ✅ Successfully generated: {success_count}")
-            print(f"   ❌ Failed generation: {fail_count}")
-            print(f"   📈 Success rate: {success_rate:.1f}%")
             
             # Step 3: Component Selection
             print("🔄 Step 3: Gemini component selection...")
@@ -379,39 +309,8 @@ class LiveNewsSystem:
                 print("⏭️ No articles processed - skipping cycle")
                 return
             
-            # Step 3.5: Filter articles - only publish those with complete dual-language fields
-            print(f"\n🔍 FILTERING ARTICLES FOR DUAL-LANGUAGE COMPLETENESS")
-            final_articles_with_content = []
-            skipped_articles = []
-            
-            for article in final_articles:
-                has_dual_lang = all([
-                    article.get('title_news'),
-                    article.get('title_b2'),
-                    article.get('summary_bullets_news'),
-                    article.get('summary_bullets_b2'),
-                    article.get('content_news'),
-                    article.get('content_b2')
-                ])
-                
-                if has_dual_lang:
-                    final_articles_with_content.append(article)
-                else:
-                    skipped_title = article.get('title', 'Unknown')[:60]
-                    skipped_articles.append(skipped_title)
-                    print(f"   ⚠️  SKIPPED (missing dual-language): {skipped_title}")
-                    print(f"      Missing fields: {', '.join([f for f in ['title_news', 'title_b2', 'summary_bullets_news', 'summary_bullets_b2', 'content_news', 'content_b2'] if not article.get(f)])}")
-            
-            print(f"\n📊 FILTERING RESULTS:")
-            print(f"   ✅ Articles with complete dual-language: {len(final_articles_with_content)}")
-            print(f"   ⚠️  Articles skipped (incomplete): {len(skipped_articles)}")
-            
-            if not final_articles_with_content:
-                print("⏭️ No articles with complete dual-language content - skipping publication")
-                return
-            
-            # Step 4: Publish to Supabase (only complete articles)
-            published_count = self.publish_to_supabase(final_articles_with_content)
+            # Step 4: Publish to Supabase
+            published_count = self.publish_to_supabase(final_articles)
             
             # Update totals
             self.total_articles_published += published_count
@@ -420,9 +319,7 @@ class LiveNewsSystem:
             print(f"\n✅ CYCLE #{self.cycle_count} COMPLETE")
             print(f"   📰 RSS fetch: {new_articles_count} new articles")
             print(f"   📊 Processed: {len(new_articles)} articles")
-            print(f"   ✍️ Finalized: {len(final_articles)} articles")
-            print(f"   ✅ With dual-language: {len(final_articles_with_content)} articles")
-            print(f"   ⚠️  Skipped (incomplete): {len(skipped_articles)} articles")
+            print(f"   ✍️ Finalized: {len(final_articles)} articles (with dual-language)")
             print(f"   🌍 Published: {published_count} articles")
             print(f"   📈 Total published: {self.total_articles_published} articles")
             
