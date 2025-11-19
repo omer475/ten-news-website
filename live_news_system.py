@@ -211,7 +211,14 @@ class LiveNewsSystem:
             # Convert articles to Supabase format - FULL FIELD MAPPING
             articles_to_publish = []
             article_ids = []
-            for article in articles:
+            for i, article in enumerate(articles, 1):
+                # DEBUG: Check what fields are in the article from Step 6
+                print(f"\n  🔍 DEBUG [publish_to_supabase {i}/{len(articles)}]:")
+                print(f"     Article keys: {list(article.keys())[:20]}")
+                print(f"     ✓ title_news: {bool(article.get('title_news'))}")
+                print(f"     ✓ content_news: {bool(article.get('content_news'))}")
+                print(f"     ✓ summary_bullets_news: {bool(article.get('summary_bullets_news'))}")
+                
                 db_article = {
                     # Core fields
                     'url': article.get('url', ''),
@@ -254,6 +261,11 @@ class LiveNewsSystem:
                     'publishedAt': datetime.now().isoformat(),
                     'image_extraction_method': article.get('image_extraction_method', '')
                 }
+                
+                # DEBUG: Verify db_article has the fields
+                print(f"     ➡️  db_article has title_news: {bool(db_article.get('title_news'))}")
+                print(f"     ➡️  db_article has content_news: {bool(db_article.get('content_news'))}")
+                
                 articles_to_publish.append(db_article)
                 if 'id' in article:
                     article_ids.append(article['id'])
