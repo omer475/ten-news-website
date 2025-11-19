@@ -1252,12 +1252,26 @@ The article concludes with forward-looking analysis and what readers should watc
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
+      // Don't capture touch if it's on the language switcher
+      if (e.target.closest('.language-icon-btn') || 
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
       if (!isTransitioning) {
         startY = e.touches[0].clientY;
       }
     };
 
     const handleTouchEnd = (e) => {
+      // Don't handle touch if it's on the language switcher
+      if (e.target.closest('.language-icon-btn') || 
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
       if (isTransitioning) return;
       
       // Block navigation if article is open
