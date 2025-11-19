@@ -296,8 +296,13 @@ SELECTED COMPONENTS: {', '.join(components)}
             title = article.get('title_news', article.get('title', 'Unknown'))[:60]
             components = article.get('components', article.get('selected_components', []))
             
+            # DEBUG: Check if dual-language fields exist in article from Step 5
             print(f"[{i}/{len(articles)}] Generating components: {title}")
             print(f"  Components: {', '.join(components) if components else 'none'}")
+            print(f"  📥 Received from Step 5:")
+            print(f"     ✓ title_news: {bool(article.get('title_news'))}")
+            print(f"     ✓ content_news: {bool(article.get('content_news'))}")
+            print(f"     ✓ summary_bullets_news: {bool(article.get('summary_bullets_news'))}")
             
             if not components:
                 # No components selected, just pass through
@@ -313,6 +318,11 @@ SELECTED COMPONENTS: {', '.join(components)}
                 complete_article = {**article, **generated}
                 results.append(complete_article)
                 print(f"  Components generated: {', '.join(generated.keys())} ✓")
+                
+                # DEBUG: Verify dual-language fields still present
+                print(f"  📤 Passing to publishing:")
+                print(f"     ✓ title_news: {bool(complete_article.get('title_news'))}")
+                print(f"     ✓ content_news: {bool(complete_article.get('content_news'))}")
             else:
                 # Failed, but include article anyway (components are optional)
                 results.append(article)
