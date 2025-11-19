@@ -96,17 +96,18 @@ Examples:
 ✓ B2: "**European Central Bank** increases **interest rates** to **4.5 percent**"
 
 === CONTENT_NEWS (Advanced Version, 200-500 words) ===
-CRITICAL: Write a comprehensive, detailed news article for educated readers.
+CRITICAL: Write a comprehensive news article based on the source material provided.
 
 Rules:
 - **Target: 300-400 words** (Flexible: 200-500 based on source article length)
+- For shorter source articles: Write 200-300 words, focus on key points without padding
+- For longer source articles: Write 350-500 words with comprehensive details
 - Professional journalism tone (BBC, Reuters, NYT style)
-- Detailed, comprehensive journalistic coverage
 - Stay FAITHFUL to the original article - don't add information not in the source
-- Include background context, current developments, and implications
+- Include background context, current developments, and implications from the source
 - Use multiple paragraphs for better readability
-- Include specific details, quotes, statistics, and expert opinions from the source
-- Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
+- Include specific details, quotes, statistics from the source article
+- Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW based on available information
 - Complex vocabulary and sentence structures allowed
 - Use past tense for completed events, present tense for ongoing situations
 - **BOLD MARKUP**: Add **bold** markdown around important terms throughout
@@ -114,9 +115,9 @@ Rules:
 
 Structure (adjust based on source length):
 1. Opening paragraph: Main event with key details and immediate impact
-2. Background paragraph: Context, historical factors, and why this matters
-3. Details paragraph: Specific information, numbers, quotes, expert analysis
-4. Implications paragraph: Consequences, future outlook, broader significance
+2. Background paragraph: Context, historical factors, and why this matters (if in source)
+3. Details paragraph: Specific information, numbers, quotes from source
+4. Implications paragraph: Consequences, future outlook (if mentioned in source)
 
 Writing style:
 - Professional journalism tone
@@ -124,13 +125,13 @@ Writing style:
 - Engaging but not sensational
 - Can use complex language
 - Proper attribution when mentioning sources
-- For shorter source articles, focus on key points without padding
+- For shorter source articles, focus on key points without adding speculation
 
 === CONTENT_B2 (B2 English Version, 200-500 words) ===
 CRITICAL: Write the SAME article but in simpler B2-level English.
 
 Rules:
-- **Target: 300-400 words** (Flexible: 200-500 based on source article length)
+- **Target: 300-400 words** (Flexible: 200-500 based on source article length - SAME LENGTH AS CONTENT_NEWS)
 - Same information as CONTENT_NEWS, just simpler language
 - Simpler sentence structures (mostly simple and compound sentences)
 - More common vocabulary (but NOT "too easy" - words like "interest", "inflation" are fine)
