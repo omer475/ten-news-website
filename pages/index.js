@@ -924,37 +924,8 @@ The article concludes with forward-looking analysis and what readers should watc
             
             console.log('📰 Setting stories:', finalStories.length);
             
-            // Add example dual-language data for testing if fields are missing
-            finalStories = finalStories.map((story, storyIndex) => {
-              if (story.type === 'news' && !story.title_news) {
-                return {
-                  ...story,
-                  // ADVANCED ENGLISH VERSION (Professional News Language)
-                  title_news: "**Global Markets** Surge Amid **Economic Recovery** Signals",
-                  summary_bullets_news: [
-                    "**International markets** experience unprecedented **growth trajectory** following central bank announcements",
-                    "**Financial analysts** project sustained **economic momentum** through fiscal quarter",
-                    "**Trade agreements** finalized between major economies, strengthening **bilateral relations**",
-                    "**Investment portfolios** demonstrate resilience despite **geopolitical uncertainties** in emerging markets"
-                  ],
-                  content_news: "**Financial markets** worldwide experienced significant upward momentum today as **central banks** across multiple jurisdictions announced coordinated **monetary policy** adjustments. The **Dow Jones Industrial Average** surged by 2.3%, while **European indices** posted comparable gains. **Chief economists** attribute this rally to strengthening **macroeconomic indicators** and improved **consumer confidence** metrics. **Institutional investors** have responded positively to the **Federal Reserve's** dovish stance on interest rates, anticipating sustained **liquidity** in the markets. **Corporate earnings** reports exceeded analyst expectations, with **technology sector** valuations reaching new highs. **Emerging market** currencies stabilized following **diplomatic breakthroughs** in trade negotiations. **Portfolio managers** are recalibrating their **asset allocation** strategies to capitalize on the favorable conditions. **Market volatility** indices declined sharply, suggesting increased **investor sentiment** and risk appetite. **Government bond** yields adjusted accordingly, reflecting confidence in the **economic trajectory**. Analysts project this momentum will persist through the **fiscal year**, contingent upon stable **geopolitical landscape** and continued **monetary accommodation**.",
-                  
-                  // B2 ENGLISH VERSION (Upper-Intermediate / Easier to Understand)
-                  title_b2: "**Stock Markets** Rise as **Economy** Shows Improvement",
-                  summary_bullets_b2: [
-                    "**World stock markets** go up after **banks** share positive news about economy",
-                    "**Money experts** believe the **good situation** will continue for several months",
-                    "**Countries** agree on new **trade deals**, making business relationships stronger",
-                    "**People's savings** stay safe even though some **world problems** continue"
-                  ],
-                  content_b2: "**Stock markets** around the world went up today after **central banks** announced new plans to help the **economy**. The main **American stock index** increased by 2.3%, and **European markets** also showed good results. **Economy experts** say this happened because people feel more **positive** about spending money. **Big investors** are happy with the **Federal Reserve's** decision to keep **interest rates** low, which means it's easier to borrow money. **Companies** made more money than expected, especially **technology companies** whose value went to new record levels. **Money from developing countries** became more stable after **government leaders** made progress in **trade discussions**. **Investment managers** are changing their plans to take advantage of these good conditions. The **risk level** in markets went down, showing that **investors** feel more confident. **Government bonds** changed their prices to match the new economic situation. Experts think these positive changes will continue for the rest of the year, as long as **world politics** stay calm and **banks** continue their helpful policies."
-                };
-              }
-              return story;
-            });
-            
             setStories(finalStories);
-            console.log('📰 Stories set successfully with dual-language data');
+            console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
             setStories([]);
