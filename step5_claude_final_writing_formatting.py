@@ -311,64 +311,46 @@ class ClaudeFinalWriter:
     
     def _build_user_prompt(self, article: Dict) -> str:
         """
-        Build user prompt with article and context data
+        Build user prompt for dual-language content generation
         
         Args:
-            article: Article with text and context data
+            article: Article with scraped text from Step 2
         
         Returns:
             Formatted prompt string
         """
-        # Support both field names for compatibility
-        components = article.get('components', article.get('selected_components', []))
-        context_data = article.get('context_data', {})
+        # Get article text (support both 'text' and 'content' field names)
+        article_text = article.get('text', article.get('content', ''))
+        article_title = article.get('title', 'Unknown')
+        article_description = article.get('description', '')
         
-        prompt = f"""Write a complete news article based on this information.
+        # Build simple prompt focused on the scraped article
+        prompt = f"""Generate dual-language news content (Advanced + B2 English) based on this scraped article:
 
 ORIGINAL ARTICLE:
-Title: {article['title']}
-Text: {article['text'][:3000]}
+Title: {article_title}
+Description: {article_description}
+Full Text:
+{article_text[:4000]}
 
-SELECTED COMPONENTS: {', '.join(components)}
+SOURCE LENGTH: {len(article_text)} characters (~{len(article_text.split())} words)
 
-"""
-        
-        # Add context data for each selected component
-        if 'timeline' in components and context_data.get('timeline_data'):
-            prompt += f"""TIMELINE CONTEXT (from web search):
-{json.dumps(context_data['timeline_data'], indent=2)}
+Generate:
+1. title_news (Advanced English, ≤12 words)
+2. title_b2 (B2 English, ≤12 words)
+3. content_news (Advanced article, target 300-400 words, flexible 200-500 based on source length)
+4. content_b2 (B2 article, same length as content_news, simpler language)
+5. summary_bullets_news (4 bullets, 10-15 words each)
+6. summary_bullets_b2 (4 bullets, 10-15 words each)
 
-"""
-        
-        if 'details' in components and context_data.get('details_data'):
-            prompt += f"""DETAILS CONTEXT (from web search):
-{json.dumps(context_data['details_data'], indent=2)}
+IMPORTANT: 
+- Stay faithful to the source article - use only information provided above
+- For shorter source articles, write proportionally shorter content (200-300 words)
+- For longer source articles, write fuller coverage (350-500 words)
+- Both language versions must have THE SAME length and information
+- Add **bold** markup to important terms (names, numbers, organizations, locations)
 
-"""
-        
-        if 'graph' in components and context_data.get('graph_data'):
-            prompt += f"""GRAPH CONTEXT (from web search):
-Type: {article.get('graph_type', 'line')}
-{json.dumps(context_data['graph_data'], indent=2)}
-
-"""
-        
-        if 'map' in components and context_data.get('map_data'):
-            prompt += f"""MAP CONTEXT (from web search):
-{json.dumps(context_data['map_data'], indent=2)}
-
-"""
-        
-        prompt += """Generate complete article with:
-1. Title (≤12 words)
-2. Detailed article text (maximum 200 words) - comprehensive, detailed journalistic coverage
-3. Summary bullets (exactly 4 bullets, 10-17 words each, max 60 words total)
-4. Timeline (if selected)
-5. Details (if selected, exactly 3 with numbers)
-6. Graph (if selected)
-7. Map (if selected)
-
-Return ONLY valid JSON."""
+Return ONLY valid JSON, no markdown, no explanations."""
         
         return prompt
     
