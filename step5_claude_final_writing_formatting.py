@@ -95,23 +95,24 @@ Examples:
 ✓ Advanced: "**European Central Bank** raises interest rates to **4.5 percent**"
 ✓ B2: "**European Central Bank** increases **interest rates** to **4.5 percent**"
 
-=== CONTENT_NEWS (Advanced Version, 300-400 words) ===
+=== CONTENT_NEWS (Advanced Version, 200-500 words) ===
 CRITICAL: Write a comprehensive, detailed news article for educated readers.
 
 Rules:
-- **300-400 words** (MANDATORY range)
+- **Target: 300-400 words** (Flexible: 200-500 based on source article length)
 - Professional journalism tone (BBC, Reuters, NYT style)
 - Detailed, comprehensive journalistic coverage
+- Stay FAITHFUL to the original article - don't add information not in the source
 - Include background context, current developments, and implications
 - Use multiple paragraphs for better readability
-- Include specific details, quotes, statistics, and expert opinions
+- Include specific details, quotes, statistics, and expert opinions from the source
 - Cover WHO, WHAT, WHEN, WHERE, WHY, and HOW
 - Complex vocabulary and sentence structures allowed
 - Use past tense for completed events, present tense for ongoing situations
 - **BOLD MARKUP**: Add **bold** markdown around important terms throughout
   - Highlight: organization names, person names, numbers, percentages, locations, dates, key concepts
 
-Structure:
+Structure (adjust based on source length):
 1. Opening paragraph: Main event with key details and immediate impact
 2. Background paragraph: Context, historical factors, and why this matters
 3. Details paragraph: Specific information, numbers, quotes, expert analysis
@@ -123,12 +124,13 @@ Writing style:
 - Engaging but not sensational
 - Can use complex language
 - Proper attribution when mentioning sources
+- For shorter source articles, focus on key points without padding
 
-=== CONTENT_B2 (B2 English Version, 300-400 words) ===
+=== CONTENT_B2 (B2 English Version, 200-500 words) ===
 CRITICAL: Write the SAME article but in simpler B2-level English.
 
 Rules:
-- **300-400 words** (MANDATORY range - same length as CONTENT_NEWS)
+- **Target: 300-400 words** (Flexible: 200-500 based on source article length)
 - Same information as CONTENT_NEWS, just simpler language
 - Simpler sentence structures (mostly simple and compound sentences)
 - More common vocabulary (but NOT "too easy" - words like "interest", "inflation" are fine)
@@ -138,7 +140,7 @@ Rules:
 - **BOLD MARKUP**: Add **bold** markdown around important terms throughout
   - Highlight: organization names, person names, numbers, percentages, locations, dates, key concepts
 
-Structure: Same as CONTENT_NEWS
+Structure: Same as CONTENT_NEWS (adjust based on source length)
 Writing style: Same tone, just clearer language
 
 === SUMMARY_BULLETS_NEWS (Advanced Version, 4 bullets, 10-15 words each) ===
@@ -201,10 +203,13 @@ Return ONLY valid JSON with DUAL-LANGUAGE content:
 
 VALIDATION CHECKLIST:
 - TITLE_NEWS & TITLE_B2: ≤12 words each, declarative, geographic specificity, **bold** markup for 1-3 key terms
-- CONTENT_NEWS & CONTENT_B2: 300-400 words each, detailed comprehensive coverage, **bold** markup throughout
+- CONTENT_NEWS & CONTENT_B2: Target 300-400 words (flexible: 200-500 based on source), detailed comprehensive coverage, **bold** markup throughout
 - SUMMARY_BULLETS_NEWS & SUMMARY_BULLETS_B2: Exactly 4 bullets each, 10-15 words per bullet, **bold** markup 1-2 per bullet
 
-CRITICAL: Both language versions must contain THE SAME INFORMATION, just different complexity levels.
+CRITICAL: 
+- Both language versions must contain THE SAME INFORMATION, just different complexity levels
+- Stay FAITHFUL to the source article - don't add information not in the original
+- For shorter source articles, write shorter but complete coverage
 
 NOTE: Components (timeline, details, graph) will be added in Step 6 using Perplexity context.
 
@@ -389,14 +394,16 @@ Return ONLY valid JSON."""
         if 'title_b2' in result and len(result['title_b2'].split()) > 12:
             errors.append(f"Title_b2 too long: {len(result['title_b2'].split())} words")
         
-        # Validate content articles (300-400 words each)
+        # Validate content articles (flexible: 200-500 words based on source length)
         for content_field in ['content_news', 'content_b2']:
             if content_field in result:
                 content_words = len(result[content_field].split())
-                if content_words < 300:
-                    errors.append(f"{content_field} too short: {content_words} words (need 300-400)")
-                elif content_words > 450:  # Allow 10% buffer
-                    errors.append(f"{content_field} too long: {content_words} words (need 300-400)")
+                # Minimum 200 words (for short source articles)
+                # Maximum 500 words (allow flexibility)
+                if content_words < 200:
+                    errors.append(f"{content_field} too short: {content_words} words (minimum 200)")
+                elif content_words > 500:
+                    errors.append(f"{content_field} too long: {content_words} words (maximum 500)")
         
         # Validate summary bullets (both versions)
         for bullets_field in ['summary_bullets_news', 'summary_bullets_b2']:
