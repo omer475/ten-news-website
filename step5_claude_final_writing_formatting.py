@@ -427,11 +427,9 @@ Return ONLY valid JSON, no markdown, no explanations."""
         
         for i, article in enumerate(articles, 1):
             # Support both field names
-            components = article.get('components', article.get('selected_components', []))
-            components_str = ', '.join(components) if components else 'none'
-            print(f"[{i}/{len(articles)}] Writing: {article['title'][:50]}...")
-            print(f"  Components in article: {components}")
-            print(f"  Components formatted: {components_str}", end=' ')
+            title = article.get('title', 'Unknown')[:60]
+            
+            print(f"[{i}/{len(articles)}] Writing: {title}...")
             
             # Write article
             formatted = self.write_article(article)
@@ -456,6 +454,20 @@ Return ONLY valid JSON, no markdown, no explanations."""
                     
                     **formatted  # Add Claude-generated content (includes all dual-language fields)
                 }
+                
+                # DEBUG: Check if dual-language fields are present
+                has_dual_lang = all([
+                    complete_article.get('title_news'),
+                    complete_article.get('title_b2'),
+                    complete_article.get('content_news'),
+                    complete_article.get('content_b2'),
+                    complete_article.get('summary_bullets_news'),
+                    complete_article.get('summary_bullets_b2')
+                ])
+                if not has_dual_lang:
+                    print(f"  ⚠️  WARNING: Missing dual-language fields!")
+                    print(f"     Available fields: {list(formatted.keys())}")
+                
                 results.append(complete_article)
                 print(f"✓")
             else:
