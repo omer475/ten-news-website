@@ -1,12 +1,13 @@
-# STEP 5: CLAUDE FINAL WRITING & FORMATTING
-# ==========================================
-# Purpose: Write everything in one comprehensive Claude call
+# STEP 5: CLAUDE DUAL-LANGUAGE CONTENT GENERATION
+# ================================================
+# Purpose: Generate dual-language titles, articles, and bullets from scraped article
 # Model: Claude Sonnet 4.5 (best quality for writing)
-# Input: ~100 articles with context data from Step 4
-# Output: Complete formatted articles ready for users
-# Writes: Title, Summary (paragraph + bullets), Timeline, Details, Graph, Map
-# Cost: ~$1.80 per 100 articles
-# Time: ~5-7 minutes for 100 articles
+# Input: Articles with scraped full text from Step 2
+# Output: Dual-language content (titles, articles, bullets)
+# Writes: title_news, title_b2, content_news, content_b2, summary_bullets_news, summary_bullets_b2
+# Note: Components (timeline, details, graph) are generated in Step 6 using Perplexity context
+# Cost: ~$1.20 per 100 articles
+# Time: ~4-5 minutes for 100 articles
 
 import anthropic
 import json
@@ -36,22 +37,18 @@ class WriterConfig:
 # COMPLETE SYSTEM PROMPT
 # ==========================================
 
-CLAUDE_WRITING_PROMPT = """You are a professional news writer for a global news application. Your task is to write a complete, publication-ready news article.
+CLAUDE_WRITING_PROMPT = """You are a professional news writer for a global news application. Your task is to write dual-language news content.
 
 You will receive:
-1. Original article text
-2. Selected components (timeline, details, graph) - ordered by importance
-3. Context data from web searches (for selected components only)
+1. Original scraped article text (from Step 2)
+2. Article title and description
 
 You must write DUAL-LANGUAGE CONTENT (Advanced + B2 English):
 1. Titles (2 versions: Advanced & B2)
 2. Full Articles (2 versions: 300-400 words each)
 3. Summary Bullets (2 versions: 4 bullets each, 10-15 words per bullet)
-4. Timeline (if selected, 2-4 events)
-5. Details (if selected, exactly 3 data points)
-6. Graph (if selected, formatted data)
 
-NOTE: Map component is currently disabled.
+NOTE: Timeline, details, and graph components will be generated separately in Step 6 using web search context.
 
 === DUAL-LANGUAGE REQUIREMENTS ===
 
@@ -180,119 +177,6 @@ Examples:
 ✓ Advanced: "**ECB** raises interest rates to **4.5%**, tenth consecutive increase since July"
 ✓ B2: "**ECB** increases interest rates to **4.5%**, tenth time in a row since July"
 
-=== TIMELINE (if selected) ===
-- 2-4 events in chronological order (oldest first)
-- Use context data provided from Perplexity
-- Each event: date + description (≤14 words)
-- Focus on contextual events (background, related developments, upcoming)
-- DO NOT include main news event from title
-
-Date formats:
-- Different days: "Oct 14, 2024"
-- Same day recent: "14:30, Oct 14"
-- Month only: "Oct 2024"
-- Future: "Dec 2024"
-
-Format:
-[
-  {"date": "Jul 27, 2023", "event": "ECB begins rate hike cycle with increase to 3.75 percent"},
-  {"date": "Mar 2024", "event": "ECB holds rates steady for first time in eight months"}
-]
-
-=== DETAILS (if selected) ===
-- EXACTLY 3 data points
-- Format: "Label: Value"
-- Label: 1-3 words, Value: specific number/data
-- Total per detail: under 8 words
-- EVERY detail MUST contain a NUMBER
-
-CRITICAL: Each detail must include:
-- Percentage: 4.25%, 5.3%
-- Amount/Count: 340M, $2.8T, 10 consecutive
-- Date: 2023, Mar 2024, Since 2001
-- Rate/Ratio: 6.4%, 0.1%
-
-Use context data from Perplexity. DO NOT repeat data from title/summary.
-
-Examples:
-✓ "Previous rate: 4.25%"
-✓ "Inflation target: 2%"
-✓ "GDP growth: 0.1%"
-
-❌ "Platform: Social media" - no number
-❌ "Status: Ongoing" - no number
-
-=== GRAPH (if selected) ===
-Format graph data from Perplexity context:
-
-{
-  "type": "line",  // or "bar", "area", "column"
-  "title": "Federal Funds Rate 2020-2024",
-  "data": [
-    {"date": "2020-03", "value": 0.25},
-    {"date": "2022-03", "value": 0.50},
-    {"date": "2023-07", "value": 5.25},
-    {"date": "2024-01", "value": 5.50}
-  ],
-  "y_label": "Interest Rate (%)",
-  "x_label": "Date"
-}
-
-Use data from Perplexity search. Ensure:
-- At least 4 data points
-- Dates in YYYY-MM format
-- Values as numbers only
-- Clear axis labels
-
-<!-- MAP - DISABLED (kept for future re-enabling)
-
-=== MAP (if selected) ===
-Format map data from Perplexity context:
-
-{
-  "type": "point_markers",
-  "center": {"lat": 37.17, "lon": 37.03},
-  "zoom": 7,
-  "markers": [
-    {
-      "lat": 37.17,
-      "lon": 37.03,
-      "label": "Epicenter (M7.8)",
-      "type": "epicenter",
-      "color": "red",
-      "size": "large"
-    },
-    {
-      "lat": 37.00,
-      "lon": 37.38,
-      "label": "Gaziantep, Turkey",
-      "type": "affected_city",
-      "color": "orange",
-      "size": "medium",
-      "info": "Major damage reported"
-    }
-  ],
-  "affected_region": {
-    "type": "circle",
-    "center": {"lat": 37.17, "lon": 37.03},
-    "radius_km": 200,
-    "color": "rgba(255, 0, 0, 0.2)"
-  }
-}
-
-Color coding:
-- red: epicenter, major damage, critical
-- orange: significant damage, affected area
-- yellow: minor impact, tremors felt
-- blue: primary location, general
-
-Zoom levels:
-- 4-5: Multi-country
-- 7-8: Regional
-- 10-11: City-level
-
--->
-
 === OUTPUT FORMAT ===
 Return ONLY valid JSON with DUAL-LANGUAGE content:
 
@@ -312,21 +196,17 @@ Return ONLY valid JSON with DUAL-LANGUAGE content:
     "B2 bullet 2 (10-15 words) with **bold** markup",
     "B2 bullet 3 (10-15 words) with **bold** markup",
     "B2 bullet 4 (10-15 words) with **bold** markup"
-  ],
-  "timeline": [...],  // Only if timeline selected
-  "details": [...],   // Only if details selected
-  "graph": {...}      // Only if graph selected
+  ]
 }
 
 VALIDATION CHECKLIST:
 - TITLE_NEWS & TITLE_B2: ≤12 words each, declarative, geographic specificity, **bold** markup for 1-3 key terms
 - CONTENT_NEWS & CONTENT_B2: 300-400 words each, detailed comprehensive coverage, **bold** markup throughout
 - SUMMARY_BULLETS_NEWS & SUMMARY_BULLETS_B2: Exactly 4 bullets each, 10-15 words per bullet, **bold** markup 1-2 per bullet
-- Timeline: 2-4 events, chronological, ≤14 words per event (if selected)
-- Details: Exactly 3, all have numbers, <8 words each (if selected)
-- Graph: At least 4 data points, correct format (if selected)
 
 CRITICAL: Both language versions must contain THE SAME INFORMATION, just different complexity levels.
+
+NOTE: Components (timeline, details, graph) will be added in Step 6 using Perplexity context.
 
 Return ONLY valid JSON, no markdown, no explanations."""
 
@@ -533,30 +413,7 @@ Return ONLY valid JSON."""
                     if bullet.endswith('.'):
                         errors.append(f"{bullets_field} bullet {i+1} ends with period")
         
-        # Check selected components - support both field names
-        components = article.get('components', article.get('selected_components', []))
-        
-        if 'timeline' in components:
-            if 'timeline' not in result:
-                errors.append("Timeline selected but not in output")
-            elif len(result['timeline']) < 2 or len(result['timeline']) > 4:
-                errors.append(f"Timeline event count: {len(result['timeline'])} (need 2-4)")
-        
-        if 'details' in components:
-            if 'details' not in result:
-                errors.append("Details selected but not in output")
-            elif len(result['details']) != 3:
-                errors.append(f"Details count: {len(result['details'])} (need exactly 3)")
-            else:
-                for i, detail in enumerate(result['details']):
-                    if not any(char.isdigit() for char in detail):
-                        errors.append(f"Detail {i+1} has no number: '{detail}'")
-        
-        if 'graph' in components and 'graph' not in result:
-            errors.append("Graph selected but not in output")
-        
-        if 'map' in components and 'map' not in result:
-            errors.append("Map selected but not in output")
+        # NOTE: Components (timeline, details, graph) are validated in Step 6
         
         return len(errors) == 0, errors
     

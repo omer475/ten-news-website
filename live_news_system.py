@@ -26,8 +26,8 @@ from step2_scrapingbee_full_article_fetching import ScrapingBeeArticleFetcher, F
 from step3_gemini_component_selection import GeminiComponentSelector, ComponentConfig
 from step4_perplexity_dynamic_context_search import PerplexityContextSearcher, PerplexityConfig
 from step5_claude_final_writing_formatting import ClaudeFinalWriter, WriterConfig
+from step6_claude_component_generation import ClaudeComponentWriter, ComponentWriterConfig
 from supabase_storage import save_articles_to_supabase
-# Dual-language content now generated in Step 5 (not Step 1)
 
 class LiveNewsSystem:
     def __init__(self):
@@ -51,9 +51,14 @@ class LiveNewsSystem:
             config=PerplexityConfig()
         )
         
-        self.final_writer = ClaudeFinalWriter(
-            api_key=os.getenv('CLAUDE_API_KEY'),
+        self.dual_language_writer = ClaudeFinalWriter(
+            api_key=os.getenv('ANTHROPIC_API_KEY'),
             config=WriterConfig()
+        )
+        
+        self.component_writer = ClaudeComponentWriter(
+            api_key=os.getenv('ANTHROPIC_API_KEY'),
+            config=ComponentWriterConfig()
         )
         
         print("🚀 TEN NEWS LIVE SYSTEM INITIALIZED")
@@ -170,17 +175,23 @@ class LiveNewsSystem:
             
             print(f"✅ {len(articles_with_components)} articles processed")
             
-            # Step 4: Context Search
+            # Step 4: Context Search (for components)
             print("🔄 Step 4: Perplexity context search...")
             articles_with_context = self.context_searcher.search_all_articles(articles_with_components)
             
             print(f"✅ {len(articles_with_context)} articles processed")
             
-            # Step 5: Final Writing
-            print("🔄 Step 5: Claude final writing...")
-            final_articles = self.final_writer.write_all_articles(articles_with_context)
+            # Step 5: Dual-Language Content Generation (from scraped article text)
+            print("🔄 Step 5: Generating dual-language content from scraped articles...")
+            articles_with_content = self.dual_language_writer.write_all_articles(articles_with_context)
             
-            print(f"✅ {len(final_articles)} final articles written")
+            print(f"✅ {len(articles_with_content)} articles with dual-language content")
+            
+            # Step 6: Component Generation (timeline, details, graph from Perplexity context)
+            print("🔄 Step 6: Generating components from web context...")
+            final_articles = self.component_writer.write_all_articles(articles_with_content)
+            
+            print(f"✅ {len(final_articles)} final articles complete")
             
             return final_articles
             
@@ -319,7 +330,9 @@ class LiveNewsSystem:
             print(f"\n✅ CYCLE #{self.cycle_count} COMPLETE")
             print(f"   📰 RSS fetch: {new_articles_count} new articles")
             print(f"   📊 Processed: {len(new_articles)} articles")
-            print(f"   ✍️ Finalized: {len(final_articles)} articles (with dual-language)")
+            print(f"   ✍️ Finalized: {len(final_articles)} articles")
+            print(f"      └─ Dual-language content (Step 5)")
+            print(f"      └─ Components: timeline/details/graph (Step 6)")
             print(f"   🌍 Published: {published_count} articles")
             print(f"   📈 Total published: {self.total_articles_published} articles")
             
