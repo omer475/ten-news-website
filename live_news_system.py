@@ -194,8 +194,8 @@ class LiveNewsSystem:
                             print(f"  ⚠️  Skipping article {i+1}: Missing title or text")
                             print(f"      Title: {article_data['title'][:50] if article_data['title'] else 'EMPTY'}")
                             print(f"      Text length: {len(article_data['text']) if article_data['text'] else 0} chars")
-                            success = False  # Mark as failed so it gets counted
-                            break  # Exit retry loop for this article
+                            print(f"      Available keys in article: {list(article.keys())[:10]}")
+                            break
                         
                         # Generate dual-language content
                         dual_lang_result = claude_write_title_summary(article_data)
