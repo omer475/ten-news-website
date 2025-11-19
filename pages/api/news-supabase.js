@@ -137,6 +137,30 @@ export default async function handler(req, res) {
         }
       }
 
+      // Parse dual-language bullets if they're strings
+      let summaryBulletsNews = [];
+      let summaryBulletsB2 = [];
+      
+      if (article.summary_bullets_news) {
+        try {
+          summaryBulletsNews = typeof article.summary_bullets_news === 'string'
+            ? JSON.parse(article.summary_bullets_news)
+            : article.summary_bullets_news;
+        } catch (e) {
+          console.error('Error parsing summary_bullets_news:', e);
+        }
+      }
+      
+      if (article.summary_bullets_b2) {
+        try {
+          summaryBulletsB2 = typeof article.summary_bullets_b2 === 'string'
+            ? JSON.parse(article.summary_bullets_b2)
+            : article.summary_bullets_b2;
+        } catch (e) {
+          console.error('Error parsing summary_bullets_b2:', e);
+        }
+      }
+
       return {
         id: article.id,
         title: article.title,
@@ -171,8 +195,19 @@ export default async function handler(req, res) {
         category: article.category,
         emoji: article.emoji || '📰',
         final_score: article.ai_final_score,
+        
+        // Dual-language content fields (from Step 5 generation)
+        title_news: article.title_news || null,
+        title_b2: article.title_b2 || null,
+        content_news: article.content_news || null,
+        content_b2: article.content_b2 || null,
+        summary_bullets_news: summaryBulletsNews,
+        summary_bullets_b2: summaryBulletsB2,
+        
+        // Legacy fields for backward compatibility
         detailed_text: article.article || article.summary || article.description || '',  // NEW: Use 'article' field
         summary_bullets: summaryBullets,
+        
         timeline: timelineData,
         graph: graphData,  // Include graph data
         components: article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null,  // Include component order
