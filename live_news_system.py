@@ -222,7 +222,14 @@ class LiveNewsSystem:
                     print(f"  ❌ Failed to generate dual-language content for article {i+1} after {max_retries + 1} attempts")
                     fail_count += 1
             
-            print(f"✅ Dual-language generation complete: {success_count} succeeded, {fail_count} failed")
+            total_processed = success_count + fail_count
+            success_rate = (success_count / total_processed * 100) if total_processed > 0 else 0
+            
+            print(f"\n📊 DUAL-LANGUAGE GENERATION SUMMARY:")
+            print(f"   Total articles processed: {total_processed}")
+            print(f"   ✅ Successfully generated: {success_count}")
+            print(f"   ❌ Failed generation: {fail_count}")
+            print(f"   📈 Success rate: {success_rate:.1f}%")
             
             # Step 3: Component Selection
             print("🔄 Step 3: Gemini component selection...")
@@ -369,8 +376,39 @@ class LiveNewsSystem:
                 print("⏭️ No articles processed - skipping cycle")
                 return
             
-            # Step 4: Publish to Supabase
-            published_count = self.publish_to_supabase(final_articles)
+            # Step 3.5: Filter articles - only publish those with complete dual-language fields
+            print(f"\n🔍 FILTERING ARTICLES FOR DUAL-LANGUAGE COMPLETENESS")
+            final_articles_with_content = []
+            skipped_articles = []
+            
+            for article in final_articles:
+                has_dual_lang = all([
+                    article.get('title_news'),
+                    article.get('title_b2'),
+                    article.get('summary_bullets_news'),
+                    article.get('summary_bullets_b2'),
+                    article.get('content_news'),
+                    article.get('content_b2')
+                ])
+                
+                if has_dual_lang:
+                    final_articles_with_content.append(article)
+                else:
+                    skipped_title = article.get('title', 'Unknown')[:60]
+                    skipped_articles.append(skipped_title)
+                    print(f"   ⚠️  SKIPPED (missing dual-language): {skipped_title}")
+                    print(f"      Missing fields: {', '.join([f for f in ['title_news', 'title_b2', 'summary_bullets_news', 'summary_bullets_b2', 'content_news', 'content_b2'] if not article.get(f)])}")
+            
+            print(f"\n📊 FILTERING RESULTS:")
+            print(f"   ✅ Articles with complete dual-language: {len(final_articles_with_content)}")
+            print(f"   ⚠️  Articles skipped (incomplete): {len(skipped_articles)}")
+            
+            if not final_articles_with_content:
+                print("⏭️ No articles with complete dual-language content - skipping publication")
+                return
+            
+            # Step 4: Publish to Supabase (only complete articles)
+            published_count = self.publish_to_supabase(final_articles_with_content)
             
             # Update totals
             self.total_articles_published += published_count
@@ -380,6 +418,8 @@ class LiveNewsSystem:
             print(f"   📰 RSS fetch: {new_articles_count} new articles")
             print(f"   📊 Processed: {len(new_articles)} articles")
             print(f"   ✍️ Finalized: {len(final_articles)} articles")
+            print(f"   ✅ With dual-language: {len(final_articles_with_content)} articles")
+            print(f"   ⚠️  Skipped (incomplete): {len(skipped_articles)} articles")
             print(f"   🌍 Published: {published_count} articles")
             print(f"   📈 Total published: {self.total_articles_published} articles")
             

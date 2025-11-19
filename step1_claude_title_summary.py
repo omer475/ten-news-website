@@ -213,7 +213,7 @@ Return only valid JSON with all 6 fields. No explanations."""
     try:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=2000,  # Increased for two full articles (300-400 words each)
+            max_tokens=3000,  # Increased to ensure complete generation of two full articles (300-400 words each)
             temperature=0.5,
             system=system_prompt,
             messages=[
