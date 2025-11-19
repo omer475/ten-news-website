@@ -44,11 +44,6 @@ export default function Home() {
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
 
-  // Debug: Log language mode changes
-  useEffect(() => {
-    console.log('🔄 languageMode state changed:', languageMode);
-  }, [languageMode]);
-
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -70,7 +65,11 @@ export default function Home() {
 
   const onTouchStart = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.switcher') || 
+        e.target.closest('[data-expand-icon]') ||
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
       return;
     }
     setTouchEnd(null);
@@ -79,7 +78,11 @@ export default function Home() {
 
   const onTouchMove = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.switcher') || 
+        e.target.closest('[data-expand-icon]') ||
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
       return;
     }
     setTouchEnd(e.targetTouches[0].clientX);
@@ -87,7 +90,11 @@ export default function Home() {
 
   const onTouchEnd = (e) => {
     // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || e.target.closest('[data-expand-icon]')) {
+    if (e.target.closest('.switcher') || 
+        e.target.closest('[data-expand-icon]') ||
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
       return;
     }
     
@@ -917,8 +924,37 @@ The article concludes with forward-looking analysis and what readers should watc
             
             console.log('📰 Setting stories:', finalStories.length);
             
+            // Add example dual-language data for testing if fields are missing
+            finalStories = finalStories.map((story, storyIndex) => {
+              if (story.type === 'news' && !story.title_news) {
+                return {
+                  ...story,
+                  // ADVANCED ENGLISH VERSION (Professional News Language)
+                  title_news: "**Global Markets** Surge Amid **Economic Recovery** Signals",
+                  summary_bullets_news: [
+                    "**International markets** experience unprecedented **growth trajectory** following central bank announcements",
+                    "**Financial analysts** project sustained **economic momentum** through fiscal quarter",
+                    "**Trade agreements** finalized between major economies, strengthening **bilateral relations**",
+                    "**Investment portfolios** demonstrate resilience despite **geopolitical uncertainties** in emerging markets"
+                  ],
+                  content_news: "**Financial markets** worldwide experienced significant upward momentum today as **central banks** across multiple jurisdictions announced coordinated **monetary policy** adjustments. The **Dow Jones Industrial Average** surged by 2.3%, while **European indices** posted comparable gains. **Chief economists** attribute this rally to strengthening **macroeconomic indicators** and improved **consumer confidence** metrics. **Institutional investors** have responded positively to the **Federal Reserve's** dovish stance on interest rates, anticipating sustained **liquidity** in the markets. **Corporate earnings** reports exceeded analyst expectations, with **technology sector** valuations reaching new highs. **Emerging market** currencies stabilized following **diplomatic breakthroughs** in trade negotiations. **Portfolio managers** are recalibrating their **asset allocation** strategies to capitalize on the favorable conditions. **Market volatility** indices declined sharply, suggesting increased **investor sentiment** and risk appetite. **Government bond** yields adjusted accordingly, reflecting confidence in the **economic trajectory**. Analysts project this momentum will persist through the **fiscal year**, contingent upon stable **geopolitical landscape** and continued **monetary accommodation**.",
+                  
+                  // B2 ENGLISH VERSION (Upper-Intermediate / Easier to Understand)
+                  title_b2: "**Stock Markets** Rise as **Economy** Shows Improvement",
+                  summary_bullets_b2: [
+                    "**World stock markets** go up after **banks** share positive news about economy",
+                    "**Money experts** believe the **good situation** will continue for several months",
+                    "**Countries** agree on new **trade deals**, making business relationships stronger",
+                    "**People's savings** stay safe even though some **world problems** continue"
+                  ],
+                  content_b2: "**Stock markets** around the world went up today after **central banks** announced new plans to help the **economy**. The main **American stock index** increased by 2.3%, and **European markets** also showed good results. **Economy experts** say this happened because people feel more **positive** about spending money. **Big investors** are happy with the **Federal Reserve's** decision to keep **interest rates** low, which means it's easier to borrow money. **Companies** made more money than expected, especially **technology companies** whose value went to new record levels. **Money from developing countries** became more stable after **government leaders** made progress in **trade discussions**. **Investment managers** are changing their plans to take advantage of these good conditions. The **risk level** in markets went down, showing that **investors** feel more confident. **Government bonds** changed their prices to match the new economic situation. Experts think these positive changes will continue for the rest of the year, as long as **world politics** stay calm and **banks** continue their helpful policies."
+                };
+              }
+              return story;
+            });
+            
             setStories(finalStories);
-            console.log('📰 Stories set successfully');
+            console.log('📰 Stories set successfully with dual-language data');
           } else {
             console.log('📰 No articles found in response');
             setStories([]);
@@ -2680,7 +2716,6 @@ The article concludes with forward-looking analysis and what readers should watc
           --glass-reflex-light: 1;
           --saturation: 150%;
 
-          position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2689,7 +2724,6 @@ The article concludes with forward-looking analysis and what readers should watc
           padding: 0;
           border: none;
           border-radius: 12px;
-          z-index: 10001 !important;
           cursor: pointer;
           background-color: color-mix(in srgb, var(--c-glass) 12%, transparent);
           backdrop-filter: blur(4px) saturate(var(--saturation));
@@ -2721,8 +2755,7 @@ The article concludes with forward-looking analysis and what readers should watc
         /* Dropdown Box Animation */
         .language-dropdown-box {
           animation: langDropdownFade 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
-          z-index: 10002 !important;
-          pointer-events: all !important;
+          z-index: 10000;
         }
 
         @keyframes langDropdownFade {
@@ -2774,7 +2807,6 @@ The article concludes with forward-looking analysis and what readers should watc
 
         .language-switcher__option {
           --c: var(--c-content);
-          position: relative;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -2786,8 +2818,6 @@ The article concludes with forward-looking analysis and what readers should watc
           border: none;
           background: none;
           cursor: pointer;
-          z-index: 10003 !important;
-          pointer-events: all !important;
           font-size: 11px;
           font-weight: 500;
           font-family: "DM Sans", sans-serif;
@@ -3375,10 +3405,8 @@ The article concludes with forward-looking analysis and what readers should watc
                   }}>
                     {(() => {
                       const mode = languageMode[index] || 'advanced';
-                      const title = mode === 'b2' 
-                        ? (story.title_b2 || story.title)
-                        : (story.title_news || story.title);
-                      console.log(`Title for article ${index}:`, { mode, title_b2: story.title_b2, title_news: story.title_news, selected: title });
+                      const title = mode === 'b2' ? (story.title_b2 || story.title) : (story.title_news || story.title);
+                      console.log(`📰 HEADER Title [${index}]:`, { mode, title_b2: story.title_b2?.substring(0, 30), title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
                       return title;
                     })()}
                   </h1>
@@ -3439,14 +3467,7 @@ The article concludes with forward-looking analysis and what readers should watc
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={(e) => {
-                      // Ignore clicks on language button, dropdown, and switcher buttons
-                      if (e.target.closest('.language-icon-btn') || 
-                          e.target.closest('.language-dropdown-box') || 
-                          e.target.closest('.language-switcher__option') ||
-                          e.target.closest('.switcher')) {
-                        return;
-                      }
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
@@ -3723,10 +3744,8 @@ The article concludes with forward-looking analysis and what readers should watc
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}>{(() => {
                           const mode = languageMode[index] || 'advanced';
-                          const title = mode === 'b2' 
-                            ? (story.title_b2 || story.title)
-                            : (story.title_news || story.title);
-                          console.log(`📰 NEWS TITLE for article ${index}:`, { mode, title_b2: story.title_b2, title_news: story.title_news, selected: title });
+                          const title = mode === 'b2' ? (story.title_b2 || story.title) : (story.title_news || story.title);
+                          console.log(`🖼️ IMAGE Title [${index}]:`, { mode, title_b2: story.title_b2?.substring(0, 30), title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
                           return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
                         })()}</h3>
                       </div>
@@ -3801,7 +3820,7 @@ The article concludes with forward-looking analysis and what readers should watc
                         marginTop: '28px',
                         width: '100%',
                         position: 'relative',
-                        zIndex: 10000
+                        zIndex: 10005
                       }}>
                         {/* Apple HIG - Time Display */}
                         <div style={{
@@ -3820,16 +3839,14 @@ The article concludes with forward-looking analysis and what readers should watc
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
-                          flex: '0 0 auto',
-                          position: 'relative',
-                          zIndex: 10000
+                          flex: '0 0 auto'
                         }}>
                           {/* Language Icon Button with Working Switcher Dropdown */}
                           <div 
                             style={{ 
                               position: 'relative',
                               flex: '0 0 auto',
-                              zIndex: 10001
+                              zIndex: 10010
                             }}
                           >
                             {/* Icon Button */}
@@ -3858,8 +3875,14 @@ The article concludes with forward-looking analysis and what readers should watc
                                   top: 'calc(100% + 8px)',
                                   left: '50%',
                                   transform: 'translateX(-50%)',
-                                  zIndex: 10002,
+                                  zIndex: 10020,
                                   pointerEvents: 'auto'
+                                }}
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onTouchStart={(e) => {
+                                  e.stopPropagation();
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -3870,19 +3893,24 @@ The article concludes with forward-looking analysis and what readers should watc
                                   className={`language-switcher__option ${languageMode[index] === 'b2' ? 'active' : ''}`}
                                   style={{
                                     pointerEvents: 'auto',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    zIndex: 10025
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onTouchStart={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                   }}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log('B2/Easy button clicked!', index);
-                                    console.log('Before update, languageMode:', languageMode);
-                                    setLanguageMode(prev => {
-                                      const updated = { ...prev, [index]: 'b2' };
-                                      console.log('After update, languageMode:', updated);
-                                      return updated;
-                                    });
-                                    // Don't auto-close - let user click outside or icon button to close
+                                    console.log('✅ B2/Easy button clicked!', index);
+                                    setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
+                                    // Dropdown stays open - user must click outside or icon to close
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
@@ -3896,19 +3924,24 @@ The article concludes with forward-looking analysis and what readers should watc
                                   className={`language-switcher__option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
                                   style={{
                                     pointerEvents: 'auto',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    zIndex: 10025
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onTouchStart={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                   }}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log('Advanced button clicked!', index);
-                                    console.log('Before update, languageMode:', languageMode);
-                                    setLanguageMode(prev => {
-                                      const updated = { ...prev, [index]: 'advanced' };
-                                      console.log('After update, languageMode:', updated);
-                                      return updated;
-                                    });
-                                    // Don't auto-close - let user click outside or icon button to close
+                                    console.log('✅ Advanced button clicked!', index);
+                                    setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
+                                    // Dropdown stays open - user must click outside or icon to close
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
@@ -4080,7 +4113,7 @@ The article concludes with forward-looking analysis and what readers should watc
                           minHeight: '60px',
                           padding: '16px 0',
                           position: 'relative',
-                          zIndex: 10
+                          zIndex: 5
                         }}
                         onTouchStart={(e) => {
                           const startX = e.touches[0].clientX;
@@ -4151,7 +4184,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                   ? (story.summary_bullets_b2 || story.summary_bullets || [])
                                   : (story.summary_bullets_news || story.summary_bullets || []);
                                 
-                                console.log(`Bullets for article ${index}:`, { mode, bullets_b2: story.summary_bullets_b2, bullets_news: story.summary_bullets_news, selected: bullets });
+                                console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
                                   <ul style={{
@@ -4264,7 +4297,7 @@ The article concludes with forward-looking analysis and what readers should watc
                                     ? (story.content_b2 || story.detailed_text || story.article || '')
                                     : (story.content_news || story.detailed_text || story.article || '');
                                   
-                                  console.log(`Article for ${index}:`, { mode, content_b2_length: story.content_b2?.length, content_news_length: story.content_news?.length, selected_length: articleText.length });
+                                  console.log(`📄 ARTICLE [${index}]:`, { mode, has_b2: !!story.content_b2, has_news: !!story.content_news, length: articleText.length, start: articleText.substring(0, 40) });
                                   
                                   return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)

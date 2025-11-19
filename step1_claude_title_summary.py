@@ -325,7 +325,7 @@ def validate_title_summary(response: Dict[str, str]) -> Tuple[bool, list]:
                 errors.append(f"summary_bullets_b2[{i}] too short: {bullet_words} words (must be 10-15)")
             elif bullet_words > 15:
                 errors.append(f"summary_bullets_b2[{i}] too long: {bullet_words} words (must be 10-15)")
-    
+        
     # Validate content_news (300-400 words)
     content_news_words = len(content_news.split())
     if content_news_words < 300:
