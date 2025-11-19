@@ -49,24 +49,6 @@ def save_articles_to_supabase(articles, source_part):
     
     for i, article in enumerate(articles, 1):
         try:
-            # Handle new live system format (detailed_text + summary_bullets)
-            detailed_text = article.get('detailed_text', article.get('article', ''))
-            summary_bullets_data = article.get('summary_bullets', [])
-            
-            # DEBUG: Check what we got
-            if not detailed_text:
-                print(f"  🔍 DEBUG [{i}/{len(articles)}]: No detailed_text found. Article keys: {list(article.keys())[:15]}")
-            else:
-                print(f"  ✅ DEBUG [{i}/{len(articles)}]: detailed_text length: {len(detailed_text)} chars, bullets: {len(summary_bullets_data)}")
-            
-            # Ensure summary_bullets is a list
-            if not isinstance(summary_bullets_data, list):
-                summary_bullets_data = []
-            
-            # DEBUG: Check components field
-            components_data = article.get('components', [])
-            print(f"  🔍 DEBUG [{i}/{len(articles)}]: components in article: {components_data}")
-            
             # Normalize details into newline-joined string (ensure elements are strings)
             raw_details = article.get('details', []) or []
             normalized_details = []
@@ -132,11 +114,6 @@ def save_articles_to_supabase(articles, source_part):
                 'view_count': article.get('view_count', 0),
                 'image_extraction_method': article.get('image_extraction_method', ''),
             }
-            
-            # DEBUG: Verify dual-language fields made it to db_article
-            print(f"  ✅ db_article has title_news: {bool(db_article.get('title_news'))}")
-            print(f"  ✅ db_article has content_news: {bool(db_article.get('content_news'))} ({len(db_article.get('content_news') or '')} chars)")
-            print(f"  ✅ db_article has summary_bullets_news: {bool(db_article.get('summary_bullets_news'))}")
             
             # Insert into database (upsert to handle duplicates)
             response = supabase.table('articles').upsert(

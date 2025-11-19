@@ -435,12 +435,6 @@ Return ONLY valid JSON, no markdown, no explanations."""
             formatted = self.write_article(article)
             
             if formatted:
-                # DEBUG: Check what Claude returned
-                print(f"  📋 Claude returned fields: {list(formatted.keys())}")
-                print(f"     ✓ title_news: {bool(formatted.get('title_news'))}")
-                print(f"     ✓ content_news: {bool(formatted.get('content_news'))} ({len(formatted.get('content_news', ''))} chars)")
-                print(f"     ✓ summary_bullets_news: {bool(formatted.get('summary_bullets_news'))} ({len(formatted.get('summary_bullets_news', []))} bullets)")
-                
                 # Combine with original metadata
                 complete_article = {
                     'id': article.get('id', f"article_{i}"),
@@ -460,10 +454,6 @@ Return ONLY valid JSON, no markdown, no explanations."""
                     
                     **formatted  # Add Claude-generated content (includes all dual-language fields)
                 }
-                
-                # DEBUG: Verify fields are in complete_article
-                print(f"  ✅ complete_article has title_news: {bool(complete_article.get('title_news'))}")
-                print(f"  ✅ complete_article has content_news: {bool(complete_article.get('content_news'))}")
                 
                 results.append(complete_article)
                 print(f"✓")
