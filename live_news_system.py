@@ -192,7 +192,10 @@ class LiveNewsSystem:
                         # Validate input data
                         if not article_data['title'] or not article_data['text']:
                             print(f"  ⚠️  Skipping article {i+1}: Missing title or text")
-                            break
+                            print(f"      Title: {article_data['title'][:50] if article_data['title'] else 'EMPTY'}")
+                            print(f"      Text length: {len(article_data['text']) if article_data['text'] else 0} chars")
+                            success = False  # Mark as failed so it gets counted
+                            break  # Exit retry loop for this article
                         
                         # Generate dual-language content
                         dual_lang_result = claude_write_title_summary(article_data)
