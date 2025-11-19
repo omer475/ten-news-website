@@ -818,54 +818,38 @@ export default function Home() {
                      {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
                    ];
                
-               const sampleDetailedText = article.detailed_text || `**Breaking News Update**
-
-This is a preview of the full article content. In the complete version, you would see the detailed analysis and comprehensive coverage of today's top stories.
-
-The article delves into the key developments, providing context and background information that helps readers understand the broader implications. Expert opinions and multiple perspectives are included to give a well-rounded view of the situation.
-
-Additional paragraphs would continue here, exploring various aspects of the story, including historical context, potential future outcomes, and relevant statistics. The content is structured to be both informative and engaging, making complex topics accessible to a wide audience.
-
-**Key Takeaways:**
-- Important point one that summarizes a critical aspect
-- Second significant finding that provides insight
-- Third major conclusion that ties everything together
-
-The article concludes with forward-looking analysis and what readers should watch for in the coming days as this story continues to develop.`;
+             const storyData = {
+               type: 'news',
+               number: article.rank || (index + 1),
+               category: (article.category || 'WORLD NEWS').toUpperCase(),
+               emoji: article.emoji || '📰',
+               title: article.title || 'News Story',
                
-               // Generate fallback bullets if none provided
-               let bulletPoints = article.summary_bullets || [];
-               if (!bulletPoints || bulletPoints.length === 0) {
-                 // Try to generate bullets from summary or detailed text
-                 const sourceText = article.summary || article.detailed_text || sampleDetailedText;
-                 if (sourceText && sourceText.length > 50) {
-                   // Split into sentences and take first few as bullets
-                   const sentences = sourceText.split(/[.!?]+/).filter(s => s.trim().length > 20);
-                   bulletPoints = sentences.slice(0, Math.min(4, sentences.length)).map(s => s.trim());
-                 }
-               }
-
-              const storyData = {
-                type: 'news',
-                number: article.rank || (index + 1),
-                category: (article.category || 'WORLD NEWS').toUpperCase(),
-                emoji: article.emoji || '📰',
-                title: article.title || 'News Story',
-                detailed_text: sampleDetailedText,
-                summary_bullets: bulletPoints,
-                details: sampleDetails,
-                source: article.source || 'Today+',
-                url: article.url || '#',
-                urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
-                blurColor: article.blurColor || null,  // Pre-computed blur color
-                map: article.map || null,
-                graph: article.graph || null,
-                timeline: sampleTimeline,
-                components: article.components || null,  // CRITICAL: Include components array
-                publishedAt: article.publishedAt || article.published_at || article.added_at,
-                id: article.id || `article_${index}`,
-                final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
-              };
+               // Dual-language content fields (from Step 5 generation)
+               title_news: article.title_news || null,
+               title_b2: article.title_b2 || null,
+               content_news: article.content_news || null,
+               content_b2: article.content_b2 || null,
+               summary_bullets_news: article.summary_bullets_news || null,
+               summary_bullets_b2: article.summary_bullets_b2 || null,
+               
+               // Legacy fields for backward compatibility (old articles)
+               detailed_text: article.detailed_text || article.content_news || article.content_b2 || null,
+               summary_bullets: article.summary_bullets || article.summary_bullets_news || article.summary_bullets_b2 || [],
+               
+               details: sampleDetails,
+               source: article.source || 'Today+',
+               url: article.url || '#',
+               urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+               blurColor: article.blurColor || null,  // Pre-computed blur color
+               map: article.map || null,
+               graph: article.graph || null,
+               timeline: sampleTimeline,
+               components: article.components || null,  // CRITICAL: Include components array
+               publishedAt: article.publishedAt || article.published_at || article.added_at,
+               id: article.id || `article_${index}`,
+               final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
+             };
                
                processedStories.push(storyData);
              });
