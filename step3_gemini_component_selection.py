@@ -38,9 +38,9 @@ class ComponentConfig:
 # SYSTEM PROMPT - COMPONENT SELECTION LOGIC
 # ==========================================
 
-COMPONENT_SELECTION_PROMPT = """You are analyzing news article TITLES to select the MOST RELEVANT visual components for each story.
+COMPONENT_SELECTION_PROMPT = """You are analyzing news articles to select the MOST RELEVANT visual components for each story.
 
-CRITICAL: You will ONLY see the article TITLE. Choose components based on the title alone.
+CRITICAL: You will receive BOTH the article TITLE and the FULL ARTICLE CONTENT (200 words synthesized by Claude). Analyze both to make the best component selection.
 
 AVAILABLE COMPONENTS (select 1-3 of these, ONLY if truly relevant):
 1. timeline - Historical events and chronology
@@ -154,39 +154,47 @@ CRITICAL RULES:
 
 EXAMPLES:
 
-Title: "Earthquake strikes Turkey near Gaziantep"
+Article: "Earthquake strikes Turkey near Gaziantep"
+Content: Mentions death toll, previous earthquakes in region, rescue timeline
 Output: {"components": ["details", "timeline"], "emoji": "🌊", "graph_type": null, "graph_data_needed": null}
-(Details and timeline are relevant - immediate facts and historical context)
+(Details for casualties, timeline for historical context and rescue progression)
 
-Title: "Interest rates rise to 4.5 percent"
-Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "interest rates over time", "map_locations": null}
-(Only graph and details - no timeline needed for single rate change)
+Article: "Nvidia Reports Record $57 Billion Revenue"
+Content: Discusses revenue growth, quarterly comparisons, year-over-year trends
+Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "Nvidia revenue over quarters", "emoji": "📈"}
+(Graph for revenue trend, details for key numbers)
 
-Title: "iPhone 16 announced with $999 price"
+Article: "Interest rates rise to 4.5 percent"
+Content: Mentions previous rate, Fed's decision timeline, economic impact
+Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "interest rates over time"}
+(Graph for rate trend, details for context)
+
+Article: "iPhone 16 announced with $999 price"
+Content: Lists specs, storage options, release date, pricing tiers
 Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Only details needed - no other components add value)
+(Details for specs and pricing - no graph needed for single product)
 
-Title: "Colombia recalls ambassador after Trump accusations"
+Article: "Colombia recalls ambassador after Trump accusations"
+Content: Describes diplomatic timeline, previous incidents, relationship history
 Output: {"components": ["timeline", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Timeline and details relevant - no map needed for diplomatic action)
+(Timeline for diplomatic progression, details for key facts)
 
-Title: "Election results show Biden wins 306 electoral votes"
-Output: {"components": ["graph", "details"], "emoji": "🗳️", "graph_type": "bar", "graph_data_needed": "electoral votes by candidate"}
-(Graph and details relevant - results need visualization and facts)
-
-Title: "Scientists discover new Earth-like planet"
+Article: "Scientists discover new Earth-like planet"
+Content: Describes planet size, distance, discovery method, significance
 Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Only details needed - no other components add value to discovery)
+(Details for discovery facts - no timeline or graph needed)
 
-Title: "Hurricane Milton approaches Florida coast"
+Article: "Hurricane Milton approaches Florida coast"
+Content: Current position, forecast path, previous hurricane hits, evacuation numbers
 Output: {"components": ["details", "timeline"], "emoji": "🌪️", "graph_type": null, "graph_data_needed": null}
-(Details and timeline - immediate facts and storm progression)
+(Details for current status, timeline for storm progression)
 
 REMEMBER: 
-- Analyze ONLY the title
+- Analyze BOTH the title AND the full article content
+- Use the article content to understand context, numbers, and facts
 - Use exact keywords: "timeline", "details", "graph", "map"
 - Select 1-4 components that are TRULY relevant to the story
-- Quality over quantity - choose fewer but better components
+- Be GENEROUS in selecting components if the article has rich data
 - Ask: "Would a reader genuinely benefit from this component?"
 
 Return ONLY valid JSON with the exact keyword strings."""
@@ -238,24 +246,33 @@ class GeminiComponentSelector:
         Select components for a single article
         
         Args:
-            article: Dict with 'title' and 'text' from Step 2
+            article: Dict with 'title' and 'text' (full article content from Step 3)
         
         Returns:
             Dict with component selection
         """
-        # Get article title only
+        # Get article title and content
         article_title = article.get('title', 'No title')
+        article_content = article.get('text', '')
         
-        user_prompt = f"""Analyze this news title and select the MOST RELEVANT components (1-4).
+        # Limit content to 1000 chars to save tokens
+        if len(article_content) > 1000:
+            article_content = article_content[:1000] + "..."
+        
+        user_prompt = f"""Analyze this news article (title + content) and select the MOST RELEVANT components (1-4).
 
 TITLE: {article_title}
 
+ARTICLE CONTENT:
+{article_content}
+
 REQUIREMENTS:
-- Analyze ONLY the title above
+- Analyze BOTH the title AND the full article content above
+- Look for: numbers, dates, trends, historical context, key facts
+- Be GENEROUS if the article has rich data that would benefit from visualization
 - Select 1-4 components that are TRULY relevant to this story
-- Quality over quantity - choose fewer but better components
 - Use exact keywords: "timeline", "details", "graph", "map"
-- Ask yourself: "Does this component genuinely help understand this story?"
+- Ask yourself: "Would a reader genuinely benefit from this component?"
 
 Return ONLY valid JSON with exact component keywords."""
 

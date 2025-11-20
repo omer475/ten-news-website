@@ -27,11 +27,10 @@ export default async function handler(req, res) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
     const { data: articles, error } = await supabase
-      .from('articles')
+      .from('published_articles')
       .select('*')
-      .eq('published', true)
       .gte('created_at', twentyFourHoursAgo)
-      .order('ai_final_score', { ascending: false, nullsLast: true })
+      .order('created_at', { ascending: false })
       .limit(500)
 
     if (error) {
@@ -163,12 +162,21 @@ export default async function handler(req, res) {
 
       return {
         id: article.id,
-        title: article.title,
+        // Support both old 'title' and new 'title_news' fields
+        title: article.title_news || article.title,
+        // Support both old 'url' and new cluster-based url
         url: article.url,
-        source: article.source,
-        description: article.description,
-        content: article.content,
+        // Support both old 'source' and new 'source' fields
+        source: article.source || 'Today+',
+        // Use content_news as description fallback
+        description: article.description || (article.content_news ? article.content_news.substring(0, 200) + '...' : ''),
+        // Support both old 'content' and new 'content_news' fields
+        content: article.content_news || article.content,
         created_at: article.created_at,  // DEBUG: Include to check if this field exists
+        // Metadata from new schema
+        num_sources: article.num_sources,
+        cluster_id: article.cluster_id,
+        version_number: article.version_number
         // Ensure image URL is always passed if it exists and is valid
         urlToImage: (() => {
           const imgUrl = article.image_url;
@@ -194,9 +202,9 @@ export default async function handler(req, res) {
         publishedAt: article.published_date || article.published_at,
         category: article.category,
         emoji: article.emoji || '📰',
-        final_score: article.ai_final_score,
+        final_score: article.ai_final_score || 0, // Old field, default to 0 for new articles
         
-        // Dual-language content fields (from Step 5 generation)
+        // Dual-language content fields (from Step 3 synthesis)
         title_news: article.title_news || null,
         title_b2: article.title_b2 || null,
         content_news: article.content_news || null,
@@ -204,14 +212,15 @@ export default async function handler(req, res) {
         summary_bullets_news: summaryBulletsNews,
         summary_bullets_b2: summaryBulletsB2,
         
-        // Legacy fields for backward compatibility
-        detailed_text: article.article || article.summary || article.description || '',  // NEW: Use 'article' field
-        summary_bullets: summaryBullets,
+        // Legacy fields for backward compatibility (fallback to new fields)
+        detailed_text: article.content_news || article.article || article.summary || article.description || '',
+        summary_bullets: summaryBullets.length > 0 ? summaryBullets : summaryBulletsNews,
         
         timeline: timelineData,
         graph: graphData,  // Include graph data
-        components: article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null,  // Include component order
-        details: article.details_section ? article.details_section.split('\n') : [],
+        // Support both 'components_order' (new) and 'components' (old)
+        components: article.components_order || (article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null),
+        details: article.details_section ? article.details_section.split('\n') : (article.details ? (typeof article.details === 'string' ? JSON.parse(article.details) : article.details) : []),
         views: article.view_count || 0
       };
     })
