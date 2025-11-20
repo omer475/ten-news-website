@@ -28,7 +28,7 @@ KEYWORD_MATCH_THRESHOLD = 3        # 3+ shared keywords = same event
 **After:**
 ```python
 TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event (strong match)
-MIN_TITLE_SIMILARITY = 0.35        # Minimum 35% title similarity even with keyword match (NEW)
+MIN_TITLE_SIMILARITY = 0.50        # Minimum 50% title similarity even with keyword match (NEW)
 KEYWORD_MATCH_THRESHOLD = 5        # 5+ shared keywords = same event (increased from 3)
 ENTITY_MATCH_THRESHOLD = 2         # 2+ shared entities adds confidence (NEW)
 ```
@@ -41,15 +41,15 @@ ENTITY_MATCH_THRESHOLD = 2         # 2+ shared entities adds confidence (NEW)
 - Articles with very similar titles → always match
 - Example: "Biden announces climate plan" vs "Biden unveils climate initiative"
 
-#### Tier 2: **MODERATE MATCH** (Title ≥ 35% + 5+ shared keywords)
+#### Tier 2: **MODERATE MATCH** (Title ≥ 50% + 5+ shared keywords)
 - Articles with somewhat similar titles AND significant keyword overlap
 - Example: "Tesla stock surges 15%" vs "Tesla shares jump on earnings beat"  
-- **CRITICAL:** Now requires minimum 35% title similarity (prevents "Ukraine war" matching "Router flaws")
+- **CRITICAL:** Now requires minimum 50% title similarity (prevents "Ukraine war" matching "Router flaws")
 
-#### Tier 3: **ENTITY MATCH** (Title ≥ 35% + 2+ shared entities)
+#### Tier 3: **ENTITY MATCH** (Title ≥ 50% + 2+ shared entities)
 - Articles mentioning the same people/places/organizations
 - Example: "Elon Musk announces new project" vs "Musk unveils Tesla innovation"
-- **CRITICAL:** Also requires 35% minimum title similarity
+- **CRITICAL:** Also requires 50% minimum title similarity
 
 ### 3. **Debug Logging**
 
@@ -71,7 +71,7 @@ The algorithm now prints **why** articles match:
 
 ❌ **Rejected (too different):**
 ```
-❌ REJECTED: Title similarity 12% < minimum 35%
+❌ REJECTED: Title similarity 12% < minimum 50%
 ✨ Created new cluster: Ukraine Peace Plan
 ```
 
@@ -153,7 +153,7 @@ def is_same_event(article, cluster):
         return True  # ✅ STRONG MATCH
     
     # Minimum title similarity required
-    if title_sim < 35%:
+    if title_sim < 50%:
         return False  # ❌ TOO DIFFERENT
     
     # Step 3: Check keyword/entity overlap
@@ -186,8 +186,8 @@ def is_same_event(article, cluster):
 
 1. **Monitor the next cycle** - The debug output will show WHY articles match/don't match
 2. **Adjust thresholds if needed**:
-   - If too many new clusters → lower `MIN_TITLE_SIMILARITY` to 30%
-   - If still seeing bad matches → increase `KEYWORD_MATCH_THRESHOLD` to 6
+   - If too many new clusters → lower `MIN_TITLE_SIMILARITY` to 45%
+   - If still seeing bad matches → increase `KEYWORD_MATCH_THRESHOLD` to 6 or `MIN_TITLE_SIMILARITY` to 60%
 3. **Check published articles** - Quality should improve significantly
 
 ---
@@ -196,7 +196,7 @@ def is_same_event(article, cluster):
 
 | Metric | Before | After | Impact |
 |--------|--------|-------|--------|
-| **Minimum Title Similarity** | 0% (none) | **35%** | ✅ Prevents unrelated matches |
+| **Minimum Title Similarity** | 0% (none) | **50%** | ✅ Prevents unrelated matches |
 | **Keyword Threshold** | 3 keywords | **5 keywords** | ✅ More overlap required |
 | **Entity Matching** | Not used | **2+ entities** | ✅ Better person/place/org clustering |
 | **Debug Visibility** | None | **Full logging** | ✅ Can diagnose issues |
