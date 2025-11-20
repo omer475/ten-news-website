@@ -233,7 +233,9 @@ SELECTED COMPONENTS: {', '.join(components)}
         for component in components:
             if component in context_data and context_data[component]:
                 prompt += f"\n=== {component.upper()} CONTEXT DATA ===\n"
-                prompt += context_data[component][:2000]  # Limit context length
+                # context_data[component] is a dict with 'results' key
+                context_text = context_data[component].get('results', '') if isinstance(context_data[component], dict) else str(context_data[component])
+                prompt += context_text[:2000]  # Limit context length
                 prompt += "\n"
         
         prompt += "\nReturn ONLY valid JSON."
