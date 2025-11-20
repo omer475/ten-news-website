@@ -176,7 +176,7 @@ export default async function handler(req, res) {
         // Metadata from new schema
         num_sources: article.num_sources,
         cluster_id: article.cluster_id,
-        version_number: article.version_number
+        version_number: article.version_number,
         // Ensure image URL is always passed if it exists and is valid
         urlToImage: (() => {
           const imgUrl = article.image_url;
