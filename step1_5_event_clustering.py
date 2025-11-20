@@ -28,8 +28,10 @@ class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
     # Matching thresholds
-    TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event
-    KEYWORD_MATCH_THRESHOLD = 3  # 3+ shared keywords = same event
+    TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event (strong match)
+    MIN_TITLE_SIMILARITY = 0.35  # Minimum 35% title similarity even with keyword match
+    KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event (increased from 3)
+    ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     
     # Time windows
     MAX_CLUSTER_AGE_HOURS = 24  # Only match with clusters created in last 24h
@@ -210,22 +212,23 @@ def calculate_title_similarity(title1: str, title2: str) -> float:
 # EVENT MATCHING
 # ==========================================
 
-def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict]) -> bool:
+def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], debug: bool = False) -> Dict:
     """
     Determine if an article belongs to an existing cluster.
     
-    Matching criteria (from requirements):
+    Matching criteria (IMPROVED for accuracy):
     1. Published within 24 hours of cluster creation
-    2. Title similarity >= 75%, OR
-    3. 3+ shared keywords/entities
+    2. Title similarity >= 75% (strong match), OR
+    3. Title similarity >= 35% AND (5+ shared keywords OR 2+ shared entities)
     
     Args:
         article: Article to match with title, keywords, entities, published_at
         cluster: Cluster metadata with created_at
         cluster_sources: List of source articles in the cluster
+        debug: If True, print debug information
         
     Returns:
-        True if article should be added to this cluster
+        Dict with 'match' (bool), 'reason' (str), 'title_sim' (float), 'shared_keywords' (list)
     """
     # Check 1: Time proximity (24 hours)
     cluster_created = datetime.fromisoformat(cluster['created_at'].replace('Z', '+00:00'))
@@ -237,11 +240,11 @@ def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict]) -> 
         
         time_diff = abs((article_published - cluster_created).total_seconds() / 3600)
         if time_diff > ClusteringConfig.MAX_CLUSTER_AGE_HOURS:
-            return False
+            return {'match': False, 'reason': 'too_old', 'title_sim': 0.0, 'shared_keywords': []}
     
     # Get representative article from cluster (highest score)
     if not cluster_sources:
-        return False
+        return {'match': False, 'reason': 'no_sources', 'title_sim': 0.0, 'shared_keywords': []}
     
     representative = max(cluster_sources, key=lambda x: x.get('score', 0))
     
@@ -251,24 +254,43 @@ def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict]) -> 
     
     title_similarity = calculate_title_similarity(article_title, representative_title)
     
+    # STRONG MATCH: High title similarity
     if title_similarity >= ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:
-        return True
+        if debug:
+            print(f"  ✅ STRONG MATCH: Title similarity {title_similarity:.2%} >= {ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:.0%}")
+        return {'match': True, 'reason': 'high_title_similarity', 'title_sim': title_similarity, 'shared_keywords': []}
     
-    # Check 3: Keyword/Entity overlap
+    # Check 3: Keyword/Entity overlap (ONLY if title similarity >= 35%)
+    if title_similarity < ClusteringConfig.MIN_TITLE_SIMILARITY:
+        if debug:
+            print(f"  ❌ REJECTED: Title similarity {title_similarity:.2%} < minimum {ClusteringConfig.MIN_TITLE_SIMILARITY:.0%}")
+        return {'match': False, 'reason': 'title_too_different', 'title_sim': title_similarity, 'shared_keywords': []}
+    
     article_keywords = set(article.get('keywords', []))
     article_entities = set(article.get('entities', []))
-    article_terms = article_keywords.union(article_entities)
     
     rep_keywords = set(representative.get('keywords', []))
     rep_entities = set(representative.get('entities', []))
-    rep_terms = rep_keywords.union(rep_entities)
     
-    shared_terms = article_terms.intersection(rep_terms)
+    shared_keywords = article_keywords.intersection(rep_keywords)
+    shared_entities = article_entities.intersection(rep_entities)
     
-    if len(shared_terms) >= ClusteringConfig.KEYWORD_MATCH_THRESHOLD:
-        return True
+    # MODERATE MATCH: Good keyword overlap + decent title similarity
+    if len(shared_keywords) >= ClusteringConfig.KEYWORD_MATCH_THRESHOLD:
+        if debug:
+            print(f"  ✅ MODERATE MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}/{ClusteringConfig.KEYWORD_MATCH_THRESHOLD} ({', '.join(list(shared_keywords)[:5])}...)")
+        return {'match': True, 'reason': 'keyword_match', 'title_sim': title_similarity, 'shared_keywords': list(shared_keywords)}
     
-    return False
+    # ENTITY MATCH: Shared named entities (people, places, orgs) + decent title similarity
+    if len(shared_entities) >= ClusteringConfig.ENTITY_MATCH_THRESHOLD:
+        if debug:
+            print(f"  ✅ ENTITY MATCH: Title {title_similarity:.2%}, Entities: {len(shared_entities)}/{ClusteringConfig.ENTITY_MATCH_THRESHOLD} ({', '.join(list(shared_entities))})")
+        return {'match': True, 'reason': 'entity_match', 'title_sim': title_similarity, 'shared_keywords': list(shared_entities)}
+    
+    if debug:
+        print(f"  ❌ NO MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}, Entities: {len(shared_entities)}")
+    
+    return {'match': False, 'reason': 'insufficient_overlap', 'title_sim': title_similarity, 'shared_keywords': list(shared_keywords)}
 
 
 # ==========================================
@@ -570,7 +592,9 @@ class EventClusteringEngine:
             for cluster in active_clusters:
                 cluster_sources = self.get_cluster_sources(cluster['id'])
                 
-                if is_same_event(article, cluster, cluster_sources):
+                match_result = is_same_event(article, cluster, cluster_sources, debug=True)
+                
+                if match_result['match']:
                     # Add to this cluster
                     if self.add_to_cluster(cluster['id'], source_id):
                         print(f"  ✓ Added to cluster: {cluster['event_name']}")
