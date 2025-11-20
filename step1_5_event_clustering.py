@@ -555,7 +555,7 @@ class EventClusteringEngine:
             'matched_to_existing': 0,
             'new_clusters_created': 0,
             'failed': 0,
-            'clusters': []
+            'cluster_ids': []  # Track ALL affected cluster IDs (new + updated)
         }
         
         # Get active clusters
@@ -599,6 +599,9 @@ class EventClusteringEngine:
                     if self.add_to_cluster(cluster['id'], source_id):
                         print(f"  ✓ Added to cluster: {cluster['event_name']}")
                         stats['matched_to_existing'] += 1
+                        # Track this cluster as updated
+                        if cluster['id'] not in stats['cluster_ids']:
+                            stats['cluster_ids'].append(cluster['id'])
                         matched = True
                         break
             
@@ -609,7 +612,8 @@ class EventClusteringEngine:
                     event_name = self._generate_event_name(article.get('title', ''))
                     print(f"  ✨ Created new cluster: {event_name}")
                     stats['new_clusters_created'] += 1
-                    stats['clusters'].append(cluster_id)
+                    # Track this new cluster
+                    stats['cluster_ids'].append(cluster_id)
                     
                     # Add to active clusters for subsequent matching
                     active_clusters.append({

@@ -234,34 +234,39 @@ def run_complete_pipeline():
     if clustering_result.get('failed', 0) > 0:
         print(f"   ⚠️  Failed: {clustering_result['failed']}")
     
-    # Get clusters ready for processing (2+ sources, not yet published)
-    clusters = supabase.table('clusters')\
-        .select('*')\
-        .eq('status', 'active')\
-        .execute()
-    
+    # ONLY process NEW/UPDATED clusters from THIS cycle (not old ones)
     clusters_to_process = []
-    for cluster in clusters.data:
+    
+    # Get cluster IDs that were created or updated in Step 1.5
+    affected_cluster_ids = clustering_result.get('cluster_ids', [])
+    
+    if not affected_cluster_ids:
+        print(f"   🎯 No clusters to process this cycle")
+        print("⚠️  No new clusters created - ending cycle")
+        return
+    
+    # For each affected cluster, check if it's ready (not yet published)
+    for cluster_id in affected_cluster_ids:
         # Check if already published
         existing = supabase.table('published_articles')\
             .select('id')\
-            .eq('cluster_id', cluster['id'])\
+            .eq('cluster_id', cluster_id)\
             .execute()
         
         if existing.data:
-            continue
+            continue  # Already published
         
         # Get source count
         sources = supabase.table('source_articles')\
             .select('id')\
-            .eq('cluster_id', cluster['id'])\
+            .eq('cluster_id', cluster_id)\
             .execute()
         
         # Process clusters with 1+ sources (single-source articles are now allowed)
         if len(sources.data) >= 1:
-            clusters_to_process.append(cluster['id'])
+            clusters_to_process.append(cluster_id)
     
-    print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)}")
+    print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)} (NEW this cycle)")
     
     if not clusters_to_process:
         print("⚠️  No clusters ready - ending cycle")
