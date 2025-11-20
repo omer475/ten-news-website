@@ -300,9 +300,14 @@ def run_complete_pipeline():
             success_count = len([s for s in cluster_sources if s.get('full_text')])
             print(f"   ✅ Fetched full text: {success_count}/{len(cluster_sources)}")
             
-            # STEP 3: Multi-Source Synthesis with Claude            
+            # STEP 3: Smart Image Selection
             print(f"\n📸 STEP 3: SMART IMAGE SELECTION")
             print(f"   Selecting best image from {len(cluster_sources)} sources...")
+            
+            # DEBUG: Check if sources have image_url field
+            for i, src in enumerate(cluster_sources[:2], 1):  # Check first 2 sources
+                img_url = src.get('image_url')
+                print(f"   🔍 DEBUG Source {i}: image_url = {img_url[:50] if img_url else 'NONE'}...")
             
             selected_image = select_best_image_for_cluster(cluster_sources, cluster.get('event_name', ''))
             
