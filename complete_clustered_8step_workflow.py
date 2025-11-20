@@ -281,6 +281,14 @@ def run_complete_pipeline():
             print(f"📰 PROCESSING CLUSTER {cluster_id}")
             print(f"{'='*80}")
             
+            # Get cluster metadata
+            cluster_result = supabase.table('clusters')\
+                .select('*')\
+                .eq('id', cluster_id)\
+                .execute()
+            
+            cluster = cluster_result.data[0] if cluster_result.data else {}
+            
             # Get all source articles in this cluster
             sources = supabase.table('source_articles')\
                 .select('*')\
