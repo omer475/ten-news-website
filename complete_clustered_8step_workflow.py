@@ -116,12 +116,38 @@ def fetch_rss_articles(max_articles_per_source=10):
                 if published_date == '':
                     published_date = None
                 
+                # Extract image URL from RSS entry
+                image_url = None
+                
+                # Try media:content (most common in news RSS)
+                if hasattr(entry, 'media_content') and entry.media_content:
+                    image_url = entry.media_content[0].get('url')
+                
+                # Try media:thumbnail
+                elif hasattr(entry, 'media_thumbnail') and entry.media_thumbnail:
+                    image_url = entry.media_thumbnail[0].get('url')
+                
+                # Try enclosures (some news sites use this)
+                elif hasattr(entry, 'enclosures') and entry.enclosures:
+                    for enclosure in entry.enclosures:
+                        if enclosure.get('type', '').startswith('image/'):
+                            image_url = enclosure.get('href')
+                            break
+                
+                # Try links array
+                elif hasattr(entry, 'links'):
+                    for link in entry.links:
+                        if link.get('type', '').startswith('image/') or link.get('rel') == 'enclosure':
+                            image_url = link.get('href')
+                            break
+                
                 source_articles.append({
                     'url': article_url,
                     'title': entry.get('title', ''),
                     'description': entry.get('description', ''),
                     'source': source_name,
-                    'published_date': published_date
+                    'published_date': published_date,
+                    'image_url': image_url
                 })
             
             return (source_name, source_articles)

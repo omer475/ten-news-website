@@ -294,6 +294,13 @@ Return ONLY valid JSON with exact component keywords."""
                         return self._get_fallback_selection(article_title)
                 
                 result_text = response.text.strip()
+                
+                # DEBUG: Log raw Gemini response
+                print(f"\n   🔍 DEBUG - Gemini Raw Response:")
+                print(f"      Title: {article_title[:80]}...")
+                print(f"      Content length sent: {len(article_content)} chars")
+                print(f"      Gemini returned: {result_text[:300]}")
+                
                 result = json.loads(result_text)
                 
                 # Debug: Check if result is a list instead of dict
@@ -302,6 +309,12 @@ Return ONLY valid JSON with exact component keywords."""
                 
                 # Validate and fix if needed
                 result = self._validate_and_fix_selection(result)
+                
+                # DEBUG: Log validated result
+                components_list = result.get('components', [])
+                print(f"      Validated components: {components_list}")
+                if not components_list:
+                    print(f"      ⚠️  WARNING: Gemini returned ZERO components!")
                 
                 return result
             

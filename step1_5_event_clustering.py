@@ -348,7 +348,8 @@ class EventClusteringEngine:
                 'keywords': keywords,
                 'entities': entities,
                 'category': article.get('category', article.get('ai_category', 'World News')),
-                'cluster_id': None  # Not yet clustered
+                'cluster_id': None,  # Not yet clustered
+                'image_url': article.get('image_url')  # Image from RSS feed
             }
             
             # Insert into source_articles
