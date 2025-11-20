@@ -342,7 +342,7 @@ def run_complete_pipeline():
             }
             
             component_result = component_selector.select_components(article_for_selection)
-            selected = component_result.get('selected_components', [])
+            selected = component_result.get('components', [])  # Fixed: was 'selected_components'
             print(f"   Selected components: {', '.join(selected) if selected else 'none'}")
             
             context_data = {}

@@ -100,6 +100,32 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
         dict with 'approved' and 'filtered' lists
     """
     
+    # FILTER OUT ARTICLES WITHOUT IMAGES (User requirement)
+    articles_with_images = []
+    articles_without_images = []
+    
+    for article in articles:
+        image_url = article.get('image_url')
+        if image_url and image_url.strip():  # Has valid image URL
+            articles_with_images.append(article)
+        else:
+            articles_without_images.append(article)
+    
+    if articles_without_images:
+        print(f"   ⚠️  Filtered {len(articles_without_images)} articles WITHOUT images")
+    
+    if not articles_with_images:
+        print(f"   ❌ No articles with images to score!")
+        return {
+            "approved": [],
+            "filtered": articles_without_images
+        }
+    
+    print(f"   ✅ Scoring {len(articles_with_images)} articles WITH images")
+    
+    # Continue with articles that have images
+    articles = articles_with_images
+    
     # Use gemini-2.0-flash-exp as gemini-2.5-flash may not be available yet
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     
@@ -134,13 +160,19 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
                     article['status'] = 'FILTERED'
                 all_filtered.extend(batch)
         
+        # Add articles without images to filtered list
+        all_filtered.extend(articles_without_images)
+        
         return {
             "approved": all_approved,
             "filtered": all_filtered
         }
     else:
         # Single batch - use existing logic
-        return _process_batch(articles, url, api_key, max_retries)
+        result = _process_batch(articles, url, api_key, max_retries)
+        # Add articles without images to filtered list
+        result['filtered'].extend(articles_without_images)
+        return result
 
 
 def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: int = 3) -> Dict:
