@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-STEP 3: MULTI-SOURCE SYNTHESIS
+STEP 4: MULTI-SOURCE SYNTHESIS
 ==========================================
 Purpose: Generate AI-written articles by synthesizing multiple sources about the same event
 Model: Claude Sonnet 4.5
-Input: Cluster with N source articles (full text from Step 2)
+Input: Cluster with N source articles (full text from Step 2) + selected image from Step 3
 Output: ONE comprehensive 200-word article with dual-language support
 Key Feature: Combines information from ALL sources, resolves conflicts, writes as firsthand reporting
 """
@@ -16,7 +16,6 @@ import os
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 from datetime import datetime
-from image_selection import select_best_image
 
 
 # ==========================================
@@ -307,17 +306,6 @@ class MultiSourceSynthesizer:
                 is_valid, errors = self._validate_output(result)
                 
                 if is_valid:
-                    # NEW: Select best image from sources
-                    best_image = select_best_image(full_articles, result.get('title_news', ''))
-                    if best_image:
-                        result['image_url'] = best_image['url']
-                        result['image_source'] = best_image['source_name']
-                        result['image_score'] = best_image['quality_score']
-                    else:
-                        result['image_url'] = None
-                        result['image_source'] = None
-                        result['image_score'] = 0
-                    
                     return result
                 else:
                     print(f"  ⚠ Validation issues (attempt {attempt + 1}): {errors[:2]}")

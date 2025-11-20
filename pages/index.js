@@ -817,13 +817,13 @@ export default function Home() {
                      {"date": "Today", "event": "Major announcement breaks, drawing significant attention"},
                      {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
                    ];
-               
-             const storyData = {
-               type: 'news',
-               number: article.rank || (index + 1),
-               category: (article.category || 'WORLD NEWS').toUpperCase(),
-               emoji: article.emoji || '📰',
-               title: article.title || 'News Story',
+
+              const storyData = {
+                type: 'news',
+                number: article.rank || (index + 1),
+                category: (article.category || 'WORLD NEWS').toUpperCase(),
+                emoji: article.emoji || '📰',
+                title: article.title || 'News Story',
                
                // Dual-language content fields (from Step 5 generation)
                title_news: article.title_news || null,
@@ -837,19 +837,19 @@ export default function Home() {
                detailed_text: article.detailed_text || article.content_news || article.content_b2 || null,
                summary_bullets: article.summary_bullets || article.summary_bullets_news || article.summary_bullets_b2 || [],
                
-               details: sampleDetails,
-               source: article.source || 'Today+',
-               url: article.url || '#',
-               urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
-               blurColor: article.blurColor || null,  // Pre-computed blur color
-               map: article.map || null,
-               graph: article.graph || null,
-               timeline: sampleTimeline,
-               components: article.components || null,  // CRITICAL: Include components array
-               publishedAt: article.publishedAt || article.published_at || article.added_at,
-               id: article.id || `article_${index}`,
-               final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
-             };
+                details: sampleDetails,
+                source: article.source || 'Today+',
+                url: article.url || '#',
+                urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+                blurColor: article.blurColor || null,  // Pre-computed blur color
+                map: article.map || null,
+                graph: article.graph || null,
+                timeline: sampleTimeline,
+                components: article.components || null,  // CRITICAL: Include components array
+                publishedAt: article.publishedAt || article.published_at || article.added_at,
+                id: article.id || `article_${index}`,
+                final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
+              };
                
                processedStories.push(storyData);
              });
@@ -3920,7 +3920,7 @@ export default function Home() {
                                 </button>
                               </div>
                             )}
-                          </div>
+                        </div>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
@@ -4156,33 +4156,33 @@ export default function Home() {
                                 console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
-                                  <ul style={{
-                                    margin: 0,
-                                    paddingLeft: '20px',
+                                <ul style={{
+                                  margin: 0,
+                                  paddingLeft: '20px',
                                     listStyleType: 'disc',
                                     transition: 'opacity 0.3s ease'
-                                  }}>
+                                }}>
                                     {bullets.map((bullet, i) => (
                                       <li key={`${languageMode[index]}-${i}`} style={{
-                                      marginBottom: '16px',
-                                        fontSize: '17px',
-                                      lineHeight: '1.47',
-                                      fontWeight: '400',
-                                      color: darkMode ? '#f5f5f7' : '#1d1d1f',
-                                      letterSpacing: '-0.022em',
+                                    marginBottom: '16px',
+                                      fontSize: '17px',
+                                    lineHeight: '1.47',
+                                    fontWeight: '400',
+                                    color: darkMode ? '#f5f5f7' : '#1d1d1f',
+                                    letterSpacing: '-0.022em',
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                       animation: 'fadeSlideIn 0.4s ease',
                                       animationDelay: `${i * 0.1}s`,
                                       animationFillMode: 'both'
-                                    }}>
-                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
-                                    No bullet points available
-                                  </p>
+                                  }}>
+                                    {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
+                                  No bullet points available
+                                </p>
                                 );
                               })()}
                           </div>

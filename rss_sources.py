@@ -102,7 +102,6 @@ MARKET_SOURCES = [
     ('CNBC Business', 'https://www.cnbc.com/id/10001147/device/rss/rss.html'),
     ('MarketWatch', 'https://www.marketwatch.com/rss/'),
     ('MarketWatch Markets', 'https://www.marketwatch.com/rss/marketpulse'),
-    ('Yahoo Finance', 'https://finance.yahoo.com/news/rssindex'),
     ('Seeking Alpha Market News', 'https://seekingalpha.com/feed.xml'),
     ('Investor\'s Business Daily', 'https://www.investors.com/feed/'),
     ('Morningstar', 'https://www.morningstar.com/rss'),

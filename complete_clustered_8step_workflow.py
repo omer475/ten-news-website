@@ -1,16 +1,16 @@
 """
-COMPLETE 7-STEP NEWS WORKFLOW WITH CLUSTERING
+COMPLETE 8-STEP NEWS WORKFLOW WITH CLUSTERING
 ==============================================
 
 Step 0: RSS Feed Collection (171 sources)
 Step 1: Gemini Scoring & Filtering (score ≥70)
-Step 1.5: Event Clustering (NEW - clusters similar articles)
-Step 2: ScrapingBee Full Article Fetching (all sources in cluster)
-Step 3: Multi-Source Synthesis with Claude (generates article from all sources)
-Step 4: Perplexity Context Search (for components)
-Step 5: Claude Timeline + Details Formatting
-Step 6: Claude Component Generation
-Step 7: Publishing to Supabase
+Step 1.5: Event Clustering (clusters similar articles)
+Step 2: Jina Full Article Fetching (all sources in cluster)
+Step 3: Smart Image Selection (selects best image from sources)
+Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
+Step 5: Component Selection & Perplexity Search (decides which components + fetches data)
+Steps 6-7: Claude Component Generation (timeline, details, graph)
+Step 8: Publishing to Supabase
 """
 
 import time
@@ -29,9 +29,11 @@ from rss_sources import ALL_SOURCES
 from step1_gemini_news_scoring_filtering import score_news_articles_step1
 from step1_5_event_clustering import EventClusteringEngine
 from step2_jina_full_article_fetching import JinaArticleFetcher, fetch_articles_parallel
-from step3_gemini_component_selection import GeminiComponentSelector
+from step3_image_selection import select_best_image_for_cluster
+from step4_multi_source_synthesis import MultiSourceSynthesizer
+from step5_gemini_component_selection import GeminiComponentSelector
 from step2_perplexity_context_search import search_perplexity_context
-from step6_claude_component_generation import ClaudeComponentWriter
+from step6_7_claude_component_generation import ClaudeComponentWriter
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -158,7 +160,7 @@ def run_complete_pipeline():
     """Run the complete 7-step clustered news workflow"""
     
     print("\n" + "="*80)
-    print("🚀 COMPLETE 7-STEP CLUSTERED NEWS WORKFLOW")
+    print("🚀 COMPLETE 8-STEP CLUSTERED NEWS WORKFLOW")
     print("="*80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
@@ -264,8 +266,18 @@ def run_complete_pipeline():
             success_count = len([s for s in cluster_sources if s.get('full_text')])
             print(f"   ✅ Fetched full text: {success_count}/{len(cluster_sources)}")
             
-            # STEP 3: Multi-Source Synthesis with Claude
-            print(f"\n✍️  STEP 3: MULTI-SOURCE SYNTHESIS")
+            # STEP 3: Multi-Source Synthesis with Claude            
+            print(f"\n📸 STEP 3: SMART IMAGE SELECTION")
+            print(f"   Selecting best image from {len(cluster_sources)} sources...")
+            
+            selected_image = select_best_image_for_cluster(cluster_sources, cluster.get('event_name', ''))
+            
+            if selected_image:
+                print(f"   ✅ Selected: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+            else:
+                print(f"   ⚠️  No suitable image found")
+            
+            print(f"\n✍️  STEP 4: MULTI-SOURCE SYNTHESIS")
             print(f"   Synthesizing article from {len(cluster_sources)} sources...")
             
             synthesized = synthesize_multisource_article(cluster_sources, cluster_id)
@@ -274,10 +286,20 @@ def run_complete_pipeline():
                 print(f"   ❌ Synthesis failed - skipping cluster")
                 continue
             
+            # Add image data to synthesized article
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+            else:
+                synthesized['image_url'] = None
+                synthesized['image_source'] = None
+                synthesized['image_score'] = 0
+            
             print(f"   ✅ Synthesized: {synthesized['title_news'][:60]}...")
             
-            # STEP 4: Perplexity Context Search
-            print(f"\n🔍 STEP 4: COMPONENT SELECTION & PERPLEXITY SEARCH")
+            # STEP 5: Component Selection & Perplexity Search
+            print(f"\n🔍 STEP 5: COMPONENT SELECTION & PERPLEXITY SEARCH")
             
             # Select components based on synthesized title + full content
             article_for_selection = {
@@ -302,7 +324,7 @@ def run_complete_pipeline():
                 print(f"   ✅ Context fetched for {len(context_data)} components")
             
             # STEP 5 & 6: Generate components with Claude
-            print(f"\n📊 STEPS 5-6: COMPONENT GENERATION")
+            print(f"\n📊 STEPS 6-7: COMPONENT GENERATION")
             
             components = {}
             if selected and context_data:
@@ -323,8 +345,8 @@ def run_complete_pipeline():
                     components = {k: v for k, v in components.items() if v is not None}
                     print(f"   ✅ Generated: {', '.join(components.keys())}")
             
-            # STEP 7: Publishing to Supabase
-            print(f"\n💾 STEP 7: PUBLISHING TO SUPABASE")
+            # STEP 8: Publishing to Supabase
+            print(f"\n💾 STEP 8: PUBLISHING TO SUPABASE")
             
             article_data = {
                 'cluster_id': cluster_id,
@@ -493,7 +515,7 @@ def main():
     """Run continuous workflow"""
     
     print("\n" + "="*80)
-    print("🚀 COMPLETE 7-STEP CLUSTERED NEWS SYSTEM")
+    print("🚀 COMPLETE 8-STEP CLUSTERED NEWS SYSTEM")
     print("="*80)
     print("\nThis system will:")
     print("  📰 Fetch RSS from 171 sources")
