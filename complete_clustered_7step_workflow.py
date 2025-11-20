@@ -342,7 +342,11 @@ def run_complete_pipeline():
                 'graph': components.get('graph'),
                 'components_order': selected,
                 'num_sources': len(cluster_sources),
-                'published_at': datetime.now().isoformat()
+                'published_at': datetime.now().isoformat(),
+                # Image data from Step 3
+                'image_url': synthesized.get('image_url'),
+                'image_source': synthesized.get('image_source'),
+                'image_score': synthesized.get('image_score')
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
