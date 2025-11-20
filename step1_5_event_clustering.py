@@ -29,7 +29,7 @@ class ClusteringConfig:
     
     # Matching thresholds
     TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event (strong match)
-    MIN_TITLE_SIMILARITY = 0.45  # Minimum 45% title similarity even with keyword match
+    MIN_TITLE_SIMILARITY = 0.70  # Minimum 70% title similarity even with keyword match
     KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event (increased from 3)
     ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     
@@ -219,7 +219,7 @@ def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], deb
     Matching criteria (IMPROVED for accuracy):
     1. Published within 24 hours of cluster creation
     2. Title similarity >= 75% (strong match), OR
-    3. Title similarity >= 45% AND (5+ shared keywords OR 2+ shared entities)
+    3. Title similarity >= 70% AND (5+ shared keywords OR 2+ shared entities)
     
     Args:
         article: Article to match with title, keywords, entities, published_at
@@ -260,7 +260,7 @@ def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], deb
             print(f"  ✅ STRONG MATCH: Title similarity {title_similarity:.2%} >= {ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:.0%}")
         return {'match': True, 'reason': 'high_title_similarity', 'title_sim': title_similarity, 'shared_keywords': []}
     
-    # Check 3: Keyword/Entity overlap (ONLY if title similarity >= 45%)
+    # Check 3: Keyword/Entity overlap (ONLY if title similarity >= 70%)
     if title_similarity < ClusteringConfig.MIN_TITLE_SIMILARITY:
         if debug:
             print(f"  ❌ REJECTED: Title similarity {title_similarity:.2%} < minimum {ClusteringConfig.MIN_TITLE_SIMILARITY:.0%}")

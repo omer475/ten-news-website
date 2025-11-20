@@ -28,10 +28,14 @@ KEYWORD_MATCH_THRESHOLD = 3        # 3+ shared keywords = same event
 **After:**
 ```python
 TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event (strong match)
-MIN_TITLE_SIMILARITY = 0.45        # Minimum 45% title similarity even with keyword match (NEW)
+MIN_TITLE_SIMILARITY = 0.70        # Minimum 70% title similarity even with keyword match (STRICT)
 KEYWORD_MATCH_THRESHOLD = 5        # 5+ shared keywords = same event (increased from 3)
 ENTITY_MATCH_THRESHOLD = 2         # 2+ shared entities adds confidence (NEW)
 ```
+
+**Single-Source Rule Changed:**
+- Old: Required ≥2 sources to publish (multi-source synthesis only)
+- New: Allow ≥1 source (single articles can be published)
 
 ### 2. **Improved Matching Logic**
 
@@ -41,15 +45,15 @@ ENTITY_MATCH_THRESHOLD = 2         # 2+ shared entities adds confidence (NEW)
 - Articles with very similar titles → always match
 - Example: "Biden announces climate plan" vs "Biden unveils climate initiative"
 
-#### Tier 2: **MODERATE MATCH** (Title ≥ 45% + 5+ shared keywords)
-- Articles with somewhat similar titles AND significant keyword overlap
-- Example: "Tesla stock surges 15%" vs "Tesla shares jump on earnings beat"  
-- **CRITICAL:** Now requires minimum 45% title similarity (prevents "Ukraine war" matching "Router flaws")
+#### Tier 2: **MODERATE MATCH** (Title ≥ 70% + 5+ shared keywords)
+- Articles with very similar titles AND significant keyword overlap
+- Example: "Tesla stock surges 15%" vs "Tesla shares surge 15% on earnings"  
+- **CRITICAL:** Now requires minimum 70% title similarity (STRICT - prevents any loosely-related matches)
 
-#### Tier 3: **ENTITY MATCH** (Title ≥ 45% + 2+ shared entities)
-- Articles mentioning the same people/places/organizations
-- Example: "Elon Musk announces new project" vs "Musk unveils Tesla innovation"
-- **CRITICAL:** Also requires 45% minimum title similarity
+#### Tier 3: **ENTITY MATCH** (Title ≥ 70% + 2+ shared entities)
+- Articles mentioning the same people/places/organizations with very similar titles
+- Example: "Elon Musk announces Tesla plan" vs "Musk unveils Tesla innovation"
+- **CRITICAL:** Also requires 70% minimum title similarity (VERY STRICT)
 
 ### 3. **Debug Logging**
 
@@ -71,7 +75,7 @@ The algorithm now prints **why** articles match:
 
 ❌ **Rejected (too different):**
 ```
-❌ REJECTED: Title similarity 12% < minimum 45%
+❌ REJECTED: Title similarity 68% < minimum 70%
 ✨ Created new cluster: Ukraine Peace Plan
 ```
 
@@ -152,8 +156,8 @@ def is_same_event(article, cluster):
     if title_sim >= 75%:
         return True  # ✅ STRONG MATCH
     
-    # Minimum title similarity required
-    if title_sim < 45%:
+    # Minimum title similarity required (STRICT)
+    if title_sim < 70%:
         return False  # ❌ TOO DIFFERENT
     
     # Step 3: Check keyword/entity overlap
@@ -185,9 +189,11 @@ def is_same_event(article, cluster):
 ## 🚀 Next Steps
 
 1. **Monitor the next cycle** - The debug output will show WHY articles match/don't match
-2. **Adjust thresholds if needed**:
-   - If too many new clusters → lower `MIN_TITLE_SIMILARITY` to 40%
-   - If still seeing bad matches → increase `KEYWORD_MATCH_THRESHOLD` to 6 or `MIN_TITLE_SIMILARITY` to 55%
+2. **70% threshold is VERY STRICT** - Most articles will create new clusters (by design)
+3. **Single-source articles now published** - No more "0 clusters ready" issues
+4. **Adjust thresholds if needed**:
+   - If too many bad matches → increase to 75% (same as strong match)
+   - If too many new clusters → lower to 65%
 3. **Check published articles** - Quality should improve significantly
 
 ---
@@ -196,9 +202,10 @@ def is_same_event(article, cluster):
 
 | Metric | Before | After | Impact |
 |--------|--------|-------|--------|
-| **Minimum Title Similarity** | 0% (none) | **45%** | ✅ Prevents unrelated matches |
+| **Minimum Title Similarity** | 0% (none) | **70%** | ✅ VERY STRICT - only very similar titles match |
 | **Keyword Threshold** | 3 keywords | **5 keywords** | ✅ More overlap required |
 | **Entity Matching** | Not used | **2+ entities** | ✅ Better person/place/org clustering |
+| **Single-Source Rule** | Required 2+ | **Allow 1+** | ✅ Publishes all important stories |
 | **Debug Visibility** | None | **Full logging** | ✅ Can diagnose issues |
 
 ---

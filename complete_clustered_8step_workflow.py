@@ -242,34 +242,23 @@ def run_complete_pipeline():
     
     clusters_to_process = []
     for cluster in clusters.data:
+        # Check if already published
+        existing = supabase.table('published_articles')\
+            .select('id')\
+            .eq('cluster_id', cluster['id'])\
+            .execute()
+        
+        if existing.data:
+            continue
+        
         # Get source count
         sources = supabase.table('source_articles')\
             .select('id')\
             .eq('cluster_id', cluster['id'])\
             .execute()
         
-        # Need at least 2 sources to synthesize
-        if len(sources.data) < 2:
-            continue
-        
-        # Check if already published
-        existing = supabase.table('published_articles')\
-            .select('id', 'num_sources')\
-            .eq('cluster_id', cluster['id'])\
-            .execute()
-        
-        if existing.data:
-            # Already published - check if new sources were added
-            previous_source_count = existing.data[0].get('num_sources', 0)
-            current_source_count = len(sources.data)
-            
-            if current_source_count > previous_source_count:
-                # NEW SOURCES ADDED - re-synthesize
-                print(f"   🔄 Cluster {cluster['id']}: {current_source_count - previous_source_count} new sources (updating)")
-                clusters_to_process.append(cluster['id'])
-            # else: no new sources, skip
-        else:
-            # Not yet published - process it
+        # Process clusters with 1+ sources (single-source articles are now allowed)
+        if len(sources.data) >= 1:
             clusters_to_process.append(cluster['id'])
     
     print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)}")
@@ -416,14 +405,9 @@ def run_complete_pipeline():
                 'image_score': synthesized.get('image_score')
             }
             
-            # Use upsert to update existing articles or insert new ones
-            result = supabase.table('published_articles').upsert(
-                article_data, 
-                on_conflict='cluster_id'  # Update based on cluster_id
-            ).execute()
+            result = supabase.table('published_articles').insert(article_data).execute()
             
-            action = "Updated" if len(cluster_sources) > 2 else "Published"
-            print(f"   ✅ {action} article ID: {result.data[0]['id']}")
+            print(f"   ✅ Published article ID: {result.data[0]['id']}")
             published_count += 1
             
         except Exception as e:
