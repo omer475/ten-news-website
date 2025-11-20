@@ -88,13 +88,16 @@ def normalize_url(url):
     return normalized
 
 def fetch_rss_articles(max_articles_per_source=10):
-    """Step 0: Fetch NEW articles from 171 RSS sources"""
+    """Step 0: Fetch NEW articles from 171 RSS sources with deduplication"""
+    from article_deduplication import get_new_articles_only, mark_article_as_processed
+    
     print(f"\n{'='*80}")
     print(f"📡 STEP 0: RSS FEED COLLECTION")
     print(f"{'='*80}")
     print(f"Fetching from {len(ALL_SOURCES)} premium sources...")
     
-    articles = []
+    all_fetched_articles = []
+    source_counts = {}
     
     def fetch_one_source(source_name, url):
         try:
@@ -102,54 +105,58 @@ def fetch_rss_articles(max_articles_per_source=10):
             response = requests.get(url, timeout=10, headers=headers, verify=False)
             feed = feedparser.parse(response.content)
             
-            new_count = 0
+            source_articles = []
             for entry in feed.entries[:max_articles_per_source]:
                 article_url = entry.get('link', '')
                 if not article_url:
                     continue
-                
-                # Check if already exists
-                normalized = normalize_url(article_url)
-                try:
-                    existing = supabase.table('source_articles')\
-                        .select('id')\
-                        .eq('normalized_url', normalized)\
-                        .limit(1)\
-                        .execute()
-                    
-                    if existing.data:
-                        continue  # Skip - already seen this article
-                except:
-                    pass
                 
                 # Handle published date properly
                 published_date = entry.get('published', None)
                 if published_date == '':
                     published_date = None
                 
-                articles.append({
+                source_articles.append({
                     'url': article_url,
                     'title': entry.get('title', ''),
                     'description': entry.get('description', ''),
                     'source': source_name,
                     'published_date': published_date
                 })
-                new_count += 1
             
-            return (source_name, new_count)
+            return (source_name, source_articles)
         except Exception as e:
-            return (source_name, 0)
+            return (source_name, [])
     
-    # Parallel fetch
+    # Parallel fetch from all sources
     with ThreadPoolExecutor(max_workers=30) as executor:
         futures = [executor.submit(fetch_one_source, name, url) for name, url in ALL_SOURCES]
         for future in as_completed(futures):
-            source_name, count = future.result()
-            if count > 0:
-                print(f"✅ {source_name}: {count} new")
+            source_name, source_articles = future.result()
+            if source_articles:
+                all_fetched_articles.extend(source_articles)
+                source_counts[source_name] = len(source_articles)
     
-    print(f"\n✅ Step 0 Complete: {len(articles)} NEW articles fetched")
-    return articles
+    print(f"\n📊 Fetched {len(all_fetched_articles)} articles from {len(source_counts)} sources")
+    
+    # Apply deduplication (time-based + database check)
+    new_articles = get_new_articles_only(all_fetched_articles, supabase, time_window=15)
+    
+    # Mark new articles as processed
+    for article in new_articles:
+        mark_article_as_processed(article, supabase)
+    
+    # Show which sources had new articles
+    new_by_source = {}
+    for article in new_articles:
+        source = article.get('source', 'Unknown')
+        new_by_source[source] = new_by_source.get(source, 0) + 1
+    
+    for source_name, count in sorted(new_by_source.items()):
+        print(f"✅ {source_name}: {count} new")
+    
+    print(f"\n✅ Step 0 Complete: {len(new_articles)} NEW articles (after deduplication)")
+    return new_articles
 
 
 # ==========================================
