@@ -2718,7 +2718,7 @@ export default function Home() {
         .language-icon-btn svg {
           width: 16px;
           height: 16px;
-          opacity: 0.8;
+          opacity: 1;
         }
 
         /* Dropdown Box Animation */
@@ -3830,8 +3830,10 @@ export default function Home() {
                                 }));
                               }}
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 7V4h16v3"/>
+                                <path d="M9 20h6"/>
+                                <path d="M12 4v16"/>
                               </svg>
                             </button>
                             
