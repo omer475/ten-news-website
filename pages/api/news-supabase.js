@@ -30,8 +30,7 @@ export default async function handler(req, res) {
       .from('published_articles')
       .select('*')
       .gte('created_at', twentyFourHoursAgo)
-      .order('ai_final_score', { ascending: false })  // Sort by score (highest first)
-      .order('created_at', { ascending: false })      // Then by time for same scores
+      .order('created_at', { ascending: false })  // Sort by time (score column doesn't exist yet)
       .limit(500)
 
     if (error) {
@@ -52,7 +51,7 @@ export default async function handler(req, res) {
     const filteredArticles = (articles || []).filter(a => {
       // Filter out test articles
       const url = a?.url || ''
-      const title = a?.title || ''
+      const title = a?.title_news || a?.title || ''  // Check title_news first (new schema)
       const source = a?.source || ''
       const isNotTest = url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source);
       
