@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 
 export default function SingleNewsPage() {
   const router = useRouter();
@@ -123,9 +124,14 @@ export default function SingleNewsPage() {
   }
 
   return (
-    <div className="single-news-page">
-      {/* Header */}
-      <header className="news-header">
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      </Head>
+      
+      <div className="single-news-page">
+        {/* Header */}
+        <header className="news-header">
         <div className="header-content">
           <button className="back-button" onClick={handleBack}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1354,6 +1360,7 @@ export default function SingleNewsPage() {
           }
         }
       `}</style>
-    </div>
+      </div>
+    </>
   );
 }
