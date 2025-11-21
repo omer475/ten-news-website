@@ -469,25 +469,95 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int) -> Opti
         for i, s in enumerate(limited_sources)
     ])
     
-    prompt = f"""You are writing a news article for Today+. You have {len(limited_sources)} sources about the same event.
+    prompt = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📰 YOUR ROLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are a professional news editor synthesizing {len(limited_sources)} source articles into ONE comprehensive article.
+Your goal: Create a cohesive, factual news story that combines the best information from ALL sources.
 
 SOURCES:
 {sources_text}
 
-Your task: Write ONE comprehensive article synthesizing ALL sources.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✍️ GENERAL WRITING RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Generate in this EXACT JSON format:
+1. SYNTHESIZE, DON'T COPY - Combine information from ALL sources into one coherent story
+2. NEVER quote sources or use "according to Reuters" - Write as firsthand reporter
+3. HANDLE CONFLICTS - Use most recent source OR say "at least X" OR specify range
+4. INVERTED PYRAMID - Most newsworthy info first (who, what, when, where)
+5. JOURNALISTIC STANDARDS - Objective, neutral, third person, active voice, factual only
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 TITLE REQUIREMENTS (8-10 words max)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TITLE_NEWS: [Subject] + [Strong Verb] + [Key Detail]
+- ACTIVE voice with strong verbs (Plunge, Crash, Soar, Jump, Fall, Drop, Rise, Surge, Reject, Approve)
+- Present tense, include numbers, use **bold** for key terms
+- ✓ "**Bitcoin** Drops **8%** as Crypto Fear Index Hits **2022** Lows"
+- ✗ NO "The/A", weak verbs, passive voice, vague adjectives, word repetition
+
+TITLE_B2: Same meaning, simple vocabulary
+- Common verbs (Fall, Drop, Rise, Jump, Say, Ask, Start, Stop)
+- ✓ "**Bitcoin** Falls **8%** as Crypto Fear Hits **2022** Low"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔹 BULLET SUMMARY (18-25 words each, exactly 3 bullets)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MUST provide NEW information NOT in title. Progressive structure:
+  Bullet 1: Immediate impact/consequence (with specific numbers)
+  Bullet 2: Key factual details (who, when, where, names)
+  Bullet 3: Context, cause, or future implications
+
+MANDATORY: Specific numbers in 2+ bullets, named entities, NO title repetition
+✓ "S&P 500 plunged 3.2% erasing $1.1 trillion in market value, while Tokyo's Nikkei dropped 2.8%"
+✗ "Market volatility spread" (vague), "Experts monitoring" (obvious)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 ARTICLE CONTENT (220-280 words)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CONTENT_NEWS: AP/Reuters style
+  Para 1 (35-45w): 5 Ws - Who, What, When, Where, Why
+  Para 2 (40-50w): Key details, quote if available, critical numbers
+  Para 3 (40-50w): Background/context, significance, broader trends
+  Para 4 (40-50w): Supporting details, reactions, additional data
+  Para 5 (35-45w): Future implications, next steps
+
+MANDATORY: 5+ specific numbers, 3+ named entities, 1+ quote, attribution for claims
+STYLE: Objective, third person, active voice, varied sentences (15-25w)
+
+CONTENT_B2: Simple B2 English
+  5 paragraphs (35-50w each), 2-3 sentences per paragraph
+  Max 20 words/sentence, simple tenses, active voice only
+  Simplify: "Plummeted"→"fell quickly", "Volatility"→"going up and down"
+  Define technical terms: "S&P 500 (measure of 500 biggest US companies)"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT (JSON):
 {{
-  "title_news": "Professional title (≤12 words)",
-  "title_b2": "B2 simple title (≤12 words, same meaning)",
-  "content_news": "Advanced article 200-500 words with **bold** for key terms",
-  "content_b2": "B2 article same length, simpler vocabulary, same **bold** words",
-  "summary_bullets_news": ["bullet 1 (10-15 words)", "bullet 2", "bullet 3", "bullet 4"],
-  "summary_bullets_b2": ["simple bullet 1", "simple bullet 2", "simple bullet 3", "simple bullet 4"],
+  "title_news": "Advanced title with **bold** key terms (8-10 words)",
+  "title_b2": "Simple title with **bold** key terms (8-10 words)",
+  "summary_bullets_news": [
+    "Impact/consequence with numbers (18-25 words)",
+    "Key factual details with names (18-25 words)",
+    "Context or future implications (18-25 words)"
+  ],
+  "summary_bullets_b2": [
+    "Simple impact statement (18-25 words)",
+    "Simple details with names (18-25 words)",
+    "Simple context or what's next (18-25 words)"
+  ],
+  "content_news": "220-280 word article in AP/Reuters style...",
+  "content_b2": "220-280 word article in simple B2 English...",
   "category": "Tech|Business|Science|International|Finance|Crypto|Other"
 }}
 
-Write only the JSON, no preamble."""
+Return ONLY valid JSON, no markdown, no explanations."""
     
     # Try up to 3 times
     for attempt in range(3):
