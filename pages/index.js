@@ -3376,7 +3376,7 @@ export default function Home() {
                       const mode = languageMode[index] || 'advanced';
                       const title = mode === 'b2' ? (story.title_b2 || story.title) : (story.title_news || story.title);
                       console.log(`📰 HEADER Title [${index}]:`, { mode, title_b2: story.title_b2?.substring(0, 30), title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
-                      return title;
+                      return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
                     })()}
                   </h1>
                   
