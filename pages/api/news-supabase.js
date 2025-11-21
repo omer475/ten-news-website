@@ -30,8 +30,8 @@ export default async function handler(req, res) {
       .from('published_articles')
       .select('*')
       .gte('created_at', twentyFourHoursAgo)
-      .order('ai_final_score', { ascending: false, nullsFirst: false })  // Sort by score, highest first (nulls last)
-      .order('created_at', { ascending: false })  // Secondary sort by date for same scores
+      .order('ai_final_score', { ascending: false })  // Sort by score (highest first)
+      .order('created_at', { ascending: false })      // Then by time for same scores
       .limit(500)
 
     if (error) {
