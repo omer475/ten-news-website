@@ -465,7 +465,7 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int) -> Opti
     sources_text = "\n\n".join([
         f"SOURCE {i+1} ({s.get('source_name', 'Unknown')}):\n"
         f"Title: {s.get('title', 'Unknown')}\n"
-        f"Content: {s.get('full_text', s.get('description', ''))[:800]}"  # Limit content length
+        f"Content: {s.get('full_text', s.get('description', ''))[:1500]}"  # Increased from 800 to 1500 chars (~225 words)
         for i, s in enumerate(limited_sources)
     ])
     
