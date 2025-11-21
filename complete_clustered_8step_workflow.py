@@ -592,8 +592,8 @@ def main():
             
             run_complete_pipeline()
             
-            print(f"\n😴 Sleeping 10 minutes until next cycle...")
-            time.sleep(600)
+            print(f"\n😴 Sleeping 5 minutes until next cycle...")
+            time.sleep(300)  # 5 minutes = 300 seconds
             
         except KeyboardInterrupt:
             print("\n\n🛑 Stopped by user")
