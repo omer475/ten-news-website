@@ -523,9 +523,9 @@ MANDATORY HIGHLIGHTING COUNTS:
    • Focus on: Main subject + key number/impact
 
 📌 BULLET POINTS (summary_bullets_news + summary_bullets_b2):
-   • Per bullet: 1-3 highlighted terms
-   • Each of the 3 bullets MUST have at least 1 highlight
-   • Total across all 3 bullets: 3-9 highlights
+   • Per bullet: 2-4 highlighted terms (MANDATORY)
+   • Each of the 3 bullets MUST have at least 2 highlights, maximum 4
+   • Total across all 3 bullets: 6-12 highlights
 
 📌 ARTICLE CONTENT (content_news + content_b2):
    • Minimum: 5 highlighted terms across entire article
@@ -557,17 +557,17 @@ TITLE_B2: Same meaning, simple vocabulary
 - ✓ "**Bitcoin** Falls **8%** as Crypto Fear Hits **2022** Low"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔹 BULLET SUMMARY (18-25 words each, exactly 3 bullets)
+🔹 BULLET SUMMARY (15-20 words each, exactly 3 bullets)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 MUST provide NEW information NOT in title. Progressive structure:
-  Bullet 1: Immediate impact/consequence (with specific numbers, 1-3 highlights)
-  Bullet 2: Key factual details (who, when, where, names, 1-3 highlights)
-  Bullet 3: Context, cause, or future implications (1-3 highlights)
+  Bullet 1: Immediate impact/consequence (with specific numbers, 2-4 highlights MANDATORY)
+  Bullet 2: Key factual details (who, when, where, names, 2-4 highlights MANDATORY)
+  Bullet 3: Context, cause, or future implications (2-4 highlights MANDATORY)
 
-MANDATORY: Specific numbers in 2+ bullets, named entities, NO title repetition
-✓ "**S&P 500** plunged **3.2%** erasing **$1.1 trillion** in market value"
-✗ "Market volatility spread" (vague, no highlights)
+MANDATORY: Specific numbers in 2+ bullets, named entities, NO title repetition, 15-20 words per bullet
+✓ "**S&P 500** fell **3.2%** losing **$1.1 trillion** while **Tokyo's Nikkei** dropped 2.8%"
+✗ "Market volatility spread" (vague, no highlights, too short)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📄 ARTICLE CONTENT (220-280 words)
@@ -594,14 +594,14 @@ OUTPUT FORMAT (JSON):
   "title_news": "Advanced title with **2-3 bold** key terms (8-10 words)",
   "title_b2": "Simple title with **2-3 bold** key terms (8-10 words)",
   "summary_bullets_news": [
-    "Impact with **1-3 highlights** (18-25 words)",
-    "Details with **1-3 highlights** (18-25 words)",
-    "Context with **1-3 highlights** (18-25 words)"
+    "Impact with **2-4 highlights** (15-20 words)",
+    "Details with **2-4 highlights** (15-20 words)",
+    "Context with **2-4 highlights** (15-20 words)"
   ],
   "summary_bullets_b2": [
-    "Simple impact with **1-3 highlights** (18-25 words)",
-    "Simple details with **1-3 highlights** (18-25 words)",
-    "Simple context with **1-3 highlights** (18-25 words)"
+    "Simple impact with **2-4 highlights** (15-20 words)",
+    "Simple details with **2-4 highlights** (15-20 words)",
+    "Simple context with **2-4 highlights** (15-20 words)"
   ],
   "content_news": "220-280 word article with **5-15 highlights** distributed throughout...",
   "content_b2": "220-280 word article with **5-15 highlights** distributed throughout...",
