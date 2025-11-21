@@ -166,7 +166,8 @@ def fetch_rss_articles(max_articles_per_source=10):
     print(f"\n📊 Fetched {len(all_fetched_articles)} articles from {len(source_counts)} sources")
     
     # Apply deduplication (time-based + database check)
-    new_articles = get_new_articles_only(all_fetched_articles, supabase, time_window=15)
+    # Use 24-hour window to catch articles when system is offline for extended periods
+    new_articles = get_new_articles_only(all_fetched_articles, supabase, time_window=1440)  # 24 hours
     
     # Mark new articles as processed
     for article in new_articles:
