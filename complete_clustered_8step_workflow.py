@@ -180,7 +180,7 @@ def fetch_rss_articles(max_articles_per_source=10):
         new_by_source[source] = new_by_source.get(source, 0) + 1
     
     for source_name, count in sorted(new_by_source.items()):
-        print(f"✅ {source_name}: {count} new")
+                print(f"✅ {source_name}: {count} new")
     
     print(f"\n✅ Step 0 Complete: {len(new_articles)} NEW articles (after deduplication)")
     return new_articles
@@ -469,22 +469,63 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int) -> Opti
         for i, s in enumerate(limited_sources)
     ])
     
-    prompt = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📰 YOUR ROLE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-You are a professional news editor synthesizing {len(limited_sources)} source articles into ONE comprehensive article.
-Your goal: Create a cohesive, factual news story that combines the best information from ALL sources.
+    prompt = f"""You are writing a news article by synthesizing information from {len(limited_sources)} sources about the same event.
 
 SOURCES:
 {sources_text}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📰 YOUR ROLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are a professional news editor synthesizing multiple source articles into ONE comprehensive article.
+Your goal: Create a cohesive, factual news story that combines the best information from ALL sources.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use **bold** to highlight KEY TERMS ONLY. Be selective - highlight what matters most.
+
+WHAT TO HIGHLIGHT:
+  ✓ Specific numbers: **$22.1 billion**, **3.2%**, **847 points**
+  ✓ Key people: **Jerome Powell**, **Elon Musk**, **President Biden**
+  ✓ Organizations: **Federal Reserve**, **Nvidia**, **European Central Bank**
+  ✓ Places: **Wall Street**, **Tokyo**, **Dubai Air Show**
+  ✓ Important dates: **Wednesday**, **November 20**, **2025**
+  ✓ Key entities: **S&P 500**, **Bitcoin**, **Nikkei 225**
+
+WHAT NOT TO HIGHLIGHT:
+  ✗ Common words: "said," "announced," "market," "today"
+  ✗ Every number - only the most significant ones
+  ✗ Generic terms: "company," "officials," "experts"
+  ✗ Articles and prepositions: "the," "at," "in"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MANDATORY HIGHLIGHTING COUNTS:
+
+📌 TITLE (title_news + title_b2):
+   • Minimum: 2 highlighted terms
+   • Maximum: 3 highlighted terms
+   • Focus on: Main subject + key number/impact
+
+📌 BULLET POINTS (summary_bullets_news + summary_bullets_b2):
+   • Per bullet: 1-3 highlighted terms
+   • Each of the 3 bullets MUST have at least 1 highlight
+   • Total across all 3 bullets: 3-9 highlights
+
+📌 ARTICLE CONTENT (content_news + content_b2):
+   • Minimum: 5 highlighted terms across entire article
+   • Maximum: 15 highlighted terms across entire article
+   • Distribute throughout - don't cluster all in first paragraph
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ GENERAL WRITING RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. SYNTHESIZE, DON'T COPY - Combine information from ALL sources into one coherent story
-2. NEVER quote sources or use "according to Reuters" - Write as firsthand reporter
+2. NEVER quote sources or use "according to" - Write as firsthand reporter
 3. HANDLE CONFLICTS - Use most recent source OR say "at least X" OR specify range
 4. INVERTED PYRAMID - Most newsworthy info first (who, what, when, where)
 5. JOURNALISTIC STANDARDS - Objective, neutral, third person, active voice, factual only
@@ -494,10 +535,10 @@ SOURCES:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 TITLE_NEWS: [Subject] + [Strong Verb] + [Key Detail]
-- ACTIVE voice with strong verbs (Plunge, Crash, Soar, Jump, Fall, Drop, Rise, Surge, Reject, Approve)
-- Present tense, include numbers, use **bold** for key terms
+- ACTIVE voice with strong verbs (Plunge, Crash, Soar, Jump, Fall, Drop, Rise, Surge)
+- Present tense, include numbers, use **bold** for 2-3 key terms
 - ✓ "**Bitcoin** Drops **8%** as Crypto Fear Index Hits **2022** Lows"
-- ✗ NO "The/A", weak verbs, passive voice, vague adjectives, word repetition
+- ✗ NO "The/A", weak verbs, passive voice, vague adjectives
 
 TITLE_B2: Same meaning, simple vocabulary
 - Common verbs (Fall, Drop, Rise, Jump, Say, Ask, Start, Stop)
@@ -508,52 +549,50 @@ TITLE_B2: Same meaning, simple vocabulary
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 MUST provide NEW information NOT in title. Progressive structure:
-  Bullet 1: Immediate impact/consequence (with specific numbers)
-  Bullet 2: Key factual details (who, when, where, names)
-  Bullet 3: Context, cause, or future implications
+  Bullet 1: Immediate impact/consequence (with specific numbers, 1-3 highlights)
+  Bullet 2: Key factual details (who, when, where, names, 1-3 highlights)
+  Bullet 3: Context, cause, or future implications (1-3 highlights)
 
 MANDATORY: Specific numbers in 2+ bullets, named entities, NO title repetition
-✓ "S&P 500 plunged 3.2% erasing $1.1 trillion in market value, while Tokyo's Nikkei dropped 2.8%"
-✗ "Market volatility spread" (vague), "Experts monitoring" (obvious)
+✓ "**S&P 500** plunged **3.2%** erasing **$1.1 trillion** in market value"
+✗ "Market volatility spread" (vague, no highlights)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📄 ARTICLE CONTENT (220-280 words)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CONTENT_NEWS: AP/Reuters style
-  Para 1 (35-45w): 5 Ws - Who, What, When, Where, Why
-  Para 2 (40-50w): Key details, quote if available, critical numbers
-  Para 3 (40-50w): Background/context, significance, broader trends
-  Para 4 (40-50w): Supporting details, reactions, additional data
-  Para 5 (35-45w): Future implications, next steps
+CONTENT_NEWS: AP/Reuters style, 5-15 highlights distributed throughout
+  Para 1 (35-45w): 5 Ws, 2-3 highlights
+  Para 2 (40-50w): Key details, 1-2 highlights  
+  Para 3 (40-50w): Background/context, 1-2 highlights
+  Para 4 (40-50w): Supporting details, 1-2 highlights
+  Para 5 (35-45w): Future implications, 0-2 highlights
 
-MANDATORY: 5+ specific numbers, 3+ named entities, 1+ quote, attribution for claims
-STYLE: Objective, third person, active voice, varied sentences (15-25w)
+MANDATORY: 5+ specific numbers, 3+ named entities, distribute highlights across ALL paragraphs
 
-CONTENT_B2: Simple B2 English
+CONTENT_B2: Simple B2 English, 5-15 highlights distributed throughout
   5 paragraphs (35-50w each), 2-3 sentences per paragraph
   Max 20 words/sentence, simple tenses, active voice only
   Simplify: "Plummeted"→"fell quickly", "Volatility"→"going up and down"
-  Define technical terms: "S&P 500 (measure of 500 biggest US companies)"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 OUTPUT FORMAT (JSON):
 {{
-  "title_news": "Advanced title with **bold** key terms (8-10 words)",
-  "title_b2": "Simple title with **bold** key terms (8-10 words)",
+  "title_news": "Advanced title with **2-3 bold** key terms (8-10 words)",
+  "title_b2": "Simple title with **2-3 bold** key terms (8-10 words)",
   "summary_bullets_news": [
-    "Impact/consequence with numbers (18-25 words)",
-    "Key factual details with names (18-25 words)",
-    "Context or future implications (18-25 words)"
+    "Impact with **1-3 highlights** (18-25 words)",
+    "Details with **1-3 highlights** (18-25 words)",
+    "Context with **1-3 highlights** (18-25 words)"
   ],
   "summary_bullets_b2": [
-    "Simple impact statement (18-25 words)",
-    "Simple details with names (18-25 words)",
-    "Simple context or what's next (18-25 words)"
+    "Simple impact with **1-3 highlights** (18-25 words)",
+    "Simple details with **1-3 highlights** (18-25 words)",
+    "Simple context with **1-3 highlights** (18-25 words)"
   ],
-  "content_news": "220-280 word article in AP/Reuters style...",
-  "content_b2": "220-280 word article in simple B2 English...",
+  "content_news": "220-280 word article with **5-15 highlights** distributed throughout...",
+  "content_b2": "220-280 word article with **5-15 highlights** distributed throughout...",
   "category": "Tech|Business|Science|International|Finance|Crypto|Other"
 }}
 
