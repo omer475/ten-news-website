@@ -401,16 +401,11 @@ def run_complete_pipeline():
             # STEP 8: Publishing to Supabase
             print(f"\n💾 STEP 8: PUBLISHING TO SUPABASE")
             
-            # Calculate article importance score (0-1000)
-            # Based on average source score + bonus for multi-source coverage
+            # Use the HIGHEST Gemini score from Step 1 (from any source in cluster)
             source_scores = [s.get('score', 0) for s in cluster_sources if s.get('score')]
-            avg_score = sum(source_scores) / len(source_scores) if source_scores else 500
+            article_score = max(source_scores) if source_scores else 500
             
-            # Bonus for multi-source articles (up to +100 points)
-            source_bonus = min(len(cluster_sources) * 10, 100)
-            
-            article_score = int(min(avg_score + source_bonus, 1000))
-            print(f"   📊 Article score: {article_score}/1000 (avg: {int(avg_score)}, sources: {len(cluster_sources)})")
+            print(f"   📊 Article score: {article_score}/1000 (highest from {len(cluster_sources)} source(s))")
             
             article_data = {
                 'cluster_id': cluster_id,
