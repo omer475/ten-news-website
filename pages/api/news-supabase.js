@@ -23,14 +23,15 @@ export default async function handler(req, res) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch published articles from last 24 hours, sorted by score
+    // Fetch published articles from last 24 hours, sorted by score (highest first)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
     const { data: articles, error } = await supabase
       .from('published_articles')
       .select('*')
       .gte('created_at', twentyFourHoursAgo)
-      .order('created_at', { ascending: false })
+      .order('ai_final_score', { ascending: false, nullsFirst: false })  // Sort by score, highest first (nulls last)
+      .order('created_at', { ascending: false })  // Secondary sort by date for same scores
       .limit(500)
 
     if (error) {

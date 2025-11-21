@@ -401,6 +401,20 @@ def run_complete_pipeline():
             # STEP 8: Publishing to Supabase
             print(f"\n💾 STEP 8: PUBLISHING TO SUPABASE")
             
+            # Calculate cluster score (average of source scores, weighted by source count)
+            source_scores = [s.get('score', 0) for s in cluster_sources if s.get('score')]
+            if source_scores:
+                # Use weighted average: higher weight for more sources, cap at 1000
+                avg_score = sum(source_scores) / len(source_scores)
+                # Bonus for multiple sources (up to +100 points for 10+ sources)
+                source_bonus = min(len(cluster_sources) * 10, 100)
+                cluster_score = min(int(avg_score + source_bonus), 1000)
+            else:
+                # Fallback: estimate based on number of sources
+                cluster_score = min(500 + (len(cluster_sources) * 50), 1000)
+            
+            print(f"   Cluster score: {cluster_score}/1000 (from {len(cluster_sources)} sources)")
+            
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],  # Primary source URL
@@ -418,6 +432,7 @@ def run_complete_pipeline():
                 'components_order': selected,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
+                'ai_final_score': cluster_score,  # Add calculated score for sorting
                 # Image data from Step 3
                 'image_url': synthesized.get('image_url'),
                 'image_source': synthesized.get('image_source'),
