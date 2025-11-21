@@ -233,7 +233,7 @@ REQUIREMENTS:
 **To test the improvement**:
 
 1. Run the system:
-   ```bash
+```bash
    ./RUN_LIVE_CLUSTERED_SYSTEM.sh
    ```
 
