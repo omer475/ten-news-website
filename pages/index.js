@@ -265,11 +265,11 @@ export default function Home() {
     return hex.length === 1 ? '0' + hex : hex;
   };
 
-  // Filter colors to keep only colorful ones (saturation >= 35%)
+  // Filter colors to keep only vivid ones (saturation >= 50%)
   const filterColorfulColors = (colors) => {
     return colors.filter(color => {
       const [h, s, l] = color.hsl;
-      return s >= 35 && l >= 20 && l <= 80; // Colorful, not too dark/light
+      return s >= 50 && l >= 25 && l <= 75; // Vivid colors only, not pale or too dark/light
     });
   };
 
@@ -311,31 +311,31 @@ export default function Home() {
     return sortedColors;
   };
 
-  // Select the most dominant color from the image
+  // Select the most vivid, saturated color from the image
   const selectColorForArticle = (colorCandidates, articleIndex) => {
-    // Filter to colorful only (saturation >= 30%, lightness 20-80%)
+    // Filter to vivid colors only (saturation >= 50%, lightness 25-75%)
     let colorfulColors = filterColorfulColors(colorCandidates);
     
-    // If no colorful colors, use most saturated from all candidates
+    // If no vivid colors, use most saturated from all candidates
     if (colorfulColors.length === 0) {
       const sortedBySaturation = colorCandidates.sort((a, b) => b.hsl[1] - a.hsl[1]);
       colorfulColors = sortedBySaturation.slice(0, 1);
     }
     
-    // Sort by frequency and vibrancy to get the TRUE dominant color from the image
-    // Vibrancy = saturation * (1 - distance from mid-lightness)
+    // Sort by PURE SATURATION first for most vivid colors (red, navy, purple, green)
+    // Vibrancy = saturation^1.5 * (1 - distance from mid-lightness)
     colorfulColors.sort((a, b) => {
-      const vibrancyA = a.hsl[1] * (1 - Math.abs(a.hsl[2] - 50) / 50);
-      const vibrancyB = b.hsl[1] * (1 - Math.abs(b.hsl[2] - 50) / 50);
+      const vibrancyA = Math.pow(a.hsl[1], 1.5) * (1 - Math.abs(a.hsl[2] - 45) / 50);
+      const vibrancyB = Math.pow(b.hsl[1], 1.5) * (1 - Math.abs(b.hsl[2] - 45) / 50);
       return vibrancyB - vibrancyA;
     });
     
-    // Select the FIRST (most vibrant) color - this is the actual dominant color
+    // Select the FIRST (most vivid) color
     const selectedColor = { ...colorfulColors[0] };
     
-    // Only boost saturation slightly, NO hue shifting
+    // Boost saturation more aggressively for vivid appearance
     selectedColor.hsl = [...selectedColor.hsl];
-    selectedColor.hsl[1] = Math.min(100, selectedColor.hsl[1] * 1.15);
+    selectedColor.hsl[1] = Math.min(100, selectedColor.hsl[1] * 1.3);
     
     // Convert to RGB
     const [r, g, b] = hslToRgb(...selectedColor.hsl);
@@ -347,16 +347,16 @@ export default function Home() {
     return selectedColor;
   };
 
-  // Create blur color (dark but more vibrant and varied)
+  // Create blur color (dark and VERY vivid - red, navy, purple, green)
   const createBlurColor = (hsl) => {
     const [h, s, l] = hsl;
     
-    // More varied darkness range based on original lightness
-    const newL = Math.max(20, Math.min(45, l * 0.5)); // Dark: 20-45%
+    // Dark but not too dark: 30-50% lightness for better visibility
+    const newL = Math.max(30, Math.min(50, l * 0.55));
     
-    // Keep more saturation for vibrant colors, reduce less
-    // If original is very saturated, keep it high
-    const newS = Math.min(85, s * 1.0); // Preserve saturation, cap at 85%
+    // BOOST saturation aggressively for vivid colors
+    // Minimum 70% saturation, boost by 40%
+    const newS = Math.max(70, Math.min(95, s * 1.4));
     
     return [h, newS, newL];
   };
