@@ -472,22 +472,31 @@ export default function Home() {
     return [h, newS, newL];
   };
 
-  // Create title highlight color (VIBRANT and EYE-CATCHING)
+  // Create title highlight color (DARKER than blur, readable on light backgrounds)
   const createTitleHighlightColor = (blurHsl) => {
     const [h, s, l] = blurHsl;
     
-    // Make it MUCH brighter and more saturated for maximum visibility
-    const newL = Math.min(92, l + 60); // Very bright (85 → 92)
-    const newS = Math.min(95, s * 1.8); // High saturation (70 → 95, multiplier 1.2 → 1.8)
+    // Make it DARKER than blur for better contrast
+    // Blur is typically 20-45% lightness, we want 55-75% for title highlights
+    // This ensures they're darker than blur but still readable on light backgrounds
     
-    // Boost colors that tend to be dull
-    let finalS = newS;
-    if (s < 50) {
-      // If original was low saturation, boost even more
-      finalS = Math.min(95, newS * 1.3);
+    let newL;
+    if (l <= 30) {
+      // If blur is very dark (20-30%), make highlight medium-dark (55-65%)
+      newL = 55 + (l / 30) * 10; // 55-65% range
+    } else {
+      // If blur is medium (30-45%), make highlight medium (65-75%)
+      newL = 65 + ((l - 30) / 15) * 10; // 65-75% range
     }
     
-    return [h, finalS, newL];
+    // Increase saturation for vibrancy
+    const newS = Math.min(90, s * 1.6); // Boost saturation by 60%
+    
+    // Ensure minimum values for readability and vibrancy
+    const finalL = Math.max(55, Math.min(75, newL)); // Clamp between 55-75%
+    const finalS = Math.max(65, Math.min(90, newS)); // Clamp between 65-90%
+    
+    return [h, finalS, finalL];
   };
 
   // Create bullet text color (VIVID and CLEAR)
