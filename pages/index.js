@@ -472,44 +472,36 @@ export default function Home() {
     return [h, newS, newL];
   };
 
-  // Create title highlight color (BOLD, DOMINANT, and EYE-CATCHING)
+  // Create title highlight color (VIBRANT and EYE-CATCHING)
   const createTitleHighlightColor = (blurHsl) => {
     const [h, s, l] = blurHsl;
     
-    // Create BOLD, SOLID colors - not washed out bright ones
-    // Lower lightness (60-75%) = more solid, dominant colors
-    // Higher saturation (90-100%) = maximum vibrancy
+    // Make it MUCH brighter and more saturated for maximum visibility
+    const newL = Math.min(92, l + 60); // Very bright (85 → 92)
+    const newS = Math.min(95, s * 1.8); // High saturation (70 → 95, multiplier 1.2 → 1.8)
     
-    // Calculate optimal lightness for boldness (not too dark, not too light)
-    const newL = Math.max(60, Math.min(75, l + 35)); // 60-75% range (was 92% - too light!)
-    
-    // Maximum saturation for dominance
-    let finalS = Math.min(100, Math.max(90, s * 2.0)); // 90-100% saturation (was 95% max)
-    
-    // Extra boost for originally dull colors
+    // Boost colors that tend to be dull
+    let finalS = newS;
     if (s < 50) {
-      finalS = Math.min(100, s * 2.5); // Even more saturated
+      // If original was low saturation, boost even more
+      finalS = Math.min(95, newS * 1.3);
     }
-    
-    // Ensure minimum saturation for dominance
-    finalS = Math.max(90, finalS);
     
     return [h, finalS, newL];
   };
 
-  // Create bullet text color (BOLD and DOMINANT)
+  // Create bullet text color (VIVID and CLEAR)
   const createBulletTextColor = (blurHsl, titleHsl) => {
     const [h, s1, l1] = blurHsl;
     const [, s2, l2] = titleHsl;
     
-    // Create bold, solid colors - similar to highlight but slightly different
-    // Use the highlight color as base but adjust slightly
-    const highlightL = titleHsl[2]; // Use highlight lightness
-    const highlightS = titleHsl[1]; // Use highlight saturation
+    // Create a vibrant middle color that's clearly visible
+    const midL = Math.min(85, (l1 + l2) / 2 + 25); // Much lighter (was +10, now +25)
+    const midS = Math.min(90, (s1 + s2) / 2 + 20); // Much more saturated (was +5, now +20)
     
-    // Make it slightly lighter than highlight but still bold
-    const finalL = Math.max(65, Math.min(80, highlightL + 5)); // 65-80% (bold, not washed out)
-    const finalS = Math.max(85, highlightS * 0.95); // 85-100% (very saturated)
+    // Ensure it's not too similar to blur or title
+    const finalL = Math.max(70, midL); // Ensure minimum lightness of 70%
+    const finalS = Math.max(75, midS); // Ensure minimum saturation of 75%
     
     return [h, finalS, finalL];
   };
@@ -518,26 +510,28 @@ export default function Home() {
   const createInfoBoxColor = (blurHsl) => {
     const [h, s, l] = blurHsl;
     
-    // Create darker version of blur color that's readable on white background
-    // Darker = lower lightness (30-50% range)
-    // High saturation (70-90%) = vibrant but readable
-    // Must contrast well with white (#FFFFFF)
+    // Make it DARKER than blur for readability on white
+    // Blur is typically 20-45% lightness, we want 50-70% for info boxes
+    // This ensures good contrast on white background
     
-    // Calculate darker lightness (30-50% for good contrast on white)
-    const newL = Math.max(30, Math.min(50, l + 10)); // Darker than blur, readable on white
-    
-    // High saturation for vibrancy, but not too high (70-90%)
-    let finalS = Math.min(90, Math.max(70, s * 1.3)); // Boost saturation for visibility
-    
-    // Ensure minimum saturation for colorfulness
-    if (s < 40) {
-      finalS = Math.min(90, s * 1.8); // Extra boost for dull colors
+    // Calculate darker version: increase lightness but keep it readable
+    // If blur is very dark (20-30%), make info box medium-dark (50-60%)
+    // If blur is medium (30-45%), make info box medium (60-70%)
+    let newL;
+    if (l <= 30) {
+      newL = 50 + (l / 30) * 10; // 50-60% range
+    } else {
+      newL = 60 + ((l - 30) / 15) * 10; // 60-70% range
     }
     
-    // Ensure minimum saturation
-    finalS = Math.max(70, finalS);
+    // Increase saturation for vibrancy (but not too much)
+    const newS = Math.min(85, s * 1.4); // Boost saturation by 40%
     
-    return [h, finalS, newL];
+    // Ensure minimum values for readability
+    const finalL = Math.max(50, Math.min(70, newL)); // Clamp between 50-70%
+    const finalS = Math.max(60, Math.min(85, newS)); // Clamp between 60-85%
+    
+    return [h, finalS, finalL];
   };
 
   // Main extraction function with index-based selection
@@ -592,7 +586,7 @@ export default function Home() {
       const [lR, lG, lB] = hslToRgb(...linkHsl);
       const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
       
-      // Create information box color (darker, readable on white)
+      // Create information box color (DARKER, readable on white)
       const infoBoxHsl = createInfoBoxColor(blurHsl);
       const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
       const infoBoxColor = `rgb(${iR}, ${iG}, ${iB})`;
@@ -616,10 +610,10 @@ export default function Home() {
       console.error(`   Using fallback blue-gray color #3A4A5E`);
       
       // Fallback colors
-      // Fallback colors with infoBox color
-      const fallbackBlurHsl = [220, 30, 30]; // Dark blue-gray
+      const fallbackBlurHsl = [210, 30, 35]; // Blue-gray #3A4A5E
       const fallbackInfoBoxHsl = createInfoBoxColor(fallbackBlurHsl);
       const [fiR, fiG, fiB] = hslToRgb(...fallbackInfoBoxHsl);
+      const fallbackInfoBoxColor = `rgb(${fiR}, ${fiG}, ${fiB})`;
       
       setImageDominantColors(prev => ({
         ...prev,
@@ -627,7 +621,7 @@ export default function Home() {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
           link: '#5A6F8E',
-          infoBox: `rgb(${fiR}, ${fiG}, ${fiB})`
+          infoBox: fallbackInfoBoxColor
         }
       }));
     }
@@ -4068,13 +4062,16 @@ export default function Home() {
                                     const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
                                     const infoBoxHsl = createInfoBoxColor(blurHsl);
                                     
+                                    const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
+                                    const infoBoxColorHex = `rgb(${iR}, ${iG}, ${iB})`;
+                                    
                                     setImageDominantColors(prev => ({
                                       ...prev,
                                       [index]: {
                                         blurColor: blurColor,
                                         highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
                                         link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
-                                        infoBox: `hsl(${infoBoxHsl[0]}, ${infoBoxHsl[1]}%, ${infoBoxHsl[2]}%)`
+                                        infoBox: infoBoxColorHex
                                       }
                                     }));
                                     
@@ -5406,11 +5403,11 @@ export default function Home() {
                                           letterSpacing: '0.5px'
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
-                                          color: imageDominantColors[index]?.infoBox || '#333333',
+                                          color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
                                           fontSize: '18px',
                                           fontWeight: '800',
                                           textAlign: 'center',
-                                          textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                          textShadow: 'none',
                                           lineHeight: '1.1'
                                         }}>{mainValue}</div>
                                         {subtitle && <div className="news-detail-subtitle" style={{ 
