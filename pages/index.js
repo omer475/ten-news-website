@@ -472,36 +472,44 @@ export default function Home() {
     return [h, newS, newL];
   };
 
-  // Create title highlight color (VIBRANT and EYE-CATCHING)
+  // Create title highlight color (BOLD, DOMINANT, and EYE-CATCHING)
   const createTitleHighlightColor = (blurHsl) => {
     const [h, s, l] = blurHsl;
     
-    // Make it MUCH brighter and more saturated for maximum visibility
-    const newL = Math.min(92, l + 60); // Very bright (85 → 92)
-    const newS = Math.min(95, s * 1.8); // High saturation (70 → 95, multiplier 1.2 → 1.8)
+    // Create BOLD, SOLID colors - not washed out bright ones
+    // Lower lightness (60-75%) = more solid, dominant colors
+    // Higher saturation (90-100%) = maximum vibrancy
     
-    // Boost colors that tend to be dull
-    let finalS = newS;
+    // Calculate optimal lightness for boldness (not too dark, not too light)
+    const newL = Math.max(60, Math.min(75, l + 35)); // 60-75% range (was 92% - too light!)
+    
+    // Maximum saturation for dominance
+    let finalS = Math.min(100, Math.max(90, s * 2.0)); // 90-100% saturation (was 95% max)
+    
+    // Extra boost for originally dull colors
     if (s < 50) {
-      // If original was low saturation, boost even more
-      finalS = Math.min(95, newS * 1.3);
+      finalS = Math.min(100, s * 2.5); // Even more saturated
     }
+    
+    // Ensure minimum saturation for dominance
+    finalS = Math.max(90, finalS);
     
     return [h, finalS, newL];
   };
 
-  // Create bullet text color (VIVID and CLEAR)
+  // Create bullet text color (BOLD and DOMINANT)
   const createBulletTextColor = (blurHsl, titleHsl) => {
     const [h, s1, l1] = blurHsl;
     const [, s2, l2] = titleHsl;
     
-    // Create a vibrant middle color that's clearly visible
-    const midL = Math.min(85, (l1 + l2) / 2 + 25); // Much lighter (was +10, now +25)
-    const midS = Math.min(90, (s1 + s2) / 2 + 20); // Much more saturated (was +5, now +20)
+    // Create bold, solid colors - similar to highlight but slightly different
+    // Use the highlight color as base but adjust slightly
+    const highlightL = titleHsl[2]; // Use highlight lightness
+    const highlightS = titleHsl[1]; // Use highlight saturation
     
-    // Ensure it's not too similar to blur or title
-    const finalL = Math.max(70, midL); // Ensure minimum lightness of 70%
-    const finalS = Math.max(75, midS); // Ensure minimum saturation of 75%
+    // Make it slightly lighter than highlight but still bold
+    const finalL = Math.max(65, Math.min(80, highlightL + 5)); // 65-80% (bold, not washed out)
+    const finalS = Math.max(85, highlightS * 0.95); // 85-100% (very saturated)
     
     return [h, finalS, finalL];
   };
