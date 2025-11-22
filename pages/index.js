@@ -3918,13 +3918,15 @@ export default function Home() {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
                                   
-                                  // Strategy: Try with CORS for first 3 attempts (enables color extraction)
-                                  // Then try without CORS for final 2 attempts (image loads but no color extraction)
-                                  if (retryCount <= 3) {
-                                    imgElement.crossOrigin = 'anonymous';
+                                  // Strategy: Try with CORS for first 2 attempts (enables color extraction)
+                                  // Then try without CORS for final 3 attempts (image loads but no color extraction)
+                                  if (retryCount <= 2) {
+                                    imgElement.setAttribute('crossOrigin', 'anonymous');
                                     console.log(`🔄 Retry ${retryCount}/${maxRetries} WITH CORS (color extraction enabled)`);
                                   } else {
+                                    // Remove CORS completely - some servers reject CORS requests
                                     imgElement.removeAttribute('crossOrigin');
+                                    imgElement.crossOrigin = '';
                                     console.log(`🔄 Retry ${retryCount}/${maxRetries} WITHOUT CORS (image only, fallback color)`);
                                     // Set fallback color immediately for non-CORS images
                                     setImageDominantColors(prev => ({
@@ -3937,20 +3939,26 @@ export default function Home() {
                                     }));
                                   }
                                   
-                                  // Try different referrer policies
-                                  if (retryCount === 3) {
+                                  // Vary referrer policies
+                                  if (retryCount === 1 || retryCount === 2) {
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                  } else if (retryCount === 3) {
                                     imgElement.referrerPolicy = 'no-referrer-when-downgrade';
                                   } else if (retryCount === 4) {
                                     imgElement.referrerPolicy = 'origin';
                                   } else {
-                                    imgElement.referrerPolicy = 'no-referrer';
+                                    imgElement.referrerPolicy = 'unsafe-url';
                                   }
                                   
-                                  // Try with timestamp to bypass cache
-                                  const separator = imageUrl.includes('?') ? '&' : '?';
-                                  const newSrc = imageUrl + separator + '_retry=' + retryCount + '&_t=' + Date.now();
-                                  console.log(`   URL: ${newSrc.substring(0, 80)}...`);
-                                  imgElement.src = newSrc;
+                                  // Don't add retry params - some servers reject modified URLs
+                                  console.log(`   URL: ${imageUrl.substring(0, 80)}...`);
+                                  
+                                  // Force reload by clearing and resetting
+                                  const tempSrc = imgElement.src;
+                                  imgElement.src = '';
+                                  setTimeout(() => {
+                                    imgElement.src = imageUrl;
+                                  }, 50);
                                   return;
                                 }
                                 
@@ -3989,8 +3997,8 @@ export default function Home() {
                                 }
                               };
                               
-                              // Try loading again with increasing delays
-                              setTimeout(tryLoadImage, 300 * retryCount);
+                              // Try loading again with shorter delays
+                              setTimeout(tryLoadImage, 100 * retryCount); // Reduced from 300ms
                             }}
                             onLoadStart={() => {
                               console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
