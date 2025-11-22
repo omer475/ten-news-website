@@ -472,21 +472,38 @@ export default function Home() {
     return [h, newS, newL];
   };
 
-  // Create title highlight color (lighter, subtle)
+  // Create title highlight color (VIBRANT and EYE-CATCHING)
   const createTitleHighlightColor = (blurHsl) => {
     const [h, s, l] = blurHsl;
-    const newL = Math.min(85, l + 50); // Much lighter
-    const newS = Math.min(70, s * 1.2); // Slightly more saturated
-    return [h, newS, newL];
+    
+    // Make it MUCH brighter and more saturated for maximum visibility
+    const newL = Math.min(92, l + 60); // Very bright (85 → 92)
+    const newS = Math.min(95, s * 1.8); // High saturation (70 → 95, multiplier 1.2 → 1.8)
+    
+    // Boost colors that tend to be dull
+    let finalS = newS;
+    if (s < 50) {
+      // If original was low saturation, boost even more
+      finalS = Math.min(95, newS * 1.3);
+    }
+    
+    return [h, finalS, newL];
   };
 
-  // Create bullet text color (between blur and title)
+  // Create bullet text color (VIVID and CLEAR)
   const createBulletTextColor = (blurHsl, titleHsl) => {
     const [h, s1, l1] = blurHsl;
     const [, s2, l2] = titleHsl;
-    const midL = (l1 + l2) / 2 + 10; // Between the two, slightly lighter
-    const midS = (s1 + s2) / 2 + 5; // Average saturation
-    return [h, Math.min(75, midS), Math.min(70, midL)];
+    
+    // Create a vibrant middle color that's clearly visible
+    const midL = Math.min(85, (l1 + l2) / 2 + 25); // Much lighter (was +10, now +25)
+    const midS = Math.min(90, (s1 + s2) / 2 + 20); // Much more saturated (was +5, now +20)
+    
+    // Ensure it's not too similar to blur or title
+    const finalL = Math.max(70, midL); // Ensure minimum lightness of 70%
+    const finalS = Math.max(75, midS); // Ensure minimum saturation of 75%
+    
+    return [h, finalS, finalL];
   };
 
   // Main extraction function with index-based selection
@@ -3999,12 +4016,17 @@ export default function Home() {
                                     
                                     console.log(`  ✓ Strategy 4: Generated color ${blurColor} from URL hash`);
                                     
+                                    // Use the same VIBRANT color generation functions
+                                    const blurHsl = [hue, saturation, lightness];
+                                    const highlightHsl = createTitleHighlightColor(blurHsl);
+                                    const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
+                                    
                                     setImageDominantColors(prev => ({
                                       ...prev,
                                       [index]: {
                                         blurColor: blurColor,
-                                        highlight: `hsl(${hue}, ${Math.min(70, saturation * 1.2)}%, ${Math.min(85, lightness + 50)}%)`,
-                                        link: `hsl(${hue}, ${Math.min(75, (saturation + 50) / 2)}%, ${Math.min(70, (lightness + 85) / 2)}%)`
+                                        highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
+                                        link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`
                                       }
                                     }));
                                     
