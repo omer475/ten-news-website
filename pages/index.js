@@ -492,26 +492,44 @@ export default function Home() {
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
+      console.log(`🎨 Starting color extraction for article ${storyIndex}`);
+      console.log(`   Image src: ${imgElement.src}`);
+      console.log(`   Image dimensions: ${imgElement.naturalWidth}x${imgElement.naturalHeight}`);
+      console.log(`   crossOrigin: ${imgElement.crossOrigin}`);
+      
+      // Verify image is ready
+      if (!imgElement.complete || !imgElement.naturalWidth || imgElement.naturalWidth === 0) {
+        throw new Error(`Image not fully loaded: complete=${imgElement.complete}, width=${imgElement.naturalWidth}`);
+      }
+      
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      canvas.width = imgElement.naturalWidth || imgElement.width;
-      canvas.height = imgElement.naturalHeight || imgElement.height;
+      canvas.width = imgElement.naturalWidth;
+      canvas.height = imgElement.naturalHeight;
+      
+      console.log(`   Drawing image to canvas...`);
       ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
       
+      console.log(`   Getting image data from canvas...`);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
+      console.log(`   ✅ Successfully got ${pixels.length / 4} pixels`);
       
       // Extract colorful candidates
       const candidates = extractColorfulCandidates(pixels, canvas.width, canvas.height);
+      console.log(`   Found ${candidates.length} color candidates`);
       
       // Select color based on article index
       const selectedColor = selectColorForArticle(candidates, storyIndex);
+      console.log(`   Selected color HSL: ${selectedColor.hsl.join(', ')}`);
+      console.log(`   Selected color RGB: ${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}`);
       
       // Create blur color
       const blurHsl = createBlurColor(selectedColor.hsl);
       const [bR, bG, bB] = hslToRgb(...blurHsl);
       const blurColorHex = `#${toHex(bR)}${toHex(bG)}${toHex(bB)}`;
+      console.log(`   🎨 Final blur color: ${blurColorHex}`);
       
       // Create title highlight color  
       const highlightHsl = createTitleHighlightColor(blurHsl);
@@ -532,8 +550,14 @@ export default function Home() {
           link: linkColor
         }
       }));
+      
+      console.log(`   ✅ Color extraction complete for article ${storyIndex}`);
     } catch (error) {
-      console.error('Color extraction error:', error);
+      console.error(`❌ Color extraction FAILED for article ${storyIndex}:`, error);
+      console.error(`   Error type: ${error.name}`);
+      console.error(`   Error message: ${error.message}`);
+      console.error(`   Using fallback blue-gray color #3A4A5E`);
+      
       // Fallback colors
       setImageDominantColors(prev => ({
         ...prev,
@@ -3836,20 +3860,24 @@ export default function Home() {
                                 return newSet;
                               });
                               
-                              // Always extract colors from the actual image using the improved algorithm
-                              if (e.target.complete && e.target.naturalWidth > 0) {
-                                try {
-                                  extractDominantColor(e.target, index);
-                                } catch (error) {
-                                  console.warn('Color extraction failed:', error);
-                                }
-                              }
                               // Ensure image is visible and persistent
                               e.target.style.opacity = '1';
                               e.target.style.visibility = 'visible';
                               e.target.style.display = 'block';
                               e.target.style.minWidth = '100%';
                               e.target.style.minHeight = '100%';
+                              
+                              // Extract colors after a tiny delay to ensure image is fully decoded
+                              setTimeout(() => {
+                                if (e.target.complete && e.target.naturalWidth > 0) {
+                                  try {
+                                    console.log(`🎯 Attempting color extraction for article ${index}...`);
+                                    extractDominantColor(e.target, index);
+                                  } catch (error) {
+                                    console.error(`❌ Color extraction outer catch for article ${index}:`, error);
+                                  }
+                                }
+                              }, 100); // 100ms delay to ensure image is decoded
                             }}
                             onError={(e) => {
                               console.error('❌ Image failed to load:', imageUrl);
@@ -3866,12 +3894,9 @@ export default function Home() {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
                                   
-                                  // Try different CORS settings
-                                  if (retryCount % 2 === 0) {
-                                    imgElement.crossOrigin = 'anonymous';
-                                  } else {
-                                    imgElement.crossOrigin = undefined;
-                                  }
+                                  // ALWAYS keep crossOrigin='anonymous' for color extraction to work
+                                  // Without this, canvas.getImageData() will throw a CORS error
+                                  imgElement.crossOrigin = 'anonymous';
                                   
                                   // Try different referrer policies
                                   if (retryCount === 3) {
