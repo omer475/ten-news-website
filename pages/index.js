@@ -265,12 +265,11 @@ export default function Home() {
     return hex.length === 1 ? '0' + hex : hex;
   };
 
-  // Filter colors to keep only HIGHLY SATURATED ones (NO pale colors allowed)
+  // Filter colors to keep only colorful ones (saturation >= 35%)
   const filterColorfulColors = (colors) => {
     return colors.filter(color => {
       const [h, s, l] = color.hsl;
-      // STRICT: Saturation must be >= 60%, lightness 30-70% (NO pale colors)
-      return s >= 60 && l >= 30 && l <= 70;
+      return s >= 35 && l >= 20 && l <= 80; // Colorful, not too dark/light
     });
   };
 
@@ -312,35 +311,31 @@ export default function Home() {
     return sortedColors;
   };
 
-  // Select ONLY the most saturated, vivid color (NO PALE COLORS)
+  // Select the most dominant color from the image
   const selectColorForArticle = (colorCandidates, articleIndex) => {
-    // Filter to HIGHLY saturated colors only (saturation >= 60%, lightness 30-70%)
+    // Filter to colorful only (saturation >= 30%, lightness 20-80%)
     let colorfulColors = filterColorfulColors(colorCandidates);
     
-    // If no highly saturated colors, use most saturated from all candidates
+    // If no colorful colors, use most saturated from all candidates
     if (colorfulColors.length === 0) {
       const sortedBySaturation = colorCandidates.sort((a, b) => b.hsl[1] - a.hsl[1]);
       colorfulColors = sortedBySaturation.slice(0, 1);
-      // Force boost the saturation to make it vivid
-      if (colorfulColors[0]) {
-        colorfulColors[0].hsl[1] = Math.max(65, colorfulColors[0].hsl[1]);
-      }
     }
     
-    // Sort by MAXIMUM SATURATION for most vivid colors
-    // Saturation^2 heavily favors highly saturated colors
+    // Sort by frequency and vibrancy to get the TRUE dominant color from the image
+    // Vibrancy = saturation * (1 - distance from mid-lightness)
     colorfulColors.sort((a, b) => {
-      const vibrancyA = Math.pow(a.hsl[1], 2) * (1 - Math.abs(a.hsl[2] - 45) / 50);
-      const vibrancyB = Math.pow(b.hsl[1], 2) * (1 - Math.abs(b.hsl[2] - 45) / 50);
+      const vibrancyA = a.hsl[1] * (1 - Math.abs(a.hsl[2] - 50) / 50);
+      const vibrancyB = b.hsl[1] * (1 - Math.abs(b.hsl[2] - 50) / 50);
       return vibrancyB - vibrancyA;
     });
     
-    // Select the FIRST (most saturated) color
+    // Select the FIRST (most vibrant) color - this is the actual dominant color
     const selectedColor = { ...colorfulColors[0] };
     
-    // Boost saturation MAXIMALLY - minimum 70% after boost
+    // Only boost saturation slightly, NO hue shifting
     selectedColor.hsl = [...selectedColor.hsl];
-    selectedColor.hsl[1] = Math.max(70, Math.min(100, selectedColor.hsl[1] * 1.4));
+    selectedColor.hsl[1] = Math.min(100, selectedColor.hsl[1] * 1.15);
     
     // Convert to RGB
     const [r, g, b] = hslToRgb(...selectedColor.hsl);
@@ -352,16 +347,16 @@ export default function Home() {
     return selectedColor;
   };
 
-  // Create blur color (EXTREMELY vivid - NO PALE COLORS)
+  // Create blur color (dark but more vibrant and varied)
   const createBlurColor = (hsl) => {
     const [h, s, l] = hsl;
     
-    // Dark but visible: 35-50% lightness
-    const newL = Math.max(35, Math.min(50, l * 0.6));
+    // More varied darkness range based on original lightness
+    const newL = Math.max(20, Math.min(45, l * 0.5)); // Dark: 20-45%
     
-    // MAXIMUM SATURATION - minimum 80%, boost by 50%
-    // This ensures ONLY vivid colors: red, navy, purple, green
-    const newS = Math.max(80, Math.min(100, s * 1.5));
+    // Keep more saturation for vibrant colors, reduce less
+    // If original is very saturated, keep it high
+    const newS = Math.min(85, s * 1.0); // Preserve saturation, cap at 85%
     
     return [h, newS, newL];
   };
