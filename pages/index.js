@@ -514,6 +514,32 @@ export default function Home() {
     return [h, finalS, finalL];
   };
 
+  // Create information box color (DARKER, READABLE on white background)
+  const createInfoBoxColor = (blurHsl) => {
+    const [h, s, l] = blurHsl;
+    
+    // Create darker version of blur color that's readable on white background
+    // Darker = lower lightness (30-50% range)
+    // High saturation (70-90%) = vibrant but readable
+    // Must contrast well with white (#FFFFFF)
+    
+    // Calculate darker lightness (30-50% for good contrast on white)
+    const newL = Math.max(30, Math.min(50, l + 10)); // Darker than blur, readable on white
+    
+    // High saturation for vibrancy, but not too high (70-90%)
+    let finalS = Math.min(90, Math.max(70, s * 1.3)); // Boost saturation for visibility
+    
+    // Ensure minimum saturation for colorfulness
+    if (s < 40) {
+      finalS = Math.min(90, s * 1.8); // Extra boost for dull colors
+    }
+    
+    // Ensure minimum saturation
+    finalS = Math.max(70, finalS);
+    
+    return [h, finalS, newL];
+  };
+
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -566,13 +592,19 @@ export default function Home() {
       const [lR, lG, lB] = hslToRgb(...linkHsl);
       const linkColor = `rgb(${lR}, ${lG}, ${lB})`;
       
+      // Create information box color (darker, readable on white)
+      const infoBoxHsl = createInfoBoxColor(blurHsl);
+      const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
+      const infoBoxColor = `rgb(${iR}, ${iG}, ${iB})`;
+      
       // Store all colors
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: blurColorHex,
           highlight: highlightColor,
-          link: linkColor
+          link: linkColor,
+          infoBox: infoBoxColor
         }
       }));
       
@@ -584,12 +616,18 @@ export default function Home() {
       console.error(`   Using fallback blue-gray color #3A4A5E`);
       
       // Fallback colors
+      // Fallback colors with infoBox color
+      const fallbackBlurHsl = [220, 30, 30]; // Dark blue-gray
+      const fallbackInfoBoxHsl = createInfoBoxColor(fallbackBlurHsl);
+      const [fiR, fiG, fiB] = hslToRgb(...fallbackInfoBoxHsl);
+      
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
-          link: '#5A6F8E'
+          link: '#5A6F8E',
+          infoBox: `rgb(${fiR}, ${fiG}, ${fiB})`
         }
       }));
     }
@@ -4028,13 +4066,15 @@ export default function Home() {
                                     const blurHsl = [hue, saturation, lightness];
                                     const highlightHsl = createTitleHighlightColor(blurHsl);
                                     const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
+                                    const infoBoxHsl = createInfoBoxColor(blurHsl);
                                     
                                     setImageDominantColors(prev => ({
                                       ...prev,
                                       [index]: {
                                         blurColor: blurColor,
                                         highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
-                                        link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`
+                                        link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
+                                        infoBox: `hsl(${infoBoxHsl[0]}, ${infoBoxHsl[1]}%, ${infoBoxHsl[2]}%)`
                                       }
                                     }));
                                     
@@ -5366,7 +5406,7 @@ export default function Home() {
                                           letterSpacing: '0.5px'
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
-                                          color: imageDominantColors[index]?.highlight || '#000000',
+                                          color: imageDominantColors[index]?.infoBox || '#333333',
                                           fontSize: '18px',
                                           fontWeight: '800',
                                           textAlign: 'center',
