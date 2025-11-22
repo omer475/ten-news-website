@@ -587,7 +587,7 @@ export default function Home() {
       // Default colors if no blur color
       return {
         color1: '#1e3a8a', // Navy (dominant)
-        color2: '#c7d2e0'  // Light grey
+        color2: 'transparent'  // Transparent
       };
     }
 
@@ -663,19 +663,16 @@ export default function Home() {
       const color1Hsl = { h: hsl.h, s: Math.min(hsl.s + 10, 100), l: hsl.l };
       const color1Rgb = hslToRgb(color1Hsl.h, color1Hsl.s, color1Hsl.l);
       
-      // Color 2: Light grey with a subtle hint of the blur color's hue
-      const color2Hsl = { h: hsl.h, s: 15, l: 78 }; // Very light with low saturation
-      const color2Rgb = hslToRgb(color2Hsl.h, color2Hsl.s, color2Hsl.l);
-
+      // Color 2: Transparent
       return {
         color1: rgbToHex(color1Rgb.r, color1Rgb.g, color1Rgb.b),
-        color2: rgbToHex(color2Rgb.r, color2Rgb.g, color2Rgb.b)
+        color2: 'transparent'
       };
     } catch (error) {
       console.error('Error generating border colors:', error);
       return {
         color1: '#1e3a8a',
-        color2: '#c7d2e0'
+        color2: 'transparent'
       };
     }
   };
@@ -1929,7 +1926,7 @@ export default function Home() {
           background: conic-gradient(
             from var(--gradient-angle),
             var(--border-color-1, #1e3a8a) 0deg,
-            var(--border-color-2, #c7d2e0) 180deg,
+            var(--border-color-2, transparent) 180deg,
             var(--border-color-1, #1e3a8a) 360deg
           );
           -webkit-mask: 
@@ -1942,7 +1939,7 @@ export default function Home() {
           mask-composite: exclude;
           z-index: -1;
           pointer-events: none;
-          animation: rotateBorder 5s linear infinite reverse;
+          animation: rotateBorder 2.5s linear infinite reverse;
         }
 
         /* Keyframes for counterclockwise gradient rotation (using reverse) */
