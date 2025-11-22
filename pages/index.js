@@ -3911,24 +3911,43 @@ export default function Home() {
                               
                               // More aggressive retry strategy
                               let retryCount = parseInt(imgElement.dataset.retryCount || '0');
-                              const maxRetries = 5; // Increased retries
+                              const maxRetries = 8; // Increased from 5 to 8
                               
                               const tryLoadImage = () => {
                                 if (retryCount < maxRetries && imageUrl && !imageUrl.includes('data:') && !imageUrl.includes('blob:')) {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
                                   
-                                  // Strategy: Try with CORS for first 2 attempts (enables color extraction)
-                                  // Then try without CORS for final 3 attempts (image loads but no color extraction)
+                                  // Progressive strategy:
+                                  // Retries 1-2: CORS with no-referrer
+                                  // Retries 3-4: NO CORS with no-referrer  
+                                  // Retries 5-6: NO CORS with different referrer policies
+                                  // Retries 7-8: NO CORS with cache-busting
+                                  
                                   if (retryCount <= 2) {
                                     imgElement.setAttribute('crossOrigin', 'anonymous');
-                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} WITH CORS (color extraction enabled)`);
-                                  } else {
-                                    // Remove CORS completely - some servers reject CORS requests
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} WITH CORS + no-referrer`);
+                                  } else if (retryCount <= 4) {
                                     imgElement.removeAttribute('crossOrigin');
                                     imgElement.crossOrigin = '';
-                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} WITHOUT CORS (image only, fallback color)`);
-                                    // Set fallback color immediately for non-CORS images
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} NO CORS + no-referrer`);
+                                  } else if (retryCount <= 6) {
+                                    imgElement.removeAttribute('crossOrigin');
+                                    imgElement.crossOrigin = '';
+                                    imgElement.referrerPolicy = retryCount === 5 ? 'no-referrer-when-downgrade' : 'origin';
+                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} NO CORS + ${imgElement.referrerPolicy}`);
+                                  } else {
+                                    // Final attempts with cache busting
+                                    imgElement.removeAttribute('crossOrigin');
+                                    imgElement.crossOrigin = '';
+                                    imgElement.referrerPolicy = 'unsafe-url';
+                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} NO CORS + cache-bust`);
+                                  }
+                                  
+                                  // Set fallback color for non-CORS images
+                                  if (retryCount > 2) {
                                     setImageDominantColors(prev => ({
                                       ...prev,
                                       [index]: {
@@ -3939,25 +3958,20 @@ export default function Home() {
                                     }));
                                   }
                                   
-                                  // Vary referrer policies
-                                  if (retryCount === 1 || retryCount === 2) {
-                                    imgElement.referrerPolicy = 'no-referrer';
-                                  } else if (retryCount === 3) {
-                                    imgElement.referrerPolicy = 'no-referrer-when-downgrade';
-                                  } else if (retryCount === 4) {
-                                    imgElement.referrerPolicy = 'origin';
-                                  } else {
-                                    imgElement.referrerPolicy = 'unsafe-url';
-                                  }
-                                  
-                                  // Don't add retry params - some servers reject modified URLs
                                   console.log(`   URL: ${imageUrl.substring(0, 80)}...`);
                                   
+                                  // For final 2 attempts, add cache buster
+                                  let loadUrl = imageUrl;
+                                  if (retryCount > 6) {
+                                    const separator = imageUrl.includes('?') ? '&' : '?';
+                                    loadUrl = imageUrl + separator + '_cb=' + Date.now();
+                                    console.log(`   Using cache-busted URL`);
+                                  }
+                                  
                                   // Force reload by clearing and resetting
-                                  const tempSrc = imgElement.src;
                                   imgElement.src = '';
                                   setTimeout(() => {
-                                    imgElement.src = imageUrl;
+                                    imgElement.src = loadUrl;
                                   }, 50);
                                   return;
                                 }

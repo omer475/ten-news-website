@@ -282,39 +282,46 @@ export default function SingleNewsPage() {
                   
                   // Retry strategy
                   let retryCount = parseInt(imgElement.dataset.retryCount || '0');
-                  const maxRetries = 5;
+                  const maxRetries = 8; // Increased from 5 to 8
                   
                   if (retryCount < maxRetries) {
                     retryCount++;
                     imgElement.dataset.retryCount = retryCount.toString();
                     
-                    // Try with CORS for first 2 attempts, then without
+                    // Progressive strategy
                     if (retryCount <= 2) {
                       imgElement.setAttribute('crossOrigin', 'anonymous');
+                      imgElement.referrerPolicy = 'no-referrer';
                       console.log(`🔄 News page retry ${retryCount}/${maxRetries} WITH CORS`);
+                    } else if (retryCount <= 4) {
+                      imgElement.removeAttribute('crossOrigin');
+                      imgElement.crossOrigin = '';
+                      imgElement.referrerPolicy = 'no-referrer';
+                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} NO CORS`);
+                    } else if (retryCount <= 6) {
+                      imgElement.removeAttribute('crossOrigin');
+                      imgElement.crossOrigin = '';
+                      imgElement.referrerPolicy = retryCount === 5 ? 'no-referrer-when-downgrade' : 'origin';
+                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} NO CORS + ${imgElement.referrerPolicy}`);
                     } else {
                       imgElement.removeAttribute('crossOrigin');
                       imgElement.crossOrigin = '';
-                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} WITHOUT CORS`);
+                      imgElement.referrerPolicy = 'unsafe-url';
+                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} NO CORS + cache-bust`);
                     }
                     
-                    // Vary referrer policies
-                    if (retryCount === 1 || retryCount === 2) {
-                      imgElement.referrerPolicy = 'no-referrer';
-                    } else if (retryCount === 3) {
-                      imgElement.referrerPolicy = 'no-referrer-when-downgrade';
-                    } else if (retryCount === 4) {
-                      imgElement.referrerPolicy = 'origin';
-                    } else {
-                      imgElement.referrerPolicy = 'unsafe-url';
+                    // For final 2 attempts, add cache buster
+                    let loadUrl = article.image;
+                    if (retryCount > 6) {
+                      const separator = article.image.includes('?') ? '&' : '?';
+                      loadUrl = article.image + separator + '_cb=' + Date.now();
                     }
                     
                     // Force reload
                     setTimeout(() => {
-                      const tempSrc = imgElement.src;
                       imgElement.src = '';
                       setTimeout(() => {
-                        imgElement.src = tempSrc;
+                        imgElement.src = loadUrl;
                       }, 50);
                     }, 100 * retryCount);
                   } else {
