@@ -272,67 +272,44 @@ export default function SingleNewsPage() {
               <img 
                 src={article.image} 
                 alt={article.title}
-                crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
                 loading="eager"
                 decoding="async"
+                onLoad={(e) => {
+                  console.log('✅ News page image loaded successfully');
+                  e.target.style.display = 'block';
+                }}
                 onError={(e) => {
-                  console.error('❌ Image failed to load:', article.image);
+                  console.error('❌ News page image failed to load:', article.image);
                   const imgElement = e.target;
                   
-                  // Retry strategy
                   let retryCount = parseInt(imgElement.dataset.retryCount || '0');
-                  const maxRetries = 8; // Increased from 5 to 8
+                  const maxRetries = 3;
                   
                   if (retryCount < maxRetries) {
                     retryCount++;
                     imgElement.dataset.retryCount = retryCount.toString();
+                    console.log(`🔄 News page retry ${retryCount}/${maxRetries}`);
                     
-                    // Progressive strategy
-                    if (retryCount <= 2) {
-                      imgElement.setAttribute('crossOrigin', 'anonymous');
-                      imgElement.referrerPolicy = 'no-referrer';
-                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} WITH CORS`);
-                    } else if (retryCount <= 4) {
-                      imgElement.removeAttribute('crossOrigin');
-                      imgElement.crossOrigin = '';
-                      imgElement.referrerPolicy = 'no-referrer';
-                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} NO CORS`);
-                    } else if (retryCount <= 6) {
-                      imgElement.removeAttribute('crossOrigin');
-                      imgElement.crossOrigin = '';
-                      imgElement.referrerPolicy = retryCount === 5 ? 'no-referrer-when-downgrade' : 'origin';
-                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} NO CORS + ${imgElement.referrerPolicy}`);
+                    // Vary referrer policies
+                    if (retryCount === 1) {
+                      imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                    } else if (retryCount === 2) {
+                      imgElement.referrerPolicy = 'origin';
                     } else {
-                      imgElement.removeAttribute('crossOrigin');
-                      imgElement.crossOrigin = '';
                       imgElement.referrerPolicy = 'unsafe-url';
-                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} NO CORS + cache-bust`);
                     }
                     
-                    // For final 2 attempts, add cache buster
-                    let loadUrl = article.image;
-                    if (retryCount > 6) {
-                      const separator = article.image.includes('?') ? '&' : '?';
-                      loadUrl = article.image + separator + '_cb=' + Date.now();
-                    }
-                    
-                    // Force reload
+                    // Reload with cache buster
                     setTimeout(() => {
-                      imgElement.src = '';
-                      setTimeout(() => {
-                        imgElement.src = loadUrl;
-                      }, 50);
+                      const separator = article.image.includes('?') ? '&' : '?';
+                      imgElement.src = article.image + separator + '_t=' + Date.now();
                     }, 100 * retryCount);
                   } else {
                     // All retries failed - hide image
                     console.warn('⚠️ All retries failed for news page image');
                     e.target.style.display = 'none';
                   }
-                }}
-                onLoad={(e) => {
-                  console.log('✅ News page image loaded successfully');
-                  e.target.style.display = 'block';
                 }}
               />
             </div>

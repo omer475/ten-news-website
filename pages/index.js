@@ -3827,7 +3827,6 @@ export default function Home() {
                             alt={story.title || 'News image'}
                             loading={isImageLoaded ? "eager" : "lazy"}
                             decoding="async"
-                            crossOrigin="anonymous"
                             referrerPolicy="no-referrer"
                             style={{
                               width: '100%',
@@ -3851,168 +3850,99 @@ export default function Home() {
                             }}
                             onLoad={(e) => {
                               console.log('✅ Image loaded successfully:', imageUrl);
-                              console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
-                              console.log('   crossOrigin:', e.target.crossOrigin);
                               
-                              // Mark this image as successfully loaded
+                              // Mark as loaded
                               setLoadedImages(prev => {
                                 const newSet = new Set(prev);
                                 newSet.add(imageUrl);
                                 return newSet;
                               });
                               
-                              // Ensure image is visible and persistent
+                              // Ensure image is visible
                               e.target.style.opacity = '1';
                               e.target.style.visibility = 'visible';
                               e.target.style.display = 'block';
-                              e.target.style.minWidth = '100%';
-                              e.target.style.minHeight = '100%';
                               
-                              // Only extract colors if image has CORS enabled
-                              if (e.target.crossOrigin === 'anonymous') {
-                                // Extract colors after a tiny delay to ensure image is fully decoded
-                                setTimeout(() => {
-                                  if (e.target.complete && e.target.naturalWidth > 0) {
-                                    try {
-                                      console.log(`🎯 Attempting color extraction for article ${index}...`);
-                                      extractDominantColor(e.target, index);
-                                    } catch (error) {
-                                      console.error(`❌ Color extraction outer catch for article ${index}:`, error);
-                                      // Use fallback color on error
-                                      setImageDominantColors(prev => ({
-                                        ...prev,
-                                        [index]: {
-                                          blurColor: '#3A4A5E',
-                                          highlight: '#A8C4E0',
-                                          link: '#5A6F8E'
-                                        }
-                                      }));
-                                    }
+                              // Set fallback colors immediately (fast response)
+                              setImageDominantColors(prev => ({
+                                ...prev,
+                                [index]: {
+                                  blurColor: '#3A4A5E',
+                                  highlight: '#A8C4E0',
+                                  link: '#5A6F8E'
+                                }
+                              }));
+                              
+                              // Try color extraction with CORS in background (optional enhancement)
+                              // Create a duplicate image with CORS for color extraction only
+                              setTimeout(() => {
+                                const corsImg = new Image();
+                                corsImg.crossOrigin = 'anonymous';
+                                corsImg.onload = () => {
+                                  try {
+                                    console.log(`🎨 Extracting colors for article ${index} via CORS proxy...`);
+                                    extractDominantColor(corsImg, index);
+                                  } catch (error) {
+                                    console.log(`⚠️ Color extraction failed, keeping fallback color`);
                                   }
-                                }, 100); // 100ms delay to ensure image is decoded
-                              } else {
-                                // Image loaded without CORS - use fallback colors
-                                console.log(`⚠️ Image loaded without CORS - using fallback color for article ${index}`);
-                                setImageDominantColors(prev => ({
-                                  ...prev,
-                                  [index]: {
-                                    blurColor: '#3A4A5E',
-                                    highlight: '#A8C4E0',
-                                    link: '#5A6F8E'
-                                  }
-                                }));
-                              }
+                                };
+                                corsImg.onerror = () => {
+                                  console.log(`ℹ️ CORS not available for this image, using fallback color`);
+                                };
+                                corsImg.src = imageUrl;
+                              }, 200);
                             }}
                             onError={(e) => {
                               console.error('❌ Image failed to load:', imageUrl);
-                              console.error('   Story title:', story.title);
                               const imgElement = e.target;
                               const parentElement = imgElement.parentElement;
                               
-                              // More aggressive retry strategy
                               let retryCount = parseInt(imgElement.dataset.retryCount || '0');
-                              const maxRetries = 8; // Increased from 5 to 8
+                              const maxRetries = 3; // Reduced retries since we start without CORS
                               
-                              const tryLoadImage = () => {
-                                if (retryCount < maxRetries && imageUrl && !imageUrl.includes('data:') && !imageUrl.includes('blob:')) {
-                                  retryCount++;
-                                  imgElement.dataset.retryCount = retryCount.toString();
-                                  
-                                  // Progressive strategy:
-                                  // Retries 1-2: CORS with no-referrer
-                                  // Retries 3-4: NO CORS with no-referrer  
-                                  // Retries 5-6: NO CORS with different referrer policies
-                                  // Retries 7-8: NO CORS with cache-busting
-                                  
-                                  if (retryCount <= 2) {
-                                    imgElement.setAttribute('crossOrigin', 'anonymous');
-                                    imgElement.referrerPolicy = 'no-referrer';
-                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} WITH CORS + no-referrer`);
-                                  } else if (retryCount <= 4) {
-                                    imgElement.removeAttribute('crossOrigin');
-                                    imgElement.crossOrigin = '';
-                                    imgElement.referrerPolicy = 'no-referrer';
-                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} NO CORS + no-referrer`);
-                                  } else if (retryCount <= 6) {
-                                    imgElement.removeAttribute('crossOrigin');
-                                    imgElement.crossOrigin = '';
-                                    imgElement.referrerPolicy = retryCount === 5 ? 'no-referrer-when-downgrade' : 'origin';
-                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} NO CORS + ${imgElement.referrerPolicy}`);
-                                  } else {
-                                    // Final attempts with cache busting
-                                    imgElement.removeAttribute('crossOrigin');
-                                    imgElement.crossOrigin = '';
-                                    imgElement.referrerPolicy = 'unsafe-url';
-                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} NO CORS + cache-bust`);
-                                  }
-                                  
-                                  // Set fallback color for non-CORS images
-                                  if (retryCount > 2) {
-                                    setImageDominantColors(prev => ({
-                                      ...prev,
-                                      [index]: {
-                                        blurColor: '#3A4A5E',
-                                        highlight: '#A8C4E0',
-                                        link: '#5A6F8E'
-                                      }
-                                    }));
-                                  }
-                                  
-                                  console.log(`   URL: ${imageUrl.substring(0, 80)}...`);
-                                  
-                                  // For final 2 attempts, add cache buster
-                                  let loadUrl = imageUrl;
-                                  if (retryCount > 6) {
-                                    const separator = imageUrl.includes('?') ? '&' : '?';
-                                    loadUrl = imageUrl + separator + '_cb=' + Date.now();
-                                    console.log(`   Using cache-busted URL`);
-                                  }
-                                  
-                                  // Force reload by clearing and resetting
-                                  imgElement.src = '';
-                                  setTimeout(() => {
-                                    imgElement.src = loadUrl;
-                                  }, 50);
-                                  return;
+                              if (retryCount < maxRetries) {
+                                retryCount++;
+                                imgElement.dataset.retryCount = retryCount.toString();
+                                console.log(`🔄 Retry ${retryCount}/${maxRetries}`);
+                                
+                                // Try different referrer policies
+                                if (retryCount === 1) {
+                                  imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                                } else if (retryCount === 2) {
+                                  imgElement.referrerPolicy = 'origin';
+                                } else {
+                                  imgElement.referrerPolicy = 'unsafe-url';
                                 }
                                 
-                                // Only show fallback after all retries exhausted
-                                if (retryCount >= maxRetries) {
-                                  console.warn('⚠️ All image load attempts failed, showing fallback');
-                                  // Remove from loaded images set if it was previously loaded
-                                  setLoadedImages(prev => {
-                                    const newSet = new Set(prev);
-                                    newSet.delete(imageUrl);
-                                    return newSet;
-                                  });
-                                  imgElement.style.display = 'none';
-                                  if (parentElement) {
-                                    const existingFallback = parentElement.querySelector('.image-fallback');
-                                    if (!existingFallback) {
-                                      parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                                      const fallback = document.createElement('div');
-                                      fallback.className = 'image-fallback';
-                                      fallback.style.cssText = `
-                                        font-size: 72px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        width: 100%;
-                                        height: 100%;
-                                        position: absolute;
-                                        top: 0;
-                                        left: 0;
-                                        z-index: 1;
-                                      `;
-                                      fallback.textContent = story.emoji || '📰';
-                                      parentElement.appendChild(fallback);
-                                    }
-                                  }
+                                // Reload
+                                setTimeout(() => {
+                                  const separator = imageUrl.includes('?') ? '&' : '?';
+                                  imgElement.src = imageUrl + separator + '_t=' + Date.now();
+                                }, 100 * retryCount);
+                              } else {
+                                // All retries failed - show emoji fallback
+                                console.warn('⚠️ All retries failed, showing emoji');
+                                imgElement.style.display = 'none';
+                                if (parentElement && !parentElement.querySelector('.image-fallback')) {
+                                  parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                  const fallback = document.createElement('div');
+                                  fallback.className = 'image-fallback';
+                                  fallback.style.cssText = `
+                                    font-size: 72px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    width: 100%;
+                                    height: 100%;
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    z-index: 1;
+                                  `;
+                                  fallback.textContent = story.emoji || '📰';
+                                  parentElement.appendChild(fallback);
                                 }
-                              };
-                              
-                              // Try loading again with shorter delays
-                              setTimeout(tryLoadImage, 100 * retryCount); // Reduced from 300ms
+                              }
                             }}
                             onLoadStart={() => {
                               console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
