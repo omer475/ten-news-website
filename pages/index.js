@@ -470,6 +470,105 @@ export default function Home() {
     };
   };
 
+  // Helper function to generate 2 complementary border colors from blur color
+  const getBorderColorsFromBlur = (blurColor) => {
+    if (!blurColor) {
+      // Default colors if no blur color
+      return {
+        color1: '#1e3a8a', // Navy (dominant)
+        color2: '#c7d2e0'  // Light grey
+      };
+    }
+
+    // Convert hex to RGB
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    };
+
+    // Convert RGB to HSL
+    const rgbToHsl = (r, g, b) => {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    };
+
+    // Convert HSL to RGB
+    const hslToRgb = (h, s, l) => {
+      h /= 360; s /= 100; l /= 100;
+      let r, g, b;
+
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+    };
+
+    // Convert RGB to hex
+    const rgbToHex = (r, g, b) => {
+      return '#' + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join('');
+    };
+
+    try {
+      const rgb = hexToRgb(blurColor);
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+      // Generate 2 colors:
+      // Color 1: The blur color itself (dominant color) - slightly enhanced saturation
+      const color1Hsl = { h: hsl.h, s: Math.min(hsl.s + 10, 100), l: hsl.l };
+      const color1Rgb = hslToRgb(color1Hsl.h, color1Hsl.s, color1Hsl.l);
+      
+      // Color 2: Light grey with a subtle hint of the blur color's hue
+      const color2Hsl = { h: hsl.h, s: 15, l: 78 }; // Very light with low saturation
+      const color2Rgb = hslToRgb(color2Hsl.h, color2Hsl.s, color2Hsl.l);
+
+      return {
+        color1: rgbToHex(color1Rgb.r, color1Rgb.g, color1Rgb.b),
+        color2: rgbToHex(color2Rgb.r, color2Rgb.g, color2Rgb.b)
+      };
+    } catch (error) {
+      console.error('Error generating border colors:', error);
+      return {
+        color1: '#1e3a8a',
+        color2: '#c7d2e0'
+      };
+    }
+  };
+
   // Initialize default component display
   useEffect(() => {
     if (stories.length > 0) {
@@ -1201,7 +1300,7 @@ export default function Home() {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '600', color: linkColor }}>
+          <span key={i} style={{ fontWeight: '500', color: linkColor }}>
             {content}
           </span>
         );
@@ -1577,7 +1676,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1654,6 +1753,104 @@ export default function Home() {
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
         }
 
+        /* Glass Container - Matching Switch Button Design */
+        .glass-container {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          font-weight: 600;
+          color: #000;
+          cursor: pointer;
+          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+          backdrop-filter: blur(12px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
+          border-radius: 20px;
+          box-sizing: border-box;
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+        }
+
+        /* Glass Container - Matching Switch Button Design */
+        .glass-container {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          font-weight: 600;
+          color: #000;
+          cursor: pointer;
+          border-radius: 20px;
+          box-sizing: border-box;
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            inset -0.15px -0.5px 2px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset -0.75px 1.25px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 0px 1.5px 2px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            inset 1px -3.25px 0.5px -2px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+          /* Keep original glassmorphism background */
+          background-color: color-mix(in srgb, var(--c-glass) 25%, transparent);
+          backdrop-filter: blur(12px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
+        }
+
+        /* Animated Rotating Border - Using ::before for the border only */
+        .glass-container::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 20px;
+          padding: 2px;
+          background: conic-gradient(
+            from var(--gradient-angle),
+            var(--border-color-1, #1e3a8a) 0deg,
+            var(--border-color-2, #c7d2e0) 180deg,
+            var(--border-color-1, #1e3a8a) 360deg
+          );
+          -webkit-mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+          mask-composite: exclude;
+          z-index: -1;
+          pointer-events: none;
+          animation: rotateBorder 5s linear infinite reverse;
+        }
+
+        /* Keyframes for counterclockwise gradient rotation (using reverse) */
+        @keyframes rotateBorder {
+          0% {
+            --gradient-angle: 0deg;
+          }
+          100% {
+            --gradient-angle: 360deg;
+          }
+        }
+        
+        /* Support for gradient angle animation */
+        @property --gradient-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+
         .glass-container .glass-filter {
           display: none;
         }
@@ -1668,7 +1865,7 @@ export default function Home() {
 
         .glass-container .glass-content {
           position: relative;
-          z-index: 3;
+          z-index: 1;
           display: flex;
           flex-direction: column;
           width: 100%;
@@ -4167,7 +4364,7 @@ export default function Home() {
                                     {bullets.map((bullet, i) => (
                                       <li key={`${languageMode[index]}-${i}`} style={{
                                     marginBottom: '16px',
-                                      fontSize: '16px',
+                                      fontSize: '17px',
                                     lineHeight: '1.47',
                                     fontWeight: '400',
                                     color: darkMode ? '#f5f5f7' : '#1d1d1f',
@@ -4489,6 +4686,7 @@ export default function Home() {
                           // If a state is explicitly set, show that component
                           if (showGraph[index]) {
                             // Show Graph - Similar to timeline with expand/collapse
+                            const borderColors = getBorderColorsFromBlur(imageDominantColors[index]?.blurColor);
                             return story.graph && (
                               <div 
                                 className="glass-container graph-container-desktop"
@@ -4502,7 +4700,9 @@ export default function Home() {
                                   transition: 'height 0.3s ease-in-out',
                                   minHeight: '85px',
                                   zIndex: '10',
-                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden',
+                                  '--border-color-1': borderColors.color1,
+                                  '--border-color-2': borderColors.color2
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
@@ -4615,6 +4815,7 @@ export default function Home() {
                           );
                           } else if (showTimeline[index]) {
                             // Show Timeline
+                            const borderColors = getBorderColorsFromBlur(imageDominantColors[index]?.blurColor);
                             return story.timeline && (
                             <div 
                               className="glass-container timeline-container-desktop timeline-container-animated"
@@ -4628,7 +4829,9 @@ export default function Home() {
                                 transition: 'height 0.3s ease-in-out',
                                 minHeight: '85px',
                                 zIndex: '10',
-                                overflow: expandedTimeline[index] ? 'visible' : 'hidden'
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
+                                '--border-color-1': borderColors.color1,
+                                '--border-color-2': borderColors.color2
                               }}>
                               <div className="glass-filter"></div>
                               <div className="glass-overlay"></div>
@@ -4816,6 +5019,7 @@ export default function Home() {
                             );
                           } else if (showDetails[index]) {
                             // Show Details
+                            const borderColors = getBorderColorsFromBlur(imageDominantColors[index]?.blurColor);
                             return story.details && (
                               <div 
                                 className="glass-container details-container-desktop details-container-animated"
@@ -4829,7 +5033,9 @@ export default function Home() {
                                   minHeight: '85px',
                                   zIndex: '10',
                                   overflow: 'hidden',
-                                  display: 'flex'
+                                  display: 'flex',
+                                  '--border-color-1': borderColors.color1,
+                                  '--border-color-2': borderColors.color2
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
