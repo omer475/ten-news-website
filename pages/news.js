@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 
 export default function SingleNewsPage() {
   const router = useRouter();
@@ -124,14 +123,9 @@ export default function SingleNewsPage() {
   }
 
   return (
-    <>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-      </Head>
-      
-      <div className="single-news-page">
-        {/* Header */}
-        <header className="news-header">
+    <div className="single-news-page">
+      {/* Header */}
+      <header className="news-header">
         <div className="header-content">
           <button className="back-button" onClick={handleBack}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -278,8 +272,60 @@ export default function SingleNewsPage() {
               <img 
                 src={article.image} 
                 alt={article.title}
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+                loading="eager"
+                decoding="async"
                 onError={(e) => {
-                  e.target.style.display = 'none';
+                  console.error('❌ Image failed to load:', article.image);
+                  const imgElement = e.target;
+                  
+                  // Retry strategy
+                  let retryCount = parseInt(imgElement.dataset.retryCount || '0');
+                  const maxRetries = 5;
+                  
+                  if (retryCount < maxRetries) {
+                    retryCount++;
+                    imgElement.dataset.retryCount = retryCount.toString();
+                    
+                    // Try with CORS for first 2 attempts, then without
+                    if (retryCount <= 2) {
+                      imgElement.setAttribute('crossOrigin', 'anonymous');
+                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} WITH CORS`);
+                    } else {
+                      imgElement.removeAttribute('crossOrigin');
+                      imgElement.crossOrigin = '';
+                      console.log(`🔄 News page retry ${retryCount}/${maxRetries} WITHOUT CORS`);
+                    }
+                    
+                    // Vary referrer policies
+                    if (retryCount === 1 || retryCount === 2) {
+                      imgElement.referrerPolicy = 'no-referrer';
+                    } else if (retryCount === 3) {
+                      imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                    } else if (retryCount === 4) {
+                      imgElement.referrerPolicy = 'origin';
+                    } else {
+                      imgElement.referrerPolicy = 'unsafe-url';
+                    }
+                    
+                    // Force reload
+                    setTimeout(() => {
+                      const tempSrc = imgElement.src;
+                      imgElement.src = '';
+                      setTimeout(() => {
+                        imgElement.src = tempSrc;
+                      }, 50);
+                    }, 100 * retryCount);
+                  } else {
+                    // All retries failed - hide image
+                    console.warn('⚠️ All retries failed for news page image');
+                    e.target.style.display = 'none';
+                  }
+                }}
+                onLoad={(e) => {
+                  console.log('✅ News page image loaded successfully');
+                  e.target.style.display = 'block';
                 }}
               />
             </div>
@@ -1360,7 +1406,6 @@ export default function SingleNewsPage() {
           }
         }
       `}</style>
-      </div>
-    </>
+    </div>
   );
 }
