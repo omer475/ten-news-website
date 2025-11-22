@@ -3839,20 +3839,7 @@ export default function Home() {
                                 return newSet;
                               });
                               
-                              // Use pre-computed blur color if available, otherwise extract
-                              if (story.blurColor) {
-                                // Use pre-computed color from article data
-                                setImageDominantColors(prev => ({ 
-                                  ...prev, 
-                                  [index]: { 
-                                    blurColor: story.blurColor,
-                                    // Still need to extract for highlight/link colors
-                                    ...(prev[index] || {})
-                                  }
-                                }));
-                              }
-                              
-                              // Always extract for highlight/link colors
+                              // Always extract colors from the actual image using the improved algorithm
                               if (e.target.complete && e.target.naturalWidth > 0) {
                                 try {
                                   extractDominantColor(e.target, index);
