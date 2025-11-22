@@ -740,8 +740,10 @@ export default function Home() {
       const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
       // Generate 2 colors:
-      // Color 1: The blur color itself (dominant color) - slightly enhanced saturation
-      const color1Hsl = { h: hsl.h, s: Math.min(hsl.s + 10, 100), l: hsl.l };
+      // Color 1: Lighter version of the blur color (dominant color)
+      // Increase lightness significantly to create a lighter version
+      const lighterL = Math.min(75, hsl.l + 30); // Add 30% lightness, cap at 75%
+      const color1Hsl = { h: hsl.h, s: Math.min(hsl.s + 5, 100), l: lighterL };
       const color1Rgb = hslToRgb(color1Hsl.h, color1Hsl.s, color1Hsl.l);
       
       // Color 2: Transparent
