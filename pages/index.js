@@ -3852,6 +3852,7 @@ export default function Home() {
                             onLoad={(e) => {
                               console.log('✅ Image loaded successfully:', imageUrl);
                               console.log('   Image dimensions:', e.target.naturalWidth, 'x', e.target.naturalHeight);
+                              console.log('   crossOrigin:', e.target.crossOrigin);
                               
                               // Mark this image as successfully loaded
                               setLoadedImages(prev => {
@@ -3867,17 +3868,40 @@ export default function Home() {
                               e.target.style.minWidth = '100%';
                               e.target.style.minHeight = '100%';
                               
-                              // Extract colors after a tiny delay to ensure image is fully decoded
-                              setTimeout(() => {
-                                if (e.target.complete && e.target.naturalWidth > 0) {
-                                  try {
-                                    console.log(`🎯 Attempting color extraction for article ${index}...`);
-                                    extractDominantColor(e.target, index);
-                                  } catch (error) {
-                                    console.error(`❌ Color extraction outer catch for article ${index}:`, error);
+                              // Only extract colors if image has CORS enabled
+                              if (e.target.crossOrigin === 'anonymous') {
+                                // Extract colors after a tiny delay to ensure image is fully decoded
+                                setTimeout(() => {
+                                  if (e.target.complete && e.target.naturalWidth > 0) {
+                                    try {
+                                      console.log(`🎯 Attempting color extraction for article ${index}...`);
+                                      extractDominantColor(e.target, index);
+                                    } catch (error) {
+                                      console.error(`❌ Color extraction outer catch for article ${index}:`, error);
+                                      // Use fallback color on error
+                                      setImageDominantColors(prev => ({
+                                        ...prev,
+                                        [index]: {
+                                          blurColor: '#3A4A5E',
+                                          highlight: '#A8C4E0',
+                                          link: '#5A6F8E'
+                                        }
+                                      }));
+                                    }
                                   }
-                                }
-                              }, 100); // 100ms delay to ensure image is decoded
+                                }, 100); // 100ms delay to ensure image is decoded
+                              } else {
+                                // Image loaded without CORS - use fallback colors
+                                console.log(`⚠️ Image loaded without CORS - using fallback color for article ${index}`);
+                                setImageDominantColors(prev => ({
+                                  ...prev,
+                                  [index]: {
+                                    blurColor: '#3A4A5E',
+                                    highlight: '#A8C4E0',
+                                    link: '#5A6F8E'
+                                  }
+                                }));
+                              }
                             }}
                             onError={(e) => {
                               console.error('❌ Image failed to load:', imageUrl);
@@ -3894,9 +3918,24 @@ export default function Home() {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
                                   
-                                  // ALWAYS keep crossOrigin='anonymous' for color extraction to work
-                                  // Without this, canvas.getImageData() will throw a CORS error
-                                  imgElement.crossOrigin = 'anonymous';
+                                  // Strategy: Try with CORS for first 3 attempts (enables color extraction)
+                                  // Then try without CORS for final 2 attempts (image loads but no color extraction)
+                                  if (retryCount <= 3) {
+                                    imgElement.crossOrigin = 'anonymous';
+                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} WITH CORS (color extraction enabled)`);
+                                  } else {
+                                    imgElement.removeAttribute('crossOrigin');
+                                    console.log(`🔄 Retry ${retryCount}/${maxRetries} WITHOUT CORS (image only, fallback color)`);
+                                    // Set fallback color immediately for non-CORS images
+                                    setImageDominantColors(prev => ({
+                                      ...prev,
+                                      [index]: {
+                                        blurColor: '#3A4A5E',
+                                        highlight: '#A8C4E0',
+                                        link: '#5A6F8E'
+                                      }
+                                    }));
+                                  }
                                   
                                   // Try different referrer policies
                                   if (retryCount === 3) {
@@ -3910,7 +3949,7 @@ export default function Home() {
                                   // Try with timestamp to bypass cache
                                   const separator = imageUrl.includes('?') ? '&' : '?';
                                   const newSrc = imageUrl + separator + '_retry=' + retryCount + '&_t=' + Date.now();
-                                  console.log(`🔄 Retry ${retryCount}/${maxRetries}: ${newSrc.substring(0, 80)}...`);
+                                  console.log(`   URL: ${newSrc.substring(0, 80)}...`);
                                   imgElement.src = newSrc;
                                   return;
                                 }
