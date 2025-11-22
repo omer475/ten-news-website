@@ -1437,7 +1437,7 @@ export default function Home() {
           </span>
         );
       }
-      return <span key={i}>{part}</span>;
+      return <span key={i} style={{ color: '#666666' }}>{part}</span>;
     });
   };
 
@@ -4478,7 +4478,6 @@ export default function Home() {
                                       fontSize: '17px',
                                     lineHeight: '1.47',
                                     fontWeight: '400',
-                                    color: darkMode ? '#f5f5f7' : '#1d1d1f',
                                     letterSpacing: '-0.022em',
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                       animation: 'fadeSlideIn 0.4s ease',
