@@ -273,9 +273,10 @@ export default function Home() {
     });
   };
 
-  // Extract diverse color candidates from image
+  // Extract diverse color candidates from image with frequency and coverage tracking
   const extractColorfulCandidates = (pixels, width, height) => {
     const colorMap = {};
+    const totalPixelsSampled = pixels.length / 4; // Total RGBA pixel count
     
     // Sample pixels (every 10th pixel)
     for (let i = 0; i < pixels.length; i += 40) {
@@ -295,25 +296,98 @@ export default function Home() {
       const bKey = Math.round(b / 15) * 15;
       const key = `${rKey},${gKey},${bKey}`;
       
-      colorMap[key] = (colorMap[key] || 0) + 1;
+      // Track frequency and spatial coverage
+      if (!colorMap[key]) {
+        colorMap[key] = { 
+          count: 0, 
+          positions: new Set() 
+        };
+      }
+      colorMap[key].count += 1;
+      
+      // Track spatial coverage (approximate grid position)
+      const pixelIndex = i / 4;
+      const x = Math.floor((pixelIndex % width) / 10); // Divide into 10-pixel grid
+      const y = Math.floor(Math.floor(pixelIndex / width) / 10);
+      colorMap[key].positions.add(`${x},${y}`);
     }
     
-    // Get top 20 most frequent colors
+    // Calculate max values for normalization
+    const maxCount = Math.max(...Object.values(colorMap).map(v => v.count));
+    const maxCoverage = Math.max(...Object.values(colorMap).map(v => v.positions.size));
+    
+    // Get top 20 most frequent colors with frequency and coverage data
     const sortedColors = Object.entries(colorMap)
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 20)
-      .map(([key]) => {
+      .map(([key, data]) => {
         const [r, g, b] = key.split(',').map(Number);
         const hsl = rgbToHsl(r, g, b);
-        return { r, g, b, hsl, rgb: { r, g, b } };
+        return { 
+          r, g, b, 
+          hsl, 
+          rgb: { r, g, b },
+          frequency: data.count,
+          normalizedFrequency: data.count / maxCount,
+          coverage: data.positions.size,
+          normalizedCoverage: data.positions.size / maxCoverage
+        };
       });
     
     return sortedColors;
   };
 
-  // Select the most dominant color from the image
+  // Analyze hue distribution to identify dominant color families
+  const getDominantHueRange = (colorCandidates) => {
+    const hueRanges = {
+      red: { range: [0, 40, 340, 360], count: 0, totalSat: 0 },      // Red/Orange
+      green: { range: [80, 160], count: 0, totalSat: 0 },            // Green
+      blue: { range: [180, 260], count: 0, totalSat: 0 },            // Blue
+      yellow: { range: [40, 80], count: 0, totalSat: 0 },            // Yellow
+      purple: { range: [260, 340], count: 0, totalSat: 0 }           // Purple/Magenta
+    };
+    
+    colorCandidates.forEach(color => {
+      const [h, s] = color.hsl;
+      const freq = color.normalizedFrequency || 1;
+      
+      // Check which hue range this color belongs to
+      if ((h >= 0 && h <= 40) || (h >= 340 && h <= 360)) {
+        hueRanges.red.count += freq;
+        hueRanges.red.totalSat += s * freq;
+      } else if (h >= 80 && h <= 160) {
+        hueRanges.green.count += freq;
+        hueRanges.green.totalSat += s * freq;
+      } else if (h >= 180 && h <= 260) {
+        hueRanges.blue.count += freq;
+        hueRanges.blue.totalSat += s * freq;
+      } else if (h >= 40 && h <= 80) {
+        hueRanges.yellow.count += freq;
+        hueRanges.yellow.totalSat += s * freq;
+      } else if (h >= 260 && h <= 340) {
+        hueRanges.purple.count += freq;
+        hueRanges.purple.totalSat += s * freq;
+      }
+    });
+    
+    // Find the most dominant hue range (weighted by frequency and saturation)
+    let maxScore = 0;
+    let dominantRange = null;
+    
+    Object.entries(hueRanges).forEach(([name, data]) => {
+      const score = data.count * (data.totalSat / Math.max(data.count, 1));
+      if (score > maxScore) {
+        maxScore = score;
+        dominantRange = name;
+      }
+    });
+    
+    return dominantRange;
+  };
+
+  // Select the most dominant color using weighted scoring
   const selectColorForArticle = (colorCandidates, articleIndex) => {
-    // Filter to colorful only (saturation >= 30%, lightness 20-80%)
+    // Filter to colorful only (saturation >= 35%, lightness 20-80%)
     let colorfulColors = filterColorfulColors(colorCandidates);
     
     // If no colorful colors, use most saturated from all candidates
@@ -322,15 +396,52 @@ export default function Home() {
       colorfulColors = sortedBySaturation.slice(0, 1);
     }
     
-    // Sort by frequency and vibrancy to get the TRUE dominant color from the image
-    // Vibrancy = saturation * (1 - distance from mid-lightness)
-    colorfulColors.sort((a, b) => {
-      const vibrancyA = a.hsl[1] * (1 - Math.abs(a.hsl[2] - 50) / 50);
-      const vibrancyB = b.hsl[1] * (1 - Math.abs(b.hsl[2] - 50) / 50);
-      return vibrancyB - vibrancyA;
+    // Get the dominant hue range from the image
+    const dominantHueRange = getDominantHueRange(colorfulColors);
+    
+    // Calculate composite score for each color
+    // Weights: Frequency (50%), Saturation (30%), Coverage (20%)
+    const WEIGHT_FREQUENCY = 0.50;
+    const WEIGHT_SATURATION = 0.30;
+    const WEIGHT_COVERAGE = 0.20;
+    
+    colorfulColors.forEach(color => {
+      const [h, s, l] = color.hsl;
+      
+      // Normalize saturation (0-100 range)
+      const normalizedSaturation = s / 100;
+      
+      // Calculate composite score
+      let score = 
+        (WEIGHT_FREQUENCY * color.normalizedFrequency) +
+        (WEIGHT_SATURATION * normalizedSaturation) +
+        (WEIGHT_COVERAGE * color.normalizedCoverage);
+      
+      // Boost score if color is in the dominant hue range
+      const inDominantRange = (
+        (dominantHueRange === 'red' && ((h >= 0 && h <= 40) || (h >= 340 && h <= 360))) ||
+        (dominantHueRange === 'green' && h >= 80 && h <= 160) ||
+        (dominantHueRange === 'blue' && h >= 180 && h <= 260) ||
+        (dominantHueRange === 'yellow' && h >= 40 && h <= 80) ||
+        (dominantHueRange === 'purple' && h >= 260 && h <= 340)
+      );
+      
+      if (inDominantRange) {
+        score *= 1.3; // 30% boost for colors in dominant hue range
+      }
+      
+      // Slight penalty for very common "sky blue" bias (hue 200-220)
+      if (h >= 200 && h <= 220 && s < 60) {
+        score *= 0.85; // Reduce score by 15%
+      }
+      
+      color.compositeScore = score;
     });
     
-    // Select the FIRST (most vibrant) color - this is the actual dominant color
+    // Sort by composite score (highest first)
+    colorfulColors.sort((a, b) => b.compositeScore - a.compositeScore);
+    
+    // Select the highest scoring color
     const selectedColor = { ...colorfulColors[0] };
     
     // Only boost saturation slightly, NO hue shifting
