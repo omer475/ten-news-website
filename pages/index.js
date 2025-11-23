@@ -3682,6 +3682,33 @@ export default function Home() {
         )}
 
 
+        {/* Background Image Layer - Outside transform container for proper position: fixed */}
+        {stories[currentIndex]?.type === 'news' && stories[currentIndex]?.urlToImage && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            width: '100vw',
+            height: '40vh',
+            zIndex: 0,
+            overflow: 'hidden',
+            pointerEvents: 'none'
+          }}>
+            <img
+              src={stories[currentIndex].urlToImage}
+              alt={stories[currentIndex].title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                display: 'block'
+              }}
+            />
+          </div>
+        )}
+
         {/* Stories */}
         {stories.map((story, index) => (
           <div
@@ -3847,23 +3874,18 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Extends to screen top including safe area */}
+                    {/* News Image - Now rendered in background layer outside transform container */}
                     <div style={{
-                      position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',  /* Extend into safe area */
-                      margin: 0,
+                      position: 'relative',
+                      width: '100%',
+                      height: '40vh',
+                      marginTop: '0',
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
-                      zIndex: '1',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      // Ensure image container doesn't interfere with information box
-                      maxHeight: 'calc(38vh + env(safe-area-inset-top, 0px))'
+                      opacity: 0  /* Hidden - image shown in background layer */
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
