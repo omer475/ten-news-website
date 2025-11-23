@@ -1908,17 +1908,19 @@ export default function Home() {
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           overflow: hidden;
           position: fixed;
-          width: 100vw;
-          height: 100vh;
-          height: 100dvh;
-          top: 0;
-          left: 0;
-          margin: 0;
-          padding: 0;
+          width: 100%;
+          height: 100%;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
           touch-action: none;
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+          /* Apply safe area padding like test page */
+          padding-top: env(safe-area-inset-top, 0px);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          padding-left: env(safe-area-inset-left, 0px);
+          padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* Glassmorphism Variables */
@@ -3656,17 +3658,7 @@ export default function Home() {
         }
       `}</style>
       
-      <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0, 
-        width: '100vw', 
-        height: '100vh', 
-        height: '100dvh',
-        overflow: 'hidden' 
-      }}>
+      <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
