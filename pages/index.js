@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
@@ -42,20 +43,6 @@ export default function Home() {
 
   // Language mode for summaries (advanced vs B2)
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
-  const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
-
-  // Close language dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      // Check if click is outside the language button
-      if (!e.target.closest('.language-icon-btn') && !e.target.closest('.language-dropdown-box')) {
-        setShowLanguageOptions({});
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -67,9 +54,7 @@ export default function Home() {
     // Only handle swipe on summary content, not on buttons or other elements
     if (e.target.closest('.switcher') || 
         e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn') ||
-        e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
+        e.target.closest('.language-icon-btn')) {
       return;
     }
     setTouchEnd(null);
@@ -80,9 +65,7 @@ export default function Home() {
     // Only handle swipe on summary content, not on buttons or other elements
     if (e.target.closest('.switcher') || 
         e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn') ||
-        e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
+        e.target.closest('.language-icon-btn')) {
       return;
     }
     setTouchEnd(e.targetTouches[0].clientX);
@@ -92,9 +75,7 @@ export default function Home() {
     // Only handle swipe on summary content, not on buttons or other elements
     if (e.target.closest('.switcher') || 
         e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn') ||
-        e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
+        e.target.closest('.language-icon-btn')) {
       return;
     }
     
@@ -1561,10 +1542,8 @@ export default function Home() {
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
-      // Don't capture touch if it's on the language switcher
-      if (e.target.closest('.language-icon-btn') || 
-          e.target.closest('.language-dropdown-box') ||
-          e.target.closest('.language-switcher__option')) {
+      // Don't capture touch if it's on the language button
+      if (e.target.closest('.language-icon-btn')) {
         return;
       }
       
@@ -4372,119 +4351,41 @@ export default function Home() {
                           gap: '8px',
                           flex: '0 0 auto'
                         }}>
-                          {/* Language Icon Button with Working Switcher Dropdown */}
-                          <div 
-                            style={{ 
-                              position: 'relative',
-                              flex: '0 0 auto',
-                              zIndex: 10010
+                          {/* Language Toggle Button - Direct Toggle */}
+                          <button
+                            className="language-icon-btn"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const currentMode = languageMode[index] || 'advanced';
+                              const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
+                              setLanguageMode(prev => ({ ...prev, [index]: newMode }));
+                              console.log(`✅ Language toggled to: ${newMode} for article ${index}`);
                             }}
                           >
-                            {/* Icon Button */}
-                            <button
-                              className="language-icon-btn"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setShowLanguageOptions(prev => ({
-                                  ...prev,
-                                  [index]: !prev[index]
-                                }));
-                              }}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M4 7V4h16v3"/>
-                                <path d="M9 20h6"/>
-                                <path d="M12 4v16"/>
-                              </svg>
-                            </button>
-                            
-                            {/* Dropdown with Working Switcher */}
-                            {showLanguageOptions[index] && (
-                              <div 
-                                className="language-switcher language-dropdown-box" 
-                                style={{ 
-                                  position: 'absolute',
-                                  top: 'calc(100% + 8px)',
-                                  left: '50%',
-                                  transform: 'translateX(-50%)',
-                                  zIndex: 10020,
-                                  pointerEvents: 'auto'
-                                }}
-                                onMouseDown={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                onTouchStart={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <button
-                                  key="b2"
-                                  className={`language-switcher__option ${languageMode[index] === 'b2' ? 'active' : ''}`}
-                                  style={{
-                                    pointerEvents: 'auto',
-                                    cursor: 'pointer',
-                                    position: 'relative',
-                                    zIndex: 10025
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onTouchStart={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('✅ B2/Easy button clicked!', index);
-                                    setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
-                                    // Dropdown stays open - user must click outside or icon to close
-                                  }}
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
-                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                  </svg>
-                                  <span style={{ pointerEvents: 'none' }}>Easy</span>
-                                </button>
-                                
-                                <button
-                                  key="advanced"
-                                  className={`language-switcher__option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
-                                  style={{
-                                    pointerEvents: 'auto',
-                                    cursor: 'pointer',
-                                    position: 'relative',
-                                    zIndex: 10025
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onTouchStart={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('✅ Advanced button clicked!', index);
-                                    setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
-                                    // Dropdown stays open - user must click outside or icon to close
-                                  }}
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
-                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                  </svg>
-                                  <span style={{ pointerEvents: 'none' }}>Adv</span>
-                                </button>
-                              </div>
-                            )}
-                        </div>
+                            {(() => {
+                              const currentMode = languageMode[index] || 'advanced';
+                              return currentMode === 'advanced' ? (
+                                // Advanced Reading Icon - Complex Book with multiple lines
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                  <line x1="8" y1="6" x2="16" y2="6"/>
+                                  <line x1="8" y1="10" x2="16" y2="10"/>
+                                  <line x1="8" y1="14" x2="16" y2="14"/>
+                                  <line x1="8" y1="18" x2="12" y2="18"/>
+                                </svg>
+                              ) : (
+                                // Easy Reading Icon - Simple Book with fewer lines
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                  <line x1="8" y1="8" x2="16" y2="8"/>
+                                  <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                              );
+                            })()}
+                          </button>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
