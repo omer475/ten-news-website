@@ -2114,7 +2114,7 @@ export default function Home() {
           background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
           backdrop-filter: saturate(180%) blur(20px);
           -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 9999;
+          z-index: 999999;
           pointer-events: none;
         }
 
@@ -2127,7 +2127,7 @@ export default function Home() {
           background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
           backdrop-filter: saturate(180%) blur(20px);
           -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 9999;
+          z-index: 999999;
           pointer-events: none;
         }
 
