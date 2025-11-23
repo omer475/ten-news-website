@@ -4628,7 +4628,6 @@ export default function Home() {
                                     transition: 'opacity 0.3s ease'
                                 }}>
                                     {bullets.map((bullet, i) => {
-                                      const bulletDotColor = imageDominantColors[index]?.bulletDot || '#999999';
                                       return (
                                       <li key={`${languageMode[index]}-${i}`} style={{
                                     marginBottom: '16px',
@@ -4650,7 +4649,7 @@ export default function Home() {
                                       width: '8px',
                                       height: '8px',
                                       borderRadius: '50%',
-                                      backgroundColor: bulletDotColor,
+                                      backgroundColor: '#D1D1D6',
                                       display: 'inline-block'
                                     }}></span>
                                     {renderBoldText(bullet, imageDominantColors[index], story.category)}
