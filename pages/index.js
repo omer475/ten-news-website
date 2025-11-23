@@ -4722,7 +4722,7 @@ export default function Home() {
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
                                   margin: 0,
-                                  paddingLeft: '20px',
+                                  paddingLeft: '8px',
                                     listStyleType: 'none',
                                     transition: 'opacity 0.3s ease'
                                 }}>
@@ -4731,7 +4731,7 @@ export default function Home() {
                                       return (
                                       <li key={`${languageMode[index]}-${i}`} style={{
                                     marginBottom: '16px',
-                                    paddingLeft: '20px',
+                                    paddingLeft: '16px',
                                     position: 'relative',
                                       fontSize: '17px',
                                     lineHeight: '1.47',
