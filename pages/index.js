@@ -1908,10 +1908,13 @@ export default function Home() {
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
           overflow: hidden;
           position: fixed;
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
+          width: 100vw;
+          height: 100vh;
+          height: 100dvh;
+          top: 0;
+          left: 0;
+          margin: 0;
+          padding: 0;
           touch-action: none;
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
@@ -2178,7 +2181,7 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 0;  /* Remove top padding - images extend to top */
+          padding-top: calc(68px + env(safe-area-inset-top, 0px));
           padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
@@ -3653,7 +3656,17 @@ export default function Home() {
         }
       `}</style>
       
-      <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        width: '100vw', 
+        height: '100vh', 
+        height: '100dvh',
+        overflow: 'hidden' 
+      }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -3681,33 +3694,6 @@ export default function Home() {
           </div>
         )}
 
-
-        {/* Background Image Layer - Outside transform container for proper position: fixed */}
-        {stories[currentIndex]?.type === 'news' && stories[currentIndex]?.urlToImage && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            width: '100vw',
-            height: '40vh',
-            zIndex: 0,
-            overflow: 'hidden',
-            pointerEvents: 'none'
-          }}>
-            <img
-              src={stories[currentIndex].urlToImage}
-              alt={stories[currentIndex].title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center',
-                display: 'block'
-              }}
-            />
-          </div>
-        )}
 
         {/* Stories */}
         {stories.map((story, index) => (
@@ -3874,18 +3860,23 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Now rendered in background layer outside transform container */}
+                    {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '40vh',
-                      marginTop: '0',
+                      position: 'fixed',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
+                      height: '38vh',
+                      margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
+                      zIndex: '1',
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      opacity: 0  /* Hidden - image shown in background layer */
+                      // Ensure image container doesn't interfere with information box
+                      maxHeight: '38vh'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
