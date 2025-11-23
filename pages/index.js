@@ -1512,7 +1512,7 @@ export default function Home() {
           </span>
         );
       }
-      return <span key={i} style={{ color: '#666666' }}>{part}</span>;
+      return <span key={i} style={{ color: '#000000' }}>{part}</span>;
     });
   };
 
