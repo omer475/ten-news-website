@@ -1906,13 +1906,6 @@ export default function Home() {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
-          touch-action: none;
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
