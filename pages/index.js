@@ -543,6 +543,21 @@ export default function Home() {
     return [h, finalS, finalL];
   };
 
+  // Create bullet dot color (LIGHT COMPLEMENTARY color)
+  const createBulletDotColor = (blurHsl) => {
+    const [h, s, l] = blurHsl;
+    
+    // Calculate complementary/opposite hue (180 degrees opposite)
+    const complementaryHue = (h + 180) % 360;
+    
+    // Make it LIGHT (70-85% lightness) for visibility
+    // Keep good saturation (60-80%) for vibrancy
+    const lightL = Math.max(70, Math.min(85, 75 + (l / 45) * 10)); // 70-85% range
+    const lightS = Math.max(60, Math.min(80, s * 1.2)); // Boost saturation slightly
+    
+    return [complementaryHue, lightS, lightL];
+  };
+
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -600,6 +615,11 @@ export default function Home() {
       const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
       const infoBoxColor = `rgb(${iR}, ${iG}, ${iB})`;
       
+      // Create bullet dot color (LIGHT COMPLEMENTARY)
+      const bulletDotHsl = createBulletDotColor(blurHsl);
+      const [bdR, bdG, bdB] = hslToRgb(...bulletDotHsl);
+      const bulletDotColor = `rgb(${bdR}, ${bdG}, ${bdB})`;
+      
       // Store all colors
       setImageDominantColors(prev => ({
         ...prev,
@@ -607,7 +627,8 @@ export default function Home() {
           blurColor: blurColorHex,
           highlight: highlightColor,
           link: linkColor,
-          infoBox: infoBoxColor
+          infoBox: infoBoxColor,
+          bulletDot: bulletDotColor
         }
       }));
       
@@ -624,13 +645,18 @@ export default function Home() {
       const [fiR, fiG, fiB] = hslToRgb(...fallbackInfoBoxHsl);
       const fallbackInfoBoxColor = `rgb(${fiR}, ${fiG}, ${fiB})`;
       
+      const fallbackBulletDotHsl = createBulletDotColor(fallbackBlurHsl);
+      const [fbdR, fbdG, fbdB] = hslToRgb(...fallbackBulletDotHsl);
+      const fallbackBulletDotColor = `rgb(${fbdR}, ${fbdG}, ${fbdB})`;
+      
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
           link: '#5A6F8E',
-          infoBox: fallbackInfoBoxColor
+          infoBox: fallbackInfoBoxColor,
+          bulletDot: fallbackBulletDotColor
         }
       }));
     }
@@ -4072,9 +4098,13 @@ export default function Home() {
                                     const highlightHsl = createTitleHighlightColor(blurHsl);
                                     const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
                                     const infoBoxHsl = createInfoBoxColor(blurHsl);
+                                    const bulletDotHsl = createBulletDotColor(blurHsl);
                                     
                                     const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
                                     const infoBoxColorHex = `rgb(${iR}, ${iG}, ${iB})`;
+                                    
+                                    const [bdR, bdG, bdB] = hslToRgb(...bulletDotHsl);
+                                    const bulletDotColorHex = `rgb(${bdR}, ${bdG}, ${bdB})`;
                                     
                                     setImageDominantColors(prev => ({
                                       ...prev,
@@ -4082,7 +4112,8 @@ export default function Home() {
                                         blurColor: blurColor,
                                         highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
                                         link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
-                                        infoBox: infoBoxColorHex
+                                        infoBox: infoBoxColorHex,
+                                        bulletDot: bulletDotColorHex
                                       }
                                     }));
                                     
@@ -4692,12 +4723,16 @@ export default function Home() {
                                 <ul style={{
                                   margin: 0,
                                   paddingLeft: '20px',
-                                    listStyleType: 'disc',
+                                    listStyleType: 'none',
                                     transition: 'opacity 0.3s ease'
                                 }}>
-                                    {bullets.map((bullet, i) => (
+                                    {bullets.map((bullet, i) => {
+                                      const bulletDotColor = imageDominantColors[index]?.bulletDot || '#999999';
+                                      return (
                                       <li key={`${languageMode[index]}-${i}`} style={{
                                     marginBottom: '16px',
+                                    paddingLeft: '20px',
+                                    position: 'relative',
                                       fontSize: '17px',
                                     lineHeight: '1.47',
                                     fontWeight: '400',
@@ -4707,9 +4742,19 @@ export default function Home() {
                                       animationDelay: `${i * 0.1}s`,
                                       animationFillMode: 'both'
                                   }}>
+                                    <span style={{
+                                      position: 'absolute',
+                                      left: '0',
+                                      top: '0.5em',
+                                      width: '8px',
+                                      height: '8px',
+                                      borderRadius: '50%',
+                                      backgroundColor: bulletDotColor,
+                                      display: 'inline-block'
+                                    }}></span>
                                     {renderBoldText(bullet, imageDominantColors[index], story.category)}
                                     </li>
-                                  ))}
+                                  )})}
                                 </ul>
                               ) : (
                                 <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
