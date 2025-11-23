@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
@@ -43,6 +42,20 @@ export default function Home() {
 
   // Language mode for summaries (advanced vs B2)
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
+  const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
+
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Check if click is outside the language button
+      if (!e.target.closest('.language-icon-btn') && !e.target.closest('.language-dropdown-box')) {
+        setShowLanguageOptions({});
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
@@ -54,7 +67,9 @@ export default function Home() {
     // Only handle swipe on summary content, not on buttons or other elements
     if (e.target.closest('.switcher') || 
         e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn')) {
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
       return;
     }
     setTouchEnd(null);
@@ -65,7 +80,9 @@ export default function Home() {
     // Only handle swipe on summary content, not on buttons or other elements
     if (e.target.closest('.switcher') || 
         e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn')) {
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
       return;
     }
     setTouchEnd(e.targetTouches[0].clientX);
@@ -75,7 +92,9 @@ export default function Home() {
     // Only handle swipe on summary content, not on buttons or other elements
     if (e.target.closest('.switcher') || 
         e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn')) {
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
       return;
     }
     
@@ -524,21 +543,6 @@ export default function Home() {
     return [h, finalS, finalL];
   };
 
-  // Create bullet dot color (LIGHT COMPLEMENTARY color)
-  const createBulletDotColor = (blurHsl) => {
-    const [h, s, l] = blurHsl;
-    
-    // Calculate complementary/opposite hue (180 degrees opposite)
-    const complementaryHue = (h + 180) % 360;
-    
-    // Make it LIGHT (70-85% lightness) for visibility
-    // Keep good saturation (60-80%) for vibrancy
-    const lightL = Math.max(70, Math.min(85, 75 + (l / 45) * 10)); // 70-85% range
-    const lightS = Math.max(60, Math.min(80, s * 1.2)); // Boost saturation slightly
-    
-    return [complementaryHue, lightS, lightL];
-  };
-
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
@@ -596,11 +600,6 @@ export default function Home() {
       const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
       const infoBoxColor = `rgb(${iR}, ${iG}, ${iB})`;
       
-      // Create bullet dot color (LIGHT COMPLEMENTARY)
-      const bulletDotHsl = createBulletDotColor(blurHsl);
-      const [bdR, bdG, bdB] = hslToRgb(...bulletDotHsl);
-      const bulletDotColor = `rgb(${bdR}, ${bdG}, ${bdB})`;
-      
       // Store all colors
       setImageDominantColors(prev => ({
         ...prev,
@@ -608,8 +607,7 @@ export default function Home() {
           blurColor: blurColorHex,
           highlight: highlightColor,
           link: linkColor,
-          infoBox: infoBoxColor,
-          bulletDot: bulletDotColor
+          infoBox: infoBoxColor
         }
       }));
       
@@ -626,18 +624,13 @@ export default function Home() {
       const [fiR, fiG, fiB] = hslToRgb(...fallbackInfoBoxHsl);
       const fallbackInfoBoxColor = `rgb(${fiR}, ${fiG}, ${fiB})`;
       
-      const fallbackBulletDotHsl = createBulletDotColor(fallbackBlurHsl);
-      const [fbdR, fbdG, fbdB] = hslToRgb(...fallbackBulletDotHsl);
-      const fallbackBulletDotColor = `rgb(${fbdR}, ${fbdG}, ${fbdB})`;
-      
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
           blurColor: '#3A4A5E',
           highlight: '#A8C4E0',
           link: '#5A6F8E',
-          infoBox: fallbackInfoBoxColor,
-          bulletDot: fallbackBulletDotColor
+          infoBox: fallbackInfoBoxColor
         }
       }));
     }
@@ -1507,12 +1500,12 @@ export default function Home() {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '600', color: linkColor }}>
+          <span key={i} style={{ fontWeight: '500', color: linkColor }}>
             {content}
           </span>
         );
       }
-      return <span key={i} style={{ color: '#000000' }}>{part}</span>;
+      return <span key={i} style={{ color: '#666666' }}>{part}</span>;
     });
   };
 
@@ -1542,8 +1535,10 @@ export default function Home() {
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
-      // Don't capture touch if it's on the language button
-      if (e.target.closest('.language-icon-btn')) {
+      // Don't capture touch if it's on the language switcher
+      if (e.target.closest('.language-icon-btn') || 
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
         return;
       }
       
@@ -1881,7 +1876,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1900,8 +1895,11 @@ export default function Home() {
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           padding: 0;
           margin: 0;
+          width: 100vw;
           height: 100%;
-          min-height: 100dvh;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
+          overflow-x: hidden;
         }
 
         /* Apple HIG - Body Typography & Colors */
@@ -1913,7 +1911,8 @@ export default function Home() {
           position: fixed;
           width: 100%;
           height: 100%;
-          min-height: 100dvh;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
           touch-action: none;
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
@@ -2122,7 +2121,10 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 max(env(safe-area-inset-left, 20px), 20px) 0 max(env(safe-area-inset-right, 20px), 20px);
+          padding-top: calc(0px + env(safe-area-inset-top, 0px));
+          padding-bottom: 0;
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
           transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
         }
@@ -2177,10 +2179,10 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 68px;
-          padding-bottom: 200px;
-          padding-left: max(env(safe-area-inset-left, 20px), 20px);
-          padding-right: max(env(safe-area-inset-right, 20px), 20px);
+          padding-top: calc(68px + env(safe-area-inset-top, 0px));
+          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
@@ -2236,6 +2238,8 @@ export default function Home() {
           pointer-events: auto;
           position: relative;
           z-index: 1001;
+          margin-left: calc(0px + env(safe-area-inset-left, 0px));
+          margin-right: calc(0px + env(safe-area-inset-right, 0px));
         }
 
         .paywall-modal h2 {
@@ -2446,7 +2450,7 @@ export default function Home() {
 
         .progress-indicator {
           position: fixed;
-          right: 24px;
+          right: calc(24px + env(safe-area-inset-right, 0px));
           top: 50%;
           transform: translateY(-50%);
           display: flex;
@@ -2474,7 +2478,7 @@ export default function Home() {
 
         .scroll-hint {
           position: absolute;
-          bottom: 160px;
+          bottom: calc(160px + env(safe-area-inset-bottom, 0px));
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -2588,6 +2592,8 @@ export default function Home() {
           max-width: 400px;
           max-height: 90vh;
           overflow-y: auto;
+          margin-left: calc(0px + env(safe-area-inset-left, 0px));
+          margin-right: calc(0px + env(safe-area-inset-right, 0px));
         }
 
         .auth-modal-header {
@@ -4077,13 +4083,9 @@ export default function Home() {
                                     const highlightHsl = createTitleHighlightColor(blurHsl);
                                     const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
                                     const infoBoxHsl = createInfoBoxColor(blurHsl);
-                                    const bulletDotHsl = createBulletDotColor(blurHsl);
                                     
                                     const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
                                     const infoBoxColorHex = `rgb(${iR}, ${iG}, ${iB})`;
-                                    
-                                    const [bdR, bdG, bdB] = hslToRgb(...bulletDotHsl);
-                                    const bulletDotColorHex = `rgb(${bdR}, ${bdG}, ${bdB})`;
                                     
                                     setImageDominantColors(prev => ({
                                       ...prev,
@@ -4091,8 +4093,7 @@ export default function Home() {
                                         blurColor: blurColor,
                                         highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
                                         link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
-                                        infoBox: infoBoxColorHex,
-                                        bulletDot: bulletDotColorHex
+                                        infoBox: infoBoxColorHex
                                       }
                                     }));
                                     
@@ -4351,41 +4352,119 @@ export default function Home() {
                           gap: '8px',
                           flex: '0 0 auto'
                         }}>
-                          {/* Language Toggle Button - Direct Toggle */}
-                          <button
-                            className="language-icon-btn"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const currentMode = languageMode[index] || 'advanced';
-                              const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
-                              setLanguageMode(prev => ({ ...prev, [index]: newMode }));
-                              console.log(`✅ Language toggled to: ${newMode} for article ${index}`);
+                          {/* Language Icon Button with Working Switcher Dropdown */}
+                          <div 
+                            style={{ 
+                              position: 'relative',
+                              flex: '0 0 auto',
+                              zIndex: 10010
                             }}
                           >
-                            {(() => {
-                              const currentMode = languageMode[index] || 'advanced';
-                              return currentMode === 'advanced' ? (
-                                // Advanced Reading Icon - Complex Book with multiple lines
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                  <line x1="8" y1="6" x2="16" y2="6"/>
-                                  <line x1="8" y1="10" x2="16" y2="10"/>
-                                  <line x1="8" y1="14" x2="16" y2="14"/>
-                                  <line x1="8" y1="18" x2="12" y2="18"/>
-                                </svg>
-                              ) : (
-                                // Easy Reading Icon - Simple Book with fewer lines
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                  <line x1="8" y1="8" x2="16" y2="8"/>
-                                  <line x1="8" y1="12" x2="16" y2="12"/>
-                                </svg>
-                              );
-                            })()}
-                          </button>
+                            {/* Icon Button */}
+                            <button
+                              className="language-icon-btn"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowLanguageOptions(prev => ({
+                                  ...prev,
+                                  [index]: !prev[index]
+                                }));
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 7V4h16v3"/>
+                                <path d="M9 20h6"/>
+                                <path d="M12 4v16"/>
+                              </svg>
+                            </button>
+                            
+                            {/* Dropdown with Working Switcher */}
+                            {showLanguageOptions[index] && (
+                              <div 
+                                className="language-switcher language-dropdown-box" 
+                                style={{ 
+                                  position: 'absolute',
+                                  top: 'calc(100% + 8px)',
+                                  left: '50%',
+                                  transform: 'translateX(-50%)',
+                                  zIndex: 10020,
+                                  pointerEvents: 'auto'
+                                }}
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onTouchStart={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <button
+                                  key="b2"
+                                  className={`language-switcher__option ${languageMode[index] === 'b2' ? 'active' : ''}`}
+                                  style={{
+                                    pointerEvents: 'auto',
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    zIndex: 10025
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onTouchStart={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('✅ B2/Easy button clicked!', index);
+                                    setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
+                                    // Dropdown stays open - user must click outside or icon to close
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
+                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                  </svg>
+                                  <span style={{ pointerEvents: 'none' }}>Easy</span>
+                                </button>
+                                
+                                <button
+                                  key="advanced"
+                                  className={`language-switcher__option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
+                                  style={{
+                                    pointerEvents: 'auto',
+                                    cursor: 'pointer',
+                                    position: 'relative',
+                                    zIndex: 10025
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onTouchStart={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('✅ Advanced button clicked!', index);
+                                    setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
+                                    // Dropdown stays open - user must click outside or icon to close
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
+                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                  </svg>
+                                  <span style={{ pointerEvents: 'none' }}>Adv</span>
+                                </button>
+                              </div>
+                            )}
+                        </div>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
                         {getAvailableComponentsCount(story) > 1 && (
@@ -4623,17 +4702,13 @@ export default function Home() {
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
                                   margin: 0,
-                                  paddingLeft: '8px',
-                                    listStyleType: 'none',
+                                  paddingLeft: '20px',
+                                    listStyleType: 'disc',
                                     transition: 'opacity 0.3s ease'
                                 }}>
-                                    {bullets.map((bullet, i) => {
-                                      const bulletDotColor = imageDominantColors[index]?.bulletDot || '#999999';
-                                      return (
+                                    {bullets.map((bullet, i) => (
                                       <li key={`${languageMode[index]}-${i}`} style={{
                                     marginBottom: '16px',
-                                    paddingLeft: '16px',
-                                    position: 'relative',
                                       fontSize: '17px',
                                     lineHeight: '1.47',
                                     fontWeight: '400',
@@ -4643,19 +4718,9 @@ export default function Home() {
                                       animationDelay: `${i * 0.1}s`,
                                       animationFillMode: 'both'
                                   }}>
-                                    <span style={{
-                                      position: 'absolute',
-                                      left: '0',
-                                      top: '0.5em',
-                                      width: '6px',
-                                      height: '6px',
-                                      borderRadius: '50%',
-                                      backgroundColor: '#000000',
-                                      display: 'inline-block'
-                                    }}></span>
                                     {renderBoldText(bullet, imageDominantColors[index], story.category)}
                                     </li>
-                                  )})}
+                                  ))}
                                 </ul>
                               ) : (
                                 <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>

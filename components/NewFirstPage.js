@@ -138,9 +138,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           flex: 1;
           display: flex;
           flex-direction: column;
-          padding: 20px;
+          padding-top: calc(20px + env(safe-area-inset-top, 0px));
+          padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           overflow: hidden;
-          height: 100vh;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
           background: #ffffff;
           border: none !important;
         }
@@ -380,7 +384,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         }
 
         .fullscreen-header {
-          padding: 16px 20px;
+          padding-top: calc(16px + env(safe-area-inset-top, 0px));
+          padding-bottom: 16px;
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -410,7 +417,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         .fullscreen-content {
           flex: 1;
           overflow-y: auto;
-          padding: 20px;
+          padding-top: 20px;
+          padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
         }
 
         .fullscreen-item {
