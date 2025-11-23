@@ -2178,7 +2178,7 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: calc(68px + env(safe-area-inset-top, 0px));
+          padding-top: 0;  /* Remove top padding - images extend to top */
           padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
@@ -3847,14 +3847,14 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - With Rounded Corners and Spacing */}
+                    {/* News Image - Extends to screen top including safe area */}
                     <div style={{
                       position: 'fixed',
                       top: '0',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '38vh',
+                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',  /* Extend into safe area */
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3863,7 +3863,7 @@ export default function Home() {
                       overflow: 'hidden',
                       pointerEvents: 'none',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: '38vh'
+                      maxHeight: 'calc(38vh + env(safe-area-inset-top, 0px))'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
