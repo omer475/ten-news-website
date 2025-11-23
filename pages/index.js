@@ -4372,11 +4372,25 @@ export default function Home() {
                                 }));
                               }}
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M4 7V4h16v3"/>
-                                <path d="M9 20h6"/>
-                                <path d="M12 4v16"/>
-                              </svg>
+                              {(() => {
+                                const currentMode = languageMode[index] || 'advanced';
+                                return currentMode === 'advanced' ? (
+                                  // Advanced Reading Icon - Graduation Cap (represents expert/advanced level)
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                                  </svg>
+                                ) : (
+                                  // Easy Reading Icon - Simple Book with Heart (represents friendly, approachable reading)
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                    <path d="M12 9c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5" fill="none"/>
+                                    <path d="M12 9c-.5-1-1.5-1.5-2.5-1.5s-2 .5-2.5 1.5" fill="none"/>
+                                    <path d="M12 9c0 1.5-1 2.5-2 2.5s-2-1-2-2.5c0-1.5 1-2.5 2-2.5s2 1 2 2.5z" fill="currentColor" opacity="0.4"/>
+                                  </svg>
+                                );
+                              })()}
                             </button>
                             
                             {/* Dropdown with Working Switcher */}
@@ -4426,8 +4440,12 @@ export default function Home() {
                                     // Dropdown stays open - user must click outside or icon to close
                                   }}
                                 >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
-                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                    <path d="M12 9c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5" fill="none"/>
+                                    <path d="M12 9c-.5-1-1.5-1.5-2.5-1.5s-2 .5-2.5 1.5" fill="none"/>
+                                    <path d="M12 9c0 1.5-1 2.5-2 2.5s-2-1-2-2.5c0-1.5 1-2.5 2-2.5s2 1 2 2.5z" fill="currentColor" opacity="0.5"/>
                                   </svg>
                                   <span style={{ pointerEvents: 'none' }}>Easy</span>
                                 </button>
@@ -4457,8 +4475,9 @@ export default function Home() {
                                     // Dropdown stays open - user must click outside or icon to close
                                   }}
                                 >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ pointerEvents: 'none' }}>
-                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
                                   </svg>
                                   <span style={{ pointerEvents: 'none' }}>Adv</span>
                                 </button>
