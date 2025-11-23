@@ -27,7 +27,7 @@ body {
 /* Apply safe areas to body - like test page */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  background: #ffffff;
+  background: #f5f5f7;
   color: #1d1d1f;
   /* Direct safe area padding - exactly like test page */
   padding-top: env(safe-area-inset-top, 0px);
