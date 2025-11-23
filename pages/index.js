@@ -4360,129 +4360,49 @@ export default function Home() {
                               zIndex: 10010
                             }}
                           >
-                            {/* Icon Button */}
+                            {/* Language Toggle Button - Direct Toggle with Better Icons */}
                             <button
                               className="language-icon-btn"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setShowLanguageOptions(prev => ({
-                                  ...prev,
-                                  [index]: !prev[index]
-                                }));
+                                const currentMode = languageMode[index] || 'advanced';
+                                const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
+                                setLanguageMode(prev => ({ ...prev, [index]: newMode }));
+                                console.log(`✅ Language toggled to: ${newMode} for article ${index}`);
                               }}
                             >
                               {(() => {
                                 const currentMode = languageMode[index] || 'advanced';
                                 return currentMode === 'advanced' ? (
-                                  // Advanced Reading Icon - Graduation Cap (represents expert/advanced level)
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                                  </svg>
-                                ) : (
-                                  // Easy Reading Icon - Simple Book with Heart (represents friendly, approachable reading)
+                                  // Advanced Reading Icon - Book with sparkles/stars (expert, complex)
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                    <path d="M12 9c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5" fill="none"/>
-                                    <path d="M12 9c-.5-1-1.5-1.5-2.5-1.5s-2 .5-2.5 1.5" fill="none"/>
-                                    <path d="M12 9c0 1.5-1 2.5-2 2.5s-2-1-2-2.5c0-1.5 1-2.5 2-2.5s2 1 2 2.5z" fill="currentColor" opacity="0.4"/>
+                                    <line x1="8" y1="7" x2="16" y2="7"/>
+                                    <line x1="8" y1="11" x2="16" y2="11"/>
+                                    <line x1="8" y1="15" x2="16" y2="15"/>
+                                    <line x1="8" y1="19" x2="12" y2="19"/>
+                                    {/* Sparkles for advanced/expert level */}
+                                    <circle cx="18" cy="5" r="1" fill="#000000"/>
+                                    <circle cx="19.5" cy="7.5" r="0.8" fill="#000000"/>
+                                    <circle cx="18" cy="10" r="0.6" fill="#000000"/>
+                                  </svg>
+                                ) : (
+                                  // Easy Reading Icon - Simple book with smiley (friendly, approachable)
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                    <line x1="8" y1="9" x2="16" y2="9"/>
+                                    <line x1="8" y1="13" x2="16" y2="13"/>
+                                    {/* Smiley face for easy/friendly reading */}
+                                    <circle cx="12" cy="16.5" r="1.5" fill="none" stroke="#000000" strokeWidth="1.5"/>
+                                    <path d="M10 15.5 Q12 14.5 14 15.5" stroke="#000000" strokeWidth="1.5" fill="none"/>
                                   </svg>
                                 );
                               })()}
                             </button>
                             
-                            {/* Dropdown with Working Switcher */}
-                            {showLanguageOptions[index] && (
-                              <div 
-                                className="language-switcher language-dropdown-box" 
-                                style={{ 
-                                  position: 'absolute',
-                                  top: 'calc(100% + 8px)',
-                                  left: '50%',
-                                  transform: 'translateX(-50%)',
-                                  zIndex: 10020,
-                                  pointerEvents: 'auto'
-                                }}
-                                onMouseDown={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                onTouchStart={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <button
-                                  key="b2"
-                                  className={`language-switcher__option ${languageMode[index] === 'b2' ? 'active' : ''}`}
-                                  style={{
-                                    pointerEvents: 'auto',
-                                    cursor: 'pointer',
-                                    position: 'relative',
-                                    zIndex: 10025
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onTouchStart={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('✅ B2/Easy button clicked!', index);
-                                    setLanguageMode(prev => ({ ...prev, [index]: 'b2' }));
-                                    // Dropdown stays open - user must click outside or icon to close
-                                  }}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                    <path d="M12 9c.5-1 1.5-1.5 2.5-1.5s2 .5 2.5 1.5" fill="none"/>
-                                    <path d="M12 9c-.5-1-1.5-1.5-2.5-1.5s-2 .5-2.5 1.5" fill="none"/>
-                                    <path d="M12 9c0 1.5-1 2.5-2 2.5s-2-1-2-2.5c0-1.5 1-2.5 2-2.5s2 1 2 2.5z" fill="currentColor" opacity="0.5"/>
-                                  </svg>
-                                  <span style={{ pointerEvents: 'none' }}>Easy</span>
-                                </button>
-                                
-                                <button
-                                  key="advanced"
-                                  className={`language-switcher__option ${(languageMode[index] === 'advanced' || !languageMode[index]) ? 'active' : ''}`}
-                                  style={{
-                                    pointerEvents: 'auto',
-                                    cursor: 'pointer',
-                                    position: 'relative',
-                                    zIndex: 10025
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onTouchStart={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('✅ Advanced button clicked!', index);
-                                    setLanguageMode(prev => ({ ...prev, [index]: 'advanced' }));
-                                    // Dropdown stays open - user must click outside or icon to close
-                                  }}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                                  </svg>
-                                  <span style={{ pointerEvents: 'none' }}>Adv</span>
-                                </button>
-                              </div>
-                            )}
                         </div>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
