@@ -269,7 +269,6 @@ export default function SingleNewsPage() {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <title>{article.title} | Ten News</title>
         <meta name="description" content={article.summary} />
         <meta property="og:title" content={article.title} />
