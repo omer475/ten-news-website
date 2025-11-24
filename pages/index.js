@@ -2009,48 +2009,6 @@ export default function Home() {
           -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
         }
 
-        /* Animated Rotating Border - Using ::before for the border only */
-        .glass-container::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 20px;
-          padding: 2px;
-          background: conic-gradient(
-            from var(--gradient-angle),
-            var(--border-color-1, #1e3a8a) 0deg,
-            var(--border-color-2, transparent) 180deg,
-            var(--border-color-1, #1e3a8a) 360deg
-          );
-          -webkit-mask: 
-            linear-gradient(#fff 0 0) content-box, 
-            linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask: 
-            linear-gradient(#fff 0 0) content-box, 
-            linear-gradient(#fff 0 0);
-          mask-composite: exclude;
-          z-index: -1;
-          pointer-events: none;
-          animation: rotateBorder 2.5s linear infinite reverse;
-        }
-
-        /* Keyframes for counterclockwise gradient rotation (using reverse) */
-        @keyframes rotateBorder {
-          0% {
-            --gradient-angle: 0deg;
-          }
-          100% {
-            --gradient-angle: 360deg;
-          }
-        }
-        
-        /* Support for gradient angle animation */
-        @property --gradient-angle {
-          syntax: '<angle>';
-          initial-value: 0deg;
-          inherits: false;
-        }
 
         .glass-container .glass-filter {
           display: none;
@@ -4995,7 +4953,6 @@ export default function Home() {
                           // If a state is explicitly set, show that component
                           if (showGraph[index]) {
                             // Show Graph - Similar to timeline with expand/collapse
-                            const borderColors = getBorderColorsFromBlur(imageDominantColors[index]?.blurColor);
                             return story.graph && (
                               <div 
                                 className="glass-container graph-container-desktop"
@@ -5009,9 +4966,7 @@ export default function Home() {
                                   transition: 'height 0.3s ease-in-out',
                                   minHeight: '85px',
                                   zIndex: '10',
-                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden',
-                                  '--border-color-1': borderColors.color1,
-                                  '--border-color-2': borderColors.color2
+                                  overflowY: expandedGraph[index] ? 'visible' : 'hidden'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
@@ -5124,7 +5079,6 @@ export default function Home() {
                           );
                           } else if (showTimeline[index]) {
                             // Show Timeline
-                            const borderColors = getBorderColorsFromBlur(imageDominantColors[index]?.blurColor);
                             return story.timeline && (
                             <div 
                               className="glass-container timeline-container-desktop timeline-container-animated"
@@ -5138,9 +5092,7 @@ export default function Home() {
                                 transition: 'height 0.3s ease-in-out',
                                 minHeight: '85px',
                                 zIndex: '10',
-                                overflow: expandedTimeline[index] ? 'visible' : 'hidden',
-                                '--border-color-1': borderColors.color1,
-                                '--border-color-2': borderColors.color2
+                                overflow: expandedTimeline[index] ? 'visible' : 'hidden'
                               }}>
                               <div className="glass-filter"></div>
                               <div className="glass-overlay"></div>
@@ -5328,7 +5280,6 @@ export default function Home() {
                             );
                           } else if (showDetails[index]) {
                             // Show Details
-                            const borderColors = getBorderColorsFromBlur(imageDominantColors[index]?.blurColor);
                             return story.details && (
                               <div 
                                 className="glass-container details-container-desktop details-container-animated"
@@ -5342,9 +5293,7 @@ export default function Home() {
                                   minHeight: '85px',
                                   zIndex: '10',
                                   overflow: 'hidden',
-                                  display: 'flex',
-                                  '--border-color-1': borderColors.color1,
-                                  '--border-color-2': borderColors.color2
+                                  display: 'flex'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
