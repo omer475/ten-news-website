@@ -3816,9 +3816,9 @@ export default function Home() {
                       height: '55vh', // Extends to 55% viewport to cover safe area
                       padding: 0,
                       margin: 0,
-                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? '#FF0000' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // TEMPORARY RED FOR DEBUGGING
                       display: 'block',
-                      zIndex: '1',
+                      zIndex: '500', // Increased from 1 to 500 (below header's 1000)
                       overflow: 'visible', // Changed to visible so image can extend
                       pointerEvents: 'none'
                     }}>
