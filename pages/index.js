@@ -1500,7 +1500,7 @@ export default function Home() {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '600', color: linkColor }}>
+          <span key={i} style={{ fontWeight: '500', color: linkColor }}>
             {content}
           </span>
         );
@@ -4634,7 +4634,7 @@ export default function Home() {
                                     marginBottom: '16px',
                                       fontSize: '17px',
                                     lineHeight: '1.47',
-                                    fontWeight: '600',
+                                    fontWeight: '400',
                                     letterSpacing: '-0.022em',
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                       animation: 'fadeSlideIn 0.4s ease',
