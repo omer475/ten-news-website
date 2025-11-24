@@ -1492,8 +1492,8 @@ export default function Home() {
   const renderBoldText = (text, colors, category = null) => {
     if (!text) return '';
     
-    const linkColor = colors?.blurColor || 
-      (category ? getCategoryColors(category).primary : '#000000');
+    // Use a consistent dark blue color for highlighted words for better readability
+    const linkColor = '#1a56db'; // Dark blue that's readable on white background
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
