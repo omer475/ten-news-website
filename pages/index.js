@@ -3867,24 +3867,19 @@ export default function Home() {
                             decoding="async"
                             referrerPolicy="no-referrer"
                             style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
                               width: '100%',
                               height: '100%',
-                              minWidth: '100%',
-                              minHeight: '100%',
-                              maxWidth: '100%',
-                              maxHeight: '100%',
                               objectFit: 'cover',
                               objectPosition: 'center',
                               display: 'block',
                               margin: 0,
                               padding: 0,
-                              flexShrink: 0,
-                              flexGrow: 1,
                               opacity: 1,
                               visibility: 'visible',
-                              pointerEvents: 'auto',
-                              position: 'relative',
-                              zIndex: 1
+                              zIndex: 2
                             }}
                             onLoad={(e) => {
                               console.log('✅ Image loaded successfully:', imageUrl);
