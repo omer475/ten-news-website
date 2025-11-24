@@ -1500,7 +1500,7 @@ export default function Home() {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '500', color: linkColor }}>
+          <span key={i} style={{ fontWeight: '600', color: linkColor }}>
             {content}
           </span>
         );

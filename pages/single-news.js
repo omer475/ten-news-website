@@ -819,14 +819,20 @@ export default function SingleNewsPage() {
         }
 
         .single-news-page {
-          min-height: 100dvh;
-          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 100vh;
+          width: 100vw;
+          overflow: hidden;
+          overscroll-behavior: none;
           background: #ffffff;
           color: #1d1d1f;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           font-size: var(--font-size);
           line-height: 1.6;
-          position: relative;
         }
         
         .single-news-page::before {
@@ -1114,10 +1120,16 @@ export default function SingleNewsPage() {
 
         /* Hero Section */
         .hero-section {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: calc(50vh + env(safe-area-inset-top, 0px));
+          margin-top: calc(-1 * env(safe-area-inset-top, 0px));
           padding: 40px 24px;
-          margin-top: calc(-1 * env(safe-area-inset-top));
-          padding-top: calc(40px + env(safe-area-inset-top));
+          padding-top: calc(40px + env(safe-area-inset-top, 0px));
           background: linear-gradient(135deg, #F8F9FB 0%, #ffffff 100%);
+          overflow: hidden;
         }
 
         .dark-mode .hero-section {
@@ -1295,8 +1307,18 @@ export default function SingleNewsPage() {
 
         /* Article Content */
         .article-content {
-          padding: 60px 24px;
+          position: absolute;
+          top: 50vh;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          padding: 20px 24px;
+          padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+          padding-left: calc(24px + env(safe-area-inset-left, 0px));
+          padding-right: calc(24px + env(safe-area-inset-right, 0px));
           background: white;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
           transform: translateY(100px);
           opacity: 0;
           transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
