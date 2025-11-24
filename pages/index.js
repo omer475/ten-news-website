@@ -3825,23 +3825,6 @@ export default function Home() {
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
-                      {/* Simple direct image - bypasses all complex logic */}
-                      {story.urlToImage && (
-                        <img
-                          src={story.urlToImage}
-                          alt={story.title}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block',
-                            zIndex: 10
-                          }}
-                        />
-                      )}
                       {(() => {
                         // Simplified validation - just check if URL exists
                         const rawUrl = story.urlToImage;
