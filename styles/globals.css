@@ -24,16 +24,12 @@ body {
   overflow-x: hidden;
 }
 
-/* Apply safe areas to body - like test page */
+/* Body styling - NO padding so images can extend into safe areas */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   background: #f5f5f7;
   color: #1d1d1f;
-  /* Direct safe area padding - exactly like test page */
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  /* No padding! Let individual elements handle safe areas */
 }
 
 .loading-container {
