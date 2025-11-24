@@ -1909,8 +1909,11 @@ export default function Home() {
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          /* REMOVE body padding - let image extend to top edge */
-          padding: 0 !important;
+          /* Apply safe area padding like test page */
+          padding-top: env(safe-area-inset-top, 0px);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          padding-left: env(safe-area-inset-left, 0px);
+          padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* Glassmorphism Variables */
@@ -2059,10 +2062,31 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
 
-        /* Safe Area Overlays - DISABLED (photo should show through) */
-        .safe-area-overlay-top,
+        /* Safe Area Overlays - Match header blur effect */
+        .safe-area-overlay-top {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top, 0px);
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
+          z-index: 999999;
+          pointer-events: none;
+        }
+
         .safe-area-overlay-bottom {
-          display: none !important;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-bottom, 0px);
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
+          z-index: 999999;
+          pointer-events: none;
         }
 
         /* Apple HIG - Header Design */
@@ -3612,6 +3636,10 @@ export default function Home() {
         }
       `}</style>
       
+      {/* Safe Area Overlays with blur effect */}
+      <div className="safe-area-overlay-top" />
+      <div className="safe-area-overlay-bottom" />
+      
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
@@ -3806,26 +3834,33 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Extends into safe area at top */}
+                    {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '55vh', // Extends to 55% viewport to cover safe area
-                      padding: 0,
+                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
-                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? '#FF0000' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // TEMPORARY RED FOR DEBUGGING
+                      padding: 0,
+                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
-                      zIndex: '500', // Increased from 1 to 500 (below header's 1000)
-                      overflow: 'visible', // Changed to visible so image can extend
+                      zIndex: '1',
+                      overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
                       {(() => {
-                        // Simplified validation - just check if URL exists
+                        // Always try to show image if URL exists - be very lenient with validation
+                        // Only reject if clearly invalid (null, empty, or too short to be a URL)
                         const rawUrl = story.urlToImage;
-                        const hasImageUrl = !!rawUrl;
+                        const hasImageUrl = rawUrl && 
+                                          (typeof rawUrl === 'string' || typeof rawUrl === 'object') && 
+                                          String(rawUrl).trim() !== '' && 
+                                          String(rawUrl).toLowerCase() !== 'null' && 
+                                          String(rawUrl).toLowerCase() !== 'undefined' &&
+                                          String(rawUrl).toLowerCase() !== 'none' &&
+                                          String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
                         
                         if (!hasImageUrl) {
                           return (
@@ -3857,19 +3892,24 @@ export default function Home() {
                             decoding="async"
                             referrerPolicy="no-referrer"
                             style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
                               width: '100%',
                               height: '100%',
+                              minWidth: '100%',
+                              minHeight: '100%',
+                              maxWidth: '100%',
+                              maxHeight: '100%',
                               objectFit: 'cover',
                               objectPosition: 'center',
                               display: 'block',
                               margin: 0,
                               padding: 0,
+                              flexShrink: 0,
+                              flexGrow: 1,
                               opacity: 1,
                               visibility: 'visible',
-                              zIndex: 2
+                              pointerEvents: 'auto',
+                              position: 'relative',
+                              zIndex: 1
                             }}
                             onLoad={(e) => {
                               console.log('✅ Image loaded successfully:', imageUrl);
