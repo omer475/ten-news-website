@@ -3819,12 +3819,27 @@ export default function Home() {
                       height: '50vh',
                       margin: 0,
                       padding: 0,
-                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? '#ff0000' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: '#ff0000',
                       display: 'block',
                       zIndex: '1',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: '100px',
+                        left: '20px',
+                        right: '20px',
+                        background: 'rgba(255,255,255,0.9)',
+                        padding: '10px',
+                        fontSize: '12px',
+                        zIndex: 10,
+                        pointerEvents: 'auto'
+                      }}>
+                        DEBUG:<br/>
+                        hasURL: {story.urlToImage ? 'YES' : 'NO'}<br/>
+                        URL: {story.urlToImage?.substring(0,50)}...
+                      </div>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
                         // Only reject if clearly invalid (null, empty, or too short to be a URL)
