@@ -1909,11 +1909,8 @@ export default function Home() {
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          /* Apply safe area padding like test page */
-          padding-top: env(safe-area-inset-top, 0px);
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          padding-left: env(safe-area-inset-left, 0px);
-          padding-right: env(safe-area-inset-right, 0px);
+          /* REMOVE body padding - let image extend to top edge */
+          padding: 0 !important;
         }
 
         /* Glassmorphism Variables */
@@ -3809,20 +3806,20 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - With Rounded Corners and Spacing */}
+                    {/* News Image - Extends into safe area at top */}
                     <div style={{
                       position: 'fixed',
                       top: '0',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
-                      marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
+                      height: '55vh', // Extends to 55% viewport to cover safe area
                       padding: 0,
+                      margin: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      overflow: 'hidden',
+                      overflow: 'visible', // Changed to visible so image can extend
                       pointerEvents: 'none'
                     }}>
                       {(() => {
