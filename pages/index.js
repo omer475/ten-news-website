@@ -3816,7 +3816,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '50vh',
+                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
