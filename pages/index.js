@@ -3812,11 +3812,11 @@ export default function Home() {
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+                      top: '0',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',
+                      height: '50vh',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
