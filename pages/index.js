@@ -4296,7 +4296,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + 50px)',
+                        paddingTop: 'calc(38vh - 80px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
