@@ -1953,7 +1953,7 @@ export default function Home() {
             0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
         }
-
+        
         /* Glass Container - Matching Switch Button Design */
         .glass-container {
           position: relative;
@@ -4071,15 +4071,15 @@ export default function Home() {
                                     const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
                                     const infoBoxColorHex = `rgb(${iR}, ${iG}, ${iB})`;
                                     
-                                    setImageDominantColors(prev => ({
-                                      ...prev,
-                                      [index]: {
+                                setImageDominantColors(prev => ({ 
+                                  ...prev, 
+                                  [index]: { 
                                         blurColor: blurColor,
                                         highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
                                         link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
                                         infoBox: infoBoxColorHex
-                                      }
-                                    }));
+                                  }
+                                }));
                                     
                                     resolve(true);
                                   });
@@ -4089,7 +4089,7 @@ export default function Home() {
                                 try {
                                   await tryDirectExtraction();
                                 } catch (err1) {
-                                  try {
+                                try {
                                     await tryCORSImage();
                                   } catch (err2) {
                                     try {
@@ -4119,19 +4119,19 @@ export default function Home() {
                               const maxRetries = 3; // Reduced retries since we start without CORS
                               
                               if (retryCount < maxRetries) {
-                                retryCount++;
-                                imgElement.dataset.retryCount = retryCount.toString();
+                                  retryCount++;
+                                  imgElement.dataset.retryCount = retryCount.toString();
                                 console.log(`🔄 Retry ${retryCount}/${maxRetries}`);
-                                
-                                // Try different referrer policies
+                                  
+                                  // Try different referrer policies
                                 if (retryCount === 1) {
-                                  imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                                    imgElement.referrerPolicy = 'no-referrer-when-downgrade';
                                 } else if (retryCount === 2) {
-                                  imgElement.referrerPolicy = 'origin';
-                                } else {
+                                    imgElement.referrerPolicy = 'origin';
+                                  } else {
                                   imgElement.referrerPolicy = 'unsafe-url';
-                                }
-                                
+                                  }
+                                  
                                 // Reload
                                 setTimeout(() => {
                                   const separator = imageUrl.includes('?') ? '&' : '?';
@@ -4140,27 +4140,27 @@ export default function Home() {
                               } else {
                                 // All retries failed - show emoji fallback
                                 console.warn('⚠️ All retries failed, showing emoji');
-                                imgElement.style.display = 'none';
+                                  imgElement.style.display = 'none';
                                 if (parentElement && !parentElement.querySelector('.image-fallback')) {
-                                  parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                                  const fallback = document.createElement('div');
-                                  fallback.className = 'image-fallback';
-                                  fallback.style.cssText = `
-                                    font-size: 72px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    width: 100%;
-                                    height: 100%;
-                                    position: absolute;
-                                    top: 0;
-                                    left: 0;
-                                    z-index: 1;
-                                  `;
-                                  fallback.textContent = story.emoji || '📰';
-                                  parentElement.appendChild(fallback);
-                                }
-                              }
+                                      parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                      const fallback = document.createElement('div');
+                                      fallback.className = 'image-fallback';
+                                      fallback.style.cssText = `
+                                        font-size: 72px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        width: 100%;
+                                        height: 100%;
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        z-index: 1;
+                                      `;
+                                      fallback.textContent = story.emoji || '📰';
+                                      parentElement.appendChild(fallback);
+                                    }
+                                  }
                             }}
                             onLoadStart={() => {
                               console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
@@ -4296,7 +4296,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + 80px)',
+                        paddingTop: 'calc(38vh + 20px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -4360,7 +4360,7 @@ export default function Home() {
                                 const currentMode = languageMode[index] || 'advanced';
                                 return currentMode === 'advanced' ? (
                                   // Advanced Reading Icon - Book with sparkles/stars (expert, complex)
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                                     <line x1="8" y1="7" x2="16" y2="7"/>
@@ -4371,7 +4371,7 @@ export default function Home() {
                                     <circle cx="18" cy="5" r="1" fill="#000000"/>
                                     <circle cx="19.5" cy="7.5" r="0.8" fill="#000000"/>
                                     <circle cx="18" cy="10" r="0.6" fill="#000000"/>
-                                  </svg>
+                              </svg>
                                 ) : (
                                   // Easy Reading Icon - Simple book with smiley (friendly, approachable)
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4385,8 +4385,8 @@ export default function Home() {
                                   </svg>
                                 );
                               })()}
-                            </button>
-                            
+                                </button>
+                                
                         </div>
 
                         {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
