@@ -64,65 +64,81 @@ export default function Home() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
-    // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || 
-        e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn') ||
-        e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
-      return;
+    try {
+      // Only handle swipe on summary content, not on buttons or other elements
+      if (e.target.closest('.switcher') || 
+          e.target.closest('[data-expand-icon]') ||
+          e.target.closest('.language-icon-btn') ||
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      if (e.targetTouches && e.targetTouches.length > 0) {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+      }
+    } catch (err) {
+      // Silently handle touch errors
     }
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
   };
 
   const onTouchMove = (e) => {
-    // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || 
-        e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn') ||
-        e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
-      return;
+    try {
+      // Only handle swipe on summary content, not on buttons or other elements
+      if (e.target.closest('.switcher') || 
+          e.target.closest('[data-expand-icon]') ||
+          e.target.closest('.language-icon-btn') ||
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      if (e.targetTouches && e.targetTouches.length > 0) {
+        setTouchEnd(e.targetTouches[0].clientX);
+      }
+    } catch (err) {
+      // Silently handle touch errors
     }
-    setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = (e) => {
-    // Only handle swipe on summary content, not on buttons or other elements
-    if (e.target.closest('.switcher') || 
-        e.target.closest('[data-expand-icon]') ||
-        e.target.closest('.language-icon-btn') ||
-        e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
-      return;
-    }
-    
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    try {
+      // Only handle swipe on summary content, not on buttons or other elements
+      if (e.target.closest('.switcher') || 
+          e.target.closest('[data-expand-icon]') ||
+          e.target.closest('.language-icon-btn') ||
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
+      if (!touchStart || !touchEnd) return;
+      
+      const distance = touchStart - touchEnd;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe || isRightSwipe) {
-      // Prevent click event when swiping
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // If detailed article is open, swipe left-to-right closes it
-      if (showDetailedArticle && isRightSwipe) {
-        setShowDetailedArticle(false);
-        setSelectedArticle(null);
-        return;
+      if (isLeftSwipe || isRightSwipe) {
+        // Prevent click event when swiping
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // If detailed article is open, swipe left-to-right closes it
+        if (showDetailedArticle && isRightSwipe) {
+          setShowDetailedArticle(false);
+          setSelectedArticle(null);
+          return;
+        }
+        
+        // If detailed text is showing for current article, swipe right returns to summary
+        if (showDetailedText[currentIndex] && isRightSwipe) {
+          setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
+          return;
+        }
+        
+        // No more bullet/summary toggle - only detailed text navigation
       }
-      
-      // If detailed text is showing for current article, swipe right returns to summary
-      if (showDetailedText[currentIndex] && isRightSwipe) {
-        setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
-        return;
-      }
-      
-      // No more bullet/summary toggle - only detailed text navigation
+    } catch (err) {
+      // Silently handle touch errors
     }
   };
 
@@ -1515,36 +1531,44 @@ export default function Home() {
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
-      // Don't capture touch if it's on the language switcher
-      if (e.target.closest('.language-icon-btn') || 
-          e.target.closest('.language-dropdown-box') ||
-          e.target.closest('.language-switcher__option')) {
-        return;
-      }
-      
-      if (!isTransitioning) {
-        startY = e.touches[0].clientY;
+      try {
+        // Don't capture touch if it's on the language switcher
+        if (e.target.closest('.language-icon-btn') || 
+            e.target.closest('.language-dropdown-box') ||
+            e.target.closest('.language-switcher__option')) {
+          return;
+        }
+        
+        if (!isTransitioning && e.touches && e.touches.length > 0) {
+          startY = e.touches[0].clientY;
+        }
+      } catch (err) {
+        // Silently handle touch errors
       }
     };
 
     const handleTouchEnd = (e) => {
-      // Don't handle touch if it's on the language switcher
-      if (e.target.closest('.language-icon-btn') || 
-          e.target.closest('.language-dropdown-box') ||
-          e.target.closest('.language-switcher__option')) {
-        return;
-      }
-      
-      if (isTransitioning) return;
-      
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen) {
-        return; // Don't allow story navigation when article is open
-      }
-      
-      const endY = e.changedTouches[0].clientY;
-      const diff = startY - endY;
+      try {
+        // Don't handle touch if it's on the language switcher
+        if (e.target.closest('.language-icon-btn') || 
+            e.target.closest('.language-dropdown-box') ||
+            e.target.closest('.language-switcher__option')) {
+          return;
+        }
+        
+        if (isTransitioning) return;
+        
+        // Block navigation if article is open
+        const isArticleOpen = showDetailedText[currentIndex];
+        if (isArticleOpen) {
+          return; // Don't allow story navigation when article is open
+        }
+        
+        // Safety check for changedTouches
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
+        
+        const endY = e.changedTouches[0].clientY;
+        const diff = startY - endY;
       
       if (Math.abs(diff) > 30) {
         isTransitioning = true;
@@ -1567,6 +1591,9 @@ export default function Home() {
         setTimeout(() => {
           isTransitioning = false;
         }, 500);
+      }
+      } catch (err) {
+        // Silently handle touch errors on mobile
       }
     };
 
@@ -4493,50 +4520,58 @@ export default function Home() {
                           zIndex: 5
                         }}
                         onTouchStart={(e) => {
-                          const startX = e.touches[0].clientX;
-                          const startY = e.touches[0].clientY;
-                          let hasMoved = false;
-                          let swipeDirection = null;
-                          
-                          const handleTouchMove = (moveEvent) => {
-                            const currentX = moveEvent.touches[0].clientX;
-                            const currentY = moveEvent.touches[0].clientY;
-                            const diffX = Math.abs(startX - currentX);
-                            const diffY = Math.abs(startY - currentY);
+                          try {
+                            if (!e.touches || e.touches.length === 0) return;
+                            const startX = e.touches[0].clientX;
+                            const startY = e.touches[0].clientY;
+                            let hasMoved = false;
+                            let swipeDirection = null;
                             
-                            if (diffX > 10 || diffY > 10) {
-                              hasMoved = true;
+                            const handleTouchMove = (moveEvent) => {
+                              try {
+                                if (!moveEvent.touches || moveEvent.touches.length === 0) return;
+                                const currentX = moveEvent.touches[0].clientX;
+                                const currentY = moveEvent.touches[0].clientY;
+                                const diffX = Math.abs(startX - currentX);
+                                const diffY = Math.abs(startY - currentY);
+                                
+                                if (diffX > 10 || diffY > 10) {
+                                  hasMoved = true;
+                                  
+                                  // Determine swipe direction
+                                  if (diffX > diffY && diffX > 50) {
+                                    swipeDirection = 'horizontal';
+                                    moveEvent.preventDefault();
+                                    moveEvent.stopPropagation();
+                                  } else if (diffY > diffX && diffY > 30) {
+                                    swipeDirection = 'vertical';
+                                  }
+                                }
+                              } catch (err) {}
+                            };
+                            
+                            const handleTouchEnd = (endEvent) => {
+                              try {
+                                if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) return;
+                                const endX = endEvent.changedTouches[0].clientX;
+                                const diffX = Math.abs(startX - endX);
+                                
+                                // Only handle horizontal swipes for summary/bullet points toggle
+                                if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
+                                  endEvent.preventDefault();
+                                  endEvent.stopPropagation();
+                                  toggleSummaryDisplayMode(index);
+                                }
+                              } catch (err) {}
                               
-                              // Determine swipe direction
-                              if (diffX > diffY && diffX > 50) {
-                                swipeDirection = 'horizontal';
-                                moveEvent.preventDefault();
-                                moveEvent.stopPropagation();
-                              } else if (diffY > diffX && diffY > 30) {
-                                swipeDirection = 'vertical';
-                              }
-                            }
-                          };
-                          
-                          const handleTouchEnd = (endEvent) => {
-                            const endX = endEvent.changedTouches[0].clientX;
-                            const diffX = Math.abs(startX - endX);
+                              // Clean up listeners
+                              document.removeEventListener('touchmove', handleTouchMove);
+                              document.removeEventListener('touchend', handleTouchEnd);
+                            };
                             
-                            // Only handle horizontal swipes for summary/bullet points toggle
-                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
-                              console.log('Horizontal summary swipe detected for story', index);
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
-                              toggleSummaryDisplayMode(index);
-                            }
-                            
-                            // Clean up listeners
-                            document.removeEventListener('touchmove', handleTouchMove);
-                            document.removeEventListener('touchend', handleTouchEnd);
-                          };
-                          
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                          } catch (err) {}
                         }}
                       >
                         <div 
@@ -4560,8 +4595,6 @@ export default function Home() {
                                 const bullets = mode === 'b2'
                                   ? (story.summary_bullets_b2 || story.summary_bullets || [])
                                   : (story.summary_bullets_news || story.summary_bullets || []);
-                                
-                                console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
@@ -4615,37 +4648,46 @@ export default function Home() {
                                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
                               }}
                               onTouchStart={(e) => {
-                                const startX = e.touches[0].clientX;
-                                const startY = e.touches[0].clientY;
-                                let hasMoved = false;
-                                
-                                const handleTouchMove = (moveEvent) => {
-                                  const currentX = moveEvent.touches[0].clientX;
-                                  const diffX = Math.abs(currentX - startX);
-                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
+                                try {
+                                  if (!e.touches || e.touches.length === 0) return;
+                                  const startX = e.touches[0].clientX;
+                                  const startY = e.touches[0].clientY;
+                                  let hasMoved = false;
                                   
-                                  if (diffX > 10 || diffY > 10) {
-                                    hasMoved = true;
-                                  }
-                                };
-                                
-                                const handleTouchEnd = (endEvent) => {
-                                  const endX = endEvent.changedTouches[0].clientX;
-                                  const diffX = endX - startX;
+                                  const handleTouchMove = (moveEvent) => {
+                                    try {
+                                      if (!moveEvent.touches || moveEvent.touches.length === 0) return;
+                                      const currentX = moveEvent.touches[0].clientX;
+                                      const diffX = Math.abs(currentX - startX);
+                                      const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
+                                      
+                                      if (diffX > 10 || diffY > 10) {
+                                        hasMoved = true;
+                                      }
+                                    } catch (err) {}
+                                  };
                                   
-                                  // Swipe right to close article
-                                  if (hasMoved && diffX > 100) {
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    toggleDetailedText(index); // Close article
-                                  }
+                                  const handleTouchEnd = (endEvent) => {
+                                    try {
+                                      if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) return;
+                                      const endX = endEvent.changedTouches[0].clientX;
+                                      const diffX = endX - startX;
+                                      
+                                      // Swipe right to close article
+                                      if (hasMoved && diffX > 100) {
+                                        endEvent.preventDefault();
+                                        endEvent.stopPropagation();
+                                        toggleDetailedText(index); // Close article
+                                      }
+                                    } catch (err) {}
+                                    
+                                    document.removeEventListener('touchmove', handleTouchMove);
+                                    document.removeEventListener('touchend', handleTouchEnd);
+                                  };
                                   
-                                  document.removeEventListener('touchmove', handleTouchMove);
-                                  document.removeEventListener('touchend', handleTouchEnd);
-                                };
-                                
-                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                                  document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                  document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                                } catch (err) {}
                               }}
                             >
                               <div dangerouslySetInnerHTML={{
@@ -4672,8 +4714,6 @@ export default function Home() {
                                   const articleText = mode === 'b2'
                                     ? (story.content_b2 || story.detailed_text || story.article || '')
                                     : (story.content_news || story.detailed_text || story.article || '');
-                                  
-                                  console.log(`📄 ARTICLE [${index}]:`, { mode, has_b2: !!story.content_b2, has_news: !!story.content_news, length: articleText.length, start: articleText.substring(0, 40) });
                                   
                                   return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
@@ -4761,84 +4801,95 @@ export default function Home() {
                           boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
-                          // Check if touch started on expand icon - if so, don't handle it
-                          const touchTarget = e.target;
-                          const isExpandIcon = touchTarget.closest('[data-expand-icon]');
-                          if (isExpandIcon) return;
-                          
-                          // Only handle if there are multiple information types
-                          if (getAvailableComponentsCount(story) <= 1) return;
-                          
-                          const startX = e.touches[0].clientX;
-                          const startY = e.touches[0].clientY;
-                          let hasMoved = false;
-                          let swipeDirection = null;
-                          
-                          const handleTouchMove = (moveEvent) => {
-                            const currentX = moveEvent.touches[0].clientX;
-                            const currentY = moveEvent.touches[0].clientY;
-                            const diffX = Math.abs(startX - currentX);
-                            const diffY = Math.abs(startY - currentY);
+                          try {
+                            // Check if touch started on expand icon - if so, don't handle it
+                            const touchTarget = e.target;
+                            const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                            if (isExpandIcon) return;
                             
-                            if (diffX > 15 || diffY > 15) {
-                              hasMoved = true;
-                              
-                              // Determine swipe direction - be more strict
-                              if (diffX > diffY && diffX > 30) {
-                                swipeDirection = 'horizontal';
-                                // ONLY prevent default for clear horizontal swipes
-                                moveEvent.preventDefault();
-                                moveEvent.stopPropagation();
-                              } else if (diffY > diffX && diffY > 30) {
-                                swipeDirection = 'vertical';
-                                // Let vertical swipes pass through for story navigation
-                              }
-                            }
-                          };
-                          
-                          const handleTouchEnd = (endEvent) => {
-                            const endX = endEvent.changedTouches[0].clientX;
-                            const endY = endEvent.changedTouches[0].clientY;
-                            const diffX = startX - endX;
-                            const diffY = startY - endY;
+                            // Only handle if there are multiple information types
+                            if (getAvailableComponentsCount(story) <= 1) return;
                             
-                            // Only handle horizontal swipes for information switching
-                            if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              console.log('Horizontal information swipe detected for story', index);
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
-                              
-                              // Disable auto-rotation for this article when user manually interacts
-                              setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
-                              
-                              switchToNextInformationType(story, index);
-                            } else if (!hasMoved) {
-                              // Check if the touch target is the expand icon
-                              const touchTarget = endEvent.target;
-                              const isExpandIcon = touchTarget.closest('[data-expand-icon]');
-                              
-                              if (!isExpandIcon) {
-                                // Single tap switches information type
-                                console.log('Information box tap detected for story', index);
-                                endEvent.preventDefault();
-                                endEvent.stopPropagation();
+                            if (!e.touches || e.touches.length === 0) return;
+                            const startX = e.touches[0].clientX;
+                            const startY = e.touches[0].clientY;
+                            let hasMoved = false;
+                            let swipeDirection = null;
+                            
+                            const handleTouchMove = (moveEvent) => {
+                              try {
+                                if (!moveEvent.touches || moveEvent.touches.length === 0) return;
+                                const currentX = moveEvent.touches[0].clientX;
+                                const currentY = moveEvent.touches[0].clientY;
+                                const diffX = Math.abs(startX - currentX);
+                                const diffY = Math.abs(startY - currentY);
                                 
-                                // Disable auto-rotation for this article when user manually interacts
-                                setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
-                                
-                                switchToNextInformationType(story, index);
-                              }
-                            }
-                            // If it's vertical swipe, let it pass through for story navigation
+                                if (diffX > 15 || diffY > 15) {
+                                  hasMoved = true;
+                                  
+                                  // Determine swipe direction - be more strict
+                                  if (diffX > diffY && diffX > 30) {
+                                    swipeDirection = 'horizontal';
+                                    // ONLY prevent default for clear horizontal swipes
+                                    moveEvent.preventDefault();
+                                    moveEvent.stopPropagation();
+                                  } else if (diffY > diffX && diffY > 30) {
+                                    swipeDirection = 'vertical';
+                                    // Let vertical swipes pass through for story navigation
+                                  }
+                                }
+                              } catch (err) {}
+                            };
                             
-                            // Clean up listeners
-                            document.removeEventListener('touchmove', handleTouchMove);
-                            document.removeEventListener('touchend', handleTouchEnd);
-                          };
-                          
-                          // Use normal event listeners, let vertical swipes pass through
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                            const handleTouchEnd = (endEvent) => {
+                              try {
+                                if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) {
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
+                                  return;
+                                }
+                                const endX = endEvent.changedTouches[0].clientX;
+                                const endY = endEvent.changedTouches[0].clientY;
+                                const diffX = startX - endX;
+                                const diffY = startY - endY;
+                                
+                                // Only handle horizontal swipes for information switching
+                                if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
+                                  endEvent.preventDefault();
+                                  endEvent.stopPropagation();
+                                  
+                                  // Disable auto-rotation for this article when user manually interacts
+                                  setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                                  
+                                  switchToNextInformationType(story, index);
+                                } else if (!hasMoved) {
+                                  // Check if the touch target is the expand icon
+                                  const touchTarget = endEvent.target;
+                                  const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                                  
+                                  if (!isExpandIcon) {
+                                    // Single tap switches information type
+                                    endEvent.preventDefault();
+                                    endEvent.stopPropagation();
+                                    
+                                    // Disable auto-rotation for this article when user manually interacts
+                                    setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                                    
+                                    switchToNextInformationType(story, index);
+                                  }
+                                }
+                              } catch (err) {}
+                              // If it's vertical swipe, let it pass through for story navigation
+                              
+                              // Clean up listeners
+                              document.removeEventListener('touchmove', handleTouchMove);
+                              document.removeEventListener('touchend', handleTouchEnd);
+                            };
+                            
+                            // Use normal event listeners, let vertical swipes pass through
+                            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                          } catch (err) {}
                         }}
                       >
                         {/* Content - Show one component at a time */}
@@ -4938,7 +4989,6 @@ export default function Home() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log('Expand graph icon clicked for story', index);
                                     setExpandedGraph(prev => ({
                                       ...prev,
                                       [index]: !prev[index]
@@ -4947,7 +4997,6 @@ export default function Home() {
                                   onTouchEnd={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log('Expand graph icon touched for story', index);
                                     setExpandedGraph(prev => ({
                                       ...prev,
                                       [index]: !prev[index]
@@ -5064,7 +5113,6 @@ export default function Home() {
                                onClick={(e) => {
                                  e.preventDefault();
                                  e.stopPropagation();
-                                 console.log('Expand icon clicked for story', index, 'current state:', expandedTimeline[index], 'will toggle to:', !expandedTimeline[index]);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]
@@ -5073,7 +5121,6 @@ export default function Home() {
                                onTouchEnd={(e) => {
                                  e.preventDefault();
                                  e.stopPropagation();
-                                 console.log('Expand icon touched for story', index);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]
