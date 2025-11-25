@@ -157,7 +157,6 @@ export default function Home() {
   const getAvailableInformationTypes = (story) => {
     // If components array exists, use it to determine order
     if (story.components && Array.isArray(story.components) && story.components.length > 0) {
-      console.log(`📊 Story "${story.title?.substring(0, 30)}..." has components array:`, story.components);
       // Filter to only include components that actually have data
       const filtered = story.components.filter(type => {
         switch (type) {
@@ -173,11 +172,9 @@ export default function Home() {
         return false;
         }
       });
-      console.log(`✅ Filtered components for this story:`, filtered);
       return filtered;
     }
     
-    console.log(`⚠️  Story "${story.title?.substring(0, 30)}..." has NO components array, using fallback`);
     // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
@@ -546,14 +543,9 @@ export default function Home() {
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
-      console.log(`🎨 Starting color extraction for article ${storyIndex}`);
-      console.log(`   Image src: ${imgElement.src}`);
-      console.log(`   Image dimensions: ${imgElement.naturalWidth}x${imgElement.naturalHeight}`);
-      console.log(`   crossOrigin: ${imgElement.crossOrigin}`);
-      
       // Verify image is ready
       if (!imgElement.complete || !imgElement.naturalWidth || imgElement.naturalWidth === 0) {
-        throw new Error(`Image not fully loaded: complete=${imgElement.complete}, width=${imgElement.naturalWidth}`);
+        throw new Error(`Image not fully loaded`);
       }
       
       const canvas = document.createElement('canvas');
@@ -562,28 +554,21 @@ export default function Home() {
       canvas.width = imgElement.naturalWidth;
       canvas.height = imgElement.naturalHeight;
       
-      console.log(`   Drawing image to canvas...`);
       ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
       
-      console.log(`   Getting image data from canvas...`);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
-      console.log(`   ✅ Successfully got ${pixels.length / 4} pixels`);
       
       // Extract colorful candidates
       const candidates = extractColorfulCandidates(pixels, canvas.width, canvas.height);
-      console.log(`   Found ${candidates.length} color candidates`);
       
       // Select color based on article index
       const selectedColor = selectColorForArticle(candidates, storyIndex);
-      console.log(`   Selected color HSL: ${selectedColor.hsl.join(', ')}`);
-      console.log(`   Selected color RGB: ${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}`);
       
       // Create blur color
       const blurHsl = createBlurColor(selectedColor.hsl);
       const [bR, bG, bB] = hslToRgb(...blurHsl);
       const blurColorHex = `#${toHex(bR)}${toHex(bG)}${toHex(bB)}`;
-      console.log(`   🎨 Final blur color: ${blurColorHex}`);
       
       // Create title highlight color  
       const highlightHsl = createTitleHighlightColor(blurHsl);
@@ -610,13 +595,8 @@ export default function Home() {
           infoBox: infoBoxColor
         }
       }));
-      
-      console.log(`   ✅ Color extraction complete for article ${storyIndex}`);
     } catch (error) {
-      console.error(`❌ Color extraction FAILED for article ${storyIndex}:`, error);
-      console.error(`   Error type: ${error.name}`);
-      console.error(`   Error message: ${error.message}`);
-      console.error(`   Using fallback blue-gray color #3A4A5E`);
+      // Color extraction failed, use fallback
       
       // Fallback colors
       const fallbackBlurHsl = [210, 30, 35]; // Blue-gray #3A4A5E
@@ -1692,44 +1672,31 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
-  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
-  
-  // Temporary debug - force loading to false if stories exist
-  if (stories.length > 0 && loading) {
-    console.log('🔧 Debug: Forcing loading to false');
-    setLoading(false);
-  }
-  
-  // Temporary debug - show current state
-  console.log('🔧 Debug: Current state - loading:', loading, 'stories:', stories.length);
-  
-  // Emergency fallback - if loading takes too long, show something
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading && stories.length === 0) {
-        console.log('🔧 Emergency: Setting loading to false after timeout');
-        setLoading(false);
-      }
-    }, 2000); // 2 second timeout
-    
-    return () => clearTimeout(timer);
-  }, [loading, stories.length]);
-  
-  // Force loading to false if we have stories but still loading
+  // Single consolidated useEffect for loading state safety
+  // Ensures loading is false when stories exist (prevents stuck loading states)
   useEffect(() => {
     if (stories.length > 0 && loading) {
-      console.log('🔧 Force: Setting loading to false because stories exist');
       setLoading(false);
     }
   }, [stories.length, loading]);
   
-  // Additional safety check - force render if we have data
+  // Emergency timeout fallback - if loading takes too long without stories
   useEffect(() => {
-    if (stories.length > 0) {
-      console.log('🔧 Safety: Stories exist, ensuring loading is false');
-      setLoading(false);
+    if (!loading) return; // Only set timeout if currently loading
+    
+    const timer = setTimeout(() => {
+      setLoading(false); // Force loading to false after timeout
+    }, 5000); // 5 second timeout
+    
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  // Initialize progress bar key when article changes
+  useEffect(() => {
+    if (stories.length > 0 && stories[currentIndex] && !progressBarKey[currentIndex]) {
+      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
     }
-  }, [stories.length]);
+  }, [currentIndex, stories]);
 
   // Auto-rotation for information boxes
   useEffect(() => {
@@ -1753,24 +1720,22 @@ export default function Home() {
       return;
     }
 
-    // Initialize progress bar key if not set
-    if (!progressBarKey[currentIndex]) {
-      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
-    }
-
     // Set up interval to rotate every 4 seconds
     const intervalId = setInterval(() => {
-      console.log(`🔄 Auto-rotating information box for article ${currentIndex}`);
-      switchToNextInformationType(currentStory, currentIndex);
-      // Reset progress bar animation
-      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
+      try {
+        switchToNextInformationType(currentStory, currentIndex);
+        // Reset progress bar animation
+        setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
+      } catch (err) {
+        // Silently handle any rotation errors
+      }
     }, 4000);
 
     // Cleanup interval on unmount or when dependencies change
     return () => {
       clearInterval(intervalId);
     };
-  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
+  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
   
   if (loading) {
     return (
@@ -3928,8 +3893,6 @@ export default function Home() {
                               
                               // ADVANCED MULTI-STRATEGY COLOR EXTRACTION
                               const attemptColorExtraction = async () => {
-                                console.log(`🎨 Starting advanced color extraction for article ${index}...`);
-                                
                                 // Strategy 1: Try direct extraction if CORS available
                                 const tryDirectExtraction = () => {
                                   return new Promise((resolve, reject) => {
@@ -3942,11 +3905,9 @@ export default function Home() {
                                       ctx.drawImage(e.target, 0, 0);
                                       ctx.getImageData(0, 0, 1, 1); // Test if we can read
                                       
-                                      console.log(`  ✓ Strategy 1: Direct extraction - SUCCESS`);
                                       extractDominantColor(e.target, index);
                                       resolve(true);
                                     } catch (err) {
-                                      console.log(`  ✗ Strategy 1: Direct extraction - CORS blocked`);
                                       reject(err);
                                     }
                                   });
@@ -3959,25 +3920,21 @@ export default function Home() {
                                     corsImg.crossOrigin = 'anonymous';
                                     
                                     const timeout = setTimeout(() => {
-                                      console.log(`  ✗ Strategy 2: CORS image - TIMEOUT`);
                                       reject(new Error('timeout'));
                                     }, 3000);
                                     
                                     corsImg.onload = () => {
                                       clearTimeout(timeout);
                                       try {
-                                        console.log(`  ✓ Strategy 2: CORS image - SUCCESS`);
                                         extractDominantColor(corsImg, index);
                                         resolve(true);
                                       } catch (err) {
-                                        console.log(`  ✗ Strategy 2: CORS image - Extraction failed`);
                                         reject(err);
                                       }
                                     };
                                     
                                     corsImg.onerror = () => {
                                       clearTimeout(timeout);
-                                      console.log(`  ✗ Strategy 2: CORS image - FAILED to load`);
                                       reject(new Error('cors load failed'));
                                     };
                                     
@@ -4001,13 +3958,11 @@ export default function Home() {
                                     
                                     const tryNextProxy = () => {
                                       if (proxyIndex >= proxies.length) {
-                                        console.log(`  ✗ Strategy 3: All proxies failed`);
                                         reject(new Error('all proxies failed'));
                                         return;
                                       }
                                       
                                       const proxyUrl = proxies[proxyIndex];
-                                      console.log(`  → Strategy 3: Trying proxy ${proxyIndex + 1}/${proxies.length}`);
                                       
                                       const timeout = setTimeout(() => {
                                         proxyIndex++;
@@ -4017,11 +3972,9 @@ export default function Home() {
                                       proxyImg.onload = () => {
                                         clearTimeout(timeout);
                                         try {
-                                          console.log(`  ✓ Strategy 3: Proxy ${proxyIndex + 1} - SUCCESS`);
                                           extractDominantColor(proxyImg, index);
                                           resolve(true);
                                         } catch (err) {
-                                          console.log(`  ✗ Strategy 3: Proxy ${proxyIndex + 1} - Extraction failed`);
                                           proxyIndex++;
                                           tryNextProxy();
                                         }
@@ -4029,7 +3982,6 @@ export default function Home() {
                                       
                                       proxyImg.onerror = () => {
                                         clearTimeout(timeout);
-                                        console.log(`  ✗ Strategy 3: Proxy ${proxyIndex + 1} - FAILED`);
                                         proxyIndex++;
                                         tryNextProxy();
                                       };
@@ -4044,8 +3996,6 @@ export default function Home() {
                                 // Strategy 4: Simplified color from image analysis (no canvas)
                                 const trySimplifiedExtraction = () => {
                                   return new Promise((resolve) => {
-                                    console.log(`  → Strategy 4: Simplified extraction from visible pixels`);
-                                    
                                     // Use a very simple heuristic based on the image source
                                     // This is a fallback that generates reasonable colors
                                     const hash = imageUrl.split('').reduce((acc, char) => {
@@ -4059,8 +4009,6 @@ export default function Home() {
                                     
                                     const [r, g, b] = hslToRgb(hue, saturation, lightness);
                                     const blurColor = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-                                    
-                                    console.log(`  ✓ Strategy 4: Generated color ${blurColor} from URL hash`);
                                     
                                     // Use the same VIBRANT color generation functions
                                     const blurHsl = [hue, saturation, lightness];
@@ -4101,17 +4049,14 @@ export default function Home() {
                                   }
                                 }
                                 
-                                console.log(`🎨 Color extraction complete for article ${index}`);
                               };
                               
                               // Start extraction immediately (don't wait)
-                              attemptColorExtraction().catch(err => {
-                                console.error(`❌ All color extraction strategies failed:`, err);
+                              attemptColorExtraction().catch(() => {
                                 // Keep the default fallback color already set
                               });
                             }}
                             onError={(e) => {
-                              console.error('❌ Image failed to load:', imageUrl);
                               const imgElement = e.target;
                               const parentElement = imgElement.parentElement;
                               
@@ -4121,7 +4066,6 @@ export default function Home() {
                               if (retryCount < maxRetries) {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
-                                console.log(`🔄 Retry ${retryCount}/${maxRetries}`);
                                   
                                   // Try different referrer policies
                                 if (retryCount === 1) {
@@ -4139,7 +4083,6 @@ export default function Home() {
                                 }, 100 * retryCount);
                               } else {
                                 // All retries failed - show emoji fallback
-                                console.warn('⚠️ All retries failed, showing emoji');
                                   imgElement.style.display = 'none';
                                 if (parentElement && !parentElement.querySelector('.image-fallback')) {
                                       parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
@@ -4162,9 +4105,7 @@ export default function Home() {
                                     }
                                   }
                             }}
-                            onLoadStart={() => {
-                              console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
-                            }}
+                            onLoadStart={() => {}}
                           />
                         );
                       })()}
