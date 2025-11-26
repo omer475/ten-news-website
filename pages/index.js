@@ -2150,7 +2150,7 @@ export default function Home() {
           padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
-          background: ${darkMode ? '#000000' : '#f5f5f7'};
+          background: transparent;
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
           z-index: 10;
@@ -2159,12 +2159,13 @@ export default function Home() {
         .story-container::after {
           content: '';
           position: absolute;
-          top: 0;
+          top: 38vh;
           left: 0;
           right: 0;
-          /* Reduce height to leave space for information box at bottom */
-          height: calc(100dvh - 250px);
+          bottom: 0;
           background: ${darkMode ? '#000000' : '#fff'};
+          border-top-left-radius: 22px;
+          border-top-right-radius: 22px;
           z-index: -1;
           pointer-events: none;
           /* Ensure it doesn't extend below the content area where information box is */
