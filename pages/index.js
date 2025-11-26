@@ -3625,9 +3625,7 @@ export default function Home() {
         }
       `}</style>
       
-      {/* Safe Area Overlays with blur effect */}
-      <div className="safe-area-overlay-top" />
-      <div className="safe-area-overlay-bottom" />
+      {/* Safe area overlays removed - content extends into safe areas */}
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
