@@ -32,6 +32,13 @@ body {
   /* No padding! Let individual elements handle safe areas */
 }
 
+/* Next.js wrapper - must be transparent */
+#__next {
+  background: transparent;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;
