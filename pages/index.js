@@ -5925,3 +5925,4 @@ function EmailConfirmation({ email, onBack }) {
     </div>
   );
 }// Force deployment - Thu Oct 23 15:14:36 BST 2025
+// Force rebuild Wed Nov 26 18:13:00 GMT 2025
