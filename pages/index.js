@@ -2165,14 +2165,12 @@ export default function Home() {
           top: 38vh;
           left: 0;
           right: 0;
-          bottom: 0;
+          bottom: env(safe-area-inset-bottom, 0px);
           background: ${darkMode ? '#000000' : '#fff'};
           border-top-left-radius: 22px;
           border-top-right-radius: 22px;
           z-index: -1;
           pointer-events: none;
-          /* Ensure it doesn't extend below the content area where information box is */
-          max-height: calc(100dvh - 250px);
         }
 
         .story-content {
@@ -3821,7 +3819,8 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - With Rounded Corners and Spacing */}
+                    {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
+                    {index === currentIndex && (
                       <div style={{
                         position: 'fixed',
                       top: 'calc(-1 * env(safe-area-inset-top, 0px))',
@@ -4208,9 +4207,10 @@ export default function Home() {
                         })()}</h3>
                       </div>
                     </div>
+                    )}
                     
-                    {/* Emoji fallback when no image */}
-                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                    {/* Emoji fallback when no image - only for current page */}
+                    {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
                       top: '0',
@@ -4241,13 +4241,14 @@ export default function Home() {
                     </div>
                     )}
                     
-                    {/* Apple HIG - Content Container */}
+                    {/* Apple HIG - Content Container - only for current page, stops above safe area */}
+                    {index === currentIndex && (
                     <div style={{
                       position: 'fixed',
                       top: 'calc(38vh + 50px)',
                       left: '0',
                       right: '0',
-                      bottom: '0',
+                      bottom: 'env(safe-area-inset-bottom, 0px)',
                       background: darkMode ? '#000000' : '#ffffff',
                       borderTopLeftRadius: '22px',
                       borderTopRightRadius: '22px',
@@ -4255,6 +4256,7 @@ export default function Home() {
                       pointerEvents: 'none',
                       boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
+                    )}
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
