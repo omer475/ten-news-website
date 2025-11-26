@@ -1883,7 +1883,7 @@ export default function Home() {
 
         /* Apple HIG - Base Styles */
         html {
-          background: ${darkMode ? '#000000' : '#f5f5f7'};
+          background: transparent;
           padding: 0;
           margin: 0;
           width: 100vw;
@@ -1896,16 +1896,13 @@ export default function Home() {
         /* Apple HIG - Body Typography & Colors */
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: ${darkMode ? '#000000' : '#f5f5f7'};
+          background: transparent;
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
-          transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          /* Apply safe area padding like test page */
-          padding-top: env(safe-area-inset-top, 0px);
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          padding-left: env(safe-area-inset-left, 0px);
-          padding-right: env(safe-area-inset-right, 0px);
+          /* No safe area padding - content extends to edges */
+          padding: 0;
+          margin: 0;
         }
 
         /* Glassmorphism Variables */
