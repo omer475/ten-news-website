@@ -37,14 +37,14 @@ body {
   position: relative;
 }
 
-/* Next.js wrapper - extends into safe area */
+/* Next.js wrapper - extends fully into safe area */
 #__next {
   position: fixed;
-  top: calc(-1 * env(safe-area-inset-top, 0px));
+  top: calc(-1 * (env(safe-area-inset-top, 59px) + 10px));
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(100% + env(safe-area-inset-top, 0px));
+  height: calc(100% + env(safe-area-inset-top, 59px) + 10px);
   overscroll-behavior: none;
 }
 
