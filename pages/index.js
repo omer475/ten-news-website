@@ -2189,15 +2189,15 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - simple 45vh height */
+        /* Image container - extends into safe area using negative margin */
         .image-container-extended {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: 45vh;
-          margin: 0;
+          height: calc(45vh + env(safe-area-inset-top, 0px));
+          margin-top: calc(-1 * env(safe-area-inset-top, 0px));
           padding: 0;
           display: block;
           z-index: 1;
@@ -2205,15 +2205,15 @@ export default function Home() {
           pointer-events: none;
         }
         
-        /* Emoji fallback container - simple 45vh height */
+        /* Emoji fallback container - extends into safe area using negative margin */
         .emoji-container-extended {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: 45vh;
-          margin: 0;
+          height: calc(45vh + env(safe-area-inset-top, 0px));
+          margin-top: calc(-1 * env(safe-area-inset-top, 0px));
           padding: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           display: flex;
