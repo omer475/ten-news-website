@@ -2156,6 +2156,9 @@ export default function Home() {
           background: transparent;
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
+          overflow-x: hidden;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: auto;
           z-index: 10;
         }
         
