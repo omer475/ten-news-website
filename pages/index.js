@@ -4223,10 +4223,10 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                           <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 45vh - 12px)',
+                        top: 'calc(45vh - 80px)',
                         left: '20px',
                         right: '20px',
-                        zIndex: 10,
+                        zIndex: 100,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
