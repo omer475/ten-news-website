@@ -3914,7 +3914,7 @@ export default function Home() {
                     {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
                     {index === currentIndex && (
                       <div style={{
-                      position: 'fixed',
+                      position: 'absolute',
                       top: 0,
                       left: 0,
                       right: 0,
@@ -4304,7 +4304,7 @@ export default function Home() {
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
-                        position: 'fixed',
+                        position: 'absolute',
                         top: 0,
                         left: 0,
                         right: 0,
