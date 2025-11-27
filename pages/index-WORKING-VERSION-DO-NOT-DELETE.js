@@ -2677,11 +2677,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '3px',
+                      top: '0',
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      height: 'calc(38vh - 3px + env(safe-area-inset-top, 47px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2692,7 +2692,7 @@ The article concludes with forward-looking analysis and what readers should watc
                       pointerEvents: 'none',
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                       // Ensure image container doesn't interfere with information box
-                      maxHeight: 'calc(38vh - 3px)'
+                      maxHeight: 'calc(38vh - 3px + env(safe-area-inset-top, 47px))'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -2940,11 +2940,11 @@ The article concludes with forward-looking analysis and what readers should watc
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '3px',
+                      top: '0',
                       left: '6px',
                       right: '6px',
                       width: 'calc(100vw - 12px)',
-                      height: 'calc(38vh - 3px)',
+                      height: 'calc(38vh - 3px + env(safe-area-inset-top, 47px))',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
