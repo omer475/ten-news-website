@@ -2159,7 +2159,8 @@ export default function Home() {
           z-index: 10;
         }
         
-        .story-container::after {
+        /* Only apply white background to news pages, not opening page */
+        .story-container.news-page::after {
           content: '';
           position: absolute;
           top: 38vh;
@@ -2171,6 +2172,21 @@ export default function Home() {
           border-top-right-radius: 22px;
           z-index: -1;
           pointer-events: none;
+        }
+        
+        /* Content container background - stops above bottom safe area */
+        .content-bg-container {
+          position: fixed;
+          top: calc(38vh + 50px);
+          left: 0;
+          right: 0;
+          bottom: env(safe-area-inset-bottom, 0px);
+          background: ${darkMode ? '#000000' : '#ffffff'};
+          border-top-left-radius: 22px;
+          border-top-right-radius: 22px;
+          z-index: 1;
+          pointer-events: none;
+          box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
 
         .story-content {
@@ -3658,7 +3674,7 @@ export default function Home() {
         {stories.map((story, index) => (
           <div
             key={index}
-            className="story-container"
+            className={`story-container ${story.type === 'news' ? 'news-page' : ''}`}
             style={{
               transform: `${
                 index === currentIndex 
@@ -4213,11 +4229,11 @@ export default function Home() {
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '38vh',
+                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4243,19 +4259,7 @@ export default function Home() {
                     
                     {/* Apple HIG - Content Container - only for current page, stops above safe area */}
                     {index === currentIndex && (
-                    <div style={{
-                      position: 'fixed',
-                      top: 'calc(38vh + 50px)',
-                      left: '0',
-                      right: '0',
-                      bottom: 'env(safe-area-inset-bottom, 0px)',
-                      background: darkMode ? '#000000' : '#ffffff',
-                      borderTopLeftRadius: '22px',
-                      borderTopRightRadius: '22px',
-                      zIndex: '1',
-                      pointerEvents: 'none',
-                      boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
-                    }}></div>
+                      <div className="content-bg-container"></div>
                     )}
                     
                     {/* Content Area - Starts After Image */}
