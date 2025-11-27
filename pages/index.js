@@ -45,22 +45,37 @@ export default function Home() {
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
 
   // Safe area inset detection for iOS
-  const [safeAreaTop, setSafeAreaTop] = useState(0);
+  const [safeAreaTop, setSafeAreaTop] = useState(59); // Default to 59px for iPhone notch
 
   // Detect safe area inset on mount
   useEffect(() => {
     const measureSafeArea = () => {
+      // Method 1: Use CSS env variable
       const div = document.createElement('div');
       div.style.cssText = 'position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden;';
       document.body.appendChild(div);
       const height = div.getBoundingClientRect().height;
       document.body.removeChild(div);
+      
       if (height > 0) {
         setSafeAreaTop(height);
-        console.log('Safe area top detected:', height);
+        console.log('Safe area top detected via env():', height);
+      } else {
+        // Method 2: Check if iOS device with notch - use 59px default
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const hasNotch = window.screen.height >= 812 || window.screen.width >= 812;
+        if (isIOS && hasNotch) {
+          setSafeAreaTop(59);
+          console.log('iOS notch device detected, using 59px');
+        } else {
+          setSafeAreaTop(0);
+          console.log('No safe area detected');
+        }
       }
     };
-    measureSafeArea();
+    
+    // Run after a short delay to ensure viewport is ready
+    setTimeout(measureSafeArea, 100);
   }, []);
 
   // Close language dropdown when clicking outside
