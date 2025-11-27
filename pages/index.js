@@ -3872,7 +3872,19 @@ export default function Home() {
                   }}>
                     {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
                     {index === currentIndex && (
-                      <div className="image-container-extended" style={{
+                      <div style={{
+                      position: 'fixed',
+                      top: '-59px',
+                      left: 0,
+                      right: 0,
+                      width: '100vw',
+                      height: 'calc(38vh + 59px)',
+                      margin: 0,
+                      padding: 0,
+                      display: 'block',
+                      zIndex: 1,
+                      overflow: 'hidden',
+                      pointerEvents: 'none',
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
                       {(() => {
@@ -4250,7 +4262,23 @@ export default function Home() {
                     
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                      <div className="emoji-container-extended">
+                      <div style={{
+                        position: 'fixed',
+                        top: '-59px',
+                        left: 0,
+                        right: 0,
+                        width: '100vw',
+                        height: 'calc(38vh + 59px)',
+                        margin: 0,
+                        padding: 0,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1,
+                        overflow: 'hidden',
+                        pointerEvents: 'none'
+                      }}>
                           <div style={{
                         fontSize: '72px',
                             display: 'flex',
