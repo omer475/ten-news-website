@@ -2054,32 +2054,6 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
 
-        /* Safe Area Overlays - Match header blur effect */
-        .safe-area-overlay-top {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-top, 0px);
-          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
-          backdrop-filter: saturate(180%) blur(20px);
-          -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 999999;
-          pointer-events: none;
-        }
-
-        .safe-area-overlay-bottom {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-bottom, 0px);
-          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
-          backdrop-filter: saturate(180%) blur(20px);
-          -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 999999;
-          pointer-events: none;
-        }
 
         /* Apple HIG - Header Design */
         .header {
@@ -3628,9 +3602,6 @@ export default function Home() {
         }
       `}</style>
       
-      {/* Safe Area Overlays with blur effect */}
-      <div className="safe-area-overlay-top" />
-      <div className="safe-area-overlay-bottom" />
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
