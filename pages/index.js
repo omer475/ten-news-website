@@ -2149,8 +2149,8 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: calc(68px + env(safe-area-inset-top, 0px));
-          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+          padding-top: 68px;
+          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: transparent;
