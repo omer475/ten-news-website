@@ -3926,7 +3926,6 @@ export default function Home() {
                       zIndex: 1,
                       overflow: 'hidden',
                       pointerEvents: 'none',
-                      transform: `translateY(-${safeAreaTop}px)`,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
                       {(() => {
@@ -4319,8 +4318,7 @@ export default function Home() {
                         justifyContent: 'center',
                         zIndex: 1,
                         overflow: 'hidden',
-                        pointerEvents: 'none',
-                        transform: `translateY(-${safeAreaTop}px)`
+                        pointerEvents: 'none'
                       }}>
                             <div style={{
                         fontSize: '72px',

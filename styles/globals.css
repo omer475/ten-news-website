@@ -21,9 +21,7 @@ html {
   height: 100%;
   height: -webkit-fill-available;
   background: transparent;
-  overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none;
 }
 
 body {
@@ -35,20 +33,18 @@ body {
   width: 100vw;
   height: 100%;
   height: -webkit-fill-available;
-  overflow: hidden;
   overscroll-behavior: none;
-  touch-action: pan-y;
   position: relative;
 }
 
-/* Next.js wrapper */
+/* Next.js wrapper - extends into safe area */
 #__next {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  top: calc(-1 * env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   bottom: 0;
-  overflow: hidden;
+  height: calc(100% + env(safe-area-inset-top, 0px));
   overscroll-behavior: none;
 }
 
