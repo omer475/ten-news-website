@@ -1870,7 +1870,7 @@ export default function Home() {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -2163,10 +2163,10 @@ export default function Home() {
         .story-container.news-page::after {
           content: '';
           position: absolute;
-          top: calc(38vh + 59px);
+          top: 45vh;
           left: 0;
           right: 0;
-          bottom: env(safe-area-inset-bottom, 0px);
+          bottom: 0;
           background: ${darkMode ? '#000000' : '#fff'};
           border-top-left-radius: 22px;
           border-top-right-radius: 22px;
@@ -2177,10 +2177,10 @@ export default function Home() {
         /* Content container background - stops above bottom safe area */
         .content-bg-container {
           position: fixed;
-          top: calc(38vh + 59px + 50px);
+          top: calc(45vh + 50px);
           left: 0;
           right: 0;
-          bottom: env(safe-area-inset-bottom, 0px);
+          bottom: 0;
           background: ${darkMode ? '#000000' : '#ffffff'};
           border-top-left-radius: 22px;
           border-top-right-radius: 22px;
@@ -2189,14 +2189,14 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - extends into top safe area with fixed 59px for iPhone notch */
+        /* Image container - fills top portion of screen */
         .image-container-extended {
           position: fixed;
-          top: -59px;
+          top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(38vh + 118px);
+          height: 45vh;
           margin: 0;
           padding: 0;
           display: block;
@@ -2205,14 +2205,14 @@ export default function Home() {
           pointer-events: none;
         }
         
-        /* Emoji fallback container - extends into top safe area with fixed 59px for iPhone notch */
+        /* Emoji fallback container - fills top portion of screen */
         .emoji-container-extended {
           position: fixed;
-          top: -59px;
+          top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(38vh + 118px);
+          height: 45vh;
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -3874,11 +3874,11 @@ export default function Home() {
                     {index === currentIndex && (
                       <div style={{
                       position: 'fixed',
-                      top: '-59px',
+                      top: 0,
                       left: 0,
                       right: 0,
                       width: '100vw',
-                      height: 'calc(38vh + 118px)',
+                      height: '45vh',
                       margin: 0,
                       padding: 0,
                       display: 'block',
@@ -4185,10 +4185,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                           <div style={{
                         position: 'fixed',
-                        top: 'calc((38vh + 59px) * 0.55)',
+                        top: 'calc(45vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc((38vh + 59px) * 0.45 + 74px)',
+                        height: 'calc(45vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4235,7 +4235,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                           <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 38vh - 59px - 12px)',
+                        bottom: 'calc(100vh - 45vh - 12px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4264,11 +4264,11 @@ export default function Home() {
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                         position: 'fixed',
-                        top: '-59px',
+                        top: 0,
                         left: 0,
                         right: 0,
                         width: '100vw',
-                        height: 'calc(38vh + 118px)',
+                        height: '45vh',
                         margin: 0,
                         padding: 0,
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4300,7 +4300,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + 59px - 60px)',
+                        paddingTop: 'calc(45vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
