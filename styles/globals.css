@@ -166,13 +166,12 @@ body {
 .story-container {
   position: absolute;
   width: 100%;
-  min-height: calc(100% + 150px);
-  height: auto;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 0;
-  padding-bottom: calc(350px + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   padding-left: calc(24px + env(safe-area-inset-left, 0px));
   padding-right: calc(24px + env(safe-area-inset-right, 0px));
   background: transparent;

@@ -2145,13 +2145,12 @@ export default function Home() {
         .story-container {
           position: absolute;
           width: 100%;
-          min-height: calc(100% + 150px);
-          height: auto;
+          height: 100%;
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 0;
-          padding-bottom: calc(350px + env(safe-area-inset-bottom, 0px));
+          padding-top: calc(68px + env(safe-area-inset-top, 0px));
+          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: transparent;
@@ -2190,30 +2189,34 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - fills top portion of screen */
+        /* Image container - extends into safe area at top */
         .image-container-extended {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: 45vh;
+          height: calc(45vh + env(safe-area-inset-top, 0px));
+          height: calc(45vh + constant(safe-area-inset-top, 0px));
           margin: 0;
           padding: 0;
           display: block;
           z-index: 1;
           overflow: hidden;
           pointer-events: none;
+          transform: translateY(calc(-1 * env(safe-area-inset-top, 0px)));
+          transform: translateY(calc(-1 * constant(safe-area-inset-top, 0px)));
         }
         
-        /* Emoji fallback container - fills top portion of screen */
+        /* Emoji fallback container - extends into safe area at top */
         .emoji-container-extended {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: 45vh;
+          height: calc(45vh + env(safe-area-inset-top, 0px));
+          height: calc(45vh + constant(safe-area-inset-top, 0px));
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -2223,6 +2226,8 @@ export default function Home() {
           z-index: 1;
           overflow: hidden;
           pointer-events: none;
+          transform: translateY(calc(-1 * env(safe-area-inset-top, 0px)));
+          transform: translateY(calc(-1 * constant(safe-area-inset-top, 0px)));
         }
 
         .story-content {
@@ -3873,19 +3878,7 @@ export default function Home() {
                   }}>
                     {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
                     {index === currentIndex && (
-                      <div style={{
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      width: '100vw',
-                      height: '45vh',
-                      margin: 0,
-                      padding: 0,
-                      display: 'block',
-                      zIndex: 1,
-                      overflow: 'hidden',
-                      pointerEvents: 'none',
+                      <div className="image-container-extended" style={{
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
                       {(() => {
@@ -4263,23 +4256,7 @@ export default function Home() {
                     
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                      <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        width: '100vw',
-                        height: '45vh',
-                        margin: 0,
-                        padding: 0,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1,
-                        overflow: 'hidden',
-                        pointerEvents: 'none'
-                      }}>
+                      <div className="emoji-container-extended">
                           <div style={{
                         fontSize: '72px',
                             display: 'flex',
