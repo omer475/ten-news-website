@@ -2197,14 +2197,14 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - absolute position extending into safe area */
+        /* Image container - simple fixed position */
         .image-container-extended {
-          position: absolute;
-          top: calc(-1 * env(safe-area-inset-top, 0px));
+          position: fixed;
+          top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + env(safe-area-inset-top, 0px));
+          height: 45vh;
           padding: 0;
           margin: 0;
           display: block;
@@ -2213,14 +2213,14 @@ export default function Home() {
           pointer-events: none;
         }
         
-        /* Emoji fallback container - absolute position extending into safe area */
+        /* Emoji fallback container - simple fixed position */
         .emoji-container-extended {
-          position: absolute;
-          top: calc(-1 * env(safe-area-inset-top, 0px));
+          position: fixed;
+          top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + env(safe-area-inset-top, 0px));
+          height: 45vh;
           padding: 0;
           margin: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -3869,11 +3869,10 @@ export default function Home() {
                   >
                     Refresh Reading List
                   </button>
-                      </div>
+                    </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
-                  
-                    // Original News Item View - Everything stays the same
+                  {/* Original News Item View */}
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
@@ -3906,7 +3905,7 @@ export default function Home() {
                               height: '100%'
                             }}>
                               {story.emoji || '📰'}
-                            </div>
+                      </div>
                           );
                         }
                         
@@ -4179,7 +4178,7 @@ export default function Home() {
                       })()}
                       
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
-                          <div style={{
+                      <div style={{
                         position: 'fixed',
                         top: 'calc(45vh * 0.55)',
                         left: '0',
@@ -4259,9 +4258,9 @@ export default function Home() {
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div className="emoji-container-extended">
-                          <div style={{
+                            <div style={{
                         fontSize: '72px',
-                            display: 'flex',
+                              display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                         width: '100%',
