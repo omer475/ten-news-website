@@ -2163,7 +2163,7 @@ export default function Home() {
         .story-container.news-page::after {
           content: '';
           position: absolute;
-          top: calc(38vh + env(safe-area-inset-top, 0px));
+          top: 38vh;
           left: 0;
           right: 0;
           bottom: env(safe-area-inset-bottom, 0px);
@@ -2177,7 +2177,7 @@ export default function Home() {
         /* Content container background - stops above bottom safe area */
         .content-bg-container {
           position: fixed;
-          top: calc(38vh + env(safe-area-inset-top, 0px) + 50px);
+          top: calc(38vh + 50px);
           left: 0;
           right: 0;
           bottom: env(safe-area-inset-bottom, 0px);
@@ -2192,7 +2192,7 @@ export default function Home() {
         /* Image container - extends into top safe area */
         .image-container-extended {
           position: fixed;
-          top: 0;
+          top: calc(-1 * env(safe-area-inset-top, 0px));
           left: 0;
           right: 0;
           width: 100vw;
@@ -2208,7 +2208,7 @@ export default function Home() {
         /* Emoji fallback container - extends into top safe area */
         .emoji-container-extended {
           position: fixed;
-          top: 0;
+          top: calc(-1 * env(safe-area-inset-top, 0px));
           left: 0;
           right: 0;
           width: 100vw;
@@ -2227,24 +2227,24 @@ export default function Home() {
         /* Blur overlay - positioned relative to extended image */
         .blur-overlay-extended {
           position: fixed;
-          top: calc((38vh + env(safe-area-inset-top, 0px)) * 0.55);
+          top: calc(38vh * 0.55);
           left: 0;
           width: 100%;
-          height: calc((38vh + env(safe-area-inset-top, 0px)) * 0.45 + 74px);
+          height: calc(38vh * 0.45 + 74px);
           pointer-events: none;
           z-index: 2;
         }
         
-        /* Title container - positioned at bottom of extended image */
+        /* Title container - positioned at bottom of image */
         .title-container-extended {
           position: fixed;
-          bottom: calc(100vh - 38vh - env(safe-area-inset-top, 0px) - 12px);
+          bottom: calc(100vh - 38vh - 12px);
         }
         
-        /* Content area - starts after extended image */
+        /* Content area - starts after image */
         .news-content-extended {
           position: relative;
-          padding-top: calc(38vh + env(safe-area-inset-top, 0px) - 60px);
+          padding-top: calc(38vh - 60px);
         }
 
         .story-content {
