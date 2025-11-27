@@ -2144,6 +2144,10 @@ export default function Home() {
         /* Apple HIG - Story Container */
         .story-container {
           position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           width: 100%;
           height: 100%;
           display: flex;
@@ -2157,8 +2161,9 @@ export default function Home() {
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
           overflow-x: hidden;
-          overscroll-behavior: contain;
+          overscroll-behavior: none;
           -webkit-overflow-scrolling: auto;
+          touch-action: pan-y;
           z-index: 10;
         }
         
@@ -2192,42 +2197,30 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - fixed position, 45vh height */
+        /* Image container - absolute position extending into safe area */
         .image-container-extended {
-          position: fixed;
-          top: 0;
+          position: absolute;
+          top: calc(-1 * env(safe-area-inset-top, 0px));
           left: 0;
           right: 0;
           width: 100vw;
-          height: 45vh;
+          height: calc(45vh + env(safe-area-inset-top, 0px));
           padding: 0;
           margin: 0;
           display: block;
           z-index: 1;
-          overflow: visible;
+          overflow: hidden;
           pointer-events: none;
         }
         
-        /* Extend image into safe area using ::before pseudo-element */
-        .image-container-extended::before {
-          content: '';
-          position: absolute;
-          top: calc(-1 * env(safe-area-inset-top, 50px));
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-top, 50px);
-          background: inherit;
-          z-index: 1;
-        }
-        
-        /* Emoji fallback container */
+        /* Emoji fallback container - absolute position extending into safe area */
         .emoji-container-extended {
-          position: fixed;
-          top: 0;
+          position: absolute;
+          top: calc(-1 * env(safe-area-inset-top, 0px));
           left: 0;
           right: 0;
           width: 100vw;
-          height: 45vh;
+          height: calc(45vh + env(safe-area-inset-top, 0px));
           padding: 0;
           margin: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -2235,20 +2228,8 @@ export default function Home() {
           align-items: center;
           justify-content: center;
           z-index: 1;
-          overflow: visible;
+          overflow: hidden;
           pointer-events: none;
-        }
-        
-        /* Extend emoji container into safe area */
-        .emoji-container-extended::before {
-          content: '';
-          position: absolute;
-          top: calc(-1 * env(safe-area-inset-top, 50px));
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-top, 50px);
-          background: inherit;
-          z-index: 1;
         }
 
         .story-content {
