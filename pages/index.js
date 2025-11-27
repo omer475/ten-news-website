@@ -44,6 +44,25 @@ export default function Home() {
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
 
+  // Safe area inset detection for iOS
+  const [safeAreaTop, setSafeAreaTop] = useState(0);
+
+  // Detect safe area inset on mount
+  useEffect(() => {
+    const measureSafeArea = () => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden;';
+      document.body.appendChild(div);
+      const height = div.getBoundingClientRect().height;
+      document.body.removeChild(div);
+      if (height > 0) {
+        setSafeAreaTop(height);
+        console.log('Safe area top detected:', height);
+      }
+    };
+    measureSafeArea();
+  }, []);
+
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -3879,7 +3898,19 @@ export default function Home() {
                   }}>
                     {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
                     {index === currentIndex && (
-                      <div className="image-container-extended" style={{
+                      <div style={{
+                      position: 'fixed',
+                      top: safeAreaTop > 0 ? `-${safeAreaTop}px` : 0,
+                      left: 0,
+                      right: 0,
+                      width: '100vw',
+                      height: safeAreaTop > 0 ? `calc(45vh + ${safeAreaTop}px)` : '45vh',
+                      margin: 0,
+                      padding: 0,
+                      display: 'block',
+                      zIndex: 1,
+                      overflow: 'hidden',
+                      pointerEvents: 'none',
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
                       {(() => {
@@ -4257,7 +4288,23 @@ export default function Home() {
                     
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                      <div className="emoji-container-extended">
+                      <div style={{
+                        position: 'fixed',
+                        top: safeAreaTop > 0 ? `-${safeAreaTop}px` : 0,
+                        left: 0,
+                        right: 0,
+                        width: '100vw',
+                        height: safeAreaTop > 0 ? `calc(45vh + ${safeAreaTop}px)` : '45vh',
+                        margin: 0,
+                        padding: 0,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1,
+                        overflow: 'hidden',
+                        pointerEvents: 'none'
+                      }}>
                             <div style={{
                         fontSize: '72px',
                               display: 'flex',
