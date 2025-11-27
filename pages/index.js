@@ -865,14 +865,14 @@ export default function Home() {
       }
       
       // Fallback: Check localStorage
-    const storedUser = localStorage.getItem('tennews_user');
-    const storedSession = localStorage.getItem('tennews_session');
+      const storedUser = localStorage.getItem('tennews_user');
+      const storedSession = localStorage.getItem('tennews_session');
 
-    if (storedUser && storedSession) {
-      try {
-        const userData = JSON.parse(storedUser);
-        const sessionData = JSON.parse(storedSession);
-        setUser(userData);
+      if (storedUser && storedSession) {
+        try {
+          const userData = JSON.parse(storedUser);
+          const sessionData = JSON.parse(storedSession);
+          setUser(userData);
           
           // Fetch profile from API
           try {
@@ -885,17 +885,17 @@ export default function Home() {
             console.log('⚠️ Error fetching profile:', profileError);
           }
           
-        setAuthLoading(false);
+          setAuthLoading(false);
           return;
-      } catch (error) {
-        // Invalid stored data, clear it
-        localStorage.removeItem('tennews_user');
-        localStorage.removeItem('tennews_session');
+        } catch (error) {
+          // Invalid stored data, clear it
+          localStorage.removeItem('tennews_user');
+          localStorage.removeItem('tennews_session');
+        }
       }
-    }
 
       // Final fallback: API check
-    checkUser();
+      checkUser();
     };
     
     checkAuth();
@@ -1060,17 +1060,17 @@ export default function Home() {
           
           if (newsData.articles && newsData.articles.length > 0) {
             // Create opening story
-          const openingStory = {
-            type: 'opening',
-            date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long', 
-              day: 'numeric',
-              year: 'numeric'
-            }).toUpperCase(),
-            headline: newsData.dailyGreeting || 'Today Essential Global News'
-          };
-          
+            const openingStory = {
+              type: 'opening',
+              date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long', 
+                day: 'numeric',
+                year: 'numeric'
+              }).toUpperCase(),
+              headline: newsData.dailyGreeting || 'Today Essential Global News'
+            };
+            
             const processedStories = [openingStory];
             
             // API already filters articles older than 24 hours
@@ -1114,11 +1114,11 @@ export default function Home() {
                    ];
 
               const storyData = {
-              type: 'news',
-              number: article.rank || (index + 1),
-              category: (article.category || 'WORLD NEWS').toUpperCase(),
-              emoji: article.emoji || '📰',
-              title: article.title || 'News Story',
+                type: 'news',
+                number: article.rank || (index + 1),
+                category: (article.category || 'WORLD NEWS').toUpperCase(),
+                emoji: article.emoji || '📰',
+                title: article.title || 'News Story',
                
                // Dual-language content fields (from Step 5 generation)
                title_news: article.title_news || null,
@@ -1145,9 +1145,9 @@ export default function Home() {
                 id: article.id || `article_${index}`,
                 final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
               };
-              
-              processedStories.push(storyData);
-          });
+               
+               processedStories.push(storyData);
+             });
             
             // Filter out read articles using ReadArticleTracker
             let unreadStories = processedStories;
@@ -1221,7 +1221,7 @@ export default function Home() {
         setLoading(false);
       }
     };
-
+    
     loadNewsData();
   }, []);
 
@@ -1540,7 +1540,7 @@ export default function Home() {
         }
         
         if (!isTransitioning && e.touches && e.touches.length > 0) {
-        startY = e.touches[0].clientY;
+          startY = e.touches[0].clientY;
         }
       } catch (err) {
         // Silently handle touch errors
@@ -1556,7 +1556,7 @@ export default function Home() {
           return;
         }
         
-      if (isTransitioning) return;
+        if (isTransitioning) return;
         
         // Block navigation if article is open
         const isArticleOpen = showDetailedText[currentIndex];
@@ -1566,9 +1566,9 @@ export default function Home() {
         
         // Safety check for changedTouches
         if (!e.changedTouches || e.changedTouches.length === 0) return;
-      
-      const endY = e.changedTouches[0].clientY;
-      const diff = startY - endY;
+        
+        const endY = e.changedTouches[0].clientY;
+        const diff = startY - endY;
       
       if (Math.abs(diff) > 30) {
         isTransitioning = true;
@@ -1763,7 +1763,7 @@ export default function Home() {
       clearInterval(intervalId);
     };
   }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
-
+  
   if (loading) {
     return (
       <div className="loading-container">
@@ -1868,9 +1868,6 @@ export default function Home() {
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1886,7 +1883,7 @@ export default function Home() {
 
         /* Apple HIG - Base Styles */
         html {
-          background: transparent;
+          background: ${darkMode ? '#000000' : '#f5f5f7'};
           padding: 0;
           margin: 0;
           width: 100vw;
@@ -1899,13 +1896,16 @@ export default function Home() {
         /* Apple HIG - Body Typography & Colors */
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: transparent;
+          background: ${darkMode ? '#000000' : '#f5f5f7'};
           color: ${darkMode ? '#f5f5f7' : '#1d1d1f'};
+          transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          /* No safe area padding - content extends to edges */
-          padding: 0;
-          margin: 0;
+          /* Apply safe area padding like test page */
+          padding-top: env(safe-area-inset-top, 0px);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          padding-left: env(safe-area-inset-left, 0px);
+          padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* Glassmorphism Variables */
@@ -2054,14 +2054,16 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
 
-        /* Safe Area Overlays - Transparent */
+        /* Safe Area Overlays - Match header blur effect */
         .safe-area-overlay-top {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           height: env(safe-area-inset-top, 0px);
-          background: transparent;
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
           z-index: 999999;
           pointer-events: none;
         }
@@ -2072,7 +2074,9 @@ export default function Home() {
           left: 0;
           right: 0;
           height: env(safe-area-inset-bottom, 0px);
-          background: transparent;
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
           z-index: 999999;
           pointer-events: none;
         }
@@ -2153,7 +2157,7 @@ export default function Home() {
           padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
-          background: transparent;
+          background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
           z-index: 10;
@@ -2162,15 +2166,16 @@ export default function Home() {
         .story-container::after {
           content: '';
           position: absolute;
-          top: 38vh;
+          top: 0;
           left: 0;
           right: 0;
-          bottom: env(safe-area-inset-bottom, 0px);
+          /* Reduce height to leave space for information box at bottom */
+          height: calc(100dvh - 250px);
           background: ${darkMode ? '#000000' : '#fff'};
-          border-top-left-radius: 22px;
-          border-top-right-radius: 22px;
           z-index: -1;
           pointer-events: none;
+          /* Ensure it doesn't extend below the content area where information box is */
+          max-height: calc(100dvh - 250px);
         }
 
         .story-content {
@@ -3546,13 +3551,13 @@ export default function Home() {
             padding: 0 10px 20px 10px;
             max-width: 100%;
           }
-
+          
           .news-content {
             margin: 0 auto;
             max-width: 100%;
             width: 100%;
           }
-
+          
           .news-number {
             font-size: 20px;
             top: 0;
@@ -3623,34 +3628,36 @@ export default function Home() {
         }
       `}</style>
       
-      {/* Safe area overlays removed - content extends into safe areas */}
+      {/* Safe Area Overlays with blur effect */}
+      <div className="safe-area-overlay-top" />
+      <div className="safe-area-overlay-bottom" />
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
         {currentIndex === 0 && (
-        <div className="header">
-          <div className="logo">
+          <div className="header">
+            <div className="logo">
               Today<span className="logo-ten">+</span>
+            </div>
+            
+            <div style={{ flex: 1 }}></div>
+            
+            <div className="header-right">
+              <span className="time">{currentTime}</span>
+              {user ? (
+                <>
+                  <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
+                </>
+              ) : (
+                <>
+                  <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
+                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
+                </>
+              )}
+            </div>
           </div>
-          
-          <div style={{ flex: 1 }}></div>
-          
-          <div className="header-right">
-            <span className="time">{currentTime}</span>
-            {user ? (
-              <>
-                <button className="auth-btn" onClick={handleLogout}>LOGOUT</button>
-              </>
-            ) : (
-              <>
-                <button className="auth-btn" onClick={() => setAuthModal('login')}>LOGIN</button>
-                <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>SIGN UP</button>
-              </>
-            )}
-          </div>
-        </div>
         )}
 
 
@@ -3738,8 +3745,8 @@ export default function Home() {
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    </div>
-                    
+                  </div>
+                  
                   <h1 style={{
                     fontSize: '28px',
                     fontWeight: '600',
@@ -3810,7 +3817,7 @@ export default function Home() {
                   >
                     Refresh Reading List
                   </button>
-                      </div>
+                </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
@@ -3819,10 +3826,9 @@ export default function Home() {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
                   }}>
-                    {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
-                    {index === currentIndex && (
-                      <div style={{
-                        position: 'fixed',
+                    {/* News Image - With Rounded Corners and Spacing */}
+                    <div style={{
+                      position: 'fixed',
                       top: 'calc(-1 * env(safe-area-inset-top, 0px))',
                       left: '0',
                       right: '0',
@@ -3855,7 +3861,7 @@ export default function Home() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                        width: '100%',
+                              width: '100%',
                               height: '100%'
                             }}>
                               {story.emoji || '📰'}
@@ -4132,7 +4138,7 @@ export default function Home() {
                       })()}
                       
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
-                          <div style={{
+                      <div style={{
                         position: 'fixed',
                         top: 'calc(38vh * 0.55)',
                         left: '0',
@@ -4159,9 +4165,9 @@ export default function Home() {
                         left: 0,
                         right: 0,
                         padding: '24px 16px 4px 16px',
-                            display: 'flex',
+                        display: 'flex',
                         flexDirection: 'column',
-                            justifyContent: 'flex-end',
+                        justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor 
                           ? `linear-gradient(to bottom, 
                               ${imageDominantColors[index].blurColor}26 0%, 
@@ -4182,7 +4188,7 @@ export default function Home() {
                       
                       {/* Title - In front of everything */}
                       {/* Apple HIG - Title Typography */}
-                          <div style={{
+                      <div style={{
                         position: 'fixed',
                         bottom: 'calc(100vh - 38vh - 12px)',
                         left: '20px',
@@ -4207,10 +4213,9 @@ export default function Home() {
                         })()}</h3>
                       </div>
                     </div>
-                    )}
                     
-                    {/* Emoji fallback when no image - only for current page */}
-                    {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
+                    {/* Emoji fallback when no image */}
+                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
                       top: '0',
@@ -4221,34 +4226,33 @@ export default function Home() {
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            display: 'flex',
+                        display: 'flex',
                         alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: '1',
                       overflow: 'hidden',
                       pointerEvents: 'none'
                     }}>
-                            <div style={{
+                        <div style={{
                         fontSize: '72px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         width: '100%',
                         height: '100%'
                       }}>
                         {story.emoji || '📰'}
-                            </div>
+                        </div>
                     </div>
                     )}
                     
-                    {/* Apple HIG - Content Container - only for current page, stops above safe area */}
-                    {index === currentIndex && (
+                    {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
                       top: 'calc(38vh + 50px)',
                       left: '0',
                       right: '0',
-                      bottom: 'env(safe-area-inset-bottom, 0px)',
+                      bottom: '0',
                       background: darkMode ? '#000000' : '#ffffff',
                       borderTopLeftRadius: '22px',
                       borderTopRightRadius: '22px',
@@ -4256,7 +4260,6 @@ export default function Home() {
                       pointerEvents: 'none',
                       boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
-                    )}
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
@@ -4272,10 +4275,10 @@ export default function Home() {
                       }}>
                       
                       {/* Time Since Published and Timeline Button Row - Fixed Position */}
-                            <div style={{
-                              display: 'flex',
+                      <div style={{
+                        display: 'flex',
                         justifyContent: 'space-between',
-                              alignItems: 'center',
+                        alignItems: 'center',
                         marginBottom: '8px',
                         marginTop: '0px',
                         width: '100%',
@@ -4314,7 +4317,7 @@ export default function Home() {
                               className="language-icon-btn"
                               onClick={(e) => {
                                 e.preventDefault();
-                              e.stopPropagation();
+                                e.stopPropagation();
                                 const currentMode = languageMode[index] || 'advanced';
                                 const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
                                 setLanguageMode(prev => ({ ...prev, [index]: newMode }));
@@ -4383,7 +4386,7 @@ export default function Home() {
                                     // Set the selected state
                                     switch (infoType) {
                                       case 'timeline':
-                                setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
                                         break;
                                       case 'details':
                                         setShowDetails(prev => ({ ...prev, [index]: true }));
@@ -4447,7 +4450,7 @@ export default function Home() {
                                             background: '#000000',
                                             borderRadius: '50%'
                                           }}></div>
-                            </div>
+                                        </div>
                                       </div>
                                     )}
                                     {infoType === 'graph' && (
@@ -4489,9 +4492,9 @@ export default function Home() {
                                             background: '#000000',
                                             borderRadius: '1px'
                                           }}></div>
-                          </div>
-                        </div>
-                        )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </button>
                               );
@@ -4808,66 +4811,66 @@ export default function Home() {
                             if (getAvailableComponentsCount(story) <= 1) return;
                             
                             if (!e.touches || e.touches.length === 0) return;
-                          const startX = e.touches[0].clientX;
-                          const startY = e.touches[0].clientY;
-                          let hasMoved = false;
-                          let swipeDirection = null;
-                          
-                          const handleTouchMove = (moveEvent) => {
+                            const startX = e.touches[0].clientX;
+                            const startY = e.touches[0].clientY;
+                            let hasMoved = false;
+                            let swipeDirection = null;
+                            
+                            const handleTouchMove = (moveEvent) => {
                               try {
                                 if (!moveEvent.touches || moveEvent.touches.length === 0) return;
-                            const currentX = moveEvent.touches[0].clientX;
-                            const currentY = moveEvent.touches[0].clientY;
-                            const diffX = Math.abs(startX - currentX);
-                            const diffY = Math.abs(startY - currentY);
-                            
-                            if (diffX > 15 || diffY > 15) {
-                              hasMoved = true;
-                              
-                              // Determine swipe direction - be more strict
-                              if (diffX > diffY && diffX > 30) {
-                                swipeDirection = 'horizontal';
-                                // ONLY prevent default for clear horizontal swipes
-                                moveEvent.preventDefault();
-                                moveEvent.stopPropagation();
-                              } else if (diffY > diffX && diffY > 30) {
-                                swipeDirection = 'vertical';
-                                // Let vertical swipes pass through for story navigation
-                              }
-                            }
+                                const currentX = moveEvent.touches[0].clientX;
+                                const currentY = moveEvent.touches[0].clientY;
+                                const diffX = Math.abs(startX - currentX);
+                                const diffY = Math.abs(startY - currentY);
+                                
+                                if (diffX > 15 || diffY > 15) {
+                                  hasMoved = true;
+                                  
+                                  // Determine swipe direction - be more strict
+                                  if (diffX > diffY && diffX > 30) {
+                                    swipeDirection = 'horizontal';
+                                    // ONLY prevent default for clear horizontal swipes
+                                    moveEvent.preventDefault();
+                                    moveEvent.stopPropagation();
+                                  } else if (diffY > diffX && diffY > 30) {
+                                    swipeDirection = 'vertical';
+                                    // Let vertical swipes pass through for story navigation
+                                  }
+                                }
                               } catch (err) {}
-                          };
-                          
-                          const handleTouchEnd = (endEvent) => {
+                            };
+                            
+                            const handleTouchEnd = (endEvent) => {
                               try {
                                 if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) {
                                   document.removeEventListener('touchmove', handleTouchMove);
                                   document.removeEventListener('touchend', handleTouchEnd);
                                   return;
                                 }
-                            const endX = endEvent.changedTouches[0].clientX;
-                            const endY = endEvent.changedTouches[0].clientY;
-                            const diffX = startX - endX;
-                            const diffY = startY - endY;
-                            
+                                const endX = endEvent.changedTouches[0].clientX;
+                                const endY = endEvent.changedTouches[0].clientY;
+                                const diffX = startX - endX;
+                                const diffY = startY - endY;
+                                
                                 // Only handle horizontal swipes for information switching
-                            if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
+                                if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
+                                  endEvent.preventDefault();
+                                  endEvent.stopPropagation();
                                   
                                   // Disable auto-rotation for this article when user manually interacts
                                   setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
                                   
                                   switchToNextInformationType(story, index);
-                            } else if (!hasMoved) {
+                                } else if (!hasMoved) {
                                   // Check if the touch target is the expand icon
                                   const touchTarget = endEvent.target;
                                   const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                                   
                                   if (!isExpandIcon) {
                                     // Single tap switches information type
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
+                                    endEvent.preventDefault();
+                                    endEvent.stopPropagation();
                                     
                                     // Disable auto-rotation for this article when user manually interacts
                                     setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
@@ -4876,16 +4879,16 @@ export default function Home() {
                                   }
                                 }
                               } catch (err) {}
-                            // If it's vertical swipe, let it pass through for story navigation
+                              // If it's vertical swipe, let it pass through for story navigation
+                              
+                              // Clean up listeners
+                              document.removeEventListener('touchmove', handleTouchMove);
+                              document.removeEventListener('touchend', handleTouchEnd);
+                            };
                             
-                            // Clean up listeners
-                            document.removeEventListener('touchmove', handleTouchMove);
-                            document.removeEventListener('touchend', handleTouchEnd);
-                          };
-                          
-                          // Use normal event listeners, let vertical swipes pass through
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                            // Use normal event listeners, let vertical swipes pass through
+                            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                            document.addEventListener('touchend', handleTouchEnd, { passive: false });
                           } catch (err) {}
                         }}
                       >
@@ -5030,7 +5033,7 @@ export default function Home() {
                                     opacity: 0.9
                                   }}>
                                     {story.graph.title || 'Data Visualization'}
-                            </div>
+                                  </div>
                                   
                                   {/* Chart Container */}
                                   <div style={{
@@ -5164,7 +5167,7 @@ export default function Home() {
                                   flexDirection: 'column',
                                   justifyContent: 'flex-start',
                                   height: '100%',
-                                    paddingLeft: '20px',
+                                  paddingLeft: '20px',
                                   paddingTop: '0px',
                                   paddingBottom: '8px'
                                 }}>
@@ -5213,7 +5216,7 @@ export default function Home() {
                                       textOverflow: expandedTimeline[index] ? 'clip' : 'ellipsis',
                                       whiteSpace: expandedTimeline[index] ? 'normal' : 'nowrap'
                                     }}>{event.event}</div>
-                      </div>
+                                  </div>
                                 ))}
                                 </div>
                               </div>
@@ -5241,7 +5244,7 @@ export default function Home() {
                                   justifyContent: 'center',
                                 flexDirection: 'column'
                               }}>
-                                  <div style={{
+                              <div style={{
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 color: '#1e293b',
@@ -5270,7 +5273,7 @@ export default function Home() {
                                 className="glass-container details-container-desktop details-container-animated"
                                 style={{
                                   position: 'absolute',
-                                    bottom: '0',
+                                  bottom: '0',
                                   left: '0',
                                   right: '0',
                                   height: '85px',
@@ -5314,14 +5317,14 @@ export default function Home() {
                                       }}>
                                         <div className="news-detail-label" style={{ 
                                           color: '#000000',
-                                    fontSize: '9px',
+                                          fontSize: '9px',
                                           fontWeight: '700',
                                           marginBottom: '3px',
                                           textAlign: 'center',
                                           textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
                                           opacity: 0.7,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
+                                          textTransform: 'uppercase',
+                                          letterSpacing: '0.5px'
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
                                           color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
@@ -5339,11 +5342,11 @@ export default function Home() {
                                           textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
                                           opacity: 0.8
                                         }}>{subtitle}</div>}
-                    </div>
+                                      </div>
                                     );
                                   })}
-                  </div>
-                </div>
+                                </div>
+                              </div>
                             );
                           } else {
                             // No state set - fallback to default based on available components
@@ -5417,7 +5420,7 @@ export default function Home() {
                             />
                             );
                           })}
-                    </div>
+                        </div>
                       )}
                       
                     </div>
@@ -5922,4 +5925,3 @@ function EmailConfirmation({ email, onBack }) {
     </div>
   );
 }// Force deployment - Thu Oct 23 15:14:36 BST 2025
-// Force rebuild Wed Nov 26 18:13:00 GMT 2025
