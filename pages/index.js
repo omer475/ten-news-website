@@ -2189,10 +2189,10 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - TEST with hardcoded -50px */
+        /* Image container - absolute positioning to reach top of screen */
         .image-container-extended {
-          position: fixed;
-          top: -50px !important;
+          position: absolute;
+          top: -50px;
           left: 0;
           right: 0;
           width: 100vw;
@@ -2205,10 +2205,10 @@ export default function Home() {
           pointer-events: none;
         }
         
-        /* Emoji fallback container - TEST with hardcoded -50px */
+        /* Emoji fallback container - absolute positioning */
         .emoji-container-extended {
-          position: fixed;
-          top: -50px !important;
+          position: absolute;
+          top: -50px;
           left: 0;
           right: 0;
           width: 100vw;
