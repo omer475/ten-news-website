@@ -2189,14 +2189,14 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - extends into top safe area */
+        /* Image container - extends into top safe area with fixed 59px for iPhone notch */
         .image-container-extended {
           position: fixed;
-          top: calc(-1 * env(safe-area-inset-top, 0px));
+          top: -59px;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(38vh + env(safe-area-inset-top, 0px));
+          height: calc(38vh + 59px);
           margin: 0;
           padding: 0;
           display: block;
@@ -2205,14 +2205,14 @@ export default function Home() {
           pointer-events: none;
         }
         
-        /* Emoji fallback container - extends into top safe area */
+        /* Emoji fallback container - extends into top safe area with fixed 59px for iPhone notch */
         .emoji-container-extended {
           position: fixed;
-          top: calc(-1 * env(safe-area-inset-top, 0px));
+          top: -59px;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(38vh + env(safe-area-inset-top, 0px));
+          height: calc(38vh + 59px);
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -2222,29 +2222,6 @@ export default function Home() {
           z-index: 1;
           overflow: hidden;
           pointer-events: none;
-        }
-        
-        /* Blur overlay - positioned relative to extended image */
-        .blur-overlay-extended {
-          position: fixed;
-          top: calc(38vh * 0.55);
-          left: 0;
-          width: 100%;
-          height: calc(38vh * 0.45 + 74px);
-          pointer-events: none;
-          z-index: 2;
-        }
-        
-        /* Title container - positioned at bottom of image */
-        .title-container-extended {
-          position: fixed;
-          bottom: calc(100vh - 38vh - 12px);
-        }
-        
-        /* Content area - starts after image */
-        .news-content-extended {
-          position: relative;
-          padding-top: calc(38vh - 60px);
         }
 
         .story-content {
@@ -3912,7 +3889,7 @@ export default function Home() {
                         
                         if (!hasImageUrl) {
                           return (
-                            <div style={{
+                      <div style={{
                               fontSize: '72px',
                               display: 'flex',
                               alignItems: 'center',
@@ -4194,7 +4171,12 @@ export default function Home() {
                       })()}
                       
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
-                          <div className="blur-overlay-extended" style={{
+                          <div style={{
+                        position: 'fixed',
+                        top: 'calc(38vh * 0.55)',
+                        left: '0',
+                        width: '100%',
+                        height: 'calc(38vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4209,7 +4191,7 @@ export default function Home() {
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
-                      <div style={{
+                          <div style={{
                         position: 'absolute',
                         top: 0,
                         bottom: '-12px',
@@ -4239,7 +4221,9 @@ export default function Home() {
                       
                       {/* Title - In front of everything */}
                       {/* Apple HIG - Title Typography */}
-                          <div className="title-container-extended" style={{
+                          <div style={{
+                        position: 'fixed',
+                        bottom: 'calc(100vh - 38vh - 12px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4267,9 +4251,9 @@ export default function Home() {
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div className="emoji-container-extended">
-                            <div style={{
+                          <div style={{
                         fontSize: '72px',
-                              display: 'flex',
+                            display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                         width: '100%',
@@ -4286,7 +4270,9 @@ export default function Home() {
                     )}
                     
                     {/* Content Area - Starts After Image */}
-                    <div className="news-content news-content-extended" style={{
+                    <div className="news-content" style={{
+                      position: 'relative',
+                        paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -4317,12 +4303,12 @@ export default function Home() {
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
                         }}>
                           {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
-                        </div>
-
+                            </div>
+                            
                         {/* Right Side Buttons Group - Language Toggle + Switcher */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
                           gap: '8px',
                           flex: '0 0 auto'
                         }}>
