@@ -22,7 +22,6 @@ html {
   background: transparent;
   overflow: hidden;
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: auto;
 }
 
 body {
@@ -36,10 +35,6 @@ body {
   height: -webkit-fill-available;
   overflow: hidden;
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: auto;
-  position: fixed;
-  top: 0;
-  left: 0;
 }
 
 /* Next.js wrapper - must be transparent and extend into safe area */

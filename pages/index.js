@@ -2192,30 +2192,42 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - absolute positioning to reach top of screen */
+        /* Image container - fixed position, 45vh height */
         .image-container-extended {
-          position: absolute;
-          top: -50px;
+          position: fixed;
+          top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + 50px);
+          height: 45vh;
           padding: 0;
           margin: 0;
           display: block;
           z-index: 1;
-          overflow: hidden;
+          overflow: visible;
           pointer-events: none;
         }
         
-        /* Emoji fallback container - absolute positioning */
-        .emoji-container-extended {
+        /* Extend image into safe area using ::before pseudo-element */
+        .image-container-extended::before {
+          content: '';
           position: absolute;
-          top: -50px;
+          top: calc(-1 * env(safe-area-inset-top, 50px));
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top, 50px);
+          background: inherit;
+          z-index: 1;
+        }
+        
+        /* Emoji fallback container */
+        .emoji-container-extended {
+          position: fixed;
+          top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + 50px);
+          height: 45vh;
           padding: 0;
           margin: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -2223,8 +2235,20 @@ export default function Home() {
           align-items: center;
           justify-content: center;
           z-index: 1;
-          overflow: hidden;
+          overflow: visible;
           pointer-events: none;
+        }
+        
+        /* Extend emoji container into safe area */
+        .emoji-container-extended::before {
+          content: '';
+          position: absolute;
+          top: calc(-1 * env(safe-area-inset-top, 50px));
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top, 50px);
+          background: inherit;
+          z-index: 1;
         }
 
         .story-content {
