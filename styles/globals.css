@@ -40,11 +40,11 @@ body {
 /* Next.js wrapper - extends fully into safe area */
 #__next {
   position: fixed;
-  top: calc(-1 * (env(safe-area-inset-top, 59px) + 30px));
+  top: -59px;
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(100% + env(safe-area-inset-top, 59px) + 30px);
+  height: calc(100% + 59px);
   overscroll-behavior: none;
 }
 
