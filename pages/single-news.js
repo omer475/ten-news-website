@@ -773,7 +773,7 @@ export default function SingleNewsPage() {
           margin: 0;
           height: 100%;
           min-height: 100dvh;
-          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+          min-height: calc(100dvh + 0px + 0px);
         }
         
         body {
@@ -782,16 +782,16 @@ export default function SingleNewsPage() {
           margin: 0;
           height: 100%;
           min-height: 100dvh;
-          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+          min-height: calc(100dvh + 0px + 0px);
         }
         
         body::before {
           content: '';
           position: fixed;
-          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          top: calc(-1 * max(0px, 44px));
           left: 0;
           right: 0;
-          height: max(env(safe-area-inset-top), 44px);
+          height: max(0px, 44px);
           background: #ffffff;
           z-index: -1;
           pointer-events: none;
@@ -800,10 +800,10 @@ export default function SingleNewsPage() {
         body::after {
           content: '';
           position: fixed;
-          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          bottom: calc(-1 * max(0px, 34px));
           left: 0;
           right: 0;
-          height: max(env(safe-area-inset-bottom), 34px);
+          height: max(0px, 34px);
           background: #ffffff;
           z-index: -1;
           pointer-events: none;
@@ -838,10 +838,10 @@ export default function SingleNewsPage() {
         .single-news-page::before {
           content: '';
           position: fixed;
-          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          top: calc(-1 * max(0px, 44px));
           left: 0;
           right: 0;
-          height: max(env(safe-area-inset-top), 44px);
+          height: max(0px, 44px);
           background: #ffffff;
           z-index: 0;
           pointer-events: none;
@@ -850,10 +850,10 @@ export default function SingleNewsPage() {
         .single-news-page::after {
           content: '';
           position: fixed;
-          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          bottom: calc(-1 * max(0px, 34px));
           left: 0;
           right: 0;
-          height: max(env(safe-area-inset-bottom), 34px);
+          height: max(0px, 34px);
           background: #ffffff;
           z-index: 0;
           pointer-events: none;
@@ -877,7 +877,7 @@ export default function SingleNewsPage() {
         /* Reading Progress */
         .reading-progress {
           position: fixed;
-          top: env(safe-area-inset-top);
+          top: 0px;
           left: 0;
           right: 0;
           height: 3px;
@@ -1124,10 +1124,10 @@ export default function SingleNewsPage() {
           top: 0;
           left: 0;
           right: 0;
-          height: calc(50vh + env(safe-area-inset-top, 0px));
-          margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+          height: calc(50vh + 0px);
+          margin-top: calc(-1 * 0px);
           padding: 40px 24px;
-          padding-top: calc(40px + env(safe-area-inset-top, 0px));
+          padding-top: calc(40px + 0px);
           background: linear-gradient(135deg, #F8F9FB 0%, #ffffff 100%);
           overflow: hidden;
         }
@@ -1276,8 +1276,8 @@ export default function SingleNewsPage() {
 
         .hero-image {
           position: relative;
-          top: calc(-1 * env(safe-area-inset-top));
-          margin-bottom: calc(-1 * env(safe-area-inset-top));
+          top: calc(-1 * 0px);
+          margin-bottom: calc(-1 * 0px);
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -1313,9 +1313,9 @@ export default function SingleNewsPage() {
           right: 0;
           bottom: 0;
           padding: 20px 24px;
-          padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-          padding-left: calc(24px + env(safe-area-inset-left, 0px));
-          padding-right: calc(24px + env(safe-area-inset-right, 0px));
+          padding-bottom: calc(20px + 0px);
+          padding-left: calc(24px + 0px);
+          padding-right: calc(24px + 0px);
           background: white;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;

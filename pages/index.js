@@ -1902,10 +1902,10 @@ export default function Home() {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           /* Apply safe area padding like test page */
-          padding-top: env(safe-area-inset-top, 0px);
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          padding-left: env(safe-area-inset-left, 0px);
-          padding-right: env(safe-area-inset-right, 0px);
+          padding-top: 0px;
+          padding-bottom: 0px;
+          padding-left: 0px;
+          padding-right: 0px;
         }
 
         /* Glassmorphism Variables */
@@ -2069,10 +2069,10 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: calc(0px + env(safe-area-inset-top, 0px));
+          padding-top: calc(0px + 0px);
           padding-bottom: 0;
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
+          padding-left: calc(20px + 0px);
+          padding-right: calc(20px + 0px);
           border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
           transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
         }
@@ -2127,10 +2127,10 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: calc(68px + env(safe-area-inset-top, 0px));
-          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
+          padding-top: calc(68px + 0px);
+          padding-bottom: calc(200px + 0px);
+          padding-left: calc(20px + 0px);
+          padding-right: calc(20px + 0px);
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
@@ -2186,8 +2186,8 @@ export default function Home() {
           pointer-events: auto;
           position: relative;
           z-index: 1001;
-          margin-left: calc(0px + env(safe-area-inset-left, 0px));
-          margin-right: calc(0px + env(safe-area-inset-right, 0px));
+          margin-left: calc(0px + 0px);
+          margin-right: calc(0px + 0px);
         }
 
         .paywall-modal h2 {
@@ -2398,7 +2398,7 @@ export default function Home() {
 
         .progress-indicator {
           position: fixed;
-          right: calc(24px + env(safe-area-inset-right, 0px));
+          right: calc(24px + 0px);
           top: 50%;
           transform: translateY(-50%);
           display: flex;
@@ -2426,7 +2426,7 @@ export default function Home() {
 
         .scroll-hint {
           position: absolute;
-          bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+          bottom: calc(160px + 0px);
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -2540,8 +2540,8 @@ export default function Home() {
           max-width: 400px;
           max-height: 90vh;
           overflow-y: auto;
-          margin-left: calc(0px + env(safe-area-inset-left, 0px));
-          margin-right: calc(0px + env(safe-area-inset-right, 0px));
+          margin-left: calc(0px + 0px);
+          margin-right: calc(0px + 0px);
         }
 
         .auth-modal-header {
@@ -3800,11 +3800,11 @@ export default function Home() {
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+                      top: 'calc(-1 * 0px)',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(38vh + 0px)',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

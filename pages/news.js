@@ -581,7 +581,7 @@ export default function SingleNewsPage() {
         .header-content {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 12px max(env(safe-area-inset-left, 20px), 20px) 12px max(env(safe-area-inset-right, 20px), 20px);
+          padding: 12px 20px 12px 20px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -676,9 +676,9 @@ export default function SingleNewsPage() {
 
         /* Apple HIG - Hero Section */
         .hero-section {
-          padding: 48px max(env(safe-area-inset-left, 24px), 24px) 48px max(env(safe-area-inset-right, 24px), 24px);
-          margin-top: calc(-1 * env(safe-area-inset-top));
-          padding-top: calc(48px + env(safe-area-inset-top));
+          padding: 48px 24px 48px 24px;
+          margin-top: calc(-1 * 0px);
+          padding-top: calc(48px + 0px);
           background: #ffffff;
         }
 
@@ -786,8 +786,8 @@ export default function SingleNewsPage() {
         /* Apple HIG - Hero Image */
         .hero-image {
           position: relative;
-          top: calc(-1 * env(safe-area-inset-top));
-          margin-bottom: calc(-1 * env(safe-area-inset-top));
+          top: calc(-1 * 0px);
+          margin-bottom: calc(-1 * 0px);
           border-radius: 18px;
           overflow: hidden;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
@@ -801,7 +801,7 @@ export default function SingleNewsPage() {
 
         /* Apple HIG - Article Content */
         .article-content {
-          padding: 64px max(env(safe-area-inset-left, 24px), 24px) 64px max(env(safe-area-inset-right, 24px), 24px);
+          padding: 64px 24px 64px 24px;
           background: #f5f5f7;
           transform: translateY(100px);
           opacity: 0;
