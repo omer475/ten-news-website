@@ -3915,17 +3915,18 @@ export default function Home() {
                     {index === currentIndex && (
                       <div style={{
                       position: 'fixed',
-                      top: safeAreaTop > 0 ? `-${safeAreaTop}px` : 0,
+                      top: 0,
                       left: 0,
                       right: 0,
                       width: '100vw',
-                      height: safeAreaTop > 0 ? `calc(45vh + ${safeAreaTop}px)` : '45vh',
+                      height: `calc(45vh + ${safeAreaTop}px)`,
                       margin: 0,
                       padding: 0,
                       display: 'block',
                       zIndex: 1,
                       overflow: 'hidden',
                       pointerEvents: 'none',
+                      transform: `translateY(-${safeAreaTop}px)`,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
                       {(() => {
@@ -4305,11 +4306,11 @@ export default function Home() {
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                         position: 'fixed',
-                        top: safeAreaTop > 0 ? `-${safeAreaTop}px` : 0,
+                        top: 0,
                         left: 0,
                         right: 0,
                         width: '100vw',
-                        height: safeAreaTop > 0 ? `calc(45vh + ${safeAreaTop}px)` : '45vh',
+                        height: `calc(45vh + ${safeAreaTop}px)`,
                         margin: 0,
                         padding: 0,
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4318,7 +4319,8 @@ export default function Home() {
                         justifyContent: 'center',
                         zIndex: 1,
                         overflow: 'hidden',
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        transform: `translateY(-${safeAreaTop}px)`
                       }}>
                             <div style={{
                         fontSize: '72px',
