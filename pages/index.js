@@ -2189,34 +2189,30 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - extends into safe area at top */
+        /* Image container - simple 45vh height */
         .image-container-extended {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + env(safe-area-inset-top, 0px));
-          height: calc(45vh + constant(safe-area-inset-top, 0px));
+          height: 45vh;
           margin: 0;
           padding: 0;
           display: block;
           z-index: 1;
           overflow: hidden;
           pointer-events: none;
-          transform: translateY(calc(-1 * env(safe-area-inset-top, 0px)));
-          transform: translateY(calc(-1 * constant(safe-area-inset-top, 0px)));
         }
         
-        /* Emoji fallback container - extends into safe area at top */
+        /* Emoji fallback container - simple 45vh height */
         .emoji-container-extended {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + env(safe-area-inset-top, 0px));
-          height: calc(45vh + constant(safe-area-inset-top, 0px));
+          height: 45vh;
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -2226,8 +2222,6 @@ export default function Home() {
           z-index: 1;
           overflow: hidden;
           pointer-events: none;
-          transform: translateY(calc(-1 * env(safe-area-inset-top, 0px)));
-          transform: translateY(calc(-1 * constant(safe-area-inset-top, 0px)));
         }
 
         .story-content {
