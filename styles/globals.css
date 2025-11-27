@@ -13,30 +13,35 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Extend html and body to full screen - like test page */
-html,
+/* Extend html and body to full screen including safe areas */
+html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100%;
+  background: transparent;
+}
+
 body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  background: transparent;
+  color: #1d1d1f;
   margin: 0;
   padding: 0;
   width: 100vw;
   min-height: 100vh;
   min-height: -webkit-fill-available;
   overflow-x: hidden;
+  /* Pull body up into safe area */
+  position: relative;
 }
 
-/* Body styling - NO padding so images can extend into safe areas */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  background: transparent;
-  color: #1d1d1f;
-  /* No padding! Let individual elements handle safe areas */
-}
-
-/* Next.js wrapper - must be transparent */
+/* Next.js wrapper - must be transparent and extend into safe area */
 #__next {
   background: transparent;
   min-height: 100vh;
   min-height: -webkit-fill-available;
+  position: relative;
 }
 
 .loading-container {

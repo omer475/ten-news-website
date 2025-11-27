@@ -2189,32 +2189,32 @@ export default function Home() {
           box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
         }
         
-        /* Image container - extends into safe area using negative margin */
+        /* Image container - TEST with hardcoded -50px */
         .image-container-extended {
           position: fixed;
-          top: 0;
+          top: -50px !important;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + env(safe-area-inset-top, 0px));
-          margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+          height: calc(45vh + 50px);
           padding: 0;
+          margin: 0;
           display: block;
           z-index: 1;
           overflow: hidden;
           pointer-events: none;
         }
         
-        /* Emoji fallback container - extends into safe area using negative margin */
+        /* Emoji fallback container - TEST with hardcoded -50px */
         .emoji-container-extended {
           position: fixed;
-          top: 0;
+          top: -50px !important;
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(45vh + env(safe-area-inset-top, 0px));
-          margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+          height: calc(45vh + 50px);
           padding: 0;
+          margin: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           display: flex;
           align-items: center;
