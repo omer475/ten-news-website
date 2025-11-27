@@ -677,7 +677,7 @@ export default function SingleNewsPage() {
         /* Apple HIG - Hero Section */
         .hero-section {
           padding: 48px 24px 48px 24px;
-          margin-top: calc(-1 * 0px);
+          margin-top: 0;
           padding-top: calc(48px + 0px);
           background: #ffffff;
         }
@@ -786,8 +786,8 @@ export default function SingleNewsPage() {
         /* Apple HIG - Hero Image */
         .hero-image {
           position: relative;
-          top: calc(-1 * 0px);
-          margin-bottom: calc(-1 * 0px);
+          top: 0;
+          margin-bottom: 0;
           border-radius: 18px;
           overflow: hidden;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
