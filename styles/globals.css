@@ -13,47 +13,30 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Extend html and body to full screen including safe areas */
-html {
+/* Extend html and body to full screen - like test page */
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100vw;
-  height: 100%;
-  height: -webkit-fill-available;
-  background: transparent;
-  overscroll-behavior: none;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
 }
 
+/* Body styling - NO padding so images can extend into safe areas */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   background: transparent;
   color: #1d1d1f;
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100%;
-  height: -webkit-fill-available;
-  overscroll-behavior: none;
-  position: relative;
+  /* No padding! Let individual elements handle safe areas */
 }
 
-/* Next.js wrapper - extends fully into safe area */
-#__next {
-  position: fixed;
-  top: -59px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(100% + 59px);
-  overscroll-behavior: none;
-}
-
-/* Next.js wrapper - must be transparent and extend into safe area */
+/* Next.js wrapper - must be transparent */
 #__next {
   background: transparent;
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  position: relative;
 }
 
 .loading-container {

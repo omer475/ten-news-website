@@ -44,40 +44,6 @@ export default function Home() {
   const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
 
-  // Safe area inset detection for iOS
-  const [safeAreaTop, setSafeAreaTop] = useState(59); // Default to 59px for iPhone notch
-
-  // Detect safe area inset on mount
-  useEffect(() => {
-    const measureSafeArea = () => {
-      // Method 1: Use CSS env variable
-      const div = document.createElement('div');
-      div.style.cssText = 'position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden;';
-      document.body.appendChild(div);
-      const height = div.getBoundingClientRect().height;
-      document.body.removeChild(div);
-      
-      if (height > 0) {
-        setSafeAreaTop(height);
-        console.log('Safe area top detected via env():', height);
-      } else {
-        // Method 2: Check if iOS device with notch - use 59px default
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const hasNotch = window.screen.height >= 812 || window.screen.width >= 812;
-        if (isIOS && hasNotch) {
-          setSafeAreaTop(59);
-          console.log('iOS notch device detected, using 59px');
-        } else {
-          setSafeAreaTop(0);
-          console.log('No safe area detected');
-        }
-      }
-    };
-    
-    // Run after a short delay to ensure viewport is ready
-    setTimeout(measureSafeArea, 100);
-  }, []);
-
   // Close language dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -1904,7 +1870,7 @@ export default function Home() {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -2178,10 +2144,6 @@ export default function Home() {
         /* Apple HIG - Story Container */
         .story-container {
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
           width: 100%;
           height: 100%;
           display: flex;
@@ -2194,75 +2156,20 @@ export default function Home() {
           background: transparent;
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
-          overflow-x: hidden;
-          overscroll-behavior: none;
-          -webkit-overflow-scrolling: auto;
-          touch-action: pan-y;
           z-index: 10;
         }
         
-        /* Only apply white background to news pages, not opening page */
-        .story-container.news-page::after {
+        .story-container::after {
           content: '';
           position: absolute;
-          top: 45vh;
+          top: 38vh;
           left: 0;
           right: 0;
-          bottom: 0;
+          bottom: env(safe-area-inset-bottom, 0px);
           background: ${darkMode ? '#000000' : '#fff'};
           border-top-left-radius: 22px;
           border-top-right-radius: 22px;
           z-index: -1;
-          pointer-events: none;
-        }
-        
-        /* Content container background - stops above bottom safe area */
-        .content-bg-container {
-          position: fixed;
-          top: calc(45vh + 50px);
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: ${darkMode ? '#000000' : '#ffffff'};
-          border-top-left-radius: 22px;
-          border-top-right-radius: 22px;
-          z-index: 1;
-          pointer-events: none;
-          box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.04);
-        }
-        
-        /* Image container - simple fixed position */
-        .image-container-extended {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          width: 100vw;
-          height: 45vh;
-          padding: 0;
-          margin: 0;
-          display: block;
-          z-index: 1;
-          overflow: hidden;
-          pointer-events: none;
-        }
-        
-        /* Emoji fallback container - simple fixed position */
-        .emoji-container-extended {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          width: 100vw;
-          height: 45vh;
-          padding: 0;
-          margin: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1;
-          overflow: hidden;
           pointer-events: none;
         }
 
@@ -3751,7 +3658,7 @@ export default function Home() {
         {stories.map((story, index) => (
           <div
             key={index}
-            className={`story-container ${story.type === 'news' ? 'news-page' : ''}`}
+            className="story-container"
             style={{
               transform: `${
                 index === currentIndex 
@@ -3903,10 +3810,11 @@ export default function Home() {
                   >
                     Refresh Reading List
                   </button>
-                    </div>
+                      </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
-                  {/* Original News Item View */}
+                  
+                    // Original News Item View - Everything stays the same
                   <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
                       // Toggle detailed text to show article under summary
                       toggleDetailedText(index);
@@ -3914,19 +3822,19 @@ export default function Home() {
                     {/* News Image - Only render for current page to avoid fixed-position stacking issues */}
                     {index === currentIndex && (
                       <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
+                        position: 'fixed',
+                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+                      left: '0',
+                      right: '0',
                       width: '100vw',
-                      height: `calc(45vh + ${safeAreaTop}px)`,
+                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
+                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
-                      zIndex: 1,
+                      zIndex: '1',
                       overflow: 'hidden',
-                      pointerEvents: 'none',
-                      background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      pointerEvents: 'none'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -3942,7 +3850,7 @@ export default function Home() {
                         
                         if (!hasImageUrl) {
                           return (
-                      <div style={{
+                            <div style={{
                               fontSize: '72px',
                               display: 'flex',
                               alignItems: 'center',
@@ -3951,7 +3859,7 @@ export default function Home() {
                               height: '100%'
                             }}>
                               {story.emoji || '📰'}
-                      </div>
+                            </div>
                           );
                         }
                         
@@ -4224,12 +4132,12 @@ export default function Home() {
                       })()}
                       
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
-                      <div style={{
+                          <div style={{
                         position: 'fixed',
-                        top: 'calc(45vh * 0.55)',
+                        top: 'calc(38vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(45vh * 0.45 + 74px)',
+                        height: 'calc(38vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4244,7 +4152,7 @@ export default function Home() {
                       {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
                       {/* Only show overlay if image exists, and limit it to not cover bottom area */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
-                          <div style={{
+                      <div style={{
                         position: 'absolute',
                         top: 0,
                         bottom: '-12px',
@@ -4276,10 +4184,10 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                           <div style={{
                         position: 'fixed',
-                        top: 'calc(45vh - 80px)',
+                        bottom: 'calc(100vh - 38vh - 12px)',
                         left: '20px',
                         right: '20px',
-                        zIndex: 100,
+                        zIndex: 10,
                         pointerEvents: 'none'
                       }}>
                         <h3 style={{ 
@@ -4304,22 +4212,22 @@ export default function Home() {
                     {/* Emoji fallback when no image - only for current page */}
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        width: '100vw',
-                        height: `calc(45vh + ${safeAreaTop}px)`,
-                        margin: 0,
-                        padding: 0,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'flex',
+                      position: 'fixed',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      width: '100vw',
+                      height: '38vh',
+                      margin: 0,
+                      padding: 0,
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1,
-                        overflow: 'hidden',
-                        pointerEvents: 'none'
-                      }}>
+                      justifyContent: 'center',
+                      zIndex: '1',
+                      overflow: 'hidden',
+                      pointerEvents: 'none'
+                    }}>
                             <div style={{
                         fontSize: '72px',
                               display: 'flex',
@@ -4335,13 +4243,25 @@ export default function Home() {
                     
                     {/* Apple HIG - Content Container - only for current page, stops above safe area */}
                     {index === currentIndex && (
-                      <div className="content-bg-container"></div>
+                    <div style={{
+                      position: 'fixed',
+                      top: 'calc(38vh + 50px)',
+                      left: '0',
+                      right: '0',
+                      bottom: 'env(safe-area-inset-bottom, 0px)',
+                      background: darkMode ? '#000000' : '#ffffff',
+                      borderTopLeftRadius: '22px',
+                      borderTopRightRadius: '22px',
+                      zIndex: '1',
+                      pointerEvents: 'none',
+                      boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
+                    }}></div>
                     )}
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(45vh - 60px)',
+                        paddingTop: 'calc(38vh - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -4372,12 +4292,12 @@ export default function Home() {
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
                         }}>
                           {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
-                            </div>
-                            
+                        </div>
+
                         {/* Right Side Buttons Group - Language Toggle + Switcher */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
                           gap: '8px',
                           flex: '0 0 auto'
                         }}>
