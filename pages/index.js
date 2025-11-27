@@ -2196,7 +2196,7 @@ export default function Home() {
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(38vh + 59px);
+          height: calc(38vh + 118px);
           margin: 0;
           padding: 0;
           display: block;
@@ -2212,7 +2212,7 @@ export default function Home() {
           left: 0;
           right: 0;
           width: 100vw;
-          height: calc(38vh + 59px);
+          height: calc(38vh + 118px);
           margin: 0;
           padding: 0;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -3874,11 +3874,11 @@ export default function Home() {
                     {index === currentIndex && (
                       <div style={{
                       position: 'fixed',
-                      top: 0,
+                      top: '-59px',
                       left: 0,
                       right: 0,
                       width: '100vw',
-                      height: 'calc(38vh + 59px)',
+                      height: 'calc(38vh + 118px)',
                       margin: 0,
                       padding: 0,
                       display: 'block',
@@ -4264,11 +4264,11 @@ export default function Home() {
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                         position: 'fixed',
-                        top: 0,
+                        top: '-59px',
                         left: 0,
                         right: 0,
                         width: '100vw',
-                        height: 'calc(38vh + 59px)',
+                        height: 'calc(38vh + 118px)',
                         margin: 0,
                         padding: 0,
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
