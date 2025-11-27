@@ -2145,13 +2145,13 @@ export default function Home() {
         .story-container {
           position: absolute;
           width: 100%;
-          min-height: calc(100% + 59px);
+          min-height: calc(100% + 150px);
           height: auto;
           display: flex;
           align-items: flex-start;
           justify-content: center;
           padding-top: 0;
-          padding-bottom: calc(260px + env(safe-area-inset-bottom, 0px));
+          padding-bottom: calc(350px + env(safe-area-inset-bottom, 0px));
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: transparent;
