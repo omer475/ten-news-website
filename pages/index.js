@@ -2163,7 +2163,7 @@ export default function Home() {
         .story-container.news-page::after {
           content: '';
           position: absolute;
-          top: 38vh;
+          top: calc(38vh + 59px);
           left: 0;
           right: 0;
           bottom: env(safe-area-inset-bottom, 0px);
@@ -2177,7 +2177,7 @@ export default function Home() {
         /* Content container background - stops above bottom safe area */
         .content-bg-container {
           position: fixed;
-          top: calc(38vh + 50px);
+          top: calc(38vh + 59px + 50px);
           left: 0;
           right: 0;
           bottom: env(safe-area-inset-bottom, 0px);
@@ -3874,7 +3874,7 @@ export default function Home() {
                     {index === currentIndex && (
                       <div style={{
                       position: 'fixed',
-                      top: '-59px',
+                      top: 0,
                       left: 0,
                       right: 0,
                       width: '100vw',
@@ -4185,10 +4185,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                           <div style={{
                         position: 'fixed',
-                        top: 'calc(38vh * 0.55)',
+                        top: 'calc((38vh + 59px) * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(38vh * 0.45 + 74px)',
+                        height: 'calc((38vh + 59px) * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4235,7 +4235,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                           <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 38vh - 12px)',
+                        bottom: 'calc(100vh - 38vh - 59px - 12px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4264,7 +4264,7 @@ export default function Home() {
                     {index === currentIndex && (!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                         position: 'fixed',
-                        top: '-59px',
+                        top: 0,
                         left: 0,
                         right: 0,
                         width: '100vw',
@@ -4300,7 +4300,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh - 60px)',
+                        paddingTop: 'calc(38vh + 59px - 60px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
