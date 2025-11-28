@@ -4296,14 +4296,15 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + 51px)',
+                        paddingTop: 'calc(38vh + 56px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
                         background: 'transparent',
                         width: '100%',
                         maxWidth: '100%',
-                        margin: '0 auto'
+                        margin: '0 auto',
+                        marginTop: '-10px'
                       }}>
                       
                       {/* Time Since Published and Timeline Button Row - Fixed Position */}
