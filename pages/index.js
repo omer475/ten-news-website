@@ -2167,7 +2167,7 @@ export default function Home() {
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
-          overflow-y: auto;
+          overflow: hidden;
           z-index: 10;
         }
         
@@ -4296,7 +4296,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + 54px)',
+                        paddingTop: 'calc(38vh + 58px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
