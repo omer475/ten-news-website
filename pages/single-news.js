@@ -269,6 +269,7 @@ export default function SingleNewsPage() {
   return (
     <>
       <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
         <title>{article.title} | Ten News</title>
         <meta name="description" content={article.summary} />
         <meta property="og:title" content={article.title} />
@@ -773,7 +774,7 @@ export default function SingleNewsPage() {
           margin: 0;
           height: 100%;
           min-height: 100dvh;
-          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
         
         body {
@@ -782,9 +783,32 @@ export default function SingleNewsPage() {
           margin: 0;
           height: 100%;
           min-height: 100dvh;
-          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
         }
         
+        body::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: #ffffff;
+          z-index: -1;
+          pointer-events: none;
+        }
+        
+        body::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: #ffffff;
+          z-index: -1;
+          pointer-events: none;
+        }
       `}</style>
       
       <style jsx>{`
@@ -796,31 +820,59 @@ export default function SingleNewsPage() {
         }
 
         .single-news-page {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 100vh;
-          width: 100vw;
-          overflow: hidden;
-          overscroll-behavior: none;
+          min-height: 100dvh;
+          min-height: calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
           background: #ffffff;
           color: #1d1d1f;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           font-size: var(--font-size);
           line-height: 1.6;
+          position: relative;
         }
         
+        .single-news-page::before {
+          content: '';
+          position: fixed;
+          top: calc(-1 * max(env(safe-area-inset-top), 44px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-top), 44px);
+          background: #ffffff;
+          z-index: 0;
+          pointer-events: none;
+        }
+        
+        .single-news-page::after {
+          content: '';
+          position: fixed;
+          bottom: calc(-1 * max(env(safe-area-inset-bottom), 34px));
+          left: 0;
+          right: 0;
+          height: max(env(safe-area-inset-bottom), 34px);
+          background: #ffffff;
+          z-index: 0;
+          pointer-events: none;
+        }
+
         .single-news-page.dark-mode {
           background: #1a1a1a;
           color: #ffffff;
+        }
+        
+        .single-news-page.dark-mode::before,
+        .single-news-page.dark-mode::after {
+          background: #1a1a1a;
+        }
+        
+        body.dark-mode::before,
+        body.dark-mode::after {
+          background: #1a1a1a;
         }
 
         /* Reading Progress */
         .reading-progress {
           position: fixed;
-          top: 0px;
+          top: env(safe-area-inset-top);
           left: 0;
           right: 0;
           height: 3px;
@@ -1063,16 +1115,10 @@ export default function SingleNewsPage() {
 
         /* Hero Section */
         .hero-section {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 50vh;
-          margin-top: 0;
           padding: 40px 24px;
-          padding-top: 40px;
+          margin-top: calc(-1 * env(safe-area-inset-top));
+          padding-top: calc(40px + env(safe-area-inset-top));
           background: linear-gradient(135deg, #F8F9FB 0%, #ffffff 100%);
-          overflow: hidden;
         }
 
         .dark-mode .hero-section {
@@ -1219,8 +1265,8 @@ export default function SingleNewsPage() {
 
         .hero-image {
           position: relative;
-          top: 0;
-          margin-bottom: 0;
+          top: calc(-1 * env(safe-area-inset-top));
+          margin-bottom: calc(-1 * env(safe-area-inset-top));
           border-radius: 16px;
           overflow: hidden;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -1250,18 +1296,8 @@ export default function SingleNewsPage() {
 
         /* Article Content */
         .article-content {
-          position: absolute;
-          top: 50vh;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          padding: 20px 24px;
-          padding-bottom: 20px;
-          padding-left: 24px;
-          padding-right: 24px;
+          padding: 60px 24px;
           background: white;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
           transform: translateY(100px);
           opacity: 0;
           transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);

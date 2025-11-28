@@ -64,81 +64,65 @@ export default function Home() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
-    try {
-      // Only handle swipe on summary content, not on buttons or other elements
-      if (e.target.closest('.switcher') || 
-          e.target.closest('[data-expand-icon]') ||
-          e.target.closest('.language-icon-btn') ||
-          e.target.closest('.language-dropdown-box') ||
-          e.target.closest('.language-switcher__option')) {
-        return;
-      }
-      if (e.targetTouches && e.targetTouches.length > 0) {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
-      }
-    } catch (err) {
-      // Silently handle touch errors
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.switcher') || 
+        e.target.closest('[data-expand-icon]') ||
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
+      return;
     }
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
   };
 
   const onTouchMove = (e) => {
-    try {
-      // Only handle swipe on summary content, not on buttons or other elements
-      if (e.target.closest('.switcher') || 
-          e.target.closest('[data-expand-icon]') ||
-          e.target.closest('.language-icon-btn') ||
-          e.target.closest('.language-dropdown-box') ||
-          e.target.closest('.language-switcher__option')) {
-        return;
-      }
-      if (e.targetTouches && e.targetTouches.length > 0) {
-        setTouchEnd(e.targetTouches[0].clientX);
-      }
-    } catch (err) {
-      // Silently handle touch errors
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.switcher') || 
+        e.target.closest('[data-expand-icon]') ||
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
+      return;
     }
+    setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = (e) => {
-    try {
-      // Only handle swipe on summary content, not on buttons or other elements
-      if (e.target.closest('.switcher') || 
-          e.target.closest('[data-expand-icon]') ||
-          e.target.closest('.language-icon-btn') ||
-          e.target.closest('.language-dropdown-box') ||
-          e.target.closest('.language-switcher__option')) {
+    // Only handle swipe on summary content, not on buttons or other elements
+    if (e.target.closest('.switcher') || 
+        e.target.closest('[data-expand-icon]') ||
+        e.target.closest('.language-icon-btn') ||
+        e.target.closest('.language-dropdown-box') ||
+        e.target.closest('.language-switcher__option')) {
+      return;
+    }
+    
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe || isRightSwipe) {
+      // Prevent click event when swiping
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // If detailed article is open, swipe left-to-right closes it
+      if (showDetailedArticle && isRightSwipe) {
+        setShowDetailedArticle(false);
+        setSelectedArticle(null);
         return;
       }
       
-      if (!touchStart || !touchEnd) return;
-      
-      const distance = touchStart - touchEnd;
-      const isLeftSwipe = distance > minSwipeDistance;
-      const isRightSwipe = distance < -minSwipeDistance;
-
-      if (isLeftSwipe || isRightSwipe) {
-        // Prevent click event when swiping
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // If detailed article is open, swipe left-to-right closes it
-        if (showDetailedArticle && isRightSwipe) {
-          setShowDetailedArticle(false);
-          setSelectedArticle(null);
-          return;
-        }
-        
-        // If detailed text is showing for current article, swipe right returns to summary
-        if (showDetailedText[currentIndex] && isRightSwipe) {
-          setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
-          return;
-        }
-        
-        // No more bullet/summary toggle - only detailed text navigation
+      // If detailed text is showing for current article, swipe right returns to summary
+      if (showDetailedText[currentIndex] && isRightSwipe) {
+        setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
+        return;
       }
-    } catch (err) {
-      // Silently handle touch errors
+      
+      // No more bullet/summary toggle - only detailed text navigation
     }
   };
 
@@ -173,6 +157,7 @@ export default function Home() {
   const getAvailableInformationTypes = (story) => {
     // If components array exists, use it to determine order
     if (story.components && Array.isArray(story.components) && story.components.length > 0) {
+      console.log(`📊 Story "${story.title?.substring(0, 30)}..." has components array:`, story.components);
       // Filter to only include components that actually have data
       const filtered = story.components.filter(type => {
         switch (type) {
@@ -188,9 +173,11 @@ export default function Home() {
         return false;
         }
       });
+      console.log(`✅ Filtered components for this story:`, filtered);
       return filtered;
     }
     
+    console.log(`⚠️  Story "${story.title?.substring(0, 30)}..." has NO components array, using fallback`);
     // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
@@ -559,9 +546,14 @@ export default function Home() {
   // Main extraction function with index-based selection
   const extractDominantColor = (imgElement, storyIndex) => {
     try {
+      console.log(`🎨 Starting color extraction for article ${storyIndex}`);
+      console.log(`   Image src: ${imgElement.src}`);
+      console.log(`   Image dimensions: ${imgElement.naturalWidth}x${imgElement.naturalHeight}`);
+      console.log(`   crossOrigin: ${imgElement.crossOrigin}`);
+      
       // Verify image is ready
       if (!imgElement.complete || !imgElement.naturalWidth || imgElement.naturalWidth === 0) {
-        throw new Error(`Image not fully loaded`);
+        throw new Error(`Image not fully loaded: complete=${imgElement.complete}, width=${imgElement.naturalWidth}`);
       }
       
       const canvas = document.createElement('canvas');
@@ -570,21 +562,28 @@ export default function Home() {
       canvas.width = imgElement.naturalWidth;
       canvas.height = imgElement.naturalHeight;
       
+      console.log(`   Drawing image to canvas...`);
       ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
       
+      console.log(`   Getting image data from canvas...`);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
+      console.log(`   ✅ Successfully got ${pixels.length / 4} pixels`);
       
       // Extract colorful candidates
       const candidates = extractColorfulCandidates(pixels, canvas.width, canvas.height);
+      console.log(`   Found ${candidates.length} color candidates`);
       
       // Select color based on article index
       const selectedColor = selectColorForArticle(candidates, storyIndex);
+      console.log(`   Selected color HSL: ${selectedColor.hsl.join(', ')}`);
+      console.log(`   Selected color RGB: ${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}`);
       
       // Create blur color
       const blurHsl = createBlurColor(selectedColor.hsl);
       const [bR, bG, bB] = hslToRgb(...blurHsl);
       const blurColorHex = `#${toHex(bR)}${toHex(bG)}${toHex(bB)}`;
+      console.log(`   🎨 Final blur color: ${blurColorHex}`);
       
       // Create title highlight color  
       const highlightHsl = createTitleHighlightColor(blurHsl);
@@ -611,8 +610,13 @@ export default function Home() {
           infoBox: infoBoxColor
         }
       }));
+      
+      console.log(`   ✅ Color extraction complete for article ${storyIndex}`);
     } catch (error) {
-      // Color extraction failed, use fallback
+      console.error(`❌ Color extraction FAILED for article ${storyIndex}:`, error);
+      console.error(`   Error type: ${error.name}`);
+      console.error(`   Error message: ${error.message}`);
+      console.error(`   Using fallback blue-gray color #3A4A5E`);
       
       // Fallback colors
       const fallbackBlurHsl = [210, 30, 35]; // Blue-gray #3A4A5E
@@ -1531,44 +1535,36 @@ export default function Home() {
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
-      try {
-        // Don't capture touch if it's on the language switcher
-        if (e.target.closest('.language-icon-btn') || 
-            e.target.closest('.language-dropdown-box') ||
-            e.target.closest('.language-switcher__option')) {
-          return;
-        }
-        
-        if (!isTransitioning && e.touches && e.touches.length > 0) {
-          startY = e.touches[0].clientY;
-        }
-      } catch (err) {
-        // Silently handle touch errors
+      // Don't capture touch if it's on the language switcher
+      if (e.target.closest('.language-icon-btn') || 
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
+      if (!isTransitioning) {
+        startY = e.touches[0].clientY;
       }
     };
 
     const handleTouchEnd = (e) => {
-      try {
-        // Don't handle touch if it's on the language switcher
-        if (e.target.closest('.language-icon-btn') || 
-            e.target.closest('.language-dropdown-box') ||
-            e.target.closest('.language-switcher__option')) {
-          return;
-        }
-        
-        if (isTransitioning) return;
-        
-        // Block navigation if article is open
-        const isArticleOpen = showDetailedText[currentIndex];
-        if (isArticleOpen) {
-          return; // Don't allow story navigation when article is open
-        }
-        
-        // Safety check for changedTouches
-        if (!e.changedTouches || e.changedTouches.length === 0) return;
-        
-        const endY = e.changedTouches[0].clientY;
-        const diff = startY - endY;
+      // Don't handle touch if it's on the language switcher
+      if (e.target.closest('.language-icon-btn') || 
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
+      if (isTransitioning) return;
+      
+      // Block navigation if article is open
+      const isArticleOpen = showDetailedText[currentIndex];
+      if (isArticleOpen) {
+        return; // Don't allow story navigation when article is open
+      }
+      
+      const endY = e.changedTouches[0].clientY;
+      const diff = startY - endY;
       
       if (Math.abs(diff) > 30) {
         isTransitioning = true;
@@ -1591,9 +1587,6 @@ export default function Home() {
         setTimeout(() => {
           isTransitioning = false;
         }, 500);
-      }
-      } catch (err) {
-        // Silently handle touch errors on mobile
       }
     };
 
@@ -1699,31 +1692,44 @@ export default function Home() {
     };
   }, [user, currentIndex]);
 
-  // Single consolidated useEffect for loading state safety
-  // Ensures loading is false when stories exist (prevents stuck loading states)
+  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Temporary debug - force loading to false if stories exist
+  if (stories.length > 0 && loading) {
+    console.log('🔧 Debug: Forcing loading to false');
+    setLoading(false);
+  }
+  
+  // Temporary debug - show current state
+  console.log('🔧 Debug: Current state - loading:', loading, 'stories:', stories.length);
+  
+  // Emergency fallback - if loading takes too long, show something
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading && stories.length === 0) {
+        console.log('🔧 Emergency: Setting loading to false after timeout');
+        setLoading(false);
+      }
+    }, 2000); // 2 second timeout
+    
+    return () => clearTimeout(timer);
+  }, [loading, stories.length]);
+  
+  // Force loading to false if we have stories but still loading
   useEffect(() => {
     if (stories.length > 0 && loading) {
+      console.log('🔧 Force: Setting loading to false because stories exist');
       setLoading(false);
     }
   }, [stories.length, loading]);
   
-  // Emergency timeout fallback - if loading takes too long without stories
+  // Additional safety check - force render if we have data
   useEffect(() => {
-    if (!loading) return; // Only set timeout if currently loading
-    
-    const timer = setTimeout(() => {
-      setLoading(false); // Force loading to false after timeout
-    }, 5000); // 5 second timeout
-    
-    return () => clearTimeout(timer);
-  }, [loading]);
-
-  // Initialize progress bar key when article changes
-  useEffect(() => {
-    if (stories.length > 0 && stories[currentIndex] && !progressBarKey[currentIndex]) {
-      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
+    if (stories.length > 0) {
+      console.log('🔧 Safety: Stories exist, ensuring loading is false');
+      setLoading(false);
     }
-  }, [currentIndex, stories]);
+  }, [stories.length]);
 
   // Auto-rotation for information boxes
   useEffect(() => {
@@ -1747,22 +1753,24 @@ export default function Home() {
       return;
     }
 
+    // Initialize progress bar key if not set
+    if (!progressBarKey[currentIndex]) {
+      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
+    }
+
     // Set up interval to rotate every 4 seconds
     const intervalId = setInterval(() => {
-      try {
-        switchToNextInformationType(currentStory, currentIndex);
-        // Reset progress bar animation
-        setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
-      } catch (err) {
-        // Silently handle any rotation errors
-      }
+      console.log(`🔄 Auto-rotating information box for article ${currentIndex}`);
+      switchToNextInformationType(currentStory, currentIndex);
+      // Reset progress bar animation
+      setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
     }, 4000);
 
     // Cleanup interval on unmount or when dependencies change
     return () => {
       clearInterval(intervalId);
     };
-  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
+  }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
   
   if (loading) {
     return (
@@ -1902,10 +1910,10 @@ export default function Home() {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           /* Apply safe area padding like test page */
-          padding-top: 0px;
-          padding-bottom: 0px;
-          padding-left: 0px;
-          padding-right: 0px;
+          padding-top: env(safe-area-inset-top, 0px);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          padding-left: env(safe-area-inset-left, 0px);
+          padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* Glassmorphism Variables */
@@ -2054,6 +2062,32 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
 
+        /* Safe Area Overlays - Match header blur effect */
+        .safe-area-overlay-top {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-top, 0px);
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
+          z-index: 999999;
+          pointer-events: none;
+        }
+
+        .safe-area-overlay-bottom {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-bottom, 0px);
+          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
+          backdrop-filter: saturate(180%) blur(20px);
+          -webkit-backdrop-filter: saturate(180%) blur(20px);
+          z-index: 999999;
+          pointer-events: none;
+        }
 
         /* Apple HIG - Header Design */
         .header {
@@ -2069,10 +2103,10 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: 0;
+          padding-top: calc(0px + env(safe-area-inset-top, 0px));
           padding-bottom: 0;
-          padding-left: 20px;
-          padding-right: 20px;
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
           transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
         }
@@ -2127,10 +2161,10 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 68px;
-          padding-bottom: 200px;
-          padding-left: 20px;
-          padding-right: 20px;
+          padding-top: calc(68px + env(safe-area-inset-top, 0px));
+          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow-y: auto;
@@ -2186,8 +2220,8 @@ export default function Home() {
           pointer-events: auto;
           position: relative;
           z-index: 1001;
-          margin-left: 0;
-          margin-right: 0;
+          margin-left: calc(0px + env(safe-area-inset-left, 0px));
+          margin-right: calc(0px + env(safe-area-inset-right, 0px));
         }
 
         .paywall-modal h2 {
@@ -2398,7 +2432,7 @@ export default function Home() {
 
         .progress-indicator {
           position: fixed;
-          right: 24px;
+          right: calc(24px + env(safe-area-inset-right, 0px));
           top: 50%;
           transform: translateY(-50%);
           display: flex;
@@ -2426,7 +2460,7 @@ export default function Home() {
 
         .scroll-hint {
           position: absolute;
-          bottom: 160px;
+          bottom: calc(160px + env(safe-area-inset-bottom, 0px));
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -2540,8 +2574,8 @@ export default function Home() {
           max-width: 400px;
           max-height: 90vh;
           overflow-y: auto;
-          margin-left: 0;
-          margin-right: 0;
+          margin-left: calc(0px + env(safe-area-inset-left, 0px));
+          margin-right: calc(0px + env(safe-area-inset-right, 0px));
         }
 
         .auth-modal-header {
@@ -3602,6 +3636,9 @@ export default function Home() {
         }
       `}</style>
       
+      {/* Safe Area Overlays with blur effect */}
+      <div className="safe-area-overlay-top" />
+      <div className="safe-area-overlay-bottom" />
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
@@ -3800,11 +3837,11 @@ export default function Home() {
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '38vh',
+                      height: 'calc(38vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -3891,6 +3928,8 @@ export default function Home() {
                               
                               // ADVANCED MULTI-STRATEGY COLOR EXTRACTION
                               const attemptColorExtraction = async () => {
+                                console.log(`🎨 Starting advanced color extraction for article ${index}...`);
+                                
                                 // Strategy 1: Try direct extraction if CORS available
                                 const tryDirectExtraction = () => {
                                   return new Promise((resolve, reject) => {
@@ -3903,9 +3942,11 @@ export default function Home() {
                                       ctx.drawImage(e.target, 0, 0);
                                       ctx.getImageData(0, 0, 1, 1); // Test if we can read
                                       
+                                      console.log(`  ✓ Strategy 1: Direct extraction - SUCCESS`);
                                       extractDominantColor(e.target, index);
                                       resolve(true);
                                     } catch (err) {
+                                      console.log(`  ✗ Strategy 1: Direct extraction - CORS blocked`);
                                       reject(err);
                                     }
                                   });
@@ -3918,21 +3959,25 @@ export default function Home() {
                                     corsImg.crossOrigin = 'anonymous';
                                     
                                     const timeout = setTimeout(() => {
+                                      console.log(`  ✗ Strategy 2: CORS image - TIMEOUT`);
                                       reject(new Error('timeout'));
                                     }, 3000);
                                     
                                     corsImg.onload = () => {
                                       clearTimeout(timeout);
                                       try {
+                                        console.log(`  ✓ Strategy 2: CORS image - SUCCESS`);
                                         extractDominantColor(corsImg, index);
                                         resolve(true);
                                       } catch (err) {
+                                        console.log(`  ✗ Strategy 2: CORS image - Extraction failed`);
                                         reject(err);
                                       }
                                     };
                                     
                                     corsImg.onerror = () => {
                                       clearTimeout(timeout);
+                                      console.log(`  ✗ Strategy 2: CORS image - FAILED to load`);
                                       reject(new Error('cors load failed'));
                                     };
                                     
@@ -3956,11 +4001,13 @@ export default function Home() {
                                     
                                     const tryNextProxy = () => {
                                       if (proxyIndex >= proxies.length) {
+                                        console.log(`  ✗ Strategy 3: All proxies failed`);
                                         reject(new Error('all proxies failed'));
                                         return;
                                       }
                                       
                                       const proxyUrl = proxies[proxyIndex];
+                                      console.log(`  → Strategy 3: Trying proxy ${proxyIndex + 1}/${proxies.length}`);
                                       
                                       const timeout = setTimeout(() => {
                                         proxyIndex++;
@@ -3970,9 +4017,11 @@ export default function Home() {
                                       proxyImg.onload = () => {
                                         clearTimeout(timeout);
                                         try {
+                                          console.log(`  ✓ Strategy 3: Proxy ${proxyIndex + 1} - SUCCESS`);
                                           extractDominantColor(proxyImg, index);
                                           resolve(true);
                                         } catch (err) {
+                                          console.log(`  ✗ Strategy 3: Proxy ${proxyIndex + 1} - Extraction failed`);
                                           proxyIndex++;
                                           tryNextProxy();
                                         }
@@ -3980,6 +4029,7 @@ export default function Home() {
                                       
                                       proxyImg.onerror = () => {
                                         clearTimeout(timeout);
+                                        console.log(`  ✗ Strategy 3: Proxy ${proxyIndex + 1} - FAILED`);
                                         proxyIndex++;
                                         tryNextProxy();
                                       };
@@ -3994,6 +4044,8 @@ export default function Home() {
                                 // Strategy 4: Simplified color from image analysis (no canvas)
                                 const trySimplifiedExtraction = () => {
                                   return new Promise((resolve) => {
+                                    console.log(`  → Strategy 4: Simplified extraction from visible pixels`);
+                                    
                                     // Use a very simple heuristic based on the image source
                                     // This is a fallback that generates reasonable colors
                                     const hash = imageUrl.split('').reduce((acc, char) => {
@@ -4007,6 +4059,8 @@ export default function Home() {
                                     
                                     const [r, g, b] = hslToRgb(hue, saturation, lightness);
                                     const blurColor = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+                                    
+                                    console.log(`  ✓ Strategy 4: Generated color ${blurColor} from URL hash`);
                                     
                                     // Use the same VIBRANT color generation functions
                                     const blurHsl = [hue, saturation, lightness];
@@ -4047,14 +4101,17 @@ export default function Home() {
                                   }
                                 }
                                 
+                                console.log(`🎨 Color extraction complete for article ${index}`);
                               };
                               
                               // Start extraction immediately (don't wait)
-                              attemptColorExtraction().catch(() => {
+                              attemptColorExtraction().catch(err => {
+                                console.error(`❌ All color extraction strategies failed:`, err);
                                 // Keep the default fallback color already set
                               });
                             }}
                             onError={(e) => {
+                              console.error('❌ Image failed to load:', imageUrl);
                               const imgElement = e.target;
                               const parentElement = imgElement.parentElement;
                               
@@ -4064,6 +4121,7 @@ export default function Home() {
                               if (retryCount < maxRetries) {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
+                                console.log(`🔄 Retry ${retryCount}/${maxRetries}`);
                                   
                                   // Try different referrer policies
                                 if (retryCount === 1) {
@@ -4081,6 +4139,7 @@ export default function Home() {
                                 }, 100 * retryCount);
                               } else {
                                 // All retries failed - show emoji fallback
+                                console.warn('⚠️ All retries failed, showing emoji');
                                   imgElement.style.display = 'none';
                                 if (parentElement && !parentElement.querySelector('.image-fallback')) {
                                       parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
@@ -4103,7 +4162,9 @@ export default function Home() {
                                     }
                                   }
                             }}
-                            onLoadStart={() => {}}
+                            onLoadStart={() => {
+                              console.log('🔄 Image loading started:', imageUrl.substring(0, 80));
+                            }}
                           />
                         );
                       })()}
@@ -4235,7 +4296,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh - 60px)',
+                        paddingTop: 'calc(38vh + 58px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -4491,58 +4552,50 @@ export default function Home() {
                           zIndex: 5
                         }}
                         onTouchStart={(e) => {
-                          try {
-                            if (!e.touches || e.touches.length === 0) return;
-                            const startX = e.touches[0].clientX;
-                            const startY = e.touches[0].clientY;
-                            let hasMoved = false;
-                            let swipeDirection = null;
+                          const startX = e.touches[0].clientX;
+                          const startY = e.touches[0].clientY;
+                          let hasMoved = false;
+                          let swipeDirection = null;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
                             
-                            const handleTouchMove = (moveEvent) => {
-                              try {
-                                if (!moveEvent.touches || moveEvent.touches.length === 0) return;
-                                const currentX = moveEvent.touches[0].clientX;
-                                const currentY = moveEvent.touches[0].clientY;
-                                const diffX = Math.abs(startX - currentX);
-                                const diffY = Math.abs(startY - currentY);
-                                
-                                if (diffX > 10 || diffY > 10) {
-                                  hasMoved = true;
-                                  
-                                  // Determine swipe direction
-                                  if (diffX > diffY && diffX > 50) {
-                                    swipeDirection = 'horizontal';
-                                    moveEvent.preventDefault();
-                                    moveEvent.stopPropagation();
-                                  } else if (diffY > diffX && diffY > 30) {
-                                    swipeDirection = 'vertical';
-                                  }
-                                }
-                              } catch (err) {}
-                            };
-                            
-                            const handleTouchEnd = (endEvent) => {
-                              try {
-                                if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) return;
-                                const endX = endEvent.changedTouches[0].clientX;
-                                const diffX = Math.abs(startX - endX);
-                                
-                                // Only handle horizontal swipes for summary/bullet points toggle
-                                if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
-                                  endEvent.preventDefault();
-                                  endEvent.stopPropagation();
-                                  toggleSummaryDisplayMode(index);
-                                }
-                              } catch (err) {}
+                            if (diffX > 10 || diffY > 10) {
+                              hasMoved = true;
                               
-                              // Clean up listeners
-                              document.removeEventListener('touchmove', handleTouchMove);
-                              document.removeEventListener('touchend', handleTouchEnd);
-                            };
+                              // Determine swipe direction
+                              if (diffX > diffY && diffX > 50) {
+                                swipeDirection = 'horizontal';
+                                moveEvent.preventDefault();
+                                moveEvent.stopPropagation();
+                              } else if (diffY > diffX && diffY > 30) {
+                                swipeDirection = 'vertical';
+                              }
+                            }
+                          };
+                          
+                          const handleTouchEnd = (endEvent) => {
+                            const endX = endEvent.changedTouches[0].clientX;
+                            const diffX = Math.abs(startX - endX);
                             
-                            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                            document.addEventListener('touchend', handleTouchEnd, { passive: false });
-                          } catch (err) {}
+                            // Only handle horizontal swipes for summary/bullet points toggle
+                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
+                              console.log('Horizontal summary swipe detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              toggleSummaryDisplayMode(index);
+                            }
+                            
+                            // Clean up listeners
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
                         <div 
@@ -4566,6 +4619,8 @@ export default function Home() {
                                 const bullets = mode === 'b2'
                                   ? (story.summary_bullets_b2 || story.summary_bullets || [])
                                   : (story.summary_bullets_news || story.summary_bullets || []);
+                                
+                                console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
@@ -4619,46 +4674,37 @@ export default function Home() {
                                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
                               }}
                               onTouchStart={(e) => {
-                                try {
-                                  if (!e.touches || e.touches.length === 0) return;
-                                  const startX = e.touches[0].clientX;
-                                  const startY = e.touches[0].clientY;
-                                  let hasMoved = false;
+                                const startX = e.touches[0].clientX;
+                                const startY = e.touches[0].clientY;
+                                let hasMoved = false;
+                                
+                                const handleTouchMove = (moveEvent) => {
+                                  const currentX = moveEvent.touches[0].clientX;
+                                  const diffX = Math.abs(currentX - startX);
+                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
                                   
-                                  const handleTouchMove = (moveEvent) => {
-                                    try {
-                                      if (!moveEvent.touches || moveEvent.touches.length === 0) return;
-                                      const currentX = moveEvent.touches[0].clientX;
-                                      const diffX = Math.abs(currentX - startX);
-                                      const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
-                                      
-                                      if (diffX > 10 || diffY > 10) {
-                                        hasMoved = true;
-                                      }
-                                    } catch (err) {}
-                                  };
+                                  if (diffX > 10 || diffY > 10) {
+                                    hasMoved = true;
+                                  }
+                                };
+                                
+                                const handleTouchEnd = (endEvent) => {
+                                  const endX = endEvent.changedTouches[0].clientX;
+                                  const diffX = endX - startX;
                                   
-                                  const handleTouchEnd = (endEvent) => {
-                                    try {
-                                      if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) return;
-                                      const endX = endEvent.changedTouches[0].clientX;
-                                      const diffX = endX - startX;
-                                      
-                                      // Swipe right to close article
-                                      if (hasMoved && diffX > 100) {
-                                        endEvent.preventDefault();
-                                        endEvent.stopPropagation();
-                                        toggleDetailedText(index); // Close article
-                                      }
-                                    } catch (err) {}
-                                    
-                                    document.removeEventListener('touchmove', handleTouchMove);
-                                    document.removeEventListener('touchend', handleTouchEnd);
-                                  };
+                                  // Swipe right to close article
+                                  if (hasMoved && diffX > 100) {
+                                    endEvent.preventDefault();
+                                    endEvent.stopPropagation();
+                                    toggleDetailedText(index); // Close article
+                                  }
                                   
-                                  document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                  document.addEventListener('touchend', handleTouchEnd, { passive: false });
-                                } catch (err) {}
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
+                                };
+                                
+                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
                               }}
                             >
                               <div dangerouslySetInnerHTML={{
@@ -4685,6 +4731,8 @@ export default function Home() {
                                   const articleText = mode === 'b2'
                                     ? (story.content_b2 || story.detailed_text || story.article || '')
                                     : (story.content_news || story.detailed_text || story.article || '');
+                                  
+                                  console.log(`📄 ARTICLE [${index}]:`, { mode, has_b2: !!story.content_b2, has_news: !!story.content_news, length: articleText.length, start: articleText.substring(0, 40) });
                                   
                                   return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
@@ -4732,7 +4780,7 @@ export default function Home() {
                       })() && (
                       <div style={{
                         position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '24px',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
                         left: showDetailedText[index] ? '0' : '50%',
                         transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
@@ -4772,95 +4820,84 @@ export default function Home() {
                           boxShadow: 'none'
                         }}
                         onTouchStart={(e) => {
-                          try {
-                            // Check if touch started on expand icon - if so, don't handle it
-                            const touchTarget = e.target;
-                            const isExpandIcon = touchTarget.closest('[data-expand-icon]');
-                            if (isExpandIcon) return;
+                          // Check if touch started on expand icon - if so, don't handle it
+                          const touchTarget = e.target;
+                          const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                          if (isExpandIcon) return;
+                          
+                          // Only handle if there are multiple information types
+                          if (getAvailableComponentsCount(story) <= 1) return;
+                          
+                          const startX = e.touches[0].clientX;
+                          const startY = e.touches[0].clientY;
+                          let hasMoved = false;
+                          let swipeDirection = null;
+                          
+                          const handleTouchMove = (moveEvent) => {
+                            const currentX = moveEvent.touches[0].clientX;
+                            const currentY = moveEvent.touches[0].clientY;
+                            const diffX = Math.abs(startX - currentX);
+                            const diffY = Math.abs(startY - currentY);
                             
-                            // Only handle if there are multiple information types
-                            if (getAvailableComponentsCount(story) <= 1) return;
-                            
-                            if (!e.touches || e.touches.length === 0) return;
-                            const startX = e.touches[0].clientX;
-                            const startY = e.touches[0].clientY;
-                            let hasMoved = false;
-                            let swipeDirection = null;
-                            
-                            const handleTouchMove = (moveEvent) => {
-                              try {
-                                if (!moveEvent.touches || moveEvent.touches.length === 0) return;
-                                const currentX = moveEvent.touches[0].clientX;
-                                const currentY = moveEvent.touches[0].clientY;
-                                const diffX = Math.abs(startX - currentX);
-                                const diffY = Math.abs(startY - currentY);
-                                
-                                if (diffX > 15 || diffY > 15) {
-                                  hasMoved = true;
-                                  
-                                  // Determine swipe direction - be more strict
-                                  if (diffX > diffY && diffX > 30) {
-                                    swipeDirection = 'horizontal';
-                                    // ONLY prevent default for clear horizontal swipes
-                                    moveEvent.preventDefault();
-                                    moveEvent.stopPropagation();
-                                  } else if (diffY > diffX && diffY > 30) {
-                                    swipeDirection = 'vertical';
-                                    // Let vertical swipes pass through for story navigation
-                                  }
-                                }
-                              } catch (err) {}
-                            };
-                            
-                            const handleTouchEnd = (endEvent) => {
-                              try {
-                                if (!endEvent.changedTouches || endEvent.changedTouches.length === 0) {
-                                  document.removeEventListener('touchmove', handleTouchMove);
-                                  document.removeEventListener('touchend', handleTouchEnd);
-                                  return;
-                                }
-                                const endX = endEvent.changedTouches[0].clientX;
-                                const endY = endEvent.changedTouches[0].clientY;
-                                const diffX = startX - endX;
-                                const diffY = startY - endY;
-                                
-                                // Only handle horizontal swipes for information switching
-                                if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
-                                  endEvent.preventDefault();
-                                  endEvent.stopPropagation();
-                                  
-                                  // Disable auto-rotation for this article when user manually interacts
-                                  setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
-                                  
-                                  switchToNextInformationType(story, index);
-                                } else if (!hasMoved) {
-                                  // Check if the touch target is the expand icon
-                                  const touchTarget = endEvent.target;
-                                  const isExpandIcon = touchTarget.closest('[data-expand-icon]');
-                                  
-                                  if (!isExpandIcon) {
-                                    // Single tap switches information type
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    
-                                    // Disable auto-rotation for this article when user manually interacts
-                                    setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
-                                    
-                                    switchToNextInformationType(story, index);
-                                  }
-                                }
-                              } catch (err) {}
-                              // If it's vertical swipe, let it pass through for story navigation
+                            if (diffX > 15 || diffY > 15) {
+                              hasMoved = true;
                               
-                              // Clean up listeners
-                              document.removeEventListener('touchmove', handleTouchMove);
-                              document.removeEventListener('touchend', handleTouchEnd);
-                            };
+                              // Determine swipe direction - be more strict
+                              if (diffX > diffY && diffX > 30) {
+                                swipeDirection = 'horizontal';
+                                // ONLY prevent default for clear horizontal swipes
+                                moveEvent.preventDefault();
+                                moveEvent.stopPropagation();
+                              } else if (diffY > diffX && diffY > 30) {
+                                swipeDirection = 'vertical';
+                                // Let vertical swipes pass through for story navigation
+                              }
+                            }
+                          };
+                          
+                          const handleTouchEnd = (endEvent) => {
+                            const endX = endEvent.changedTouches[0].clientX;
+                            const endY = endEvent.changedTouches[0].clientY;
+                            const diffX = startX - endX;
+                            const diffY = startY - endY;
                             
-                            // Use normal event listeners, let vertical swipes pass through
-                            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                            document.addEventListener('touchend', handleTouchEnd, { passive: false });
-                          } catch (err) {}
+                            // Only handle horizontal swipes for information switching
+                            if (hasMoved && swipeDirection === 'horizontal' && Math.abs(diffX) > 25) {
+                              console.log('Horizontal information swipe detected for story', index);
+                              endEvent.preventDefault();
+                              endEvent.stopPropagation();
+                              
+                              // Disable auto-rotation for this article when user manually interacts
+                              setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                              
+                              switchToNextInformationType(story, index);
+                            } else if (!hasMoved) {
+                              // Check if the touch target is the expand icon
+                              const touchTarget = endEvent.target;
+                              const isExpandIcon = touchTarget.closest('[data-expand-icon]');
+                              
+                              if (!isExpandIcon) {
+                                // Single tap switches information type
+                                console.log('Information box tap detected for story', index);
+                                endEvent.preventDefault();
+                                endEvent.stopPropagation();
+                                
+                                // Disable auto-rotation for this article when user manually interacts
+                                setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                                
+                                switchToNextInformationType(story, index);
+                              }
+                            }
+                            // If it's vertical swipe, let it pass through for story navigation
+                            
+                            // Clean up listeners
+                            document.removeEventListener('touchmove', handleTouchMove);
+                            document.removeEventListener('touchend', handleTouchEnd);
+                          };
+                          
+                          // Use normal event listeners, let vertical swipes pass through
+                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
                         }}
                       >
                         {/* Content - Show one component at a time */}
@@ -4960,6 +4997,7 @@ export default function Home() {
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    console.log('Expand graph icon clicked for story', index);
                                     setExpandedGraph(prev => ({
                                       ...prev,
                                       [index]: !prev[index]
@@ -4968,6 +5006,7 @@ export default function Home() {
                                   onTouchEnd={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    console.log('Expand graph icon touched for story', index);
                                     setExpandedGraph(prev => ({
                                       ...prev,
                                       [index]: !prev[index]
@@ -5084,6 +5123,7 @@ export default function Home() {
                                onClick={(e) => {
                                  e.preventDefault();
                                  e.stopPropagation();
+                                 console.log('Expand icon clicked for story', index, 'current state:', expandedTimeline[index], 'will toggle to:', !expandedTimeline[index]);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]
@@ -5092,6 +5132,7 @@ export default function Home() {
                                onTouchEnd={(e) => {
                                  e.preventDefault();
                                  e.stopPropagation();
+                                 console.log('Expand icon touched for story', index);
                                  setExpandedTimeline(prev => ({
                                    ...prev,
                                    [index]: !prev[index]

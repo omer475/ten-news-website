@@ -54,3 +54,5 @@ Thumbs.db
 # Database files (too large for GitHub)
 ten_news.db
 *.db
+.vercel
+.env*.local

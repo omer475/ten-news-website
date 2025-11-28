@@ -5,20 +5,29 @@
   -webkit-font-smoothing: antialiased;
 }
 
-html,
-body {
-  margin: 0;
+html {
+  background: #ffffff;
   padding: 0;
-  width: 100vw;
+  margin: 0;
   min-height: 100vh;
-  min-height: -webkit-fill-available;
-  overflow-x: hidden;
+  min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  background: #f5f5f7;
+  background: #ffffff;
   color: #1d1d1f;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  min-height: 100vh;
+  min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+  /* iOS Safe Area Insets - Do NOT add top padding as images extend behind status bar */
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .loading-container {
@@ -151,7 +160,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 80px 24px 60px 24px;
+  padding: 80px 24px 60px;
   background: #F8F9FB;
   transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
   overflow-y: auto;
@@ -461,3 +470,4 @@ body {
     height: 18px;
   }
 }
+
