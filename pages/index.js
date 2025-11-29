@@ -4281,7 +4281,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(38vh + 10px)',
+                      top: 'calc(38vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4296,7 +4296,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(38vh + 14px)',
+                        paddingTop: 'calc(38vh + 54px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
