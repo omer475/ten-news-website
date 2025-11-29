@@ -4626,6 +4626,7 @@ export default function Home() {
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
                                   margin: 0,
+                                  marginTop: '-10px',
                                   paddingLeft: '20px',
                                     listStyleType: 'disc',
                                     transition: 'opacity 0.3s ease'
