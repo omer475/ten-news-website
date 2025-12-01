@@ -4965,7 +4965,7 @@ export default function Home() {
                                   right: '0',
                                   height: expandedGraph[index] ? '300px' : '85px',
                                   maxHeight: expandedGraph[index] ? '300px' : '85px',
-                                  transition: 'height 0.3s ease-in-out',
+                                  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                                   minHeight: '85px',
                                   zIndex: '10',
                                   overflowY: expandedGraph[index] ? 'visible' : 'hidden'
@@ -5019,7 +5019,7 @@ export default function Home() {
                                     fontWeight: 'bold',
                                     color: '#000000',
                                     transform: expandedGraph[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.2s ease',
+                                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                                     textShadow: '1px 1px 2px rgba(255, 255, 255, 0.8)'
                                   }}>
                                     ↗
@@ -5051,7 +5051,7 @@ export default function Home() {
                                   <div style={{
                                     width: '100%',
                                     height: expandedGraph[index] ? '260px' : '55px',
-                                    transition: 'height 0.3s ease-in-out',
+                                    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                                     overflow: expandedGraph[index] ? 'visible' : 'hidden'
                                   }}>
                                     {story.graph && story.graph.data && story.graph.data.length > 0 ? (

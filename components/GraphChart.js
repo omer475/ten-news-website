@@ -4,42 +4,56 @@ import React, { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3b82f6' }) {
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showContent, setShowContent] = useState(true);
+  const [contentOpacity, setContentOpacity] = useState(1);
+  const [contentScale, setContentScale] = useState(1);
   const prevExpandedRef = useRef(expanded);
-  const transitionTimeoutRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
-  // Handle smooth transition when expanded state changes
+  // Smooth transition when expanded state changes
   useEffect(() => {
     if (prevExpandedRef.current !== expanded) {
-      // Start transition - fade out content briefly
-      setIsTransitioning(true);
-      setShowContent(false);
+      // Smooth fade out
+      setContentOpacity(0.3);
+      setContentScale(0.97);
       
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
-      }
-      
-      // After a brief delay, show content with new size
-      transitionTimeoutRef.current = setTimeout(() => {
-        setShowContent(true);
-        // End transition after animation completes
+      // Gradually restore after container finishes resizing
+      const restoreAnimation = () => {
+        let start = null;
+        const duration = 400; // ms
+        
+        const animate = (timestamp) => {
+          if (!start) start = timestamp;
+          const progress = Math.min((timestamp - start) / duration, 1);
+          
+          // Smooth easing function (ease-out cubic)
+          const eased = 1 - Math.pow(1 - progress, 3);
+          
+          setContentOpacity(0.3 + (0.7 * eased));
+          setContentScale(0.97 + (0.03 * eased));
+          
+          if (progress < 1) {
+            animationFrameRef.current = requestAnimationFrame(animate);
+          }
+        };
+        
+        // Start restore after container transition begins
         setTimeout(() => {
-          setIsTransitioning(false);
-        }, 300);
-      }, 150);
+          animationFrameRef.current = requestAnimationFrame(animate);
+        }, 100);
+      };
       
+      restoreAnimation();
       prevExpandedRef.current = expanded;
     }
     
     return () => {
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [expanded]);
 
-  // Memoize chart data to prevent recalculation on every render
+  // Memoize chart data
   const chartData = useMemo(() => {
     if (!graph || !graph.data || graph.data.length === 0) {
       return [];
@@ -87,9 +101,6 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
   };
 
   const renderChart = () => {
-    // Animate on initial load, but not during transitions
-    const shouldAnimate = !isTransitioning && showContent;
-    
     if (graph.type === 'line' || !graph.type) {
       return (
         <LineChart {...commonProps}>
@@ -112,9 +123,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             strokeWidth={2}
             dot={{ fill: accentColor, r: expanded ? 4 : 2 }}
             activeDot={{ r: 6 }}
-            isAnimationActive={shouldAnimate}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={true}
+            animationDuration={1000}
+            animationEasing="ease-in-out"
           />
         </LineChart>
       );
@@ -136,9 +147,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
           <Bar 
             dataKey="value" 
             fill={accentColor} 
-            isAnimationActive={shouldAnimate}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={true}
+            animationDuration={1000}
+            animationEasing="ease-in-out"
           />
         </BarChart>
       );
@@ -163,9 +174,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             stroke={accentColor} 
             fill={accentColor} 
             fillOpacity={0.3} 
-            isAnimationActive={shouldAnimate}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={true}
+            animationDuration={1000}
+            animationEasing="ease-in-out"
           />
         </AreaChart>
       );
@@ -193,9 +204,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
           <Bar 
             dataKey="value" 
             fill={accentColor} 
-            isAnimationActive={shouldAnimate}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={true}
+            animationDuration={1000}
+            animationEasing="ease-in-out"
           />
         </BarChart>
       );
@@ -211,9 +222,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             dataKey="value" 
             stroke={accentColor} 
             strokeWidth={2} 
-            isAnimationActive={shouldAnimate}
-            animationDuration={600}
-            animationEasing="ease-out"
+            isAnimationActive={true}
+            animationDuration={1000}
+            animationEasing="ease-in-out"
           />
         </LineChart>
       );
@@ -224,11 +235,13 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
     <div style={{
       width: '100%',
       height: '100%',
-      opacity: showContent ? 1 : 0,
-      transform: showContent ? 'scale(1)' : 'scale(0.95)',
-      transition: 'opacity 0.25s ease-out, transform 0.25s ease-out'
+      opacity: contentOpacity,
+      transform: `scale(${contentScale})`,
+      transformOrigin: 'center center',
+      transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+      willChange: 'opacity, transform'
     }}>
-      <ResponsiveContainer width="100%" height="100%" debounce={50}>
+      <ResponsiveContainer width="100%" height="100%" debounce={150}>
         {renderChart()}
       </ResponsiveContainer>
     </div>
