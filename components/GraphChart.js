@@ -1,9 +1,32 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3b82f6' }) {
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeTimeoutRef = useRef(null);
+  const prevExpandedRef = useRef(expanded);
+
+  // Detect when expanded state changes and temporarily disable animations
+  useEffect(() => {
+    if (prevExpandedRef.current !== expanded) {
+      setIsResizing(true);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      resizeTimeoutRef.current = setTimeout(() => {
+        setIsResizing(false);
+      }, 400); // Wait for CSS transition to complete
+      prevExpandedRef.current = expanded;
+    }
+    return () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, [expanded]);
+
   // Memoize chart data to prevent recalculation on every render
   const chartData = useMemo(() => {
     if (!graph || !graph.data || graph.data.length === 0) {
@@ -31,6 +54,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
     );
   }
 
+  // Only animate when not resizing
+  const shouldAnimate = !isResizing;
+
   const commonProps = {
     data: chartData,
     style: { fontSize: '10px' }
@@ -48,8 +74,7 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
       border: '1px solid #e2e8f0',
       borderRadius: '4px',
       fontSize: '11px'
-    },
-    isAnimationActive: false
+    }
   };
 
   const renderChart = () => {
@@ -75,7 +100,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             strokeWidth={2}
             dot={{ fill: accentColor, r: expanded ? 4 : 2 }}
             activeDot={{ r: 6 }}
-            isAnimationActive={false}
+            isAnimationActive={shouldAnimate}
+            animationDuration={800}
           />
         </LineChart>
       );
@@ -94,7 +120,12 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             } : null}
           />
           <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill={accentColor} isAnimationActive={false} />
+          <Bar 
+            dataKey="value" 
+            fill={accentColor} 
+            isAnimationActive={shouldAnimate}
+            animationDuration={800}
+          />
         </BarChart>
       );
     } else if (graph.type === 'area') {
@@ -118,7 +149,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             stroke={accentColor} 
             fill={accentColor} 
             fillOpacity={0.3} 
-            isAnimationActive={false}
+            isAnimationActive={shouldAnimate}
+            animationDuration={800}
           />
         </AreaChart>
       );
@@ -143,7 +175,12 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             width={60}
           />
           <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill={accentColor} isAnimationActive={false} />
+          <Bar 
+            dataKey="value" 
+            fill={accentColor} 
+            isAnimationActive={shouldAnimate}
+            animationDuration={800}
+          />
         </BarChart>
       );
     } else {
@@ -158,7 +195,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             dataKey="value" 
             stroke={accentColor} 
             strokeWidth={2} 
-            isAnimationActive={false}
+            isAnimationActive={shouldAnimate}
+            animationDuration={800}
           />
         </LineChart>
       );
@@ -166,7 +204,7 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%" debounce={200}>
+    <ResponsiveContainer width="100%" height="100%" debounce={100}>
       {renderChart()}
     </ResponsiveContainer>
   );
