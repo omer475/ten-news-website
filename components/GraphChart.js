@@ -4,25 +4,37 @@ import React, { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3b82f6' }) {
-  const [isResizing, setIsResizing] = useState(false);
-  const resizeTimeoutRef = useRef(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showContent, setShowContent] = useState(true);
   const prevExpandedRef = useRef(expanded);
+  const transitionTimeoutRef = useRef(null);
 
-  // Detect when expanded state changes and temporarily disable animations
+  // Handle smooth transition when expanded state changes
   useEffect(() => {
     if (prevExpandedRef.current !== expanded) {
-      setIsResizing(true);
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
+      // Start transition - fade out content briefly
+      setIsTransitioning(true);
+      setShowContent(false);
+      
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
       }
-      resizeTimeoutRef.current = setTimeout(() => {
-        setIsResizing(false);
-      }, 400); // Wait for CSS transition to complete
+      
+      // After a brief delay, show content with new size
+      transitionTimeoutRef.current = setTimeout(() => {
+        setShowContent(true);
+        // End transition after animation completes
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 150);
+      
       prevExpandedRef.current = expanded;
     }
+    
     return () => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current);
       }
     };
   }, [expanded]);
@@ -54,9 +66,6 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
     );
   }
 
-  // Only animate when not resizing
-  const shouldAnimate = !isResizing;
-
   const commonProps = {
     data: chartData,
     style: { fontSize: '10px' }
@@ -78,6 +87,9 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
   };
 
   const renderChart = () => {
+    // Animate on initial load, but not during transitions
+    const shouldAnimate = !isTransitioning && showContent;
+    
     if (graph.type === 'line' || !graph.type) {
       return (
         <LineChart {...commonProps}>
@@ -101,7 +113,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             dot={{ fill: accentColor, r: expanded ? 4 : 2 }}
             activeDot={{ r: 6 }}
             isAnimationActive={shouldAnimate}
-            animationDuration={800}
+            animationDuration={600}
+            animationEasing="ease-out"
           />
         </LineChart>
       );
@@ -124,7 +137,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             dataKey="value" 
             fill={accentColor} 
             isAnimationActive={shouldAnimate}
-            animationDuration={800}
+            animationDuration={600}
+            animationEasing="ease-out"
           />
         </BarChart>
       );
@@ -150,7 +164,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             fill={accentColor} 
             fillOpacity={0.3} 
             isAnimationActive={shouldAnimate}
-            animationDuration={800}
+            animationDuration={600}
+            animationEasing="ease-out"
           />
         </AreaChart>
       );
@@ -179,7 +194,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             dataKey="value" 
             fill={accentColor} 
             isAnimationActive={shouldAnimate}
-            animationDuration={800}
+            animationDuration={600}
+            animationEasing="ease-out"
           />
         </BarChart>
       );
@@ -196,7 +212,8 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
             stroke={accentColor} 
             strokeWidth={2} 
             isAnimationActive={shouldAnimate}
-            animationDuration={800}
+            animationDuration={600}
+            animationEasing="ease-out"
           />
         </LineChart>
       );
@@ -204,9 +221,17 @@ const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%" debounce={100}>
-      {renderChart()}
-    </ResponsiveContainer>
+    <div style={{
+      width: '100%',
+      height: '100%',
+      opacity: showContent ? 1 : 0,
+      transform: showContent ? 'scale(1)' : 'scale(0.95)',
+      transition: 'opacity 0.25s ease-out, transform 0.25s ease-out'
+    }}>
+      <ResponsiveContainer width="100%" height="100%" debounce={50}>
+        {renderChart()}
+      </ResponsiveContainer>
+    </div>
   );
 });
 
