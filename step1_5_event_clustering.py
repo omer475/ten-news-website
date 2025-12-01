@@ -29,7 +29,7 @@ class ClusteringConfig:
     
     # Matching thresholds
     TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event (strong match)
-    MIN_TITLE_SIMILARITY = 0.70  # Minimum 70% title similarity even with keyword match
+    MIN_TITLE_SIMILARITY = 0.55  # Minimum 55% title similarity even with keyword match (lowered to prevent duplicate articles)
     KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event (increased from 3)
     ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     

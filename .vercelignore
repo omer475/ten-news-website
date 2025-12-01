@@ -1,31 +1,23 @@
-# Ignore large files
-ten_news.db
-*.db
-*.log
-push_logs.log
-logs/
+# Python files (not needed for website)
+*.py
 __pycache__/
 
-# Python files not needed for deployment
-*.py
-*.pyc
+# Git files
+.git/
+.gitignore
 
-# JSON data files
-*.json
-!package.json
-!package-lock.json
-!next.config.js
-!vercel.json
-!jsconfig.json
-
-# Other large files
-ngrok
-*.sh
-*.sql
+# Documentation
 *.md
 !README.md
 
-# Backup files
-*.backup
-*-backup*
-*-old*
+# Development files
+.env.local
+.DS_Store
+
+# News generator files (handled by GitHub Actions)
+news-generator.py
+setup-news-generator.py
+test-*.py
+
+# Processing logs (for debugging)
+processing_log_*.json
