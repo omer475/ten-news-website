@@ -4639,48 +4639,29 @@ export default function Home() {
                                 console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
-                                <div>
-                                  <ul style={{
-                                    margin: 0,
-                                    marginTop: '-10px',
-                                    paddingLeft: '20px',
-                                    listStyleType: 'disc',
-                                    transition: 'opacity 0.3s ease'
-                                  }}>
-                                    {bullets.map((bullet, i) => (
-                                      <li key={`${languageMode[index]}-${i}`} style={{
-                                        marginBottom: '16px',
-                                        fontSize: '16px',
-                                        lineHeight: '1.47',
-                                        fontWeight: '400',
-                                        letterSpacing: '-0.022em',
-                                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
-                                        animation: 'fadeSlideIn 0.4s ease',
-                                        animationDelay: `${i * 0.1}s`,
-                                        animationFillMode: 'both'
-                                      }}>
-                                        {renderBoldText(bullet, imageDominantColors[index], story.category)}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  {/* Tap to read indicator - only show when article is not open */}
-                                  {!showDetailedText[index] && (story.detailed_text || story.content_news || story.content_b2) && (
-                                    <div style={{
-                                      marginTop: '16px',
-                                      fontSize: '13px',
-                                      fontWeight: '500',
-                                      color: imageDominantColors[index]?.highlight || '#007AFF',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '6px',
-                                      opacity: 0.9,
-                                      animation: 'pulse 2s ease-in-out infinite'
+                                <ul style={{
+                                  margin: 0,
+                                  marginTop: '-10px',
+                                  paddingLeft: '20px',
+                                  listStyleType: 'disc',
+                                  transition: 'opacity 0.3s ease'
+                                }}>
+                                  {bullets.map((bullet, i) => (
+                                    <li key={`${languageMode[index]}-${i}`} style={{
+                                      marginBottom: '16px',
+                                      fontSize: '16px',
+                                      lineHeight: '1.47',
+                                      fontWeight: '400',
+                                      letterSpacing: '-0.022em',
+                                      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
+                                      animation: 'fadeSlideIn 0.4s ease',
+                                      animationDelay: `${i * 0.1}s`,
+                                      animationFillMode: 'both'
                                     }}>
-                                      <span>↓</span>
-                                      <span>Tap to read full article</span>
-                                    </div>
-                                  )}
-                                </div>
+                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                    </li>
+                                  ))}
+                                </ul>
                               ) : (
                                 <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
                                   No bullet points available
