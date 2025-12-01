@@ -17,8 +17,20 @@ from collections import Counter
 from urllib.parse import urlparse, parse_qs, urlunparse
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import anthropic
 
 load_dotenv()
+
+# ==========================================
+# ANTHROPIC CLIENT FOR AI SIMILARITY CHECK
+# ==========================================
+
+def get_anthropic_client():
+    """Get Anthropic client for Claude Haiku 4.5"""
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY must be set in environment")
+    return anthropic.Anthropic(api_key=api_key)
 
 # ==========================================
 # CONFIGURATION
@@ -184,7 +196,7 @@ def extract_entities(title: str, description: str = None) -> List[str]:
 
 def calculate_title_similarity(title1: str, title2: str) -> float:
     """
-    Calculate similarity ratio between two titles.
+    Calculate similarity ratio between two titles (legacy string-based method).
     
     Args:
         title1: First title
@@ -209,63 +221,182 @@ def calculate_title_similarity(title1: str, title2: str) -> float:
 
 
 # ==========================================
+# AI-POWERED TITLE SIMILARITY (Claude Haiku 4.5)
+# ==========================================
+
+def check_title_similarity_ai(new_title: str, cluster_titles: List[Tuple[int, str]], debug: bool = False) -> Dict[int, bool]:
+    """
+    Use Claude Haiku 4.5 to determine if a new article covers the same event as existing clusters.
+    
+    Args:
+        new_title: Title of the new article to check
+        cluster_titles: List of tuples (cluster_id, cluster_representative_title)
+        debug: If True, print debug information
+        
+    Returns:
+        Dict mapping cluster_id to True (same event) or False (different event)
+    """
+    if not cluster_titles:
+        return {}
+    
+    # Build the prompt with numbered clusters
+    cluster_list = "\n".join([f"{i+1}. {title}" for i, (_, title) in enumerate(cluster_titles)])
+    
+    prompt = f"""Compare if articles cover the SAME news event.
+
+SAME EVENT = same incident/announcement/development being reported
+DIFFERENT = different incidents, different companies, or different aspects of a topic
+
+NEW ARTICLE: "{new_title}"
+
+CLUSTERS:
+{cluster_list}
+
+Reply with ONLY: 1:YES, 2:NO, 3:NO (etc.)
+Nothing else. No explanations."""
+
+    try:
+        client = get_anthropic_client()
+        
+        response = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=200,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        result_text = response.content[0].text.strip()
+        
+        # Extract just the first line (the actual response)
+        first_line = result_text.split('\n')[0].strip()
+        
+        if debug:
+            print(f"  🤖 AI Response: {first_line}")
+        
+        # Parse the response: "1:YES, 2:NO, 3:NO, ..." or just "22:YES" for matches only
+        results = {}
+        
+        # Initialize ALL clusters as NO (not matching) - AI only returns what it finds
+        for cluster_id, _ in cluster_titles:
+            results[cluster_id] = False
+        
+        # Handle various formats the AI might use
+        parts = first_line.replace(" ", "").replace(";", ",").split(",")
+        for part in parts:
+            if ":" in part:
+                try:
+                    # Extract number and decision
+                    idx_str, decision = part.split(":", 1)
+                    # Clean up any non-numeric characters from index
+                    idx_str = ''.join(c for c in idx_str if c.isdigit())
+                    if idx_str:
+                        idx = int(idx_str) - 1  # Convert to 0-based index
+                        if 0 <= idx < len(cluster_titles):
+                            cluster_id = cluster_titles[idx][0]
+                            # Check if decision contains YES
+                            results[cluster_id] = "YES" in decision.upper()
+                except (ValueError, IndexError):
+                    continue
+        
+        return results
+        
+    except Exception as e:
+        print(f"  ❌ AI similarity check error: {e}")
+        print(f"  ℹ️  Falling back to legacy string-based matching for all clusters")
+        # Return None for all clusters to signal "use fallback" (not "AI said no match")
+        # This ensures the legacy keyword/entity matching is used when AI is unavailable
+        return {cluster_id: None for cluster_id, _ in cluster_titles}
+
+
+# ==========================================
 # EVENT MATCHING
 # ==========================================
 
-def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], debug: bool = False) -> Dict:
+def check_time_proximity(article: Dict, cluster: Dict) -> bool:
+    """
+    Check if an article is within the time window for a cluster.
+    
+    Args:
+        article: Article with published_at
+        cluster: Cluster with created_at
+        
+    Returns:
+        True if within time window, False otherwise
+    """
+    try:
+        cluster_created = datetime.fromisoformat(cluster['created_at'].replace('Z', '+00:00'))
+        article_published = article.get('published_at')
+        
+        if article_published:
+            if isinstance(article_published, str):
+                article_published = datetime.fromisoformat(article_published.replace('Z', '+00:00'))
+            
+            time_diff = abs((article_published - cluster_created).total_seconds() / 3600)
+            if time_diff > ClusteringConfig.MAX_CLUSTER_AGE_HOURS:
+                return False
+        return True
+    except Exception:
+        return True  # On error, allow the comparison
+
+
+def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], debug: bool = False, ai_decision: Optional[bool] = None) -> Dict:
     """
     Determine if an article belongs to an existing cluster.
     
-    Matching criteria (IMPROVED for accuracy):
-    1. Published within 24 hours of cluster creation
-    2. Title similarity >= 75% (strong match), OR
-    3. Title similarity >= 70% AND (5+ shared keywords OR 2+ shared entities)
+    Uses AI-powered semantic matching via Claude Haiku 4.5.
     
     Args:
         article: Article to match with title, keywords, entities, published_at
         cluster: Cluster metadata with created_at
         cluster_sources: List of source articles in the cluster
         debug: If True, print debug information
+        ai_decision: Pre-computed AI decision (True=same event, False=different, None=not checked)
         
     Returns:
         Dict with 'match' (bool), 'reason' (str), 'title_sim' (float), 'shared_keywords' (list)
     """
     # Check 1: Time proximity (24 hours)
-    cluster_created = datetime.fromisoformat(cluster['created_at'].replace('Z', '+00:00'))
-    article_published = article.get('published_at')
+    if not check_time_proximity(article, cluster):
+        return {'match': False, 'reason': 'too_old', 'title_sim': 0.0, 'shared_keywords': []}
     
-    if article_published:
-        if isinstance(article_published, str):
-            article_published = datetime.fromisoformat(article_published.replace('Z', '+00:00'))
-        
-        time_diff = abs((article_published - cluster_created).total_seconds() / 3600)
-        if time_diff > ClusteringConfig.MAX_CLUSTER_AGE_HOURS:
-            return {'match': False, 'reason': 'too_old', 'title_sim': 0.0, 'shared_keywords': []}
+    # Check 2: AI decision (if provided from batched call)
+    # ai_decision can be: True (match), False (no match), or None (AI unavailable, use fallback)
+    if ai_decision is True:
+        if debug:
+            print(f"  ✅ AI MATCH: Claude Haiku determined this is the same event")
+        return {'match': True, 'reason': 'ai_semantic_match', 'title_sim': 1.0, 'shared_keywords': []}
+    elif ai_decision is False:
+        if debug:
+            print(f"  ❌ AI REJECTED: Claude Haiku determined this is a different event")
+        return {'match': False, 'reason': 'ai_semantic_different', 'title_sim': 0.0, 'shared_keywords': []}
     
-    # Get representative article from cluster (highest score)
+    # Fallback: Legacy string-based matching (ai_decision is None - AI unavailable or errored)
+    if debug:
+        print(f"  ⚠️  Using fallback matching (AI unavailable)")
     if not cluster_sources:
         return {'match': False, 'reason': 'no_sources', 'title_sim': 0.0, 'shared_keywords': []}
     
     representative = max(cluster_sources, key=lambda x: x.get('score', 0))
     
-    # Check 2: Title similarity
     article_title = article.get('title', '')
     representative_title = representative.get('title', '')
     
     title_similarity = calculate_title_similarity(article_title, representative_title)
     
-    # STRONG MATCH: High title similarity
+    # STRONG MATCH: High title similarity (75%+)
     if title_similarity >= ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:
         if debug:
-            print(f"  ✅ STRONG MATCH: Title similarity {title_similarity:.2%} >= {ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:.0%}")
+            print(f"  ✅ FALLBACK STRONG MATCH: Title similarity {title_similarity:.2%} >= {ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:.0%}")
         return {'match': True, 'reason': 'high_title_similarity', 'title_sim': title_similarity, 'shared_keywords': []}
     
-    # Check 3: Keyword/Entity overlap (ONLY if title similarity >= 70%)
+    # Check keyword/entity overlap only if title similarity meets minimum threshold (55%+)
     if title_similarity < ClusteringConfig.MIN_TITLE_SIMILARITY:
         if debug:
-            print(f"  ❌ REJECTED: Title similarity {title_similarity:.2%} < minimum {ClusteringConfig.MIN_TITLE_SIMILARITY:.0%}")
+            print(f"  ❌ FALLBACK REJECTED: Title similarity {title_similarity:.2%} < minimum {ClusteringConfig.MIN_TITLE_SIMILARITY:.0%}")
         return {'match': False, 'reason': 'title_too_different', 'title_sim': title_similarity, 'shared_keywords': []}
     
+    # Get keywords and entities for overlap check
     article_keywords = set(article.get('keywords', []))
     article_entities = set(article.get('entities', []))
     
@@ -278,17 +409,17 @@ def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], deb
     # MODERATE MATCH: Good keyword overlap + decent title similarity
     if len(shared_keywords) >= ClusteringConfig.KEYWORD_MATCH_THRESHOLD:
         if debug:
-            print(f"  ✅ MODERATE MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}/{ClusteringConfig.KEYWORD_MATCH_THRESHOLD} ({', '.join(list(shared_keywords)[:5])}...)")
+            print(f"  ✅ FALLBACK KEYWORD MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}/{ClusteringConfig.KEYWORD_MATCH_THRESHOLD} ({', '.join(list(shared_keywords)[:5])}...)")
         return {'match': True, 'reason': 'keyword_match', 'title_sim': title_similarity, 'shared_keywords': list(shared_keywords)}
     
     # ENTITY MATCH: Shared named entities (people, places, orgs) + decent title similarity
     if len(shared_entities) >= ClusteringConfig.ENTITY_MATCH_THRESHOLD:
         if debug:
-            print(f"  ✅ ENTITY MATCH: Title {title_similarity:.2%}, Entities: {len(shared_entities)}/{ClusteringConfig.ENTITY_MATCH_THRESHOLD} ({', '.join(list(shared_entities))})")
+            print(f"  ✅ FALLBACK ENTITY MATCH: Title {title_similarity:.2%}, Entities: {len(shared_entities)}/{ClusteringConfig.ENTITY_MATCH_THRESHOLD} ({', '.join(list(shared_entities))})")
         return {'match': True, 'reason': 'entity_match', 'title_sim': title_similarity, 'shared_keywords': list(shared_entities)}
     
     if debug:
-        print(f"  ❌ NO MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}, Entities: {len(shared_entities)}")
+        print(f"  ❌ FALLBACK NO MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}, Entities: {len(shared_entities)} (AI was not available)")
     
     return {'match': False, 'reason': 'insufficient_overlap', 'title_sim': title_similarity, 'shared_keywords': list(shared_keywords)}
 
@@ -586,13 +717,51 @@ class EventClusteringEngine:
                 article.get('description', '')
             )
             
-            # Try to match with existing clusters
+            # Try to match with existing clusters using AI
             matched = False
             
+            # Collect cluster titles for batched AI check
+            cluster_titles_for_ai = []
+            cluster_sources_cache = {}
+            
             for cluster in active_clusters:
-                cluster_sources = self.get_cluster_sources(cluster['id'])
+                # Check time proximity first (cheap check)
+                if check_time_proximity(article, cluster):
+                    cluster_sources = self.get_cluster_sources(cluster['id'])
+                    cluster_sources_cache[cluster['id']] = cluster_sources
+                    
+                    if cluster_sources:
+                        # Get representative title (highest score article)
+                        rep = max(cluster_sources, key=lambda x: x.get('score', 0))
+                        rep_title = rep.get('title', cluster.get('main_title', ''))
+                        cluster_titles_for_ai.append((cluster['id'], rep_title))
+            
+            # Call AI once for all clusters (batched)
+            ai_decisions = {}
+            if cluster_titles_for_ai:
+                print(f"  🤖 Checking against {len(cluster_titles_for_ai)} clusters with AI...")
+                ai_decisions = check_title_similarity_ai(
+                    article.get('title', ''),
+                    cluster_titles_for_ai,
+                    debug=True
+                )
+            
+            # Find matching cluster using AI decisions
+            for cluster in active_clusters:
+                cluster_id = cluster['id']
                 
-                match_result = is_same_event(article, cluster, cluster_sources, debug=True)
+                # Skip if not in our AI check (failed time proximity)
+                if cluster_id not in cluster_sources_cache:
+                    continue
+                
+                cluster_sources = cluster_sources_cache[cluster_id]
+                ai_decision = ai_decisions.get(cluster_id)
+                
+                match_result = is_same_event(
+                    article, cluster, cluster_sources, 
+                    debug=True, 
+                    ai_decision=ai_decision
+                )
                 
                 if match_result['match']:
                     # Add to this cluster
