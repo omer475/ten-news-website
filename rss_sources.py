@@ -7,7 +7,7 @@
 RSS_FEEDS = [
     
     # ========================================
-    # MAJOR INTERNATIONAL NEWS AGENCIES
+# MAJOR INTERNATIONAL NEWS AGENCIES
     # ========================================
     {
         'name': 'Reuters World',
@@ -47,7 +47,7 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # US PREMIUM NEWS
+# US PREMIUM NEWS
     # ========================================
     {
         'name': 'The New York Times World',
@@ -131,7 +131,7 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # UK PREMIUM NEWS
+# UK PREMIUM NEWS
     # ========================================
     {
         'name': 'BBC News World',
@@ -319,7 +319,7 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # PREMIUM NEWS MAGAZINES
+# PREMIUM NEWS MAGAZINES
     # ========================================
     {
         'name': 'TIME Magazine',
@@ -906,7 +906,7 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # SPACE & ASTRONOMY
+# SPACE & ASTRONOMY
     # ========================================
     {
         'name': 'Space.com',

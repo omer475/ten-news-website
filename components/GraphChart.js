@@ -1,9 +1,21 @@
 'use client';
 
+import React, { memo, useMemo } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' }) {
-  if (!graph || !graph.data || graph.data.length === 0) {
+const GraphChart = memo(function GraphChart({ graph, expanded, accentColor = '#3b82f6' }) {
+  // Memoize chart data to prevent recalculation on every render
+  const chartData = useMemo(() => {
+    if (!graph || !graph.data || graph.data.length === 0) {
+      return [];
+    }
+    return graph.data.map(d => ({
+      date: d.date,
+      value: typeof d.value === 'number' ? d.value : parseFloat(d.value) || 0
+    }));
+  }, [graph]);
+
+  if (chartData.length === 0) {
     return (
       <div style={{
         width: '100%',
@@ -18,11 +30,6 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
       </div>
     );
   }
-
-  const chartData = graph.data.map(d => ({
-    date: d.date,
-    value: typeof d.value === 'number' ? d.value : parseFloat(d.value) || 0
-  }));
 
   const commonProps = {
     data: chartData,
@@ -41,7 +48,8 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
       border: '1px solid #e2e8f0',
       borderRadius: '4px',
       fontSize: '11px'
-    }
+    },
+    isAnimationActive: false
   };
 
   const renderChart = () => {
@@ -67,6 +75,7 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
             strokeWidth={2}
             dot={{ fill: accentColor, r: expanded ? 4 : 2 }}
             activeDot={{ r: 6 }}
+            isAnimationActive={false}
           />
         </LineChart>
       );
@@ -85,7 +94,7 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
             } : null}
           />
           <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill={accentColor} />
+          <Bar dataKey="value" fill={accentColor} isAnimationActive={false} />
         </BarChart>
       );
     } else if (graph.type === 'area') {
@@ -103,7 +112,14 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
             } : null}
           />
           <Tooltip {...tooltipProps} />
-          <Area type="monotone" dataKey="value" stroke={accentColor} fill={accentColor} fillOpacity={0.3} />
+          <Area 
+            type="monotone" 
+            dataKey="value" 
+            stroke={accentColor} 
+            fill={accentColor} 
+            fillOpacity={0.3} 
+            isAnimationActive={false}
+          />
         </AreaChart>
       );
     } else if (graph.type === 'column') {
@@ -127,7 +143,7 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
             width={60}
           />
           <Tooltip {...tooltipProps} />
-          <Bar dataKey="value" fill={accentColor} />
+          <Bar dataKey="value" fill={accentColor} isAnimationActive={false} />
         </BarChart>
       );
     } else {
@@ -137,16 +153,23 @@ export default function GraphChart({ graph, expanded, accentColor = '#3b82f6' })
           <XAxis dataKey="date" {...axisProps} />
           <YAxis {...axisProps} />
           <Tooltip {...tooltipProps} />
-          <Line type="monotone" dataKey="value" stroke={accentColor} strokeWidth={2} />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke={accentColor} 
+            strokeWidth={2} 
+            isAnimationActive={false}
+          />
         </LineChart>
       );
     }
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" debounce={200}>
       {renderChart()}
     </ResponsiveContainer>
   );
-}
+});
 
+export default GraphChart;
