@@ -748,51 +748,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           }
         });
 
-        // Apply colors to countries based on newsCountByCountry state
-        const countryElements = g.querySelectorAll('.country');
-        const counts = Object.values(newsCountByCountry);
-        const maxCount = Math.max(...counts, 1);
-        
-        console.log('=== MAP COLORING ===');
-        console.log('Countries in data:', Object.keys(newsCountByCountry).length);
-        console.log('Max count:', maxCount);
-        
-        let matchedCount = 0;
-        let unmatchedCountries = [];
-        
-        countryElements.forEach(el => {
-          const countryId = parseInt(el.getAttribute('data-id'));
-          let articleCount = null;
-          let matchedName = null;
-          
-          for (const [name, count] of Object.entries(newsCountByCountry)) {
-            const normalizedName = name.toLowerCase().trim();
-            if (countryNameToId[normalizedName] === countryId) {
-              articleCount = count;
-              matchedName = name;
-              matchedCount++;
-              break;
-            }
-          }
-          
-          if (articleCount !== null && articleCount > 0) {
-            const intensity = articleCount / maxCount;
-            el.style.fill = getColor(intensity);
-          }
-        });
-        
-        // Find unmatched countries
-        for (const [name, count] of Object.entries(newsCountByCountry)) {
-          const normalizedName = name.toLowerCase().trim();
-          if (!countryNameToId[normalizedName]) {
-            unmatchedCountries.push(`${name} (${count})`);
-          }
-        }
-        
-        console.log('Matched countries:', matchedCount);
-        console.log('Unmatched countries:', unmatchedCountries);
-        console.log('====================');
-
         setMapLoaded(true);
       } catch (error) {
         console.error('Error loading map:', error);
@@ -800,7 +755,43 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
 
     loadMap();
-  }, [scriptsLoaded, newsCountByCountry]);
+  }, [scriptsLoaded]);
+
+  // Separate useEffect for coloring - runs whenever country data changes
+  useEffect(() => {
+    if (!mapLoaded) return;
+    if (Object.keys(newsCountByCountry).length === 0) return;
+    
+    console.log('=== COLORING MAP ===');
+    console.log('Countries in data:', Object.keys(newsCountByCountry).length);
+    
+    const svg = mapContainerRef.current?.querySelector('svg');
+    const g = svg?.querySelector('#countries');
+    if (!g) return;
+    
+    const countryElements = g.querySelectorAll('.country');
+    const counts = Object.values(newsCountByCountry);
+    const maxCount = Math.max(...counts, 1);
+    
+    let coloredCount = 0;
+    
+    countryElements.forEach(el => {
+      const countryId = parseInt(el.getAttribute('data-id'));
+      
+      for (const [name, count] of Object.entries(newsCountByCountry)) {
+        const normalizedName = name.toLowerCase().trim();
+        if (countryNameToId[normalizedName] === countryId) {
+          const intensity = count / maxCount;
+          el.style.fill = getColor(intensity);
+          coloredCount++;
+          break;
+        }
+      }
+    });
+    
+    console.log('Colored:', coloredCount, 'countries');
+    console.log('====================');
+  }, [mapLoaded, newsCountByCountry]);
 
   const handleContinue = (e) => {
     e.preventDefault();
