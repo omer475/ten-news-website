@@ -790,7 +790,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           font-weight: 400;
           line-height: 1.02;
           letter-spacing: -0.03em;
-          color: rgba(0, 0, 0, 0.35);
+          color: #000000;
         }
 
         /* Last Visit */
