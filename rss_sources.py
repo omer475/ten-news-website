@@ -834,22 +834,6 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # CRYPTOCURRENCY & BLOCKCHAIN (REDUCED TO 2)
-    # ========================================
-    {
-        'name': 'CoinDesk',
-        'url': 'https://www.coindesk.com/arc/outboundfeeds/rss/',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Cointelegraph',
-        'url': 'https://cointelegraph.com/rss',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    
-    # ========================================
     # TECHNOLOGY NEWS (BALANCED - REMOVED PURE TECH)
     # ========================================
     {
