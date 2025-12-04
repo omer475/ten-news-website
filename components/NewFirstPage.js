@@ -1,16 +1,62 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Script from 'next/script';
 
-export default function NewFirstPage({ onContinue, user, userProfile, stories, readTracker }) {
+export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker }) {
   // Safety check for stories
-  if (!stories || !Array.isArray(stories)) {
-    stories = [];
-  }
+  const [stories, setStories] = useState(initialStories || []);
+  const [lastHourStories, setLastHourStories] = useState([]);
 
   const mapContainerRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState({ d3: false, topojson: false });
   const [newsCountByCountry, setNewsCountByCountry] = useState({});
+
+  // Filter stories from the last hour
+  const filterLastHourStories = useCallback((storiesToFilter) => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return storiesToFilter.filter(story => {
+      if (story.type !== 'news') return false;
+      const createdAt = story.created_at ? new Date(story.created_at) : null;
+      return createdAt && createdAt >= oneHourAgo;
+    });
+  }, []);
+
+  // Fetch fresh stories from Supabase
+  const fetchFreshStories = useCallback(async () => {
+    try {
+      const response = await fetch('/api/news-supabase');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.stories && Array.isArray(data.stories)) {
+          setStories(data.stories);
+          setLastHourStories(filterLastHourStories(data.stories));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching fresh stories:', error);
+    }
+  }, [filterLastHourStories]);
+
+  // Initialize and set up hourly refresh
+  useEffect(() => {
+    // Initial filter
+    setLastHourStories(filterLastHourStories(stories));
+
+    // Set up hourly refresh
+    const refreshInterval = setInterval(() => {
+      fetchFreshStories();
+    }, 60 * 60 * 1000); // Every hour
+
+    return () => clearInterval(refreshInterval);
+  }, [filterLastHourStories, fetchFreshStories]);
+
+  // Update when initial stories change
+  useEffect(() => {
+    if (initialStories && Array.isArray(initialStories)) {
+      setStories(initialStories);
+      setLastHourStories(filterLastHourStories(initialStories));
+    }
+  }, [initialStories, filterLastHourStories]);
 
   // Country name to ISO numeric ID mapping for the map
   const countryNameToId = {
@@ -144,11 +190,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     return Array.from(foundCountries);
   };
 
-  // Count news by country from all stories
-  const countNewsByCountry = () => {
+  // Count news by country from last hour stories only
+  const countNewsByCountry = useCallback(() => {
     const counts = {};
     
-    stories.filter(story => story.type === 'news').forEach(story => {
+    lastHourStories.forEach(story => {
       // Combine title and description for country extraction
       const textToSearch = [
         story.title,
@@ -170,7 +216,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     });
 
     return counts;
-  };
+  }, [lastHourStories]);
 
   // Calculate total news count
   const getTotalNewsCount = () => {
@@ -614,7 +660,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
   // Load the map when scripts are ready
   useEffect(() => {
     if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
-    if (stories.length === 0) return;
     if (typeof window === 'undefined') return;
 
     const loadMap = async () => {
@@ -692,7 +737,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     };
 
     loadMap();
-  }, [scriptsLoaded, stories]);
+  }, [scriptsLoaded, lastHourStories, countNewsByCountry]);
 
   const handleContinue = (e) => {
     e.preventDefault();
