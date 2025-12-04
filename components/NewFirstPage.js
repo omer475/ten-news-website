@@ -231,10 +231,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
       const lastHour = new Date(lastTime).getHours();
       const currentHour = new Date().getHours();
       
-      // Determine the period description - specific hours for 1-12
+      // Determine the period description - minutes for < 1 hour, then specific hours
       let period = '';
+      const minutesDiff = hoursDiff * 60;
       
-      if (hoursDiff < 1) {
+      if (minutesDiff < 20) {
+        period = 'the last 15 minutes';
+      } else if (minutesDiff < 40) {
+        period = 'the last 30 minutes';
+      } else if (minutesDiff < 55) {
+        period = 'the last 45 minutes';
+      } else if (hoursDiff < 1.25) {
         period = 'the last hour';
       } else if (hoursDiff < 2) {
         period = 'the last 2 hours';
