@@ -4990,7 +4990,7 @@ export default function Home() {
                       })() && (
                       <div style={{
                         position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '8px',
+                        bottom: showDetailedText[index] ? 'auto' : '12px',
                         left: showDetailedText[index] ? '0' : '50%',
                         transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
