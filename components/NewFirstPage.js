@@ -204,6 +204,107 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     return '2h ago';
   };
 
+  // Get time of day for contextual greetings
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
+  };
+
+  // Personalized greeting generator
+  const getPersonalizedGreeting = () => {
+    const time = getTimeOfDay();
+    const count = totalNewsCount;
+    const name = firstName || '';
+    
+    // Greeting variations based on context
+    const greetings = {
+      morning: {
+        hi: [
+          `Rise and shine${name ? `, ${name}` : ''}`,
+          `Good morning${name ? `, ${name}` : ''}`,
+          `Morning${name ? `, ${name}` : ''}`,
+          `Hey${name ? ` ${name}` : ''}, early bird`,
+          `Fresh start${name ? `, ${name}` : ''}`,
+          `Wakey wakey${name ? `, ${name}` : ''}`,
+        ],
+        sub: {
+          few: ['Quiet morning so far', 'Light news day', 'Easy start today'],
+          some: ['The world woke up busy', 'Plenty to catch up on', 'Your morning briefing awaits'],
+          many: ['Busy world out there', 'A lot happened overnight', 'The news never sleeps'],
+          tons: ['The world went crazy', 'Massive news day', 'You might need coffee for this']
+        }
+      },
+      afternoon: {
+        hi: [
+          `Hey${name ? ` ${name}` : ''}`,
+          `Good afternoon${name ? `, ${name}` : ''}`,
+          `What's up${name ? `, ${name}` : ''}`,
+          `Hope your day's going well${name ? `, ${name}` : ''}`,
+          `Afternoon${name ? `, ${name}` : ''}`,
+          `Back for more${name ? `, ${name}` : ''}?`,
+        ],
+        sub: {
+          few: ['Light afternoon', 'Taking it easy today', 'Calm news day'],
+          some: ['Decent amount happening', 'Your afternoon update', 'Here\'s what\'s new'],
+          many: ['Busy afternoon', 'Lots going on', 'The news keeps flowing'],
+          tons: ['Wild day out there', 'News overload incoming', 'Buckle up']
+        }
+      },
+      evening: {
+        hi: [
+          `Evening${name ? `, ${name}` : ''}`,
+          `Good evening${name ? `, ${name}` : ''}`,
+          `Hey${name ? ` ${name}` : ''}, winding down?`,
+          `Welcome back${name ? `, ${name}` : ''}`,
+          `End of day check-in${name ? `, ${name}` : ''}`,
+        ],
+        sub: {
+          few: ['Quiet evening', 'Light day wrapping up', 'Easy night ahead'],
+          some: ['Here\'s today\'s recap', 'Catch up before bed', 'Your evening digest'],
+          many: ['Eventful day', 'A lot to digest', 'Today was busy'],
+          tons: ['What a day', 'Major news day', 'History was made today']
+        }
+      },
+      night: {
+        hi: [
+          `Still up${name ? `, ${name}` : ''}?`,
+          `Night owl${name ? `, ${name}` : ''}`,
+          `Hey${name ? ` ${name}` : ''}, can\'t sleep?`,
+          `Late night${name ? `, ${name}` : ''}`,
+          `Burning the midnight oil${name ? `, ${name}` : ''}?`,
+        ],
+        sub: {
+          few: ['Quiet night', 'Not much stirring', 'Peaceful world right now'],
+          some: ['The world keeps turning', 'News while you browse', 'Night reading material'],
+          many: ['Busy even at night', 'The news never rests', 'Lots to catch up on'],
+          tons: ['Crazy night', 'News explosion', 'Sleep can wait']
+        }
+      }
+    };
+
+    // Determine count category
+    let countCategory = 'few';
+    if (count > 50) countCategory = 'tons';
+    else if (count > 20) countCategory = 'many';
+    else if (count > 5) countCategory = 'some';
+
+    // Pick random greeting from appropriate category
+    const timeGreetings = greetings[time];
+    const hiOptions = timeGreetings.hi;
+    const subOptions = timeGreetings.sub[countCategory];
+    
+    const randomHi = hiOptions[Math.floor(Math.random() * hiOptions.length)];
+    const randomSub = subOptions[Math.floor(Math.random() * subOptions.length)];
+
+    return { hi: randomHi, sub: randomSub };
+  };
+
+  // Generate greeting once per render
+  const [personalGreeting] = useState(() => getPersonalizedGreeting());
+
   // Get color based on intensity (0-1)
   const getColor = (value) => {
     const colors = [
@@ -542,12 +643,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         <div className="greeting-section">
           <div className="greeting-content">
             <div className="greeting-hi">
-              {user ? `Hi ${firstName}` : 'Hello'}
+              {personalGreeting.hi}
             </div>
             <div className="greeting-main">
               {totalNewsCount} new {totalNewsCount === 1 ? 'story' : 'stories'}
             </div>
-            <div className="greeting-sub">since your last visit</div>
+            <div className="greeting-sub">{personalGreeting.sub}</div>
             <div className="last-visit">
               <span className="last-visit-dot"></span>
               <span>{getLastVisitText()}</span>
