@@ -33,6 +33,12 @@ export default function Home() {
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
   
+  // Pagination state for loading articles in batches
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreArticles, setHasMoreArticles] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalArticles, setTotalArticles] = useState(0);
+  
   // Auto-rotation state for information boxes
   const [autoRotationEnabled, setAutoRotationEnabled] = useState({}); // Track which articles have auto-rotation active
   const [progressBarKey, setProgressBarKey] = useState({}); // Track progress bar resets
@@ -1049,12 +1055,125 @@ export default function Home() {
     };
   }, [currentIndex, stories]);
 
+  // Function to load more articles (pagination)
+  const loadMoreArticles = async (pageNum) => {
+    if (loadingMore || !hasMoreArticles) return;
+    
+    setLoadingMore(true);
+    try {
+      console.log(`📡 Loading more articles (page ${pageNum})...`);
+      const response = await fetch(`/api/news?page=${pageNum}&pageSize=30&t=${Date.now()}`);
+      
+      if (response.ok) {
+        const newsData = await response.json();
+        
+        if (newsData.articles && newsData.articles.length > 0) {
+          // Convert new articles to story format
+          const newStories = newsData.articles.map((article, index) => {
+            const sampleDetails = article.details && article.details.length > 0 ? article.details : [
+              'Impact Score: 8.5/10 High significance',
+              'Read Time: 4 min Estimated reading duration',
+              'Source Credibility: Verified from trusted sources'
+            ];
+            
+            const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0) 
+              ? article.timeline 
+              : [
+                  {"date": "3 days ago", "event": "Initial reports emerge"},
+                  {"date": "Yesterday", "event": "Key developments unfold"},
+                  {"date": "Today", "event": "Major announcement breaks"},
+                  {"date": "Tomorrow", "event": "Expected follow-up responses"}
+                ];
+
+            return {
+              type: 'news',
+              number: article.rank || (index + 1),
+              category: (article.category || 'WORLD NEWS').toUpperCase(),
+              emoji: article.emoji || '📰',
+              title: article.title || 'News Story',
+              title_news: article.title_news || null,
+              title_b2: article.title_b2 || null,
+              content_news: article.content_news || null,
+              content_b2: article.content_b2 || null,
+              summary_bullets_news: article.summary_bullets_news || null,
+              summary_bullets_b2: article.summary_bullets_b2 || null,
+              detailed_text: article.detailed_text || article.content_news || article.content_b2 || null,
+              summary_bullets: article.summary_bullets || article.summary_bullets_news || article.summary_bullets_b2 || [],
+              details: sampleDetails,
+              source: article.source || 'Today+',
+              url: article.url || '#',
+              urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
+              blurColor: article.blurColor || null,
+              map: article.map || null,
+              graph: article.graph || null,
+              timeline: sampleTimeline,
+              components: article.components || null,
+              publishedAt: article.publishedAt || article.published_at || article.added_at,
+              id: article.id || `article_${pageNum}_${index}`,
+              final_score: article.final_score
+            };
+          });
+          
+          // Filter out read articles
+          let unreadNewStories = newStories;
+          if (readTrackerRef.current) {
+            unreadNewStories = newStories.filter(story => 
+              !readTrackerRef.current.hasBeenRead(story.id)
+            );
+          }
+          
+          // Insert new stories before the "all caught up" page
+          setStories(prev => {
+            const allCaughtUpIndex = prev.findIndex(s => s.type === 'all-read');
+            if (allCaughtUpIndex > 0) {
+              return [
+                ...prev.slice(0, allCaughtUpIndex),
+                ...unreadNewStories,
+                prev[allCaughtUpIndex] // Keep all-caught-up at the end
+              ];
+            }
+            return [...prev, ...unreadNewStories];
+          });
+          
+          console.log(`✅ Loaded ${unreadNewStories.length} more articles`);
+        }
+        
+        // Update pagination state
+        if (newsData.pagination) {
+          setHasMoreArticles(newsData.pagination.hasMore);
+          setTotalArticles(newsData.pagination.total);
+        } else {
+          setHasMoreArticles(false);
+        }
+        
+        setCurrentPage(pageNum);
+      }
+    } catch (error) {
+      console.error('Error loading more articles:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Load more articles when user gets close to the end
+  useEffect(() => {
+    // Calculate how close to the end we are (stories includes opening + news + all-caught-up)
+    const newsStoriesCount = stories.filter(s => s.type === 'news').length;
+    const storiesFromEnd = newsStoriesCount - currentIndex;
+    
+    // Load more when 5 or fewer stories left to view
+    if (storiesFromEnd <= 5 && hasMoreArticles && !loadingMore && currentIndex > 0) {
+      console.log(`📦 Near end (${storiesFromEnd} stories left), loading page ${currentPage + 1}...`);
+      loadMoreArticles(currentPage + 1);
+    }
+  }, [currentIndex, stories.length, hasMoreArticles, loadingMore, currentPage]);
+
   useEffect(() => {
     console.log('🔄 useEffect starting...');
     const loadNewsData = async () => {
       try {
-        console.log('📡 About to fetch API...');
-        const response = await fetch(`/api/news?t=${Date.now()}`);
+        console.log('📡 About to fetch API (page 1)...');
+        const response = await fetch(`/api/news?page=1&pageSize=30&t=${Date.now()}`);
         console.log('📡 Response status:', response.status);
         
         if (response.ok) {
@@ -1208,6 +1327,14 @@ export default function Home() {
             console.log('📰 Setting stories:', finalStories.length);
             
             setStories(finalStories);
+            
+            // Track pagination info
+            if (newsData.pagination) {
+              setHasMoreArticles(newsData.pagination.hasMore);
+              setTotalArticles(newsData.pagination.total);
+              console.log(`📦 Pagination: ${newsData.articles.length}/${newsData.pagination.total} articles loaded, hasMore: ${newsData.pagination.hasMore}`);
+            }
+            
             console.log('📰 Stories set successfully');
           } else {
             console.log('📰 No articles found in response');
@@ -1876,6 +2003,7 @@ export default function Home() {
   return (
     <>
       <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -1909,11 +2037,6 @@ export default function Home() {
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          /* Apply safe area padding like test page */
-          padding-top: env(safe-area-inset-top, 0px);
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          padding-left: env(safe-area-inset-left, 0px);
-          padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* Glassmorphism Variables */
@@ -2062,33 +2185,6 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
 
-        /* Safe Area Overlays - Match header blur effect */
-        .safe-area-overlay-top {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-top, 0px);
-          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
-          backdrop-filter: saturate(180%) blur(20px);
-          -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 999999;
-          pointer-events: none;
-        }
-
-        .safe-area-overlay-bottom {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: env(safe-area-inset-bottom, 0px);
-          background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
-          backdrop-filter: saturate(180%) blur(20px);
-          -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 999999;
-          pointer-events: none;
-        }
-
         /* Apple HIG - Header Design */
         .header {
           position: sticky;
@@ -2103,10 +2199,10 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: calc(0px + env(safe-area-inset-top, 0px));
+          padding-top: 0;
           padding-bottom: 0;
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
+          padding-left: 20px;
+          padding-right: 20px;
           border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
           transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
         }
@@ -2161,10 +2257,10 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: calc(68px + env(safe-area-inset-top, 0px));
-          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
+          padding-top: 68px;
+          padding-bottom: 200px;
+          padding-left: 20px;
+          padding-right: 20px;
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow: hidden;
@@ -2220,8 +2316,8 @@ export default function Home() {
           pointer-events: auto;
           position: relative;
           z-index: 1001;
-          margin-left: calc(0px + env(safe-area-inset-left, 0px));
-          margin-right: calc(0px + env(safe-area-inset-right, 0px));
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .paywall-modal h2 {
@@ -2432,7 +2528,7 @@ export default function Home() {
 
         .progress-indicator {
           position: fixed;
-          right: calc(24px + env(safe-area-inset-right, 0px));
+          right: 24px;
           top: 50%;
           transform: translateY(-50%);
           display: flex;
@@ -2460,7 +2556,7 @@ export default function Home() {
 
         .scroll-hint {
           position: absolute;
-          bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+          bottom: 160px;
           left: 50%;
           transform: translateX(-50%);
           font-size: 12px;
@@ -2574,8 +2670,8 @@ export default function Home() {
           max-width: 400px;
           max-height: 90vh;
           overflow-y: auto;
-          margin-left: calc(0px + env(safe-area-inset-left, 0px));
-          margin-right: calc(0px + env(safe-area-inset-right, 0px));
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .auth-modal-header {
@@ -3648,9 +3744,7 @@ export default function Home() {
         }
       `}</style>
       
-      {/* Safe Area Overlays with blur effect */}
-      <div className="safe-area-overlay-top" />
-      <div className="safe-area-overlay-bottom" />
+      {/* Safe Area Overlays removed for bigger photo version */}
       
       <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
@@ -3681,8 +3775,19 @@ export default function Home() {
         )}
 
 
-        {/* Stories */}
-        {stories.map((story, index) => (
+        {/* Stories - Virtual rendering: only render stories near current index for performance */}
+        {stories.map((story, index) => {
+          // Only render stories within a window of ±3 from current index
+          // This prevents rendering 500+ stories and crashing the browser
+          const renderWindow = 3;
+          const shouldRender = Math.abs(index - currentIndex) <= renderWindow;
+          
+          if (!shouldRender) {
+            // Return an empty placeholder to maintain array indices
+            return <div key={index} style={{ display: 'none' }} />;
+          }
+          
+          return (
           <div
             key={index}
             className="story-container"
@@ -3754,7 +3859,7 @@ export default function Home() {
                   background: '#ffffff',
                   color: '#1d1d1f'
                 }}>
-                  {/* Checkmark Icon */}
+                  {/* Loading or Checkmark Icon */}
                   <div style={{
                     width: '80px',
                     height: '80px',
@@ -3765,9 +3870,20 @@ export default function Home() {
                     justifyContent: 'center',
                     marginBottom: '32px'
                   }}>
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
+                    {loadingMore ? (
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '3px solid #e0e0e0',
+                        borderTop: '3px solid #1d1d1f',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                    ) : (
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
                   </div>
                   
                   <h1 style={{
@@ -3781,12 +3897,7 @@ export default function Home() {
                     opacity: 1,
                     transform: 'translateY(0)'
                   }}>
-                    {(() => {
-                      const mode = languageMode[index] || 'advanced';
-                      const title = mode === 'b2' ? (story.title_b2 || story.title) : (story.title_news || story.title);
-                      console.log(`📰 HEADER Title [${index}]:`, { mode, title_b2: story.title_b2?.substring(0, 30), title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
-                      return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
-                    })()}
+                    {loadingMore ? 'Loading More...' : (hasMoreArticles ? 'Loading More Articles...' : story.title)}
                   </h1>
                   
                   <p style={{
@@ -3797,7 +3908,7 @@ export default function Home() {
                     lineHeight: '1.4',
                     maxWidth: '280px'
                   }}>
-                    {story.message}
+                    {loadingMore ? 'Fetching the next batch of news' : (hasMoreArticles ? `${totalArticles - stories.filter(s => s.type === 'news').length} more articles available` : story.message)}
                   </p>
                   
                   <p style={{
@@ -3807,39 +3918,72 @@ export default function Home() {
                     color: '#86868b',
                     lineHeight: '1.4'
                   }}>
-                    {story.subtitle}
+                    {loadingMore ? 'Please wait...' : (hasMoreArticles ? 'Swipe back to continue reading' : story.subtitle)}
                   </p>
                   
-                  <button
-                    onClick={() => {
-                      if (readTrackerRef.current) {
-                        readTrackerRef.current.clearHistory();
-                        window.location.reload();
-                      }
-                    }}
-                    style={{
-                      padding: '12px 24px',
-                      fontSize: '15px',
-                      fontWeight: '500',
-                      color: '#ffffff',
-                      background: '#1d1d1f',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      transition: 'background 0.2s, transform 0.1s',
-                      letterSpacing: '-0.2px'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.background = '#333333';
-                      e.target.style.transform = 'scale(1.02)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.background = '#1d1d1f';
-                      e.target.style.transform = 'scale(1)';
-                    }}
-                  >
-                    Refresh Reading List
-                  </button>
+                  {hasMoreArticles ? (
+                    <button
+                      onClick={() => loadMoreArticles(currentPage + 1)}
+                      disabled={loadingMore}
+                      style={{
+                        padding: '12px 24px',
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        color: '#ffffff',
+                        background: loadingMore ? '#999999' : '#1d1d1f',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: loadingMore ? 'not-allowed' : 'pointer',
+                        transition: 'background 0.2s, transform 0.1s',
+                        letterSpacing: '-0.2px'
+                      }}
+                      onMouseOver={(e) => {
+                        if (!loadingMore) {
+                          e.target.style.background = '#333333';
+                          e.target.style.transform = 'scale(1.02)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (!loadingMore) {
+                          e.target.style.background = '#1d1d1f';
+                          e.target.style.transform = 'scale(1)';
+                        }
+                      }}
+                    >
+                      {loadingMore ? 'Loading...' : 'Load More Articles'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (readTrackerRef.current) {
+                          readTrackerRef.current.clearHistory();
+                          window.location.reload();
+                        }
+                      }}
+                      style={{
+                        padding: '12px 24px',
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        color: '#ffffff',
+                        background: '#1d1d1f',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s, transform 0.1s',
+                        letterSpacing: '-0.2px'
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.background = '#333333';
+                        e.target.style.transform = 'scale(1.02)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.background = '#1d1d1f';
+                        e.target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      Refresh Reading List
+                    </button>
+                  )}
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
@@ -3852,11 +3996,11 @@ export default function Home() {
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+                      top: '0',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(42vh + env(safe-area-inset-top, 0px))',
+                      height: '48vh',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4187,10 +4331,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(42vh * 0.55)',
+                        top: 'calc(48vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(42vh * 0.45 + 74px)',
+                        height: 'calc(48vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4237,7 +4381,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 42vh - 12px)',
+                        bottom: 'calc(100vh - 48vh - 12px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4269,7 +4413,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '42vh',
+                      height: '48vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4296,7 +4440,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(42vh + 50px)',
+                      top: 'calc(48vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4311,7 +4455,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(42vh + 52px)',
+                        paddingTop: 'calc(48vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -5459,7 +5603,8 @@ export default function Home() {
               ) : null}
             </div>
           </div>
-        ))}
+        );
+        })}
 
         {/* Authentication Modal */}
         {authModal && (

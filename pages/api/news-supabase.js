@@ -23,15 +23,27 @@ export default async function handler(req, res) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Pagination support
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 30;
+    const offset = (page - 1) * pageSize;
+    
     // Fetch published articles from last 24 hours, sorted by score (highest first)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    // First get total count
+    const { count: totalCount } = await supabase
+      .from('published_articles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', twentyFourHoursAgo);
     
     const { data: articles, error } = await supabase
       .from('published_articles')
       .select('*')
       .gte('created_at', twentyFourHoursAgo)
-      .order('created_at', { ascending: false })  // Sort by time (score column doesn't exist yet)
-      .limit(500)
+      .order('ai_final_score', { ascending: false, nullsFirst: false })  // Primary: Score (highest first)
+      .order('created_at', { ascending: false })  // Secondary: Date (tie-breaker)
+      .range(offset, offset + pageSize - 1)
 
     if (error) {
       console.error('Supabase error:', error)
@@ -225,10 +237,19 @@ export default async function handler(req, res) {
       };
     })
 
+    // Calculate if there are more pages
+    const hasMore = offset + formattedArticles.length < (totalCount || 0);
+    
     return res.status(200).json({
       status: 'ok',
       totalResults: formattedArticles.length,
       articles: formattedArticles,
+      pagination: {
+        page,
+        pageSize,
+        total: totalCount || formattedArticles.length,
+        hasMore
+      },
       generatedAt: new Date().toISOString(),
       displayTimestamp: new Date().toLocaleString('en-US', {
         weekday: 'long',
