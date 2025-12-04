@@ -819,7 +819,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 20px 0 40px;
+          padding: 20px 16px 40px;
           min-height: 0;
         }
 
@@ -832,7 +832,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           letter-spacing: 0.05em;
           color: #000000;
           text-transform: uppercase;
-          margin-bottom: 20px;
+          margin-bottom: 10px;
+          margin-top: 20px;
           flex-shrink: 0;
           align-self: flex-start;
         }
