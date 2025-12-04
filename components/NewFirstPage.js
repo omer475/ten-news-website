@@ -213,90 +213,151 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     return 'night';
   };
 
-  // Personalized greeting generator
+  // Analyze stories by score and category
+  const analyzeStories = () => {
+    const newsStories = stories.filter(s => s.type === 'news');
+    
+    // Find high-scored articles (score >= 900)
+    const highScored = newsStories.filter(s => s.final_score >= 900);
+    const veryHighScored = newsStories.filter(s => s.final_score >= 950);
+    const breakingNews = newsStories.filter(s => s.final_score >= 980);
+    
+    // Get top categories from high-scored articles
+    const categoryCount = {};
+    highScored.forEach(s => {
+      const cat = s.category?.toLowerCase() || 'general';
+      categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    });
+    
+    // Sort categories by count
+    const topCategories = Object.entries(categoryCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([cat]) => cat);
+    
+    // Get the highest scored article
+    const topArticle = newsStories.reduce((max, s) => 
+      (s.final_score || 0) > (max?.final_score || 0) ? s : max, null);
+    
+    return {
+      hasBreaking: breakingNews.length > 0,
+      hasVeryHigh: veryHighScored.length > 0,
+      highScoredCount: highScored.length,
+      topCategories,
+      topArticle,
+      topScore: topArticle?.final_score || 0
+    };
+  };
+
+  // Category display names
+  const categoryLabels = {
+    'politics': 'politics',
+    'world': 'world news',
+    'business': 'business',
+    'technology': 'tech',
+    'science': 'science',
+    'health': 'health',
+    'sports': 'sports',
+    'entertainment': 'entertainment',
+    'finance': 'markets',
+    'economy': 'the economy',
+    'conflict': 'conflicts',
+    'war': 'war coverage',
+    'climate': 'climate',
+    'general': 'current events'
+  };
+
+  // Personalized greeting generator based on scores
   const getPersonalizedGreeting = () => {
     const time = getTimeOfDay();
-    const count = totalNewsCount;
     const name = firstName || '';
+    const analysis = analyzeStories();
     
-    // Greeting variations based on context
-    const greetings = {
-      morning: {
-        hi: [
-          `Rise and shine${name ? `, ${name}` : ''}`,
-          `Good morning${name ? `, ${name}` : ''}`,
-          `Morning${name ? `, ${name}` : ''}`,
-          `Hey${name ? ` ${name}` : ''}, early bird`,
-          `Fresh start${name ? `, ${name}` : ''}`,
-          `Wakey wakey${name ? `, ${name}` : ''}`,
-        ],
-        sub: {
-          few: ['Quiet morning so far', 'Light news day', 'Easy start today'],
-          some: ['The world woke up busy', 'Plenty to catch up on', 'Your morning briefing awaits'],
-          many: ['Busy world out there', 'A lot happened overnight', 'The news never sleeps'],
-          tons: ['The world went crazy', 'Massive news day', 'You might need coffee for this']
-        }
-      },
-      afternoon: {
-        hi: [
-          `Hey${name ? ` ${name}` : ''}`,
-          `Good afternoon${name ? `, ${name}` : ''}`,
-          `What's up${name ? `, ${name}` : ''}`,
-          `Hope your day's going well${name ? `, ${name}` : ''}`,
-          `Afternoon${name ? `, ${name}` : ''}`,
-          `Back for more${name ? `, ${name}` : ''}?`,
-        ],
-        sub: {
-          few: ['Light afternoon', 'Taking it easy today', 'Calm news day'],
-          some: ['Decent amount happening', 'Your afternoon update', 'Here\'s what\'s new'],
-          many: ['Busy afternoon', 'Lots going on', 'The news keeps flowing'],
-          tons: ['Wild day out there', 'News overload incoming', 'Buckle up']
-        }
-      },
-      evening: {
-        hi: [
-          `Evening${name ? `, ${name}` : ''}`,
-          `Good evening${name ? `, ${name}` : ''}`,
-          `Hey${name ? ` ${name}` : ''}, winding down?`,
-          `Welcome back${name ? `, ${name}` : ''}`,
-          `End of day check-in${name ? `, ${name}` : ''}`,
-        ],
-        sub: {
-          few: ['Quiet evening', 'Light day wrapping up', 'Easy night ahead'],
-          some: ['Here\'s today\'s recap', 'Catch up before bed', 'Your evening digest'],
-          many: ['Eventful day', 'A lot to digest', 'Today was busy'],
-          tons: ['What a day', 'Major news day', 'History was made today']
-        }
-      },
-      night: {
-        hi: [
-          `Still up${name ? `, ${name}` : ''}?`,
-          `Night owl${name ? `, ${name}` : ''}`,
-          `Hey${name ? ` ${name}` : ''}, can\'t sleep?`,
-          `Late night${name ? `, ${name}` : ''}`,
-          `Burning the midnight oil${name ? `, ${name}` : ''}?`,
-        ],
-        sub: {
-          few: ['Quiet night', 'Not much stirring', 'Peaceful world right now'],
-          some: ['The world keeps turning', 'News while you browse', 'Night reading material'],
-          many: ['Busy even at night', 'The news never rests', 'Lots to catch up on'],
-          tons: ['Crazy night', 'News explosion', 'Sleep can wait']
-        }
-      }
+    // Time-based hi greetings
+    const hiGreetings = {
+      morning: [
+        `Rise and shine${name ? `, ${name}` : ''}`,
+        `Good morning${name ? `, ${name}` : ''}`,
+        `Morning${name ? `, ${name}` : ''}`,
+        `Hey${name ? ` ${name}` : ''}, early bird`,
+      ],
+      afternoon: [
+        `Hey${name ? ` ${name}` : ''}`,
+        `Good afternoon${name ? `, ${name}` : ''}`,
+        `What's up${name ? `, ${name}` : ''}`,
+        `Afternoon${name ? `, ${name}` : ''}`,
+      ],
+      evening: [
+        `Evening${name ? `, ${name}` : ''}`,
+        `Good evening${name ? `, ${name}` : ''}`,
+        `Welcome back${name ? `, ${name}` : ''}`,
+      ],
+      night: [
+        `Still up${name ? `, ${name}` : ''}?`,
+        `Night owl${name ? `, ${name}` : ''}`,
+        `Late night${name ? `, ${name}` : ''}`,
+      ]
     };
 
-    // Determine count category
-    let countCategory = 'few';
-    if (count > 50) countCategory = 'tons';
-    else if (count > 20) countCategory = 'many';
-    else if (count > 5) countCategory = 'some';
-
-    // Pick random greeting from appropriate category
-    const timeGreetings = greetings[time];
-    const hiOptions = timeGreetings.hi;
-    const subOptions = timeGreetings.sub[countCategory];
+    // Score-based sub messages
+    let subOptions = [];
     
-    const randomHi = hiOptions[Math.floor(Math.random() * hiOptions.length)];
+    if (analysis.hasBreaking) {
+      // Breaking news (score >= 980)
+      subOptions = [
+        'Breaking news you need to see',
+        'Major story developing',
+        'This one\'s important',
+        'Big news just dropped',
+        'You\'ll want to see this',
+        'Stop everything, big news'
+      ];
+    } else if (analysis.hasVeryHigh) {
+      // Very high scored (>= 950)
+      const topCat = analysis.topCategories[0];
+      const catLabel = categoryLabels[topCat] || topCat;
+      subOptions = [
+        `Big day for ${catLabel}`,
+        `Major ${catLabel} developments`,
+        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} is buzzing`,
+        'Some heavy hitters today',
+        'Top stories worth your time',
+        `Important ${catLabel} news`
+      ];
+    } else if (analysis.highScoredCount >= 5) {
+      // Multiple high-scored articles
+      const cats = analysis.topCategories.slice(0, 2);
+      const catLabels = cats.map(c => categoryLabels[c] || c);
+      subOptions = [
+        `Busy day in ${catLabels[0] || 'the news'}`,
+        'Lots of important stories',
+        `${catLabels.join(' and ')} making waves`,
+        'Quality stories waiting',
+        'Packed with good reads'
+      ];
+    } else if (analysis.highScoredCount >= 1) {
+      // Some high-scored articles
+      const topCat = analysis.topCategories[0];
+      const catLabel = categoryLabels[topCat] || 'news';
+      subOptions = [
+        `Some ${catLabel} worth reading`,
+        'A few standout stories',
+        `Notable ${catLabel} today`,
+        'Curated highlights ready',
+        'Quality over quantity today'
+      ];
+    } else {
+      // Regular day - time-based defaults
+      const defaults = {
+        morning: ['Your morning briefing', 'Starting fresh', 'Here\'s what\'s new'],
+        afternoon: ['Your afternoon update', 'Catching you up', 'Here\'s the latest'],
+        evening: ['Your evening digest', 'End of day roundup', 'Today\'s wrap-up'],
+        night: ['Night reading', 'Late night digest', 'While you\'re up']
+      };
+      subOptions = defaults[time];
+    }
+
+    const randomHi = hiGreetings[time][Math.floor(Math.random() * hiGreetings[time].length)];
     const randomSub = subOptions[Math.floor(Math.random() * subOptions.length)];
 
     return { hi: randomHi, sub: randomSub };
