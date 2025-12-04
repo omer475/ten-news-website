@@ -300,7 +300,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
         period = 'yesterday';
       } else if (hoursDiff < 72) {
         period = '2 days ago';
-      } else {
+    } else {
         period = 'a few days ago';
       }
       
@@ -830,10 +830,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           font-size: 11px;
           font-weight: 600;
           letter-spacing: 0.05em;
-          color: rgba(0, 0, 0, 0.32);
+          color: #000000;
           text-transform: uppercase;
           margin-bottom: 20px;
           flex-shrink: 0;
+          align-self: flex-start;
         }
 
         .map-label-icon {
@@ -869,28 +870,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
           fill: #d8d8d8;
           stroke: none;
           transition: fill 0.3s ease;
-        }
-
-        /* Tap to continue hint */
-        .continue-hint {
-          position: absolute;
-          bottom: max(30px, env(safe-area-inset-bottom, 30px));
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 12px;
-          font-weight: 500;
-          color: rgba(0, 0, 0, 0.25);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          animation: pulse 2s infinite;
-          cursor: pointer;
-          padding: 10px 20px;
-          z-index: 10;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.7; }
         }
 
         /* Responsive */
@@ -952,8 +931,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
             </svg>
           </div>
         </div>
-
-        <div className="continue-hint">Tap to continue</div>
       </div>
     </>
   );
