@@ -1348,15 +1348,20 @@ RSS_FEEDS = [
 # Removed 49 low-quality/specialized sources
 # Focused on: Elite news, authoritative business, serious science, consumer fascination
 
-print(f"Total RSS Feeds: {len(RSS_FEEDS)}")
-print(f"\nBreakdown by category:")
-categories = {}
-for feed in RSS_FEEDS:
-    cat = feed['category']
-    categories[cat] = categories.get(cat, 0) + 1
+# Legacy compatibility - convert RSS_FEEDS to ALL_SOURCES tuple format
+ALL_SOURCES = [(feed['name'], feed['url']) for feed in RSS_FEEDS]
 
-for category in sorted(categories.keys()):
-    count = categories[category]
-    pct = count / len(RSS_FEEDS) * 100
-    print(f"  {category.capitalize():15s}: {count:3d} feeds ({pct:5.1f}%)")
+# Only print stats when run directly (not when imported)
+if __name__ == "__main__":
+    print(f"Total RSS Feeds: {len(RSS_FEEDS)}")
+    print(f"\nBreakdown by category:")
+    categories = {}
+    for feed in RSS_FEEDS:
+        cat = feed['category']
+        categories[cat] = categories.get(cat, 0) + 1
+
+    for category in sorted(categories.keys()):
+        count = categories[category]
+        pct = count / len(RSS_FEEDS) * 100
+        print(f"  {category.capitalize():15s}: {count:3d} feeds ({pct:5.1f}%)")
 
