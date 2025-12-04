@@ -41,7 +41,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     console.log('Total stories:', storiesToFilter.length);
     
     const filtered = storiesToFilter.filter(story => {
-      if (story.type !== 'news') return false;
+      // Accept both 'news' type and articles without type (from API)
+      if (story.type && story.type !== 'news') return false;
       const createdAt = story.created_at ? new Date(story.created_at) : null;
       return createdAt && createdAt >= cutoffTime;
     });
@@ -63,9 +64,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       const response = await fetch('/api/news-supabase');
       if (response.ok) {
         const data = await response.json();
-        if (data.stories && Array.isArray(data.stories)) {
-          setStories(data.stories);
-          setLastHourStories(filterStoriesByTimeWindow(data.stories));
+        // API returns 'articles' not 'stories'
+        if (data.articles && Array.isArray(data.articles)) {
+          setStories(data.articles);
+          setLastHourStories(filterStoriesByTimeWindow(data.articles));
         }
       }
     } catch (error) {
