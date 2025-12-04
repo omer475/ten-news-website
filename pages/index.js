@@ -2059,10 +2059,10 @@ export default function Home() {
           padding: 0;
           margin: 0;
           width: 100vw;
-          height: 100vh;
-          height: 100dvh;
+          height: 100%;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
           overflow: hidden;
-          position: fixed;
           touch-action: none;
         }
 
@@ -2075,10 +2075,14 @@ export default function Home() {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           overflow: hidden;
-          position: fixed;
           width: 100%;
           height: 100%;
           touch-action: none;
+          /* Apply safe area padding like test page */
+          padding-top: env(safe-area-inset-top, 0px);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+          padding-left: env(safe-area-inset-left, 0px);
+          padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* Glassmorphism Variables */
@@ -2301,10 +2305,10 @@ export default function Home() {
           display: flex;
           align-items: flex-start;
           justify-content: center;
-          padding-top: 68px;
-          padding-bottom: 200px;
-          padding-left: 20px;
-          padding-right: 20px;
+          padding-top: calc(68px + env(safe-area-inset-top, 0px));
+          padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+          padding-left: calc(20px + env(safe-area-inset-left, 0px));
+          padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow: hidden;
@@ -4041,11 +4045,11 @@ export default function Home() {
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '48vh',
+                      height: 'calc(48vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4376,10 +4380,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(48vh * 0.55)',
+                        top: 'calc((48vh + env(safe-area-inset-top, 0px)) * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(48vh * 0.45 + 74px)',
+                        height: 'calc((48vh + env(safe-area-inset-top, 0px)) * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4426,7 +4430,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 48vh - 12px)',
+                        bottom: 'calc(100vh - 48vh - env(safe-area-inset-top, 0px) - 12px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4454,11 +4458,11 @@ export default function Home() {
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
                       <div style={{
                       position: 'fixed',
-                      top: '0',
+                      top: 'calc(-1 * env(safe-area-inset-top, 0px))',
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '48vh',
+                      height: 'calc(48vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4485,7 +4489,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(48vh + 50px)',
+                      top: 'calc(48vh + env(safe-area-inset-top, 0px) + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4500,7 +4504,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(48vh + 52px)',
+                        paddingTop: 'calc(48vh + env(safe-area-inset-top, 0px) + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
