@@ -213,6 +213,64 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     return 'night';
   };
 
+  // Get and update last visit time
+  const getLastVisitInfo = () => {
+    if (typeof window === 'undefined') return { hours: 2, period: 'recently' };
+    
+    try {
+      const lastVisit = localStorage.getItem('tennews_last_visit');
+      const now = Date.now();
+      
+      // Update last visit time
+      localStorage.setItem('tennews_last_visit', now.toString());
+      
+      if (!lastVisit) return { hours: 24, period: 'a while' };
+      
+      const lastTime = parseInt(lastVisit);
+      const hoursDiff = (now - lastTime) / (1000 * 60 * 60);
+      const lastHour = new Date(lastTime).getHours();
+      
+      // Determine the period description
+      let period = '';
+      if (hoursDiff < 1) {
+        period = 'the last hour';
+      } else if (hoursDiff < 2) {
+        period = 'the last couple hours';
+      } else if (hoursDiff < 3) {
+        period = 'the last few hours';
+      } else if (hoursDiff < 6) {
+        period = 'the past few hours';
+      } else if (hoursDiff < 12) {
+        // Check if it was morning/afternoon/evening
+        if (lastHour >= 5 && lastHour < 12) {
+          period = 'this morning';
+        } else if (lastHour >= 12 && lastHour < 17) {
+          period = 'this afternoon';
+        } else {
+          period = 'earlier today';
+        }
+      } else if (hoursDiff < 24) {
+        if (lastHour >= 21 || lastHour < 5) {
+          period = 'last night';
+        } else if (lastHour >= 5 && lastHour < 12) {
+          period = 'yesterday morning';
+        } else if (lastHour >= 12 && lastHour < 17) {
+          period = 'yesterday afternoon';
+        } else {
+          period = 'yesterday evening';
+        }
+      } else if (hoursDiff < 48) {
+        period = 'yesterday';
+      } else {
+        period = 'a few days';
+      }
+      
+      return { hours: hoursDiff, period };
+    } catch (e) {
+      return { hours: 2, period: 'recently' };
+    }
+  };
+
   // Analyze stories by score and category
   const analyzeStories = () => {
     const newsStories = stories.filter(s => s.type === 'news');
@@ -268,249 +326,177 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     'general': 'current events'
   };
 
-  // Personalized greeting generator based on scores
+  // Personalized greeting generator based on scores and time since last visit
   const getPersonalizedGreeting = () => {
     const time = getTimeOfDay();
     const name = firstName ? `, ${firstName}` : '';
     const analysis = analyzeStories();
-    const count = analysis.totalCount;
+    const lastVisit = getLastVisitInfo();
+    const period = lastVisit.period;
     
     // Simple, professional greetings
     const hiGreetings = {
-      morning: [
-        `Good morning${name}`,
-        `Morning${name}`,
-      ],
-      afternoon: [
-        `Good afternoon${name}`,
-        `Afternoon${name}`,
-      ],
-      evening: [
-        `Good evening${name}`,
-        `Evening${name}`,
-      ],
-      night: [
-        `Good evening${name}`,
-        `Evening${name}`,
-      ]
+      morning: [`Good morning${name}`, `Morning${name}`],
+      afternoon: [`Good afternoon${name}`, `Afternoon${name}`],
+      evening: [`Good evening${name}`, `Evening${name}`],
+      night: [`Good evening${name}`, `Evening${name}`]
     };
 
-    // Professional, informative sub messages based on score analysis
-    let subOptions = [];
+    // Get category labels
     const topCat = analysis.topCategories[0];
     const cat2 = analysis.topCategories[1];
     const catLabel = categoryLabels[topCat] || topCat || 'current events';
     const catLabel2 = cat2 ? (categoryLabels[cat2] || cat2) : null;
+    const capCat = catLabel.charAt(0).toUpperCase() + catLabel.slice(1);
+    
+    // Build time-aware, category-specific messages
+    let subOptions = [];
     
     if (analysis.hasBreaking) {
-      // Breaking news (score >= 980)
+      // BREAKING NEWS - with time context
       subOptions = [
-        `Major story developing in ${catLabel}`,
-        `Breaking developments in ${catLabel}`,
-        `Significant ${catLabel} news breaking now`,
-        `Important ${catLabel} story unfolding`,
-        `Critical developments in ${catLabel}`,
-        `Major ${catLabel} news you should know`,
-        `Big story breaking in ${catLabel}`,
-        `Urgent ${catLabel} developments`,
-        `Key ${catLabel} story developing`,
-        `Notable breaking news in ${catLabel}`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} sees major development`,
-        `Developing situation in ${catLabel}`,
-        `Important story emerging in ${catLabel}`,
-        `Significant news from ${catLabel}`,
-        `Major update in ${catLabel}`,
-        'A major story is developing',
-        'Significant developments to report',
-        'Important news breaking',
-        'Key story unfolding now',
-        'Notable developments today',
-        'Big news to catch up on',
-        'Significant story breaking',
-        'Major news developing',
-        'Important updates await',
-        'Key developments to know',
+        `Since ${period}, major ${catLabel} story broke`,
+        `Breaking ${catLabel} developments since ${period}`,
+        `Major ${catLabel} news since you left`,
+        `Big ${catLabel} story developing since ${period}`,
+        `${capCat} breaking news since ${period}`,
+        `Important ${catLabel} story since ${period}`,
+        `Since ${period}, significant ${catLabel} news`,
+        `${capCat} saw major development since ${period}`,
+        `Breaking: ${catLabel} story since ${period}`,
+        `Major story in ${catLabel} since ${period}`,
+        `Critical ${catLabel} news since you were here`,
+        `${capCat} making headlines since ${period}`,
+        `Big developments in ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} is breaking`,
+        `Urgent ${catLabel} update since ${period}`,
+        `${capCat} story unfolding since ${period}`,
+        `Important ${catLabel} since your last visit`,
+        `Since ${period}, big ${catLabel} news`,
+        `Major ${catLabel} breaking since ${period}`,
+        `${capCat} developments since ${period}`,
+        `Breaking story in ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} is major news`,
+        `Big ${catLabel} updates since ${period}`,
+        `${capCat} in breaking news since ${period}`,
+        `Significant ${catLabel} since ${period}`,
       ];
     } else if (analysis.hasVeryHigh) {
-      // Very high scored (>= 950)
+      // VERY IMPORTANT - with time context
       subOptions = [
-        `Significant developments in ${catLabel}`,
-        `Important news from ${catLabel} today`,
-        `Notable ${catLabel} stories to follow`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} making headlines`,
-        `Key ${catLabel} updates today`,
-        `Major ${catLabel} news to cover`,
-        `Important ${catLabel} developments`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} in focus today`,
-        `Significant ${catLabel} coverage`,
-        `Big movements in ${catLabel}`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} seeing major activity`,
-        `Key stories in ${catLabel}`,
-        `Important day for ${catLabel}`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} headlines dominate`,
-        `Substantial ${catLabel} news`,
-        catLabel2 ? `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} and ${catLabel2} lead today` : `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} leads today`,
-        catLabel2 ? `Key stories in ${catLabel} and ${catLabel2}` : `Key stories in ${catLabel}`,
-        catLabel2 ? `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} and ${catLabel2} making news` : `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} making news`,
-        'Notable stories across sectors',
-        'Important updates to review',
-        'Key stories worth your attention',
-        'Significant news to catch up on',
-        'Major stories to follow',
-        'Important developments today',
-        'Key updates waiting',
+        `Since ${period}, big moves in ${catLabel}`,
+        `${capCat} had major updates since ${period}`,
+        `Important ${catLabel} news since ${period}`,
+        `Since ${period}, ${catLabel} made headlines`,
+        `${capCat} developments since your last visit`,
+        `Key ${catLabel} stories since ${period}`,
+        `Since ${period}, notable ${catLabel} news`,
+        `${capCat} has been active since ${period}`,
+        `Major ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} in focus`,
+        `${capCat} updates since ${period}`,
+        `Important news in ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} is trending`,
+        `${capCat} saw activity since ${period}`,
+        `Key developments in ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} making news`,
+        `${capCat} headlines since ${period}`,
+        `Significant ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} stands out`,
+        `${capCat} news since your last visit`,
+        catLabel2 ? `${capCat} and ${catLabel2} since ${period}` : `${capCat} leading since ${period}`,
+        catLabel2 ? `Since ${period}, ${catLabel} and ${catLabel2} active` : `Since ${period}, ${catLabel} very active`,
+        `Notable ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} developments`,
+        `${capCat} stories since ${period}`,
       ];
     } else if (analysis.highScoredCount >= 5) {
-      // Multiple high-scored articles
+      // MULTIPLE STORIES - with time context
       subOptions = [
-        `Active day across ${catLabel}`,
-        catLabel2 ? `Busy day for ${catLabel} and ${catLabel2}` : `Busy day for ${catLabel}`,
-        `Multiple stories developing in ${catLabel}`,
-        catLabel2 ? `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} and ${catLabel2} both active` : `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} very active`,
-        `Several ${catLabel} stories to follow`,
-        `Plenty happening in ${catLabel}`,
-        catLabel2 ? `News across ${catLabel} and ${catLabel2}` : `News across ${catLabel}`,
-        `Full coverage in ${catLabel} today`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} seeing lots of activity`,
-        `Multiple developments in ${catLabel}`,
-        'Busy news day overall',
-        'Several stories worth following',
-        'Active day across multiple sectors',
-        'Plenty of developments to cover',
-        'Multiple stories of interest',
-        'Full slate of news today',
-        'Several key updates',
-        'Active news cycle today',
-        'Multiple stories developing',
-        'Busy day in the news',
-        'Several developments to track',
-        'Full news agenda today',
-        'Multiple updates across sectors',
-        'Lots of ground to cover',
-        'Several stories competing for attention',
+        `Busy since ${period} in ${catLabel}`,
+        `A lot happened in ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} been busy`,
+        `Multiple ${catLabel} stories since ${period}`,
+        `${capCat} very active since ${period}`,
+        `Plenty in ${catLabel} since ${period}`,
+        `Since ${period}, lots in ${catLabel}`,
+        `Several ${catLabel} updates since ${period}`,
+        `${capCat} full of news since ${period}`,
+        `Busy ${catLabel} since your last visit`,
+        `Since ${period}, ${catLabel} stacked up`,
+        `Multiple stories in ${catLabel} since ${period}`,
+        `${capCat} packed since ${period}`,
+        `Since ${period}, active in ${catLabel}`,
+        `Lots happened in ${catLabel} since ${period}`,
+        catLabel2 ? `${capCat} and ${catLabel2} busy since ${period}` : `${capCat} busy since ${period}`,
+        catLabel2 ? `Since ${period}, ${catLabel} and ${catLabel2} full` : `Since ${period}, ${catLabel} packed`,
+        `Eventful ${catLabel} since ${period}`,
+        `Since ${period}, much in ${catLabel}`,
+        `${capCat} developments since ${period}`,
+        `Several stories since ${period}`,
+        `Since ${period}, news stacked up`,
+        `Busy news since ${period}`,
+        `Multiple updates since ${period}`,
+        `Since ${period}, plenty happened`,
       ];
     } else if (analysis.highScoredCount >= 1) {
-      // Some high-scored articles
+      // SOME STORIES - with time context
       subOptions = [
-        `Some notable ${catLabel} updates`,
-        `A few ${catLabel} stories to note`,
-        `Select ${catLabel} coverage today`,
-        `Key ${catLabel} story to follow`,
-        `Notable update in ${catLabel}`,
-        `Some developments in ${catLabel}`,
-        `${catLabel.charAt(0).toUpperCase() + catLabel.slice(1)} has a story worth reading`,
-        `A few updates from ${catLabel}`,
-        `Select stories in ${catLabel}`,
-        `Some ${catLabel} news of note`,
-        'A few notable stories',
-        'Some updates worth knowing',
-        'Select stories to follow',
-        'A few developments of note',
-        'Some news worth your time',
-        'A handful of key stories',
-        'Some updates to review',
-        'A few stories stand out',
-        'Select developments today',
-        'Some notable coverage',
-        'A few updates across sectors',
-        'Some stories of interest',
-        'A few key developments',
-        'Some news to catch up on',
-        'A few stories worth reading',
+        `Some ${catLabel} updates since ${period}`,
+        `A few ${catLabel} stories since ${period}`,
+        `Since ${period}, some ${catLabel} news`,
+        `Notable ${catLabel} since ${period}`,
+        `${capCat} had updates since ${period}`,
+        `Since ${period}, a few ${catLabel} stories`,
+        `Some news in ${catLabel} since ${period}`,
+        `A couple ${catLabel} updates since ${period}`,
+        `Since ${period}, ${catLabel} saw activity`,
+        `Few ${catLabel} stories since your visit`,
+        `${capCat} updates since ${period}`,
+        `Since ${period}, select ${catLabel} news`,
+        `Some ${catLabel} since ${period}`,
+        `A few updates in ${catLabel} since ${period}`,
+        `Since ${period}, ${catLabel} has news`,
+        `Notable news since ${period}`,
+        `Since ${period}, some updates`,
+        `A few stories since ${period}`,
+        `Some developments since ${period}`,
+        `Since ${period}, a few updates`,
+        `Select stories since ${period}`,
+        `Since ${period}, notable news`,
+        `Some news since ${period}`,
+        `A handful since ${period}`,
+        `Since ${period}, few stories`,
       ];
     } else {
-      // Regular day - straightforward updates
-      const regularOptions = {
-        morning: [
-          'Here\'s your morning briefing',
-          'Your morning news summary',
-          'The morning headlines',
-          'What happened overnight',
-          'Morning news roundup',
-          'Your daily briefing',
-          'The news this morning',
-          'Morning update ready',
-          'Today\'s first briefing',
-          'Morning headlines compiled',
-          'The overnight summary',
-          'Your morning digest',
-          'News from this morning',
-          'The day\'s first update',
-          'Morning news awaits',
-          'Your morning summary',
-          'Headlines this morning',
-          'The morning report',
-          'Today\'s morning news',
-          'Your first update today',
-        ],
-        afternoon: [
-          'Here\'s what\'s happened today',
-          'Your afternoon update',
-          'News since this morning',
-          'The afternoon headlines',
-          'Updates from today',
-          'Afternoon news summary',
-          'What\'s new this afternoon',
-          'The day\'s developments',
-          'Afternoon briefing ready',
-          'News from today',
-          'Your afternoon summary',
-          'Today\'s updates so far',
-          'The afternoon report',
-          'News through midday',
-          'Afternoon headlines',
-          'The day\'s news so far',
-          'Updates through today',
-          'Afternoon news roundup',
-          'Here\'s the afternoon update',
-          'Today\'s news continues',
-        ],
-        evening: [
-          'Here\'s how the day unfolded',
-          'Your evening summary',
-          'The day\'s news recap',
-          'What happened today',
-          'Evening news roundup',
-          'Today\'s full summary',
-          'The day in review',
-          'Evening headlines',
-          'Your end of day briefing',
-          'Today\'s developments',
-          'The evening report',
-          'News from today',
-          'Your evening update',
-          'The day\'s events',
-          'Evening summary ready',
-          'Today\'s news wrapped',
-          'The day\'s coverage',
-          'Evening briefing compiled',
-          'Today\'s stories',
-          'Your daily recap',
-        ],
-        night: [
-          'Here\'s the day\'s summary',
-          'Tonight\'s news roundup',
-          'The day\'s events recap',
-          'What you may have missed',
-          'Late news summary',
-          'Today\'s final update',
-          'The night briefing',
-          'Day\'s news compiled',
-          'Tonight\'s headlines',
-          'Your late update',
-          'The evening summary',
-          'Today in review',
-          'Night news digest',
-          'The day\'s wrap-up',
-          'Late night briefing',
-          'Today\'s news summary',
-          'The night report',
-          'Day\'s final recap',
-          'Tonight\'s update',
-          'Late summary ready',
-        ]
-      };
-      subOptions = regularOptions[time];
+      // REGULAR - straightforward time-based
+      subOptions = [
+        `Here's what happened since ${period}`,
+        `Updates since ${period}`,
+        `News since ${period}`,
+        `What's new since ${period}`,
+        `Since ${period}, here's the news`,
+        `Catching you up since ${period}`,
+        `The news since ${period}`,
+        `Since ${period}, some updates`,
+        `Your update since ${period}`,
+        `News roundup since ${period}`,
+        `What happened since ${period}`,
+        `Since ${period}, the headlines`,
+        `Summary since ${period}`,
+        `Since your last visit, updates`,
+        `The latest since ${period}`,
+        `Since ${period}, what's new`,
+        `Briefing since ${period}`,
+        `Since ${period}, the roundup`,
+        `News since your last visit`,
+        `Since ${period}, here's what's new`,
+        `Updates since your last visit`,
+        `The news since you left`,
+        `Since ${period}, the news`,
+        `What's happened since ${period}`,
+        `Catching up since ${period}`,
+      ];
     }
 
     const randomHi = hiGreetings[time][Math.floor(Math.random() * hiGreetings[time].length)];
