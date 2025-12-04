@@ -68,6 +68,72 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
+        'name': 'The New York Times Africa',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Americas',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Asia Pacific',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Europe',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Middle East',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Technology',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Sports',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Science',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Climate',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Climate.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Space',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Space.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The New York Times Health',
+        'url': 'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
         'name': 'Washington Post World',
         'url': 'https://feeds.washingtonpost.com/rss/world',
         'category': 'news',
@@ -77,6 +143,18 @@ RSS_FEEDS = [
         'name': 'Washington Post National',
         'url': 'https://feeds.washingtonpost.com/rss/national',
         'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Washington Post Business',
+        'url': 'https://feeds.washingtonpost.com/rss/business',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Washington Post Entertainment',
+        'url': 'https://feeds.washingtonpost.com/rss/entertainment',
+        'category': 'consumer',
         'tier': 'premium'
     },
     {
@@ -129,6 +207,18 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
+    {
+        'name': 'PBS NewsHour Headlines',
+        'url': 'https://www.pbs.org/newshour/feeds/rss/headlines',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'PBS NewsHour Politics',
+        'url': 'https://www.pbs.org/newshour/feeds/rss/politics',
+        'category': 'news',
+        'tier': 'premium'
+    },
     
     # ========================================
 # UK PREMIUM NEWS
@@ -152,6 +242,86 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
+        'name': 'BBC News Business',
+        'url': 'https://feeds.bbci.co.uk/news/business/rss.xml',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC News Politics',
+        'url': 'https://feeds.bbci.co.uk/news/politics/rss.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC News Health',
+        'url': 'https://feeds.bbci.co.uk/news/health/rss.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC News Science & Environment',
+        'url': 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC News Technology',
+        'url': 'https://feeds.bbci.co.uk/news/technology/rss.xml',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC News Entertainment & Arts',
+        'url': 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    
+    # Sky News
+    {
+        'name': 'Sky News Home',
+        'url': 'https://feeds.skynews.com/feeds/rss/home.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Sky News World',
+        'url': 'https://feeds.skynews.com/feeds/rss/world.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Sky News Business',
+        'url': 'https://feeds.skynews.com/feeds/rss/business.xml',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Sky News Politics',
+        'url': 'https://feeds.skynews.com/feeds/rss/politics.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Sky News Technology',
+        'url': 'https://feeds.skynews.com/feeds/rss/technology.xml',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Sky News Entertainment',
+        'url': 'https://feeds.skynews.com/feeds/rss/entertainment.xml',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Sky News Strange',
+        'url': 'https://feeds.skynews.com/feeds/rss/strange.xml',
+        'category': 'consumer',
+        'tier': 'standard'
+    },
+    {
         'name': 'The Guardian World',
         'url': 'https://www.theguardian.com/world/rss',
         'category': 'news',
@@ -167,6 +337,42 @@ RSS_FEEDS = [
         'name': 'The Guardian US',
         'url': 'https://www.theguardian.com/us-news/rss',
         'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Guardian Europe',
+        'url': 'https://www.theguardian.com/world/europe-news/rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Guardian Sport',
+        'url': 'https://www.theguardian.com/uk/sport/rss',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Guardian Technology',
+        'url': 'https://www.theguardian.com/uk/technology/rss',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Guardian Science',
+        'url': 'https://www.theguardian.com/science/rss',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Guardian Environment',
+        'url': 'https://www.theguardian.com/uk/environment/rss',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Guardian Business',
+        'url': 'https://www.theguardian.com/uk/business/rss',
+        'category': 'business',
         'tier': 'premium'
     },
     {
@@ -210,8 +416,92 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
+        'name': 'Deutsche Welle Top Stories',
+        'url': 'https://rss.dw.com/atom/rss-en-top',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle World',
+        'url': 'https://rss.dw.com/atom/rss-en-world',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle EU',
+        'url': 'https://rss.dw.com/atom/rss-en-eu',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle Africa',
+        'url': 'https://rss.dw.com/rdf/rss-en-africa',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle Business',
+        'url': 'https://rss.dw.com/atom/rss-en-bus',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle Science',
+        'url': 'https://rss.dw.com/atom/rss_en_science',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle Environment',
+        'url': 'https://rss.dw.com/atom/rss_en_environment',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle Sports',
+        'url': 'https://rss.dw.com/atom/rss-en-sports',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Deutsche Welle Asia',
+        'url': 'https://rss.dw.com/atom/rss-en-asia',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
         'name': 'France 24',
         'url': 'https://www.france24.com/en/rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'France 24 Europe',
+        'url': 'https://www.france24.com/en/europe/rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'France 24 Africa',
+        'url': 'https://www.france24.com/en/africa/rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'France 24 Middle East',
+        'url': 'https://www.france24.com/en/middle-east/rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'France 24 Americas',
+        'url': 'https://www.france24.com/en/americas/rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'France 24 Asia Pacific',
+        'url': 'https://www.france24.com/en/asia-pacific/rss',
         'category': 'news',
         'tier': 'premium'
     },
@@ -300,6 +590,14 @@ RSS_FEEDS = [
     {
         'name': 'Haaretz',
         'url': 'https://www.haaretz.com/cmlink/1.628756',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    
+    # 🆕 ADDED: UN News
+    {
+        'name': 'UN News',
+        'url': 'https://news.un.org/feed/subscribe/en/news/all/rss.xml',
         'category': 'news',
         'tier': 'premium'
     },
@@ -459,6 +757,24 @@ RSS_FEEDS = [
     {
         'name': 'Seeking Alpha',
         'url': 'https://seekingalpha.com/feed.xml',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Seeking Alpha AAPL',
+        'url': 'https://seekingalpha.com/api/sa/combined/AAPL.xml',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Seeking Alpha Market Currents',
+        'url': 'https://seekingalpha.com/market_currents.xml',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Seeking Alpha Most Popular',
+        'url': 'https://seekingalpha.com/listing/most-popular-articles.xml',
         'category': 'business',
         'tier': 'premium'
     },
@@ -881,12 +1197,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Phys.org',
-        'url': 'https://phys.org/rss-feed/',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
         'name': 'Live Science',
         'url': 'https://www.livescience.com/feeds/all',
         'category': 'science',
@@ -1156,6 +1466,12 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
+        'name': 'Statista Infographics',
+        'url': 'https://www.statista.com/rss/infographics',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
         'name': 'Our World in Data',
         'url': 'https://ourworldindata.org/atom.xml',
         'category': 'consumer',
@@ -1171,6 +1487,62 @@ RSS_FEEDS = [
         'name': 'FiveThirtyEight',
         'url': 'https://fivethirtyeight.com/feed/',
         'category': 'consumer',
+        'tier': 'premium'
+    },
+    
+    # Eurostat - EU Statistics
+    {
+        'name': 'Eurostat Press Releases',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurostat Population & Social',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_POPSOC&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurostat General Statistics',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_GENSTA&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurostat Economy & Finance',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_ECOFIN&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_EURNEW',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurostat Industry & Commerce',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_INDCOM&_estatsearchportlet_WAR_estatsearchportlet_collection=CAT_PREREL',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurostat Transport',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_TRANSP&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
+        'category': 'business',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Eurostat External Trade',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_EXTTRA&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
+        'category': 'business',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Eurostat Environment & Energy',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_ENVENE&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurostat Research & Development',
+        'url': 'https://ec.europa.eu/eurostat/en/search?p_p_id=estatsearchportlet_WAR_estatsearchportlet&p_p_lifecycle=2&p_p_state=maximized&p_p_mode=view&p_p_resource_id=atom&_estatsearchportlet_WAR_estatsearchportlet_theme=PER_RESDEV&_estatsearchportlet_WAR_estatsearchportlet_collection=dataset',
+        'category': 'science',
         'tier': 'premium'
     },
     

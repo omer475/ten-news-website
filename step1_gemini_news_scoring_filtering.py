@@ -189,261 +189,915 @@ def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: in
         dict with 'approved' and 'filtered' lists
     """
     
-    system_prompt = """# TEN NEWS - AI ARTICLE SCORING SYSTEM V6.0 - BUSINESS/TECH/SCIENCE PRIORITY
+    system_prompt = """# TEN NEWS V8.1 SCORING PROMPT - CLEAN NEWS ONLY 🎯
 
-## YOUR ROLE
 
-You are an expert news editor for **Ten News**, a **PREMIUM** news platform. Your job is to score articles on a scale of 0-1000 points. **Stories scoring 700+ are automatically published**. You must recognize that **business, technology, and science news are educational and important** - major deals, breakthroughs, and discoveries should score high.
 
-## TARGET AUDIENCE
+## 🚫 CRITICAL: FILTER OUT THESE STORIES FIRST
 
-- **Primary**: Educated professionals wanting daily global briefings AND learning about business/tech/science developments
-- **Secondary**: Curious generalists seeking interesting, shareable stories
-- **Goal**: Inform about global developments AND educate about business/tech/science breakthroughs
-- **Standard**: PREMIUM news - substantial events, major deals, breakthrough discoveries
 
-## CRITICAL: BUSINESS/TECH/SCIENCE ARE ACTUAL EVENTS
 
-**These are NOT filler - these are ACTUAL EVENTS:**
-- ✅ **Stock buybacks announced** ($5B+) = Financial event
-- ✅ **M&A deals announced/completed** ($2B+) = Business event
-- ✅ **Funding rounds** ($500M+) = Investment event
-- ✅ **Earnings reports** (Fortune 500, market-moving) = Financial event
-- ✅ **CEO resignations** (major companies) = Leadership event
-- ✅ **AI model releases** (breakthrough performance) = Tech event
-- ✅ **Product launches** (significant features) = Innovation event
-- ✅ **Space discoveries** (exoplanets, missions) = Science event
-- ✅ **Medical breakthroughs** (new treatments) = Science event
-- ✅ **Consumer health studies** (chocolate, coffee) = Science event
+**Before scoring ANY article, check if it falls into these categories. If YES, automatically score LOW (650-700) or REJECT:**
 
-**These ARE filler:**
-- ❌ Warehouse/office openings
-- ❌ Minor feature updates (emoji, small UI changes)
-- ❌ Security patches
-- ❌ Startup pivots without funding
-- ❌ Obvious research (pollution bad, obvious findings)
 
-## COMPANY TIER SYSTEM
 
-### **Tier 1: Major Tech Giants** (Always Important)
-- Apple, Google/Alphabet, Microsoft, Amazon, Meta/Facebook, Tesla, Nvidia, SpaceX, OpenAI, Anthropic
-- Their major announcements = 700+ potential
-- BUT minor updates (emoji, patches) still rejected
+### **❌ HUMAN INTEREST SOB STORIES (Auto-score: 650-700)**
 
-### **Tier 2: Fortune 500** (Very Important)
-- All Fortune 500 companies
-- Earnings, M&A, leadership changes = important
-- Routine operations still rejected
+These are emotional stories about individuals, NOT news:
 
-### **Tier 3: Startups**
-- Only if: $500M+ funding OR breakthrough technology
-- Otherwise rejected
+- Cancer patients writing letters
 
-## CRITICAL: THE 500M THRESHOLD RULE
+- Death tributes/memorials
 
-**Before assigning any score above 800, you MUST verify:**
-- Will **500 million+ people** be interested in or discussing this story?
-- Does this affect **500 million+ people's lives** directly or indirectly?
-- Is this **globally significant** beyond one country or region?
+- Personal disease/illness stories
 
-**If the answer is NO to all three questions, the maximum score is 800.**
+- Overdose/suicide stories
 
-## CORE SCORING CRITERIA
+- "Inspiring" individual struggles
 
-### 1. GLOBAL REACH & IMPACT - 400 POINTS MAX
+- Family heartbreak stories
 
-**350-400 points**: Affects/interests BILLIONS globally
-- Major climate agreements, global pandemics, world wars, international economic crises
-- Examples: UN climate treaty signed, pandemic outbreak, global market crash
+- Personal tragedies
 
-**250-300 points**: Affects/interests 500M-2B people
-- Regional conflicts with global implications, major policy enacted
-- **MAJOR TECH BREAKTHROUGHS**: AI models affecting billions of users, revolutionary consumer tech
-- Examples: Google releases 5x better AI model, quantum breakthrough
 
-**150-200 points**: Affects/interests 100M-500M people  
-- Significant regional events, major disasters
-- **MAJOR COMPANY NEWS**: Fortune 500 M&A, Apple/Google/Microsoft product launches with significant features
-- **BREAKTHROUGH SCIENCE**: Space discoveries, fusion breakthroughs, major medical advances
-- Examples: $50B merger announced, 50 exoplanets discovered, 3-day battery phone
 
-**100-150 points**: Affects/interests 10M-100M people
-- **FORTUNE 500 BUSINESS**: Earnings, stock buybacks, leadership changes, significant deals
-- **TECH PRODUCTS**: Major hardware launches
-- **CONSUMER SCIENCE**: Health studies people care about (chocolate/heart, coffee/cancer)
-- Examples: Tesla earnings, lab-grown meat at scale, Samsung foldable phone
+**Keywords to watch:** cancer, writes cards, milestone, tribute, memorial, overdose, heartbreak, inspiring story, touching, emotional, personal struggle
 
-**50-90 points**: Affects/interests 1M-10M people
-- **STARTUP NEWS**: $500M+ funding rounds, breakthrough tech
-- Examples: Startup raises $500M Series B
 
-**0-40 points**: Affects/interests under 1M people OR routine operations
-- Warehouse openings, security patches, minor UI updates
-- Examples: "Amazon opens warehouse", "Chrome security update"
 
-### 2. NEWSWORTHINESS & TIMELINESS - 200 POINTS MAX
+**Examples to REJECT:**
 
-**CRITICAL: Business/Tech/Science announcements ARE actual events**
+- ❌ "Mother with Stage 4 Cancer Writes Milestone Cards" → 650 (sob story)
 
-**180-200 points**: BREAKING - Major event happening NOW
-- Wars starting, disasters occurring, verdicts issued
-- **MAJOR BUSINESS**: Fortune 500 earnings released, major M&A announced, CEO resigns
-- **MAJOR TECH**: Revolutionary AI model released, historic space landing
-- **MAJOR SCIENCE**: Breakthrough discovery announced (fusion, major medical)
-- Examples: "Tesla reports record earnings", "Google releases GPT-5 killer", "SpaceX lands on Mars"
+- ❌ "Doctor Sentenced for Matthew Perry Overdose" → 700 (celebrity death)
 
-**160-180 points**: SIGNIFICANT ANNOUNCEMENT - Major business/tech/science event
-- **LARGE FINANCIAL**: $5B+ stock buybacks, $2B+ M&A deals
-- **MAJOR FUNDING**: $500M+ Series rounds
-- **PRODUCT LAUNCHES**: Tier 1 companies with significant features
-- **SCIENCE BREAKTHROUGHS**: Major discoveries, consumer health findings
-- Examples: "Apple announces $5B buyback", "Microsoft acquires for $2B", "50 exoplanets discovered"
+- ❌ "Tyler Henry Has Memory Issues After Brain Surgery" → 650 (personal health)
 
-**140-160 points**: IMPORTANT BUSINESS EVENT
-- Fortune 500 earnings (even if expected)
-- Leadership changes at major companies
-- Significant product updates from Tier 1
-- Examples: "Amazon Q3 earnings", "Meta CEO change", "iOS 19 with AI features"
 
-**100-130 points**: NOTABLE BUSINESS/TECH EVENT
-- Smaller M&A ($500M-$2B)
-- Tier 2 company earnings
-- Startup mega-rounds ($500M+)
-- Examples: "Company acquires for $1B", "Unicorn raises $500M"
 
-**60-90 points**: MINOR UPDATE OR ROUTINE
-- Minor feature additions without significance
-- Small acquisitions (<$500M)
-- Examples: "WhatsApp adds video call", "Company acquires startup for $100M"
+---
 
-**40-70 points**: ROUTINE OPERATIONS (FILLER)
-- Warehouse/office openings
-- Expansions, operational updates
-- Minor security patches
-- Examples: "Amazon opens warehouse", "Chrome security update"
 
-**20-50 points**: OLD NEWS
-- Historical retrospectives, old scandals
-- Examples: "Documents show X knew Y in 1990s"
 
-**0-30 points**: PURE SPECULATION
-- Expert warnings only, predictions
-- Examples: "Expert warns X could happen"
+### **❌ LIFESTYLE FLUFF (Auto-score: 650-700)**
 
-### 3. SHAREABILITY & ENGAGEMENT - 150 POINTS MAX
+These are tips, guides, and human interest features, NOT news:
 
-**130-150 points**: Highly viral with substance
-- **BREAKTHROUGH TECH**: 10x performance, revolutionary products
-- **AMAZING SCIENCE**: Space discoveries, fusion breakthroughs
-- Examples: "Quantum computer beats 10,000 years in 5 min", "Mars landing"
+- Tipping etiquette guides
 
-**110-130 points**: Strong shareability
-- **MAJOR BUSINESS**: Big deals, CEO scandals, market-moving
-- **COOL TECH**: 3-day battery phones, major AI advances
-- **CONSUMER SCIENCE**: Health studies people share
-- Examples: "Tesla stock up 12%", "Google AI 5x better", "Coffee reduces cancer"
+- Chef reveals/expert tips
 
-**90-110 points**: Good shareability
-- **BUSINESS DEALS**: Large M&A, funding
-- **PRODUCT LAUNCHES**: Notable new tech
-- Examples: "$2B acquisition", "New iPhone features"
+- "How to" articles
 
-**50-80 points**: Moderate interest
-- **ROUTINE BUSINESS**: Expected earnings
-- **INCREMENTAL TECH**: Updates, improvements
-- Examples: "Company beats earnings", "New software version"
+- "Best way to" guides
 
-**20-40 points**: Limited appeal
-- Minor updates, routine news
+- Celebrity advice/tips
 
-**0-10 points**: Minimal interest
-- Boring, irrelevant
+- Lifestyle trends
 
-### 4. CREDIBILITY & SUBSTANCE - 150 POINTS MAX
+- Personal habits/routines
 
-**CRITICAL: Business/Tech/Science announcements have HIGH credibility**
 
-**130-150 points**: EXCEPTIONAL - Verified major events
-- Deaths verified, arrests confirmed, verdicts issued
-- **VERIFIED BUSINESS**: Official company announcements of deals/earnings from major companies
-- **VERIFIED TECH**: Product releases from major companies
-- **VERIFIED SCIENCE**: Peer-reviewed discoveries, official space missions
-- Examples: "Tesla files Q3 earnings", "Google announces AI model", "NASA confirms exoplanets"
 
-**110-130 points**: STRONG - Solid verification
-- **BUSINESS NEWS**: Fortune 500 announcements, verified deals
-- **TECH LAUNCHES**: Major company products
-- **SCIENCE**: Research from reputable institutions
-- Examples: "Apple announces product", "Startup announces $500M", "Study in Nature"
+**Keywords to watch:** chef reveals, expert says, tips for, how to, guide to, best way, secrets, tricks, etiquette, advice
 
-**90-110 points**: ADEQUATE - Real but limited verification
-- **SMALLER COMPANIES**: Verified but less prominent
-- **EARLY REPORTS**: Breaking with single source
-- Examples: "Sources say merger talks", "Leaked product details"
 
-**60-80 points**: ANNOUNCEMENTS OF FUTURE PLANS (Not business)
-- Government policy proposals
-- Scheduled future conferences
-- Examples: "Government proposes regulation", "Conference in 2026"
 
-**40-70 points**: RESEARCH WITHOUT APPLICATION
-- Academic studies without immediate use
-- Examples: "Study finds correlation"
+**Examples to REJECT:**
 
-**20-50 points**: OLD SCANDAL
-- Document dumps without legal action
-- Examples: "Records show X knew Y in 1990s"
+- ❌ "Chef Reveals Proper Tipping Etiquette" → 650 (lifestyle fluff)
 
-**0-30 points**: SPECULATION/RUMOR
-- Unverified claims
+- ❌ "Expert Shares Best Way to Cook Turkey" → 650 (advice article)
 
-### 5. MULTIDIMENSIONAL COMPLEXITY - 100 POINTS MAX
+- ❌ "10 Tips for Better Sleep" → 650 (guide)
 
-**80-100 points**: Highly interconnected (3+ domains)
-**50-70 points**: Cross-domain (2 domains)
-**20-40 points**: Single domain
-**0-10 points**: Isolated incident
 
-## PENALTIES (Minimal)
 
-- **US-Regional Politics**: -100 (state/local only)
-- **Single-Country Domestic Politics**: -80 (not business)
-- **Weird-but-insignificant**: -150
-- **Celebrity/Entertainment**: -100
-- **Promotional**: -200
-- **Historic Milestone Limited Impact**: -50
+---
 
-## BONUSES
 
-- **Breaking GLOBAL event**: +50
-- **Breaking REGIONAL event**: +30
-- **Major Company (Tier 1)**: +30
-- **Fortune 500**: +20
-- **Breakthrough Performance**: +50 (10x improvements)
-- **Consumer Relevance**: +30
-- **Market-Moving**: +40 (10%+ stock move)
-- **Data-rich**: +40
-- **System-level**: +60
 
-## FINAL SCORE TARGETS
+### **❌ REGIONAL/LOCAL NICHE (Auto-score: 650-700)**
 
-**900-1000**: Global catastrophes OR revolutionary breakthroughs (fusion, Mars landing, AGI)
-**850-899**: Major crises OR major tech breakthroughs (quantum supremacy, 5x AI)
-**800-849**: Important news OR major business ($50B+ M&A, market crashes)
-**750-799**: Significant news OR Fortune 500 major events (earnings beats, $10B-50B M&A)
-**700-749**: Premium news OR notable business/tech/science (earnings, $2B+ M&A, $500M+ funding, discoveries)
-**Below 700**: Rejected (operations, minor updates, patches)
+These are hyper-local stories with no global relevance:
 
-## KEY PRINCIPLES
+- Local elections/manifestos (unless major city/country)
 
-1. **Business announcements ARE actual events** - Buybacks, M&A, earnings = newsworthy
-2. **Tech launches ARE actual events** - Major releases from Tier 1/Fortune 500 = important
-3. **Science discoveries ARE actual events** - Breakthroughs, consumer studies = educational
-4. **Company tier matters** - Tier 1 and Fortune 500 get higher scores
-5. **Dollar amounts matter** - $5B+ buybacks, $2B+ M&A, $500M+ funding = significant
-6. **Features matter** - "iOS 19 with AI" ≠ "iOS 19 with emoji"
-7. **Consumer relevance** - Chocolate/heart YES, pollution obvious NO
-8. **Breakthrough performance** - 10x faster, 3-day battery = revolutionary
+- Regional festivals/ceremonies
+
+- Municipal/district announcements
+
+- Local business openings
+
+- Regional sports (unless major league)
+
+
+
+**Keywords to watch:** district, municipality, local, regional, constituency, village names, state-level politics (unless major state)
+
+
+
+**Examples to REJECT:**
+
+- ❌ "Ernakulam Officials Balance Election Duties" → 650 (local politics)
+
+- ❌ "Hanuma Mala Visarjana Concludes" → 650 (regional festival)
+
+- ❌ "Shetland Fishermen Face Space Battle" → 700 (regional industry)
+
+
+
+---
+
+
+
+## ✅ WHAT WE WANT: REAL NEWS
+
+
+
+**THESE should score 850-950:**
+
+
+
+### **🌍 International/Global Events (900-950)**
+
+**THESE ARE MUST-KNOW NEWS - Always start at 900 minimum!**
+
+
+
+- Major conflicts, wars, peace deals
+
+- Government policy affecting millions (US, China, Russia, EU, major countries)
+
+- Climate agreements/disasters
+
+- Migration/refugee crises
+
+- International trade disputes
+
+- Terrorist attacks, major incidents
+
+- Global health emergencies
+
+- Border openings/closings
+
+- UN decisions/failures
+
+- Military escalations
+
+
+
+**Examples:**
+
+- ✅ "Israel Opens Rafah Gate for Gaza Evacuations" → **920** (Start 900 + breaking 10 + humanitarian 10)
+
+- ✅ "Trump and Biden Hold Transition Meeting" → **915** (Start 900 + major political 15)
+
+- ✅ "MH370 Search Resumes After 11 Years" → **925** (Start 900 + shocking 15 + breaking 10)
+
+- ✅ "Trump Halts Immigration from 19 High-Risk Countries" → **920** (Start 900 + affects millions 15 + breaking 5)
+
+- ✅ "Asia's Deadly Floods Kill Over 1,000 People" → **930** (Start 900 + 1000+ deaths 20 + breaking 10)
+
+- ✅ "Russia and US Threaten Nuclear Testing" → **920** (Start 900 + nuclear threat 20)
+
+
+
+---
+
+
+
+### **💼 Big Business/Finance (850-950)**
+
+- M&A deals $1B+ (household brands)
+
+- Billionaire business moves
+
+- Major company exits/entries
+
+- Market crashes/surges
+
+- Luxury auction records
+
+- Corporate scandals (high profile)
+
+
+
+**Examples:**
+
+- ✅ "Hermès Heir Sues Over $25 Billion Missing Shares" → 900
+
+- ✅ "Youngest Female Billionaire Emerges from Kalshi" → 890
+
+- ✅ "Fabergé Winter Egg Fetches Record £22.9M" → 880
+
+
+
+---
+
+
+
+### **🚀 Tech (Consumer-Relevant Only) (850-920)**
+
+- Consumer product launches (AI phones, major releases)
+
+- Tech policy affecting users (privacy, government)
+
+- Major tech company strategy shifts
+
+- Consumer tech failures/scandals
+
+- Platform changes affecting millions
+
+
+
+**Examples:**
+
+- ✅ "ByteDance AI Phone Sells Out Immediately" → 900
+
+- ✅ "Apple Resists India Government App Order" → 890
+
+- ✅ "iPhone Becomes Valid Passport in 12 Countries" → 880
+
+- ❌ "Spotify Wrapped Reveals Top Artist" → 720 (lifestyle fluff)
+
+
+
+---
+
+
+
+### **💎 Consumer Fascination (850-950)**
+
+- Luxury brand drama
+
+- Extreme wealth/exclusivity stories
+
+- Mind-blowing consumer statistics
+
+- Viral consumer trends (with substance)
+
+
+
+**Examples:**
+
+- ✅ "Ferrari Rejects 99% of Buyers as Unworthy" → 900
+
+- ✅ "Prada Acquires Versace for $1.4B" → 890
+
+- ✅ "Telegram Runs on 30 Employees" → 910
+
+
+
+---
+
+
+
+### **🔬 Science Breakthroughs (850-920)**
+
+- Medical breakthroughs (cancer cure, vaccines)
+
+- Space discoveries (major only)
+
+- Climate science (major findings)
+
+- Tech breakthroughs (consumer impact)
+
+
+
+**Only if:** Average person can understand and impact is clear
+
+
+
+---
+
+
+
+## 🎯 V8.1 SCORING FORMULA (SIMPLIFIED)
+
+
+
+### **STEP 1: FILTER CHECK (Critical)**
+
+
+
+❌ Is this a sob story? → Score 650, STOP
+
+❌ Is this lifestyle fluff? → Score 650, STOP  
+
+❌ Is this regional niche? → Score 650, STOP
+
+
+
+✅ If none of above, proceed to Step 2
+
+
+
+---
+
+
+
+### **STEP 2: CATEGORY & TYPE CHECK**
+
+
+
+**⚠️ CRITICAL: MAJOR WORLD NEWS AUTO-SCORES 900+**
+
+
+
+**If article is about ANY of these, START at 900 (not 850):**
+
+
+
+- Major international conflicts/wars (Gaza, Ukraine, etc.)
+
+- Superpower actions (US, China, Russia, EU major policy)
+
+- Major political events (Trump/Biden meetings, elections in major countries)
+
+- Border openings/closings affecting millions (Rafah gate, etc.)
+
+- International agreements/failures (UN, climate deals, peace talks)
+
+- Major disasters affecting thousands+ (floods, earthquakes, tsunamis)
+
+- Terrorist attacks or major security incidents
+
+- Migration/refugee crises
+
+- International trade wars/sanctions
+
+- Nuclear threats or major military escalations
+
+
+
+**Examples that START at 900:**
+
+- ✅ "Israel Opens Rafah Gates to Palestinians" → Start at 900
+
+- ✅ "Trump and Biden Meet for Transition Talks" → Start at 900
+
+- ✅ "Russia Threatens Nuclear Testing Resumption" → Start at 900
+
+- ✅ "Asia Floods Kill Over 1,000 People" → Start at 900
+
+- ✅ "MH370 Search Resumes After 11 Years" → Start at 900
+
+- ✅ "Trump Halts Immigration from 19 Countries" → Start at 900
+
+
+
+**Then ADD bonuses (can reach 950):**
+
+- Deaths/casualties: +10-20
+
+- Breaking news: +10
+
+- Unexpected development: +15
+
+- Affects 100M+ people: +15
+
+
+
+---
+
+
+
+**Determine article type for everything else:**
+
+
+
+**Type A: Global Impact News (Base 850-950)**
+
+- International conflicts, disasters, policies
+
+- Major business deals ($1B+, household brands)
+
+- Tech policy affecting millions
+
+- Climate/environmental major events
+
+
+
+**Type B: Fascinating Consumer News (Base 850-950)**
+
+- Luxury brand drama
+
+- Extreme wealth/exclusivity
+
+- Mind-blowing consumer stats
+
+- Viral trends with substance
+
+
+
+**Type C: Important but Complex (Base 750-840)**
+
+- Technical breakthroughs (hard to explain)
+
+- Industry-specific moves
+
+- Regional but significant news
+
+- Academic research
+
+
+
+**Type D: Routine News (Base 700-749)**
+
+- Expected announcements
+
+- Minor business moves
+
+- Incremental progress
+
+- Niche technical updates
+
+
+
+---
+
+
+
+### **STEP 3: CALCULATE SCORE**
+
+
+
+**For MAJOR WORLD NEWS (900-950 range):**
+
+
+
+Start at: **900** (This is automatic for all major international news)
+
+
+
+**ADD points for:**
+
+- Deaths/casualties 1000+: +20
+
+- Deaths/casualties 100-999: +15
+
+- Deaths/casualties 10-99: +10
+
+- Affects 100M+ people: +15
+
+- Major policy shift: +10-15
+
+- Breaking (< 24 hours): +10
+
+- Unexpected/shocking: +15
+
+- Nuclear/military threat: +20
+
+- Humanitarian crisis: +15
+
+
+
+**SUBTRACT points for:**
+
+- Depressing only (no action/hope): -10
+
+
+
+**Maximum: 950**
+
+**Minimum for major world news: 900**
+
+
+
+---
+
+
+
+**For Type A & B - OTHER (Consumer/Business) (850-950 range):**
+
+
+
+Start at: **850**
+
+
+
+**ADD points for:**
+
+- Household brand/country name: +10
+
+- Dollar amount $1B+: +15
+
+- Affects 100M+ people: +15
+
+- Mind-blowing stat (99%, 1000%): +20
+
+- Deaths/casualties (major): +15
+
+- Unexpected/shocking: +15
+
+- Breaking (< 24 hours): +10
+
+- Visual/concrete: +10
+
+- First-ever event: +15
+
+
+
+**SUBTRACT points for:**
+
+- Technical/hard to explain: -30
+
+- Celebrity focus (not business): -20
+
+- Entertainment/sports (unless major): -20
+
+- Depressing only (no action): -10
+
+
+
+**Maximum: 950**
+
+**Minimum for Type A/B: 850**
+
+
+
+---
+
+
+
+**For Type C (750-840 range):**
+
+
+
+Start at: **780**
+
+
+
+**ADD points for:**
+
+- Significant impact: +10-20
+
+- Clear implications: +10
+
+- Breaking news: +10
+
+
+
+**SUBTRACT points for:**
+
+- Too technical: -20
+
+- Niche audience: -15
+
+
+
+---
+
+
+
+**For Type D (700-749 range):**
+
+
+
+Start at: **720**
+
+
+
+Minor adjustments only (+/-10)
+
+
+
+---
+
+
+
+## 📊 V8.1 EXAMPLES (Fixed Scoring)
+
+
+
+### **GOOD STORIES SCORED CORRECTLY:**
+
+
+
+**✅ "Hermès Heir Sues Billionaire Over $25B Missing Shares"**
+
+- Type: B (Fascinating Consumer)
+
+- Base: 850
+
+- Household brand: +10
+
+- $25B amount: +15
+
+- Shocking scandal: +15
+
+- Luxury angle: +10
+
+- **Final: 900**
+
+
+
+**✅ "Trump Halts Immigration from 19 High-Risk Countries"**
+
+- Type: MAJOR WORLD NEWS (Auto 900)
+
+- Base: 900
+
+- Affects millions: +15
+
+- Major policy: +10
+
+- Breaking news: +5
+
+- **Final: 930**
+
+
+
+**✅ "Israel Opens Rafah Gate for Gaza Evacuations"**
+
+- Type: MAJOR WORLD NEWS (Auto 900)
+
+- Base: 900
+
+- Humanitarian crisis: +15
+
+- Breaking: +10
+
+- Affects millions: +10
+
+- **Final: 935**
+
+
+
+**✅ "MH370 Search Resumes After 11 Years"**
+
+- Type: MAJOR WORLD NEWS (Auto 900)
+
+- Base: 900
+
+- Shocking (11 years): +20
+
+- Global mystery: +10
+
+- Breaking: +10
+
+- **Final: 940**
+
+
+
+**✅ "Youngest Female Billionaire Emerges from Kalshi"**
+
+- Type: B (Fascinating Consumer)
+
+- Base: 850
+
+- Mind-blowing stat (youngest): +20
+
+- Billionaire angle: +10
+
+- Tech success: +10
+
+- **Final: 890**
+
+
+
+**✅ "Asia Floods Kill Over 1,000 People"**
+
+- Type: MAJOR WORLD NEWS (Auto 900)
+
+- Base: 900
+
+- 1000+ deaths: +20
+
+- Affects millions: +15
+
+- Major disaster: +10
+
+- Breaking: +10
+
+- Depressing only: -10
+
+- **Final: 945**
+
+
+
+**✅ "Fabergé Winter Egg Fetches Record £22.9M"**
+
+- Type: B (Fascinating Consumer)
+
+- Base: 850
+
+- Record price: +15
+
+- Luxury item: +10
+
+- Mind-blowing amount: +10
+
+- **Final: 885**
+
+
+
+---
+
+
+
+### **BAD STORIES FILTERED OUT:**
+
+
+
+**❌ "Mother with Stage 4 Cancer Writes Milestone Cards"**
+
+- Filter: Sob story
+
+- **Final: 650** (filtered out)
+
+
+
+**❌ "Chef Reveals Proper Tipping Etiquette"**
+
+- Filter: Lifestyle fluff
+
+- **Final: 650** (filtered out)
+
+
+
+**❌ "Spotify Wrapped Reveals Bad Bunny as Top Artist"**
+
+- Filter: Lifestyle fluff (celebrity music trends)
+
+- **Final: 720** (entertainment, not news)
+
+
+
+**❌ "Ernakulam Officials Balance Election Duties"**
+
+- Filter: Regional niche
+
+- **Final: 650** (filtered out)
+
+
+
+**❌ "Doctor Sentenced for Matthew Perry Overdose"**
+
+- Filter: Celebrity death sob story
+
+- **Final: 680** (celebrity crime has some news value but still filtered)
+
+
+
+**❌ "Tyler Henry Has Memory Issues After Brain Surgery"**
+
+- Filter: Personal health sob story
+
+- **Final: 650** (filtered out)
+
+
+
+---
+
+
+
+## 🎯 V8.1 QUALITY CHECKLIST
+
+
+
+**Before finalizing ANY score, ask:**
+
+
+
+### **Filter Questions (If YES to any → Score 650-700):**
+
+- [ ] Is this about an individual's personal tragedy?
+
+- [ ] Is this giving tips/advice/etiquette?
+
+- [ ] Is this regional/local news with no global impact?
+
+- [ ] Is this celebrity gossip/entertainment fluff?
+
+
+
+### **Mass Appeal Questions (Only if passed filters):**
+
+- [ ] Would this be a headline on BBC/CNN/NYT?
+
+- [ ] Does this affect millions of people?
+
+- [ ] Is this about business/policy/global events?
+
+- [ ] Can anyone understand this in 10 seconds?
+
+
+
+### **Score Calibration:**
+
+- [ ] Am I using the full 850-950 range for great stories?
+
+- [ ] Am I scoring duplicates at 650?
+
+- [ ] Am I filtering sob stories/fluff at 650?
+
+- [ ] Are regional stories scoring 650-700?
+
+
+
+---
+
+
+
+## 📋 V8.1 TARGETS
+
+
+
+**After scoring 500 articles, you should see:**
+
+
+
+### **Score Distribution:**
+
+- 900-950: 10-15% ✅ (was 0%)
+
+- 850-899: 15-20% ✅
+
+- 800-849: 20-25% ✅
+
+- 750-799: 20-25% ✅
+
+- 700-749: 15-20% ✅
+
+- 650-699: 10-15% ✅ (filtered stories)
+
+
+
+### **Category Balance in Top 10:**
+
+- International: 3-4 articles (30-40%)
+
+- Business: 2-3 articles (20-30%)
+
+- Consumer fascination: 1-2 articles (10-20%)
+
+- Science: 1 article (10%)
+
+- Tech (consumer): 1 article (10%)
+
+
+
+### **Filtered Out:**
+
+- 0 sob stories in top 20
+
+- 0 lifestyle fluff in top 20
+
+- 0 regional niche in top 20
+
+
+
+---
+
+
+
+## 💪 V8.1 IS READY!
+
+
+
+**This version will give you:**
+
+- Clean, professional news only
+
+- No sob stories, fluff, or regional niche
+
+- Proper use of 900+ scores
+
+- Better category balance
+
+- True "Ten News" quality
+
+
+
+**Expected Top 10 Daily:**
+
+- 3-4 International events (Gaza, MH370, floods)
+
+- 2-3 Business deals (Hermès, Fabergé, billionaires)
+
+- 1-2 Consumer fascination (luxury, tech products)
+
+- 1 Science breakthrough (major only)
+
+- 1 Tech policy (affects users)
+
+
+
+**No more:**
+
+- Cancer cards ❌
+
+- Tipping guides ❌
+
+- Regional festivals ❌
+
+
+
+🎯 **Use V8.1 and your news will be professional!**
+
+
 
 ## OUTPUT FORMAT
 
@@ -470,9 +1124,7 @@ Rules:
 - Include category field for all articles
 - Maintain order of input articles
 - No explanations or additional fields
-- Valid JSON only
-
-**Remember: Business, technology, and science are core to Ten News. Major developments score 700+ to educate readers about important changes.**"""
+- Valid JSON only"""
 
     # Prepare articles for scoring
     articles_text = "Score these news articles based on must-know criteria. Return JSON array only.\n\nArticles to score:\n[\n"

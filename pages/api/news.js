@@ -12,9 +12,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Pagination support (increased default to show all articles)
+  // Pagination support - load 30 articles at a time to prevent browser crashes
   const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 500;
+  const pageSize = parseInt(req.query.pageSize) || 30;
   const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
@@ -128,32 +128,21 @@ export default async function handler(req, res) {
 
   // Try Supabase first (for production)
   try {
-    console.log('🔄 Attempting to fetch from Supabase...');
-    const supabaseResponse = await fetch(`${req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000'}/api/news-supabase`, {
-      signal: AbortSignal.timeout(5000) // 5 second timeout
+    console.log(`🔄 Attempting to fetch from Supabase (page ${page}, pageSize ${pageSize})...`);
+    // Use http for localhost, https for production
+    const isLocalhost = req.headers.host?.includes('localhost') || req.headers.host?.includes('127.0.0.1');
+    const protocol = isLocalhost ? 'http' : 'https';
+    const supabaseUrl = `${protocol}://${req.headers.host || 'localhost:3000'}/api/news-supabase?page=${page}&pageSize=${pageSize}`;
+    console.log(`📡 Fetching from: ${supabaseUrl}`);
+    const supabaseResponse = await fetch(supabaseUrl, {
+      signal: AbortSignal.timeout(10000) // 10 second timeout
     });
     
     if (supabaseResponse.ok) {
       const supabaseData = await supabaseResponse.json();
-      console.log(`✅ Serving LIVE RSS news from Supabase (${supabaseData.articles?.length || 0} articles with images!)`);
+      console.log(`✅ Serving LIVE RSS news from Supabase (${supabaseData.articles?.length || 0} articles, page ${page})`);
       
-      // Apply pagination if articles exist
-      if (supabaseData.articles && Array.isArray(supabaseData.articles)) {
-        const paginatedArticles = supabaseData.articles.slice(startIndex, endIndex);
-        const hasMore = endIndex < supabaseData.articles.length;
-        
-        return res.status(200).json({
-          ...supabaseData,
-          articles: paginatedArticles,
-          pagination: {
-            page,
-            pageSize,
-            total: supabaseData.articles.length,
-            hasMore
-          }
-        });
-      }
-      
+      // Supabase now handles pagination directly, just pass through
       return res.status(200).json(supabaseData);
     }
   } catch (fetchError) {
