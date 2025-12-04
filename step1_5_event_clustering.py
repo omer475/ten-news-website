@@ -18,6 +18,8 @@ from urllib.parse import urlparse, parse_qs, urlunparse
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import anthropic
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 load_dotenv()
 
@@ -39,10 +41,10 @@ def get_anthropic_client():
 class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
-    # Matching thresholds
-    TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event (strong match)
-    MIN_TITLE_SIMILARITY = 0.55  # Minimum 55% title similarity even with keyword match (lowered to prevent duplicate articles)
-    KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event (increased from 3)
+    # Matching thresholds - MORE LENIENT to prevent duplicate articles
+    TITLE_SIMILARITY_THRESHOLD = 0.60  # 60% title similarity = same event (lowered from 75%)
+    MIN_TITLE_SIMILARITY = 0.40  # Minimum 40% title similarity even with keyword match (lowered from 55%)
+    KEYWORD_MATCH_THRESHOLD = 3  # 3+ shared keywords = same event (lowered from 5)
     ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     
     # Time windows
@@ -52,6 +54,10 @@ class ClusteringConfig:
     # Cluster lifecycle
     CLUSTER_INACTIVITY_HOURS = 24  # Close cluster after 24h without updates
     CLUSTER_MAX_LIFETIME_HOURS = 48  # Close cluster after 48h regardless
+    
+    # PARALLEL PROCESSING SETTINGS
+    PARALLEL_WORKERS = 3  # Number of parallel threads (reduced from 5 to prevent Supabase connection issues)
+    BATCH_SIZE = 8  # Number of articles to batch in one AI call (reduced for stability)
     
     # Keywords to ignore (stopwords)
     STOPWORDS = {
@@ -242,18 +248,24 @@ def check_title_similarity_ai(new_title: str, cluster_titles: List[Tuple[int, st
     # Build the prompt with numbered clusters
     cluster_list = "\n".join([f"{i+1}. {title}" for i, (_, title) in enumerate(cluster_titles)])
     
-    prompt = f"""Compare if articles cover the SAME news event.
+    prompt = f"""Match news articles about the SAME story (even if worded differently).
 
-SAME EVENT = same incident/announcement/development being reported
-DIFFERENT = different incidents, different companies, or different aspects of a topic
+SAME STORY (match YES):
+- Same news event reported by different sources (BBC vs CNN vs Reuters)
+- Same announcement/incident with different headlines
+- Example: "Trump Wins Election" = "Donald Trump Declared President-Elect" = "Republicans Celebrate Trump Victory"
+
+DIFFERENT STORY (match NO):
+- Completely different events or topics
+- Different dates/incidents (yesterday's event vs today's)
 
 NEW ARTICLE: "{new_title}"
 
 CLUSTERS:
 {cluster_list}
 
-Reply with ONLY: 1:YES, 2:NO, 3:NO (etc.)
-Nothing else. No explanations."""
+Reply ONLY: 1:YES, 2:NO, 3:YES (etc.) - be GENEROUS with YES if it's the same news story.
+Nothing else."""
 
     try:
         client = get_anthropic_client()
@@ -307,6 +319,117 @@ Nothing else. No explanations."""
         # Return None for all clusters to signal "use fallback" (not "AI said no match")
         # This ensures the legacy keyword/entity matching is used when AI is unavailable
         return {cluster_id: None for cluster_id, _ in cluster_titles}
+
+
+def check_batch_articles_similarity_ai(articles_with_titles: List[Tuple[int, str]], cluster_titles: List[Tuple[int, str]], debug: bool = False) -> Dict[int, Dict[int, bool]]:
+    """
+    BATCH CHECK: Use Claude Haiku 4.5 to check MULTIPLE articles against clusters in ONE call.
+    Much faster than checking one article at a time!
+    
+    Args:
+        articles_with_titles: List of tuples (article_index, article_title)
+        cluster_titles: List of tuples (cluster_id, cluster_representative_title)
+        debug: If True, print debug information
+        
+    Returns:
+        Dict mapping article_index -> Dict[cluster_id -> True/False/None]
+    """
+    if not cluster_titles or not articles_with_titles:
+        return {}
+    
+    # Build the prompt with numbered articles and clusters
+    articles_list = "\n".join([f"A{i+1}. {title}" for i, (_, title) in enumerate(articles_with_titles)])
+    cluster_list = "\n".join([f"C{i+1}. {title}" for i, (_, title) in enumerate(cluster_titles)])
+    
+    prompt = f"""Match news articles to clusters covering the SAME story (even if worded differently).
+
+SAME STORY (should match):
+- Same news event from different sources (BBC, CNN, Reuters covering same thing)
+- Same announcement with different headlines
+- Example: "Biden Signs Climate Bill" matches "President Signs Landmark Climate Legislation"
+
+DIFFERENT (no match):
+- Completely unrelated topics
+- Different incidents/dates
+
+NEW ARTICLES:
+{articles_list}
+
+EXISTING CLUSTERS:
+{cluster_list}
+
+For each article, which cluster covers the SAME news story? Be GENEROUS - if it's about the same event, match it!
+Format: A1:C3, A2:NONE, A3:C1
+Reply ONLY the matches."""
+
+    try:
+        client = get_anthropic_client()
+        
+        response = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=500,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        result_text = response.content[0].text.strip()
+        first_line = result_text.split('\n')[0].strip()
+        
+        if debug:
+            print(f"  🤖 Batch AI Response: {first_line}")
+        
+        # Initialize results - all articles start with no matches
+        results = {}
+        for article_idx, _ in articles_with_titles:
+            results[article_idx] = {cluster_id: False for cluster_id, _ in cluster_titles}
+        
+        # Parse response: "A1:C3, A2:NONE, A3:C1"
+        parts = first_line.replace(" ", "").replace(";", ",").split(",")
+        for part in parts:
+            if ":" in part:
+                try:
+                    article_part, cluster_part = part.split(":", 1)
+                    
+                    # Extract article index (A1 -> 0)
+                    article_num = ''.join(c for c in article_part if c.isdigit())
+                    if not article_num:
+                        continue
+                    article_list_idx = int(article_num) - 1
+                    
+                    if article_list_idx < 0 or article_list_idx >= len(articles_with_titles):
+                        continue
+                    
+                    article_idx = articles_with_titles[article_list_idx][0]
+                    
+                    # Check if it's NONE or a cluster match
+                    if "NONE" in cluster_part.upper():
+                        continue  # Already initialized as False
+                    
+                    # Extract cluster index (C3 -> 2)
+                    cluster_num = ''.join(c for c in cluster_part if c.isdigit())
+                    if not cluster_num:
+                        continue
+                    cluster_list_idx = int(cluster_num) - 1
+                    
+                    if cluster_list_idx < 0 or cluster_list_idx >= len(cluster_titles):
+                        continue
+                    
+                    cluster_id = cluster_titles[cluster_list_idx][0]
+                    results[article_idx][cluster_id] = True
+                    
+                except (ValueError, IndexError):
+                    continue
+        
+        return results
+        
+    except Exception as e:
+        print(f"  ❌ Batch AI similarity check error: {e}")
+        # Return None for all to signal "use fallback"
+        results = {}
+        for article_idx, _ in articles_with_titles:
+            results[article_idx] = {cluster_id: None for cluster_id, _ in cluster_titles}
+        return results
 
 
 # ==========================================
@@ -453,69 +576,100 @@ class EventClusteringEngine:
         self.supabase = get_supabase_client()
         self.config = ClusteringConfig()
     
-    def get_or_create_source_article(self, article: Dict) -> Optional[int]:
+    def get_or_create_source_article(self, article: Dict, max_retries: int = 3) -> Optional[int]:
         """
         Get existing article from source_articles by URL, or create if not exists.
+        Includes retry logic for transient connection issues.
         
         Args:
             article: Article dict with url, title, description, etc.
+            max_retries: Number of retry attempts for connection failures
             
         Returns:
             Article ID if successful, None if failed
         """
-        try:
-            # Normalize URL
-            normalized_url = normalize_url(article.get('url', ''))
-            
-            # Try to find existing article first
-            result = self.supabase.table('source_articles').select('id').eq(
-                'normalized_url', normalized_url
-            ).execute()
-            
-            if result.data and len(result.data) > 0:
-                # Article already exists, return its ID
-                return result.data[0]['id']
-            
-            # Article doesn't exist, create it
-            # Extract keywords and entities
-            keywords = extract_keywords(
-                article.get('title', ''),
-                article.get('description', '')
-            )
-            entities = extract_entities(
-                article.get('title', ''),
-                article.get('description', '')
-            )
-            
-            # Prepare article data
-            article_data = {
-                'url': article.get('url', ''),
-                'normalized_url': normalized_url,
-                'title': article.get('title', ''),
-                'description': article.get('description', ''),
-                'content': article.get('content', article.get('text', '')),
-                'source_name': article.get('source', 'Unknown'),
-                'source_url': article.get('url', ''),
-                'published_at': article.get('published_date', article.get('published_at')),
-                'score': article.get('score', 0),
-                'keywords': keywords,
-                'entities': entities,
-                'category': article.get('category', article.get('ai_category', 'World News')),
-                'cluster_id': None,  # Not yet clustered
-                'image_url': article.get('image_url')  # Image from RSS feed
-            }
-            
-            # Insert into source_articles
-            result = self.supabase.table('source_articles').insert(article_data).execute()
-            
-            if result.data:
-                return result.data[0]['id']
-            
-            return None
-            
-        except Exception as e:
-            print(f"❌ Error getting/creating source article: {e}")
-            return None
+        import time
+        
+        for attempt in range(max_retries):
+            try:
+                # Normalize URL
+                normalized_url = normalize_url(article.get('url', ''))
+                
+                # Try to find existing article first
+                result = self.supabase.table('source_articles').select('id').eq(
+                    'normalized_url', normalized_url
+                ).execute()
+                
+                if result.data and len(result.data) > 0:
+                    # Article already exists, return its ID
+                    return result.data[0]['id']
+                
+                # Article doesn't exist, create it
+                # Extract keywords and entities
+                keywords = extract_keywords(
+                    article.get('title', ''),
+                    article.get('description', '')
+                )
+                entities = extract_entities(
+                    article.get('title', ''),
+                    article.get('description', '')
+                )
+                
+                # Prepare article data
+                article_data = {
+                    'url': article.get('url', ''),
+                    'normalized_url': normalized_url,
+                    'title': article.get('title', ''),
+                    'description': article.get('description', ''),
+                    'content': article.get('content', article.get('text', '')),
+                    'source_name': article.get('source', 'Unknown'),
+                    'source_url': article.get('url', ''),
+                    'published_at': article.get('published_date', article.get('published_at')),
+                    'score': article.get('score', 0),
+                    'keywords': keywords,
+                    'entities': entities,
+                    'category': article.get('category', article.get('ai_category', 'World News')),
+                    'cluster_id': None,  # Not yet clustered
+                    'image_url': article.get('image_url')  # Image from RSS feed
+                }
+                
+                # Insert into source_articles
+                result = self.supabase.table('source_articles').insert(article_data).execute()
+                
+                if result.data:
+                    return result.data[0]['id']
+                
+                return None
+                
+            except Exception as e:
+                error_str = str(e)
+                error_lower = error_str.lower()
+                
+                # Handle duplicate key violation (article already exists)
+                if '23505' in error_str or 'duplicate key' in error_lower or 'unique_normalized_url' in error_str:
+                    # This is expected - article was inserted by another process or previous run
+                    # Try to fetch the existing article
+                    try:
+                        normalized_url = normalize_url(article.get('url', ''))
+                        result = self.supabase.table('source_articles').select('id').eq(
+                            'normalized_url', normalized_url
+                        ).execute()
+                        if result.data and len(result.data) > 0:
+                            return result.data[0]['id']  # Return existing article ID
+                    except:
+                        pass
+                    return None  # Could not fetch, but not a critical error
+                
+                # Retry on connection-related errors
+                if any(err in error_lower for err in ['disconnect', 'timeout', 'connection', 'reset']):
+                    if attempt < max_retries - 1:
+                        wait_time = (attempt + 1) * 0.5  # 0.5s, 1s, 1.5s
+                        time.sleep(wait_time)
+                        continue
+                print(f"❌ Error getting/creating source article: {e}")
+                return None
+        
+        return None
     
     def get_active_clusters(self) -> List[Dict]:
         """
@@ -662,12 +816,13 @@ class EventClusteringEngine:
     def cluster_articles(self, articles: List[Dict]) -> Dict:
         """
         Main clustering algorithm: group articles by event.
+        NOW WITH PARALLEL PROCESSING for faster AI similarity checks!
         
         Process:
-        1. Save all articles to source_articles table
-        2. Get active clusters
-        3. For each article, try to match with existing cluster
-        4. If no match, create new cluster
+        1. Save all articles to source_articles table (parallel)
+        2. Get active clusters and cache cluster sources
+        3. Batch articles and check against clusters in parallel
+        4. Process results and create/update clusters
         
         Args:
             articles: List of approved articles from Step 1
@@ -676,9 +831,10 @@ class EventClusteringEngine:
             Dict with clustering statistics and cluster IDs
         """
         print(f"\n{'='*60}")
-        print(f"STEP 1.5: EVENT CLUSTERING")
+        print(f"STEP 1.5: EVENT CLUSTERING (PARALLEL MODE)")
         print(f"{'='*60}")
-        print(f"Total articles to cluster: {len(articles)}\n")
+        print(f"Total articles to cluster: {len(articles)}")
+        print(f"⚡ Using {self.config.PARALLEL_WORKERS} parallel workers, batch size {self.config.BATCH_SIZE}\n")
         
         stats = {
             'total_articles': len(articles),
@@ -689,25 +845,53 @@ class EventClusteringEngine:
             'cluster_ids': []  # Track ALL affected cluster IDs (new + updated)
         }
         
+        # Thread-safe lock for stats and active_clusters
+        stats_lock = threading.Lock()
+        
         # Get active clusters
         active_clusters = self.get_active_clusters()
-        print(f"📊 Found {len(active_clusters)} active clusters\n")
+        print(f"📊 Found {len(active_clusters)} active clusters")
         
-        for i, article in enumerate(articles, 1):
-            title = article.get('title', 'Unknown')[:60]
-            print(f"[{i}/{len(articles)}] Processing: {title}")
-            
-            # Get or create article in source_articles table
+        # Pre-fetch cluster sources for all active clusters (cached)
+        print(f"📦 Pre-caching cluster sources...")
+        cluster_sources_cache = {}
+        cluster_titles_cache = []  # (cluster_id, rep_title)
+        
+        for cluster in active_clusters:
+            sources = self.get_cluster_sources(cluster['id'])
+            cluster_sources_cache[cluster['id']] = sources
+            if sources:
+                rep = max(sources, key=lambda x: x.get('score', 0))
+                rep_title = rep.get('title', cluster.get('main_title', ''))
+                cluster_titles_cache.append((cluster['id'], rep_title))
+        
+        print(f"✅ Cached {len(cluster_titles_cache)} clusters with sources\n")
+        
+        # PHASE 1: Save all articles to database in parallel
+        print(f"📝 Phase 1: Saving articles to database...")
+        article_source_ids = {}  # article_index -> source_id
+        
+        def save_article(idx_article_tuple):
+            idx, article = idx_article_tuple
             source_id = self.get_or_create_source_article(article)
-            
-            if not source_id:
-                print(f"  ❌ Failed to get/create article")
-                stats['failed'] += 1
-                continue
-            
-            stats['saved_articles'] += 1
-            
-            # Add keywords and entities to article for matching
+            return idx, source_id
+        
+        with ThreadPoolExecutor(max_workers=self.config.PARALLEL_WORKERS) as executor:
+            futures = [executor.submit(save_article, (i, a)) for i, a in enumerate(articles)]
+            for future in as_completed(futures):
+                idx, source_id = future.result()
+                if source_id:
+                    article_source_ids[idx] = source_id
+                    with stats_lock:
+                        stats['saved_articles'] += 1
+                else:
+                    with stats_lock:
+                        stats['failed'] += 1
+        
+        print(f"✅ Saved {stats['saved_articles']}/{len(articles)} articles\n")
+        
+        # Prepare articles for clustering (add keywords/entities)
+        for i, article in enumerate(articles):
             article['keywords'] = extract_keywords(
                 article.get('title', ''),
                 article.get('description', '')
@@ -716,76 +900,147 @@ class EventClusteringEngine:
                 article.get('title', ''),
                 article.get('description', '')
             )
+            article['_idx'] = i  # Track original index
+        
+        # PHASE 2: Batch AI similarity checks
+        print(f"🤖 Phase 2: AI similarity checks (batched & parallel)...")
+        
+        # Filter articles that were saved successfully
+        valid_articles = [(i, articles[i]) for i in article_source_ids.keys()]
+        
+        # Process in batches
+        batch_size = self.config.BATCH_SIZE
+        all_ai_results = {}  # article_idx -> {cluster_id -> True/False/None}
+        
+        def process_batch(batch_articles):
+            """Process a batch of articles against all clusters"""
+            if not cluster_titles_cache:
+                return {idx: {} for idx, _ in batch_articles}
             
-            # Try to match with existing clusters using AI
+            # Check time proximity for each article
+            batch_with_valid_clusters = []
+            for idx, article in batch_articles:
+                # For simplicity, assume all clusters are time-valid
+                # (more precise filtering can be added if needed)
+                batch_with_valid_clusters.append((idx, article.get('title', '')))
+            
+            if not batch_with_valid_clusters:
+                return {idx: {} for idx, _ in batch_articles}
+            
+            # Make single batched AI call for this batch
+            return check_batch_articles_similarity_ai(
+                batch_with_valid_clusters,
+                cluster_titles_cache,
+                debug=False
+            )
+        
+        # Process batches in parallel
+        batches = [valid_articles[i:i + batch_size] for i in range(0, len(valid_articles), batch_size)]
+        print(f"   Processing {len(batches)} batches of up to {batch_size} articles each...")
+        
+        with ThreadPoolExecutor(max_workers=self.config.PARALLEL_WORKERS) as executor:
+            batch_futures = {executor.submit(process_batch, batch): batch for batch in batches}
+            completed = 0
+            for future in as_completed(batch_futures):
+                batch_results = future.result()
+                all_ai_results.update(batch_results)
+                completed += 1
+                if completed % 3 == 0 or completed == len(batches):
+                    print(f"   ✓ Completed {completed}/{len(batches)} batches")
+        
+        print(f"✅ AI checks complete\n")
+        
+        # PHASE 3: Process results and assign to clusters
+        print(f"📊 Phase 3: Assigning articles to clusters...")
+        
+        # Track NEW clusters created in THIS batch (need AI check for these)
+        new_batch_clusters = []  # List of (cluster_id, title) tuples
+        original_cluster_count = len(active_clusters)  # Clusters before this batch
+        
+        for i, article in enumerate(articles):
+            if i not in article_source_ids:
+                continue  # Article wasn't saved successfully
+            
+            source_id = article_source_ids[i]
+            title = article.get('title', 'Unknown')[:50]
+            ai_decisions = all_ai_results.get(i, {})
+            
             matched = False
+            matched_cluster = None
             
-            # Collect cluster titles for batched AI check
-            cluster_titles_for_ai = []
-            cluster_sources_cache = {}
-            
-            for cluster in active_clusters:
-                # Check time proximity first (cheap check)
-                if check_time_proximity(article, cluster):
-                    cluster_sources = self.get_cluster_sources(cluster['id'])
-                    cluster_sources_cache[cluster['id']] = cluster_sources
-                    
-                    if cluster_sources:
-                        # Get representative title (highest score article)
-                        rep = max(cluster_sources, key=lambda x: x.get('score', 0))
-                        rep_title = rep.get('title', cluster.get('main_title', ''))
-                        cluster_titles_for_ai.append((cluster['id'], rep_title))
-            
-            # Call AI once for all clusters (batched)
-            ai_decisions = {}
-            if cluster_titles_for_ai:
-                print(f"  🤖 Checking against {len(cluster_titles_for_ai)} clusters with AI...")
-                ai_decisions = check_title_similarity_ai(
-                    article.get('title', ''),
-                    cluster_titles_for_ai,
-                    debug=True
-                )
-            
-            # Find matching cluster using AI decisions
-            for cluster in active_clusters:
+            # STEP 1: Check against EXISTING clusters (from DB, with pre-computed AI decisions)
+            for cluster in active_clusters[:original_cluster_count]:
                 cluster_id = cluster['id']
+                cluster_sources = cluster_sources_cache.get(cluster_id, [])
                 
-                # Skip if not in our AI check (failed time proximity)
-                if cluster_id not in cluster_sources_cache:
+                # Check time proximity
+                if not check_time_proximity(article, cluster):
                     continue
                 
-                cluster_sources = cluster_sources_cache[cluster_id]
                 ai_decision = ai_decisions.get(cluster_id)
                 
                 match_result = is_same_event(
-                    article, cluster, cluster_sources, 
-                    debug=True, 
+                    article, cluster, cluster_sources,
+                    debug=False,
                     ai_decision=ai_decision
                 )
                 
                 if match_result['match']:
-                    # Add to this cluster
-                    if self.add_to_cluster(cluster['id'], source_id):
-                        print(f"  ✓ Added to cluster: {cluster['event_name']}")
-                        stats['matched_to_existing'] += 1
-                        # Track this cluster as updated
-                        if cluster['id'] not in stats['cluster_ids']:
-                            stats['cluster_ids'].append(cluster['id'])
+                    matched_cluster = cluster
+                    matched = True
+                    break
+            
+            # STEP 2: If no match with existing, check against NEW clusters from THIS batch
+            # Use AI for semantic matching (important for same-event, different-wording articles)
+            if not matched and new_batch_clusters:
+                # Run AI check against new batch clusters
+                new_cluster_ai_results = check_title_similarity_ai(
+                    article.get('title', ''),
+                    new_batch_clusters,
+                    debug=False
+                )
+                
+                for cluster in active_clusters[original_cluster_count:]:
+                    cluster_id = cluster['id']
+                    ai_decision = new_cluster_ai_results.get(cluster_id)
+                    
+                    if ai_decision is True:
+                        matched_cluster = cluster
                         matched = True
                         break
+                    elif ai_decision is None:
+                        # AI unavailable, use fallback string matching
+                        cluster_sources = cluster_sources_cache.get(cluster_id, [])
+                        match_result = is_same_event(
+                            article, cluster, cluster_sources,
+                            debug=False,
+                            ai_decision=None
+                        )
+                        if match_result['match']:
+                            matched_cluster = cluster
+                            matched = True
+                            break
             
-            # If no match found, create new cluster
-            if not matched:
+            if matched and matched_cluster:
+                # Add to existing cluster
+                if self.add_to_cluster(matched_cluster['id'], source_id):
+                    print(f"   ✓ [{i+1}] {title}... → {matched_cluster['event_name'][:30]}")
+                    with stats_lock:
+                        stats['matched_to_existing'] += 1
+                        if matched_cluster['id'] not in stats['cluster_ids']:
+                            stats['cluster_ids'].append(matched_cluster['id'])
+            else:
+                # Create new cluster
                 cluster_id = self.create_cluster(article, source_id)
                 if cluster_id:
                     event_name = self._generate_event_name(article.get('title', ''))
-                    print(f"  ✨ Created new cluster: {event_name}")
-                    stats['new_clusters_created'] += 1
-                    # Track this new cluster
-                    stats['cluster_ids'].append(cluster_id)
+                    print(f"   ✨ [{i+1}] {title}... → NEW: {event_name[:30]}")
+                    with stats_lock:
+                        stats['new_clusters_created'] += 1
+                        stats['cluster_ids'].append(cluster_id)
                     
-                    # Add to active clusters for subsequent matching
-                    active_clusters.append({
+                    # Add to active clusters and caches for subsequent matching
+                    new_cluster = {
                         'id': cluster_id,
                         'event_name': event_name,
                         'main_title': article.get('title', ''),
@@ -794,14 +1049,24 @@ class EventClusteringEngine:
                         'source_count': 1,
                         'importance_score': article.get('score', 0),
                         'status': 'active'
-                    })
+                    }
+                    active_clusters.append(new_cluster)
+                    cluster_sources_cache[cluster_id] = [{
+                        'title': article.get('title', ''),
+                        'score': article.get('score', 0)
+                    }]
+                    cluster_titles_cache.append((cluster_id, article.get('title', '')))
+                    
+                    # Track this new cluster for AI matching with subsequent articles
+                    new_batch_clusters.append((cluster_id, article.get('title', '')))
                 else:
-                    print(f"  ❌ Failed to create cluster")
-                    stats['failed'] += 1
+                    print(f"   ❌ [{i+1}] Failed to create cluster for: {title}")
+                    with stats_lock:
+                        stats['failed'] += 1
         
         # Print summary
         print(f"\n{'='*60}")
-        print(f"CLUSTERING COMPLETE")
+        print(f"CLUSTERING COMPLETE (PARALLEL)")
         print(f"{'='*60}")
         print(f"✓ Articles saved: {stats['saved_articles']}/{stats['total_articles']}")
         print(f"✓ Matched to existing clusters: {stats['matched_to_existing']}")

@@ -401,6 +401,12 @@ def run_complete_pipeline():
             # STEP 8: Publishing to Supabase
             print(f"\n💾 STEP 8: PUBLISHING TO SUPABASE")
             
+            # Check if article for this cluster already exists (prevent duplicates)
+            existing = supabase.table('published_articles').select('id').eq('cluster_id', cluster_id).execute()
+            if existing.data and len(existing.data) > 0:
+                print(f"   ⏭️ Cluster {cluster_id} already published (ID: {existing.data[0]['id']}), skipping...")
+                continue
+            
             # Use the HIGHEST Gemini score from Step 1 (from any source in cluster)
             source_scores = [s.get('score', 0) for s in cluster_sources if s.get('score')]
             article_score = max(source_scores) if source_scores else 500
