@@ -744,14 +744,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         const counts = Object.values(newsCountByCountry);
         const maxCount = Math.max(...counts, 1);
         
+        console.log('=== MAP COLORING ===');
+        console.log('Countries in data:', Object.keys(newsCountByCountry).length);
+        console.log('Max count:', maxCount);
+        
+        let matchedCount = 0;
+        let unmatchedCountries = [];
+        
         countryElements.forEach(el => {
           const countryId = parseInt(el.getAttribute('data-id'));
           let articleCount = null;
+          let matchedName = null;
           
           for (const [name, count] of Object.entries(newsCountByCountry)) {
             const normalizedName = name.toLowerCase().trim();
             if (countryNameToId[normalizedName] === countryId) {
               articleCount = count;
+              matchedName = name;
+              matchedCount++;
               break;
             }
           }
@@ -761,6 +771,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             el.style.fill = getColor(intensity);
           }
         });
+        
+        // Find unmatched countries
+        for (const [name, count] of Object.entries(newsCountByCountry)) {
+          const normalizedName = name.toLowerCase().trim();
+          if (!countryNameToId[normalizedName]) {
+            unmatchedCountries.push(`${name} (${count})`);
+          }
+        }
+        
+        console.log('Matched countries:', matchedCount);
+        console.log('Unmatched countries:', unmatchedCountries);
+        console.log('====================');
 
         setMapLoaded(true);
       } catch (error) {
