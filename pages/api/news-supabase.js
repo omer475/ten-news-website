@@ -31,31 +31,16 @@ export default async function handler(req, res) {
     // Fetch published articles from last 24 hours, sorted by score (highest first)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    // Build query with filters applied at DATABASE level (not client-side)
-    // This ensures pagination works correctly on filtered data
-    const baseQuery = () => supabase
+    // First get total count
+    const { count: totalCount } = await supabase
+      .from('published_articles')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', twentyFourHoursAgo);
+    
+    const { data: articles, error } = await supabase
       .from('published_articles')
       .select('*')
       .gte('created_at', twentyFourHoursAgo)
-      .not('url', 'ilike', '%test%')           // Exclude test URLs at DB level
-      .not('title_news', 'ilike', '%test%')    // Exclude test titles at DB level
-      .not('source', 'ilike', '%test%');       // Exclude test sources at DB level
-    
-    // Get total count WITH filters applied (for accurate pagination)
-    const { count: totalCount, error: countError } = await supabase
-      .from('published_articles')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', twentyFourHoursAgo)
-      .not('url', 'ilike', '%test%')
-      .not('title_news', 'ilike', '%test%')
-      .not('source', 'ilike', '%test%');
-    
-    if (countError) {
-      console.error('Supabase count error:', countError)
-    }
-    
-    // Fetch paginated articles with filters
-    const { data: articles, error } = await baseQuery()
       .order('ai_final_score', { ascending: false, nullsFirst: false })  // Primary: Score (highest first)
       .order('created_at', { ascending: false })  // Secondary: Date (tie-breaker)
       .range(offset, offset + pageSize - 1)
@@ -65,11 +50,65 @@ export default async function handler(req, res) {
       throw error
     }
 
-    console.log(`\n🔍 SUPABASE QUERY (with DB-level filters): ${articles?.length || 0} articles fetched`)
-    console.log(`📊 Total filtered articles in DB: ${totalCount || 0}`)
+    console.log(`\n🔍 RAW SUPABASE QUERY RESULT: ${articles?.length || 0} articles fetched`)
+
+    // Filter out test records AND articles older than 24 hours
+    const now = Date.now();
+    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
     
-    // Use articles directly - filtering already done at DB level
-    const filteredArticles = articles || [];
+    let testFilteredCount = 0;
+    let dateFilteredCount = 0;
+    let noDateCount = 0;
+    
+    const filteredArticles = (articles || []).filter(a => {
+      // Filter out test articles
+      const url = a?.url || ''
+      const title = a?.title_news || a?.title || ''  // Check title_news first (new schema)
+      const source = a?.source || ''
+      const isNotTest = url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source);
+      
+      if (!isNotTest) {
+        testFilteredCount++;
+        return false;
+      }
+      
+      // Filter by when article was added to database (not when originally published)
+      // This shows all articles added in last 24h, even if news is older
+      const articleDate = a.created_at || a.added_at || a.published_date || a.published_at;
+      
+      if (!articleDate) {
+        noDateCount++;
+        console.warn('⚠️ Article missing ALL date fields, excluding:', title);
+        return false;
+      }
+      
+      const articleTime = new Date(articleDate).getTime();
+      if (isNaN(articleTime)) {
+        console.warn('⚠️ Invalid article date, excluding:', title);
+        return false;
+      }
+      
+      const ageMs = now - articleTime;
+      const isRecent = ageMs < twentyFourHoursMs;
+      
+      if (!isRecent) {
+        dateFilteredCount++;
+        const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
+        const daysOld = (hoursOld / 24).toFixed(1);
+        console.log(`🗑️ Filtering out old news (${hoursOld}h / ${daysOld}d old):`, title);
+      }
+      
+      return isRecent;
+    })
+
+    console.log(`\n📊 DETAILED FILTER STATS:`)
+    console.log(`  ✅ Fetched from Supabase: ${articles?.length || 0} articles`)
+    console.log(`  🧪 Filtered as test articles: ${testFilteredCount}`)
+    console.log(`  📅 Filtered (added > 24h ago): ${dateFilteredCount}`)
+    console.log(`  ⏰ Missing ALL date fields: ${noDateCount}`)
+    console.log(`  ✅ Final count: ${filteredArticles.length} articles`)
+    console.log(`  🔍 Expected: ~136 articles added in last 24 hours`)
+    console.log(`  ❓ Missing articles: ${136 - filteredArticles.length}\n`)
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
@@ -240,4 +279,3 @@ export default async function handler(req, res) {
     })
   }
 }
-
