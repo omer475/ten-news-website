@@ -2,24 +2,45 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Script from 'next/script';
 
 export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker }) {
+  // Calculate time window immediately (before any localStorage updates)
+  const getInitialTimeWindow = () => {
+    if (typeof window === 'undefined') return 24;
+    try {
+      const lastVisit = localStorage.getItem('tennews_last_visit');
+      if (!lastVisit) return 24; // First time user
+      
+      const now = Date.now();
+      const lastTime = parseInt(lastVisit);
+      const hoursDiff = (now - lastTime) / (1000 * 60 * 60);
+      
+      // Round up to nearest hour, with minimum of 1 hour and max of 24 hours
+      return Math.min(24, Math.max(1, Math.ceil(hoursDiff)));
+    } catch {
+      return 24;
+    }
+  };
+
   // Safety check for stories
   const [stories, setStories] = useState(initialStories || []);
   const [lastHourStories, setLastHourStories] = useState([]);
+  const mapTimeWindowRef = useRef(getInitialTimeWindow());
+  const mapTimeWindow = mapTimeWindowRef.current;
 
   const mapContainerRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState({ d3: false, topojson: false });
   const [newsCountByCountry, setNewsCountByCountry] = useState({});
 
-  // Filter stories from the last hour
-  const filterLastHourStories = useCallback((storiesToFilter) => {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  // Filter stories based on last visit time window
+  const filterStoriesByTimeWindow = useCallback((storiesToFilter) => {
+    const cutoffTime = new Date(Date.now() - mapTimeWindow * 60 * 60 * 1000);
+    
     return storiesToFilter.filter(story => {
       if (story.type !== 'news') return false;
       const createdAt = story.created_at ? new Date(story.created_at) : null;
-      return createdAt && createdAt >= oneHourAgo;
+      return createdAt && createdAt >= cutoffTime;
     });
-  }, []);
+  }, [mapTimeWindow]);
 
   // Fetch fresh stories from Supabase
   const fetchFreshStories = useCallback(async () => {
@@ -29,18 +50,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         const data = await response.json();
         if (data.stories && Array.isArray(data.stories)) {
           setStories(data.stories);
-          setLastHourStories(filterLastHourStories(data.stories));
+          setLastHourStories(filterStoriesByTimeWindow(data.stories));
         }
       }
     } catch (error) {
       console.error('Error fetching fresh stories:', error);
     }
-  }, [filterLastHourStories]);
+  }, [filterStoriesByTimeWindow]);
 
   // Initialize and set up hourly refresh
   useEffect(() => {
-    // Initial filter
-    setLastHourStories(filterLastHourStories(stories));
+    // Initial filter based on user's last visit
+    setLastHourStories(filterStoriesByTimeWindow(stories));
 
     // Set up hourly refresh
     const refreshInterval = setInterval(() => {
@@ -48,15 +69,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }, 60 * 60 * 1000); // Every hour
 
     return () => clearInterval(refreshInterval);
-  }, [filterLastHourStories, fetchFreshStories]);
+  }, [filterStoriesByTimeWindow, fetchFreshStories]);
 
   // Update when initial stories change
   useEffect(() => {
     if (initialStories && Array.isArray(initialStories)) {
       setStories(initialStories);
-      setLastHourStories(filterLastHourStories(initialStories));
+      setLastHourStories(filterStoriesByTimeWindow(initialStories));
     }
-  }, [initialStories, filterLastHourStories]);
+  }, [initialStories, filterStoriesByTimeWindow]);
 
   // Country name to ISO numeric ID mapping for the map
   const countryNameToId = {
