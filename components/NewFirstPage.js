@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Script from 'next/script';
 
 export default function NewFirstPage({ onContinue, user, userProfile, stories, readTracker }) {
   // Safety check for stories
@@ -6,25 +7,172 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     stories = [];
   }
 
-  // Timeline fullscreen state
-  const [todayFullscreen, setTodayFullscreen] = useState(false);
+  const mapContainerRef = useRef(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [scriptsLoaded, setScriptsLoaded] = useState({ d3: false, topojson: false });
+  const [newsCountByCountry, setNewsCountByCountry] = useState({});
 
-  // Calculate important news count
-  const getImportantNewsCount = () => {
-    // Filter out opening and all-read stories, only get news
-    const newsStories = stories.filter(story => story.type === 'news');
-    
-    // Filter important news (score >= 950)
-    let importantNews = newsStories.filter(story => story.final_score >= 950);
-    
-    // For logged-in users, filter out read articles
-    if (user && readTracker) {
-      importantNews = importantNews.filter(story => !readTracker.hasBeenRead(story.id));
-    }
-    
-    return importantNews.length;
+  // Country name to ISO numeric ID mapping for the map
+  const countryNameToId = {
+    'afghanistan': 4, 'albania': 8, 'algeria': 12, 'andorra': 20, 'angola': 24,
+    'argentina': 32, 'armenia': 51, 'australia': 36, 'austria': 40, 'azerbaijan': 31,
+    'bahamas': 44, 'bahrain': 48, 'bangladesh': 50, 'barbados': 52, 'belarus': 112,
+    'belgium': 56, 'belize': 84, 'benin': 204, 'bhutan': 64, 'bolivia': 68,
+    'bosnia': 70, 'bosnia and herzegovina': 70, 'botswana': 72, 'brazil': 76,
+    'brunei': 96, 'bulgaria': 100, 'burkina faso': 854, 'burundi': 108,
+    'cambodia': 116, 'cameroon': 120, 'canada': 124, 'central african republic': 140,
+    'chad': 148, 'chile': 152, 'china': 156, 'colombia': 170, 'comoros': 174,
+    'congo': 178, 'dr congo': 180, 'democratic republic of congo': 180,
+    'costa rica': 188, 'croatia': 191, 'cuba': 192, 'cyprus': 196, 'czechia': 203,
+    'czech republic': 203, 'denmark': 208, 'djibouti': 262, 'dominican republic': 214,
+    'ecuador': 218, 'egypt': 818, 'el salvador': 222, 'equatorial guinea': 226,
+    'eritrea': 232, 'estonia': 233, 'eswatini': 748, 'ethiopia': 231, 'fiji': 242,
+    'finland': 246, 'france': 250, 'gabon': 266, 'gambia': 270, 'georgia': 268,
+    'germany': 276, 'ghana': 288, 'greece': 300, 'grenada': 308, 'guatemala': 320,
+    'guinea': 324, 'guinea-bissau': 624, 'guyana': 328, 'haiti': 332, 'honduras': 340,
+    'hungary': 348, 'iceland': 352, 'india': 356, 'indonesia': 360, 'iran': 364,
+    'iraq': 368, 'ireland': 372, 'israel': 376, 'italy': 380, 'ivory coast': 384,
+    'jamaica': 388, 'japan': 392, 'jordan': 400, 'kazakhstan': 398, 'kenya': 404,
+    'north korea': 408, 'south korea': 410, 'korea': 410, 'kuwait': 414,
+    'kyrgyzstan': 417, 'laos': 418, 'latvia': 428, 'lebanon': 422, 'lesotho': 426,
+    'liberia': 430, 'libya': 434, 'liechtenstein': 438, 'lithuania': 440,
+    'luxembourg': 442, 'madagascar': 450, 'malawi': 454, 'malaysia': 458,
+    'maldives': 462, 'mali': 466, 'malta': 470, 'mauritania': 478, 'mauritius': 480,
+    'mexico': 484, 'moldova': 498, 'monaco': 492, 'mongolia': 496, 'montenegro': 499,
+    'morocco': 504, 'mozambique': 508, 'myanmar': 104, 'burma': 104, 'namibia': 516,
+    'nepal': 524, 'netherlands': 528, 'new zealand': 554, 'nicaragua': 558,
+    'niger': 562, 'nigeria': 566, 'north macedonia': 807, 'macedonia': 807,
+    'norway': 578, 'oman': 512, 'pakistan': 586, 'panama': 591,
+    'papua new guinea': 598, 'paraguay': 600, 'peru': 604, 'philippines': 608,
+    'poland': 616, 'portugal': 620, 'qatar': 634, 'romania': 642, 'russia': 643,
+    'russian federation': 643, 'rwanda': 646, 'saudi arabia': 682, 'senegal': 686,
+    'serbia': 688, 'sierra leone': 694, 'singapore': 702, 'slovakia': 703,
+    'slovenia': 705, 'solomon islands': 90, 'somalia': 706, 'south africa': 710,
+    'south sudan': 728, 'spain': 724, 'sri lanka': 144, 'sudan': 729,
+    'suriname': 740, 'sweden': 752, 'switzerland': 756, 'syria': 760,
+    'taiwan': 158, 'tajikistan': 762, 'tanzania': 834, 'thailand': 764,
+    'timor-leste': 626, 'togo': 768, 'tonga': 776, 'trinidad and tobago': 780,
+    'tunisia': 788, 'turkey': 792, 'turkmenistan': 795, 'uganda': 800,
+    'ukraine': 804, 'united arab emirates': 784, 'uae': 784, 'united kingdom': 826,
+    'uk': 826, 'britain': 826, 'great britain': 826, 'england': 826, 'scotland': 826,
+    'wales': 826, 'northern ireland': 826,
+    'united states': 840, 'usa': 840, 'us': 840, 'u.s.': 840, 'u.s': 840,
+    'america': 840, 'american': 840, 'uruguay': 858, 'uzbekistan': 860, 'vanuatu': 548,
+    'vatican': 336, 'venezuela': 862, 'vietnam': 704, 'yemen': 887,
+    'zambia': 894, 'zimbabwe': 716, 'palestine': 275, 'palestinian': 275, 'gaza': 275,
+    'west bank': 275, 'european union': 0, 'eu': 0
   };
 
+  // Country aliases and common references
+  const countryAliases = {
+    'chinese': 'china',
+    'russian': 'russia',
+    'ukrainian': 'ukraine',
+    'american': 'united states',
+    'british': 'united kingdom',
+    'french': 'france',
+    'german': 'germany',
+    'italian': 'italy',
+    'spanish': 'spain',
+    'japanese': 'japan',
+    'korean': 'south korea',
+    'indian': 'india',
+    'brazilian': 'brazil',
+    'australian': 'australia',
+    'canadian': 'canada',
+    'mexican': 'mexico',
+    'israeli': 'israel',
+    'iranian': 'iran',
+    'iraqi': 'iraq',
+    'syrian': 'syria',
+    'turkish': 'turkey',
+    'saudi': 'saudi arabia',
+    'egyptian': 'egypt',
+    'south african': 'south africa',
+    'nigerian': 'nigeria',
+    'pakistani': 'pakistan',
+    'afghan': 'afghanistan',
+    'polish': 'poland',
+    'dutch': 'netherlands',
+    'belgian': 'belgium',
+    'swiss': 'switzerland',
+    'austrian': 'austria',
+    'greek': 'greece',
+    'swedish': 'sweden',
+    'norwegian': 'norway',
+    'danish': 'denmark',
+    'finnish': 'finland',
+    'portuguese': 'portugal',
+    'indonesian': 'indonesia',
+    'vietnamese': 'vietnam',
+    'thai': 'thailand',
+    'philippine': 'philippines',
+    'filipino': 'philippines',
+    'taiwanese': 'taiwan',
+    'singaporean': 'singapore',
+    'malaysian': 'malaysia',
+    'argentinian': 'argentina',
+    'colombian': 'colombia',
+    'venezuelan': 'venezuela',
+    'peruvian': 'peru',
+    'chilean': 'chile'
+  };
+
+  // Extract country mentions from article text
+  const extractCountriesFromText = (text) => {
+    if (!text) return [];
+    const normalizedText = text.toLowerCase();
+    const foundCountries = new Set();
+
+    // Check for country names
+    Object.keys(countryNameToId).forEach(country => {
+      // Create word boundary regex for more accurate matching
+      const regex = new RegExp(`\\b${country.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(normalizedText)) {
+        foundCountries.add(country);
+      }
+    });
+
+    // Check for country aliases/adjectives
+    Object.entries(countryAliases).forEach(([alias, country]) => {
+      const regex = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(normalizedText)) {
+        foundCountries.add(country);
+      }
+    });
+
+    return Array.from(foundCountries);
+  };
+
+  // Count news by country from all stories
+  const countNewsByCountry = () => {
+    const counts = {};
+    
+    stories.filter(story => story.type === 'news').forEach(story => {
+      // Combine title and description for country extraction
+      const textToSearch = [
+        story.title,
+        story.title_news,
+        story.description,
+        story.category
+      ].filter(Boolean).join(' ');
+
+      const countries = extractCountriesFromText(textToSearch);
+      
+      countries.forEach(country => {
+        // Normalize country name for display
+        const displayName = country.split(' ').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        counts[displayName] = (counts[displayName] || 0) + 1;
+      });
+    });
+
+    return counts;
+  };
+
+  // Calculate total news count
   const getTotalNewsCount = () => {
     return stories.filter(story => story.type === 'news').length;
   };
@@ -32,19 +180,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
   const getFirstName = () => {
     if (!user) return null;
     
-    // Try to get name from profile first
     if (userProfile?.full_name) {
-      const firstName = userProfile.full_name.split(' ')[0];
-      return firstName;
+      return userProfile.full_name.split(' ')[0];
     }
     
-    // Fallback to user metadata
     if (user.user_metadata?.full_name) {
-      const firstName = user.user_metadata.full_name.split(' ')[0];
-      return firstName;
+      return user.user_metadata.full_name.split(' ')[0];
     }
     
-    // Fallback to email username
     if (user.email) {
       return user.email.split('@')[0];
     }
@@ -52,539 +195,391 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
     return 'there';
   };
 
-  const importantNewsCount = getImportantNewsCount();
   const totalNewsCount = getTotalNewsCount();
   const firstName = getFirstName();
 
-  // Helper function to clean title from markdown
-  const cleanTitle = (title) => {
-    if (!title) return '';
-    // Remove markdown bold markers
-    return title.replace(/\*\*/g, '');
+  // Calculate last visit text
+  const getLastVisitText = () => {
+    // For now, use a static value - you can integrate with actual last visit tracking
+    return '2h ago';
   };
 
-  // Helper function to format time since published
-  const formatTimeSince = (publishedDate) => {
-    const now = new Date();
-    const published = new Date(publishedDate);
-    const diffMs = now - published;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 60) {
-      return `${diffMins}m`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h`;
-    } else {
-      return `${diffDays}d`;
+  // Get color based on intensity (0-1)
+  const getColor = (value) => {
+    const colors = [
+      { pos: 0, r: 102, g: 194, b: 114 },      // Green
+      { pos: 0.33, r: 234, g: 190, b: 85 },    // Yellow
+      { pos: 0.66, r: 232, g: 120, b: 85 },    // Orange
+      { pos: 1, r: 192, g: 57, b: 57 }         // Red
+    ];
+    
+    let lower = colors[0];
+    let upper = colors[colors.length - 1];
+    
+    for (let i = 0; i < colors.length - 1; i++) {
+      if (value >= colors[i].pos && value <= colors[i + 1].pos) {
+        lower = colors[i];
+        upper = colors[i + 1];
+        break;
+      }
     }
+    
+    const range = upper.pos - lower.pos;
+    const factor = range === 0 ? 0 : (value - lower.pos) / range;
+    
+    const r = Math.round(lower.r + (upper.r - lower.r) * factor);
+    const g = Math.round(lower.g + (upper.g - lower.g) * factor);
+    const b = Math.round(lower.b + (upper.b - lower.b) * factor);
+    
+    return `rgb(${r}, ${g}, ${b})`;
   };
 
-  // Get For You articles (first 5 from latest 20 articles that have images)
-  const forYouArticles = stories
-    .filter(story => story.type === 'news')
-    .slice(0, 20)  // Take first 20 latest articles
-    .filter(story => story.urlToImage)  // Filter only those with images
-    .slice(0, 5);  // Take first 5 with images
+  // Load the map when scripts are ready
+  useEffect(() => {
+    if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
+    if (stories.length === 0) return;
+    if (typeof window === 'undefined') return;
 
-  // Get Today timeline stories (first 20 news articles)
-  const todayStories = stories
-    .filter(story => story.type === 'news')
-    .slice(0, 20);
+    const loadMap = async () => {
+      try {
+        const d3 = window.d3;
+        const topojson = window.topojson;
+        
+        if (!d3 || !topojson) {
+          console.error('D3 or TopoJSON not loaded');
+          return;
+        }
+        
+        // Fetch world map data
+        const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json');
+        const topo = await res.json();
+        const geo = topojson.feature(topo, topo.objects.countries);
+        
+        const svg = mapContainerRef.current?.querySelector('svg');
+        const g = svg?.querySelector('#countries');
+        
+        if (!svg || !g) return;
 
-  // Debug logging
-  console.log('NewFirstPage - Total stories:', stories.length);
-  console.log('NewFirstPage - Stories types:', stories.map(s => s.type));
-  console.log('NewFirstPage - News stories:', stories.filter(s => s.type === 'news').length);
-  console.log('NewFirstPage - For You articles:', forYouArticles.length);
-  console.log('NewFirstPage - Today stories:', todayStories.length);
-  console.log('NewFirstPage - First today story:', todayStories[0]);
+        const proj = d3.geoNaturalEarth1().scale(320).translate([800, 450]);
+        const path = d3.geoPath().projection(proj);
+        
+        // Exclude Greenland and Antarctica
+        const exclude = [304, 10];
+        
+        // Clear existing paths
+        g.innerHTML = '';
+        
+        geo.features.forEach(f => {
+          if (exclude.includes(+f.id)) return;
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const d = path(f);
+          if (d) {
+            p.setAttribute('d', d);
+            p.setAttribute('class', 'country');
+            p.setAttribute('data-id', f.id);
+            g.appendChild(p);
+          }
+        });
 
-  // Determine the message to display
-  let greetingLine = '';
-  let messageLine = '';
+        // Calculate news by country
+        const newsCounts = countNewsByCountry();
+        setNewsCountByCountry(newsCounts);
 
-  if (user) {
-    // Logged in user
-    greetingLine = `Hi ${firstName},`;
-    
-    if (importantNewsCount > 0) {
-      messageLine = `There ${importantNewsCount === 1 ? 'is' : 'are'} ${importantNewsCount} important ${importantNewsCount === 1 ? 'news' : 'news'} to know`;
-    } else {
-      messageLine = `There ${totalNewsCount === 1 ? 'is' : 'are'} ${totalNewsCount} new ${totalNewsCount === 1 ? 'news' : 'news'}`;
+        // Apply colors to countries
+        const countryElements = g.querySelectorAll('.country');
+        const counts = Object.values(newsCounts);
+        const maxCount = Math.max(...counts, 1);
+        
+        countryElements.forEach(el => {
+          const countryId = parseInt(el.getAttribute('data-id'));
+          let articleCount = null;
+          
+          for (const [name, count] of Object.entries(newsCounts)) {
+            const normalizedName = name.toLowerCase().trim();
+            if (countryNameToId[normalizedName] === countryId) {
+              articleCount = count;
+              break;
+            }
+          }
+          
+          if (articleCount !== null && articleCount > 0) {
+            const intensity = articleCount / maxCount;
+            el.style.fill = getColor(intensity);
+          }
+        });
+
+        setMapLoaded(true);
+      } catch (error) {
+        console.error('Error loading map:', error);
+      }
+    };
+
+    loadMap();
+  }, [scriptsLoaded, stories]);
+
+  const handleContinue = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onContinue) {
+      onContinue();
     }
-  } else {
-    // Guest user
-    greetingLine = 'Hello,';
-    
-    if (importantNewsCount > 0) {
-      messageLine = `There ${importantNewsCount === 1 ? 'is' : 'are'} ${importantNewsCount} important ${importantNewsCount === 1 ? 'news' : 'news'} you must know`;
-    } else {
-      messageLine = `There ${totalNewsCount === 1 ? 'is' : 'are'} ${totalNewsCount} new ${totalNewsCount === 1 ? 'news' : 'news'}`;
-    }
-  }
+  };
 
   return (
     <>
+      {/* Load D3 and TopoJSON */}
+      <Script 
+        src="https://cdn.jsdelivr.net/npm/d3@7" 
+        strategy="afterInteractive"
+        onLoad={() => setScriptsLoaded(prev => ({ ...prev, d3: true }))}
+      />
+      <Script 
+        src="https://cdn.jsdelivr.net/npm/topojson-client@3" 
+        strategy="afterInteractive"
+        onLoad={() => setScriptsLoaded(prev => ({ ...prev, topojson: true }))}
+      />
+      
       <style jsx>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        .container {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          padding-top: calc(20px + env(safe-area-inset-top, 0px));
-          padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
-          overflow: hidden;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
-          background: #ffffff;
-          border: none !important;
-        }
-
-        /* Section 1: Hello Header */
-        .hello-section {
-          flex-shrink: 0;
-          margin-bottom: 32px;
-          padding-top: 20px;
-          position: relative;
-          padding-left: 24px;
-        }
-
-        .hello-gradient-line {
-          position: absolute;
-          left: 0;
-          top: 20px;
-          width: 4px;
-          height: calc(100% - 20px);
-          background: linear-gradient(to bottom, #ff4444 0%, #4444ff 100%);
-          border-radius: 2px;
-        }
-
-        .hello-text {
-          font-size: 40px;
-          color: #999;
-          margin-bottom: 4px;
-          font-weight: 400;
-        }
-
-        .important-news {
-          font-size: 32px;
-          font-weight: 700;
-          color: #000;
-          line-height: 1.2;
-        }
-
-        /* Section 2: For You */
-        .section-title {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          color: #000;
-          margin: 16px 0 12px;
-          flex-shrink: 0;
-        }
-
-        .section-icon {
-          width: 18px;
-          height: 18px;
-          stroke: url(#iconGradient);
-          fill: none;
-          stroke-width: 2;
-        }
-
-        .for-you-container {
-          flex-shrink: 0;
-          margin-bottom: 16px;
-        }
-
-        .for-you-scroll {
-          display: flex;
-          gap: 12px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          scroll-snap-type: x mandatory;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          padding-bottom: 4px;
-        }
-
-        .for-you-scroll::-webkit-scrollbar {
-          display: none;
-        }
-
-        .for-you-card {
-          flex: 0 0 85%;
-          background: #ffffff;
-          border-radius: 16px;
-          overflow: hidden;
-          border: 1px solid #f0f0f0;
-          scroll-snap-align: start;
-          cursor: pointer;
-        }
-
-        .card-image {
-          width: 100%;
-          height: 140px;
-          object-fit: cover;
-        }
-
-        .card-content {
-          padding: 12px;
-          background: #ffffff;
-        }
-
-        .card-category {
-          font-size: 10px;
-          font-weight: 600;
-          color: #667eea;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 6px;
-        }
-
-        .card-title {
-          font-size: 15px;
-          font-weight: 600;
-          color: #000;
-          line-height: 1.3;
-        }
-
-        /* Section 3: Today Timeline */
-        .timeline {
-          flex: 1;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-          padding: 0;
-          border: none !important;
-          border-left: none !important;
-        }
-        
-        .timeline::before,
-        .timeline::after {
-          content: none !important;
-          display: none !important;
-        }
-
-        .timeline-item {
-          padding: 8px 0;
-          border-bottom: 1px solid #f0f0f0;
-          border-left: none !important;
-          border-right: none !important;
-          border-top: none !important;
-          cursor: pointer;
-          position: relative;
-        }
-        
-        .timeline-item::before,
-        .timeline-item::after {
-          content: none !important;
-          display: none !important;
-        }
-
-        .timeline-item:last-child {
-          border-bottom: none;
-        }
-
-        .timeline-content {
-          flex: 1;
-          border: none !important;
-          border-left: none !important;
-        }
-        
-        .timeline-content::before,
-        .timeline-content::after {
-          content: none !important;
-          display: none !important;
-        }
-
-        .timeline-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1a1a1a;
-          line-height: 1.3;
-          margin-bottom: 4px;
-          border: none !important;
-        }
-
-        .timeline-meta {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          border: none !important;
-        }
-
-        .timeline-category {
-          display: inline-block;
-          font-size: 10px;
-          font-weight: 600;
-          color: #667eea;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border: none !important;
-        }
-
-        .timeline-dot {
-          width: 2px;
-          height: 2px;
-          background: #d0d0d0;
-          border-radius: 50%;
-          border: none !important;
-        }
-
-        .timeline-time {
-          font-size: 10px;
-          color: #999;
-          border: none !important;
-        }
-
-        /* Hide scrollbar but keep functionality */
-        .timeline::-webkit-scrollbar {
-          display: none;
-        }
-        .timeline {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        /* Full Screen Today View */
-        .today-fullscreen {
+        .first-page-container {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: white;
-          z-index: 200;
-          display: none;
+          display: flex;
           flex-direction: column;
-          animation: slideUp 0.3s ease;
+          background: linear-gradient(180deg, 
+            #3ABAED 0%,
+            #5DC8F1 15%,
+            #7FD6F5 25%,
+            #A1E4F9 35%,
+            #C3F2FD 45%,
+            #FFFFFF 50%,
+            #FFFFFF 100%
+          );
+          z-index: 1000;
+          overflow: hidden;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
-        .today-fullscreen.active {
+        /* Greeting Section */
+        .greeting-section {
           display: flex;
-        }
-
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-
-        .fullscreen-header {
-          padding-top: calc(16px + env(safe-area-inset-top, 0px));
-          padding-bottom: 16px;
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 1px solid #f0f0f0;
+          flex-direction: column;
+          justify-content: flex-start;
+          padding: 40px 16px;
+          padding-top: max(25vh, 120px);
+          position: relative;
           flex-shrink: 0;
         }
 
-        .back-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: #f5f5f5;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          border: none;
-          font-size: 18px;
+        .greeting-content {
+          margin-left: 0;
+          padding-left: 14px;
+          position: relative;
         }
 
-        .fullscreen-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #000;
+        .greeting-content::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3.5px;
+          background: linear-gradient(180deg, #1E88C9 0%, #B83A3A 100%);
+          border-radius: 2px;
         }
 
-        .fullscreen-content {
-          flex: 1;
-          overflow-y: auto;
-          padding-top: 20px;
-          padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-          padding-left: calc(20px + env(safe-area-inset-left, 0px));
-          padding-right: calc(20px + env(safe-area-inset-right, 0px));
-        }
-
-        .fullscreen-item {
-          padding: 12px 0;
-          border-bottom: 1px solid #f0f0f0;
-          cursor: pointer;
-        }
-
-        .fullscreen-item:last-child {
-          border-bottom: none;
-        }
-
-        .fullscreen-item-title {
+        .greeting-hi {
           font-size: 15px;
           font-weight: 600;
-          color: #1a1a1a;
-          line-height: 1.4;
-          margin-bottom: 6px;
-        }
-
-        .fullscreen-item-meta {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .fullscreen-category {
-          font-size: 10px;
-          font-weight: 600;
-          color: #667eea;
+          letter-spacing: 0.04em;
+          color: rgba(0, 0, 0, 0.4);
+          margin-bottom: 8px;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
 
-        .fullscreen-dot {
-          width: 2px;
-          height: 2px;
-          background: #d0d0d0;
+        .greeting-main {
+          font-size: 52px;
+          font-weight: 700;
+          line-height: 1.02;
+          letter-spacing: -0.03em;
+          color: rgba(0, 0, 0, 0.88);
+        }
+
+        .greeting-sub {
+          font-size: 52px;
+          font-weight: 400;
+          line-height: 1.02;
+          letter-spacing: -0.03em;
+          color: rgba(0, 0, 0, 0.35);
+        }
+
+        /* Last Visit */
+        .last-visit {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.3);
+          margin-top: 24px;
+          letter-spacing: 0;
+        }
+
+        .last-visit-dot {
+          width: 5px;
+          height: 5px;
+          background: rgba(0, 0, 0, 0.18);
           border-radius: 50%;
         }
 
-        .fullscreen-time {
-          font-size: 11px;
-          color: #999;
+        /* Map Section */
+        .map-section {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 20px 0 40px;
+          min-height: 0;
         }
 
-        .today-title-clickable {
+        .map-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          color: rgba(0, 0, 0, 0.32);
+          text-transform: uppercase;
+          margin-bottom: 20px;
+          flex-shrink: 0;
+        }
+
+        .map-label-icon {
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
+          background: none;
+          margin: 0;
+        }
+
+        .map-container {
+          position: relative;
+          width: 100%;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          min-height: 0;
+        }
+
+        .map-container :global(svg) {
+          width: 108%;
+          height: auto;
+          max-height: 100%;
+          display: block;
+          background: #ffffff;
+          margin-left: -6%;
+          margin-right: -2%;
+        }
+
+        .map-container :global(.country) {
+          fill: #d8d8d8;
+          stroke: none;
+          transition: fill 0.3s ease;
+        }
+
+        /* Tap to continue hint */
+        .continue-hint {
+          position: absolute;
+          bottom: max(30px, env(safe-area-inset-bottom, 30px));
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.25);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          animation: pulse 2s infinite;
           cursor: pointer;
+          padding: 10px 20px;
+          z-index: 10;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+          .greeting-main,
+          .greeting-sub {
+            font-size: 42px;
+          }
+          .greeting-hi {
+            font-size: 13px;
+          }
+          .greeting-section {
+            padding-top: max(20vh, 100px);
+          }
+        }
+
+        @media (max-width: 375px) {
+          .greeting-main,
+          .greeting-sub {
+            font-size: 36px;
+          }
         }
       `}</style>
 
-      {/* SVG Gradient Definition */}
-      <svg width="0" height="0" style={{ position: 'absolute' }}>
-        <defs>
-          <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-            <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
-          </linearGradient>
-        </defs>
-      </svg>
-
-      <div className="container">
-        {/* Section 1: Hello Header */}
-        <div className="hello-section">
-          <div className="hello-gradient-line"></div>
-          <div className="hello-text">{greetingLine}</div>
-          <div className="important-news">{messageLine}</div>
+      <div className="first-page-container" onClick={handleContinue}>
+        <div className="greeting-section">
+          <div className="greeting-content">
+            <div className="greeting-hi">
+              {user ? `Hi ${firstName}` : 'Hello'}
+            </div>
+            <div className="greeting-main">
+              {totalNewsCount} new {totalNewsCount === 1 ? 'story' : 'stories'}
+            </div>
+            <div className="greeting-sub">since your last visit</div>
+            <div className="last-visit">
+              <span className="last-visit-dot"></span>
+              <span>{getLastVisitText()}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Section 2: For You */}
-        <div className="for-you-container">
-          <div className="section-title">
-            <svg className="section-icon" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <circle cx="12" cy="17" r="0.5" fill="url(#iconGradient)"/>
+        <div className="map-section">
+          <div className="map-label">
+            <svg className="map-label-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M9 3v15" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M15 6v15" stroke="currentColor" strokeWidth="1.5"/>
             </svg>
-            For You
+            <span>Global activity</span>
           </div>
-          <div className="for-you-scroll">
-            {forYouArticles.length === 0 && (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#999', width: '100%' }}>
-                Loading articles...
-              </div>
-            )}
-            {forYouArticles.map((article, index) => (
-              <div
-                key={article.id || index}
-                className="for-you-card"
-                onClick={() => window.location.href = `/?story=${article.number || article.rank || index + 1}`}
-              >
-                <img
-                  src={article.urlToImage}
-                  alt={article.title}
-                  className="card-image"
-                />
-                <div className="card-content">
-                  <div className="card-category">{article.category}</div>
-                  <div className="card-title">
-                    {cleanTitle(article.title).length > 60 ? cleanTitle(article.title).substring(0, 60) + '...' : cleanTitle(article.title)}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="map-container" ref={mapContainerRef}>
+            <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet">
+              <rect width="100%" height="100%" fill="#ffffff"/>
+              <defs>
+                <filter id="round" x="-10%" y="-10%" width="120%" height="120%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                  <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="rounded"/>
+                  <feComposite in="SourceGraphic" in2="rounded" operator="atop"/>
+                </filter>
+              </defs>
+              <g id="countries" filter="url(#round)"></g>
+            </svg>
           </div>
         </div>
 
-        {/* Section 3: Today Timeline */}
-        <div className="section-title today-title-clickable" onClick={() => setTodayFullscreen(true)}>
-          <svg className="section-icon" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-          </svg>
-          Today
-        </div>
-        <div className="timeline">
-          {todayStories.length === 0 && (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-              Loading articles...
-            </div>
-          )}
-          {todayStories.map((story, index) => (
-            <div
-              key={story.id || index}
-              className="timeline-item"
-              onClick={() => window.location.href = `/?story=${story.number || story.rank || index + 1}`}
-            >
-              <div className="timeline-content">
-                <div className="timeline-title">{cleanTitle(story.title)}</div>
-                <div className="timeline-meta">
-                  <span className="timeline-category">{story.category}</span>
-                  <span className="timeline-dot"></span>
-                  <span className="timeline-time">{formatTimeSince(story.publishedAt || story.published_at || story.published_date)}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Full Screen Today View */}
-      <div className={`today-fullscreen ${todayFullscreen ? 'active' : ''}`}>
-        <div className="fullscreen-header">
-          <button className="back-btn" onClick={() => setTodayFullscreen(false)}>
-            ←
-          </button>
-          <div className="fullscreen-title">Today</div>
-          <div style={{ width: '32px' }}></div>
-        </div>
-        <div className="fullscreen-content">
-          {todayStories.map((story, index) => (
-            <div
-              key={story.id || index}
-              className="fullscreen-item"
-              onClick={() => window.location.href = `/?story=${story.number || story.rank || index + 1}`}
-            >
-              <div className="fullscreen-item-title">{cleanTitle(story.title)}</div>
-              <div className="fullscreen-item-meta">
-                <span className="fullscreen-category">{story.category}</span>
-                <span className="fullscreen-dot"></span>
-                <span className="fullscreen-time">{formatTimeSince(story.publishedAt || story.published_at || story.published_date)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <div className="continue-hint">Tap to continue</div>
       </div>
     </>
   );
