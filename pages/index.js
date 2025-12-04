@@ -4430,7 +4430,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 42vh - 12px)',
+                        bottom: 'calc(100vh - 42vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
