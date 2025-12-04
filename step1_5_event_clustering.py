@@ -951,7 +951,9 @@ class EventClusteringEngine:
         print(f"✅ AI checks complete\n")
         
         # PHASE 3: Process results and assign to clusters
-        print(f"📊 Phase 3: Assigning articles to clusters...")
+        print(f"\n{'='*80}")
+        print(f"📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (DETAILED)")
+        print(f"{'='*80}")
         
         # Track NEW clusters created in THIS batch (need AI check for these)
         new_batch_clusters = []  # List of (cluster_id, title) tuples
@@ -962,7 +964,7 @@ class EventClusteringEngine:
                 continue  # Article wasn't saved successfully
             
             source_id = article_source_ids[i]
-            title = article.get('title', 'Unknown')[:50]
+            full_title = article.get('title', 'Unknown')  # Full title, not truncated
             ai_decisions = all_ai_results.get(i, {})
             
             matched = False
@@ -1024,7 +1026,10 @@ class EventClusteringEngine:
             if matched and matched_cluster:
                 # Add to existing cluster
                 if self.add_to_cluster(matched_cluster['id'], source_id):
-                    print(f"   ✓ [{i+1}] {title}... → {matched_cluster['event_name'][:30]}")
+                    print(f"\n   ✅ MATCHED [{i+1}/{len(articles)}]")
+                    print(f"      📰 Article: {full_title}")
+                    print(f"      📁 Added to cluster: {matched_cluster['event_name']}")
+                    print(f"      🔗 Cluster ID: {matched_cluster['id']}")
                     with stats_lock:
                         stats['matched_to_existing'] += 1
                         if matched_cluster['id'] not in stats['cluster_ids']:
@@ -1034,7 +1039,10 @@ class EventClusteringEngine:
                 cluster_id = self.create_cluster(article, source_id)
                 if cluster_id:
                     event_name = self._generate_event_name(article.get('title', ''))
-                    print(f"   ✨ [{i+1}] {title}... → NEW: {event_name[:30]}")
+                    print(f"\n   ✨ NEW CLUSTER [{i+1}/{len(articles)}]")
+                    print(f"      📰 Article: {full_title}")
+                    print(f"      📁 Cluster name: {event_name}")
+                    print(f"      🔗 Cluster ID: {cluster_id}")
                     with stats_lock:
                         stats['new_clusters_created'] += 1
                         stats['cluster_ids'].append(cluster_id)
@@ -1060,7 +1068,9 @@ class EventClusteringEngine:
                     # Track this new cluster for AI matching with subsequent articles
                     new_batch_clusters.append((cluster_id, article.get('title', '')))
                 else:
-                    print(f"   ❌ [{i+1}] Failed to create cluster for: {title}")
+                    print(f"\n   ❌ FAILED [{i+1}/{len(articles)}]")
+                    print(f"      📰 Article: {full_title}")
+                    print(f"      ⚠️  Could not create cluster")
                     with stats_lock:
                         stats['failed'] += 1
         
