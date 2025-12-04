@@ -871,7 +871,7 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'TechCrunch Tech',
+        'name': 'TechCrunch',
         'url': 'https://techcrunch.com/feed/',
         'category': 'technology',
         'tier': 'premium'
@@ -1344,84 +1344,6 @@ RSS_FEEDS = [
     },
 ]
 
-# ========================================
-# SOURCE CREDIBILITY SCORES
-# ========================================
-
-SOURCE_CREDIBILITY = {
-    # Tier 1: Gold Standard (9-10 points) - Major International Agencies
-    'Reuters World': 10,
-    'Reuters Breaking News': 10,
-    'Associated Press Top News': 10,
-    'Associated Press International': 10,
-    'Associated Press US News': 10,
-    'Agence France-Presse (AFP)': 10,
-    'BBC News World': 10,
-    'BBC News UK': 10,
-    'BBC News Top Stories': 10,
-    
-    # Tier 1: Premium News Organizations
-    'The New York Times World': 10,
-    'The New York Times US': 10,
-    'The New York Times Homepage': 10,
-    'Washington Post World': 9,
-    'Washington Post National': 9,
-    'The Guardian World': 9,
-    'The Guardian UK': 9,
-    'The Guardian US': 9,
-    'The Economist World': 9,
-    'The Economist Business': 9,
-    'The Economist Finance': 9,
-    
-    # Tier 1: Top Science Journals
-    'Nature': 10,
-    'Science Magazine': 10,
-    'The Lancet': 10,
-    'New England Journal of Medicine': 10,
-    'Cell': 10,
-    'PNAS': 10,
-    
-    # Tier 1: Financial News
-    'Bloomberg': 10,
-    'Bloomberg Markets': 10,
-    'Financial Times': 10,
-    'The Wall Street Journal': 10,
-    
-    # Tier 2: Highly Credible (8-9 points)
-    'Al Jazeera English': 9,
-    'Deutsche Welle': 9,
-    'France 24': 8,
-    'The Times (UK)': 9,
-    'The Telegraph': 8,
-    'The Independent': 8,
-    'USA Today': 8,
-    'Los Angeles Times': 8,
-    'Chicago Tribune': 8,
-    'The Boston Globe': 8,
-    'NPR News': 9,
-    'NPR World': 9,
-    'Forbes': 8,
-    'Fortune': 8,
-    'Business Insider': 8,
-    'Harvard Business Review': 9,
-    'MIT Technology Review': 9,
-    'Wired': 8,
-    'The Verge': 8,
-    'Scientific American': 9,
-    'NASA': 9,
-    'ESA (European Space Agency)': 9,
-    'The Atlantic': 9,
-    'TIME Magazine': 8,
-    'ProPublica': 9,
-    'The Intercept': 8,
-    
-    # Tier 3: Credible (6-7 points) - most sources default to this
-}
-
-def get_source_credibility(source_name):
-    """Get credibility score for a source (default 7)"""
-    return SOURCE_CREDIBILITY.get(source_name, 7)
-
 # Total: ~251 Elite Premium RSS Feeds
 # Removed 49 low-quality/specialized sources
 # Focused on: Elite news, authoritative business, serious science, consumer fascination
@@ -1437,3 +1359,4 @@ for category in sorted(categories.keys()):
     count = categories[category]
     pct = count / len(RSS_FEEDS) * 100
     print(f"  {category.capitalize():15s}: {count:3d} feeds ({pct:5.1f}%)")
+
