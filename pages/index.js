@@ -34,6 +34,8 @@ export default function Home() {
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
   
   // Pagination state for loading articles in batches
+  // MAX_ARTICLES prevents memory issues with 600+ articles
+  const MAX_ARTICLES_IN_MEMORY = 150;
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreArticles, setHasMoreArticles] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -1122,24 +1124,44 @@ export default function Home() {
             );
           }
           
-          // Check if this is the last page
+          // Check if this is the last page OR we've hit memory cap
           const isLastPage = !newsData.pagination?.hasMore;
           
-          // Insert new stories and add "all caught up" only on last page
+          // Insert new stories with memory cap
           setStories(prev => {
             // Remove existing "all caught up" page if present
             const withoutAllRead = prev.filter(s => s.type !== 'all-read');
             
-            // Add new stories
-            const updated = [...withoutAllRead, ...unreadNewStories];
+            // Count current news articles
+            const currentNewsCount = withoutAllRead.filter(s => s.type === 'news').length;
+            const newNewsCount = unreadNewStories.length;
+            const totalAfterAdd = currentNewsCount + newNewsCount;
             
-            // Only add "all caught up" when we've loaded all pages
-            if (isLastPage) {
+            // Check if we've hit memory cap (150 articles)
+            const hitMemoryCap = totalAfterAdd >= MAX_ARTICLES_IN_MEMORY;
+            
+            // Add new stories
+            let updated = [...withoutAllRead, ...unreadNewStories];
+            
+            // If over cap, keep only the most recent MAX_ARTICLES_IN_MEMORY news articles
+            if (hitMemoryCap) {
+              const openingStory = updated.find(s => s.type === 'opening');
+              const newsStories = updated.filter(s => s.type === 'news').slice(0, MAX_ARTICLES_IN_MEMORY);
+              updated = openingStory ? [openingStory, ...newsStories] : newsStories;
+              console.log(`⚠️ Memory cap reached: keeping ${MAX_ARTICLES_IN_MEMORY} articles`);
+            }
+            
+            // Add "all caught up" when: last page OR memory cap reached
+            if (isLastPage || hitMemoryCap) {
               const allCaughtUpStory = {
                 type: 'all-read',
                 title: "All Caught Up",
-                message: "You've read all today's articles",
-                subtitle: "Come back in a few minutes"
+                message: hitMemoryCap 
+                  ? `You've loaded ${MAX_ARTICLES_IN_MEMORY} articles` 
+                  : "You've read all today's articles",
+                subtitle: hitMemoryCap 
+                  ? "Refresh for the latest news"
+                  : "Come back in a few minutes"
               };
               return [...updated, allCaughtUpStory];
             }
@@ -1152,7 +1174,12 @@ export default function Home() {
         
         // Update pagination state
         if (newsData.pagination) {
-          setHasMoreArticles(newsData.pagination.hasMore);
+          // Check if we've hit memory cap
+          const currentNewsCount = stories.filter(s => s.type === 'news').length;
+          const hitMemoryCap = currentNewsCount + (newsData.articles?.length || 0) >= MAX_ARTICLES_IN_MEMORY;
+          
+          // Stop loading if memory cap reached OR no more pages
+          setHasMoreArticles(newsData.pagination.hasMore && !hitMemoryCap);
           setTotalArticles(newsData.pagination.total);
         } else {
           setHasMoreArticles(false);
