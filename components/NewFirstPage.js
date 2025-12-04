@@ -58,43 +58,41 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     return filtered;
   }, [mapTimeWindow]);
 
-  // Fetch fresh stories from Supabase
-  const fetchFreshStories = useCallback(async () => {
+  // Fetch country counts from dedicated map API
+  const fetchCountryCounts = useCallback(async () => {
     try {
-      const response = await fetch('/api/news-supabase');
+      const response = await fetch(`/api/map-countries?hours=${mapTimeWindow}`);
       if (response.ok) {
         const data = await response.json();
-        // API returns 'articles' not 'stories'
-        if (data.articles && Array.isArray(data.articles)) {
-          setStories(data.articles);
-          setLastHourStories(filterStoriesByTimeWindow(data.articles));
+        console.log('Map API response:', data);
+        if (data.countryCounts) {
+          setNewsCountByCountry(data.countryCounts);
         }
       }
     } catch (error) {
-      console.error('Error fetching fresh stories:', error);
+      console.error('Error fetching country counts:', error);
     }
-  }, [filterStoriesByTimeWindow]);
+  }, [mapTimeWindow]);
 
-  // Initialize and set up hourly refresh
+  // Fetch country counts on mount and set up hourly refresh
   useEffect(() => {
-    // Initial filter based on user's last visit
-    setLastHourStories(filterStoriesByTimeWindow(stories));
+    // Initial fetch
+    fetchCountryCounts();
 
     // Set up hourly refresh
     const refreshInterval = setInterval(() => {
-      fetchFreshStories();
+      fetchCountryCounts();
     }, 60 * 60 * 1000); // Every hour
 
     return () => clearInterval(refreshInterval);
-  }, [filterStoriesByTimeWindow, fetchFreshStories]);
+  }, [fetchCountryCounts]);
 
-  // Update when initial stories change
+  // Update stories when initial stories change
   useEffect(() => {
     if (initialStories && Array.isArray(initialStories)) {
       setStories(initialStories);
-      setLastHourStories(filterStoriesByTimeWindow(initialStories));
     }
-  }, [initialStories, filterStoriesByTimeWindow]);
+  }, [initialStories]);
 
   // Country name to ISO numeric ID mapping for the map
   const countryNameToId = {
@@ -741,20 +739,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           }
         });
 
-        // Calculate news by country
-        const newsCounts = countNewsByCountry();
-        setNewsCountByCountry(newsCounts);
-
-        // Apply colors to countries
+        // Apply colors to countries based on newsCountByCountry state
         const countryElements = g.querySelectorAll('.country');
-        const counts = Object.values(newsCounts);
+        const counts = Object.values(newsCountByCountry);
         const maxCount = Math.max(...counts, 1);
         
         countryElements.forEach(el => {
           const countryId = parseInt(el.getAttribute('data-id'));
           let articleCount = null;
           
-          for (const [name, count] of Object.entries(newsCounts)) {
+          for (const [name, count] of Object.entries(newsCountByCountry)) {
             const normalizedName = name.toLowerCase().trim();
             if (countryNameToId[normalizedName] === countryId) {
               articleCount = count;
@@ -775,7 +769,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
 
     loadMap();
-  }, [scriptsLoaded, lastHourStories, countNewsByCountry]);
+  }, [scriptsLoaded, newsCountByCountry]);
 
   const handleContinue = (e) => {
     e.preventDefault();
