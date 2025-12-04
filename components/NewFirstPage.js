@@ -921,9 +921,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories, r
             <div className="greeting-hi">
               {personalGreeting.hi}
             </div>
-            <div className="greeting-main">
-              {totalNewsCount} new {totalNewsCount === 1 ? 'story' : 'stories'}
-            </div>
             <div className="greeting-sub">{personalGreeting.sub}</div>
             <div className="last-visit">
               <span className="last-visit-dot"></span>
