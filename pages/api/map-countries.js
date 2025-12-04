@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     const hours = Math.min(24, Math.max(1, parseInt(req.query.hours) || 24))
     const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
 
-    // Fetch ALL articles within time window (just title and description for country extraction)
+    // Fetch ALL articles within time window (just title and content for country extraction)
     const { data: articles, error } = await supabase
       .from('published_articles')
-      .select('title, title_news, description, category, created_at')
+      .select('title_news, content_news, category, created_at')
       .gte('created_at', cutoffTime)
 
     if (error) {
@@ -144,9 +144,8 @@ export default async function handler(req, res) {
     
     articles.forEach(article => {
       const textToSearch = [
-        article.title,
         article.title_news,
-        article.description,
+        article.content_news ? article.content_news.substring(0, 500) : '', // First 500 chars of content
         article.category
       ].filter(Boolean).join(' ')
 
