@@ -1689,6 +1689,9 @@ export default function Home() {
         return;
       }
       
+      // Prevent default to stop any scrolling - TikTok style
+      e.preventDefault();
+      
       if (!isTransitioning) {
         startY = e.touches[0].clientY;
       }
@@ -1737,7 +1740,22 @@ export default function Home() {
       }
     };
 
+    // Prevent any scrolling during touch - TikTok style
+    const handleTouchMove = (e) => {
+      // Don't block touch if it's on the language switcher
+      if (e.target.closest('.language-icon-btn') || 
+          e.target.closest('.language-dropdown-box') ||
+          e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      // Prevent default scroll behavior - only swipe navigation allowed
+      e.preventDefault();
+    };
+
     const handleWheel = (e) => {
+      // Always prevent default scrolling - TikTok style
+      e.preventDefault();
+      
       if (isTransitioning) return;
       
       // Block navigation if article is open
@@ -1756,7 +1774,6 @@ export default function Home() {
           return;
         }
 
-        e.preventDefault();
         isTransitioning = true;
         if (e.deltaY > 0) {
           nextStory();
@@ -1808,13 +1825,15 @@ export default function Home() {
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
     document.addEventListener('wheel', handleWheel, { passive: false });
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
@@ -1825,17 +1844,14 @@ export default function Home() {
   useEffect(() => {
     const isPaywallActive = !user && currentIndex >= 5;
 
-    if (isPaywallActive) {
-      // Prevent page-level scrolling but allow touch navigation (controlled by handlers)
-      document.body.style.overflow = 'hidden';
-      // Remove touch-action: none to allow touch events for navigation
-    } else {
-      document.body.style.overflow = '';
-    }
+    // TikTok-style: Always prevent scrolling - navigation is via swipe only
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
 
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     };
   }, [user, currentIndex]);
 
@@ -2037,19 +2053,20 @@ export default function Home() {
           -webkit-font-smoothing: antialiased;
         }
 
-        /* Apple HIG - Base Styles */
+        /* Apple HIG - Base Styles - TikTok-style fixed viewport */
         html {
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           padding: 0;
           margin: 0;
           width: 100vw;
-          height: 100%;
-          min-height: 100vh;
-          min-height: -webkit-fill-available;
-          overflow-x: hidden;
+          height: 100vh;
+          height: 100dvh;
+          overflow: hidden;
+          position: fixed;
+          touch-action: none;
         }
 
-        /* Apple HIG - Body Typography & Colors */
+        /* Apple HIG - Body Typography & Colors - TikTok-style no scroll */
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
           background: ${darkMode ? '#000000' : '#f5f5f7'};
@@ -2057,6 +2074,11 @@ export default function Home() {
           transition: background-color 0.3s cubic-bezier(0.28, 0, 0.4, 1), color 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+          height: 100%;
+          touch-action: none;
         }
 
         /* Glassmorphism Variables */
@@ -2269,9 +2291,11 @@ export default function Home() {
         }
 
 
-        /* Apple HIG - Story Container */
+        /* Apple HIG - Story Container - TikTok-style fixed pages */
         .story-container {
           position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
           display: flex;
@@ -2284,6 +2308,7 @@ export default function Home() {
           background: ${darkMode ? '#000000' : '#f5f5f7'};
           transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
           overflow: hidden;
+          touch-action: none;
           z-index: 10;
         }
         
@@ -3766,7 +3791,7 @@ export default function Home() {
       
       {/* Safe Area Overlays removed for bigger photo version */}
       
-      <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100dvh', overflow: 'hidden', touchAction: 'none' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
         {/* Full Header for First Page */}
@@ -3824,9 +3849,9 @@ export default function Home() {
               pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
               background: 'transparent',
               boxSizing: 'border-box',
-              // Enable scrolling when article text is open
-              overflow: showDetailedText[index] ? 'auto' : 'hidden',
-              WebkitOverflowScrolling: 'touch',
+              // TikTok-style: No scrolling within stories, only swipe between stories
+              overflow: 'hidden',
+              touchAction: 'none',
               // Red gradient border for important news (score >= 950)
               ...(story.type === 'news' && story.final_score >= 950 && {
                 border: '4px solid',
