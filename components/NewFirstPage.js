@@ -35,11 +35,26 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const filterStoriesByTimeWindow = useCallback((storiesToFilter) => {
     const cutoffTime = new Date(Date.now() - mapTimeWindow * 60 * 60 * 1000);
     
-    return storiesToFilter.filter(story => {
+    console.log('=== MAP DEBUG ===');
+    console.log('Time window (hours):', mapTimeWindow);
+    console.log('Cutoff time:', cutoffTime.toISOString());
+    console.log('Total stories:', storiesToFilter.length);
+    
+    const filtered = storiesToFilter.filter(story => {
       if (story.type !== 'news') return false;
       const createdAt = story.created_at ? new Date(story.created_at) : null;
       return createdAt && createdAt >= cutoffTime;
     });
+    
+    console.log('Filtered stories (within time window):', filtered.length);
+    if (storiesToFilter.length > 0) {
+      const sample = storiesToFilter[0];
+      console.log('Sample story created_at:', sample.created_at);
+      console.log('Sample story type:', sample.type);
+    }
+    console.log('=================');
+    
+    return filtered;
   }, [mapTimeWindow]);
 
   // Fetch fresh stories from Supabase
