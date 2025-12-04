@@ -1122,20 +1122,32 @@ export default function Home() {
             );
           }
           
-          // Insert new stories before the "all caught up" page
+          // Check if this is the last page
+          const isLastPage = !newsData.pagination?.hasMore;
+          
+          // Insert new stories and add "all caught up" only on last page
           setStories(prev => {
-            const allCaughtUpIndex = prev.findIndex(s => s.type === 'all-read');
-            if (allCaughtUpIndex > 0) {
-              return [
-                ...prev.slice(0, allCaughtUpIndex),
-                ...unreadNewStories,
-                prev[allCaughtUpIndex] // Keep all-caught-up at the end
-              ];
+            // Remove existing "all caught up" page if present
+            const withoutAllRead = prev.filter(s => s.type !== 'all-read');
+            
+            // Add new stories
+            const updated = [...withoutAllRead, ...unreadNewStories];
+            
+            // Only add "all caught up" when we've loaded all pages
+            if (isLastPage) {
+              const allCaughtUpStory = {
+                type: 'all-read',
+                title: "All Caught Up",
+                message: "You've read all today's articles",
+                subtitle: "Come back in a few minutes"
+              };
+              return [...updated, allCaughtUpStory];
             }
-            return [...prev, ...unreadNewStories];
+            
+            return updated;
           });
           
-          console.log(`✅ Loaded ${unreadNewStories.length} more articles`);
+          console.log(`✅ Loaded ${unreadNewStories.length} more articles${isLastPage ? ' (last page)' : ''}`);
         }
         
         // Update pagination state
@@ -1300,15 +1312,23 @@ export default function Home() {
               console.log('📊 Sorting news articles by score...');
               const sortedNews = sortArticlesByScore(newsArticles);
               
-              // Combine: opening story first, then sorted news, then "all caught up" page
-              const allCaughtUpStory = {
-                type: 'all-read',
-                title: "All Caught Up",
-                message: "You've read all today's articles",
-                subtitle: "Come back in a few minutes"
-              };
+              // Only add "all caught up" page if there are NO more articles to load
+              // Otherwise, auto-loading will add more articles
+              const hasMoreToLoad = newsData.pagination?.hasMore;
               
-              finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
+              if (hasMoreToLoad) {
+                // More pages available - don't show "all caught up" yet
+                finalStories = [openingStory, ...sortedNews];
+              } else {
+                // No more pages - add "all caught up" at the end
+                const allCaughtUpStory = {
+                  type: 'all-read',
+                  title: "All Caught Up",
+                  message: "You've read all today's articles",
+                  subtitle: "Come back in a few minutes"
+                };
+                finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
+              }
             } else if (unreadStories.length === 1) {
               // Only opening story left, all articles have been read
               console.log('✅ All articles have been read!');
