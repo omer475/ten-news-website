@@ -4430,7 +4430,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 42vh - 70px)',
+                        bottom: 'calc(100vh - 42vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4990,7 +4990,7 @@ export default function Home() {
                       })() && (
                       <div style={{
                         position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '10px',
+                        bottom: showDetailedText[index] ? 'auto' : '32px',
                         left: showDetailedText[index] ? '0' : '50%',
                         transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
                         width: '100%',
