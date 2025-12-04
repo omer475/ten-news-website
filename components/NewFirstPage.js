@@ -695,7 +695,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   // Load the map when scripts are ready
   useEffect(() => {
-    if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
+    console.log('Map useEffect triggered:', { 
+      d3: scriptsLoaded.d3, 
+      topojson: scriptsLoaded.topojson, 
+      countriesCount: Object.keys(newsCountByCountry).length 
+    });
+    
+    if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) {
+      console.log('Scripts not ready, waiting...');
+      return;
+    }
     if (typeof window === 'undefined') return;
 
     const loadMap = async () => {
