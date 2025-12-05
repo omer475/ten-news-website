@@ -470,187 +470,79 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const catLabel2 = cat2 ? (categoryLabels[cat2] || cat2) : null;
     const capCat = catLabel.charAt(0).toUpperCase() + catLabel.slice(1);
     
-    // MASSIVE message variations for each scenario
+    // Natural, meaningful message variations
     let subOptions = [];
     
     if (analysis.hasBreaking) {
-      // BREAKING NEWS messages
+      // BREAKING NEWS - urgent, important
       subOptions = [
-        // With "in the last X hours" format
-        `In ${period}, major ${catLabel} news broke`,
-        `${capCat} broke big in ${period}`,
-        `Major ${catLabel} story in ${period}`,
-        `Big ${catLabel} developments in ${period}`,
-        `${capCat} making headlines in ${period}`,
-        `Important ${catLabel} broke in ${period}`,
-        `In ${period}, ${catLabel} is breaking`,
-        `${capCat} story developing in ${period}`,
-        `Significant ${catLabel} in ${period}`,
-        `In ${period}, big ${catLabel} story`,
-        // With "since" format
-        `Since ${period}, ${catLabel} broke big`,
-        `${capCat} breaking since ${period}`,
-        `Major ${catLabel} since ${period}`,
-        `Since ${period}, major ${catLabel}`,
-        `${capCat} news since ${period}`,
-        `Big ${catLabel} since ${period}`,
-        `Since ${period}, ${capCat} is major`,
-        `Breaking ${catLabel} since ${period}`,
-        `${capCat} developed since ${period}`,
-        `Since ${period}, important ${catLabel}`,
-        // Simple statements
-        `Major ${catLabel} story breaking`,
-        `${capCat} is breaking right now`,
-        `Big news in ${catLabel}`,
-        `${capCat} making big news`,
-        `Important ${catLabel} developing`,
-        `${capCat} story unfolding`,
-        `Significant ${catLabel} news`,
-        `${capCat} headlines today`,
-        `Major ${catLabel} update`,
-        `${capCat} in the spotlight`,
+        `Breaking news in ${catLabel}`,
+        `Major ${catLabel} story developing`,
+        `Important ${catLabel} news just broke`,
+        `Big story unfolding in ${catLabel}`,
+        `${capCat} news you need to see`,
+        `Something big happened in ${catLabel}`,
+        `Major developments in ${catLabel}`,
+        `${capCat} is making headlines`,
+        `Significant ${catLabel} news today`,
+        `A major ${catLabel} story broke`,
       ];
     } else if (analysis.hasVeryHigh) {
-      // IMPORTANT NEWS messages
+      // IMPORTANT NEWS - notable but not breaking
       subOptions = [
-        // With "in the last X hours" format
-        `In ${period}, ${catLabel} made moves`,
-        `${capCat} had big updates in ${period}`,
-        `Important ${catLabel} in ${period}`,
-        `In ${period}, ${catLabel} in focus`,
-        `${capCat} developments in ${period}`,
-        `Key ${catLabel} news in ${period}`,
-        `In ${period}, ${catLabel} trending`,
-        `${capCat} active in ${period}`,
-        `Notable ${catLabel} in ${period}`,
-        `In ${period}, ${capCat} leads`,
-        // With "since" format
-        `Since ${period}, ${catLabel} is big`,
-        `${capCat} leading since ${period}`,
-        `Important ${catLabel} since ${period}`,
-        `Since ${period}, ${catLabel} focus`,
-        `${capCat} news since ${period}`,
-        `Key ${catLabel} since ${period}`,
-        `Since ${period}, ${capCat} active`,
-        `Notable ${catLabel} since ${period}`,
-        `${capCat} updates since ${period}`,
-        `Since ${period}, ${catLabel} moves`,
-        // With two categories
-        catLabel2 ? `${capCat} and ${catLabel2} in ${period}` : `${capCat} in focus in ${period}`,
-        catLabel2 ? `In ${period}, ${catLabel} and ${catLabel2}` : `In ${period}, ${catLabel} leads`,
-        catLabel2 ? `${capCat} and ${catLabel2} since ${period}` : `${capCat} leading since ${period}`,
-        catLabel2 ? `Since ${period}, ${catLabel} and ${catLabel2}` : `Since ${period}, ${catLabel} big`,
-        // Simple statements
-        `${capCat} making headlines`,
-        `Important ${catLabel} today`,
-        `${capCat} in focus`,
-        `Key ${catLabel} developments`,
-        `${capCat} worth watching`,
-        `Notable ${catLabel} news`,
+        `A lot happened in ${catLabel}`,
+        `Big developments in ${catLabel}`,
+        `${capCat} had a busy day`,
+        `Important ${catLabel} news today`,
+        `Plenty happening in ${catLabel}`,
+        `${capCat} is worth your attention`,
+        `Some significant ${catLabel} news`,
+        `${capCat} dominated the news`,
+        `Major ${catLabel} updates today`,
+        catLabel2 ? `${capCat} and ${catLabel2} in the spotlight` : `${capCat} in the spotlight`,
+        catLabel2 ? `Developments in ${catLabel} and ${catLabel2}` : `Notable ${catLabel} developments`,
       ];
     } else if (analysis.highScoredCount >= 5) {
-      // BUSY NEWS DAY messages
+      // BUSY DAY - lots of stories
       subOptions = [
-        // With "in the last X hours" format
-        `Busy ${catLabel} in ${period}`,
-        `A lot in ${catLabel} in ${period}`,
-        `${capCat} stacked up in ${period}`,
-        `In ${period}, lots in ${catLabel}`,
-        `${capCat} packed in ${period}`,
-        `Multiple ${catLabel} in ${period}`,
-        `In ${period}, ${catLabel} busy`,
-        `${capCat} active in ${period}`,
-        `Plenty in ${catLabel} in ${period}`,
-        `In ${period}, full ${catLabel}`,
-        // With "since" format
-        `Since ${period}, ${catLabel} busy`,
-        `${capCat} full since ${period}`,
-        `Lots in ${catLabel} since ${period}`,
-        `Since ${period}, ${catLabel} packed`,
-        `${capCat} stacked since ${period}`,
-        `Many in ${catLabel} since ${period}`,
-        `Since ${period}, ${catLabel} active`,
-        `${capCat} loaded since ${period}`,
-        `Several ${catLabel} since ${period}`,
-        `Since ${period}, ${catLabel} full`,
-        // With two categories
-        catLabel2 ? `${capCat} and ${catLabel2} busy in ${period}` : `${capCat} very busy in ${period}`,
-        catLabel2 ? `In ${period}, ${catLabel} and ${catLabel2}` : `In ${period}, ${catLabel} packed`,
-        catLabel2 ? `${capCat} and ${catLabel2} since ${period}` : `${capCat} full since ${period}`,
-        catLabel2 ? `Since ${period}, ${catLabel} and ${catLabel2} active` : `Since ${period}, ${catLabel} very active`,
-        // Simple statements
-        `Busy day in ${catLabel}`,
-        `${capCat} is packed`,
-        `Lots in ${catLabel}`,
-        `${capCat} very active`,
-        `Multiple ${catLabel} stories`,
-        `${capCat} full of news`,
+        `Busy day for ${catLabel}`,
+        `A lot to catch up on in ${catLabel}`,
+        `${capCat} has been active`,
+        `Plenty of ${catLabel} news`,
+        `${capCat} kept things interesting`,
+        `Several ${catLabel} stories to read`,
+        `${capCat} had a full day`,
+        `Lots happening in ${catLabel}`,
+        catLabel2 ? `${capCat} and ${catLabel2} were busy` : `${capCat} was busy`,
+        catLabel2 ? `Active day for ${catLabel} and ${catLabel2}` : `Active day for ${catLabel}`,
       ];
     } else if (analysis.highScoredCount >= 1) {
-      // SOME STORIES messages
+      // SOME STORIES - lighter day
       subOptions = [
-        // With "in the last X hours" format
-        `Some ${catLabel} in ${period}`,
-        `A few in ${catLabel} in ${period}`,
-        `${capCat} updates in ${period}`,
-        `In ${period}, some ${catLabel}`,
-        `${capCat} news in ${period}`,
-        `Notable ${catLabel} in ${period}`,
-        `In ${period}, ${catLabel} updates`,
-        `${capCat} stories in ${period}`,
-        `Few ${catLabel} in ${period}`,
-        `In ${period}, ${catLabel} news`,
-        // With "since" format
-        `Since ${period}, some ${catLabel}`,
-        `${capCat} updates since ${period}`,
-        `A few ${catLabel} since ${period}`,
-        `Since ${period}, ${catLabel} news`,
-        `${capCat} stories since ${period}`,
-        `Some in ${catLabel} since ${period}`,
-        `Since ${period}, ${catLabel} active`,
-        `${capCat} had news since ${period}`,
-        `Notable ${catLabel} since ${period}`,
-        `Since ${period}, few ${catLabel}`,
-        // Simple statements
-        `Some ${catLabel} updates`,
-        `${capCat} has news`,
-        `A few ${catLabel} stories`,
-        `${capCat} worth noting`,
-        `Some ${catLabel} to see`,
-        `${capCat} updates today`,
+        `Some ${catLabel} worth reading`,
+        `A few interesting ${catLabel} stories`,
+        `${capCat} has some updates`,
+        `Some notable ${catLabel} news`,
+        `A few ${catLabel} stories caught my eye`,
+        `${capCat} had a few highlights`,
+        `Some ${catLabel} to catch up on`,
+        `A couple of ${catLabel} stories`,
+        `${capCat} worth a look`,
+        `Some ${catLabel} developments`,
       ];
     } else {
-      // REGULAR DAY messages
+      // REGULAR DAY - general updates
       subOptions = [
-        // With "in the last X hours" format
-        `News in ${period}`,
-        `Updates in ${period}`,
-        `What happened in ${period}`,
-        `In ${period}, some news`,
-        `Stories in ${period}`,
-        `Headlines in ${period}`,
-        `In ${period}, updates`,
-        `The news in ${period}`,
-        `Developments in ${period}`,
-        `In ${period}, the latest`,
-        // With "since" format
-        `Since ${period}, the news`,
-        `Updates since ${period}`,
-        `News since ${period}`,
-        `Since ${period}, updates`,
-        `Stories since ${period}`,
-        `Headlines since ${period}`,
-        `Since ${period}, what's new`,
-        `The latest since ${period}`,
-        `Developments since ${period}`,
-        `Since ${period}, the roundup`,
-        // Simple statements
+        `Here's what's happening`,
+        `Your news update is ready`,
         `Here's the latest`,
-        `The news today`,
-        `Today's updates`,
-        `What's happening`,
-        `The latest news`,
-        `Today's headlines`,
+        `Catch up on what happened`,
+        `Here's your briefing`,
+        `The latest news for you`,
+        `Your news roundup`,
+        `Here's what you missed`,
+        `Time to catch up`,
+        `Your daily update`,
       ];
     }
 
