@@ -5,7 +5,7 @@ STEP 1: GEMINI NEWS SCORING & FILTERING
 Purpose: Filter RSS articles down to "must-know" news articles
 Model: Gemini 2.5 Flash
 Input: RSS articles with title, source, description, url
-Output: Approved articles (score ≥700)
+Output: Approved articles (score ≥70)
 """
 
 import requests
@@ -1119,8 +1119,8 @@ Return ONLY valid JSON array with exactly this structure for each article:
 ]
 
 Rules:
-- status = "APPROVED" if score >= 700
-- status = "FILTERED" if score < 700
+- status = "APPROVED" if score >= 70
+- status = "FILTERED" if score < 70
 - Include category field for all articles
 - Maintain order of input articles
 - No explanations or additional fields
@@ -1132,7 +1132,7 @@ Rules:
     for article in articles:
         articles_text += f'  {{\n    "title": "{article["title"]}",\n    "source": "{article["source"]}",\n    "text": "{article.get("text", "")[:500]}",\n    "url": "{article["url"]}"\n  }},\n'
     
-    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), and status (APPROVED if >=700, FILTERED if <700)."
+    articles_text += "]\n\nEvaluate each article and return JSON array with title, score (0-1000), and status (APPROVED if >=70, FILTERED if <70)."
     
     # Prepare request
     request_data = {
