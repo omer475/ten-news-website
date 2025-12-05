@@ -19,3 +19,6 @@ python-dateutil>=2.8.2
 
 # Anthropic Claude API
 anthropic>=0.18.0
+
+# Numerical computing (for embeddings)
+numpy>=1.24.0

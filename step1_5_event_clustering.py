@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-STEP 1.5: EVENT CLUSTERING ENGINE
+STEP 1.5: EVENT CLUSTERING ENGINE (v2.0 - EMBEDDING-BASED)
 ==========================================
 Purpose: Group articles about the same event for multi-source synthesis
 Input: Approved articles from Step 1 (Gemini scoring)
 Output: Clusters of articles about the same event
-Algorithm: Title similarity (75%) OR keyword overlap (3+)
+Algorithm: OpenAI embeddings + cosine similarity (threshold 0.82)
 """
 
 import re
 import os
+import numpy as np
 from typing import List, Dict, Optional, Set, Tuple
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
@@ -18,17 +19,117 @@ from urllib.parse import urlparse, parse_qs, urlunparse
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import anthropic
+from openai import OpenAI
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 load_dotenv()
 
 # ==========================================
-# ANTHROPIC CLIENT FOR AI SIMILARITY CHECK
+# OPENAI CLIENT FOR EMBEDDINGS
+# ==========================================
+
+_openai_client = None
+
+def get_openai_client():
+    """Get OpenAI client for embeddings"""
+    global _openai_client
+    if _openai_client is None:
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY must be set in environment")
+        _openai_client = OpenAI(api_key=api_key)
+    return _openai_client
+
+
+def get_embedding(text: str) -> List[float]:
+    """
+    Get OpenAI embedding for a text string.
+    Uses text-embedding-3-small model (cheap & fast).
+    
+    Args:
+        text: Text to embed (article title)
+        
+    Returns:
+        List of floats (1536-dimensional vector)
+    """
+    try:
+        client = get_openai_client()
+        # Clean text - remove HTML entities and special chars
+        clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
+        clean_text = clean_text.strip()[:500]  # Limit length
+        
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=clean_text
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"  ⚠️ Embedding error: {e}")
+        return None
+
+
+def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
+    """
+    Get embeddings for multiple texts in one API call (more efficient).
+    
+    Args:
+        texts: List of texts to embed
+        
+    Returns:
+        List of embeddings (same order as input)
+    """
+    try:
+        client = get_openai_client()
+        # Clean texts
+        clean_texts = []
+        for text in texts:
+            clean = re.sub(r'&#\d+;|&\w+;', '', text)
+            clean_texts.append(clean.strip()[:500])
+        
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=clean_texts
+        )
+        return [item.embedding for item in response.data]
+    except Exception as e:
+        print(f"  ⚠️ Batch embedding error: {e}")
+        return [None] * len(texts)
+
+
+def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
+    """
+    Calculate cosine similarity between two vectors.
+    
+    Args:
+        vec1: First embedding vector
+        vec2: Second embedding vector
+        
+    Returns:
+        Similarity score between 0 and 1
+    """
+    if vec1 is None or vec2 is None:
+        return 0.0
+    
+    a = np.array(vec1)
+    b = np.array(vec2)
+    
+    dot_product = np.dot(a, b)
+    norm_a = np.linalg.norm(a)
+    norm_b = np.linalg.norm(b)
+    
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    
+    return dot_product / (norm_a * norm_b)
+
+
+# ==========================================
+# ANTHROPIC CLIENT (FALLBACK ONLY)
 # ==========================================
 
 def get_anthropic_client():
-    """Get Anthropic client for Claude Haiku 4.5"""
+    """Get Anthropic client for Claude Haiku 4.5 (fallback only)"""
     api_key = os.getenv('ANTHROPIC_API_KEY')
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY must be set in environment")
@@ -41,10 +142,17 @@ def get_anthropic_client():
 class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
-    # Matching thresholds - MORE LENIENT to prevent duplicate articles
-    TITLE_SIMILARITY_THRESHOLD = 0.60  # 60% title similarity = same event (lowered from 75%)
-    MIN_TITLE_SIMILARITY = 0.40  # Minimum 40% title similarity even with keyword match (lowered from 55%)
-    KEYWORD_MATCH_THRESHOLD = 3  # 3+ shared keywords = same event (lowered from 5)
+    # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.82  # Cosine similarity threshold for same event
+    # 0.90+ = Almost identical titles
+    # 0.82-0.90 = Same event, different wording
+    # 0.70-0.82 = Related topics, probably different events
+    # <0.70 = Definitely different events
+    
+    # FALLBACK: String-based matching (if embeddings fail)
+    TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event
+    MIN_TITLE_SIMILARITY = 0.55  # Minimum 55% for keyword match
+    KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event
     ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     
     # Time windows
@@ -463,66 +571,103 @@ def check_time_proximity(article: Dict, cluster: Dict) -> bool:
         return True  # On error, allow the comparison
 
 
-def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], debug: bool = False, ai_decision: Optional[bool] = None) -> Dict:
+def is_same_event_embedding(article_embedding: List[float], cluster_embedding: List[float], 
+                           article_title: str, cluster_title: str, debug: bool = False) -> Dict:
+    """
+    Determine if an article belongs to an existing cluster using EMBEDDING SIMILARITY.
+    
+    This is the new v2.0 method - uses OpenAI embeddings + cosine similarity.
+    Much more accurate than AI-based matching (no hallucination).
+    
+    Args:
+        article_embedding: Pre-computed embedding for article title
+        cluster_embedding: Pre-computed embedding for cluster representative title
+        article_title: Article title (for logging)
+        cluster_title: Cluster title (for logging)
+        debug: If True, print debug information
+        
+    Returns:
+        Dict with 'match' (bool), 'reason' (str), 'similarity' (float)
+    """
+    # Calculate cosine similarity
+    similarity = cosine_similarity(article_embedding, cluster_embedding)
+    
+    # Threshold check
+    threshold = ClusteringConfig.EMBEDDING_SIMILARITY_THRESHOLD
+    is_match = similarity >= threshold
+    
+    if debug:
+        status = "✅ MATCH" if is_match else "❌ NO MATCH"
+        print(f"  {status}: Similarity {similarity:.3f} (threshold: {threshold})")
+        print(f"    Article: {article_title[:60]}...")
+        print(f"    Cluster: {cluster_title[:60]}...")
+    
+    return {
+        'match': is_match,
+        'reason': 'embedding_match' if is_match else 'embedding_different',
+        'similarity': similarity
+    }
+
+
+def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], debug: bool = False, 
+                  article_embedding: List[float] = None, cluster_embedding: List[float] = None) -> Dict:
     """
     Determine if an article belongs to an existing cluster.
     
-    Uses AI-powered semantic matching via Claude Haiku 4.5.
+    v2.0: Uses EMBEDDING SIMILARITY (primary) with string fallback.
     
     Args:
         article: Article to match with title, keywords, entities, published_at
         cluster: Cluster metadata with created_at
         cluster_sources: List of source articles in the cluster
         debug: If True, print debug information
-        ai_decision: Pre-computed AI decision (True=same event, False=different, None=not checked)
+        article_embedding: Pre-computed embedding for article title
+        cluster_embedding: Pre-computed embedding for cluster representative title
         
     Returns:
-        Dict with 'match' (bool), 'reason' (str), 'title_sim' (float), 'shared_keywords' (list)
+        Dict with 'match' (bool), 'reason' (str), 'similarity' (float), 'shared_keywords' (list)
     """
     # Check 1: Time proximity (24 hours)
     if not check_time_proximity(article, cluster):
-        return {'match': False, 'reason': 'too_old', 'title_sim': 0.0, 'shared_keywords': []}
+        return {'match': False, 'reason': 'too_old', 'similarity': 0.0, 'shared_keywords': []}
     
-    # Check 2: AI decision (if provided from batched call)
-    # ai_decision can be: True (match), False (no match), or None (AI unavailable, use fallback)
-    if ai_decision is True:
-        if debug:
-            print(f"  ✅ AI MATCH: Claude Haiku determined this is the same event")
-        return {'match': True, 'reason': 'ai_semantic_match', 'title_sim': 1.0, 'shared_keywords': []}
-    elif ai_decision is False:
-        if debug:
-            print(f"  ❌ AI REJECTED: Claude Haiku determined this is a different event")
-        return {'match': False, 'reason': 'ai_semantic_different', 'title_sim': 0.0, 'shared_keywords': []}
-    
-    # Fallback: Legacy string-based matching (ai_decision is None - AI unavailable or errored)
-    if debug:
-        print(f"  ⚠️  Using fallback matching (AI unavailable)")
     if not cluster_sources:
-        return {'match': False, 'reason': 'no_sources', 'title_sim': 0.0, 'shared_keywords': []}
+        return {'match': False, 'reason': 'no_sources', 'similarity': 0.0, 'shared_keywords': []}
     
     representative = max(cluster_sources, key=lambda x: x.get('score', 0))
-    
     article_title = article.get('title', '')
-    representative_title = representative.get('title', '')
+    cluster_title = representative.get('title', cluster.get('main_title', ''))
     
-    title_similarity = calculate_title_similarity(article_title, representative_title)
+    # PRIMARY METHOD: Embedding similarity (v2.0)
+    if article_embedding is not None and cluster_embedding is not None:
+        result = is_same_event_embedding(
+            article_embedding, cluster_embedding,
+            article_title, cluster_title, debug
+        )
+        result['shared_keywords'] = []
+        return result
+    
+    # FALLBACK: Legacy string-based matching (if embeddings not available)
+    if debug:
+        print(f"  ⚠️  Using fallback string matching (embeddings not available)")
+    
+    title_similarity = calculate_title_similarity(article_title, cluster_title)
     
     # STRONG MATCH: High title similarity (75%+)
     if title_similarity >= ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:
         if debug:
-            print(f"  ✅ FALLBACK STRONG MATCH: Title similarity {title_similarity:.2%} >= {ClusteringConfig.TITLE_SIMILARITY_THRESHOLD:.0%}")
-        return {'match': True, 'reason': 'high_title_similarity', 'title_sim': title_similarity, 'shared_keywords': []}
+            print(f"  ✅ FALLBACK STRONG MATCH: Title similarity {title_similarity:.2%}")
+        return {'match': True, 'reason': 'high_title_similarity', 'similarity': title_similarity, 'shared_keywords': []}
     
-    # Check keyword/entity overlap only if title similarity meets minimum threshold (55%+)
+    # Check keyword/entity overlap only if title similarity meets minimum threshold
     if title_similarity < ClusteringConfig.MIN_TITLE_SIMILARITY:
         if debug:
-            print(f"  ❌ FALLBACK REJECTED: Title similarity {title_similarity:.2%} < minimum {ClusteringConfig.MIN_TITLE_SIMILARITY:.0%}")
-        return {'match': False, 'reason': 'title_too_different', 'title_sim': title_similarity, 'shared_keywords': []}
+            print(f"  ❌ FALLBACK REJECTED: Title similarity {title_similarity:.2%} < minimum")
+        return {'match': False, 'reason': 'title_too_different', 'similarity': title_similarity, 'shared_keywords': []}
     
     # Get keywords and entities for overlap check
     article_keywords = set(article.get('keywords', []))
     article_entities = set(article.get('entities', []))
-    
     rep_keywords = set(representative.get('keywords', []))
     rep_entities = set(representative.get('entities', []))
     
@@ -531,20 +676,13 @@ def is_same_event(article: Dict, cluster: Dict, cluster_sources: List[Dict], deb
     
     # MODERATE MATCH: Good keyword overlap + decent title similarity
     if len(shared_keywords) >= ClusteringConfig.KEYWORD_MATCH_THRESHOLD:
-        if debug:
-            print(f"  ✅ FALLBACK KEYWORD MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}/{ClusteringConfig.KEYWORD_MATCH_THRESHOLD} ({', '.join(list(shared_keywords)[:5])}...)")
-        return {'match': True, 'reason': 'keyword_match', 'title_sim': title_similarity, 'shared_keywords': list(shared_keywords)}
+        return {'match': True, 'reason': 'keyword_match', 'similarity': title_similarity, 'shared_keywords': list(shared_keywords)}
     
-    # ENTITY MATCH: Shared named entities (people, places, orgs) + decent title similarity
+    # ENTITY MATCH: Shared named entities
     if len(shared_entities) >= ClusteringConfig.ENTITY_MATCH_THRESHOLD:
-        if debug:
-            print(f"  ✅ FALLBACK ENTITY MATCH: Title {title_similarity:.2%}, Entities: {len(shared_entities)}/{ClusteringConfig.ENTITY_MATCH_THRESHOLD} ({', '.join(list(shared_entities))})")
-        return {'match': True, 'reason': 'entity_match', 'title_sim': title_similarity, 'shared_keywords': list(shared_entities)}
+        return {'match': True, 'reason': 'entity_match', 'similarity': title_similarity, 'shared_keywords': list(shared_entities)}
     
-    if debug:
-        print(f"  ❌ FALLBACK NO MATCH: Title {title_similarity:.2%}, Keywords: {len(shared_keywords)}, Entities: {len(shared_entities)} (AI was not available)")
-    
-    return {'match': False, 'reason': 'insufficient_overlap', 'title_sim': title_similarity, 'shared_keywords': list(shared_keywords)}
+    return {'match': False, 'reason': 'insufficient_overlap', 'similarity': title_similarity, 'shared_keywords': list(shared_keywords)}
 
 
 # ==========================================
@@ -902,61 +1040,51 @@ class EventClusteringEngine:
             )
             article['_idx'] = i  # Track original index
         
-        # PHASE 2: Batch AI similarity checks
-        print(f"🤖 Phase 2: AI similarity checks (batched & parallel)...")
+        # PHASE 2: Generate embeddings for all articles and clusters
+        print(f"🧠 Phase 2: Generating embeddings (OpenAI text-embedding-3-small)...")
         
         # Filter articles that were saved successfully
         valid_articles = [(i, articles[i]) for i in article_source_ids.keys()]
         
-        # Process in batches
-        batch_size = self.config.BATCH_SIZE
-        all_ai_results = {}  # article_idx -> {cluster_id -> True/False/None}
+        # Get all article titles for batch embedding
+        article_titles = [articles[i].get('title', '') for i in article_source_ids.keys()]
+        cluster_titles = [title for _, title in cluster_titles_cache]
         
-        def process_batch(batch_articles):
-            """Process a batch of articles against all clusters"""
-            if not cluster_titles_cache:
-                return {idx: {} for idx, _ in batch_articles}
+        # Generate embeddings in batches (OpenAI allows up to 2048 per call)
+        print(f"   📰 Embedding {len(article_titles)} article titles...")
+        article_embeddings = {}
+        
+        # Process in batches of 100
+        for batch_start in range(0, len(valid_articles), 100):
+            batch_end = min(batch_start + 100, len(valid_articles))
+            batch_indices = [idx for idx, _ in valid_articles[batch_start:batch_end]]
+            batch_titles = [articles[idx].get('title', '') for idx in batch_indices]
             
-            # Check time proximity for each article
-            batch_with_valid_clusters = []
-            for idx, article in batch_articles:
-                # For simplicity, assume all clusters are time-valid
-                # (more precise filtering can be added if needed)
-                batch_with_valid_clusters.append((idx, article.get('title', '')))
+            batch_embeddings = get_embeddings_batch(batch_titles)
+            for idx, emb in zip(batch_indices, batch_embeddings):
+                article_embeddings[idx] = emb
             
-            if not batch_with_valid_clusters:
-                return {idx: {} for idx, _ in batch_articles}
-            
-            # Make single batched AI call for this batch
-            return check_batch_articles_similarity_ai(
-                batch_with_valid_clusters,
-                cluster_titles_cache,
-                debug=False
-            )
+            if (batch_end) % 100 == 0 or batch_end == len(valid_articles):
+                print(f"   ✓ Embedded {batch_end}/{len(valid_articles)} articles")
         
-        # Process batches in parallel
-        batches = [valid_articles[i:i + batch_size] for i in range(0, len(valid_articles), batch_size)]
-        print(f"   Processing {len(batches)} batches of up to {batch_size} articles each...")
+        # Generate embeddings for cluster representative titles
+        print(f"   📁 Embedding {len(cluster_titles)} cluster titles...")
+        cluster_embeddings = {}
+        if cluster_titles:
+            cluster_emb_list = get_embeddings_batch(cluster_titles)
+            for (cluster_id, _), emb in zip(cluster_titles_cache, cluster_emb_list):
+                cluster_embeddings[cluster_id] = emb
         
-        with ThreadPoolExecutor(max_workers=self.config.PARALLEL_WORKERS) as executor:
-            batch_futures = {executor.submit(process_batch, batch): batch for batch in batches}
-            completed = 0
-            for future in as_completed(batch_futures):
-                batch_results = future.result()
-                all_ai_results.update(batch_results)
-                completed += 1
-                if completed % 3 == 0 or completed == len(batches):
-                    print(f"   ✓ Completed {completed}/{len(batches)} batches")
+        print(f"✅ Embeddings generated\n")
         
-        print(f"✅ AI checks complete\n")
-        
-        # PHASE 3: Process results and assign to clusters
+        # PHASE 3: Process results and assign to clusters (EMBEDDING-BASED v2.0)
         print(f"\n{'='*80}")
-        print(f"📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (DETAILED)")
+        print(f"📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (EMBEDDING-BASED)")
         print(f"{'='*80}")
+        print(f"   Similarity threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
         
-        # Track NEW clusters created in THIS batch (need AI check for these)
-        new_batch_clusters = []  # List of (cluster_id, title) tuples
+        # Track NEW clusters created in THIS batch
+        new_batch_clusters = []  # List of (cluster_id, title, embedding) tuples
         original_cluster_count = len(active_clusters)  # Clusters before this batch
         
         for i, article in enumerate(articles):
@@ -964,69 +1092,61 @@ class EventClusteringEngine:
                 continue  # Article wasn't saved successfully
             
             source_id = article_source_ids[i]
-            full_title = article.get('title', 'Unknown')  # Full title, not truncated
-            ai_decisions = all_ai_results.get(i, {})
+            full_title = article.get('title', 'Unknown')
+            article_emb = article_embeddings.get(i)
             
             matched = False
             matched_cluster = None
+            best_similarity = 0.0
             
-            # STEP 1: Check against EXISTING clusters (from DB, with pre-computed AI decisions)
+            # STEP 1: Check against EXISTING clusters using embeddings
             for cluster in active_clusters[:original_cluster_count]:
                 cluster_id = cluster['id']
-                cluster_sources = cluster_sources_cache.get(cluster_id, [])
+                cluster_emb = cluster_embeddings.get(cluster_id)
                 
                 # Check time proximity
                 if not check_time_proximity(article, cluster):
                     continue
                 
-                ai_decision = ai_decisions.get(cluster_id)
-                
-                match_result = is_same_event(
-                    article, cluster, cluster_sources,
-                    debug=False,
-                    ai_decision=ai_decision
-                )
-                
-                if match_result['match']:
-                    matched_cluster = cluster
-                    matched = True
-                    break
-            
-            # STEP 2: If no match with existing, check against NEW clusters from THIS batch
-            # Use AI for semantic matching (important for same-event, different-wording articles)
-            if not matched and new_batch_clusters:
-                # Run AI check against new batch clusters
-                new_cluster_ai_results = check_title_similarity_ai(
-                    article.get('title', ''),
-                    new_batch_clusters,
-                    debug=False
-                )
-                
-                for cluster in active_clusters[original_cluster_count:]:
-                    cluster_id = cluster['id']
-                    ai_decision = new_cluster_ai_results.get(cluster_id)
+                # Calculate embedding similarity
+                if article_emb is not None and cluster_emb is not None:
+                    similarity = cosine_similarity(article_emb, cluster_emb)
                     
-                    if ai_decision is True:
+                    if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD and similarity > best_similarity:
+                        best_similarity = similarity
+                        matched_cluster = cluster
+                        matched = True
+                else:
+                    # Fallback: string matching if embeddings not available
+                    cluster_sources = cluster_sources_cache.get(cluster_id, [])
+                    match_result = is_same_event(article, cluster, cluster_sources, debug=False)
+                    if match_result['match']:
                         matched_cluster = cluster
                         matched = True
                         break
-                    elif ai_decision is None:
-                        # AI unavailable, use fallback string matching
-                        cluster_sources = cluster_sources_cache.get(cluster_id, [])
-                        match_result = is_same_event(
-                            article, cluster, cluster_sources,
-                            debug=False,
-                            ai_decision=None
-                        )
-                        if match_result['match']:
-                            matched_cluster = cluster
-                            matched = True
-                            break
+            
+            # STEP 2: If no match with existing, check against NEW clusters from THIS batch
+            if not matched and new_batch_clusters:
+                for new_cluster_id, new_cluster_title, new_cluster_emb in new_batch_clusters:
+                    if article_emb is not None and new_cluster_emb is not None:
+                        similarity = cosine_similarity(article_emb, new_cluster_emb)
+                        
+                        if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD:
+                            # Find the cluster object
+                            for cluster in active_clusters[original_cluster_count:]:
+                                if cluster['id'] == new_cluster_id:
+                                    matched_cluster = cluster
+                                    matched = True
+                                    best_similarity = similarity
+                                    break
+                            if matched:
+                                break
             
             if matched and matched_cluster:
                 # Add to existing cluster
                 if self.add_to_cluster(matched_cluster['id'], source_id):
-                    print(f"\n   ✅ MATCHED [{i+1}/{len(articles)}]")
+                    sim_display = f" (similarity: {best_similarity:.3f})" if best_similarity > 0 else ""
+                    print(f"\n   ✅ MATCHED [{i+1}/{len(articles)}]{sim_display}")
                     print(f"      📰 Article: {full_title}")
                     print(f"      📁 Added to cluster: {matched_cluster['event_name']}")
                     print(f"      🔗 Cluster ID: {matched_cluster['id']}")
@@ -1064,9 +1184,10 @@ class EventClusteringEngine:
                         'score': article.get('score', 0)
                     }]
                     cluster_titles_cache.append((cluster_id, article.get('title', '')))
+                    cluster_embeddings[cluster_id] = article_emb  # Store embedding for new cluster
                     
-                    # Track this new cluster for AI matching with subsequent articles
-                    new_batch_clusters.append((cluster_id, article.get('title', '')))
+                    # Track this new cluster for embedding matching with subsequent articles
+                    new_batch_clusters.append((cluster_id, article.get('title', ''), article_emb))
                 else:
                     print(f"\n   ❌ FAILED [{i+1}/{len(articles)}]")
                     print(f"      📰 Article: {full_title}")
@@ -1076,12 +1197,13 @@ class EventClusteringEngine:
         
         # Print summary
         print(f"\n{'='*60}")
-        print(f"CLUSTERING COMPLETE (PARALLEL)")
+        print(f"CLUSTERING COMPLETE (EMBEDDING-BASED v2.0)")
         print(f"{'='*60}")
         print(f"✓ Articles saved: {stats['saved_articles']}/{stats['total_articles']}")
         print(f"✓ Matched to existing clusters: {stats['matched_to_existing']}")
         print(f"✓ New clusters created: {stats['new_clusters_created']}")
         print(f"✓ Total active clusters: {len(active_clusters)}")
+        print(f"✓ Embedding threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
         if stats['failed'] > 0:
             print(f"⚠ Failed: {stats['failed']}")
         
