@@ -925,13 +925,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           bottom: 0;
           display: flex;
           flex-direction: column;
-          background: linear-gradient(180deg, 
-            #3ABAED 0%,
-            #5DC8F1 15%,
-            #7FD6F5 25%,
-            #A1E4F9 35%,
-            #C3F2FD 45%,
-            #FFFFFF 50%,
+          background: linear-gradient(165deg, 
+            #E8F4FC 0%,
+            #F0F8FD 20%,
+            #F7FBFE 40%,
+            #FFFFFF 60%,
             #FFFFFF 100%
           );
           z-index: 1000;
@@ -945,15 +943,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           flex-direction: column;
           justify-content: flex-start;
-          padding: 40px 16px;
-          padding-top: max(25vh, 120px);
+          padding: 24px 24px 0;
+          padding-top: max(12vh, 80px);
           position: relative;
           flex-shrink: 0;
         }
 
         .greeting-content {
           margin-left: 0;
-          padding-left: 14px;
+          padding-left: 16px;
           position: relative;
         }
 
@@ -961,54 +959,47 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           content: '';
           position: absolute;
           left: 0;
-          top: 0;
-          bottom: 0;
-          width: 3.5px;
-          background: linear-gradient(180deg, #1E88C9 0%, #B83A3A 100%);
+          top: 4px;
+          bottom: 4px;
+          width: 3px;
+          background: linear-gradient(180deg, #2563EB 0%, #7C3AED 100%);
           border-radius: 2px;
         }
 
         .greeting-hi {
-          font-size: 15px;
+          font-size: 13px;
           font-weight: 600;
-          letter-spacing: 0.04em;
-          color: rgba(0, 0, 0, 0.4);
-          margin-bottom: 8px;
+          letter-spacing: 0.08em;
+          color: rgba(0, 0, 0, 0.45);
+          margin-bottom: 12px;
           text-transform: uppercase;
         }
 
-        .greeting-main {
-          font-size: 52px;
-          font-weight: 700;
-          line-height: 1.02;
-          letter-spacing: -0.03em;
-          color: rgba(0, 0, 0, 0.88);
-        }
-
         .greeting-sub {
-          font-size: 52px;
-          font-weight: 400;
-          line-height: 1.02;
-          letter-spacing: -0.03em;
-          color: #000000;
+          font-size: 38px;
+          font-weight: 600;
+          line-height: 1.15;
+          letter-spacing: -0.02em;
+          color: #1a1a1a;
+          max-width: 340px;
         }
 
         /* Last Visit */
         .last-visit {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          font-size: 13px;
+          gap: 8px;
+          font-size: 14px;
           font-weight: 500;
-          color: rgba(0, 0, 0, 0.3);
-          margin-top: 24px;
+          color: rgba(0, 0, 0, 0.4);
+          margin-top: 20px;
           letter-spacing: 0;
         }
 
         .last-visit-dot {
-          width: 5px;
-          height: 5px;
-          background: rgba(0, 0, 0, 0.18);
+          width: 6px;
+          height: 6px;
+          background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
           border-radius: 50%;
         }
 
@@ -1017,80 +1008,102 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           flex: 1;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 20px 16px 40px;
+          padding: 24px;
           min-height: 0;
         }
 
         .map-label {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
+          gap: 8px;
           font-size: 11px;
           font-weight: 600;
-          letter-spacing: 0.05em;
-          color: #000000;
+          letter-spacing: 0.1em;
+          color: rgba(0, 0, 0, 0.5);
           text-transform: uppercase;
-          margin-bottom: 10px;
-          margin-top: 20px;
+          margin-bottom: 16px;
           flex-shrink: 0;
-          align-self: flex-start;
         }
 
         .map-label-icon {
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           flex-shrink: 0;
-          background: none;
-          margin: 0;
+          opacity: 0.6;
+        }
+
+        .map-wrapper {
+          flex: 1;
+          background: rgba(255, 255, 255, 0.7);
+          border-radius: 20px;
+          padding: 16px;
+          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          border: 1px solid rgba(0, 0, 0, 0.04);
         }
 
         .map-container {
           position: relative;
           width: 100%;
-          flex: 1;
+          height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: hidden;
-          min-height: 0;
         }
 
         .map-container :global(svg) {
-          width: 108%;
+          width: 115%;
           height: auto;
           max-height: 100%;
           display: block;
-          background: #ffffff;
-          margin-left: -6%;
-          margin-right: -2%;
+          margin-left: -7%;
         }
 
         .map-container :global(.country) {
-          fill: #d8d8d8;
-          stroke: none;
+          fill: #E5E7EB;
+          stroke: #ffffff;
+          stroke-width: 0.5;
           transition: fill 0.3s ease;
+        }
+
+        /* Tap hint */
+        .tap-hint {
+          text-align: center;
+          padding: 16px;
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.25);
+          letter-spacing: 0.05em;
         }
 
         /* Responsive */
         @media (max-width: 480px) {
-          .greeting-main,
           .greeting-sub {
-            font-size: 42px;
+            font-size: 32px;
           }
           .greeting-hi {
-            font-size: 13px;
+            font-size: 12px;
           }
           .greeting-section {
-            padding-top: max(20vh, 100px);
+            padding-top: max(10vh, 70px);
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+          .map-section {
+            padding: 16px;
+          }
+          .map-wrapper {
+            border-radius: 16px;
+            padding: 12px;
           }
         }
 
         @media (max-width: 375px) {
-          .greeting-main,
           .greeting-sub {
-            font-size: 36px;
+            font-size: 28px;
           }
         }
       `}</style>
@@ -1112,26 +1125,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         <div className="map-section">
           <div className="map-label">
             <svg className="map-label-icon" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-              <path d="M9 3v15" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M15 6v15" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M2 12h20M12 2c2.5 2.5 4 5.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-5.5-4-10s1.5-7.5 4-10z" stroke="currentColor" strokeWidth="1.5"/>
             </svg>
-            <span>Global activity</span>
+            <span>Global Activity</span>
           </div>
-          <div className="map-container" ref={mapContainerRef}>
-            <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet">
-              <rect width="100%" height="100%" fill="#ffffff"/>
-              <defs>
-                <filter id="round" x="-10%" y="-10%" width="120%" height="120%">
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-                  <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="rounded"/>
-                  <feComposite in="SourceGraphic" in2="rounded" operator="atop"/>
-                </filter>
-              </defs>
-              <g id="countries" filter="url(#round)"></g>
-            </svg>
+          <div className="map-wrapper">
+            <div className="map-container" ref={mapContainerRef}>
+              <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <filter id="round" x="-10%" y="-10%" width="120%" height="120%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                    <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="rounded"/>
+                    <feComposite in="SourceGraphic" in2="rounded" operator="atop"/>
+                  </filter>
+                </defs>
+                <g id="countries"></g>
+              </svg>
+            </div>
           </div>
         </div>
+
+        <div className="tap-hint">Tap anywhere to continue</div>
       </div>
     </>
   );
