@@ -30,6 +30,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const [mapLoaded, setMapLoaded] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState({ d3: false, topojson: false });
   const [newsCountByCountry, setNewsCountByCountry] = useState({});
+  
+  // Globe rotation state
+  const rotationRef = useRef({ x: 0, y: -20 });
+  const isRotatingRef = useRef(true);
+  const isDraggingRef = useRef(false);
+  const projectionRef = useRef(null);
+  const pathRef = useRef(null);
+  const globeRef = useRef(null);
 
   // Filter stories based on last visit time window
   const filterStoriesByTimeWindow = useCallback((storiesToFilter) => {
@@ -61,11 +69,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   // Fetch country counts from dedicated map API
   const fetchCountryCounts = useCallback(async () => {
     try {
-      const response = await fetch(`/api/map-countries?hours=${mapTimeWindow}`);
+      // First try with user's time window
+      let response = await fetch(`/api/map-countries?hours=${mapTimeWindow}`);
       if (response.ok) {
-        const data = await response.json();
+        let data = await response.json();
         console.log('Map API response:', data);
-        if (data.countryCounts) {
+        
+        // If no data found, fallback to 24 hours
+        if (data.totalArticles === 0 && mapTimeWindow < 24) {
+          console.log('No articles in time window, falling back to 24 hours');
+          response = await fetch(`/api/map-countries?hours=24`);
+          if (response.ok) {
+            data = await response.json();
+            console.log('24h fallback response:', data);
+          }
+        }
+        
+        if (data.countryCounts && Object.keys(data.countryCounts).length > 0) {
           setNewsCountByCountry(data.countryCounts);
         }
       }
@@ -450,17 +470,30 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   // Personalized greeting generator based on scores and time since last visit
   const getPersonalizedGreeting = () => {
     const time = getTimeOfDay();
-    const name = firstName ? `, ${firstName}` : '';
+    const name = firstName ? ` ${firstName}` : '';
     const analysis = analyzeStories();
     const lastVisit = getLastVisitInfo();
     const period = lastVisit.period;
     
-    // Simple greetings
+    // Get time description for the message
+    const getTimeDescription = () => {
+      const hours = lastVisit.hours;
+      if (hours < 1) return 'in the last hour';
+      if (hours === 1) return 'in the last hour';
+      if (hours <= 3) return `in the last ${hours} hours`;
+      if (hours <= 6) return `in the last ${hours} hours`;
+      if (hours <= 12) return `in the last ${hours} hours`;
+      if (hours <= 24) return 'since yesterday';
+      return 'recently';
+    };
+    const timePeriod = getTimeDescription();
+    
+    // Simple greetings with name
     const hiGreetings = {
-      morning: [`Good morning${name}`, `Morning${name}`],
-      afternoon: [`Good afternoon${name}`, `Afternoon${name}`],
-      evening: [`Good evening${name}`, `Evening${name}`],
-      night: [`Good evening${name}`, `Evening${name}`]
+      morning: [`Good morning${name}`],
+      afternoon: [`Good afternoon${name}`],
+      evening: [`Good evening${name}`],
+      night: [`Good evening${name}`]
     };
 
     // Get category labels
@@ -470,13 +503,22 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const catLabel2 = cat2 ? (categoryLabels[cat2] || cat2) : null;
     const capCat = catLabel.charAt(0).toUpperCase() + catLabel.slice(1);
     
-    // 50+ natural, meaningful message variations for each scenario
+    // 50+ natural, meaningful message variations for each scenario (with time reference)
     let subOptions = [];
     
     if (analysis.hasBreaking) {
-      // BREAKING NEWS - urgent, important (50+ messages)
+      // BREAKING NEWS - urgent, important (with time reference)
       subOptions = [
-        `Breaking news in ${catLabel}`,
+        `${timePeriod}, breaking news in ${catLabel}`,
+        `Major ${catLabel} developments ${timePeriod}`,
+        `${capCat} breaking ${timePeriod}`,
+        `Important ${catLabel} news ${timePeriod}`,
+        `${timePeriod}, major ${catLabel} story`,
+        `Breaking: ${catLabel} update ${timePeriod}`,
+        `Critical ${catLabel} developments ${timePeriod}`,
+        `${timePeriod}, big ${catLabel} news`,
+        `Urgent ${catLabel} updates ${timePeriod}`,
+        `${capCat} made headlines ${timePeriod}`,
         `Major ${catLabel} story developing`,
         `Important ${catLabel} news just broke`,
         `Big story unfolding in ${catLabel}`,
@@ -530,36 +572,36 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         `Significant ${catLabel} breaking`,
       ];
     } else if (analysis.hasVeryHigh) {
-      // IMPORTANT NEWS - notable but not breaking (50+ messages)
+      // IMPORTANT NEWS - with time reference
       subOptions = [
-        `A lot happened in ${catLabel}`,
-        `Big developments in ${catLabel}`,
-        `${capCat} had a busy day`,
-        `Important ${catLabel} news today`,
-        `Plenty happening in ${catLabel}`,
-        `${capCat} is worth your attention`,
-        `Some significant ${catLabel} news`,
-        `${capCat} dominated the news`,
-        `Major ${catLabel} updates today`,
-        `${capCat} in the spotlight`,
-        `Notable ${catLabel} developments`,
-        `${capCat} has been eventful`,
-        `Important things in ${catLabel}`,
-        `${capCat} made news today`,
-        `Significant ${catLabel} updates`,
-        `${capCat} worth following`,
-        `Big things in ${catLabel}`,
-        `${capCat} had major updates`,
-        `Important ${catLabel} developments`,
-        `${capCat} is trending`,
-        `Noteworthy ${catLabel} news`,
-        `${capCat} had a big day`,
-        `Significant ${catLabel} today`,
-        `${capCat} news worth reading`,
-        `Important ${catLabel} happened`,
-        `${capCat} making moves`,
-        `Big ${catLabel} day`,
-        `${capCat} had key updates`,
+        `${timePeriod}, a lot happened in ${catLabel}`,
+        `Big ${catLabel} developments ${timePeriod}`,
+        `${capCat} had a busy one ${timePeriod}`,
+        `Important ${catLabel} news ${timePeriod}`,
+        `Plenty happened in ${catLabel} ${timePeriod}`,
+        `${capCat} dominated news ${timePeriod}`,
+        `Major ${catLabel} updates ${timePeriod}`,
+        `${capCat} in the spotlight ${timePeriod}`,
+        `Notable ${catLabel} developments ${timePeriod}`,
+        `${capCat} has been eventful ${timePeriod}`,
+        `${timePeriod}, significant ${catLabel} news`,
+        `${capCat} made headlines ${timePeriod}`,
+        `Big things in ${catLabel} ${timePeriod}`,
+        `${capCat} had major updates ${timePeriod}`,
+        `Important ${catLabel} developments ${timePeriod}`,
+        `${timePeriod}, ${catLabel} is trending`,
+        `Noteworthy ${catLabel} news ${timePeriod}`,
+        `${capCat} had a big day ${timePeriod}`,
+        `Significant ${catLabel} ${timePeriod}`,
+        `${capCat} making moves ${timePeriod}`,
+        `Big ${catLabel} day ${timePeriod}`,
+        `${capCat} had key updates ${timePeriod}`,
+        `${timePeriod}, ${catLabel} made waves`,
+        `Major ${catLabel} stories ${timePeriod}`,
+        `${capCat} developments ${timePeriod}`,
+        `${timePeriod}, important ${catLabel}`,
+        `${catLabel} news worth seeing ${timePeriod}`,
+        `${capCat} made noise ${timePeriod}`,
         `Notable ${catLabel} today`,
         `${capCat} worth your time`,
         `Important ${catLabel} stories`,
@@ -586,55 +628,46 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         catLabel2 ? `Developments in ${catLabel} and ${catLabel2}` : `${capCat} developments today`,
       ];
     } else if (analysis.highScoredCount >= 5) {
-      // BUSY DAY - lots of stories (50+ messages)
+      // BUSY DAY - with time reference
       subOptions = [
-        `Busy day for ${catLabel}`,
-        `A lot to catch up on in ${catLabel}`,
-        `${capCat} has been active`,
-        `Plenty of ${catLabel} news`,
-        `${capCat} kept things interesting`,
-        `Several ${catLabel} stories to read`,
-        `${capCat} had a full day`,
-        `Lots happening in ${catLabel}`,
-        `${capCat} was busy`,
-        `Active day for ${catLabel}`,
-        `${capCat} had plenty going on`,
-        `Busy ${catLabel} day`,
-        `${capCat} has lots to share`,
-        `Multiple ${catLabel} stories`,
-        `${capCat} filled with news`,
-        `A full ${catLabel} day`,
-        `${capCat} kept busy`,
-        `Lots of ${catLabel} updates`,
-        `${capCat} had many stories`,
-        `Busy time in ${catLabel}`,
-        `${capCat} has been full`,
-        `Plenty in ${catLabel}`,
-        `${capCat} packed with news`,
-        `Multiple ${catLabel} updates`,
-        `${capCat} very active`,
-        `A lot in ${catLabel}`,
-        `${capCat} had lots`,
-        `Many ${catLabel} stories`,
-        `${capCat} busy day`,
-        `Lots to see in ${catLabel}`,
-        `${capCat} full of stories`,
-        `A busy ${catLabel} roundup`,
-        `${capCat} had a lot`,
-        `Plenty to read in ${catLabel}`,
-        `${capCat} stacked with news`,
-        `Many ${catLabel} updates`,
-        `${capCat} had many updates`,
-        `A lot happening in ${catLabel}`,
-        `${capCat} news stacked up`,
-        `Several ${catLabel} updates`,
-        `${capCat} with lots of news`,
-        `Busy ${catLabel} updates`,
-        `${capCat} had several stories`,
-        `Lots of ${catLabel} news`,
-        `${capCat} filled with updates`,
-        `Multiple things in ${catLabel}`,
-        `${capCat} had a busy one`,
+        `${timePeriod}, busy day for ${catLabel}`,
+        `A lot to catch up on ${timePeriod}`,
+        `${capCat} has been active ${timePeriod}`,
+        `Plenty of ${catLabel} news ${timePeriod}`,
+        `${capCat} kept things interesting ${timePeriod}`,
+        `Several ${catLabel} stories ${timePeriod}`,
+        `${capCat} had a full day ${timePeriod}`,
+        `Lots happening in ${catLabel} ${timePeriod}`,
+        `${capCat} was busy ${timePeriod}`,
+        `Active day for ${catLabel} ${timePeriod}`,
+        `${capCat} had plenty going on ${timePeriod}`,
+        `Busy ${catLabel} day ${timePeriod}`,
+        `${timePeriod}, multiple ${catLabel} stories`,
+        `${capCat} filled with news ${timePeriod}`,
+        `${timePeriod}, lots of ${catLabel} updates`,
+        `${capCat} had many stories ${timePeriod}`,
+        `${timePeriod}, busy time in ${catLabel}`,
+        `Plenty in ${catLabel} ${timePeriod}`,
+        `${capCat} packed with news ${timePeriod}`,
+        `${timePeriod}, ${catLabel} very active`,
+        `A lot in ${catLabel} ${timePeriod}`,
+        `${capCat} had lots ${timePeriod}`,
+        `Many ${catLabel} stories ${timePeriod}`,
+        `${timePeriod}, lots to see in ${catLabel}`,
+        `${capCat} full of stories ${timePeriod}`,
+        `A busy ${catLabel} roundup ${timePeriod}`,
+        `${capCat} had a lot ${timePeriod}`,
+        `Plenty to read ${timePeriod}`,
+        `${capCat} stacked with news ${timePeriod}`,
+        `${timePeriod}, many ${catLabel} updates`,
+        `A lot happened ${timePeriod}`,
+        `${capCat} news stacked up ${timePeriod}`,
+        `Several ${catLabel} updates ${timePeriod}`,
+        `${timePeriod}, ${catLabel} with lots of news`,
+        `${capCat} had several stories ${timePeriod}`,
+        `Lots of ${catLabel} news ${timePeriod}`,
+        `${timePeriod}, multiple things in ${catLabel}`,
+        `${capCat} had a busy one ${timePeriod}`,
         `Plenty of ${catLabel} updates`,
         `${capCat} with many stories`,
         `A lot of ${catLabel} news`,
@@ -642,116 +675,80 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         catLabel2 ? `Active day for ${catLabel} and ${catLabel2}` : `Active ${catLabel} day`,
       ];
     } else if (analysis.highScoredCount >= 1) {
-      // SOME STORIES - lighter day (50+ messages)
+      // SOME STORIES - with time reference
       subOptions = [
-        `Some ${catLabel} worth reading`,
-        `A few interesting ${catLabel} stories`,
-        `${capCat} has some updates`,
-        `Some notable ${catLabel} news`,
-        `A few ${catLabel} stories to check`,
-        `${capCat} had a few highlights`,
-        `Some ${catLabel} to catch up on`,
-        `A couple of ${catLabel} stories`,
-        `${capCat} worth a look`,
-        `Some ${catLabel} developments`,
-        `${capCat} has updates`,
-        `A few ${catLabel} updates`,
-        `Some ${catLabel} news`,
-        `${capCat} had some news`,
-        `A few things in ${catLabel}`,
-        `Some ${catLabel} stories`,
-        `${capCat} with updates`,
-        `A few ${catLabel} highlights`,
-        `Some ${catLabel} to read`,
-        `${capCat} had a few`,
-        `Notable ${catLabel} stories`,
-        `A few ${catLabel} to see`,
-        `Some things in ${catLabel}`,
-        `${capCat} news to check`,
-        `A few ${catLabel} news`,
-        `Some ${catLabel} updates`,
-        `${capCat} stories to read`,
-        `A couple things in ${catLabel}`,
-        `Some ${catLabel} highlights`,
-        `${capCat} had updates`,
-        `A few notable ${catLabel}`,
-        `Some ${catLabel} to see`,
-        `${capCat} with some news`,
-        `A few ${catLabel} developments`,
-        `Some interesting ${catLabel}`,
-        `${capCat} with a few stories`,
-        `A few ${catLabel} worth reading`,
-        `Some ${catLabel} stood out`,
-        `${capCat} had a couple`,
-        `A few in ${catLabel}`,
-        `Some ${catLabel} caught attention`,
-        `${capCat} stories worth seeing`,
-        `A few ${catLabel} stories today`,
-        `Some ${catLabel} news today`,
-        `${capCat} updates today`,
-        `A few ${catLabel} today`,
-        `Some notable ${catLabel}`,
-        `${capCat} had noteworthy news`,
-        `A few ${catLabel} made news`,
-        `Some ${catLabel} worth noting`,
-        `${capCat} with highlights`,
-        `A few ${catLabel} stories stood out`,
+        `${timePeriod}, some ${catLabel} worth reading`,
+        `A few interesting ${catLabel} stories ${timePeriod}`,
+        `${capCat} has some updates ${timePeriod}`,
+        `Some notable ${catLabel} news ${timePeriod}`,
+        `A few ${catLabel} stories ${timePeriod}`,
+        `${capCat} had a few highlights ${timePeriod}`,
+        `Some ${catLabel} to catch up on ${timePeriod}`,
+        `${timePeriod}, a couple of ${catLabel} stories`,
+        `${capCat} worth a look ${timePeriod}`,
+        `Some ${catLabel} developments ${timePeriod}`,
+        `${capCat} has updates ${timePeriod}`,
+        `A few ${catLabel} updates ${timePeriod}`,
+        `${timePeriod}, some ${catLabel} news`,
+        `${capCat} had some news ${timePeriod}`,
+        `A few things in ${catLabel} ${timePeriod}`,
+        `${timePeriod}, some ${catLabel} stories`,
+        `${capCat} with updates ${timePeriod}`,
+        `A few ${catLabel} highlights ${timePeriod}`,
+        `Some ${catLabel} to read ${timePeriod}`,
+        `${capCat} had a few ${timePeriod}`,
+        `Notable ${catLabel} stories ${timePeriod}`,
+        `${timePeriod}, a few ${catLabel} to see`,
+        `Some things in ${catLabel} ${timePeriod}`,
+        `${capCat} news to check ${timePeriod}`,
+        `A few ${catLabel} news ${timePeriod}`,
+        `${timePeriod}, some ${catLabel} updates`,
+        `${capCat} stories to read ${timePeriod}`,
+        `A couple things ${timePeriod}`,
+        `Some ${catLabel} highlights ${timePeriod}`,
+        `${capCat} had updates ${timePeriod}`,
       ];
     } else {
-      // REGULAR DAY - general updates (50+ messages)
+      // REGULAR DAY - with time reference
       subOptions = [
-        `Here's what's happening`,
-        `Your news update is ready`,
-        `Here's the latest`,
-        `Catch up on what happened`,
-        `Here's your briefing`,
-        `The latest news for you`,
-        `Your news roundup`,
-        `Here's what you missed`,
-        `Time to catch up`,
-        `Your daily update`,
-        `Here's today's news`,
-        `The news awaits`,
-        `Your update is ready`,
-        `Here's what's new`,
-        `Catch up on the news`,
-        `Your briefing is ready`,
-        `Here's your update`,
-        `The latest awaits`,
-        `News update ready`,
-        `Here's the roundup`,
-        `Time for your update`,
-        `The news for you`,
-        `Here's what happened`,
-        `Your news is ready`,
-        `Catch up time`,
-        `Here's your news`,
-        `The update is ready`,
-        `News roundup ready`,
-        `Here's today's update`,
-        `Your daily news`,
-        `The briefing awaits`,
-        `Here's the news`,
-        `Time for news`,
-        `Your roundup is ready`,
-        `Here's what's going on`,
-        `The latest news`,
-        `News update for you`,
-        `Here's today's briefing`,
-        `Your news awaits`,
-        `Catch up on today`,
-        `Here's your daily news`,
-        `The news update`,
-        `Ready for your update`,
-        `Here's what to know`,
-        `Your update awaits`,
-        `The day's news`,
-        `Here's your roundup`,
-        `News ready for you`,
-        `Here's today`,
-        `Your news update`,
-        `The latest for you`,
-        `Here's your news update`,
+        `Here's what's happening ${timePeriod}`,
+        `Your news update from ${timePeriod}`,
+        `Here's the latest ${timePeriod}`,
+        `Catch up on what happened ${timePeriod}`,
+        `Here's your briefing ${timePeriod}`,
+        `The latest news ${timePeriod}`,
+        `Your news roundup ${timePeriod}`,
+        `Here's what you missed ${timePeriod}`,
+        `Time to catch up ${timePeriod}`,
+        `${timePeriod}, here's the update`,
+        `Here's today's news ${timePeriod}`,
+        `The news awaits ${timePeriod}`,
+        `Your update is ready ${timePeriod}`,
+        `Here's what's new ${timePeriod}`,
+        `Catch up on the news ${timePeriod}`,
+        `Your briefing ${timePeriod}`,
+        `Here's your update ${timePeriod}`,
+        `The latest awaits ${timePeriod}`,
+        `News update ${timePeriod}`,
+        `Here's the roundup ${timePeriod}`,
+        `Time for your update ${timePeriod}`,
+        `The news ${timePeriod}`,
+        `Here's what happened ${timePeriod}`,
+        `Your news is ready ${timePeriod}`,
+        `Catch up time ${timePeriod}`,
+        `Here's your news ${timePeriod}`,
+        `The update is ready ${timePeriod}`,
+        `News roundup ${timePeriod}`,
+        `Here's today's update ${timePeriod}`,
+        `Your daily news ${timePeriod}`,
+        `The briefing awaits ${timePeriod}`,
+        `Here's the news ${timePeriod}`,
+        `Time for news ${timePeriod}`,
+        `Your roundup is ready ${timePeriod}`,
+        `Here's what's going on ${timePeriod}`,
+        `The latest news ${timePeriod}`,
+        `News update for you ${timePeriod}`,
+        `Here's today's briefing ${timePeriod}`,
       ];
     }
 
@@ -794,9 +791,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     return `rgb(${r}, ${g}, ${b})`;
   };
 
-  // Load the map when scripts are ready
+  // Load the 3D globe when scripts are ready
   useEffect(() => {
-    console.log('Map useEffect triggered:', { 
+    console.log('Globe useEffect triggered:', { 
       d3: scriptsLoaded.d3, 
       topojson: scriptsLoaded.topojson, 
       countriesCount: Object.keys(newsCountByCountry).length 
@@ -808,7 +805,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
     if (typeof window === 'undefined') return;
 
-    const loadMap = async () => {
+    const loadGlobe = async () => {
       try {
         const d3 = window.d3;
         const topojson = window.topojson;
@@ -818,72 +815,142 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           return;
         }
         
+        const container = mapContainerRef.current;
+        if (!container) return;
+        
+        // Get container dimensions
+        const containerWidth = container.offsetWidth || 300;
+        const containerHeight = container.offsetHeight || 300;
+        const size = Math.min(containerWidth, containerHeight);
+        
+        // Clear existing SVG
+        container.innerHTML = '';
+        
+        // Create new SVG
+        const svg = d3.select(container)
+          .append('svg')
+          .attr('width', '100%')
+          .attr('height', '100%')
+          .attr('viewBox', `0 0 ${size} ${size}`)
+          .style('cursor', 'grab');
+        
+        // Create projection
+        const projection = d3.geoOrthographic()
+          .scale(size / 2.3)
+          .center([0, 0])
+          .translate([size / 2, size / 2]);
+        
+        projectionRef.current = projection;
+        
+        const path = d3.geoPath().projection(projection);
+        pathRef.current = path;
+        
+        // Add sphere outline
+        svg.append('circle')
+          .attr('cx', size / 2)
+          .attr('cy', size / 2)
+          .attr('r', size / 2.3)
+          .attr('class', 'globe-sphere');
+        
+        const globe = svg.append('g').attr('class', 'globe-countries');
+        globeRef.current = globe;
+        
         // Fetch world map data
-        const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json');
+        const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
         const topo = await res.json();
-        const geo = topojson.feature(topo, topo.objects.countries);
-        
-        const svg = mapContainerRef.current?.querySelector('svg');
-        const g = svg?.querySelector('#countries');
-        
-        if (!svg || !g) return;
-
-        const proj = d3.geoNaturalEarth1().scale(320).translate([800, 450]);
-        const path = d3.geoPath().projection(proj);
+        const countries = topojson.feature(topo, topo.objects.countries);
         
         // Exclude Greenland and Antarctica
         const exclude = [304, 10];
+        const filteredCountries = {
+          ...countries,
+          features: countries.features.filter(f => !exclude.includes(+f.id))
+        };
         
-        // Clear existing paths
-        g.innerHTML = '';
+        // Draw countries
+        globe.selectAll('path')
+          .data(filteredCountries.features)
+          .enter()
+          .append('path')
+          .attr('class', 'country')
+          .attr('d', path)
+          .attr('data-id', d => d.id);
         
-        geo.features.forEach(f => {
-          if (exclude.includes(+f.id)) return;
-          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          const d = path(f);
-          if (d) {
-            p.setAttribute('d', d);
-            p.setAttribute('class', 'country');
-            p.setAttribute('data-id', f.id);
-            g.appendChild(p);
+        // Drag to rotate
+        const sensitivity = 0.25;
+        const drag = d3.drag()
+          .on('start', () => {
+            isDraggingRef.current = true;
+            isRotatingRef.current = false;
+            svg.style('cursor', 'grabbing');
+          })
+          .on('drag', (event) => {
+            rotationRef.current.x += event.dx * sensitivity;
+            rotationRef.current.y -= event.dy * sensitivity;
+            rotationRef.current.y = Math.max(-90, Math.min(90, rotationRef.current.y));
+            projection.rotate([rotationRef.current.x, rotationRef.current.y]);
+            globe.selectAll('path').attr('d', path);
+          })
+          .on('end', () => {
+            isDraggingRef.current = false;
+            svg.style('cursor', 'grab');
+            setTimeout(() => { isRotatingRef.current = true; }, 2000);
+          });
+        
+        svg.call(drag);
+        
+        // Auto rotation
+        let animationId;
+        const rotate = () => {
+          if (isRotatingRef.current && !isDraggingRef.current) {
+            rotationRef.current.x += 0.15;
+            projection.rotate([rotationRef.current.x, rotationRef.current.y]);
+            globe.selectAll('path').attr('d', path);
           }
-        });
-
+          animationId = requestAnimationFrame(rotate);
+        };
+        rotate();
+        
         setMapLoaded(true);
+        
+        // Cleanup
+        return () => {
+          if (animationId) cancelAnimationFrame(animationId);
+        };
       } catch (error) {
-        console.error('Error loading map:', error);
+        console.error('Error loading globe:', error);
       }
     };
 
-    loadMap();
+    loadGlobe();
   }, [scriptsLoaded]);
 
   // Separate useEffect for coloring - runs whenever country data changes
   useEffect(() => {
     if (!mapLoaded) return;
     if (Object.keys(newsCountByCountry).length === 0) return;
+    if (!globeRef.current) return;
     
-    console.log('=== COLORING MAP ===');
+    console.log('=== COLORING GLOBE ===');
     console.log('Countries in data:', Object.keys(newsCountByCountry).length);
     
-    const svg = mapContainerRef.current?.querySelector('svg');
-    const g = svg?.querySelector('#countries');
-    if (!g) return;
+    const d3 = window.d3;
+    if (!d3) return;
     
-    const countryElements = g.querySelectorAll('.country');
     const counts = Object.values(newsCountByCountry);
     const maxCount = Math.max(...counts, 1);
     
     let coloredCount = 0;
     
-    countryElements.forEach(el => {
-      const countryId = parseInt(el.getAttribute('data-id'));
+    globeRef.current.selectAll('.country').each(function() {
+      const el = d3.select(this);
+      const countryId = parseInt(el.attr('data-id'));
       
       for (const [name, count] of Object.entries(newsCountByCountry)) {
         const normalizedName = name.toLowerCase().trim();
         if (countryNameToId[normalizedName] === countryId) {
           const intensity = count / maxCount;
-          el.style.fill = getColor(intensity);
+          el.style('fill', getColor(intensity));
           coloredCount++;
           break;
         }
@@ -925,12 +992,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           bottom: 0;
           display: flex;
           flex-direction: column;
-          background: linear-gradient(165deg, 
-            #E8F4FC 0%,
-            #F0F8FD 20%,
-            #F7FBFE 40%,
-            #FFFFFF 60%,
-            #FFFFFF 100%
+          background: linear-gradient(180deg, 
+            #0a0a0f 0%,
+            #0d1117 40%,
+            #161b22 100%
           );
           z-index: 1000;
           overflow: hidden;
@@ -938,215 +1003,175 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Greeting Section */
-        .greeting-section {
+        /* Subtle grid pattern overlay */
+        .first-page-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: 
+            radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+          pointer-events: none;
+        }
+
+        /* Content wrapper */
+        .content-wrapper {
+          flex: 1;
           display: flex;
           flex-direction: column;
-          justify-content: flex-start;
-          padding: 24px 24px 0;
-          padding-top: max(12vh, 80px);
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
           position: relative;
+          z-index: 1;
+        }
+
+        /* Greeting Section */
+        .greeting-section {
+          text-align: center;
+          margin-bottom: 8px;
           flex-shrink: 0;
         }
 
-        .greeting-content {
-          margin-left: 0;
-          padding-left: 16px;
-          position: relative;
-        }
-
-        .greeting-content::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 4px;
-          bottom: 4px;
-          width: 3px;
-          background: linear-gradient(180deg, #2563EB 0%, #7C3AED 100%);
-          border-radius: 2px;
-        }
-
         .greeting-hi {
-          font-size: 13px;
+          font-size: 11px;
           font-weight: 600;
-          letter-spacing: 0.08em;
-          color: rgba(0, 0, 0, 0.45);
+          letter-spacing: 0.2em;
+          color: rgba(255, 255, 255, 0.4);
           margin-bottom: 12px;
           text-transform: uppercase;
         }
 
         .greeting-sub {
-          font-size: 38px;
-          font-weight: 600;
-          line-height: 1.15;
-          letter-spacing: -0.02em;
-          color: #1a1a1a;
-          max-width: 340px;
-        }
-
-        /* Last Visit */
-        .last-visit {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
+          font-size: 26px;
           font-weight: 500;
-          color: rgba(0, 0, 0, 0.4);
-          margin-top: 20px;
-          letter-spacing: 0;
+          line-height: 1.35;
+          letter-spacing: -0.01em;
+          color: rgba(255, 255, 255, 0.85);
+          max-width: 400px;
+          margin: 0 auto;
         }
 
-        .last-visit-dot {
-          width: 6px;
-          height: 6px;
-          background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
-          border-radius: 50%;
-        }
-
-        /* Map Section */
-        .map-section {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          padding: 24px;
-          min-height: 0;
-        }
-
-        .map-label {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.1em;
-          color: rgba(0, 0, 0, 0.5);
+        .greeting-sub::first-letter {
           text-transform: uppercase;
-          margin-bottom: 16px;
-          flex-shrink: 0;
         }
 
-        .map-label-icon {
-          width: 16px;
-          height: 16px;
-          flex-shrink: 0;
-          opacity: 0.6;
-        }
-
-        .map-wrapper {
+        /* Globe Section */
+        .globe-section {
           flex: 1;
-          background: rgba(255, 255, 255, 0.7);
-          border-radius: 20px;
-          padding: 16px;
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: hidden;
-          border: 1px solid rgba(0, 0, 0, 0.04);
+          min-height: 0;
+          max-height: 55vh;
+          position: relative;
         }
 
-        .map-container {
+        /* Globe glow effect */
+        .globe-glow {
+          position: absolute;
+          width: 80%;
+          height: 80%;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        .globe-container {
           position: relative;
           width: 100%;
           height: 100%;
+          max-width: 420px;
+          max-height: 420px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .map-container :global(svg) {
-          width: 115%;
-          height: auto;
-          max-height: 100%;
+        .globe-container :global(svg) {
+          width: 100%;
+          height: 100%;
           display: block;
-          margin-left: -7%;
+          filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.15));
         }
 
-        .map-container :global(.country) {
-          fill: #E5E7EB;
-          stroke: #ffffff;
-          stroke-width: 0.5;
+        .globe-container :global(.globe-sphere) {
+          fill: rgba(255, 255, 255, 0.02);
+          stroke: rgba(255, 255, 255, 0.08);
+          stroke-width: 1;
+        }
+
+        .globe-container :global(.country) {
+          fill: rgba(255, 255, 255, 0.12);
+          stroke: rgba(255, 255, 255, 0.05);
+          stroke-width: 0.3;
           transition: fill 0.3s ease;
         }
 
         /* Tap hint */
         .tap-hint {
           text-align: center;
-          padding: 16px;
-          font-size: 12px;
+          padding: 20px;
+          font-size: 11px;
           font-weight: 500;
-          color: rgba(0, 0, 0, 0.25);
-          letter-spacing: 0.05em;
+          color: rgba(255, 255, 255, 0.2);
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
         }
 
         /* Responsive */
         @media (max-width: 480px) {
           .greeting-sub {
-            font-size: 32px;
+            font-size: 22px;
+            max-width: 340px;
           }
           .greeting-hi {
-            font-size: 12px;
+            font-size: 10px;
           }
-          .greeting-section {
-            padding-top: max(10vh, 70px);
-            padding-left: 20px;
-            padding-right: 20px;
+          .globe-section {
+            max-height: 50vh;
           }
-          .map-section {
-            padding: 16px;
-          }
-          .map-wrapper {
-            border-radius: 16px;
-            padding: 12px;
+          .globe-container {
+            max-width: 320px;
+            max-height: 320px;
           }
         }
 
         @media (max-width: 375px) {
           .greeting-sub {
-            font-size: 28px;
+            font-size: 20px;
+            max-width: 300px;
+          }
+        }
+
+        @media (min-height: 800px) {
+          .globe-section {
+            max-height: 50vh;
           }
         }
       `}</style>
 
       <div className="first-page-container" onClick={handleContinue}>
-        <div className="greeting-section">
-          <div className="greeting-content">
+        <div className="content-wrapper">
+          <div className="greeting-section">
             <div className="greeting-hi">
               {personalGreeting.hi}
             </div>
             <div className="greeting-sub">{personalGreeting.sub}</div>
-            <div className="last-visit">
-              <span className="last-visit-dot"></span>
-              <span>{getLastVisitText()}</span>
+          </div>
+
+          <div className="globe-section">
+            <div className="globe-glow"></div>
+            <div className="globe-container" ref={mapContainerRef}>
+              {/* Globe will be rendered here by D3 */}
             </div>
           </div>
-        </div>
 
-        <div className="map-section">
-          <div className="map-label">
-            <svg className="map-label-icon" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M2 12h20M12 2c2.5 2.5 4 5.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-5.5-4-10s1.5-7.5 4-10z" stroke="currentColor" strokeWidth="1.5"/>
-            </svg>
-            <span>Global Activity</span>
-          </div>
-          <div className="map-wrapper">
-            <div className="map-container" ref={mapContainerRef}>
-              <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet">
-                <defs>
-                  <filter id="round" x="-10%" y="-10%" width="120%" height="120%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-                    <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="rounded"/>
-                    <feComposite in="SourceGraphic" in2="rounded" operator="atop"/>
-                  </filter>
-                </defs>
-                <g id="countries"></g>
-              </svg>
-            </div>
-          </div>
+          <div className="tap-hint">Scroll down to continue</div>
         </div>
-
-        <div className="tap-hint">Tap anywhere to continue</div>
       </div>
     </>
   );
