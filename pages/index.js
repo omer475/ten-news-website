@@ -644,21 +644,21 @@ export default function Home() {
     }
   };
 
-  // Category color mapping system - Updated with exact brand colors
+  // Category color mapping system - Refined professional palette
   const getCategoryColors = (category) => {
     const colorMap = {
-      'World': '#1E3A8A',           // Navy Blue - International news, global affairs, foreign policy
-      'Politics': '#DC2626',        // Crimson Red - Government, elections, policy, political developments
-      'Business': '#059669',        // Emerald Green - Economy, markets, finance, corporate news
-      'Technology': '#9333EA',      // Bright Purple - Tech industry, innovation, digital trends, gadgets
-      'Science': '#06B6D4',         // Cyan - Research, discoveries, environmental issues, health studies
-      'Health': '#EC4899',          // Pink - Medicine, wellness, public health, medical breakthroughs
-      'Sports': '#F97316',          // Vibrant Orange - Athletics, competitions, teams, sporting events
-      'Lifestyle': '#EAB308',       // Golden Yellow - Fashion, food, travel, home, personal interest
+      'World': '#2563EB',           // Royal Blue - International news, global affairs
+      'Politics': '#DC2626',        // Crimson Red - Government, elections, policy
+      'Business': '#059669',        // Emerald Green - Economy, markets, finance
+      'Technology': '#7C3AED',      // Purple - Tech industry, innovation
+      'Science': '#0891B2',         // Teal - Research, discoveries, environment
+      'Health': '#DB2777',          // Rose - Medicine, wellness, public health
+      'Sports': '#EA580C',          // Orange - Athletics, competitions
+      'Lifestyle': '#CA8A04',       // Amber - Fashion, food, travel
       // Legacy/fallback categories
       'Breaking News': '#DC2626',   // Use Politics color
-      'Environment': '#06B6D4',     // Use Science color
-      'General': '#1E3A8A'          // Use World color
+      'Environment': '#0891B2',     // Use Science color
+      'General': '#2563EB'          // Use World color
     };
     
     const baseColor = colorMap[category] || '#1E3A8A'; // Default to Navy Blue (World)
@@ -4861,23 +4861,35 @@ export default function Home() {
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
                                   margin: 0,
-                                  marginTop: '-10px',
-                                  paddingLeft: '20px',
-                                  listStyleType: 'disc',
+                                  marginTop: '4px',
+                                  padding: 0,
+                                  listStyle: 'none',
                                   transition: 'opacity 0.3s ease'
                                 }}>
                                   {bullets.map((bullet, i) => (
                                     <li key={`${languageMode[index]}-${i}`} style={{
-                                      marginBottom: '16px',
-                                      fontSize: '16px',
-                                      lineHeight: '1.47',
+                                      marginBottom: '20px',
+                                      fontSize: '17px',
+                                      lineHeight: '1.5',
                                       fontWeight: '400',
-                                      letterSpacing: '-0.022em',
+                                      letterSpacing: '-0.01em',
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                       animation: 'fadeSlideIn 0.4s ease',
-                                      animationDelay: `${i * 0.1}s`,
-                                      animationFillMode: 'both'
+                                      animationDelay: `${i * 0.08}s`,
+                                      animationFillMode: 'both',
+                                      paddingLeft: '20px',
+                                      position: 'relative',
+                                      color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
                                     }}>
+                                      <span style={{
+                                        position: 'absolute',
+                                        left: 0,
+                                        top: '8px',
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        background: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary
+                                      }}></span>
                                       {renderBoldText(bullet, imageDominantColors[index], story.category)}
                                     </li>
                                   ))}
