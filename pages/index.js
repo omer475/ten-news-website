@@ -155,7 +155,8 @@ export default function Home() {
   const getAvailableComponentsCount = (story) => {
     let count = 0;
     if (story.details && story.details.length > 0) count++;
-    if (story.timeline && story.timeline.length > 0) count++;
+    // Timeline disabled - all stories use same design
+    // if (story.timeline && story.timeline.length > 0) count++;
     if (story.map) count++;
     if (story.graph) count++;
     return count;
@@ -172,7 +173,7 @@ export default function Home() {
           case 'details':
             return story.details && story.details.length > 0;
           case 'timeline':
-            return story.timeline && story.timeline.length > 0;
+            return false; // Timeline disabled - all stories use same design
           case 'map':
             return story.map;
           case 'graph':
@@ -189,7 +190,8 @@ export default function Home() {
     // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
-    if (story.timeline && story.timeline.length > 0) types.push('timeline');
+    // Timeline disabled - all stories use same design
+    // if (story.timeline && story.timeline.length > 0) types.push('timeline');
     if (story.map) types.push('map');
     if (story.graph) types.push('graph');
     return types;
@@ -1399,11 +1401,11 @@ export default function Home() {
                 title_news: 'Global Leaders Meet for Historic Climate Summit',
                 content_news: 'World leaders from over 190 countries have gathered in Geneva for what experts are calling the most significant climate summit in decades. The three-day conference aims to establish binding commitments for reducing carbon emissions by 50% before 2035. Major economies including the US, China, and EU have signaled willingness to adopt stricter environmental policies, marking a significant shift in global climate diplomacy.',
                 summary_bullets: [
-                  'Over 190 nations represented at Geneva climate summit',
-                  'Target: 50% carbon emission reduction by 2035',
-                  'Major economies signal support for stricter policies'
+                  'World leaders from 190+ nations gather in Geneva for landmark climate negotiations this week',
+                  'Summit targets ambitious 50% carbon emission cuts by 2035, with binding commitments expected',
+                  'US, China and EU signal unprecedented cooperation on environmental policy and green energy'
                 ],
-                summary_bullets_news: ['Over 190 nations represented at Geneva climate summit', 'Target: 50% carbon emission reduction by 2035', 'Major economies signal support for stricter policies'],
+                summary_bullets_news: ['World leaders from 190+ nations gather in Geneva for landmark climate negotiations this week', 'Summit targets ambitious 50% carbon emission cuts by 2035, with binding commitments expected', 'US, China and EU signal unprecedented cooperation on environmental policy and green energy'],
                 urlToImage: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800',
                 publishedAt: new Date().toISOString(),
                 source: 'Today+',
@@ -1430,11 +1432,11 @@ export default function Home() {
                 title_news: 'AI Breakthrough: New Model Achieves Human-Level Reasoning',
                 content_news: 'Researchers at a leading AI lab have announced a major breakthrough in artificial intelligence, unveiling a new model that demonstrates human-level reasoning capabilities across multiple domains. The system, trained on a novel architecture, shows unprecedented performance in complex problem-solving, mathematical reasoning, and creative tasks. Industry experts suggest this could accelerate the timeline for artificial general intelligence.',
                 summary_bullets: [
-                  'New AI model demonstrates human-level reasoning',
-                  'Breakthrough in complex problem-solving and math',
-                  'Could accelerate AGI development timeline'
+                  'Revolutionary AI system achieves unprecedented 97.3% accuracy on complex reasoning benchmarks',
+                  'Model demonstrates human-level performance in mathematics, coding, and creative problem solving',
+                  'Experts predict this breakthrough could accelerate timeline to artificial general intelligence'
                 ],
-                summary_bullets_news: ['New AI model demonstrates human-level reasoning', 'Breakthrough in complex problem-solving and math', 'Could accelerate AGI development timeline'],
+                summary_bullets_news: ['Revolutionary AI system achieves unprecedented 97.3% accuracy on complex reasoning benchmarks', 'Model demonstrates human-level performance in mathematics, coding, and creative problem solving', 'Experts predict this breakthrough could accelerate timeline to artificial general intelligence'],
                 urlToImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
                 publishedAt: new Date(Date.now() - 3600000).toISOString(),
                 source: 'Today+',
@@ -1461,11 +1463,11 @@ export default function Home() {
                 title_news: 'Markets Rally as Central Banks Signal Rate Cuts',
                 content_news: 'Global stock markets surged to record highs following coordinated signals from major central banks indicating potential interest rate cuts in the coming months. The Federal Reserve, European Central Bank, and Bank of England have all hinted at easing monetary policy as inflation shows signs of stabilizing. Analysts predict this could fuel a continued bull market through the end of the year.',
                 summary_bullets: [
-                  'Stock markets hit record highs on rate cut hopes',
-                  'Fed, ECB, and BoE signal monetary easing',
-                  'Inflation stabilizing across major economies'
+                  'Global stock indices surge to all-time highs as investors anticipate coordinated rate cuts',
+                  'Federal Reserve, ECB and Bank of England all signal pivot toward easier monetary policy',
+                  'Inflation drops to 2.8% across G7 nations, opening door for central bank policy reversal'
                 ],
-                summary_bullets_news: ['Stock markets hit record highs on rate cut hopes', 'Fed, ECB, and BoE signal monetary easing', 'Inflation stabilizing across major economies'],
+                summary_bullets_news: ['Global stock indices surge to all-time highs as investors anticipate coordinated rate cuts', 'Federal Reserve, ECB and Bank of England all signal pivot toward easier monetary policy', 'Inflation drops to 2.8% across G7 nations, opening door for central bank policy reversal'],
                 urlToImage: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800',
                 publishedAt: new Date(Date.now() - 7200000).toISOString(),
                 source: 'Today+',
@@ -1492,11 +1494,11 @@ export default function Home() {
                 title_news: 'Scientists Discover New Exoplanet with Earth-Like Conditions',
                 content_news: 'Astronomers have announced the discovery of a potentially habitable exoplanet orbiting a star just 40 light-years from Earth. The planet, named Kepler-442c, sits within its star\'s habitable zone and shows signs of having liquid water on its surface. Initial spectroscopic analysis suggests the presence of an atmosphere containing oxygen and nitrogen, making it the most Earth-like world ever discovered.',
                 summary_bullets: [
-                  'New exoplanet found 40 light-years away',
-                  'Planet sits in habitable zone with potential water',
-                  'Atmosphere shows oxygen and nitrogen signatures'
+                  'Astronomers discover Earth-sized planet orbiting Sun-like star just 40 light-years away',
+                  'Planet Kepler-442c sits perfectly in habitable zone with signs of liquid water on surface',
+                  'Spectroscopic analysis reveals atmosphere containing oxygen and nitrogen, similar to Earth'
                 ],
-                summary_bullets_news: ['New exoplanet found 40 light-years away', 'Planet sits in habitable zone with potential water', 'Atmosphere shows oxygen and nitrogen signatures'],
+                summary_bullets_news: ['Astronomers discover Earth-sized planet orbiting Sun-like star just 40 light-years away', 'Planet Kepler-442c sits perfectly in habitable zone with signs of liquid water on surface', 'Spectroscopic analysis reveals atmosphere containing oxygen and nitrogen, similar to Earth'],
                 urlToImage: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800',
                 publishedAt: new Date(Date.now() - 10800000).toISOString(),
                 source: 'Today+',
@@ -1523,11 +1525,11 @@ export default function Home() {
                 title_news: 'Breakthrough Treatment Shows Promise Against Alzheimer\'s',
                 content_news: 'A new experimental drug has shown remarkable results in early clinical trials for Alzheimer\'s disease, reducing cognitive decline by 60% compared to placebo. The treatment, which targets amyloid plaques in the brain, represents a significant advancement in the fight against the devastating neurological condition. Researchers are now planning larger Phase 3 trials with hopes of FDA approval within three years.',
                 summary_bullets: [
-                  'New drug reduces Alzheimer\'s decline by 60%',
-                  'Treatment targets brain amyloid plaques',
-                  'Phase 3 trials planned, FDA approval in 3 years'
+                  'Experimental Alzheimer\'s drug shows remarkable 60% reduction in cognitive decline in trials',
+                  'Treatment works by targeting and clearing harmful amyloid plaques that accumulate in brain',
+                  'FDA fast-track approval expected within 3 years following successful Phase 3 clinical trials'
                 ],
-                summary_bullets_news: ['New drug reduces Alzheimer\'s decline by 60%', 'Treatment targets brain amyloid plaques', 'Phase 3 trials planned, FDA approval in 3 years'],
+                summary_bullets_news: ['Experimental Alzheimer\'s drug shows remarkable 60% reduction in cognitive decline in trials', 'Treatment works by targeting and clearing harmful amyloid plaques that accumulate in brain', 'FDA fast-track approval expected within 3 years following successful Phase 3 clinical trials'],
                 urlToImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800',
                 publishedAt: new Date(Date.now() - 14400000).toISOString(),
                 source: 'Today+',
@@ -4262,7 +4264,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(55vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4593,10 +4595,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(55vh * 0.55)',
+                        top: 'calc(50vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(55vh * 0.45 + 74px)',
+                        height: 'calc(50vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4643,7 +4645,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 55vh - 50px)',
+                        bottom: 'calc(100vh - 50vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4675,7 +4677,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '55vh',
+                      height: '50vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4702,7 +4704,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(55vh + 50px)',
+                      top: 'calc(50vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4717,7 +4719,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(55vh + 52px)',
+                        paddingTop: 'calc(50vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',

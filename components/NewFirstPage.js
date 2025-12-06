@@ -338,8 +338,54 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('d', path)
           .attr('data-id', d => d.id);
         
-        // Drag rotation
+        // Touch handling for mobile swipe vs rotate
         const sensitivity = 0.25;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let isTouchRotating = false;
+        
+        const svgNode = svg.node();
+        
+        svgNode.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          touchStartTime = Date.now();
+          isTouchRotating = false;
+          isRotatingRef.current = false;
+        }, { passive: true });
+        
+        svgNode.addEventListener('touchmove', (e) => {
+          const deltaX = e.touches[0].clientX - touchStartX;
+          const deltaY = e.touches[0].clientY - touchStartY;
+          
+          // If horizontal movement is significant, rotate the globe
+          if (Math.abs(deltaX) > 10) {
+            isTouchRotating = true;
+            rotationRef.current.x += deltaX * 0.3;
+            projection.rotate([rotationRef.current.x, rotationRef.current.y]);
+            globe.selectAll('path').attr('d', path);
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+          }
+        }, { passive: true });
+        
+        svgNode.addEventListener('touchend', (e) => {
+          const endY = e.changedTouches[0].clientY;
+          const endX = e.changedTouches[0].clientX;
+          const deltaY = touchStartY - endY; // Positive = swipe up
+          const deltaX = Math.abs(touchStartX - endX);
+          const deltaTime = Date.now() - touchStartTime;
+          
+          // If swiped up and not rotating, navigate
+          if (!isTouchRotating && deltaY > 40 && deltaY > deltaX && deltaTime < 400) {
+            if (onContinue) onContinue();
+          } else {
+            setTimeout(() => { isRotatingRef.current = true; }, 2000);
+          }
+        }, { passive: true });
+        
+        // Mouse drag for desktop
         const drag = d3.drag()
           .on('start', () => {
             isDraggingRef.current = true;
@@ -348,8 +394,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           })
           .on('drag', (event) => {
             rotationRef.current.x += event.dx * sensitivity;
-            rotationRef.current.y -= event.dy * sensitivity;
-            rotationRef.current.y = Math.max(-90, Math.min(90, rotationRef.current.y));
             projection.rotate([rotationRef.current.x, rotationRef.current.y]);
             globe.selectAll('path').attr('d', path);
           })
@@ -427,6 +471,34 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (onContinue) onContinue();
   };
 
+  // Touch swipe detection for the container
+  const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
+  
+  const handleTouchStart = (e) => {
+    touchStartRef.current = {
+      y: e.touches[0].clientY,
+      x: e.touches[0].clientX,
+      time: Date.now()
+    };
+  };
+  
+  const handleTouchMove = (e) => {
+    // Allow default behavior for vertical scrolling
+  };
+  
+  const handleTouchEnd = (e) => {
+    const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY;
+    const deltaX = Math.abs(touchStartRef.current.x - e.changedTouches[0].clientX);
+    const deltaTime = Date.now() - touchStartRef.current.time;
+    
+    // If swiped up (deltaY > 0 means finger moved up), navigate to next
+    // More lenient: 50px up, vertical > horizontal, within 500ms
+    if (deltaY > 50 && deltaY > deltaX && deltaTime < 500) {
+      e.preventDefault();
+      if (onContinue) onContinue();
+    }
+  };
+
   return (
     <>
       <Script 
@@ -493,6 +565,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .greeting-section {
           text-align: center;
           animation: fadeInDown 0.8s ease-out;
+          padding-top: 60px;
         }
 
         @keyframes fadeInDown {
@@ -578,6 +651,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           align-items: center;
           justify-content: center;
+          touch-action: pan-y;
         }
 
         .globe-container :global(svg) {
@@ -600,7 +674,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         @media (max-width: 480px) {
           .content-wrapper {
-            padding: 30px 20px;
+            padding: 30px 0;
+            overflow: hidden;
+          }
+          .greeting-section {
+            padding-top: 100px;
+            padding-left: 20px;
+            padding-right: 20px;
           }
           .greeting-sub {
             font-size: 28px;
@@ -609,9 +689,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .greeting-hi {
             font-size: 11px;
           }
+          .globe-section {
+            overflow: hidden;
+            width: 100vw;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .globe-glow {
+            display: none;
+          }
           .globe-container {
-            max-width: 280px;
-            max-height: 280px;
+            max-width: none;
+            max-height: none;
+            width: 180vw;
+            height: 180vw;
+            margin-top: 5vh;
+            touch-action: pan-y;
           }
         }
 
@@ -623,7 +718,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
       `}</style>
 
-      <div className="first-page-container" onClick={handleContinue}>
+      <div 
+        className="first-page-container" 
+        onClick={handleContinue}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="content-wrapper">
           <div className="greeting-section">
             <div className="greeting-hi">{personalGreeting.hi}</div>
