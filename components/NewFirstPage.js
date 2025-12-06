@@ -429,8 +429,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const deltaTime = Date.now() - touchStartRef.current.time;
     
     // If swiped up (deltaY > 0 means finger moved up), navigate to next
-    // More lenient: 50px up, vertical > horizontal, within 500ms
-    if (deltaY > 50 && deltaY > deltaX && deltaTime < 500) {
+    // Very lenient: 30px up, within 1 second
+    if (deltaY > 30 && deltaTime < 1000) {
       e.preventDefault();
       if (onContinue) onContinue();
     }
