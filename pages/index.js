@@ -1220,20 +1220,21 @@ export default function Home() {
           console.log('📰 API Response:', newsData);
           console.log('📰 Articles count:', newsData.articles?.length);
           
+          // Always create opening story, even if no articles
+          const openingStory = {
+            type: 'opening',
+            date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long', 
+              day: 'numeric',
+              year: 'numeric'
+            }).toUpperCase(),
+            headline: newsData.dailyGreeting || 'Today Essential Global News'
+          };
+          
+          const processedStories = [openingStory];
+          
           if (newsData.articles && newsData.articles.length > 0) {
-            // Create opening story
-            const openingStory = {
-              type: 'opening',
-              date: newsData.displayDate || new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long', 
-                day: 'numeric',
-                year: 'numeric'
-              }).toUpperCase(),
-              headline: newsData.dailyGreeting || 'Today Essential Global News'
-            };
-            
-            const processedStories = [openingStory];
             
             // API already filters articles older than 24 hours
             const recentArticles = newsData.articles;
@@ -1384,16 +1385,33 @@ export default function Home() {
             
             console.log('📰 Stories set successfully');
           } else {
-            console.log('📰 No articles found in response');
-            setStories([]);
+            console.log('📰 No articles found in response, showing first page only');
+            // Still show the opening page even with no articles
+            setStories([openingStory]);
           }
         } else {
           console.log('📡 Response not ok:', response.status);
-          setStories([]);
+          // Show opening page even on error
+          const fallbackOpening = {
+            type: 'opening',
+            date: new Date().toLocaleDateString('en-US', {
+              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+            }).toUpperCase(),
+            headline: 'Today Essential Global News'
+          };
+          setStories([fallbackOpening]);
         }
       } catch (error) {
         console.error('Error loading news:', error);
-        setStories([]);
+        // Show opening page even on error
+        const fallbackOpening = {
+          type: 'opening',
+          date: new Date().toLocaleDateString('en-US', {
+            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+          }).toUpperCase(),
+          headline: 'Today Essential Global News'
+        };
+        setStories([fallbackOpening]);
       } finally {
         console.log('📰 Setting loading to false');
         setLoading(false);
@@ -4076,7 +4094,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(42vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4407,10 +4425,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(42vh * 0.55)',
+                        top: 'calc(50vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(42vh * 0.45 + 74px)',
+                        height: 'calc(50vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4457,7 +4475,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 42vh - 50px)',
+                        bottom: 'calc(100vh - 50vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4489,7 +4507,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '42vh',
+                      height: '50vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4516,7 +4534,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(42vh + 50px)',
+                      top: 'calc(50vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4531,7 +4549,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(42vh + 52px)',
+                        paddingTop: 'calc(50vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
