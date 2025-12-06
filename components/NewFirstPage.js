@@ -338,72 +338,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('d', path)
           .attr('data-id', d => d.id);
         
-        // Touch handling for mobile swipe vs rotate
-        const sensitivity = 0.25;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchStartTime = 0;
-        let isTouchRotating = false;
-        
-        const svgNode = svg.node();
-        
-        svgNode.addEventListener('touchstart', (e) => {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-          touchStartTime = Date.now();
-          isTouchRotating = false;
-          isRotatingRef.current = false;
-        }, { passive: true });
-        
-        svgNode.addEventListener('touchmove', (e) => {
-          const deltaX = e.touches[0].clientX - touchStartX;
-          const deltaY = e.touches[0].clientY - touchStartY;
-          
-          // If horizontal movement is significant, rotate the globe
-          if (Math.abs(deltaX) > 10) {
-            isTouchRotating = true;
-            rotationRef.current.x += deltaX * 0.3;
-            projection.rotate([rotationRef.current.x, rotationRef.current.y]);
-            globe.selectAll('path').attr('d', path);
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-          }
-        }, { passive: true });
-        
-        svgNode.addEventListener('touchend', (e) => {
-          const endY = e.changedTouches[0].clientY;
-          const endX = e.changedTouches[0].clientX;
-          const deltaY = touchStartY - endY; // Positive = swipe up
-          const deltaX = Math.abs(touchStartX - endX);
-          const deltaTime = Date.now() - touchStartTime;
-          
-          // If swiped up and not rotating, navigate
-          if (!isTouchRotating && deltaY > 40 && deltaY > deltaX && deltaTime < 400) {
-            if (onContinue) onContinue();
-          } else {
-            setTimeout(() => { isRotatingRef.current = true; }, 2000);
-          }
-        }, { passive: true });
-        
-        // Mouse drag for desktop
-        const drag = d3.drag()
-          .on('start', () => {
-            isDraggingRef.current = true;
-            isRotatingRef.current = false;
-            svg.style('cursor', 'grabbing');
-          })
-          .on('drag', (event) => {
-            rotationRef.current.x += event.dx * sensitivity;
-            projection.rotate([rotationRef.current.x, rotationRef.current.y]);
-            globe.selectAll('path').attr('d', path);
-          })
-          .on('end', () => {
-            isDraggingRef.current = false;
-            svg.style('cursor', 'grab');
-            setTimeout(() => { isRotatingRef.current = true; }, 2000);
-          });
-        
-        svg.call(drag);
+        // Globe auto-rotates only - no user interaction
+        // User can tap or swipe up to navigate (handled by container)
+        svg.style('pointer-events', 'none'); // Disable all mouse/touch on globe
         
         // Auto rotation
         let animationId;
