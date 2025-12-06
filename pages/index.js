@@ -1385,9 +1385,175 @@ export default function Home() {
             
             console.log('📰 Stories set successfully');
           } else {
-            console.log('📰 No articles found in response, showing first page only');
-            // Still show the opening page even with no articles
-            setStories([openingStory]);
+            console.log('📰 No articles found in response, using mock data for localhost testing');
+            
+            // Mock news articles for localhost testing
+            const mockArticles = [
+              {
+                type: 'news',
+                id: 'mock_1',
+                number: 1,
+                category: 'POLITICS',
+                emoji: '🏛️',
+                title: 'Global Leaders Meet for Historic Climate Summit',
+                title_news: 'Global Leaders Meet for Historic Climate Summit',
+                content_news: 'World leaders from over 190 countries have gathered in Geneva for what experts are calling the most significant climate summit in decades. The three-day conference aims to establish binding commitments for reducing carbon emissions by 50% before 2035. Major economies including the US, China, and EU have signaled willingness to adopt stricter environmental policies, marking a significant shift in global climate diplomacy.',
+                summary_bullets: [
+                  'Over 190 nations represented at Geneva climate summit',
+                  'Target: 50% carbon emission reduction by 2035',
+                  'Major economies signal support for stricter policies'
+                ],
+                summary_bullets_news: ['Over 190 nations represented at Geneva climate summit', 'Target: 50% carbon emission reduction by 2035', 'Major economies signal support for stricter policies'],
+                urlToImage: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800',
+                publishedAt: new Date().toISOString(),
+                source: 'Today+',
+                final_score: 950,
+                details: [
+                  'Countries attending: 190+',
+                  'Emission target: 50% reduction',
+                  'Timeline: 2035'
+                ],
+                timeline: [
+                  { date: '2015', event: 'Paris Agreement signed by 196 parties' },
+                  { date: '2021', event: 'COP26 Glasgow strengthens commitments' },
+                  { date: 'Today', event: 'Geneva Summit sets new ambitious targets' }
+                ],
+                components: ['details', 'timeline']
+              },
+              {
+                type: 'news',
+                id: 'mock_2',
+                number: 2,
+                category: 'TECHNOLOGY',
+                emoji: '🤖',
+                title: 'AI Breakthrough: New Model Achieves Human-Level Reasoning',
+                title_news: 'AI Breakthrough: New Model Achieves Human-Level Reasoning',
+                content_news: 'Researchers at a leading AI lab have announced a major breakthrough in artificial intelligence, unveiling a new model that demonstrates human-level reasoning capabilities across multiple domains. The system, trained on a novel architecture, shows unprecedented performance in complex problem-solving, mathematical reasoning, and creative tasks. Industry experts suggest this could accelerate the timeline for artificial general intelligence.',
+                summary_bullets: [
+                  'New AI model demonstrates human-level reasoning',
+                  'Breakthrough in complex problem-solving and math',
+                  'Could accelerate AGI development timeline'
+                ],
+                summary_bullets_news: ['New AI model demonstrates human-level reasoning', 'Breakthrough in complex problem-solving and math', 'Could accelerate AGI development timeline'],
+                urlToImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
+                publishedAt: new Date(Date.now() - 3600000).toISOString(),
+                source: 'Today+',
+                final_score: 920,
+                details: [
+                  'Benchmark score: 97.3%',
+                  'Training cost: $50M',
+                  'Parameters: 1.5 Trillion'
+                ],
+                timeline: [
+                  { date: '2022', event: 'ChatGPT launches, sparking AI revolution' },
+                  { date: '2024', event: 'Multimodal AI becomes mainstream' },
+                  { date: 'Today', event: 'Human-level reasoning achieved' }
+                ],
+                components: ['details', 'timeline']
+              },
+              {
+                type: 'news',
+                id: 'mock_3',
+                number: 3,
+                category: 'BUSINESS',
+                emoji: '📈',
+                title: 'Markets Rally as Central Banks Signal Rate Cuts',
+                title_news: 'Markets Rally as Central Banks Signal Rate Cuts',
+                content_news: 'Global stock markets surged to record highs following coordinated signals from major central banks indicating potential interest rate cuts in the coming months. The Federal Reserve, European Central Bank, and Bank of England have all hinted at easing monetary policy as inflation shows signs of stabilizing. Analysts predict this could fuel a continued bull market through the end of the year.',
+                summary_bullets: [
+                  'Stock markets hit record highs on rate cut hopes',
+                  'Fed, ECB, and BoE signal monetary easing',
+                  'Inflation stabilizing across major economies'
+                ],
+                summary_bullets_news: ['Stock markets hit record highs on rate cut hopes', 'Fed, ECB, and BoE signal monetary easing', 'Inflation stabilizing across major economies'],
+                urlToImage: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800',
+                publishedAt: new Date(Date.now() - 7200000).toISOString(),
+                source: 'Today+',
+                final_score: 890,
+                details: [
+                  'S&P 500 gain: +2.4%',
+                  'Current rate: 5.25%',
+                  'Inflation: 2.8%'
+                ],
+                timeline: [
+                  { date: 'Mar 2022', event: 'Fed begins aggressive rate hike cycle' },
+                  { date: 'Jul 2024', event: 'Rates peak at 5.5%' },
+                  { date: 'Today', event: 'Central banks signal policy pivot' }
+                ],
+                components: ['details', 'timeline']
+              },
+              {
+                type: 'news',
+                id: 'mock_4',
+                number: 4,
+                category: 'SCIENCE',
+                emoji: '🔬',
+                title: 'Scientists Discover New Exoplanet with Earth-Like Conditions',
+                title_news: 'Scientists Discover New Exoplanet with Earth-Like Conditions',
+                content_news: 'Astronomers have announced the discovery of a potentially habitable exoplanet orbiting a star just 40 light-years from Earth. The planet, named Kepler-442c, sits within its star\'s habitable zone and shows signs of having liquid water on its surface. Initial spectroscopic analysis suggests the presence of an atmosphere containing oxygen and nitrogen, making it the most Earth-like world ever discovered.',
+                summary_bullets: [
+                  'New exoplanet found 40 light-years away',
+                  'Planet sits in habitable zone with potential water',
+                  'Atmosphere shows oxygen and nitrogen signatures'
+                ],
+                summary_bullets_news: ['New exoplanet found 40 light-years away', 'Planet sits in habitable zone with potential water', 'Atmosphere shows oxygen and nitrogen signatures'],
+                urlToImage: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800',
+                publishedAt: new Date(Date.now() - 10800000).toISOString(),
+                source: 'Today+',
+                final_score: 870,
+                details: [
+                  'Distance: 40 light-years',
+                  'Planet size: 1.2x Earth',
+                  'Temperature: 15°C avg'
+                ],
+                timeline: [
+                  { date: '1995', event: 'First exoplanet discovered' },
+                  { date: '2016', event: 'Proxima b found in nearest star system' },
+                  { date: 'Today', event: 'Most Earth-like planet identified' }
+                ],
+                components: ['details', 'timeline']
+              },
+              {
+                type: 'news',
+                id: 'mock_5',
+                number: 5,
+                category: 'HEALTH',
+                emoji: '💊',
+                title: 'Breakthrough Treatment Shows Promise Against Alzheimer\'s',
+                title_news: 'Breakthrough Treatment Shows Promise Against Alzheimer\'s',
+                content_news: 'A new experimental drug has shown remarkable results in early clinical trials for Alzheimer\'s disease, reducing cognitive decline by 60% compared to placebo. The treatment, which targets amyloid plaques in the brain, represents a significant advancement in the fight against the devastating neurological condition. Researchers are now planning larger Phase 3 trials with hopes of FDA approval within three years.',
+                summary_bullets: [
+                  'New drug reduces Alzheimer\'s decline by 60%',
+                  'Treatment targets brain amyloid plaques',
+                  'Phase 3 trials planned, FDA approval in 3 years'
+                ],
+                summary_bullets_news: ['New drug reduces Alzheimer\'s decline by 60%', 'Treatment targets brain amyloid plaques', 'Phase 3 trials planned, FDA approval in 3 years'],
+                urlToImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800',
+                publishedAt: new Date(Date.now() - 14400000).toISOString(),
+                source: 'Today+',
+                final_score: 860,
+                details: [
+                  'Decline reduction: 60%',
+                  'Trial patients: 1,200',
+                  'FDA timeline: 3 years'
+                ],
+                timeline: [
+                  { date: '1906', event: 'Alzheimer\'s disease first identified' },
+                  { date: '2021', event: 'First Alzheimer\'s drug approved in 20 years' },
+                  { date: 'Today', event: 'Revolutionary treatment shows 60% improvement' }
+                ],
+                components: ['details', 'timeline']
+              }
+            ];
+            
+            // Process mock articles same as real ones
+            const mockStories = [openingStory];
+            mockArticles.forEach(article => {
+              mockStories.push(article);
+            });
+            
+            console.log('📰 Using', mockArticles.length, 'mock articles for testing');
+            setStories(mockStories);
           }
         } else {
           console.log('📡 Response not ok:', response.status);
@@ -3934,11 +4100,13 @@ export default function Home() {
             >
               {story.type === 'opening' ? (
                 <NewFirstPage 
+                  key={`first-page-${currentIndex === 0 ? 'visible' : 'hidden'}`}
                   onContinue={nextStory}
                   user={user}
                   userProfile={userProfile}
                   stories={stories}
                   readTracker={readTrackerRef.current}
+                  isVisible={currentIndex === 0}
                 />
               ) : story.type === 'all-read' ? (
                 // Minimal "All Caught Up" page - White background, clean design

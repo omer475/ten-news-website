@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Script from 'next/script';
 
-export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker }) {
+export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker, isVisible = true }) {
   // Calculate time window for map
   const getInitialTimeWindow = () => {
     if (typeof window === 'undefined') return 24;
@@ -23,7 +23,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   const mapContainerRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [scriptsLoaded, setScriptsLoaded] = useState({ d3: false, topojson: false });
+  const [scriptsLoaded, setScriptsLoaded] = useState(() => {
+    // Check if scripts are already loaded on mount
+    if (typeof window !== 'undefined') {
+      return { 
+        d3: !!window.d3, 
+        topojson: !!window.topojson 
+      };
+    }
+    return { d3: false, topojson: false };
+  });
   const [newsCountByCountry, setNewsCountByCountry] = useState({});
   
   // Globe rotation state
@@ -236,6 +245,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   useEffect(() => {
     if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
     if (typeof window === 'undefined') return;
+    if (!isVisible) return; // Don't load if not visible
 
     const loadGlobe = async () => {
       try {
@@ -353,7 +363,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         
         // Auto rotation
         let animationId;
+        let isActive = true;
         const rotate = () => {
+          if (!isActive) return;
           if (isRotatingRef.current && !isDraggingRef.current) {
             rotationRef.current.x += 0.12;
             projection.rotate([rotationRef.current.x, rotationRef.current.y]);
@@ -364,14 +376,27 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         rotate();
         
         setMapLoaded(true);
-        return () => { if (animationId) cancelAnimationFrame(animationId); };
+        
+        // Return cleanup function
+        return () => { 
+          isActive = false;
+          if (animationId) cancelAnimationFrame(animationId); 
+        };
       } catch (error) {
         console.error('Error loading globe:', error);
+        return () => {};
       }
     };
 
-    loadGlobe();
-  }, [scriptsLoaded]);
+    const cleanup = loadGlobe();
+    return () => {
+      if (cleanup && typeof cleanup.then === 'function') {
+        cleanup.then(fn => fn && fn());
+      } else if (typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
+  }, [scriptsLoaded, isVisible]);
 
   // Color globe countries
   useEffect(() => {
