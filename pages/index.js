@@ -4813,8 +4813,8 @@ export default function Home() {
                                 
                         </div>
 
-                        {/* Dynamic Information Switch - Only show if multiple information types available - Right Side */}
-                        {getAvailableComponentsCount(story) > 1 && (
+                        {/* Dynamic Information Switch - Always show - Right Side */}
+                        {getAvailableComponentsCount(story) >= 1 && (
                           <div className="switcher" style={{ 
                             position: 'relative',
                             flex: '0 0 auto'
