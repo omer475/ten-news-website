@@ -4094,7 +4094,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(55vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4425,10 +4425,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(50vh * 0.55)',
+                        top: 'calc(55vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(50vh * 0.45 + 74px)',
+                        height: 'calc(55vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4475,7 +4475,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 50vh - 50px)',
+                        bottom: 'calc(100vh - 55vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4507,7 +4507,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '50vh',
+                      height: '55vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4534,7 +4534,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(50vh + 50px)',
+                      top: 'calc(55vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4549,7 +4549,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(50vh + 52px)',
+                        paddingTop: 'calc(55vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
