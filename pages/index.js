@@ -5161,7 +5161,7 @@ export default function Home() {
                                 }}>
                                   {bullets.map((bullet, i) => (
                                     <li key={`${languageMode[index]}-${i}`} style={{
-                                      marginBottom: '20px',
+                                      marginBottom: '14px',
                                       fontSize: '17px',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
