@@ -18,7 +18,7 @@ echo "   Step 1.5: 🔗 Cluster similar events"
 echo "   Step 2: 📡 Fetch full article text with Jina"
 echo "   Step 3: 📸 Smart image selection (NEW)"
 echo "   Step 4: ✍️  Synthesize multi-source articles with Claude"
-echo "   Step 5: 🔍 Component selection & Perplexity search"
+echo "   Step 5: 🔍 Component selection & Gemini search"
 echo "   Steps 6-7: 📊 Generate components (timeline/details/graph)"
 echo "   Step 8: 🌍 Publish to Supabase"
 echo "   🔄 Repeat every 5 minutes"
@@ -51,8 +51,11 @@ echo "🔧 Loading environment variables..."
 if [ -f ".env" ]; then
     export $(cat .env | grep -v '^#' | xargs)
     echo "✅ Loaded .env file"
+elif [ -f ".env.local" ]; then
+    export $(cat .env.local | grep -v '^#' | xargs)
+    echo "✅ Loaded .env.local file"
 else
-    echo "⚠️  No .env file found - using system environment variables"
+    echo "⚠️  No .env or .env.local file found - using system environment variables"
 fi
 
 # Verify required API keys
@@ -66,8 +69,7 @@ if [ -z "$ANTHROPIC_API_KEY" ]; then
     missing_keys=1
 fi
 if [ -z "$PERPLEXITY_API_KEY" ]; then
-    echo "❌ Missing PERPLEXITY_API_KEY"
-    missing_keys=1
+    echo "⚠️  Missing PERPLEXITY_API_KEY (optional - using Gemini for search)"
 fi
 if [ -z "$SCRAPINGBEE_API_KEY" ]; then
     echo "⚠️  Missing SCRAPINGBEE_API_KEY (will use Jina as fallback)"

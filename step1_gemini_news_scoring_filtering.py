@@ -189,7 +189,7 @@ def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: in
         dict with 'approved' and 'filtered' lists
     """
     
-    system_prompt = """# TEN NEWS V8.1 SCORING PROMPT - CLEAN NEWS ONLY 🎯
+    system_prompt = """# TEN NEWS V8.2 SCORING PROMPT - GLOBAL RELEVANCE EDITION 🌍
 
 
 
@@ -207,7 +207,7 @@ These are emotional stories about individuals, NOT news:
 
 - Cancer patients writing letters
 
-- Death tributes/memorials
+- Death tributes/memorials (unless world leader/major celebrity)
 
 - Personal disease/illness stories
 
@@ -221,7 +221,7 @@ These are emotional stories about individuals, NOT news:
 
 
 
-**Keywords to watch:** cancer, writes cards, milestone, tribute, memorial, overdose, heartbreak, inspiring story, touching, emotional, personal struggle
+**Keywords to watch:** cancer, writes cards, milestone, tribute, memorial, overdose, heartbreak, inspiring story, touching, emotional, personal struggle, brave battle, final wish
 
 
 
@@ -229,9 +229,73 @@ These are emotional stories about individuals, NOT news:
 
 - ❌ "Mother with Stage 4 Cancer Writes Milestone Cards" → 650 (sob story)
 
-- ❌ "Doctor Sentenced for Matthew Perry Overdose" → 700 (celebrity death)
-
 - ❌ "Tyler Henry Has Memory Issues After Brain Surgery" → 650 (personal health)
+
+- ❌ "Family's Heartbreaking Tribute to Lost Son" → 650 (personal tragedy)
+
+
+
+---
+
+
+
+### **❌ STOCK ANALYSIS / INVESTMENT FLUFF (Auto-score: 700-720)** ⭐ NEW
+
+These are investor-focused articles that average readers don't care about:
+
+- Stock price predictions/targets
+
+- Analyst ratings (upgrade/downgrade)
+
+- "Stocks to buy/sell" articles
+
+- ETF recommendations
+
+- Portfolio advice
+
+- Market speculation
+
+- Index rebalancing news
+
+- Routine market movements ("stocks rise/fall")
+
+- Individual company stock analysis
+
+
+
+**Keywords to watch:** stock target, price target, analyst rating, upgrade, downgrade, buy rating, sell rating, outperform, underperform, stocks to buy, ETF pick, portfolio, rebalancing, stocks rise, stocks fall, investor tip, hidden gem for investors
+
+
+
+**Examples to REJECT:**
+
+- ❌ "Nvidia Stock Targets $300 by 2026" → 720 (stock prediction)
+
+- ❌ "2 Stocks Surge Past Nvidia Performance" → 720 (stock comparison)
+
+- ❌ "Occidental Petroleum Faces Analyst Review" → 700 (analyst opinion)
+
+- ❌ "Vanguard ETF Emerges as Buy-and-Hold Pick" → 700 (investment advice)
+
+- ❌ "Stocks Rise on Soft September Data" → 720 (routine market)
+
+- ❌ "Carvana Joins S&P 500 in Rebalancing" → 720 (index news)
+
+- ❌ "Wall Street Targets 2026 Stock Gains" → 720 (speculation)
+
+
+
+**EXCEPTION - These finance stories ARE globally relevant (850+):**
+
+- ✅ Central bank decisions (Fed raises rates, ECB policy)
+
+- ✅ Major crashes/surges (market drops 5%+)
+
+- ✅ Billionaire warnings (Ray Dalio, Warren Buffett)
+
+- ✅ Major bank news (UBS layoffs, Goldman scandal)
+
+- ✅ Currency crises (Yen collapse, etc.)
 
 
 
@@ -257,9 +321,11 @@ These are tips, guides, and human interest features, NOT news:
 
 - Personal habits/routines
 
+- Listicles (Top 10, Best 5, etc.)
 
 
-**Keywords to watch:** chef reveals, expert says, tips for, how to, guide to, best way, secrets, tricks, etiquette, advice
+
+**Keywords to watch:** chef reveals, expert says, tips for, how to, guide to, best way, secrets, tricks, etiquette, advice, top 10, best 5, ways to, reasons why
 
 
 
@@ -269,7 +335,9 @@ These are tips, guides, and human interest features, NOT news:
 
 - ❌ "Expert Shares Best Way to Cook Turkey" → 650 (advice article)
 
-- ❌ "10 Tips for Better Sleep" → 650 (guide)
+- ❌ "10 Tips for Better Sleep" → 650 (listicle)
+
+- ❌ "Top 10 Reasons New Businesses Fail" → 650 (listicle)
 
 
 
@@ -277,33 +345,75 @@ These are tips, guides, and human interest features, NOT news:
 
 
 
-### **❌ REGIONAL/LOCAL NICHE (Auto-score: 650-700)**
+### **❌ LOCAL/REGIONAL NEWS (Auto-score: 650-700)**
 
 These are hyper-local stories with no global relevance:
 
-- Local elections/manifestos (unless major city/country)
+
+
+**US Local (Auto-reject unless involves federal government or global company):**
+
+- State-level politics (Arizona, Michigan, Texas, Florida, etc.)
+
+- City crime (Chicago shooting, NYC subway, etc.)
+
+- Local disasters (unless 100+ deaths)
+
+- County/municipal news
+
+- State court cases (unless Supreme Court)
+
+
+
+**US States to watch:** Alabama, Alaska, Arizona, Arkansas, California, Colorado, Connecticut, Delaware, Florida, Georgia, Hawaii, Idaho, Illinois, Indiana, Iowa, Kansas, Kentucky, Louisiana, Maine, Maryland, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Montana, Nebraska, Nevada, New Hampshire, New Jersey, New Mexico, New York (local), North Carolina, North Dakota, Ohio, Oklahoma, Oregon, Pennsylvania, Rhode Island, South Carolina, South Dakota, Tennessee, Texas, Utah, Vermont, Virginia, Washington, West Virginia, Wisconsin, Wyoming
+
+
+
+**US Cities (local news):** Chicago, Houston, Phoenix, Philadelphia, San Antonio, San Diego, Dallas, Austin, Jacksonville, Columbus, Charlotte, Indianapolis, Denver, Detroit, Nashville, Portland, Las Vegas, Baltimore, Milwaukee, Atlanta, Miami, Oakland, Minneapolis, Cleveland, Pittsburgh
+
+
+
+**UK Local (Auto-reject unless national policy):**
+
+- City-specific news (Manchester, Birmingham, Leeds, Liverpool, Bristol, etc.)
+
+- Regional festivals/events
+
+- Local council decisions
+
+
+
+**Other Regional:**
+
+- District/municipality announcements
 
 - Regional festivals/ceremonies
 
-- Municipal/district announcements
+- Village/town news
 
-- Local business openings
-
-- Regional sports (unless major league)
+- State-level politics (India, etc.)
 
 
 
-**Keywords to watch:** district, municipality, local, regional, constituency, village names, state-level politics (unless major state)
+**Keywords to watch:** district, municipality, local, regional, constituency, county, village, township
 
 
 
 **Examples to REJECT:**
 
-- ❌ "Ernakulam Officials Balance Election Duties" → 650 (local politics)
+- ❌ "Michigan Man Charged in Fatal Shooting" → 650 (local crime)
 
-- ❌ "Hanuma Mala Visarjana Concludes" → 650 (regional festival)
+- ❌ "Chicago Police Investigate Robbery" → 650 (local crime)
 
-- ❌ "Shetland Fishermen Face Space Battle" → 700 (regional industry)
+- ❌ "Arizona Congresswoman Pepper Sprayed at Protest" → 680 (local politics)
+
+- ❌ "14 Legionnaires' Cases Hit Florida Gym" → 650 (local health)
+
+- ❌ "Teen Charged with Arson in NYC Subway" → 650 (local crime)
+
+- ❌ "Texas Flood Victims Make 911 Pleas" → 700 (local disaster)
+
+- ❌ "Birmingham Restaurant Wins Pizza Award" → 650 (local fluff)
 
 
 
@@ -311,7 +421,7 @@ These are hyper-local stories with no global relevance:
 
 
 
-## ✅ WHAT WE WANT: REAL NEWS
+## ✅ WHAT WE WANT: GLOBALLY RELEVANT NEWS
 
 
 
@@ -319,47 +429,67 @@ These are hyper-local stories with no global relevance:
 
 
 
-### **🌍 International/Global Events (900-950)**
-
-**THESE ARE MUST-KNOW NEWS - Always start at 900 minimum!**
+---
 
 
 
-- Major conflicts, wars, peace deals
+### **🌍 INTERNATIONAL/GLOBAL EVENTS (900-950)**
 
-- Government policy affecting millions (US, China, Russia, EU, major countries)
+**MUST-KNOW NEWS - Always start at 900 minimum!**
 
-- Climate agreements/disasters
 
-- Migration/refugee crises
 
-- International trade disputes
+**Automatic 900+ triggers:**
 
-- Terrorist attacks, major incidents
+- Major conflicts, wars, peace deals (Gaza, Ukraine, etc.)
+
+- Superpower actions (US, China, Russia, EU, India major policy)
+
+- Multiple countries involved (trade wars, treaties, summits)
+
+- Border openings/closings affecting millions
+
+- UN/NATO/EU/WHO major decisions
+
+- Military escalations, nuclear threats
+
+- Terrorist attacks (international)
 
 - Global health emergencies
 
-- Border openings/closings
+- Major disasters (100+ deaths OR affects millions)
 
-- UN decisions/failures
+- Refugee/migration crises
 
-- Military escalations
+- International sanctions/trade wars
+
+
+
+**Multi-Country Bonus (IMPORTANT):**
+
+- Story involves 2 major countries: +15 points
+
+- Story involves 3+ major countries: +25 points
+
+
+
+**Major Countries List:** US, China, Russia, UK, Germany, France, Japan, India, Brazil, Australia, Canada, South Korea, Italy, Spain, Mexico, Indonesia, Saudi Arabia, Israel, Iran, Ukraine, Taiwan, EU, NATO
 
 
 
 **Examples:**
 
-- ✅ "Israel Opens Rafah Gate for Gaza Evacuations" → **920** (Start 900 + breaking 10 + humanitarian 10)
+- ✅ "NATO Ministers Say Putin Rejects Ukraine Peace" → **930** (900 + Russia/NATO + breaking)
 
-- ✅ "Trump and Biden Hold Transition Meeting" → **915** (Start 900 + major political 15)
+- ✅ "US and China Trade War Escalates" → **935** (900 + 2 superpowers +25 + trade impact +10)
 
-- ✅ "MH370 Search Resumes After 11 Years" → **925** (Start 900 + shocking 15 + breaking 10)
+- ✅ "Israel Opens Rafah Gate for Gaza Evacuations" → **925** (900 + humanitarian +15 + breaking +10)
 
-- ✅ "Trump Halts Immigration from 19 High-Risk Countries" → **920** (Start 900 + affects millions 15 + breaking 5)
+- ✅ "Asia's Deadly Floods Kill Over 1,000 People" → **940** (900 + 1000+ deaths +20 + multiple countries +15)
 
-- ✅ "Asia's Deadly Floods Kill Over 1,000 People" → **930** (Start 900 + 1000+ deaths 20 + breaking 10)
+- ✅ "EU Launches Antitrust Probe into Meta" → **920** (900 + EU + global tech company)
 
-- ✅ "Russia and US Threaten Nuclear Testing" → **920** (Start 900 + nuclear threat 20)
+- ✅ "Macron Arrives in China for Ukraine Talks" → **935** (900 + France/China/Ukraine = 3 countries +25)
 
 
 
@@ -367,29 +497,35 @@ These are hyper-local stories with no global relevance:
 
 
 
-### **💼 Big Business/Finance (850-950)**
+### **💼 BIG BUSINESS/DEALS (850-950)**
 
-- M&A deals $1B+ (household brands)
+- M&A deals $1B+ (especially household brands)
 
 - Billionaire business moves
 
-- Major company exits/entries
-
-- Market crashes/surges
-
-- Luxury auction records
+- Major company strategy shifts
 
 - Corporate scandals (high profile)
 
+- Antitrust investigations
+
+- Major layoffs/restructuring (10,000+ employees)
+
+
+
+**Global Companies that boost score:**
+
+Apple, Google, Microsoft, Amazon, Meta, Netflix, Tesla, Nvidia, OpenAI, Samsung, Disney, Nike, Coca-Cola, McDonald's, Toyota, Boeing, Airbus, Pfizer, Goldman Sachs, JPMorgan, LVMH, Alibaba, Tencent, etc.
+
 
 
 **Examples:**
 
-- ✅ "Hermès Heir Sues Over $25 Billion Missing Shares" → 900
+- ✅ "Netflix Acquires Warner Bros for $83 Billion" → **940** (850 + household brands +20 + $83B +20 + industry impact +15 + breaking +10)
 
-- ✅ "Youngest Female Billionaire Emerges from Kalshi" → 890
+- ✅ "Hermès Heir Sues Over $25B Missing Shares" → **900** (850 + luxury brand +15 + $25B +20 + scandal +15)
 
-- ✅ "Fabergé Winter Egg Fetches Record £22.9M" → 880
+- ✅ "Amazon Faces EU Antitrust Investigation" → **920** (850 + Amazon +20 + EU +15 + regulatory +10)
 
 
 
@@ -397,29 +533,39 @@ These are hyper-local stories with no global relevance:
 
 
 
-### **🚀 Tech (Consumer-Relevant Only) (850-920)**
+### **🚀 TECH (Consumer-Relevant) (850-920)**
 
 - Consumer product launches (AI phones, major releases)
 
-- Tech policy affecting users (privacy, government)
+- Tech policy affecting users (privacy, government bans)
 
-- Major tech company strategy shifts
+- Major platform changes (affects millions)
 
-- Consumer tech failures/scandals
+- AI breakthroughs (ChatGPT, etc.)
 
-- Platform changes affecting millions
+- Tech company strategy shifts
+
+- Cybersecurity (major breaches)
+
+
+
+**Global Tech Companies:** Apple, Google, Microsoft, Amazon, Meta, Nvidia, Tesla, OpenAI, Anthropic, DeepMind, Samsung, TikTok, ByteDance, Netflix, Spotify, Uber, Airbnb, Huawei, Xiaomi, Alibaba, Tencent
+
+
+
+**AI Terms that boost score:** AI, artificial intelligence, ChatGPT, GPT-4, GPT-5, Claude, Gemini, machine learning, neural network, large language model, LLM
 
 
 
 **Examples:**
 
-- ✅ "ByteDance AI Phone Sells Out Immediately" → 900
+- ✅ "OpenAI Releases GPT-5 with Major Breakthrough" → **920** (850 + OpenAI +20 + AI +20 + breakthrough +15)
 
-- ✅ "Apple Resists India Government App Order" → 890
+- ✅ "Apple Announces AI-Powered iPhone Features" → **910** (850 + Apple +20 + AI +20 + consumer product +15)
 
-- ✅ "iPhone Becomes Valid Passport in 12 Countries" → 880
+- ✅ "Meta, DeepSeek, Xai Earn Worst AI Safety Grades" → **900** (850 + multiple tech companies +15 + AI +20 + regulatory +10)
 
-- ❌ "Spotify Wrapped Reveals Top Artist" → 720 (lifestyle fluff)
+- ❌ "Instagram Users Struggle with Repost Button" → 750 (minor UX issue, not major news)
 
 
 
@@ -427,25 +573,75 @@ These are hyper-local stories with no global relevance:
 
 
 
-### **💎 Consumer Fascination (850-950)**
+### **💰 FINANCE & MARKETS (850-920)** ⭐ NEW IN V8.2
 
-- Luxury brand drama
+**ONLY major events that affect everyone - NOT stock tips or analyst opinions!**
 
-- Extreme wealth/exclusivity stories
 
-- Mind-blowing consumer statistics
 
-- Viral consumer trends (with substance)
+**✅ WHAT WE WANT (850-920):**
+
+- Central bank decisions (Federal Reserve, ECB, Bank of England, Bank of Japan)
+
+- Interest rate changes
+
+- Major stock market crashes/surges (5%+ moves)
+
+- Currency crises
+
+- Global recession/inflation news
+
+- Billionaire warnings (Ray Dalio, Buffett, etc.)
+
+- Major bank scandals/layoffs (10,000+ employees)
+
+- Government debt crises
+
+
+
+**❌ WHAT WE DON'T WANT (Filter at 700-720):**
+
+- Stock price predictions/targets
+
+- Analyst ratings (upgrade/downgrade)
+
+- Individual stock analysis
+
+- ETF recommendations
+
+- "Stocks to buy" articles
+
+- Routine market movements
+
+- Index rebalancing news
+
+- Portfolio advice
+
+
+
+**Finance Terms that boost score:** Federal Reserve, Fed, ECB, interest rate, central bank, recession, inflation, currency crisis, debt crisis, bank collapse
 
 
 
 **Examples:**
 
-- ✅ "Ferrari Rejects 99% of Buyers as Unworthy" → 900
+- ✅ "Federal Reserve Raises Interest Rates" → **890** (affects everyone globally)
 
-- ✅ "Prada Acquires Versace for $1.4B" → 890
+- ✅ "Global Markets Crash 7% on Trade War Fears" → **910** (major crash)
 
-- ✅ "Telegram Runs on 30 Employees" → 910
+- ✅ "Japan's Yen Falls to 30-Year Low" → **880** (currency crisis)
+
+- ✅ "Ray Dalio Warns America Faces Debt Spiral" → **870** (famous billionaire warning)
+
+- ✅ "UBS Plans 10,000 Job Cuts" → **860** (major bank, mass layoffs)
+
+- ❌ "Stocks Rise on Soft September Data" → **720** (routine, filter out)
+
+- ❌ "Nvidia Stock Targets $300 by 2026" → **720** (stock prediction, filter out)
+
+- ❌ "Occidental Petroleum Faces Analyst Review" → **700** (analyst opinion, filter out)
+
+- ❌ "2 Stocks Surge Past Nvidia Performance" → **720** (stock comparison, filter out)
 
 
 
@@ -453,15 +649,55 @@ These are hyper-local stories with no global relevance:
 
 
 
-### **🔬 Science Breakthroughs (850-920)**
+### **₿ CRYPTO & BLOCKCHAIN (850-900)** ⭐ NEW IN V8.2
 
-- Medical breakthroughs (cancer cure, vaccines)
+- Bitcoin major price movements ($5K+ swings)
 
-- Space discoveries (major only)
+- Major crypto regulatory decisions
+
+- Exchange collapses/scandals (FTX-level)
+
+- Institutional adoption news
+
+- Stablecoin news (affects markets)
+
+
+
+**Crypto Terms:** Bitcoin, BTC, Ethereum, ETH, crypto, cryptocurrency, blockchain, DeFi, NFT, Binance, Coinbase, stablecoin
+
+
+
+**Examples:**
+
+- ✅ "Bitcoin Surges Past $100,000" → **890** (850 + Bitcoin +15 + milestone +20)
+
+- ✅ "SEC Approves Bitcoin ETF" → **900** (850 + regulatory +20 + institutional impact +25)
+
+- ⚠️ "Bitcoin Choppy Below $95K" → 780 (routine price movement)
+
+- ⚠️ "Altcoin XYZ Launches New Feature" → 700 (niche crypto)
+
+
+
+---
+
+
+
+### **🔬 SCIENCE BREAKTHROUGHS (850-920)**
+
+- Medical breakthroughs (cancer cure, new treatments)
+
+- Space discoveries (NASA, ESA, major missions)
 
 - Climate science (major findings)
 
-- Tech breakthroughs (consumer impact)
+- Physics/quantum breakthroughs
+
+- Nobel Prize announcements
+
+
+
+**Science Terms that boost score:** breakthrough, discovery, NASA, ESA, SpaceX, Mars, Moon, quantum, CERN, vaccine, cure, treatment, clinical trial, Nobel Prize, peer-reviewed, Nature, Science
 
 
 
@@ -469,11 +705,135 @@ These are hyper-local stories with no global relevance:
 
 
 
+**Examples:**
+
+- ✅ "NASA Confirms Discovery of Water on Mars" → **920** (850 + NASA +20 + major discovery +25 + space +15)
+
+- ✅ "CERN Scientists Discover New Particle" → **890** (850 + CERN +15 + physics breakthrough +20)
+
+- ✅ "Hamilton Smith, Nobel Laureate, Dies at 94" → **870** (850 + Nobel Prize +15)
+
+- ⚠️ "Taxonomist Discovers 1,700 New Spider Species" → 780 (interesting but niche)
+
+
+
 ---
 
 
 
-## 🎯 V8.1 SCORING FORMULA (SIMPLIFIED)
+### **🏥 HEALTH & MEDICINE (850-920)** ⭐ EXPANDED IN V8.2
+
+- WHO announcements/emergencies
+
+- Pandemic/epidemic news
+
+- Major vaccine developments
+
+- Drug approvals (affects millions)
+
+- Global health crises
+
+- Major medical breakthroughs
+
+
+
+**Health Terms that boost score:** WHO, World Health, pandemic, epidemic, outbreak, vaccine, FDA approved, clinical trial, cancer cure, breakthrough treatment, Pfizer, Moderna
+
+
+
+**Examples:**
+
+- ✅ "WHO Declares New Global Health Emergency" → **930** (900 + WHO +15 + global emergency +15)
+
+- ✅ "Pfizer Announces Cancer Vaccine Breakthrough" → **910** (850 + Pfizer +15 + cancer +20 + breakthrough +20)
+
+- ✅ "Bird Flu Outbreak Spreads to 10 Countries" → **920** (900 + outbreak +10 + multiple countries +15)
+
+- ⚠️ "14 Legionnaires' Cases Hit Florida Gym" → 650 (local health issue)
+
+
+
+---
+
+
+
+### **🏆 GLOBAL SPORTS (850-900)** ⭐ NEW IN V8.2
+
+**Only major international events - NOT routine league matches!**
+
+
+
+- World Cup (FIFA, Rugby, Cricket)
+
+- Olympics (Summer, Winter)
+
+- Champions League Finals
+
+- Major tennis Grand Slams (finals)
+
+- Formula 1 Championship
+
+- World records
+
+- Major athlete news (Messi, Ronaldo, LeBron level)
+
+
+
+**Sports Events that score high:** World Cup, Olympics, Olympic, Champions League, Premier League (major news only), Wimbledon, US Open, Australian Open, French Open, Super Bowl, F1, Formula 1, Grand Prix
+
+
+
+**Global Athletes:** Messi, Ronaldo, Cristiano, LeBron, Curry, Djokovic, Nadal, Federer, Serena, Hamilton, Verstappen
+
+
+
+**Examples:**
+
+- ✅ "World Cup Final Breaks Viewership Records" → **900** (850 + World Cup +25 + record +15)
+
+- ✅ "Olympics Committee Announces 2036 Host City" → **880** (850 + Olympics +20)
+
+- ✅ "Messi Announces Retirement from Football" → **890** (850 + global celebrity +25 + major news +15)
+
+- ⚠️ "Liverpool vs Arsenal Premier League Match" → 720 (routine match)
+
+- ❌ "Texas High School Football Wins State" → 650 (local sports)
+
+
+
+---
+
+
+
+### **💎 CONSUMER FASCINATION (850-950)**
+
+- Luxury brand drama
+
+- Extreme wealth/exclusivity stories
+
+- Mind-blowing statistics (99%, 1000%)
+
+- Viral trends with substance
+
+- Record-breaking purchases
+
+
+
+**Examples:**
+
+- ✅ "Ferrari Rejects 99% of Buyers as Unworthy" → **910** (850 + luxury +15 + mind-blowing stat +25 + exclusivity +15)
+
+- ✅ "Fabergé Winter Egg Fetches Record £22.9M" → **890** (850 + luxury +15 + record +20)
+
+- ✅ "Telegram Runs on Only 30 Employees" → **900** (850 + tech +15 + mind-blowing stat +25)
+
+
+
+---
+
+
+
+## 🎯 V8.2 SCORING FORMULA
 
 
 
@@ -483,79 +843,17 @@ These are hyper-local stories with no global relevance:
 
 ❌ Is this a sob story? → Score 650, STOP
 
-❌ Is this lifestyle fluff? → Score 650, STOP  
+❌ Is this lifestyle fluff/listicle? → Score 650, STOP
 
-❌ Is this regional niche? → Score 650, STOP
+❌ Is this local/regional news? → Score 650-700, STOP
 
+❌ Is this routine sports (not World Cup/Olympics)? → Score 720, STOP
 
-
-✅ If none of above, proceed to Step 2
-
-
-
----
+❌ Is this stock analysis/investment advice? → Score 700-720, STOP ⭐ NEW
 
 
 
-### **STEP 2: CATEGORY & TYPE CHECK**
-
-
-
-**⚠️ CRITICAL: MAJOR WORLD NEWS AUTO-SCORES 900+**
-
-
-
-**If article is about ANY of these, START at 900 (not 850):**
-
-
-
-- Major international conflicts/wars (Gaza, Ukraine, etc.)
-
-- Superpower actions (US, China, Russia, EU major policy)
-
-- Major political events (Trump/Biden meetings, elections in major countries)
-
-- Border openings/closings affecting millions (Rafah gate, etc.)
-
-- International agreements/failures (UN, climate deals, peace talks)
-
-- Major disasters affecting thousands+ (floods, earthquakes, tsunamis)
-
-- Terrorist attacks or major security incidents
-
-- Migration/refugee crises
-
-- International trade wars/sanctions
-
-- Nuclear threats or major military escalations
-
-
-
-**Examples that START at 900:**
-
-- ✅ "Israel Opens Rafah Gates to Palestinians" → Start at 900
-
-- ✅ "Trump and Biden Meet for Transition Talks" → Start at 900
-
-- ✅ "Russia Threatens Nuclear Testing Resumption" → Start at 900
-
-- ✅ "Asia Floods Kill Over 1,000 People" → Start at 900
-
-- ✅ "MH370 Search Resumes After 11 Years" → Start at 900
-
-- ✅ "Trump Halts Immigration from 19 Countries" → Start at 900
-
-
-
-**Then ADD bonuses (can reach 950):**
-
-- Deaths/casualties: +10-20
-
-- Breaking news: +10
-
-- Unexpected development: +15
-
-- Affects 100M+ people: +15
+✅ If passed all filters, proceed to Step 2
 
 
 
@@ -563,55 +861,43 @@ These are hyper-local stories with no global relevance:
 
 
 
-**Determine article type for everything else:**
+### **STEP 2: DETERMINE BASE SCORE**
 
 
 
-**Type A: Global Impact News (Base 850-950)**
+**🌍 MAJOR WORLD NEWS → Start at 900**
 
-- International conflicts, disasters, policies
-
-- Major business deals ($1B+, household brands)
-
-- Tech policy affecting millions
-
-- Climate/environmental major events
+Triggers: War, peace deals, superpowers (US/China/Russia/EU), UN/NATO, disasters 100+ deaths, nuclear, sanctions, borders, refugees
 
 
 
-**Type B: Fascinating Consumer News (Base 850-950)**
+**💼 BUSINESS/TECH/FINANCE → Start at 850**
 
-- Luxury brand drama
-
-- Extreme wealth/exclusivity
-
-- Mind-blowing consumer stats
-
-- Viral trends with substance
+Triggers: Global companies, $1B+ deals, AI, tech giants, central banks, major market moves
 
 
 
-**Type C: Important but Complex (Base 750-840)**
+**🔬 SCIENCE/HEALTH → Start at 850**
 
-- Technical breakthroughs (hard to explain)
-
-- Industry-specific moves
-
-- Regional but significant news
-
-- Academic research
+Triggers: NASA, WHO, breakthroughs, discoveries, Nobel, vaccines, medical advances
 
 
 
-**Type D: Routine News (Base 700-749)**
+**🏆 GLOBAL SPORTS → Start at 850**
 
-- Expected announcements
+Triggers: World Cup, Olympics, Champions League finals, world records
 
-- Minor business moves
 
-- Incremental progress
 
-- Niche technical updates
+**💎 CONSUMER FASCINATION → Start at 850**
+
+Triggers: Luxury brands, billionaires, mind-blowing stats, records
+
+
+
+**📰 OTHER NEWS → Start at 750-800**
+
+Adjust based on global relevance
 
 
 
@@ -619,101 +905,81 @@ These are hyper-local stories with no global relevance:
 
 
 
-### **STEP 3: CALCULATE SCORE**
+### **STEP 3: APPLY BONUSES**
 
 
 
-**For MAJOR WORLD NEWS (900-950 range):**
+**Multi-Country Bonus (IMPORTANT - New in V8.2):**
+
+- 2 major countries involved: +15
+
+- 3+ major countries involved: +25
 
 
 
-Start at: **900** (This is automatic for all major international news)
+**Impact Bonuses:**
+
+- Affects 100M+ people: +20
+
+- Deaths 1000+: +25
+
+- Deaths 100-999: +15
+
+- Deaths 10-99: +10
+
+- Major policy shift: +15
+
+- First-ever event: +20
+
+- Record-breaking: +15
+
+- Breaking news (<24h): +10
 
 
 
-**ADD points for:**
+**Entity Bonuses:**
 
-- Deaths/casualties 1000+: +20
+- World leader (Putin, Xi, Trump, etc.): +20
 
-- Deaths/casualties 100-999: +15
+- Global tech company: +15
 
-- Deaths/casualties 10-99: +10
+- $1B+ amount mentioned: +20
 
-- Affects 100M+ people: +15
+- Household brand: +15
 
-- Major policy shift: +10-15
-
-- Breaking (< 24 hours): +10
-
-- Unexpected/shocking: +15
-
-- Nuclear/military threat: +20
-
-- Humanitarian crisis: +15
+- Mind-blowing stat (99%, 1000x): +20
 
 
 
-**SUBTRACT points for:**
+---
+
+
+
+### **STEP 4: APPLY PENALTIES**
+
+
+
+**Content Penalties:**
+
+- Too technical/hard to explain: -20
+
+- Niche audience only: -15
+
+- Celebrity gossip (not business): -20
 
 - Depressing only (no action/hope): -10
 
-
-
-**Maximum: 950**
-
-**Minimum for major world news: 900**
+- Question headline: -10
 
 
 
----
+**Already Filtered (shouldn't reach here):**
 
+- Local crime: -40
 
+- Sob story: -40
 
-**For Type A & B - OTHER (Consumer/Business) (850-950 range):**
-
-
-
-Start at: **850**
-
-
-
-**ADD points for:**
-
-- Household brand/country name: +10
-
-- Dollar amount $1B+: +15
-
-- Affects 100M+ people: +15
-
-- Mind-blowing stat (99%, 1000%): +20
-
-- Deaths/casualties (major): +15
-
-- Unexpected/shocking: +15
-
-- Breaking (< 24 hours): +10
-
-- Visual/concrete: +10
-
-- First-ever event: +15
-
-
-
-**SUBTRACT points for:**
-
-- Technical/hard to explain: -30
-
-- Celebrity focus (not business): -20
-
-- Entertainment/sports (unless major): -20
-
-- Depressing only (no action): -10
-
-
-
-**Maximum: 950**
-
-**Minimum for Type A/B: 850**
+- Lifestyle fluff: -30
 
 
 
@@ -721,29 +987,21 @@ Start at: **850**
 
 
 
-**For Type C (750-840 range):**
+### **STEP 5: FINAL SCORE**
 
 
 
-Start at: **780**
+- Maximum: **950**
 
+- Major World News minimum: **900**
 
+- Good Global News minimum: **850**
 
-**ADD points for:**
+- Average News: **750-849**
 
-- Significant impact: +10-20
+- Weak/Niche: **700-749**
 
-- Clear implications: +10
-
-- Breaking news: +10
-
-
-
-**SUBTRACT points for:**
-
-- Too technical: -20
-
-- Niche audience: -15
+- Filtered/Reject: **650-699**
 
 
 
@@ -751,143 +1009,73 @@ Start at: **780**
 
 
 
-**For Type D (700-749 range):**
+## 📊 V8.2 EXAMPLES
 
 
 
-Start at: **720**
+### **✅ CORRECTLY SCORED (High):**
 
 
 
-Minor adjustments only (+/-10)
+**"NATO Ministers Say Putin Rejects Ukraine Peace"**
 
+- Base: 900 (major world news)
 
+- Multi-country (NATO + Russia + Ukraine): +25
 
----
-
-
-
-## 📊 V8.1 EXAMPLES (Fixed Scoring)
-
-
-
-### **GOOD STORIES SCORED CORRECTLY:**
-
-
-
-**✅ "Hermès Heir Sues Billionaire Over $25B Missing Shares"**
-
-- Type: B (Fascinating Consumer)
-
-- Base: 850
-
-- Household brand: +10
-
-- $25B amount: +15
-
-- Shocking scandal: +15
-
-- Luxury angle: +10
-
-- **Final: 900**
-
-
-
-**✅ "Trump Halts Immigration from 19 High-Risk Countries"**
-
-- Type: MAJOR WORLD NEWS (Auto 900)
-
-- Base: 900
-
-- Affects millions: +15
-
-- Major policy: +10
-
-- Breaking news: +5
-
-- **Final: 930**
-
-
-
-**✅ "Israel Opens Rafah Gate for Gaza Evacuations"**
-
-- Type: MAJOR WORLD NEWS (Auto 900)
-
-- Base: 900
-
-- Humanitarian crisis: +15
+- World leader (Putin): +0 (already in base)
 
 - Breaking: +10
-
-- Affects millions: +10
 
 - **Final: 935**
 
 
 
-**✅ "MH370 Search Resumes After 11 Years"**
+**"Netflix Acquires Warner Bros for $83 Billion"**
 
-- Type: MAJOR WORLD NEWS (Auto 900)
+- Base: 850 (business)
 
-- Base: 900
+- Household brands (Netflix + Warner): +20
 
-- Shocking (11 years): +20
+- $83B amount: +20
 
-- Global mystery: +10
+- Industry-changing: +15
 
-- Breaking: +10
-
-- **Final: 940**
+- **Final: 905**
 
 
 
-**✅ "Youngest Female Billionaire Emerges from Kalshi"**
+**"Federal Reserve Raises Interest Rates"**
 
-- Type: B (Fascinating Consumer)
+- Base: 850 (finance)
 
-- Base: 850
+- Fed (major institution): +20
 
-- Mind-blowing stat (youngest): +20
+- Affects global markets: +15
 
-- Billionaire angle: +10
+- **Final: 885**
 
-- Tech success: +10
+
+
+**"World Cup Final Draws 1.5 Billion Viewers"**
+
+- Base: 850 (global sports)
+
+- World Cup: +25
+
+- Record viewership: +15
 
 - **Final: 890**
 
 
 
-**✅ "Asia Floods Kill Over 1,000 People"**
+**"Bitcoin Surges Past $100,000"**
 
-- Type: MAJOR WORLD NEWS (Auto 900)
+- Base: 850 (crypto)
 
-- Base: 900
+- Bitcoin: +15
 
-- 1000+ deaths: +20
-
-- Affects millions: +15
-
-- Major disaster: +10
-
-- Breaking: +10
-
-- Depressing only: -10
-
-- **Final: 945**
-
-
-
-**✅ "Fabergé Winter Egg Fetches Record £22.9M"**
-
-- Type: B (Fascinating Consumer)
-
-- Base: 850
-
-- Record price: +15
-
-- Luxury item: +10
-
-- Mind-blowing amount: +10
+- Milestone/record: +20
 
 - **Final: 885**
 
@@ -897,55 +1085,55 @@ Minor adjustments only (+/-10)
 
 
 
-### **BAD STORIES FILTERED OUT:**
+### **❌ CORRECTLY FILTERED (Low):**
 
 
 
-**❌ "Mother with Stage 4 Cancer Writes Milestone Cards"**
+**"Michigan Man Charged in Fatal Shooting"**
 
-- Filter: Sob story
+- Filter: Local US crime
 
-- **Final: 650** (filtered out)
+- **Final: 650**
 
 
 
-**❌ "Chef Reveals Proper Tipping Etiquette"**
+**"14 Legionnaires' Cases Hit Florida Gym"**
+
+- Filter: Local US health
+
+- **Final: 650**
+
+
+
+**"Chef Reveals Tipping Etiquette"**
 
 - Filter: Lifestyle fluff
 
-- **Final: 650** (filtered out)
+- **Final: 650**
 
 
 
-**❌ "Spotify Wrapped Reveals Bad Bunny as Top Artist"**
+**"Top 10 Reasons New Businesses Fail"**
 
-- Filter: Lifestyle fluff (celebrity music trends)
+- Filter: Listicle
 
-- **Final: 720** (entertainment, not news)
-
-
-
-**❌ "Ernakulam Officials Balance Election Duties"**
-
-- Filter: Regional niche
-
-- **Final: 650** (filtered out)
+- **Final: 650**
 
 
 
-**❌ "Doctor Sentenced for Matthew Perry Overdose"**
+**"Texas High School Football Wins State"**
 
-- Filter: Celebrity death sob story
+- Filter: Local sports
 
-- **Final: 680** (celebrity crime has some news value but still filtered)
+- **Final: 650**
 
 
 
-**❌ "Tyler Henry Has Memory Issues After Brain Surgery"**
+**"Arizona Congresswoman Pepper Sprayed"**
 
-- Filter: Personal health sob story
+- Filter: Local US politics
 
-- **Final: 650** (filtered out)
+- **Final: 680**
 
 
 
@@ -953,99 +1141,61 @@ Minor adjustments only (+/-10)
 
 
 
-## 🎯 V8.1 QUALITY CHECKLIST
+## 📋 V8.2 QUALITY CHECKLIST
 
 
 
-**Before finalizing ANY score, ask:**
+### **Filter Questions (If YES → Score 650-720):**
+
+- [ ] Is this about an individual's personal tragedy/health?
+
+- [ ] Is this giving tips/advice/how-to?
+
+- [ ] Is this a listicle (Top 10, Best 5)?
+
+- [ ] Is this local crime (US state/city)?
+
+- [ ] Is this local politics (state level)?
+
+- [ ] Is this regional news with no global impact?
+
+- [ ] Is this routine sports (not World Cup/Olympics)?
+
+- [ ] Is this stock analysis/price prediction? ⭐ NEW
+
+- [ ] Is this analyst ratings (upgrade/downgrade)? ⭐ NEW
+
+- [ ] Is this investment advice/ETF picks? ⭐ NEW
+
+- [ ] Is this routine market movement ("stocks rise")? ⭐ NEW
 
 
 
-### **Filter Questions (If YES to any → Score 650-700):**
+### **Global Relevance Questions (If YES → Score 850+):**
 
-- [ ] Is this about an individual's personal tragedy?
-
-- [ ] Is this giving tips/advice/etiquette?
-
-- [ ] Is this regional/local news with no global impact?
-
-- [ ] Is this celebrity gossip/entertainment fluff?
-
-
-
-### **Mass Appeal Questions (Only if passed filters):**
-
-- [ ] Would this be a headline on BBC/CNN/NYT?
+- [ ] Does this involve multiple major countries?
 
 - [ ] Does this affect millions of people?
 
-- [ ] Is this about business/policy/global events?
+- [ ] Is this about a global company/leader?
 
-- [ ] Can anyone understand this in 10 seconds?
+- [ ] Would BBC/CNN/NYT headline this?
+
+- [ ] Would someone in London, Tokyo, AND São Paulo care?
 
 
 
 ### **Score Calibration:**
 
-- [ ] Am I using the full 850-950 range for great stories?
+- [ ] Am I using 900+ for major world news?
 
-- [ ] Am I scoring duplicates at 650?
+- [ ] Am I giving multi-country bonus (+15/+25)?
 
-- [ ] Am I filtering sob stories/fluff at 650?
+- [ ] Am I properly filtering local US news?
 
-- [ ] Are regional stories scoring 650-700?
+- [ ] Am I scoring Finance/Crypto appropriately?
 
-
-
----
-
-
-
-## 📋 V8.1 TARGETS
-
-
-
-**After scoring 500 articles, you should see:**
-
-
-
-### **Score Distribution:**
-
-- 900-950: 10-15% ✅ (was 0%)
-
-- 850-899: 15-20% ✅
-
-- 800-849: 20-25% ✅
-
-- 750-799: 20-25% ✅
-
-- 700-749: 15-20% ✅
-
-- 650-699: 10-15% ✅ (filtered stories)
-
-
-
-### **Category Balance in Top 10:**
-
-- International: 3-4 articles (30-40%)
-
-- Business: 2-3 articles (20-30%)
-
-- Consumer fascination: 1-2 articles (10-20%)
-
-- Science: 1 article (10%)
-
-- Tech (consumer): 1 article (10%)
-
-
-
-### **Filtered Out:**
-
-- 0 sob stories in top 20
-
-- 0 lifestyle fluff in top 20
-
-- 0 regional niche in top 20
+- [ ] Am I recognizing global sports events?
 
 
 
@@ -1053,49 +1203,149 @@ Minor adjustments only (+/-10)
 
 
 
-## 💪 V8.1 IS READY!
+## 📋 V8.2 TARGETS
 
 
 
-**This version will give you:**
+**Score Distribution (per 100 articles):**
 
-- Clean, professional news only
+- 900-950: 10-15 articles ✅
 
-- No sob stories, fluff, or regional niche
+- 850-899: 20-25 articles ✅
 
-- Proper use of 900+ scores
+- 800-849: 20-25 articles ✅
 
-- Better category balance
+- 750-799: 15-20 articles ✅
 
-- True "Ten News" quality
+- 700-749: 10-15 articles ✅
 
-
-
-**Expected Top 10 Daily:**
-
-- 3-4 International events (Gaza, MH370, floods)
-
-- 2-3 Business deals (Hermès, Fabergé, billionaires)
-
-- 1-2 Consumer fascination (luxury, tech products)
-
-- 1 Science breakthrough (major only)
-
-- 1 Tech policy (affects users)
+- 650-699: 10-15 articles ✅ (filtered)
 
 
 
-**No more:**
+**Category Balance in Daily Top 10:**
 
-- Cancer cards ❌
+- International/World: 3-4 articles (30-40%)
 
-- Tipping guides ❌
+- Business/Finance: 2-3 articles (20-30%)
 
-- Regional festivals ❌
+- Tech/AI: 1-2 articles (10-20%)
+
+- Science/Health: 1 article (10%)
+
+- Consumer/Sports (major): 1 article (10%)
 
 
 
-🎯 **Use V8.1 and your news will be professional!**
+**Must Have 0 in Top 20:**
+
+- ❌ Local crime stories
+
+- ❌ Sob stories
+
+- ❌ Lifestyle fluff/listicles
+
+- ❌ Regional festivals
+
+- ❌ State-level politics
+
+
+
+---
+
+
+
+## 🆕 V8.2 CHANGES FROM V8.1
+
+
+
+### **Added:**
+
+1. ✅ **Finance/Markets section** - Fed, ECB, major crashes (NOT stock tips)
+
+2. ✅ **Crypto section** - Bitcoin, major crypto news
+
+3. ✅ **Multi-country bonus** - +15 for 2 countries, +25 for 3+
+
+4. ✅ **Global Sports section** - World Cup, Olympics score high
+
+5. ✅ **Expanded Health** - WHO, pandemics, not just breakthroughs
+
+6. ✅ **Comprehensive local US filter** - All 50 states + major cities
+
+7. ✅ **UK local filter** - Regional cities
+
+8. ✅ **Stock analysis filter** - Blocks analyst ratings, price targets, investment advice ⭐ NEW
+
+
+
+### **Fixed:**
+
+1. ✅ Sports no longer auto-penalized (major events score 850+)
+
+2. ✅ Finance properly scoped (major events only, NOT stock tips)
+
+3. ✅ Better local crime filtering
+
+4. ✅ Multi-country stories get deserved bonus
+
+5. ✅ Stock analysis/investment fluff filtered out ⭐ NEW
+
+
+
+---
+
+
+
+## 🎯 V8.2 IS READY!
+
+
+
+**This version gives you:**
+
+- ✅ True global relevance scoring
+
+- ✅ Proper Finance/Crypto coverage
+
+- ✅ Multi-country bonus system
+
+- ✅ Global sports recognition
+
+- ✅ Comprehensive local news filtering
+
+- ✅ All news categories valued appropriately
+
+
+
+**Expected Daily Top 10:**
+
+- 3-4 International (NATO, UN, wars, treaties)
+
+- 2-3 Business/Finance (deals, Fed, markets)
+
+- 1-2 Tech/AI (OpenAI, Apple, major launches)
+
+- 1 Science/Health (breakthroughs, WHO)
+
+- 1 Global Sports/Consumer (World Cup, luxury)
+
+
+
+**Filtered Out:**
+
+- ❌ Local US crime
+
+- ❌ State politics
+
+- ❌ Sob stories
+
+- ❌ Lifestyle fluff
+
+- ❌ Regional news
+
+
+
+🌍 **Use V8.2 for truly global news curation!**
 
 
 

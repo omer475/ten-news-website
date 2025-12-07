@@ -150,7 +150,7 @@ export default async function handler(req, res) {
 
       // Parse dual-language bullets if they're strings
       let summaryBulletsNews = [];
-      let summaryBulletsB2 = [];
+      let summaryBulletsDetailed = [];
       
       if (article.summary_bullets_news) {
         try {
@@ -162,14 +162,17 @@ export default async function handler(req, res) {
         }
       }
       
-      if (article.summary_bullets_b2) {
+      if (article.summary_bullets_detailed) {
         try {
-          summaryBulletsB2 = typeof article.summary_bullets_b2 === 'string'
-            ? JSON.parse(article.summary_bullets_b2)
-            : article.summary_bullets_b2;
+          summaryBulletsDetailed = typeof article.summary_bullets_detailed === 'string'
+            ? JSON.parse(article.summary_bullets_detailed)
+            : article.summary_bullets_detailed;
+          console.log(`✅ Article ${article.id} has detailed bullets:`, summaryBulletsDetailed?.length || 0, 'items');
         } catch (e) {
-          console.error('Error parsing summary_bullets_b2:', e);
+          console.error('Error parsing summary_bullets_detailed:', e);
         }
+      } else {
+        console.log(`⚠️ Article ${article.id} has NO detailed bullets in database`);
       }
 
       return {
@@ -216,13 +219,12 @@ export default async function handler(req, res) {
         emoji: article.emoji || '📰',
         final_score: article.ai_final_score || 0, // Old field, default to 0 for new articles
         
-        // Dual-language content fields (from Step 3 synthesis)
+        // Content fields
         title_news: article.title_news || null,
-        title_b2: article.title_b2 || null,
         content_news: article.content_news || null,
-        content_b2: article.content_b2 || null,
+        // Bullets - standard (60-80 chars) and detailed (90-120 chars)
         summary_bullets_news: summaryBulletsNews,
-        summary_bullets_b2: summaryBulletsB2,
+        summary_bullets_detailed: summaryBulletsDetailed,
         
         // Legacy fields for backward compatibility (fallback to new fields)
         detailed_text: article.content_news || article.article || article.summary || article.description || '',

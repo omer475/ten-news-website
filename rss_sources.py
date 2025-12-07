@@ -209,20 +209,8 @@ RSS_FEEDS = [
     # UK PREMIUM NEWS
     # ========================================
     {
-        'name': 'BBC News World',
-        'url': 'http://feeds.bbci.co.uk/news/world/rss.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'BBC News UK',
         'url': 'http://feeds.bbci.co.uk/news/uk/rss.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'BBC News Top Stories',
-        'url': 'http://feeds.bbci.co.uk/news/rss.xml',
         'category': 'news',
         'tier': 'premium'
     },
@@ -314,24 +302,6 @@ RSS_FEEDS = [
         'name': 'The Guardian UK',
         'url': 'https://www.theguardian.com/uk-news/rss',
         'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian US',
-        'url': 'https://www.theguardian.com/us-news/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian Europe',
-        'url': 'https://www.theguardian.com/world/europe-news/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian Sport',
-        'url': 'https://www.theguardian.com/uk/sport/rss',
-        'category': 'consumer',
         'tier': 'premium'
     },
     {
@@ -659,18 +629,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Bloomberg',
-        'url': 'https://feeds.bloomberg.com/markets/news.rss',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Bloomberg Markets',
-        'url': 'https://www.bloomberg.com/feed/podcast/markets.xml',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
         'name': 'Forbes',
         'url': 'https://www.forbes.com/real-time/feed2/',
         'category': 'business',
@@ -697,12 +655,6 @@ RSS_FEEDS = [
     {
         'name': 'CNBC Top News',
         'url': 'https://www.cnbc.com/id/100727362/device/rss/rss.html',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Yahoo Finance',
-        'url': 'https://finance.yahoo.com/rss/',
         'category': 'business',
         'tier': 'premium'
     },
@@ -743,12 +695,6 @@ RSS_FEEDS = [
     {
         'name': 'Inc. Magazine',
         'url': 'https://www.inc.com/rss/',
-        'category': 'business',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Fast Company',
-        'url': 'https://www.fastcompany.com/latest/rss',
         'category': 'business',
         'tier': 'premium'
     },
@@ -953,12 +899,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'Phys.org',
-        'url': 'https://phys.org/rss-feed/',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
         'name': 'Live Science',
         'url': 'https://www.livescience.com/feeds/all',
         'category': 'science',
@@ -1014,12 +954,6 @@ RSS_FEEDS = [
     # ========================================
     # HEALTH & MEDICINE
     # ========================================
-    {
-        'name': 'Medical Xpress',
-        'url': 'https://medicalxpress.com/rss-feed/',
-        'category': 'science',
-        'tier': 'premium'
-    },
     {
         'name': 'Johns Hopkins Medicine',
         'url': 'https://www.hopkinsmedicine.org/news/rss',

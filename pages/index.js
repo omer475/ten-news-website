@@ -1333,10 +1333,9 @@ export default function Home() {
                 emoji: article.emoji || '📰',
                 title: article.title || 'News Story',
                
-               // Content fields
+               // Dual-language content fields (from Step 5 generation)
                title_news: article.title_news || null,
                content_news: article.content_news || null,
-               // Bullets - standard (60-80 chars) and detailed (90-120 chars)
                summary_bullets_news: article.summary_bullets_news || null,
                summary_bullets_detailed: article.summary_bullets_detailed || null,
                
@@ -4170,13 +4169,7 @@ export default function Home() {
               boxSizing: 'border-box',
               // TikTok-style: No scrolling within stories, only swipe between stories
               overflow: 'hidden',
-              touchAction: 'none',
-              // Red gradient border for important news (score >= 950)
-              ...(story.type === 'news' && story.final_score >= 950 && {
-                border: '4px solid',
-                borderImage: 'linear-gradient(135deg, black 0%, #1a0000 5%, #330000 10%, #4d0000 15%, #660000 20%, #800000 25%, #990000 30%, #b30000 35%, #cc0000 40%, #e60000 45%, red 50%, #e60000 55%, #cc0000 60%, #b30000 65%, #990000 70%, #800000 75%, #660000 80%, #4d0000 85%, #330000 90%, #1a0000 95%, black 100%) 1',
-                boxShadow: '0 0 20px rgba(255, 0, 0, 0.3)'
-              })
+              touchAction: 'none'
             }}
           >
             {/* Paywall for stories 6+ (index >= 5) */}
@@ -4366,7 +4359,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(46vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4697,10 +4690,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(46vh * 0.55)',
+                        top: 'calc(50vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(46vh * 0.45 + 74px)',
+                        height: 'calc(50vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4747,7 +4740,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 46vh - 50px)',
+                        bottom: 'calc(100vh - 50vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4763,8 +4756,10 @@ export default function Home() {
                           textShadow: '0 1px 4px rgba(0,0,0,0.3)',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}>{(() => {
-                          // Title stays the same regardless of mode (only bullets change)
+                          const mode = languageMode[index] || 'advanced';
+                          // Title is always the same now (no B2 version)
                           const title = story.title_news || story.title;
+                          console.log(`🖼️ IMAGE Title [${index}]:`, { mode, title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
                           return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
                         })()}</h3>
                       </div>
@@ -4778,7 +4773,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '46vh',
+                      height: '50vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4805,7 +4800,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(46vh + 50px)',
+                      top: 'calc(50vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4820,7 +4815,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(46vh + 47px)',
+                        paddingTop: 'calc(50vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -5125,10 +5120,36 @@ export default function Home() {
                       >
                         <div 
                           className="summary-content"
-                          onTouchStart={onTouchStart}
-                          onTouchMove={onTouchMove}
-                          onTouchEnd={onTouchEnd}
-                          style={{ cursor: 'pointer' }}
+                          onTouchStart={(e) => {
+                            // Store start position for tap vs swipe detection
+                            e.currentTarget.touchStartX = e.touches[0].clientX;
+                            e.currentTarget.touchStartY = e.touches[0].clientY;
+                            e.currentTarget.touchMoved = false;
+                            onTouchStart(e);
+                          }}
+                          onTouchMove={(e) => {
+                            const diffX = Math.abs(e.touches[0].clientX - e.currentTarget.touchStartX);
+                            const diffY = Math.abs(e.touches[0].clientY - e.currentTarget.touchStartY);
+                            if (diffX > 10 || diffY > 10) {
+                              e.currentTarget.touchMoved = true;
+                            }
+                            onTouchMove(e);
+                          }}
+                          onTouchEnd={(e) => {
+                            // If it was a tap (no movement), toggle the article
+                            if (!e.currentTarget.touchMoved) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleDetailedText(index);
+                              return;
+                            }
+                            onTouchEnd(e);
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDetailedText(index);
+                          }}
+                          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                         >
                           {/* Show Only Bullet Text - Fixed Position */}
                           <div style={{ 
@@ -5143,42 +5164,53 @@ export default function Home() {
                                 // 'b2' mode = detailed (longer bullets 90-120 chars)
                                 // 'advanced' mode = standard (shorter bullets 60-80 chars)
                                 const mode = languageMode[index] || 'advanced';
-                                const bullets = mode === 'b2'
-                                  ? (story.summary_bullets_detailed || story.summary_bullets_news || story.summary_bullets || [])
-                                  : (story.summary_bullets_news || story.summary_bullets || []);
                                 
-                                console.log(`🔹 BULLETS [${index}]:`, { mode, has_detailed: !!story.summary_bullets_detailed, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
+                                // Get both bullet arrays
+                                const standardBullets = story.summary_bullets_news || story.summary_bullets || [];
+                                const detailedBullets = story.summary_bullets_detailed || [];
+                                
+                                // Select based on mode - use detailed if available and mode is 'b2'
+                                const usingDetailed = mode === 'b2' && detailedBullets.length > 0;
+                                const bullets = usingDetailed ? detailedBullets : standardBullets;
+                                
+                                console.log(`🔹 BULLETS [${index}]:`, { mode, usingDetailed, has_detailed: detailedBullets.length > 0, has_news: standardBullets.length > 0, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
-                                <div style={{
+                                <ul style={{
                                   margin: 0,
-                                  marginTop: '8px',
-                                  marginLeft: '-4px',
+                                  marginTop: '4px',
                                   padding: 0,
-                                  position: 'relative',
-                                  paddingLeft: '20px',
-                                  borderLeft: `3px solid ${imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary}`,
-                                  borderRadius: '3px',
+                                  listStyle: 'none',
                                   transition: 'opacity 0.3s ease'
                                 }}>
                                   {bullets.map((bullet, i) => (
-                                    <div key={`${languageMode[index]}-${i}`} style={{
+                                    <li key={`${languageMode[index]}-${i}`} style={{
                                       marginBottom: '14px',
                                       fontSize: '17px',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
-                                      letterSpacing: '-0.02em',
+                                      letterSpacing: '-0.01em',
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                       animation: 'fadeSlideIn 0.4s ease',
                                       animationDelay: `${i * 0.08}s`,
                                       animationFillMode: 'both',
+                                      paddingLeft: '20px',
                                       position: 'relative',
-                                      color: darkMode ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.88)'
+                                      color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
                                     }}>
+                                      <span style={{
+                                        position: 'absolute',
+                                        left: 0,
+                                        top: '8px',
+                                        width: '6px',
+                                        height: '6px',
+                                        borderRadius: '50%',
+                                        background: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary
+                                      }}></span>
                                       {renderBoldText(bullet, imageDominantColors[index], story.category)}
-                                    </div>
+                                    </li>
                                   ))}
-                                </div>
+                                </ul>
                               ) : (
                                 <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
                                   No bullet points available
@@ -5260,9 +5292,10 @@ export default function Home() {
                                   };
                                   const darkColor = darkenColor(blurColor);
                                   
-                                  // Get article content based on language mode
-                                  // Content stays the same regardless of mode (only bullets change)
+                                  // Get article content (same for both modes now)
                                   const articleText = story.content_news || story.detailed_text || story.article || '';
+                                  
+                                  console.log(`📄 ARTICLE [${index}]:`, { has_news: !!story.content_news, length: articleText.length, start: articleText.substring(0, 40) });
                                   
                                   return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)

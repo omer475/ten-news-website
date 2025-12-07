@@ -5,12 +5,13 @@ STEP 1.5: EVENT CLUSTERING ENGINE (v2.0 - EMBEDDING-BASED)
 Purpose: Group articles about the same event for multi-source synthesis
 Input: Approved articles from Step 1 (Gemini scoring)
 Output: Clusters of articles about the same event
-Algorithm: OpenAI embeddings + cosine similarity (threshold 0.82)
+Algorithm: Gemini embeddings + cosine similarity (threshold 0.82)
 """
 
 import re
 import os
 import numpy as np
+import requests
 from typing import List, Dict, Optional, Set, Tuple
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
@@ -19,51 +20,58 @@ from urllib.parse import urlparse, parse_qs, urlunparse
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import anthropic
-from openai import OpenAI
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 load_dotenv()
 
 # ==========================================
-# OPENAI CLIENT FOR EMBEDDINGS
+# GEMINI CLIENT FOR EMBEDDINGS
 # ==========================================
 
-_openai_client = None
+_gemini_api_key = None
 
-def get_openai_client():
-    """Get OpenAI client for embeddings"""
-    global _openai_client
-    if _openai_client is None:
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY must be set in environment")
-        _openai_client = OpenAI(api_key=api_key)
-    return _openai_client
+def get_gemini_api_key():
+    """Get Gemini API key for embeddings"""
+    global _gemini_api_key
+    if _gemini_api_key is None:
+        _gemini_api_key = os.getenv('GEMINI_API_KEY')
+        if not _gemini_api_key:
+            raise ValueError("GEMINI_API_KEY must be set in environment")
+    return _gemini_api_key
 
 
 def get_embedding(text: str) -> List[float]:
     """
-    Get OpenAI embedding for a text string.
-    Uses text-embedding-3-small model (cheap & fast).
+    Get Gemini embedding for a text string.
+    Uses text-embedding-004 model.
     
     Args:
         text: Text to embed (article title)
         
     Returns:
-        List of floats (1536-dimensional vector)
+        List of floats (768-dimensional vector)
     """
     try:
-        client = get_openai_client()
+        api_key = get_gemini_api_key()
         # Clean text - remove HTML entities and special chars
         clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
         clean_text = clean_text.strip()[:500]  # Limit length
         
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=clean_text
-        )
-        return response.data[0].embedding
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+        
+        payload = {
+            "model": "models/text-embedding-004",
+            "content": {
+                "parts": [{"text": clean_text}]
+            }
+        }
+        
+        response = requests.post(url, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        
+        return result['embedding']['values']
     except Exception as e:
         print(f"  ⚠️ Embedding error: {e}")
         return None
@@ -71,7 +79,8 @@ def get_embedding(text: str) -> List[float]:
 
 def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
     """
-    Get embeddings for multiple texts in one API call (more efficient).
+    Get embeddings for multiple texts using Gemini.
+    Gemini doesn't support batch embeddings, so we process one at a time.
     
     Args:
         texts: List of texts to embed
@@ -79,22 +88,33 @@ def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
     Returns:
         List of embeddings (same order as input)
     """
-    try:
-        client = get_openai_client()
-        # Clean texts
-        clean_texts = []
-        for text in texts:
-            clean = re.sub(r'&#\d+;|&\w+;', '', text)
-            clean_texts.append(clean.strip()[:500])
-        
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=clean_texts
-        )
-        return [item.embedding for item in response.data]
-    except Exception as e:
-        print(f"  ⚠️ Batch embedding error: {e}")
-        return [None] * len(texts)
+    embeddings = []
+    api_key = get_gemini_api_key()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+    
+    for text in texts:
+        try:
+            # Clean text
+            clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
+            clean_text = clean_text.strip()[:500]
+            
+            payload = {
+                "model": "models/text-embedding-004",
+                "content": {
+                    "parts": [{"text": clean_text}]
+                }
+            }
+            
+            response = requests.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+            result = response.json()
+            
+            embeddings.append(result['embedding']['values'])
+        except Exception as e:
+            print(f"  ⚠️ Batch embedding error: {e}")
+            embeddings.append(None)
+    
+    return embeddings
 
 
 def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
@@ -576,7 +596,7 @@ def is_same_event_embedding(article_embedding: List[float], cluster_embedding: L
     """
     Determine if an article belongs to an existing cluster using EMBEDDING SIMILARITY.
     
-    This is the new v2.0 method - uses OpenAI embeddings + cosine similarity.
+    This is the new v2.0 method - uses Gemini embeddings + cosine similarity.
     Much more accurate than AI-based matching (no hallucination).
     
     Args:
@@ -1041,7 +1061,7 @@ class EventClusteringEngine:
             article['_idx'] = i  # Track original index
         
         # PHASE 2: Generate embeddings for all articles and clusters
-        print(f"🧠 Phase 2: Generating embeddings (OpenAI text-embedding-3-small)...")
+        print(f"🧠 Phase 2: Generating embeddings (Gemini text-embedding-004)...")
         
         # Filter articles that were saved successfully
         valid_articles = [(i, articles[i]) for i in article_source_ids.keys()]
@@ -1050,7 +1070,7 @@ class EventClusteringEngine:
         article_titles = [articles[i].get('title', '') for i in article_source_ids.keys()]
         cluster_titles = [title for _, title in cluster_titles_cache]
         
-        # Generate embeddings in batches (OpenAI allows up to 2048 per call)
+        # Generate embeddings in batches (Gemini processes one at a time)
         print(f"   📰 Embedding {len(article_titles)} article titles...")
         article_embeddings = {}
         

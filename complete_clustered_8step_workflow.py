@@ -8,7 +8,7 @@ Step 1.5: Event Clustering (clusters similar articles)
 Step 2: Jina Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
 Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
-Step 5: Component Selection & Perplexity Search (decides which components + fetches data)
+Step 5: Component Selection & Gemini Search (decides which components + fetches data)
 Steps 6-7: Claude Component Generation (timeline, details, graph)
 Step 8: Publishing to Supabase
 """
@@ -32,7 +32,7 @@ from step2_jina_full_article_fetching import JinaArticleFetcher, fetch_articles_
 from step3_image_selection import select_best_image_for_cluster
 from step4_multi_source_synthesis import MultiSourceSynthesizer
 from step5_gemini_component_selection import GeminiComponentSelector
-from step2_perplexity_context_search import search_perplexity_context
+from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import ClaudeComponentWriter
 from supabase import create_client
 
@@ -58,11 +58,10 @@ jina_fetcher = JinaArticleFetcher()
 # Get API keys
 gemini_key = os.getenv('GEMINI_API_KEY')
 anthropic_key = os.getenv('ANTHROPIC_API_KEY')
-perplexity_key = os.getenv('PERPLEXITY_API_KEY')
 scrapingbee_key = os.getenv('SCRAPINGBEE_API_KEY')
 
-if not all([gemini_key, anthropic_key, perplexity_key]):
-    raise ValueError("Missing required API keys in .env file")
+if not all([gemini_key, anthropic_key]):
+    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, ANTHROPIC_API_KEY)")
 
 component_selector = GeminiComponentSelector(api_key=gemini_key)
 component_writer = ClaudeComponentWriter(api_key=anthropic_key)
@@ -351,8 +350,8 @@ def run_complete_pipeline():
             
             print(f"   ✅ Synthesized: {synthesized['title_news'][:60]}...")
             
-            # STEP 5: Component Selection & Perplexity Search
-            print(f"\n🔍 STEP 5: COMPONENT SELECTION & PERPLEXITY SEARCH")
+            # STEP 5: Component Selection & Gemini Search
+            print(f"\n🔍 STEP 5: COMPONENT SELECTION & GEMINI SEARCH")
             
             # Select components based on synthesized title + full content
             article_for_selection = {
@@ -365,15 +364,15 @@ def run_complete_pipeline():
             print(f"   Selected components: {', '.join(selected) if selected else 'none'}")
             
             context_data = {}
-            if selected and perplexity_key:
-                # Get context using title and summary
-                perplexity_result = search_perplexity_context(
+            if selected and gemini_key:
+                # Get context using title and summary (now using Gemini)
+                gemini_result = search_gemini_context(
                     synthesized['title_news'], 
                     synthesized['content_news'][:500]  # Use first 500 chars as summary
                 )
                 # Use same context for all selected components
                 for component in selected:
-                    context_data[component] = perplexity_result
+                    context_data[component] = gemini_result
                 print(f"   ✅ Context fetched for {len(context_data)} components")
             
             # STEP 5 & 6: Generate components with Claude
@@ -413,17 +412,30 @@ def run_complete_pipeline():
             
             print(f"   📊 Article score: {article_score}/1000 (highest from {len(cluster_sources)} source(s))")
             
+            # Get title and content (support both old and new field names from Claude)
+            title = synthesized.get('title', synthesized.get('title_news', ''))
+            content = synthesized.get('content', synthesized.get('content_news', ''))
+            
+            # Get bullets (support both old and new field names)
+            bullets_standard = synthesized.get('summary_bullets_standard', synthesized.get('summary_bullets_news', []))
+            bullets_detailed = synthesized.get('summary_bullets_detailed', [])
+            
+            # If detailed bullets are empty, use standard bullets as fallback
+            if not bullets_detailed:
+                bullets_detailed = bullets_standard
+            
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],  # Primary source URL
                 'source': cluster_sources[0]['source_name'],
                 'category': synthesized.get('category', 'Other'),
-                'title_news': synthesized['title_news'],
-                'title_b2': synthesized['title_b2'],
-                'content_news': synthesized['content_news'],
-                'content_b2': synthesized['content_b2'],
-                'summary_bullets_news': synthesized.get('summary_bullets_news', []),
-                'summary_bullets_b2': synthesized.get('summary_bullets_b2', []),
+                # Title and content
+                'title_news': title,
+                'content_news': content,
+                # Standard bullets (60-80 chars)
+                'summary_bullets_news': bullets_standard,
+                # Detailed bullets (90-120 chars) - for language toggle
+                'summary_bullets_detailed': bullets_detailed,
                 'timeline': components.get('timeline'),
                 'details': components.get('details'),
                 'graph': components.get('graph'),
@@ -567,15 +579,13 @@ EXAMPLES:
   ✗ "A Major Company Announces Important News" (abstract, weak verb)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TITLE_NEWS vs TITLE_B2
+TITLE FORMAT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-TITLE_NEWS: Full vocabulary
+Use strong, professional vocabulary:
   "Bitcoin Plummets 8% as Crypto Fear Index Hits 2022 Lows"
-
-TITLE_B2: Simplified vocabulary (same meaning, common words)
-  Replace: Plummets → Falls, Surges → Rises, Unveils → Shows, Sparks → Starts
-  "Bitcoin Falls 8% as Crypto Fear Reaches 2022 Low"
+  
+Use action verbs: Plummets, Falls, Surges, Rises, Unveils, Shows, Sparks, Starts
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔹 SUMMARY BULLETS (Exactly 3 bullets)
@@ -627,15 +637,28 @@ EXAMPLES:
   ✗ "It's because of economic conditions" (abstract)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SUMMARY_BULLETS_NEWS vs SUMMARY_BULLETS_B2
+SUMMARY_BULLETS_NEWS vs SUMMARY_BULLETS_DETAILED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SUMMARY_BULLETS_NEWS: Full vocabulary
+You MUST generate TWO versions of bullet summaries:
+
+SUMMARY_BULLETS_NEWS (Standard - 60-80 chars each):
+  • Short, scannable bullet points
+  • 10-15 words each
+  
+SUMMARY_BULLETS_DETAILED (Detailed - 90-120 chars each):
+  • Same info, expanded with more context
+  • 15-22 words each
+
+EXAMPLE:
+  STANDARD: "Layoffs hit **10%** of workforce across **US**, **Europe**, **Asia**"
+  DETAILED: "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce, hitting factories in **US**, **Europe**, and **Asia**"
+
+SUMMARY_BULLETS_NEWS (Standard 60-80 chars):
   • "Federal Reserve maintains hawkish stance despite market turbulence"
 
-SUMMARY_BULLETS_B2: Simplified vocabulary
-  Replace complex terms: hawkish stance → tough position, turbulence → problems
-  • "Federal Reserve keeps tough position despite market problems"
+SUMMARY_BULLETS_DETAILED (Expanded 90-120 chars):
+  • "Federal Reserve maintains hawkish stance despite market turbulence, signaling more rate hikes ahead"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📄 ARTICLE CONTENT (220-280 words, 5 paragraphs)
@@ -664,29 +687,15 @@ READABILITY TARGET:
   Use common vocabulary, short sentences, active voice
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONTENT_NEWS vs CONTENT_B2
+CONTENT_NEWS STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CONTENT_NEWS: AP/Reuters professional style
+AP/Reuters professional style:
   • Full vocabulary range
   • Complex sentence structures allowed (under 25 words)
   • Industry terminology acceptable
-
-CONTENT_B2: Simple English (B2 CEFR level)
-  • Maximum 20 words per sentence
-  • Simple tenses only (present, past, future - no perfect tenses)
-  • Active voice only (no passive constructions)
-  • Common vocabulary only
-  
-  SIMPLIFICATION GUIDE:
-    plummeted → fell quickly
-    volatility → prices going up and down
-    bearish sentiment → negative feeling
-    fiscal policy → government money decisions
-    monetary tightening → raising interest rates
-    consensus → agreement
-    infrastructure → roads, bridges, buildings
-    acquisition → buying (a company)
+  • Active voice preferred
+  • Present tense for current news
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
@@ -718,19 +727,17 @@ HIGHLIGHT COUNTS:
 
 {{
   "title_news": "40-60 char title with **2-3 bold** terms, strong verb, specific detail",
-  "title_b2": "Same meaning, simplified vocabulary, **2-3 bold** terms",
   "summary_bullets_news": [
-    "WHAT: Core fact with **2-3 highlights**, under 80 chars",
-    "WHO/WHERE/WHEN: Context with **2-3 highlights**, under 80 chars",
-    "WHY IT MATTERS: Impact with **2-3 highlights**, under 80 chars"
+    "WHAT: 60-80 chars with **2-3 highlights**",
+    "WHO/WHERE/WHEN: 60-80 chars with **2-3 highlights**",
+    "WHY IT MATTERS: 60-80 chars with **2-3 highlights**"
   ],
-  "summary_bullets_b2": [
-    "Same structure, simplified vocabulary, **2-3 highlights**",
-    "Same structure, simplified vocabulary, **2-3 highlights**",
-    "Same structure, simplified vocabulary, **2-3 highlights**"
+  "summary_bullets_detailed": [
+    "WHAT: 90-120 chars, expanded with more context, **2-3 highlights**",
+    "WHO/WHERE/WHEN: 90-120 chars, expanded with more context, **2-3 highlights**",
+    "WHY IT MATTERS: 90-120 chars, expanded with more context, **2-3 highlights**"
   ],
   "content_news": "220-280 words, 5 paragraphs, inverted pyramid, **8-12 highlights** distributed throughout, AP/Reuters style",
-  "content_b2": "220-280 words, 5 paragraphs, max 20 words/sentence, simple tenses, active voice only, **8-12 highlights** distributed throughout",
   "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
 }}
 
@@ -746,14 +753,18 @@ TITLE:
   □ No articles (a, an, the)
   □ 2-3 highlights
 
-BULLETS:
+BULLETS STANDARD (summary_bullets_news):
   □ Exactly 3 bullets
-  □ Each under 80 characters
+  □ Each 60-80 characters
   □ Bullet 1 = What happened
   □ Bullet 2 = Key context
   □ Bullet 3 = Why it matters
-  □ No repetition from title
-  □ Parallel structure
+  □ 2-3 highlights per bullet
+
+BULLETS DETAILED (summary_bullets_detailed):
+  □ Exactly 3 bullets  
+  □ Each 90-120 characters
+  □ Same info as standard, expanded with more detail
   □ 2-3 highlights per bullet
 
 CONTENT:
@@ -761,7 +772,7 @@ CONTENT:
   □ 5 paragraphs (inverted pyramid)
   □ 5+ specific numbers
   □ 3+ named entities
-  □ Sentences under 25 words (news) / 20 words (B2)
+  □ Sentences under 25 words
   □ Active voice throughout
   □ 8-12 highlights distributed evenly
 
@@ -795,7 +806,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
             result = json.loads(response_text)
             
             # Validate required fields
-            required = ['title_news', 'title_b2', 'content_news', 'content_b2']
+            required = ['title_news', 'summary_bullets_news', 'summary_bullets_detailed', 'content_news']
             if all(k in result for k in required):
                 return result
             else:

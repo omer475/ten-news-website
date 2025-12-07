@@ -5,7 +5,7 @@ STEP 4: MULTI-SOURCE SYNTHESIS
 Purpose: Generate AI-written articles by synthesizing multiple sources about the same event
 Model: Claude Sonnet 4.5
 Input: Cluster with N source articles (full text from Step 2) + selected image from Step 3
-Output: ONE comprehensive 200-word article with dual-language support
+Output: ONE comprehensive 220-280 word article with standard + detailed bullet summaries
 Key Feature: Combines information from ALL sources, resolves conflicts, writes as firsthand reporting
 """
 
@@ -26,7 +26,7 @@ from datetime import datetime
 class SynthesisConfig:
     """Configuration for multi-source synthesis"""
     model: str = "claude-sonnet-4-20250514"
-    max_tokens: int = 2500  # Enough for dual-language content + bullets
+    max_tokens: int = 3000  # Enough for content + both bullet versions
     temperature: float = 0.3
     timeout: int = 90
     retry_attempts: int = 3
@@ -37,29 +37,202 @@ class SynthesisConfig:
 # SYNTHESIS PROMPTS
 # ==========================================
 
-SYSTEM_PROMPT = """You are a professional news writer for Today+, a news platform that synthesizes information from multiple sources into comprehensive, original articles.
+SYSTEM_PROMPT = """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📰 YOUR ROLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Your task is to write ONE news article by combining information from multiple source articles about the same event. You will be given N source articles from different news outlets (BBC, CNN, Reuters, etc.) covering the same story.
+You are a professional news editor for Ten News, synthesizing multiple source articles into ONE comprehensive article. Your goal: Create a cohesive, engaging, trustworthy news story that combines the best information from ALL sources.
 
-CRITICAL RULES:
-1. Synthesize information from ALL sources - don't just rewrite one source
-2. Write as if you're reporting firsthand - NEVER mention "according to sources" or "based on reports"
-3. When sources conflict (e.g., different death tolls), use the most recent/authoritative source or say "at least X"
-4. Combine unique facts from each source to create the most complete picture
-5. Weight information by source credibility and article score
-6. Use objective, journalistic tone (inverted pyramid: most important first)
-7. Generate content in TWO languages: Advanced (news) and Simplified (B2)
+You will produce TWO versions of bullet summaries:
+  • STANDARD version: Shorter bullet summaries (60-80 chars)
+  • DETAILED version: Longer bullet summaries (90-120 chars)
+  
+All other elements (title, content, vocabulary, style) are IDENTICAL between versions.
 
-OUTPUT STRUCTURE:
-You must generate:
-1. Title (news version) - Advanced language, journalistic
-2. Title (B2 version) - Simplified language, easier to understand
-3. Summary bullets (news) - 3-5 key points, advanced language
-4. Summary bullets (B2) - 3-5 key points, simplified language
-5. Article content (news) - 200 words, advanced language
-6. Article content (B2) - 200 words, simplified language
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✍️ CORE WRITING PRINCIPLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Return ONLY valid JSON with these exact keys."""
+1. ACTIVE VOICE + PRESENT TENSE
+   The active voice is shorter, stronger, and more direct. Present tense creates immediacy.
+   ✓ "Tesla Cuts 10,000 Jobs" 
+   ✗ "Jobs Were Cut by Tesla" (passive)
+   ✗ "Tesla Has Cut Jobs" (past tense)
+
+2. STRONG, SPECIFIC VERBS
+   Use verbs that convey action: reveals, unveils, launches, warns, slashes, blocks, sparks
+   Avoid weak verbs: announces, says, gets, makes, has, is, are, was, were
+
+3. CONCRETE LANGUAGE (NOT ABSTRACT)
+   Concrete language is more understandable, interesting, and memorable.
+   ✓ "iPhone Prices Drop 20%" (concrete - you can picture it)
+   ✗ "Major Changes Coming" (abstract - vague)
+
+4. FRONT-LOAD IMPORTANT INFORMATION
+   Mobile users give headlines 1.7 seconds. Put the most critical info in the first 3-5 words.
+   ✓ "Apple Unveils iPhone 16 with AI Features"
+   ✗ "In a Surprise Move, Apple Announces New iPhone"
+
+5. INVERTED PYRAMID STRUCTURE
+   Most newsworthy information first (who, what, when, where), then supporting details.
+   Never bury the lead.
+
+6. SYNTHESIZE, DON'T COPY
+   Combine information from ALL sources. Never quote sources or use "according to."
+   Write as a firsthand reporter.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 TITLE REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LENGTH: 40-60 characters (8-10 words)
+
+STRUCTURE: [Subject] + [Strong Verb] + [Specific Detail/Number]
+
+CHECKLIST:
+  ✓ Start with the subject (WHO or WHAT) - never start with a verb
+  ✓ Strong verb appears in first 5 words
+  ✓ Include a specific number when relevant (odd numbers outperform even)
+  ✓ Use present tense, active voice
+  ✓ Omit articles (a, an, the) to save space
+  ✓ Use concrete, specific language
+  ✓ 2-3 **bold** highlights
+
+POWER VERBS TO USE:
+  • Impact: Cuts, Slashes, Drops, Falls, Crashes, Plunges, Tumbles
+  • Growth: Surges, Soars, Jumps, Climbs, Rises, Gains, Spikes
+  • Action: Launches, Unveils, Reveals, Blocks, Bans, Rejects, Halts
+  • Conflict: Warns, Threatens, Faces, Battles, Fights, Clashes
+
+WORDS TO AVOID:
+  • Weak verbs: announces, says, reports, notes, indicates
+  • Vague words: major, significant, important, various, some
+  • Clickbait: shocking, incredible, you won't believe
+
+EXAMPLES:
+  ✓ "**Tesla** Cuts **10,000** Jobs Amid Sales Slump" (45 chars)
+  ✓ "**Fed** Holds Rates at **5.5%**, Signals 3 Cuts for 2024" (49 chars)
+  ✓ "**Bitcoin** Crashes **15%** as Mt. Gox Repayments Begin" (48 chars)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔹 SUMMARY BULLETS (Exactly 3 bullets)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE (Inverted Pyramid):
+  • Bullet 1: WHAT happened (the core news fact not already in title)
+  • Bullet 2: WHO/WHERE/WHEN (key context, names, locations, timing)
+  • Bullet 3: WHY IT MATTERS (significance, impact, what's next)
+
+LENGTH:
+  • STANDARD: 60-80 characters per bullet (10-15 words)
+  • DETAILED: 90-120 characters per bullet (15-22 words)
+
+WRITING RULES:
+  ✓ Each bullet provides NEW information not in the title
+  ✓ Include specific numbers in at least 2 bullets
+  ✓ Use parallel structure (all bullets start with same part of speech)
+  ✓ Active voice, present tense
+  ✓ Front-load important words
+  ✓ All bullets approximately equal length within each version
+  ✓ 2-3 **bold** highlights per bullet
+
+PARALLEL STRUCTURE EXAMPLE:
+  ✓ GOOD (all start with subject + verb):
+    • Fed raises rates to 5.5%, highest level since 2007
+    • Markets drop 2% following the announcement
+    • Economists predict two more increases this year
+
+  ✗ BAD (inconsistent structure):
+    • The Fed raised rates to 5.5%
+    • A 2% market drop followed
+    • Economists are predicting more increases
+
+EXAMPLES:
+
+  STANDARD (60-80 chars each):
+    • "Layoffs hit **10%** of workforce across **US**, **Europe**, and **Asia**" (66 chars)
+    • "**Musk** cites overcapacity and rising competition from **BYD**" (56 chars)
+    • "Stock drops **8%** after hours, erasing **$50B** in market value" (58 chars)
+
+  DETAILED (90-120 chars each):
+    • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce, hitting factories in **US**, **Europe**, and **Asia**" (107 chars)
+    • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD**, which outsold **Tesla** in Q4" (110 chars)
+    • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in value and extending 2024 losses to 35%" (103 chars)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 ARTICLE CONTENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LENGTH: 220-280 words
+
+STRUCTURE (Inverted Pyramid):
+  Para 1 (40-50w): The Lead - WHO, WHAT, WHEN, WHERE (most critical facts)
+  Para 2 (45-55w): Key Details - HOW, specific numbers, named sources
+  Para 3 (45-55w): Context - Background needed to understand the story
+  Para 4 (45-55w): Supporting Info - Additional facts, reactions, developments
+  Para 5 (40-50w): Implications - What happens next, broader significance
+
+WRITING RULES:
+  ✓ Active voice throughout
+  ✓ Present tense for current news, past tense for completed actions
+  ✓ Sentences under 25 words
+  ✓ One idea per sentence
+  ✓ Include 5+ specific numbers
+  ✓ Include 3+ named entities (people, organizations, places)
+  ✓ No editorializing or opinion
+  ✓ No "according to" or source attribution phrases
+  ✓ 8-12 **bold** highlights distributed across all paragraphs
+
+READABILITY TARGET:
+  Flesch Reading Ease: 60-70
+  Grade Level: 8th-10th grade
+  Professional news vocabulary, clear sentence structure
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use **bold** to highlight KEY TERMS that help readers scan. Be selective.
+
+WHAT TO HIGHLIGHT:
+  ✓ Specific numbers: **$22.1 billion**, **3.2%**, **847 points**
+  ✓ Key people: **Jerome Powell**, **Elon Musk**, **Rishi Sunak**
+  ✓ Organizations: **Federal Reserve**, **Nvidia**, **NHS**
+  ✓ Important places: **Wall Street**, **Westminster**, **Silicon Valley**
+  ✓ Key dates: **Wednesday**, **November 20**, **Q3 2024**
+  ✓ Named entities: **S&P 500**, **Bitcoin**, **iPhone 16**
+
+WHAT NOT TO HIGHLIGHT:
+  ✗ Common words: said, announced, market, today, company
+  ✗ Every number - only the most significant
+  ✗ Generic terms: officials, experts, sources
+
+HIGHLIGHT COUNTS:
+  • Title: 2-3 highlights
+  • Bullets (both versions): 2-3 highlights per bullet
+  • Content: 8-12 highlights distributed across all paragraphs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 OUTPUT FORMAT (JSON)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{
+  "title": "40-60 char title with **2-3 bold** terms",
+  "summary_bullets_standard": [
+    "WHAT: 60-80 chars, **2-3 highlights**",
+    "WHO/WHERE/WHEN: 60-80 chars, **2-3 highlights**",
+    "WHY IT MATTERS: 60-80 chars, **2-3 highlights**"
+  ],
+  "summary_bullets_detailed": [
+    "WHAT: 90-120 chars, **2-3 highlights**",
+    "WHO/WHERE/WHEN: 90-120 chars, **2-3 highlights**",
+    "WHY IT MATTERS: 90-120 chars, **2-3 highlights**"
+  ],
+  "content": "220-280 words, 5 paragraphs, **8-12 highlights**",
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
+}
+
+Return ONLY valid JSON, no markdown code blocks, no explanations."""
 
 
 def build_synthesis_prompt(cluster: Dict, full_articles: List[Dict]) -> str:
@@ -110,43 +283,46 @@ INSTRUCTIONS:
 4. DO NOT quote sources or say "according to" - write as if you're reporting firsthand
 5. Use clear, objective, journalistic style
 6. Follow inverted pyramid structure (most newsworthy information first)
-7. Generate content in TWO language versions:
-   - NEWS (Advanced): Professional journalism language
-   - B2 (Simplified): Easier English for intermediate learners
+7. Generate TWO versions of bullet summaries:
+   - STANDARD: 60-80 characters each (shorter, scannable)
+   - DETAILED: 90-120 characters each (more context)
+8. Title and content are the SAME - only bullets differ in length
 
 OUTPUT FORMAT (JSON):
 {{
-  "title_news": "Advanced journalistic title with **bold** key terms",
-  "title_b2": "Simplified title with **bold** key terms",
-  "summary_bullets_news": [
-    "First key point in advanced language",
-    "Second key point in advanced language",
-    "Third key point in advanced language"
+  "title": "40-60 char title with **bold** key terms",
+  "summary_bullets_standard": [
+    "First key point 60-80 chars with **bold**",
+    "Second key point 60-80 chars with **bold**",
+    "Third key point 60-80 chars with **bold**"
   ],
-  "summary_bullets_b2": [
-    "First key point in simplified language",
-    "Second key point in simplified language",
-    "Third key point in simplified language"
+  "summary_bullets_detailed": [
+    "First key point 90-120 chars, more detail, with **bold**",
+    "Second key point 90-120 chars, more detail, with **bold**",
+    "Third key point 90-120 chars, more detail, with **bold**"
   ],
-  "content_news": "200-word article synthesizing all sources in advanced language...",
-  "content_b2": "200-word article synthesizing all sources in simplified language..."
+  "content": "220-280 word article synthesizing all sources with **8-12 bold highlights**...",
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
 }}
 
 TITLE FORMATTING:
 - Use **bold** for key terms (people, places, numbers)
-- Example: "**European Central Bank** raises interest rates to **4.5 percent**"
+- Example: "**Tesla** Cuts **14,000** Jobs Amid Global EV Sales Slump"
 
-BULLET POINTS:
-- 3-5 bullets per version
-- Each bullet ≤15 words
-- Focus on key facts
+BULLET REQUIREMENTS:
+- Exactly 3 bullets per version
+- STANDARD: 60-80 characters each
+- DETAILED: 90-120 characters each (same info, expanded with more detail)
+- 2-3 **bold** highlights per bullet
+- Use parallel structure
 
 ARTICLE CONTENT:
-- Exactly 200 words per version
+- 220-280 words
+- 5 paragraphs (inverted pyramid)
 - Start with most newsworthy information
 - Include who, what, when, where, why
 - Combine facts from ALL sources
-- Write as cohesive narrative, not list of facts
+- 8-12 **bold** highlights distributed across paragraphs
 
 Return ONLY valid JSON, no markdown, no explanations."""
     
@@ -192,36 +368,39 @@ Content: {content}
 
 EVENT: {cluster.get('event_name', 'Unknown Event')}
 
-CURRENT PUBLISHED ARTICLE (News Version):
-Title: {current_article.get('title_news', '')}
-Content: {current_article.get('content_news', '')}
-
-CURRENT PUBLISHED ARTICLE (B2 Version):
-Title: {current_article.get('title_b2', '')}
-Content: {current_article.get('content_b2', '')}
+CURRENT PUBLISHED ARTICLE:
+Title: {current_article.get('title', current_article.get('title_news', ''))}
+Content: {current_article.get('content', current_article.get('content_news', ''))}
 
 {new_sources_text}
 
 INSTRUCTIONS:
-1. Rewrite BOTH versions of the article to incorporate the new information
-2. Keep the article to exactly 200 words per version
+1. Rewrite the article to incorporate the new information
+2. Keep the article to 220-280 words
 3. Maintain the same journalistic tone and style
 4. Seamlessly integrate new facts (updated numbers, new developments, etc.)
-5. Remove outdated information if needed to stay within 200 words
+5. Remove outdated information if needed to stay within word count
 6. Prioritize the most recent and important information
 7. If new information contradicts old information, use the newer source
 8. Make it read as ONE cohesive article, not multiple articles stitched together
-9. Update titles if major new developments warrant it
-10. Update summary bullets to reflect current state
+9. Update title if major new developments warrant it
+10. Update BOTH bullet versions (standard and detailed)
 
 OUTPUT FORMAT (JSON):
 {{
-  "title_news": "Updated advanced title with **bold** key terms",
-  "title_b2": "Updated simplified title with **bold** key terms",
-  "summary_bullets_news": ["Updated bullet 1", "Updated bullet 2", "Updated bullet 3"],
-  "summary_bullets_b2": ["Updated bullet 1", "Updated bullet 2", "Updated bullet 3"],
-  "content_news": "Updated 200-word article in advanced language...",
-  "content_b2": "Updated 200-word article in simplified language..."
+  "title": "Updated title with **bold** key terms",
+  "summary_bullets_standard": [
+    "Updated bullet 60-80 chars",
+    "Updated bullet 60-80 chars", 
+    "Updated bullet 60-80 chars"
+  ],
+  "summary_bullets_detailed": [
+    "Updated bullet 90-120 chars",
+    "Updated bullet 90-120 chars",
+    "Updated bullet 90-120 chars"
+  ],
+  "content": "Updated 220-280 word article...",
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
 }}
 
 Return ONLY valid JSON, no markdown, no explanations."""
@@ -302,6 +481,9 @@ class MultiSourceSynthesizer:
                 # Parse JSON
                 result = json.loads(response_text)
                 
+                # Convert to standard format for backward compatibility
+                result = self._normalize_output(result)
+                
                 # Validate output
                 is_valid, errors = self._validate_output(result)
                 
@@ -313,15 +495,46 @@ class MultiSourceSynthesizer:
                         time.sleep(self.config.retry_delay)
                 
             except json.JSONDecodeError as e:
-                print(f"❌ JSON decode error (attempt {attempt + 1}): {e}")
+                print(f"   ⚠️  JSON decode error (attempt {attempt + 1}): {e}")
                 if attempt < self.config.retry_attempts - 1:
                     time.sleep(self.config.retry_delay)
             except Exception as e:
-                print(f"❌ Synthesis error (attempt {attempt + 1}): {e}")
+                print(f"   ⚠️  API error: {str(e)[:80]}")
                 if attempt < self.config.retry_attempts - 1:
                     time.sleep(self.config.retry_delay)
         
         return None  # Failed after all retries
+    
+    def _normalize_output(self, result: Dict) -> Dict:
+        """
+        Normalize output to maintain backward compatibility.
+        Maps new field names to old field names where needed.
+        
+        Args:
+            result: Raw synthesis result
+            
+        Returns:
+            Normalized result with both old and new field names
+        """
+        normalized = result.copy()
+        
+        # Map new fields to old field names for backward compatibility
+        # title -> title_news (old system expected this)
+        if 'title' in result and 'title_news' not in result:
+            normalized['title_news'] = result['title']
+        
+        # content -> content_news (old system expected this)
+        if 'content' in result and 'content_news' not in result:
+            normalized['content_news'] = result['content']
+        
+        # summary_bullets_standard -> summary_bullets_news (old system expected this)
+        if 'summary_bullets_standard' in result and 'summary_bullets_news' not in result:
+            normalized['summary_bullets_news'] = result['summary_bullets_standard']
+        
+        # Keep detailed bullets with new name
+        # summary_bullets_detailed stays as is
+        
+        return normalized
     
     def _validate_output(self, result: Dict) -> tuple[bool, List[str]]:
         """
@@ -335,38 +548,35 @@ class MultiSourceSynthesizer:
         """
         errors = []
         
-        # Check required fields
-        required_fields = [
-            'title_news', 'title_b2',
-            'summary_bullets_news', 'summary_bullets_b2',
-            'content_news', 'content_b2'
-        ]
+        # Check required fields (support both old and new field names)
+        required_fields_new = ['title', 'summary_bullets_standard', 'summary_bullets_detailed', 'content']
+        required_fields_old = ['title_news', 'summary_bullets_news', 'content_news']
         
-        for field in required_fields:
-            if field not in result:
-                errors.append(f"Missing required field: {field}")
+        has_new_format = all(field in result for field in required_fields_new)
+        has_old_format = all(field in result for field in required_fields_old)
         
-        # Check bullets
-        if 'summary_bullets_news' in result:
-            bullets = result['summary_bullets_news']
+        if not has_new_format and not has_old_format:
+            errors.append("Missing required fields")
+        
+        # Check standard bullets
+        bullets_key = 'summary_bullets_standard' if 'summary_bullets_standard' in result else 'summary_bullets_news'
+        if bullets_key in result:
+            bullets = result[bullets_key]
             if not isinstance(bullets, list) or len(bullets) < 3 or len(bullets) > 5:
-                errors.append(f"summary_bullets_news must be 3-5 items, got {len(bullets) if isinstance(bullets, list) else 'not a list'}")
+                errors.append(f"{bullets_key} must be 3-5 items")
         
-        if 'summary_bullets_b2' in result:
-            bullets = result['summary_bullets_b2']
+        # Check detailed bullets
+        if 'summary_bullets_detailed' in result:
+            bullets = result['summary_bullets_detailed']
             if not isinstance(bullets, list) or len(bullets) < 3 or len(bullets) > 5:
-                errors.append(f"summary_bullets_b2 must be 3-5 items, got {len(bullets) if isinstance(bullets, list) else 'not a list'}")
+                errors.append(f"summary_bullets_detailed must be 3-5 items")
         
-        # Check content length (should be around 200 words)
-        if 'content_news' in result:
-            word_count = len(result['content_news'].split())
-            if word_count < 150 or word_count > 250:
-                errors.append(f"content_news word count: {word_count} (should be 150-250)")
-        
-        if 'content_b2' in result:
-            word_count = len(result['content_b2'].split())
-            if word_count < 150 or word_count > 250:
-                errors.append(f"content_b2 word count: {word_count} (should be 150-250)")
+        # Check content length (should be 220-280 words)
+        content_key = 'content' if 'content' in result else 'content_news'
+        if content_key in result:
+            word_count = len(result[content_key].split())
+            if word_count < 180 or word_count > 320:
+                errors.append(f"Content word count: {word_count} (should be 180-320)")
         
         return len(errors) == 0, errors
     
@@ -381,7 +591,7 @@ class MultiSourceSynthesizer:
             List of synthesized articles
         """
         print(f"\n{'='*60}")
-        print(f"STEP 3: MULTI-SOURCE SYNTHESIS")
+        print(f"STEP 4: MULTI-SOURCE SYNTHESIS")
         print(f"{'='*60}")
         print(f"Total clusters: {len(clusters_with_sources)}\n")
         
@@ -450,36 +660,29 @@ if __name__ == "__main__":
     # Test cluster with multiple sources
     test_cluster = {
         "id": 1,
-        "event_name": "Turkey Earthquake",
-        "main_title": "Turkey Earthquake Death Toll Rises to 50",
+        "event_name": "Tesla Layoffs",
+        "main_title": "Tesla Cuts 14,000 Jobs",
         "sources": [
             {
                 "id": 1,
                 "source_name": "BBC News",
                 "score": 920,
-                "title": "Turkey Earthquake Death Toll Rises to 50",
-                "content": """A powerful earthquake struck southeastern Turkey early Monday morning, killing at least 50 people and injuring hundreds more. The 7.8 magnitude quake hit near the city of Gaziantep at 4:17 AM local time. Buildings collapsed across several cities, trapping residents under rubble. Rescue teams are working around the clock to find survivors. The earthquake was felt across the region, including in Syria and Lebanon. Turkish President declared a state of emergency in 10 provinces. International aid is being mobilized."""
+                "title": "Tesla Cuts 14,000 Jobs Amid Global EV Sales Slump",
+                "content": """Tesla announced it will lay off 10% of its global workforce, affecting approximately 14,000 employees. The electric vehicle maker is cutting jobs across its US, European, and Asian operations. CEO Elon Musk cited overcapacity and rising competition from Chinese rival BYD. Tesla's stock dropped 8% in after-hours trading following the announcement. The company's market value fell by approximately $50 billion. This marks Tesla's largest layoff in company history."""
             },
             {
                 "id": 2,
-                "source_name": "CNN",
-                "score": 880,
-                "title": "Earthquake Strikes Turkey, Dozens Dead",
-                "content": """An earthquake devastated Turkey on Monday, leaving dozens dead and hundreds injured. The quake measured 7.8 on the Richter scale and struck before dawn. Thousands of buildings were damaged or destroyed. The epicenter was near Gaziantep, a major city in southern Turkey. Emergency services are overwhelmed with rescue operations. Neighboring countries including Syria also reported casualties. Weather conditions are hampering rescue efforts as temperatures drop below freezing."""
-            },
-            {
-                "id": 3,
                 "source_name": "Reuters",
-                "score": 850,
-                "title": "Turkey Quake Leaves 50 Dead, Hundreds Injured",
-                "content": """Turkey was hit by one of its strongest earthquakes in decades on Monday, with officials reporting at least 50 deaths. The magnitude 7.8 earthquake occurred at 4:17 AM, catching many people in their sleep. The worst-hit areas include Gaziantep, Kahramanmaras, and Diyarbakir. Rescue operations continue as authorities fear the death toll will rise. The earthquake also affected northern Syria, where buildings collapsed. Turkey's disaster management agency has deployed thousands of personnel. International rescue teams are en route."""
+                "score": 880,
+                "title": "Tesla to Cut 10% of Workforce",
+                "content": """Tesla Inc will reduce its workforce by more than 10% globally as the EV maker grapples with slowing sales growth and an intensifying price war. The cuts will affect about 14,000 of Tesla's 140,000 employees worldwide. Factories in Texas, California, and Germany will see significant reductions. The announcement comes as Tesla faces increased competition from BYD, which outsold Tesla in Q4 2023."""
             }
         ],
         "importance_score": 920,
-        "source_count": 3
+        "source_count": 2
     }
     
-    print("🧪 TESTING MULTI-SOURCE SYNTHESIS")
+    print("🧪 TESTING MULTI-SOURCE SYNTHESIS (New Format)")
     print("=" * 80)
     
     try:
@@ -488,22 +691,22 @@ if __name__ == "__main__":
         
         if result:
             print("\n✅ SYNTHESIZED ARTICLE:")
-            print(f"\nTitle (News): {result['title_news']}")
-            print(f"Title (B2): {result['title_b2']}")
+            print(f"\nTitle: {result.get('title', result.get('title_news', 'N/A'))}")
             
-            print(f"\nBullets (News):")
-            for bullet in result['summary_bullets_news']:
-                print(f"  • {bullet}")
+            print(f"\nBullets (Standard):")
+            bullets = result.get('summary_bullets_standard', result.get('summary_bullets_news', []))
+            for bullet in bullets:
+                print(f"  • {bullet} ({len(bullet)} chars)")
             
-            print(f"\nBullets (B2):")
-            for bullet in result['summary_bullets_b2']:
-                print(f"  • {bullet}")
+            print(f"\nBullets (Detailed):")
+            for bullet in result.get('summary_bullets_detailed', []):
+                print(f"  • {bullet} ({len(bullet)} chars)")
             
-            print(f"\nContent (News): {len(result['content_news'].split())} words")
-            print(result['content_news'])
+            content = result.get('content', result.get('content_news', ''))
+            print(f"\nContent: {len(content.split())} words")
+            print(content[:500] + "...")
             
-            print(f"\nContent (B2): {len(result['content_b2'].split())} words")
-            print(result['content_b2'])
+            print(f"\nCategory: {result.get('category', 'N/A')}")
         else:
             print("\n❌ Synthesis failed")
         
@@ -511,4 +714,3 @@ if __name__ == "__main__":
         print(f"❌ Test error: {e}")
         import traceback
         traceback.print_exc()
-
