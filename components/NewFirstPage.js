@@ -413,9 +413,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (onContinue) onContinue();
   };
 
-  // Touch swipe detection for the container
+  // Touch swipe detection for the container - VERY LENIENT
   const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
-  
+
   const handleTouchStart = (e) => {
     touchStartRef.current = {
       y: e.touches[0].clientY,
@@ -423,19 +423,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       time: Date.now()
     };
   };
-  
+
   const handleTouchMove = (e) => {
-    // Allow default behavior for vertical scrolling
+    // Check for swipe during move for immediate response
+    const deltaY = touchStartRef.current.y - e.touches[0].clientY;
+    // If swiping up more than 50px, navigate immediately
+    if (deltaY > 50) {
+      e.preventDefault();
+      if (onContinue) onContinue();
+    }
   };
-  
+
   const handleTouchEnd = (e) => {
     const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY;
     const deltaX = Math.abs(touchStartRef.current.x - e.changedTouches[0].clientX);
     const deltaTime = Date.now() - touchStartRef.current.time;
+
+    // SUPER LENIENT: Any upward movement of 15px+ within 2 seconds
+    // OR any tap (deltaY and deltaX both small)
+    const isSwipeUp = deltaY > 15 && deltaTime < 2000;
+    const isTap = Math.abs(deltaY) < 10 && deltaX < 10 && deltaTime < 500;
     
-    // If swiped up (deltaY > 0 means finger moved up), navigate to next
-    // Very lenient: 30px up, within 1 second
-    if (deltaY > 30 && deltaTime < 1000) {
+    if (isSwipeUp || isTap) {
       e.preventDefault();
       if (onContinue) onContinue();
     }
@@ -554,7 +563,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           align-items: center;
           justify-content: center;
-          touch-action: pan-y;
+          touch-action: none;
+          pointer-events: none;
         }
 
         .globe-container :global(svg) {
@@ -610,7 +620,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             width: 180vw;
             height: 180vw;
             margin-top: 5vh;
-            touch-action: pan-y;
+            touch-action: none;
+            pointer-events: none;
           }
         }
 
