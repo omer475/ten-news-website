@@ -1098,13 +1098,11 @@ export default function Home() {
               emoji: article.emoji || '📰',
               title: article.title || 'News Story',
               title_news: article.title_news || null,
-              title_b2: article.title_b2 || null,
               content_news: article.content_news || null,
-              content_b2: article.content_b2 || null,
               summary_bullets_news: article.summary_bullets_news || null,
-              summary_bullets_b2: article.summary_bullets_b2 || null,
-              detailed_text: article.detailed_text || article.content_news || article.content_b2 || null,
-              summary_bullets: article.summary_bullets || article.summary_bullets_news || article.summary_bullets_b2 || [],
+              summary_bullets_detailed: article.summary_bullets_detailed || null,
+              detailed_text: article.detailed_text || article.content_news || null,
+              summary_bullets: article.summary_bullets || article.summary_bullets_news || [],
               details: sampleDetails,
               source: article.source || 'Today+',
               url: article.url || '#',
@@ -1335,17 +1333,16 @@ export default function Home() {
                 emoji: article.emoji || '📰',
                 title: article.title || 'News Story',
                
-               // Dual-language content fields (from Step 5 generation)
+               // Content fields
                title_news: article.title_news || null,
-               title_b2: article.title_b2 || null,
                content_news: article.content_news || null,
-               content_b2: article.content_b2 || null,
+               // Bullets - standard (60-80 chars) and detailed (90-120 chars)
                summary_bullets_news: article.summary_bullets_news || null,
-               summary_bullets_b2: article.summary_bullets_b2 || null,
+               summary_bullets_detailed: article.summary_bullets_detailed || null,
                
                // Legacy fields for backward compatibility (old articles)
-               detailed_text: article.detailed_text || article.content_news || article.content_b2 || null,
-               summary_bullets: article.summary_bullets || article.summary_bullets_news || article.summary_bullets_b2 || [],
+               detailed_text: article.detailed_text || article.content_news || null,
+               summary_bullets: article.summary_bullets || article.summary_bullets_news || [],
                
                 details: sampleDetails,
                 source: article.source || 'Today+',
@@ -4369,7 +4366,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(42vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4700,10 +4697,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(50vh * 0.55)',
+                        top: 'calc(42vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(50vh * 0.45 + 74px)',
+                        height: 'calc(46vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4750,7 +4747,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 50vh - 50px)',
+                        bottom: 'calc(100vh - 42vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4766,9 +4763,8 @@ export default function Home() {
                           textShadow: '0 1px 4px rgba(0,0,0,0.3)',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}>{(() => {
-                          const mode = languageMode[index] || 'advanced';
-                          const title = mode === 'b2' ? (story.title_b2 || story.title) : (story.title_news || story.title);
-                          console.log(`🖼️ IMAGE Title [${index}]:`, { mode, title_b2: story.title_b2?.substring(0, 30), title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
+                          // Title stays the same regardless of mode (only bullets change)
+                          const title = story.title_news || story.title;
                           return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
                         })()}</h3>
                       </div>
@@ -4782,7 +4778,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '50vh',
+                      height: '42vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4809,7 +4805,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(50vh + 50px)',
+                      top: 'calc(46vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4824,7 +4820,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(50vh + 52px)',
+                        paddingTop: 'calc(42vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',
@@ -5144,12 +5140,14 @@ export default function Home() {
                           }}>
                               {(() => {
                                 // Get bullets based on language mode
+                                // 'b2' mode = detailed (longer bullets 90-120 chars)
+                                // 'advanced' mode = standard (shorter bullets 60-80 chars)
                                 const mode = languageMode[index] || 'advanced';
                                 const bullets = mode === 'b2'
-                                  ? (story.summary_bullets_b2 || story.summary_bullets || [])
+                                  ? (story.summary_bullets_detailed || story.summary_bullets_news || story.summary_bullets || [])
                                   : (story.summary_bullets_news || story.summary_bullets || []);
                                 
-                                console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
+                                console.log(`🔹 BULLETS [${index}]:`, { mode, has_detailed: !!story.summary_bullets_detailed, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
                                 <div style={{
@@ -5263,12 +5261,8 @@ export default function Home() {
                                   const darkColor = darkenColor(blurColor);
                                   
                                   // Get article content based on language mode
-                                  const mode = languageMode[index] || 'advanced';
-                                  const articleText = mode === 'b2'
-                                    ? (story.content_b2 || story.detailed_text || story.article || '')
-                                    : (story.content_news || story.detailed_text || story.article || '');
-                                  
-                                  console.log(`📄 ARTICLE [${index}]:`, { mode, has_b2: !!story.content_b2, has_news: !!story.content_news, length: articleText.length, start: articleText.substring(0, 40) });
+                                  // Content stays the same regardless of mode (only bullets change)
+                                  const articleText = story.content_news || story.detailed_text || story.article || '';
                                   
                                   return articleText
                                     .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
