@@ -187,15 +187,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   const [personalGreeting] = useState(() => getPersonalizedGreeting());
 
-  // Color scale for globe - Elegant single-hue palette
+  // Color scale for globe - Minimal Modern Single-Tone
   const getColor = (value) => {
-    // Monochromatic indigo scale - sophisticated and cohesive
+    // Elegant indigo scale - lighter = less activity, darker = more activity
     const colors = [
-      { pos: 0, r: 165, g: 180, b: 252 },   // Soft indigo - Low activity
-      { pos: 0.5, r: 129, g: 140, b: 248 }, // Medium indigo
-      { pos: 1, r: 99, g: 102, b: 241 }     // Vibrant indigo - High/Breaking
+      { pos: 0, r: 165, g: 180, b: 252 },    // Light indigo - Low activity
+      { pos: 0.5, r: 99, g: 102, b: 241 },   // Indigo - Medium activity  
+      { pos: 1, r: 67, g: 56, b: 202 }       // Deep indigo - High/Breaking
     ];
-
+    
     let lower = colors[0], upper = colors[colors.length - 1];
     for (let i = 0; i < colors.length - 1; i++) {
       if (value >= colors[i].pos && value <= colors[i + 1].pos) {
@@ -241,7 +241,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   }, [initialStories]);
 
-  // Load 3D globe - Professional Design
+  // Load 3D globe - MINIMAL MODERN DESIGN
   useEffect(() => {
     if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
     if (typeof window === 'undefined') return;
@@ -259,6 +259,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         const containerWidth = container.offsetWidth || 400;
         const containerHeight = container.offsetHeight || 400;
         const size = Math.min(containerWidth, containerHeight);
+        const cx = size / 2;
+        const cy = size / 2;
+        const radius = size / 2.2;
         
         container.innerHTML = '';
         
@@ -270,9 +273,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .style('overflow', 'visible');
         
         const projection = d3.geoOrthographic()
-          .scale(size / 2.3)
+          .scale(radius)
           .center([0, 0])
-          .translate([size / 2, size / 2])
+          .translate([cx, cy])
           .clipAngle(90);
         
         projectionRef.current = projection;
@@ -281,66 +284,27 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         
         const defs = svg.append('defs');
         
-        // ===== COMPELLING GLOBE DESIGN =====
+        // ===== MINIMAL MODERN DESIGN =====
         
-        // Clip path for globe boundary
+        // Clip path
         defs.append('clipPath')
           .attr('id', 'globe-clip')
           .append('circle')
-          .attr('cx', size / 2)
-          .attr('cy', size / 2)
-          .attr('r', size / 2.3);
+          .attr('cx', cx)
+          .attr('cy', cy)
+          .attr('r', radius);
         
-        // Ocean gradient - elegant deep indigo
-        const oceanGradient = defs.append('radialGradient')
-          .attr('id', 'ocean-gradient')
-          .attr('cx', '30%').attr('cy', '30%').attr('r', '70%');
-        oceanGradient.append('stop')
-          .attr('offset', '0%')
-          .attr('stop-color', '#1e1b4b'); // Indigo 950
-        oceanGradient.append('stop')
-          .attr('offset', '100%')
-          .attr('stop-color', '#0c0a1d'); // Deeper indigo
+        // ===== RENDER LAYERS =====
         
-        // Country default - warm cream/ivory
-        const countryGradient = defs.append('linearGradient')
-          .attr('id', 'country-default')
-          .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '100%');
-        countryGradient.append('stop')
-          .attr('offset', '0%')
-          .attr('stop-color', '#faf5ff'); // Light purple tint
-        countryGradient.append('stop')
-          .attr('offset', '100%')
-          .attr('stop-color', '#ede9fe'); // Violet 100
-        
-        // ===== RENDER GLOBE LAYERS =====
-        
-        // Layer 1: Deep ocean sphere
+        // Layer 1: Ocean/Sea - light grey sphere
         svg.append('circle')
-          .attr('cx', size / 2)
-          .attr('cy', size / 2)
-          .attr('r', size / 2.3)
-          .attr('fill', 'url(#ocean-gradient)')
+          .attr('cx', cx)
+          .attr('cy', cy)
+          .attr('r', radius)
+          .attr('fill', '#e8eaed')
           .attr('class', 'globe-ocean');
         
-        // Layer 2: Subtle grid lines
-        const graticule = d3.geoGraticule()
-          .step([30, 30])
-          .extent([[-180, -80], [180, 80]]);
-        
-        const graticuleGroup = svg.append('g')
-          .attr('class', 'globe-graticule')
-          .attr('clip-path', 'url(#globe-clip)');
-        
-        graticuleGroup.append('path')
-          .datum(graticule)
-          .attr('class', 'graticule-lines')
-          .attr('d', path)
-          .attr('fill', 'none')
-          .attr('stroke', 'rgba(139, 92, 246, 0.08)')
-          .attr('stroke-width', '0.3');
-        
-        // Layer 4: Countries
+        // Layer 2: Countries
         const globe = svg.append('g')
           .attr('class', 'globe-countries')
           .attr('clip-path', 'url(#globe-clip)');
@@ -364,21 +328,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('d', path)
           .attr('data-id', d => d.id);
         
-        // No specular overlay - clean design
-        
-        // Disable pointer events on globe (swipe on container handles navigation)
+        // Disable pointer events on SVG
         svg.style('pointer-events', 'none');
         
-        // Auto rotation - smooth and professional
+        // Auto rotation - smooth and elegant
         let animationId;
         let isActive = true;
         const rotate = () => {
           if (!isActive) return;
           if (isRotatingRef.current && !isDraggingRef.current) {
-            rotationRef.current.x += 0.08; // Smooth, elegant rotation
+            rotationRef.current.x += 0.05;
             projection.rotate([rotationRef.current.x, rotationRef.current.y]);
             globe.selectAll('path').attr('d', path);
-            graticuleGroup.select('.graticule-lines').attr('d', path);
           }
           animationId = requestAnimationFrame(rotate);
         };
@@ -434,9 +395,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
       }
       
-      // Reset non-news countries to default (soft violet)
+      // Reset non-news countries to visible gray
       if (!hasNews) {
-        el.style('fill', '#ede9fe')
+        el.style('fill', '#c9cdd3')
           .classed('highlighted', false);
       }
     });
@@ -609,23 +570,19 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .globe-container :global(.globe-ocean) {
-          filter: none;
+          transition: fill 0.3s ease;
         }
 
         .globe-container :global(.country) {
-          fill: url(#country-default);
-          stroke: rgba(99, 102, 241, 0.2);
-          stroke-width: 0.3;
-          transition: fill 0.4s ease-out;
+          fill: #c9cdd3;
+          stroke: #e8eaed;
+          stroke-width: 0.5;
+          transition: fill 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .globe-container :global(.country.highlighted) {
-          stroke: rgba(99, 102, 241, 0.35);
-          stroke-width: 0.4;
-        }
-
-        .globe-container :global(.graticule-lines) {
-          pointer-events: none;
+          stroke: #e8eaed;
+          stroke-width: 0.6;
         }
 
         @media (max-width: 480px) {
