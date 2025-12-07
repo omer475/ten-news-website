@@ -5152,41 +5152,35 @@ export default function Home() {
                                 console.log(`🔹 BULLETS [${index}]:`, { mode, has_b2: !!story.summary_bullets_b2, has_news: !!story.summary_bullets_news, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
                                 
                                 return bullets && bullets.length > 0 ? (
-                                <ul style={{
+                                <div style={{
                                   margin: 0,
-                                  marginTop: '4px',
+                                  marginTop: '8px',
+                                  marginLeft: '-4px',
                                   padding: 0,
-                                  listStyle: 'none',
+                                  position: 'relative',
+                                  paddingLeft: '20px',
+                                  borderLeft: `3px solid ${imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary}`,
+                                  borderRadius: '3px',
                                   transition: 'opacity 0.3s ease'
                                 }}>
                                   {bullets.map((bullet, i) => (
-                                    <li key={`${languageMode[index]}-${i}`} style={{
-                                      marginBottom: '14px',
-                                      fontSize: '17px',
+                                    <div key={`${languageMode[index]}-${i}`} style={{
+                                      marginBottom: '16px',
+                                      fontSize: '19px',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
-                                      letterSpacing: '-0.01em',
+                                      letterSpacing: '-0.02em',
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                       animation: 'fadeSlideIn 0.4s ease',
                                       animationDelay: `${i * 0.08}s`,
                                       animationFillMode: 'both',
-                                      paddingLeft: '20px',
                                       position: 'relative',
-                                      color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
+                                      color: darkMode ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.88)'
                                     }}>
-                                      <span style={{
-                                        position: 'absolute',
-                                        left: 0,
-                                        top: '8px',
-                                        width: '6px',
-                                        height: '6px',
-                                        borderRadius: '50%',
-                                        background: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary
-                                      }}></span>
                                       {renderBoldText(bullet, imageDominantColors[index], story.category)}
-                                    </li>
+                                    </div>
                                   ))}
-                                </ul>
+                                </div>
                               ) : (
                                 <p style={{ margin: 0, fontStyle: 'italic', color: '#666' }}>
                                   No bullet points available
