@@ -187,13 +187,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   const [personalGreeting] = useState(() => getPersonalizedGreeting());
 
-  // Color scale for globe
+  // Color scale for globe - Clean Professional News Colors
   const getColor = (value) => {
+    // Sophisticated 2-color scale: Green (low) → Red (high)
     const colors = [
-      { pos: 0, r: 74, g: 222, b: 128 },    // Emerald green
-      { pos: 0.4, r: 250, g: 204, b: 21 },  // Yellow
-      { pos: 0.7, r: 251, g: 146, b: 60 },  // Orange
-      { pos: 1, r: 239, g: 68, b: 68 }      // Red
+      { pos: 0, r: 34, g: 197, b: 94 },     // Emerald green - Low activity
+      { pos: 0.5, r: 250, g: 204, b: 21 },  // Yellow - Medium activity  
+      { pos: 1, r: 239, g: 68, b: 68 }      // Red - High/Breaking
     ];
     
     let lower = colors[0], upper = colors[colors.length - 1];
@@ -241,11 +241,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   }, [initialStories]);
 
-  // Load 3D globe
+  // Load 3D globe - Professional Design
   useEffect(() => {
     if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
     if (typeof window === 'undefined') return;
-    if (!isVisible) return; // Don't load if not visible
+    if (!isVisible) return;
 
     const loadGlobe = async () => {
       try {
@@ -256,8 +256,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         const container = mapContainerRef.current;
         if (!container) return;
         
-        const containerWidth = container.offsetWidth || 350;
-        const containerHeight = container.offsetHeight || 350;
+        const containerWidth = container.offsetWidth || 400;
+        const containerHeight = container.offsetHeight || 400;
         const size = Math.min(containerWidth, containerHeight);
         
         container.innerHTML = '';
@@ -267,57 +267,49 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('width', '100%')
           .attr('height', '100%')
           .attr('viewBox', `0 0 ${size} ${size}`)
-          .style('cursor', 'grab');
+          .style('overflow', 'visible');
         
         const projection = d3.geoOrthographic()
-          .scale(size / 2.2)
+          .scale(size / 2.3)
           .center([0, 0])
-          .translate([size / 2, size / 2]);
+          .translate([size / 2, size / 2])
+          .clipAngle(90);
         
         projectionRef.current = projection;
         const path = d3.geoPath().projection(projection);
         pathRef.current = path;
         
-        // Outer glow
         const defs = svg.append('defs');
-        const filter = defs.append('filter').attr('id', 'glow');
-        filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'coloredBlur');
-        const feMerge = filter.append('feMerge');
-        feMerge.append('feMergeNode').attr('in', 'coloredBlur');
-        feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
         
-        // Globe sphere with gradient
-        // Smoother gradient for globe
-        const gradient = defs.append('radialGradient')
-          .attr('id', 'globe-gradient')
-          .attr('cx', '35%').attr('cy', '35%');
-        gradient.append('stop').attr('offset', '0%').attr('stop-color', 'rgba(129, 140, 248, 0.08)');
-        gradient.append('stop').attr('offset', '40%').attr('stop-color', 'rgba(99, 102, 241, 0.05)');
-        gradient.append('stop').attr('offset', '70%').attr('stop-color', 'rgba(55, 65, 81, 0.15)');
-        gradient.append('stop').attr('offset', '100%').attr('stop-color', 'rgba(30, 41, 59, 0.25)');
+        // ===== CLEAN MINIMAL GLOBE - ONLY ESSENTIAL ELEMENTS =====
         
-        // Softer glow filter
-        const glowFilter = defs.append('filter')
-          .attr('id', 'softGlow')
-          .attr('x', '-50%').attr('y', '-50%')
-          .attr('width', '200%').attr('height', '200%');
-        glowFilter.append('feGaussianBlur')
-          .attr('in', 'SourceGraphic')
-          .attr('stdDeviation', '2')
-          .attr('result', 'blur');
-        const glowMerge = glowFilter.append('feMerge');
-        glowMerge.append('feMergeNode').attr('in', 'blur');
-        glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+        // Clip path for globe boundary
+        defs.append('clipPath')
+          .attr('id', 'globe-clip')
+          .append('circle')
+          .attr('cx', size / 2)
+          .attr('cy', size / 2)
+          .attr('r', size / 2.3);
         
+        // ===== RENDER GLOBE LAYERS - CLEAN MINIMAL DESIGN =====
+        
+        // Globe base - completely transparent, only countries visible
         svg.append('circle')
           .attr('cx', size / 2)
           .attr('cy', size / 2)
-          .attr('r', size / 2.2)
-          .attr('class', 'globe-sphere')
-          .style('fill', 'url(#globe-gradient)')
-          .style('filter', 'url(#softGlow)');
+          .attr('r', size / 2.3)
+          .attr('fill', 'transparent')
+          .attr('class', 'globe-sphere');
         
-        const globe = svg.append('g').attr('class', 'globe-countries');
+        // No graticule - clean minimal design
+        const graticuleGroup = svg.append('g')
+          .attr('class', 'globe-graticule')
+          .attr('clip-path', 'url(#globe-clip)');
+        
+        // Layer 4: Countries
+        const globe = svg.append('g')
+          .attr('class', 'globe-countries')
+          .attr('clip-path', 'url(#globe-clip)');
         globeRef.current = globe;
         
         const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
@@ -338,17 +330,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('d', path)
           .attr('data-id', d => d.id);
         
-        // Globe auto-rotates only - no user interaction
-        // User can tap or swipe up to navigate (handled by container)
-        svg.style('pointer-events', 'none'); // Disable all mouse/touch on globe
+        // No specular overlay - clean design
         
-        // Auto rotation
+        // Disable pointer events on globe (swipe on container handles navigation)
+        svg.style('pointer-events', 'none');
+        
+        // Auto rotation - smooth and professional
         let animationId;
         let isActive = true;
         const rotate = () => {
           if (!isActive) return;
           if (isRotatingRef.current && !isDraggingRef.current) {
-            rotationRef.current.x += 0.12;
+            rotationRef.current.x += 0.08; // Smooth, elegant rotation
             projection.rotate([rotationRef.current.x, rotationRef.current.y]);
             globe.selectAll('path').attr('d', path);
           }
@@ -358,7 +351,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         
         setMapLoaded(true);
         
-        // Return cleanup function
         return () => { 
           isActive = false;
           if (animationId) cancelAnimationFrame(animationId); 
@@ -379,7 +371,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
   }, [scriptsLoaded, isVisible]);
 
-  // Color globe countries
+  // Color globe countries with professional highlighting
   useEffect(() => {
     if (!mapLoaded || Object.keys(newsCountByCountry).length === 0 || !globeRef.current) return;
     
@@ -392,12 +384,25 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     globeRef.current.selectAll('.country').each(function() {
       const el = d3.select(this);
       const countryId = parseInt(el.attr('data-id'));
+      let hasNews = false;
       
       for (const [name, count] of Object.entries(newsCountByCountry)) {
         if (countryNameToId[name.toLowerCase().trim()] === countryId) {
-          el.style('fill', getColor(count / maxCount));
+          const intensity = count / maxCount;
+          el.style('fill', getColor(intensity))
+            .classed('highlighted', intensity > 0.3);
+          
+          // Add subtle animation delay based on country position
+          el.style('transition-delay', `${Math.random() * 0.3}s`);
+          hasNews = true;
           break;
         }
+      }
+      
+      // Reset non-news countries to default
+      if (!hasNews) {
+        el.style('fill', '#d1d5db')
+          .classed('highlighted', false);
       }
     });
   }, [mapLoaded, newsCountByCountry]);
@@ -458,13 +463,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           bottom: 0;
           display: flex;
           flex-direction: column;
-          background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
           z-index: 1000;
           overflow: hidden;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+          font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        /* Animated background stars */
+        /* Subtle geometric pattern overlay */
         .first-page-container::before {
           content: '';
           position: absolute;
@@ -473,18 +478,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           right: 0;
           bottom: 0;
           background-image: 
-            radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 100%),
-            radial-gradient(2px 2px at 40% 70%, rgba(255,255,255,0.1) 0%, transparent 100%),
-            radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.15) 0%, transparent 100%),
-            radial-gradient(2px 2px at 60% 80%, rgba(255,255,255,0.1) 0%, transparent 100%),
-            radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.12) 0%, transparent 100%);
+            radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
           pointer-events: none;
-          animation: twinkle 4s ease-in-out infinite;
-        }
-
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 1; }
         }
 
         .content-wrapper {
@@ -496,7 +492,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           padding: 40px 24px;
           position: relative;
           z-index: 1;
-          gap: 20px;
+          gap: 24px;
         }
 
         .greeting-section {
@@ -511,23 +507,22 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .greeting-hi {
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 600;
-          letter-spacing: 0.25em;
-          color: rgba(129, 140, 248, 0.9);
-          margin-bottom: 20px;
+          letter-spacing: 0.2em;
+          color: #6366f1;
+          margin-bottom: 16px;
           text-transform: uppercase;
         }
 
         .greeting-sub {
-          font-size: 36px;
+          font-size: 34px;
           font-weight: 700;
-          line-height: 1.2;
-          letter-spacing: -0.03em;
-          color: #ffffff;
-          max-width: 440px;
+          line-height: 1.25;
+          letter-spacing: -0.025em;
+          color: #0f172a;
+          max-width: 420px;
           margin: 0 auto;
-          text-shadow: 0 4px 30px rgba(0,0,0,0.4);
         }
 
         .greeting-sub::first-letter {
@@ -550,35 +545,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           to { opacity: 1; transform: scale(1); }
         }
 
-        .globe-glow {
-          position: absolute;
-          width: 140%;
-          height: 140%;
-          background: radial-gradient(
-            circle at 50% 50%,
-            rgba(99, 102, 241, 0.12) 0%,
-            rgba(99, 102, 241, 0.08) 20%,
-            rgba(139, 92, 246, 0.05) 40%,
-            rgba(139, 92, 246, 0.02) 60%,
-            transparent 80%
-          );
-          border-radius: 50%;
-          pointer-events: none;
-          animation: smoothPulse 6s ease-in-out infinite;
-          filter: blur(20px);
-        }
-
-        @keyframes smoothPulse {
-          0%, 100% { 
-            transform: scale(1); 
-            opacity: 0.7;
-          }
-          50% { 
-            transform: scale(1.03); 
-            opacity: 1;
-          }
-        }
-
         .globe-container {
           position: relative;
           width: 100%;
@@ -598,15 +564,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .globe-container :global(.globe-sphere) {
-          stroke: rgba(148, 163, 184, 0.15);
-          stroke-width: 0.5;
+          fill: transparent;
         }
 
         .globe-container :global(.country) {
-          fill: rgba(100, 116, 139, 0.5);
-          stroke: rgba(148, 163, 184, 0.1);
-          stroke-width: 0.25;
-          transition: fill 0.5s ease-out;
+          fill: #d4d4d8;
+          stroke: #ffffff;
+          stroke-width: 0.4;
+          transition: fill 0.4s ease-out;
+        }
+
+        .globe-container :global(.country.highlighted) {
+          stroke-width: 0.5;
         }
 
         @media (max-width: 480px) {
@@ -620,8 +589,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding-right: 20px;
           }
           .greeting-sub {
-            font-size: 28px;
-            max-width: 320px;
+            font-size: 26px;
+            max-width: 300px;
+            line-height: 1.3;
           }
           .greeting-hi {
             font-size: 11px;
@@ -633,9 +603,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             display: flex;
             align-items: center;
             justify-content: center;
-          }
-          .globe-glow {
-            display: none;
           }
           .globe-container {
             max-width: none;
@@ -649,8 +616,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         @media (max-width: 375px) {
           .greeting-sub {
-            font-size: 24px;
-            max-width: 280px;
+            font-size: 22px;
+            max-width: 260px;
           }
         }
       `}</style>
@@ -669,7 +636,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           </div>
 
           <div className="globe-section">
-            <div className="globe-glow"></div>
             <div className="globe-container" ref={mapContainerRef}></div>
           </div>
         </div>

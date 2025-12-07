@@ -25,6 +25,7 @@ export default function Home() {
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [expandedGraph, setExpandedGraph] = useState({});
+  const [expandedMap, setExpandedMap] = useState({});
   const [showBulletPoints, setShowBulletPoints] = useState({});
   // Removed globalShowBullets - only showing summary text now
   const [showDetailedArticle, setShowDetailedArticle] = useState(false);
@@ -226,6 +227,7 @@ export default function Home() {
     // Reset expanded states - components should start collapsed
     setExpandedTimeline(prev => ({ ...prev, [index]: false }));
     setExpandedGraph(prev => ({ ...prev, [index]: false }));
+    setExpandedMap(prev => ({ ...prev, [index]: false }));
 
     // Set the new state
     switch (nextType) {
@@ -1278,6 +1280,54 @@ export default function Home() {
                      {"date": "Tomorrow", "event": "Expected follow-up meetings and official responses"}
                    ];
 
+               // Generate map data based on article content
+              const generateMapFromContent = (title, category) => {
+                const titleLower = (title || '').toLowerCase();
+                
+                // Location coordinates mapping
+                const locationMap = {
+                  ukraine: { lat: 48.3794, lon: 31.1656, location: 'Ukraine', region: 'Eastern Europe', description: 'Major developments in the ongoing conflict zone' },
+                  russia: { lat: 55.7558, lon: 37.6173, location: 'Moscow, Russia', region: 'Russia', description: 'Center of Russian political activity' },
+                  poland: { lat: 52.2297, lon: 21.0122, location: 'Warsaw, Poland', region: 'Central Europe', description: 'NATO eastern flank operations' },
+                  nato: { lat: 50.8503, lon: 4.3517, location: 'Brussels, Belgium', region: 'NATO HQ', description: 'Alliance headquarters coordination' },
+                  china: { lat: 39.9042, lon: 116.4074, location: 'Beijing, China', region: 'East Asia', description: 'Chinese government activity' },
+                  taiwan: { lat: 25.0330, lon: 121.5654, location: 'Taipei, Taiwan', region: 'East Asia', description: 'Cross-strait developments' },
+                  israel: { lat: 31.7683, lon: 35.2137, location: 'Jerusalem, Israel', region: 'Middle East', description: 'Regional security situation' },
+                  gaza: { lat: 31.5, lon: 34.47, location: 'Gaza Strip', region: 'Middle East', description: 'Humanitarian crisis zone' },
+                  iran: { lat: 35.6892, lon: 51.3890, location: 'Tehran, Iran', region: 'Middle East', description: 'Regional power dynamics' },
+                  syria: { lat: 33.5138, lon: 36.2765, location: 'Damascus, Syria', region: 'Middle East', description: 'Civil conflict developments' },
+                  'middle east': { lat: 29.3117, lon: 47.4818, location: 'Middle East', region: 'MENA', description: 'Regional developments' },
+                  europe: { lat: 50.1109, lon: 8.6821, location: 'Europe', region: 'EU', description: 'European affairs' },
+                  'united states': { lat: 38.9072, lon: -77.0369, location: 'Washington D.C.', region: 'North America', description: 'US government activity' },
+                  washington: { lat: 38.9072, lon: -77.0369, location: 'Washington D.C.', region: 'United States', description: 'US government activity' },
+                  trump: { lat: 38.9072, lon: -77.0369, location: 'United States', region: 'North America', description: 'US political developments' },
+                  korea: { lat: 37.5665, lon: 126.9780, location: 'Seoul, South Korea', region: 'East Asia', description: 'Korean peninsula situation' },
+                  japan: { lat: 35.6762, lon: 139.6503, location: 'Tokyo, Japan', region: 'East Asia', description: 'Japanese developments' },
+                  india: { lat: 28.6139, lon: 77.2090, location: 'New Delhi, India', region: 'South Asia', description: 'Indian subcontinent news' },
+                  australia: { lat: -33.8688, lon: 151.2093, location: 'Sydney, Australia', region: 'Oceania', description: 'Australian developments' },
+                  uk: { lat: 51.5074, lon: -0.1278, location: 'London, UK', region: 'Western Europe', description: 'British affairs' },
+                  france: { lat: 48.8566, lon: 2.3522, location: 'Paris, France', region: 'Western Europe', description: 'French developments' },
+                  germany: { lat: 52.5200, lon: 13.4050, location: 'Berlin, Germany', region: 'Central Europe', description: 'German affairs' },
+                };
+
+                // Check title for location keywords
+                for (const [keyword, mapData] of Object.entries(locationMap)) {
+                  if (titleLower.includes(keyword)) {
+                    return {
+                      center: { lat: mapData.lat, lon: mapData.lon },
+                      location: mapData.location,
+                      region: mapData.region,
+                      description: mapData.description,
+                      zoom: 5
+                    };
+                  }
+                }
+                return null;
+              };
+
+              // Try to generate map from article content if not provided
+              const generatedMap = article.map || generateMapFromContent(article.title, article.category);
+
               const storyData = {
                 type: 'news',
                 number: article.rank || (index + 1),
@@ -1302,10 +1352,18 @@ export default function Home() {
                 url: article.url || '#',
                 urlToImage: (article.urlToImage || article.image_url || '').trim() || null,
                 blurColor: article.blurColor || null,  // Pre-computed blur color
-                map: article.map || null,
+                map: generatedMap,
                 graph: article.graph || null,
                 timeline: sampleTimeline,
-                components: article.components || null,  // CRITICAL: Include components array
+                // Include components array, adding 'map' if map data was generated
+                components: (() => {
+                  let comps = article.components || ['details'];
+                  // If map data was generated and not already in components, add it
+                  if (generatedMap && !comps.includes('map')) {
+                    comps = [...comps, 'map'];
+                  }
+                  return comps;
+                })(),  // CRITICAL: Include components array with map support
                 publishedAt: article.publishedAt || article.published_at || article.added_at,
                 id: article.id || `article_${index}`,
                 final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
@@ -3657,6 +3715,53 @@ export default function Home() {
           }
         }
 
+        /* Advanced Map Animations */
+        @keyframes mapPulse {
+          0% {
+            transform: scale(1);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scale(2.5);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0;
+          }
+        }
+
+        @keyframes markerPulse {
+          0%, 100% {
+            transform: scale(1);
+            filter: brightness(1);
+          }
+          50% {
+            transform: scale(1.2);
+            filter: brightness(1.3);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes mapGlow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+          }
+        }
+
         .timeline-container-animated {
           animation: timelineSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -5673,47 +5778,342 @@ export default function Home() {
                             </div>
                           );
                           } else if (showMap[index]) {
-                            // Show Map
+                            // Show Map - Advanced Professional Design
                             return story.map && (
-                            <div 
-                              className="map-container"
-                              style={{
-                                position: 'absolute',
-                                bottom: '0',
-                                left: '0',
-                                right: '0',
-                                height: '200px',
-                                background: '#ffffff',
-                                borderRadius: '8px',
-                                padding: '12px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                zIndex: '10',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                flexDirection: 'column'
-                              }}>
-                              <div style={{
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                color: '#1e293b',
-                                marginBottom: '8px'
-                              }}>📍 Location Map</div>
-                              <div style={{
-                                    width: '100%',
-                                height: '150px',
-                                background: '#f8fafc',
-                                    borderRadius: '6px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                border: '1px solid #e2e8f0',
-                                color: '#64748b',
-                                fontSize: '12px'
-                              }}>
-                                Map visualization for: {story.map.center?.lat?.toFixed(2)}, {story.map.center?.lon?.toFixed(2)}
+                              <div 
+                                className="glass-container map-container-advanced"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: expandedMap[index] ? '320px' : '85px',
+                                  maxHeight: expandedMap[index] ? '320px' : '85px',
+                                  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflow: 'hidden'
+                                }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
+                                <div className="glass-content" style={{
+                                  height: '100%',
+                                  width: '100%',
+                                  padding: '8px 12px',
+                                  justifyContent: 'flex-start',
+                                  position: 'relative',
+                                  overflow: 'hidden'
+                                }}>
+                                  {/* Expand Icon */}
+                                  <div 
+                                    data-expand-icon="true"
+                                    style={{
+                                      position: 'absolute',
+                                      top: '6px',
+                                      right: '6px',
+                                      width: '24px',
+                                      height: '24px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      cursor: 'pointer',
+                                      zIndex: '20',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setExpandedMap(prev => ({
+                                        ...prev,
+                                        [index]: !prev[index]
+                                      }));
+                                    }}
+                                    onTouchEnd={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setExpandedMap(prev => ({
+                                        ...prev,
+                                        [index]: !prev[index]
+                                      }));
+                                    }}>
+                                    <span style={{
+                                      fontSize: '16px',
+                                      fontWeight: 'bold',
+                                      color: '#000000',
+                                      transform: expandedMap[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                                      transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                                      textShadow: '1px 1px 2px rgba(255, 255, 255, 0.8)'
+                                    }}>
+                                      ↗
+                                    </span>
                                   </div>
-                            </div>
+
+                                  {/* Map Container */}
+                                  <div style={{
+                                    position: 'relative',
+                                    height: '100%',
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                  }}>
+                                    {/* Location Header - Compact */}
+                                    <div style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      marginBottom: expandedMap[index] ? '8px' : '4px'
+                                    }}>
+                                      <div style={{
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        background: imageDominantColors[index]?.highlight || '#3b82f6',
+                                        boxShadow: `0 0 8px ${imageDominantColors[index]?.highlight || '#3b82f6'}`,
+                                        animation: 'pulse 2s ease-in-out infinite'
+                                      }}></div>
+                                      <span style={{
+                                        fontSize: '10px',
+                                        fontWeight: '700',
+                                        color: imageDominantColors[index]?.highlight || '#000000',
+                                        letterSpacing: '0.5px',
+                                        textTransform: 'uppercase',
+                                        textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)'
+                                      }}>
+                                        {story.map.location || 'Global Location'}
+                                      </span>
+                                    </div>
+
+                                    {/* SVG World Map */}
+                                    <div style={{
+                                      flex: 1,
+                                      position: 'relative',
+                                      borderRadius: '8px',
+                                      overflow: 'hidden',
+                                      background: expandedMap[index] 
+                                        ? 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%)'
+                                        : 'linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(51,65,85,0.8) 100%)',
+                                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)',
+                                      minHeight: expandedMap[index] ? '260px' : '50px',
+                                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                                    }}>
+                                      {/* Grid Lines - Background Pattern */}
+                                      <svg 
+                                        style={{
+                                          position: 'absolute',
+                                          top: 0,
+                                          left: 0,
+                                          width: '100%',
+                                          height: '100%',
+                                          opacity: 0.1
+                                        }}
+                                        preserveAspectRatio="none"
+                                        viewBox="0 0 100 100"
+                                      >
+                                        {[...Array(11)].map((_, i) => (
+                                          <line key={`h${i}`} x1="0" y1={i*10} x2="100" y2={i*10} stroke="#fff" strokeWidth="0.2"/>
+                                        ))}
+                                        {[...Array(11)].map((_, i) => (
+                                          <line key={`v${i}`} x1={i*10} y1="0" x2={i*10} y2="100" stroke="#fff" strokeWidth="0.2"/>
+                                        ))}
+                                      </svg>
+
+                                      {/* World Map SVG */}
+                                      <svg 
+                                        viewBox="0 0 1000 500" 
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          position: 'absolute',
+                                          top: 0,
+                                          left: 0
+                                        }}
+                                        preserveAspectRatio="xMidYMid slice"
+                                      >
+                                        <defs>
+                                          {/* Gradient for continents - Enhanced */}
+                                          <linearGradient id={`mapGradient${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor={imageDominantColors[index]?.highlight || '#3b82f6'} stopOpacity="0.6"/>
+                                            <stop offset="100%" stopColor={imageDominantColors[index]?.blurColor || '#1e40af'} stopOpacity="0.35"/>
+                                          </linearGradient>
+                                          {/* Glow filter for marker */}
+                                          <filter id={`glow${index}`} x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                            <feMerge>
+                                              <feMergeNode in="coloredBlur"/>
+                                              <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                          </filter>
+                                          {/* Pulse animation */}
+                                          <radialGradient id={`pulseGrad${index}`} cx="50%" cy="50%" r="50%">
+                                            <stop offset="0%" stopColor={imageDominantColors[index]?.highlight || '#3b82f6'} stopOpacity="0.8"/>
+                                            <stop offset="100%" stopColor={imageDominantColors[index]?.highlight || '#3b82f6'} stopOpacity="0"/>
+                                          </radialGradient>
+                                        </defs>
+
+                                        {/* Simplified World Map Paths - Enhanced Visibility */}
+                                        <g fill={`url(#mapGradient${index})`} stroke={imageDominantColors[index]?.highlight || '#3b82f6'} strokeWidth="1" strokeOpacity="0.8">
+                                          {/* North America */}
+                                          <path d="M150,120 L180,100 L220,95 L260,100 L280,120 L290,150 L280,180 L260,200 L240,220 L200,230 L180,220 L160,200 L150,170 Z" opacity="1"/>
+                                          {/* South America */}
+                                          <path d="M230,250 L260,240 L280,260 L290,300 L280,350 L260,380 L240,390 L220,370 L210,330 L215,290 L220,260 Z" opacity="1"/>
+                                          {/* Europe */}
+                                          <path d="M440,100 L480,90 L520,95 L540,110 L530,140 L510,150 L480,155 L450,150 L430,130 Z" opacity="1"/>
+                                          {/* Africa */}
+                                          <path d="M450,180 L500,170 L540,180 L560,220 L550,280 L530,330 L500,350 L470,340 L450,300 L440,250 L445,210 Z" opacity="1"/>
+                                          {/* Asia - Extended for Ukraine visibility */}
+                                          <path d="M540,70 L620,60 L700,70 L780,90 L830,120 L850,160 L830,200 L780,220 L700,210 L620,200 L560,180 L530,150 L525,110 Z" opacity="1"/>
+                                          {/* Australia */}
+                                          <path d="M780,300 L830,290 L870,310 L880,350 L860,380 L820,385 L780,370 L770,340 Z" opacity="1"/>
+                                          {/* Greenland */}
+                                          <path d="M320,50 L370,45 L390,60 L385,90 L360,100 L330,95 L315,75 Z" opacity="0.9"/>
+                                          {/* UK */}
+                                          <path d="M420,95 L435,90 L440,105 L430,115 L420,110 Z" opacity="1"/>
+                                          {/* Japan */}
+                                          <path d="M850,130 L870,125 L880,140 L875,160 L860,165 L850,155 Z" opacity="1"/>
+                                          {/* Middle East */}
+                                          <path d="M540,165 L580,155 L610,165 L605,190 L575,200 L545,190 Z" opacity="1"/>
+                                          {/* India */}
+                                          <path d="M640,180 L680,170 L700,200 L690,240 L660,250 L630,230 L625,200 Z" opacity="1"/>
+                                        </g>
+
+                                        {/* Location Marker with Animation */}
+                                        {(() => {
+                                          // Convert lat/lon to SVG coordinates
+                                          const lat = story.map.center?.lat || 0;
+                                          const lon = story.map.center?.lon || 0;
+                                          const x = ((lon + 180) / 360) * 1000;
+                                          const y = ((90 - lat) / 180) * 500;
+                                          
+                                          return (
+                                            <g>
+                                              {/* Outer pulse ring - Larger */}
+                                              <circle 
+                                                cx={x} cy={y} r="35" 
+                                                fill={`url(#pulseGrad${index})`}
+                                                style={{
+                                                  animation: 'mapPulse 2s ease-out infinite',
+                                                  transformOrigin: `${x}px ${y}px`
+                                                }}
+                                              />
+                                              {/* Middle ring */}
+                                              <circle 
+                                                cx={x} cy={y} r="22" 
+                                                fill={`url(#pulseGrad${index})`}
+                                                style={{
+                                                  animation: 'mapPulse 2s ease-out infinite 0.4s',
+                                                  transformOrigin: `${x}px ${y}px`
+                                                }}
+                                              />
+                                              {/* Inner pulse ring */}
+                                              <circle 
+                                                cx={x} cy={y} r="12" 
+                                                fill={`url(#pulseGrad${index})`}
+                                                style={{
+                                                  animation: 'mapPulse 2s ease-out infinite 0.8s',
+                                                  transformOrigin: `${x}px ${y}px`
+                                                }}
+                                              />
+                                              {/* Main marker dot - Larger */}
+                                              <circle 
+                                                cx={x} cy={y} r="8" 
+                                                fill={imageDominantColors[index]?.highlight || '#ef4444'}
+                                                filter={`url(#glow${index})`}
+                                                style={{
+                                                  animation: 'markerPulse 1.5s ease-in-out infinite'
+                                                }}
+                                              />
+                                              {/* Inner bright core */}
+                                              <circle 
+                                                cx={x} cy={y} r="4" 
+                                                fill="#ffffff"
+                                                opacity="0.95"
+                                              />
+                                            </g>
+                                          );
+                                        })()}
+
+                                        {/* Additional markers if available */}
+                                        {story.map.markers && story.map.markers.map((marker, mIdx) => {
+                                          const mx = ((marker.lon + 180) / 360) * 1000;
+                                          const my = ((90 - marker.lat) / 180) * 500;
+                                          return (
+                                            <g key={mIdx}>
+                                              <circle 
+                                                cx={mx} cy={my} r="12" 
+                                                fill={`url(#pulseGrad${index})`}
+                                                style={{
+                                                  animation: `mapPulse 2s ease-out infinite ${0.2 * mIdx}s`
+                                                }}
+                                              />
+                                              <circle 
+                                                cx={mx} cy={my} r="4" 
+                                                fill={imageDominantColors[index]?.highlight || '#3b82f6'}
+                                                opacity="0.8"
+                                              />
+                                            </g>
+                                          );
+                                        })}
+                                      </svg>
+
+                                      {/* Coordinates Display - Bottom Left */}
+                                      <div style={{
+                                        position: 'absolute',
+                                        bottom: '8px',
+                                        left: '10px',
+                                        display: 'flex',
+                                        gap: '12px',
+                                        fontSize: '9px',
+                                        fontFamily: 'SF Mono, Monaco, monospace',
+                                        color: 'rgba(255,255,255,0.7)',
+                                        letterSpacing: '0.5px'
+                                      }}>
+                                        <span>LAT {story.map.center?.lat?.toFixed(4) || '0.0000'}°</span>
+                                        <span>LON {story.map.center?.lon?.toFixed(4) || '0.0000'}°</span>
+                                      </div>
+
+                                      {/* Region Label - Bottom Right */}
+                                      {story.map.region && (
+                                        <div style={{
+                                          position: 'absolute',
+                                          bottom: '8px',
+                                          right: '10px',
+                                          fontSize: '9px',
+                                          fontWeight: '600',
+                                          color: imageDominantColors[index]?.highlight || '#3b82f6',
+                                          textTransform: 'uppercase',
+                                          letterSpacing: '1px',
+                                          background: 'rgba(0,0,0,0.3)',
+                                          padding: '2px 8px',
+                                          borderRadius: '4px'
+                                        }}>
+                                          {story.map.region}
+                                        </div>
+                                      )}
+
+                                      {/* Expanded Info Panel */}
+                                      {expandedMap[index] && story.map.description && (
+                                        <div style={{
+                                          position: 'absolute',
+                                          top: '10px',
+                                          left: '10px',
+                                          right: '60px',
+                                          background: 'rgba(0,0,0,0.6)',
+                                          backdropFilter: 'blur(8px)',
+                                          borderRadius: '6px',
+                                          padding: '8px 12px',
+                                          fontSize: '11px',
+                                          color: 'rgba(255,255,255,0.9)',
+                                          lineHeight: '1.4',
+                                          animation: 'fadeIn 0.3s ease'
+                                        }}>
+                                          {story.map.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             );
                           } else if (showDetails[index]) {
                             // Show Details
@@ -5825,6 +6225,7 @@ export default function Home() {
                               // Reset expanded states
                               setExpandedTimeline(prev => ({ ...prev, [index]: false }));
                               setExpandedGraph(prev => ({ ...prev, [index]: false }));
+                              setExpandedMap(prev => ({ ...prev, [index]: false }));
                               
                               // Set the clicked one
                               switch (type) {
