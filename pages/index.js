@@ -1396,6 +1396,13 @@ export default function Home() {
               console.log('📊 Sorting news articles by score...');
               const sortedNews = sortArticlesByScore(newsArticles);
               
+              // Mark the first (highest-scored) article as BREAKING NEWS for demonstration
+              // This creates a visual distinction for must-read important news
+              if (sortedNews.length > 0) {
+                sortedNews[0].isImportant = true;
+                console.log('🚨 Marked first article as BREAKING NEWS:', sortedNews[0].title?.substring(0, 40));
+              }
+              
               // Only add "all caught up" page if there are NO more articles to load
               // Otherwise, auto-loading will add more articles
               const hasMoreToLoad = newsData.pagination?.hasMore;
@@ -1464,6 +1471,7 @@ export default function Home() {
                 publishedAt: new Date().toISOString(),
                 source: 'Today+',
                 final_score: 950,
+                isImportant: true, // BREAKING NEWS - This article is marked as important
                 details: [
                   'Countries attending: 190+',
                   'Emission target: 50% reduction',
@@ -2745,6 +2753,23 @@ export default function Home() {
         @keyframes glow {
           0%, 100% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.3); }
           50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.5); }
+        }
+
+        /* Important News - Premium Animations */
+        @keyframes subtlePulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        
+        @keyframes importantPulse {
+          0%, 100% { 
+            opacity: 1;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4), 6px 0 25px rgba(239, 68, 68, 0.25);
+          }
+          50% { 
+            opacity: 0.95;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), 0 0 50px rgba(239, 68, 68, 0.5), 10px 0 40px rgba(239, 68, 68, 0.35);
+          }
         }
 
         .news-grid {
@@ -4359,7 +4384,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(50vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(42vh + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4690,10 +4715,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(50vh * 0.55)',
+                        top: 'calc(42vh * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(50vh * 0.45 + 74px)',
+                        height: 'calc(42vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor 
@@ -4736,11 +4761,54 @@ export default function Home() {
                         </div>
                       )}
                       
+                      {/* IMPORTANT NEWS - Premium Visual Treatment */}
+                      {story.isImportant && (
+                        <>
+                          {/* Left accent bar - full height */}
+                          <div style={{
+                            position: 'fixed',
+                            top: 'calc(env(safe-area-inset-top, 0px) + 56px)',
+                            left: '0',
+                            width: '5px',
+                            height: 'calc(42vh - 56px)',
+                            background: 'linear-gradient(180deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)',
+                            zIndex: 100,
+                            boxShadow: '0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4), 5px 0 20px rgba(239, 68, 68, 0.2)',
+                            animation: 'importantPulse 2s ease-in-out infinite'
+                          }} />
+                          
+                          {/* Right accent bar - full height */}
+                          <div style={{
+                            position: 'fixed',
+                            top: 'calc(env(safe-area-inset-top, 0px) + 56px)',
+                            right: '0',
+                            width: '5px',
+                            height: 'calc(42vh - 56px)',
+                            background: 'linear-gradient(180deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)',
+                            zIndex: 100,
+                            boxShadow: '0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4), -5px 0 20px rgba(239, 68, 68, 0.2)',
+                            animation: 'importantPulse 2s ease-in-out infinite'
+                          }} />
+
+                          {/* Subtle inner glow on image edges */}
+                          <div style={{
+                            position: 'fixed',
+                            top: '0',
+                            left: '0',
+                            right: '0',
+                            height: '42vh',
+                            zIndex: 3,
+                            pointerEvents: 'none',
+                            boxShadow: 'inset 5px 0 30px rgba(239, 68, 68, 0.15), inset -5px 0 30px rgba(239, 68, 68, 0.15)'
+                          }} />
+                        </>
+                      )}
+                      
                       {/* Title - In front of everything */}
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'fixed',
-                        bottom: 'calc(100vh - 50vh - 50px)',
+                        bottom: 'calc(100vh - 42vh - 50px)',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -4773,7 +4841,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: '50vh',
+                      height: '42vh',
                       margin: 0,
                       padding: 0,
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -4800,7 +4868,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(50vh + 50px)',
+                      top: 'calc(42vh + 50px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -4815,7 +4883,7 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(50vh + 52px)',
+                        paddingTop: 'calc(42vh + 52px)',
                         paddingLeft: '20px',
                         paddingRight: '20px',
                         zIndex: '2',

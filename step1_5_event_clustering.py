@@ -5,7 +5,7 @@ STEP 1.5: EVENT CLUSTERING ENGINE (v2.0 - EMBEDDING-BASED)
 Purpose: Group articles about the same event for multi-source synthesis
 Input: Approved articles from Step 1 (Gemini scoring)
 Output: Clusters of articles about the same event
-Algorithm: Gemini embeddings + cosine similarity (threshold 0.82)
+Algorithm: Gemini embeddings + cosine similarity (threshold 0.87 - strict for accuracy)
 """
 
 import re
@@ -163,15 +163,16 @@ class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
     # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.82  # Cosine similarity threshold for same event
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.87  # Cosine similarity threshold for same event (INCREASED for accuracy)
     # 0.90+ = Almost identical titles
-    # 0.82-0.90 = Same event, different wording
+    # 0.87-0.90 = Same event, different wording
+    # 0.82-0.87 = Related topics but possibly different events (TOO RISKY)
     # 0.70-0.82 = Related topics, probably different events
     # <0.70 = Definitely different events
     
     # FALLBACK: String-based matching (if embeddings fail)
-    TITLE_SIMILARITY_THRESHOLD = 0.75  # 75% title similarity = same event
-    MIN_TITLE_SIMILARITY = 0.55  # Minimum 55% for keyword match
+    TITLE_SIMILARITY_THRESHOLD = 0.80  # 80% title similarity = same event (INCREASED)
+    MIN_TITLE_SIMILARITY = 0.60  # Minimum 60% for keyword match (INCREASED)
     KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event
     ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     

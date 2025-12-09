@@ -181,18 +181,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'ABC News',
-        'url': 'https://abcnews.go.com/abcnews/topstories',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'ABC News International',
-        'url': 'https://abcnews.go.com/abcnews/internationalheadlines',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'PBS NewsHour Headlines',
         'url': 'https://www.pbs.org/newshour/feeds/rss/headlines',
         'category': 'news',
@@ -208,12 +196,6 @@ RSS_FEEDS = [
     # ========================================
     # UK PREMIUM NEWS
     # ========================================
-    {
-        'name': 'BBC News UK',
-        'url': 'http://feeds.bbci.co.uk/news/uk/rss.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
     {
         'name': 'BBC News Business',
         'url': 'https://feeds.bbci.co.uk/news/business/rss.xml',
@@ -291,42 +273,6 @@ RSS_FEEDS = [
         'url': 'https://feeds.skynews.com/feeds/rss/strange.xml',
         'category': 'consumer',
         'tier': 'standard'
-    },
-    {
-        'name': 'The Guardian World',
-        'url': 'https://www.theguardian.com/world/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian UK',
-        'url': 'https://www.theguardian.com/uk-news/rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian Technology',
-        'url': 'https://www.theguardian.com/uk/technology/rss',
-        'category': 'technology',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian Science',
-        'url': 'https://www.theguardian.com/science/rss',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian Environment',
-        'url': 'https://www.theguardian.com/uk/environment/rss',
-        'category': 'science',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Guardian Business',
-        'url': 'https://www.theguardian.com/uk/business/rss',
-        'category': 'business',
-        'tier': 'premium'
     },
     {
         'name': 'The Times (UK)',
@@ -545,12 +491,6 @@ RSS_FEEDS = [
     {
         'name': 'UN News',
         'url': 'https://news.un.org/feed/subscribe/en/news/all/rss.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'Mail & Guardian (South Africa)',
-        'url': 'https://mg.co.za/feed/',
         'category': 'news',
         'tier': 'premium'
     },

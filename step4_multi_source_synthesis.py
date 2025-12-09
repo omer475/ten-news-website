@@ -213,6 +213,44 @@ HIGHLIGHT COUNTS:
   • Content: 8-12 highlights distributed across all paragraphs
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 CRITICAL: FACTUAL ACCURACY (ZERO TOLERANCE FOR ERRORS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ACCURACY IS NON-NEGOTIABLE. Every fact must be verified against the sources.
+
+BEFORE WRITING, IDENTIFY AND LOCK:
+  1. COUNTRY/LOCATION: Which country/city is this about? Lock it. Never confuse.
+  2. KEY PEOPLE: Who are the main actors? Their exact names and roles.
+  3. ORGANIZATIONS: Which companies/governments/institutions are involved?
+  4. NUMBERS: What are the specific figures mentioned? Verify across sources.
+  5. DATES/TIMING: When did this happen? When will it happen?
+
+ABSOLUTE RULES:
+  ✗ NEVER mix up countries (e.g., Spain vs Turkey, UK vs US, China vs Japan)
+  ✗ NEVER confuse people's names or roles
+  ✗ NEVER invent facts not present in ANY source
+  ✗ NEVER combine facts from different unrelated events
+  ✗ NEVER assume - if sources conflict, use the MOST COMMONLY stated fact
+
+VERIFICATION CHECKLIST (Do this mentally before writing):
+  □ What COUNTRY is this story about? → Use ONLY that country
+  □ What PEOPLE are named? → Use ONLY those exact names
+  □ What NUMBERS are given? → Verify they appear in sources
+  □ What ORGANIZATIONS are mentioned? → Spell correctly
+  □ What is the MAIN EVENT? → Stay focused on ONE event
+
+IF SOURCES CONFLICT:
+  • Use the fact mentioned by MOST sources
+  • Prefer more specific facts over vague ones
+  • When in doubt, use the more conservative/smaller number
+  • Never blend contradictory facts into one statement
+
+GEOGRAPHIC ACCURACY:
+  • If a source says "Spain" - the article MUST say Spain, not any other country
+  • If a source says "Berlin" - it's Germany, never confuse with other cities
+  • Double-check country names before finalizing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

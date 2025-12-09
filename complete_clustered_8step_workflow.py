@@ -3,7 +3,7 @@ COMPLETE 8-STEP NEWS WORKFLOW WITH CLUSTERING
 ==============================================
 
 Step 0: RSS Feed Collection (171 sources)
-Step 1: Gemini Scoring & Filtering (score ≥70)
+Step 1: Personas Scoring & Filtering (score ≥60)
 Step 1.5: Event Clustering (clusters similar articles)
 Step 2: Jina Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
@@ -26,7 +26,7 @@ import urllib3
 
 # Import all pipeline components
 from rss_sources import ALL_SOURCES
-from step1_gemini_news_scoring_filtering import score_news_articles_step1
+from step1_personas_scoring import score_news_articles_step1
 from step1_5_event_clustering import EventClusteringEngine
 from step2_jina_full_article_fetching import JinaArticleFetcher, fetch_articles_parallel
 from step3_image_selection import select_best_image_for_cluster
@@ -406,11 +406,11 @@ def run_complete_pipeline():
                 print(f"   ⏭️ Cluster {cluster_id} already published (ID: {existing.data[0]['id']}), skipping...")
                 continue
             
-            # Use the HIGHEST Gemini score from Step 1 (from any source in cluster)
+            # Use the HIGHEST persona score from Step 1 (from any source in cluster)
             source_scores = [s.get('score', 0) for s in cluster_sources if s.get('score')]
-            article_score = max(source_scores) if source_scores else 500
+            article_score = max(source_scores) if source_scores else 50
             
-            print(f"   📊 Article score: {article_score}/1000 (highest from {len(cluster_sources)} source(s))")
+            print(f"   📊 Article score: {article_score}/100 (highest from {len(cluster_sources)} source(s))")
             
             # Get title and content (support both old and new field names from Claude)
             title = synthesized.get('title', synthesized.get('title_news', ''))
@@ -442,7 +442,7 @@ def run_complete_pipeline():
                 'components_order': selected,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
-                'ai_final_score': article_score,  # Importance score for sorting (0-1000)
+                'ai_final_score': article_score,  # Importance score for sorting (0-100)
                 # Image data from Step 3
                 'image_url': synthesized.get('image_url'),
                 'image_source': synthesized.get('image_source'),
@@ -720,6 +720,30 @@ HIGHLIGHT COUNTS:
   • Title: 2-3 highlights (main subject + key number/impact)
   • Bullets: 2-3 highlights per bullet (6-9 total across 3 bullets)
   • Content: 8-12 highlights distributed across all 5 paragraphs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 CRITICAL: FACTUAL ACCURACY (ZERO TOLERANCE FOR ERRORS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ACCURACY IS NON-NEGOTIABLE. Every fact must be verified against the sources.
+
+BEFORE WRITING, IDENTIFY AND LOCK:
+  1. COUNTRY/LOCATION: Which country/city is this about? Lock it. Never confuse.
+  2. KEY PEOPLE: Who are the main actors? Their exact names and roles.
+  3. ORGANIZATIONS: Which companies/governments/institutions are involved?
+  4. NUMBERS: What are the specific figures mentioned?
+  5. DATES/TIMING: When did this happen?
+
+ABSOLUTE RULES:
+  ✗ NEVER mix up countries (e.g., Spain vs Turkey, UK vs US)
+  ✗ NEVER confuse people's names or roles
+  ✗ NEVER invent facts not present in ANY source
+  ✗ NEVER combine facts from different unrelated events
+
+IF SOURCES CONFLICT:
+  • Use the fact mentioned by MOST sources
+  • Prefer more specific facts over vague ones
+  • Never blend contradictory facts into one statement
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
