@@ -1396,11 +1396,11 @@ export default function Home() {
               console.log('📊 Sorting news articles by score...');
               const sortedNews = sortArticlesByScore(newsArticles);
               
-              // Mark the first (highest-scored) article as BREAKING NEWS for demonstration
-              // This creates a visual distinction for must-read important news
-              if (sortedNews.length > 0) {
-                sortedNews[0].isImportant = true;
-                console.log('🚨 Marked first article as BREAKING NEWS:', sortedNews[0].title?.substring(0, 40));
+              // Log articles that qualify as important (score >= 850)
+              const importantArticles = sortedNews.filter(a => a.final_score >= 850);
+              if (importantArticles.length > 0) {
+                console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (score >= 850):`, 
+                  importantArticles.map(a => `${a.title?.substring(0, 30)}... (${a.final_score})`));
               }
               
               // Only add "all caught up" page if there are NO more articles to load
@@ -4761,8 +4761,8 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* IMPORTANT NEWS - Premium Visual Treatment */}
-                      {story.isImportant && (
+                      {/* IMPORTANT NEWS - Premium Visual Treatment for high-scoring articles (850+) */}
+                      {(story.final_score >= 850 || story.isImportant) && (
                         <>
                           {/* Left accent bar - full height */}
                           <div style={{
