@@ -62,20 +62,48 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     return 'night';
   };
 
-  // Get last visit info
+  // Get last visit info with precise time tracking
   const getLastVisitInfo = () => {
-    if (typeof window === 'undefined') return { hours: 24, period: 'day' };
+    if (typeof window === 'undefined') return { minutes: 0, hours: 0, text: 'just now' };
     try {
       const lastVisit = localStorage.getItem('tennews_last_visit');
-      if (!lastVisit) return { hours: 24, period: 'day' };
+      if (!lastVisit) return { minutes: 0, hours: 0, text: 'just now' };
       const now = Date.now();
       const lastTime = parseInt(lastVisit);
-      const hours = Math.floor((now - lastTime) / (1000 * 60 * 60));
-      return { hours: Math.max(1, hours), period: hours <= 1 ? 'hour' : hours <= 6 ? 'few hours' : 'day' };
+      const diffMs = now - lastTime;
+      const minutes = Math.floor(diffMs / (1000 * 60));
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      
+      // Generate precise time text
+      let text;
+      if (minutes < 1) {
+        text = 'just now';
+      } else if (minutes < 60) {
+        text = `in the last ${minutes} minute${minutes === 1 ? '' : 's'}`;
+      } else if (hours < 24) {
+        text = `in the last ${hours} hour${hours === 1 ? '' : 's'}`;
+      } else {
+        const days = Math.floor(hours / 24);
+        text = days === 1 ? 'since yesterday' : `in the last ${days} days`;
+      }
+      
+      return { minutes, hours, text };
     } catch {
-      return { hours: 24, period: 'day' };
+      return { minutes: 0, hours: 0, text: 'just now' };
     }
   };
+  
+  // Save current visit time to localStorage (runs once on mount)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Small delay to ensure we read the old value first for greeting
+      const timer = setTimeout(() => {
+        localStorage.setItem('tennews_last_visit', Date.now().toString());
+        console.log('✅ Saved new visit timestamp to localStorage');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Analyze stories for categories
   const analyzeStories = () => {
@@ -130,10 +158,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const analysis = analyzeStories();
     const lastVisit = getLastVisitInfo();
     
-    const timePeriod = lastVisit.hours <= 1 ? 'in the last hour' :
-                       lastVisit.hours <= 3 ? `in the last ${lastVisit.hours} hours` :
-                       lastVisit.hours <= 12 ? `in the last ${lastVisit.hours} hours` :
-                       'since yesterday';
+    // Use the precise time text from getLastVisitInfo
+    const timePeriod = lastVisit.text;
     
     const greetings = {
       morning: `Good morning${name}`,
