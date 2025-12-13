@@ -175,6 +175,23 @@ export default async function handler(req, res) {
         console.log(`⚠️ Article ${article.id} has NO detailed bullets in database`);
       }
 
+      // Parse five_ws (5 W's format) if it exists
+      let fiveWs = null;
+      console.log(`📋 Article ${article.id} raw five_ws:`, typeof article.five_ws, article.five_ws);
+      if (article.five_ws) {
+        try {
+          fiveWs = typeof article.five_ws === 'string'
+            ? JSON.parse(article.five_ws)
+            : article.five_ws;
+          console.log(`✅ Article ${article.id} has 5W's data:`, JSON.stringify(fiveWs));
+        } catch (e) {
+          console.error('Error parsing five_ws:', e);
+          fiveWs = null;
+        }
+      } else {
+        console.log(`⚠️ Article ${article.id} has NO five_ws in database`);
+      }
+
       return {
         id: article.id,
         // Support both old 'title' and new 'title_news' fields
@@ -225,6 +242,8 @@ export default async function handler(req, res) {
         // Bullets - standard (60-80 chars) and detailed (90-120 chars)
         summary_bullets_news: summaryBulletsNews,
         summary_bullets_detailed: summaryBulletsDetailed,
+        // 5 W's format (WHO/WHAT/WHEN/WHERE/WHY)
+        five_ws: fiveWs,
         
         // Legacy fields for backward compatibility (fallback to new fields)
         detailed_text: article.content_news || article.article || article.summary || article.description || '',

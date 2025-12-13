@@ -11,16 +11,17 @@ echo "============================================================"
 echo "🚀 TEN NEWS - LIVE CLUSTERED NEWS SYSTEM"
 echo "============================================================"
 echo ""
-echo "📊 This system will run the COMPLETE 8-STEP WORKFLOW:"
+echo "📊 This system will run the COMPLETE 9-STEP WORKFLOW:"
 echo "   Step 0: 📰 Fetch RSS from 171 premium sources"
-echo "   Step 1: 🎯 Score & filter with 242 Personas (≥60 points)"
+echo "   Step 1: 🎯 Score & filter with Gemini V8.2 (≥70 points)"
 echo "   Step 1.5: 🔗 Cluster similar events"
-echo "   Step 2: 📡 Fetch full article text with Jina"
-echo "   Step 3: 📸 Smart image selection (NEW)"
+echo "   Step 2: 📡 Fetch full article text with Bright Data"
+echo "   Step 3: 📸 Smart image selection"
 echo "   Step 4: ✍️  Synthesize multi-source articles with Claude"
 echo "   Step 5: 🔍 Component selection & Gemini search"
 echo "   Steps 6-7: 📊 Generate components (timeline/details/graph)"
-echo "   Step 8: 🌍 Publish to Supabase"
+echo "   Step 8: 🔬 Fact verification (catch hallucinations)"
+echo "   Step 9: 🌍 Publish to Supabase"
 echo "   🔄 Repeat every 5 minutes"
 echo ""
 echo "🛑 Press Ctrl+C to stop the system"
@@ -71,8 +72,9 @@ fi
 if [ -z "$PERPLEXITY_API_KEY" ]; then
     echo "⚠️  Missing PERPLEXITY_API_KEY (optional - using Gemini for search)"
 fi
-if [ -z "$SCRAPINGBEE_API_KEY" ]; then
-    echo "⚠️  Missing SCRAPINGBEE_API_KEY (will use Jina as fallback)"
+if [ -z "$BRIGHTDATA_API_KEY" ]; then
+    echo "❌ Missing BRIGHTDATA_API_KEY"
+    missing_keys=1
 fi
 if [ -z "$SUPABASE_URL" ]; then
     echo "❌ Missing SUPABASE_URL"

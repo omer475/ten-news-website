@@ -1,16 +1,17 @@
 """
-COMPLETE 8-STEP NEWS WORKFLOW WITH CLUSTERING
+COMPLETE 9-STEP NEWS WORKFLOW WITH CLUSTERING
 ==============================================
 
 Step 0: RSS Feed Collection (171 sources)
-Step 1: Personas Scoring & Filtering (score ≥60)
+Step 1: Gemini V8.2 Scoring & Filtering (score ≥70)
 Step 1.5: Event Clustering (clusters similar articles)
-Step 2: Jina Full Article Fetching (all sources in cluster)
+Step 2: Bright Data Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
 Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
 Step 5: Component Selection & Gemini Search (decides which components + fetches data)
 Steps 6-7: Claude Component Generation (timeline, details, graph)
-Step 8: Publishing to Supabase
+Step 8: Fact Verification (catches hallucinations, regenerates if needed)
+Step 9: Publishing to Supabase
 """
 
 import time
@@ -26,14 +27,15 @@ import urllib3
 
 # Import all pipeline components
 from rss_sources import ALL_SOURCES
-from step1_personas_scoring import score_news_articles_step1
+from step1_gemini_news_scoring_filtering import score_news_articles_step1
 from step1_5_event_clustering import EventClusteringEngine
-from step2_jina_full_article_fetching import JinaArticleFetcher, fetch_articles_parallel
+from step2_brightdata_full_article_fetching import BrightDataArticleFetcher, fetch_articles_parallel
 from step3_image_selection import select_best_image_for_cluster
 from step4_multi_source_synthesis import MultiSourceSynthesizer
 from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import ClaudeComponentWriter
+from step8_fact_verification import FactVerifier
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -53,18 +55,21 @@ def get_supabase_client():
 
 supabase = get_supabase_client()
 clustering_engine = EventClusteringEngine()
-jina_fetcher = JinaArticleFetcher()
 
 # Get API keys
 gemini_key = os.getenv('GEMINI_API_KEY')
 anthropic_key = os.getenv('ANTHROPIC_API_KEY')
-scrapingbee_key = os.getenv('SCRAPINGBEE_API_KEY')
+brightdata_key = os.getenv('BRIGHTDATA_API_KEY')
 
-if not all([gemini_key, anthropic_key]):
-    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, ANTHROPIC_API_KEY)")
+if not all([gemini_key, anthropic_key, brightdata_key]):
+    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, ANTHROPIC_API_KEY, BRIGHTDATA_API_KEY)")
+
+# Initialize Bright Data fetcher
+brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
 
 component_selector = GeminiComponentSelector(api_key=gemini_key)
 component_writer = ClaudeComponentWriter(api_key=anthropic_key)
+fact_verifier = FactVerifier(api_key=anthropic_key)
 
 
 # ==========================================
@@ -190,10 +195,10 @@ def fetch_rss_articles(max_articles_per_source=10):
 # ==========================================
 
 def run_complete_pipeline():
-    """Run the complete 7-step clustered news workflow"""
+    """Run the complete 9-step clustered news workflow"""
     
     print("\n" + "="*80)
-    print("🚀 COMPLETE 8-STEP CLUSTERED NEWS WORKFLOW")
+    print("🚀 COMPLETE 9-STEP CLUSTERED NEWS WORKFLOW")
     print("="*80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
@@ -298,8 +303,8 @@ def run_complete_pipeline():
             cluster_sources = sources.data
             print(f"   Sources in cluster: {len(cluster_sources)}")
             
-            # STEP 2: ScrapingBee Full Article Fetching (all sources)
-            print(f"\n📡 STEP 2: SCRAPINGBEE FULL ARTICLE FETCHING")
+            # STEP 2: Bright Data Full Article Fetching (all sources)
+            print(f"\n📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING")
             print(f"   Fetching full text for {len(cluster_sources)} sources...")
             
             urls = [s['url'] for s in cluster_sources]
@@ -310,8 +315,16 @@ def run_complete_pipeline():
             for source in cluster_sources:
                 source['full_text'] = url_to_text.get(source['url'], source.get('content', ''))
             
-            success_count = len([s for s in cluster_sources if s.get('full_text')])
+            success_count = len([s for s in cluster_sources if s.get('full_text') and len(s.get('full_text', '')) > 100])
             print(f"   ✅ Fetched full text: {success_count}/{len(cluster_sources)}")
+            
+            # STRICT: Require actual article content - no description fallback
+            # If Bright Data couldn't fetch content, eliminate this cluster
+            if success_count == 0:
+                print(f"   ❌ ELIMINATED: No article content fetched (blocked by site)")
+                print(f"      Reason: Cannot write accurate article without source content")
+                print(f"      Skipping cluster {cluster_id}")
+                continue
             
             # STEP 3: Smart Image Selection
             print(f"\n📸 STEP 3: SMART IMAGE SELECTION")
@@ -353,10 +366,11 @@ def run_complete_pipeline():
             # STEP 5: Component Selection & Gemini Search
             print(f"\n🔍 STEP 5: COMPONENT SELECTION & GEMINI SEARCH")
             
-            # Select components based on synthesized title + full content
+            # Select components based on synthesized title + summary bullets
+            bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
             article_for_selection = {
                 'title': synthesized['title_news'],
-                'text': synthesized['content_news']  # Full 200-word article from Claude
+                'text': bullets_text  # Use summary bullets as text context
             }
             
             component_result = component_selector.select_components(article_for_selection)
@@ -365,10 +379,10 @@ def run_complete_pipeline():
             
             context_data = {}
             if selected and gemini_key:
-                # Get context using title and summary (now using Gemini)
+                # Get context using title and summary bullets (now using Gemini)
                 gemini_result = search_gemini_context(
                     synthesized['title_news'], 
-                    synthesized['content_news'][:500]  # Use first 500 chars as summary
+                    bullets_text  # Use summary bullets for context search
                 )
                 # Use same context for all selected components
                 for component in selected:
@@ -397,8 +411,81 @@ def run_complete_pipeline():
                     components = {k: v for k, v in components.items() if v is not None}
                     print(f"   ✅ Generated: {', '.join(components.keys())}")
             
-            # STEP 8: Publishing to Supabase
-            print(f"\n💾 STEP 8: PUBLISHING TO SUPABASE")
+            # STEP 8: Fact Verification (Hallucination Check)
+            print(f"\n🔍 STEP 8: FACT VERIFICATION")
+            print(f"   Checking for hallucinations in generated content...")
+            
+            # Try up to 3 times: original + 2 regenerations
+            max_verification_attempts = 3
+            verification_passed = False
+            verification_feedback = None  # Store feedback for regeneration
+            
+            for attempt in range(max_verification_attempts):
+                if attempt > 0:
+                    print(f"\n   🔄 REGENERATING ARTICLE (Attempt {attempt + 1}/{max_verification_attempts})")
+                    print(f"      Re-synthesizing with verification feedback...")
+                    
+                    # Pass verification feedback to help Claude fix the specific issues
+                    synthesized = synthesize_multisource_article(
+                        cluster_sources, 
+                        cluster_id,
+                        verification_feedback=verification_feedback
+                    )
+                    
+                    if not synthesized:
+                        print(f"      ❌ Regeneration failed")
+                        continue
+                    
+                    # Re-add image data after regeneration
+                    if selected_image:
+                        synthesized['image_url'] = selected_image['url']
+                        synthesized['image_source'] = selected_image['source_name']
+                        synthesized['image_score'] = selected_image['quality_score']
+                    
+                    print(f"      ✅ New article: {synthesized.get('title_news', '')[:50]}...")
+                
+                # Verify the article
+                verified, discrepancies, verification_summary = fact_verifier.verify_article(
+                    cluster_sources, 
+                    synthesized
+                )
+                
+                if verified:
+                    verification_passed = True
+                    print(f"   ✅ Verification PASSED: {verification_summary}")
+                    break
+                else:
+                    print(f"   ⚠️  Verification FAILED (Attempt {attempt + 1}/{max_verification_attempts})")
+                    print(f"      Summary: {verification_summary}")
+                    if discrepancies:
+                        print(f"      Discrepancies: {len(discrepancies)}")
+                        for i, d in enumerate(discrepancies[:3], 1):  # Show up to 3 issues
+                            issue = d.get('issue', 'Unknown')
+                            print(f"         {i}. {issue[:80]}...")
+                    
+                    # Store feedback for next regeneration attempt
+                    verification_feedback = {
+                        'discrepancies': discrepancies,
+                        'summary': verification_summary
+                    }
+            
+            if not verification_passed:
+                print(f"\n   ❌ ELIMINATED: Failed verification after {max_verification_attempts} attempts")
+                print(f"      Cluster {cluster_id} will not be published")
+                continue
+            
+            # Re-add image data (in case of regeneration)
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+            else:
+                synthesized['image_url'] = None
+                synthesized['image_source'] = None
+                synthesized['image_score'] = 0
+            
+            # STEP 9: Publishing to Supabase
+            print(f"\n💾 STEP 9: PUBLISHING TO SUPABASE")
             
             # Check if article for this cluster already exists (prevent duplicates)
             existing = supabase.table('published_articles').select('id').eq('cluster_id', cluster_id).execute()
@@ -412,30 +499,26 @@ def run_complete_pipeline():
             
             print(f"   📊 Article score: {article_score}/100 (highest from {len(cluster_sources)} source(s))")
             
-            # Get title and content (support both old and new field names from Claude)
+            # Get title
             title = synthesized.get('title', synthesized.get('title_news', ''))
-            content = synthesized.get('content', synthesized.get('content_news', ''))
             
-            # Get bullets (support both old and new field names)
-            bullets_standard = synthesized.get('summary_bullets_standard', synthesized.get('summary_bullets_news', []))
-            bullets_detailed = synthesized.get('summary_bullets_detailed', [])
+            # Get bullets (new format: summary_bullets, 80-100 chars)
+            bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
             
-            # If detailed bullets are empty, use standard bullets as fallback
-            if not bullets_detailed:
-                bullets_detailed = bullets_standard
+            # Get 5 W's (new format: WHO/WHAT/WHEN/WHERE/WHY)
+            five_ws = synthesized.get('five_ws', {})
             
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],  # Primary source URL
                 'source': cluster_sources[0]['source_name'],
                 'category': synthesized.get('category', 'Other'),
-                # Title and content
+                # Title
                 'title_news': title,
-                'content_news': content,
-                # Standard bullets (60-80 chars)
-                'summary_bullets_news': bullets_standard,
-                # Detailed bullets (90-120 chars) - for language toggle
-                'summary_bullets_detailed': bullets_detailed,
+                # Summary bullets (80-100 chars) - narrative format
+                'summary_bullets_news': bullets,
+                # 5 W's - structured quick-reference (WHO/WHAT/WHEN/WHERE/WHY)
+                'five_ws': five_ws,
                 'timeline': components.get('timeline'),
                 'details': components.get('details'),
                 'graph': components.get('graph'),
@@ -473,9 +556,14 @@ def run_complete_pipeline():
 # MULTI-SOURCE SYNTHESIS
 # ==========================================
 
-def synthesize_multisource_article(sources: List[Dict], cluster_id: int) -> Optional[Dict]:
+def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
     Synthesize one article from multiple sources using Claude
+    
+    Args:
+        sources: List of source articles
+        cluster_id: Cluster ID
+        verification_feedback: Optional dict with 'discrepancies' and 'summary' from failed verification
     """
     import anthropic
     import json
@@ -494,16 +582,52 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int) -> Opti
         for i, s in enumerate(limited_sources)
     ])
     
-    prompt = f"""You are writing a news article by synthesizing information from {len(limited_sources)} sources about the same event.
+    # Add verification feedback section if provided (for regeneration after failed verification)
+    feedback_section = ""
+    if verification_feedback:
+        discrepancies = verification_feedback.get('discrepancies', [])
+        summary = verification_feedback.get('summary', '')
+        
+        if discrepancies:
+            feedback_section = f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ PREVIOUS VERIFICATION FAILED - ERRORS TO FIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VERIFICATION SUMMARY: {summary}
+
+ISSUES FOUND IN PREVIOUS VERSION:
+"""
+            for i, d in enumerate(discrepancies, 1):
+                feedback_section += f"""
+{i}. ERROR TYPE: {d.get('type', 'Unknown')}
+   ISSUE: {d.get('issue', 'N/A')}
+   WHAT YOU WROTE: {d.get('generated_claim', 'N/A')}
+   WHAT SOURCES SAY: {d.get('source_fact', 'N/A')}
+"""
+            feedback_section += """
+⚠️ CRITICAL: Fix these specific errors in your new version. Stick STRICTLY to the facts in the sources.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"""
+    
+    prompt = f"""You are synthesizing information from {len(limited_sources)} sources about the same event.
 
 SOURCES:
 {sources_text}
-
+{feedback_section}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📰 YOUR ROLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-You are a professional news editor for Ten News, synthesizing multiple source articles into ONE comprehensive article. Your goal: Create a cohesive, engaging, trustworthy news story that combines the best information from ALL sources.
+You are a professional news editor for Ten News, synthesizing multiple source articles into a concise news summary. Your goal: Create engaging, trustworthy headlines and summaries that combine the best information from ALL sources.
+
+{"⚠️ IMPORTANT: This is a REGENERATION after verification failure. Address the specific errors listed above and stick strictly to the source facts." if verification_feedback else ""}
+
+You will produce:
+  • TITLE: Punchy headline (40-60 chars)
+  • BULLETS: 3 narrative bullets for reading (80-100 chars each)
+  • 5 W's: Structured quick-reference factsheet (WHO/WHAT/WHEN/WHERE/WHY)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✍️ CORE WRITING PRINCIPLES
@@ -541,70 +665,75 @@ You are a professional news editor for Ten News, synthesizing multiple source ar
 📝 TITLE REQUIREMENTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-LENGTH: 40-60 characters (8-12 words). Truncates at 40 chars on mobile.
+LENGTH: 40-60 characters (8-10 words)
 
 STRUCTURE: [Subject] + [Strong Verb] + [Specific Detail/Number]
 
-FORMULA CHECKLIST:
+CHECKLIST:
   ✓ Start with the subject (WHO or WHAT) - never start with a verb
   ✓ Strong verb appears in first 5 words
   ✓ Include a specific number when relevant (odd numbers outperform even)
   ✓ Use present tense, active voice
   ✓ Omit articles (a, an, the) to save space
   ✓ Use concrete, specific language
+  ✓ 2-3 **bold** highlights
 
 POWER VERBS TO USE:
-  • Impact: Cuts, Slashes, Drops, Falls, Crashes, Plunges
-  • Growth: Surges, Soars, Jumps, Climbs, Rises, Gains
-  • Action: Launches, Unveils, Reveals, Blocks, Bans, Rejects
-  • Conflict: Warns, Threatens, Faces, Battles, Fights
+  • Impact: Cuts, Slashes, Drops, Falls, Crashes, Plunges, Tumbles
+  • Growth: Surges, Soars, Jumps, Climbs, Rises, Gains, Spikes
+  • Action: Launches, Unveils, Reveals, Blocks, Bans, Rejects, Halts
+  • Conflict: Warns, Threatens, Faces, Battles, Fights, Clashes
 
 WORDS TO AVOID:
   • Weak verbs: announces, says, reports, notes, indicates
   • Vague words: major, significant, important, various, some
   • Clickbait: shocking, incredible, you won't believe
 
-ENGAGEMENT WITHOUT CLICKBAIT:
-  Research shows negative words increase clicks by 2.3% each, but sensationalism erodes trust.
-  Use ONE moderate emotional trigger per headline without exaggeration.
-  ✓ "CEO Warns of 'Worst Crisis in Company History'" (factual, direct)
-  ✗ "SHOCKING: You Won't Believe What CEO Just Said" (clickbait)
+NAME RECOGNITION RULES:
+  For GLOBALLY KNOWN figures (no title needed):
+    • Elon Musk, Jeff Bezos, Mark Zuckerberg
+    • Trump, Biden, Putin, Macron, Xi Jinping
+    • Taylor Swift, Cristiano Ronaldo
+    ✓ "**Musk** Unveils New Tesla Roadster"
+
+  For LESSER-KNOWN figures (MUST include title/role):
+    • Regional politicians, governors, ministers
+    • Lesser-known CEOs, executives
+    • Foreign leaders not widely recognized globally
+    ✓ "**SD Governor Noem** Testifies on Global Security Threats"
+    ✓ "**Moldovan President Sandu** Meets with EU Leaders"
+    ✓ "**Rivian CEO RJ Scaringe** Warns of EV Price Wars"
+    ✗ "**Noem** Testifies..." (unclear who this is)
+    ✗ "**Sandu** Meets..." (unclear who this is)
+
+  RULE: If a global reader might ask "who is this?", add the title.
 
 EXAMPLES:
-  ✓ "Tesla Cuts 10,000 Jobs Amid 15% Sales Drop" (52 chars)
-  ✓ "UK Raises Skilled Worker Visa Salary to £38,700" (48 chars)
-  ✓ "Fed Holds Rates at 5.5%, Signals 3 Cuts in 2024" (48 chars)
-  
-  ✗ "There Are Going to Be Some Changes to Policy" (vague, passive)
-  ✗ "A Major Company Announces Important News" (abstract, weak verb)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TITLE FORMAT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Use strong, professional vocabulary:
-  "Bitcoin Plummets 8% as Crypto Fear Index Hits 2022 Lows"
-  
-Use action verbs: Plummets, Falls, Surges, Rises, Unveils, Shows, Sparks, Starts
+  ✓ "**Tesla** Cuts **14,000** Jobs Amid Global Sales Slump" (50 chars)
+  ✓ "**Fed** Holds Rates at **5.5%**, Signals 3 Cuts for 2024" (49 chars)
+  ✓ "**Bitcoin** Crashes **15%** as Mt. Gox Repayments Begin" (48 chars)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔹 SUMMARY BULLETS (Exactly 3 bullets)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-LENGTH: Under 80 characters each (10-15 words per bullet)
+PURPOSE: Narrative summary for readers who want context and flow.
+
+LENGTH: 80-100 characters per bullet (15-20 words)
 
 STRUCTURE (Inverted Pyramid):
-  • Bullet 1: WHAT happened (the core news fact not in title)
-  • Bullet 2: WHO/WHERE/WHEN (key context and details)
+  • Bullet 1: WHAT happened (the core news fact not already in title)
+  • Bullet 2: WHO/HOW (key players, names, method, cause)
   • Bullet 3: WHY IT MATTERS (significance, impact, what's next)
 
-WRITING RULES FOR BULLETS:
+WRITING RULES:
   ✓ Each bullet provides NEW information not in the title
   ✓ Include specific numbers in at least 2 bullets
   ✓ Use parallel structure (all bullets start with same part of speech)
   ✓ Active voice, present tense
   ✓ Front-load important words
   ✓ All bullets approximately equal length
+  ✓ 2-3 **bold** highlights per bullet
 
 PARALLEL STRUCTURE EXAMPLE:
   ✓ GOOD (all start with subject + verb):
@@ -617,85 +746,64 @@ PARALLEL STRUCTURE EXAMPLE:
     • A 2% market drop followed
     • Economists are predicting more increases
 
-WHAT TO INCLUDE:
-  ✓ Key facts (numbers, names, outcomes)
-  ✓ Direct impact on readers
-  ✓ Unexpected or newsworthy elements
-
-WHAT TO EXCLUDE:
-  ✗ Background readers likely know
-  ✗ Information already in the title
-  ✗ Vague statements without specifics
-
-EXAMPLES:
-  ✓ "Company announces 10,000 layoffs planned for Q2" (48 chars)
-  ✓ "Decision follows three consecutive quarters of losses" (54 chars)
-  ✓ "Remaining 45,000 workers face restructuring review" (51 chars)
-
-  ✗ "The company said stores will close" (too vague)
-  ✗ "This will affect many jobs" (no specifics)
-  ✗ "It's because of economic conditions" (abstract)
+EXAMPLES (80-100 chars):
+  • "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia**" (95 chars)
+  • "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD** after Q4 loss" (93 chars)
+  • "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value this week" (89 chars)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SUMMARY_BULLETS_NEWS vs SUMMARY_BULLETS_DETAILED
+📋 5 W's QUICK REFERENCE (Exactly 5 fields)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-You MUST generate TWO versions of bullet summaries:
+PURPOSE: Structured factsheet for quick scanning and at-a-glance reference.
 
-SUMMARY_BULLETS_NEWS (Standard - 60-80 chars each):
-  • Short, scannable bullet points
-  • 10-15 words each
-  
-SUMMARY_BULLETS_DETAILED (Detailed - 90-120 chars each):
-  • Same info, expanded with more context
-  • 15-22 words each
-
-EXAMPLE:
-  STANDARD: "Layoffs hit **10%** of workforce across **US**, **Europe**, **Asia**"
-  DETAILED: "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce, hitting factories in **US**, **Europe**, and **Asia**"
-
-SUMMARY_BULLETS_NEWS (Standard 60-80 chars):
-  • "Federal Reserve maintains hawkish stance despite market turbulence"
-
-SUMMARY_BULLETS_DETAILED (Expanded 90-120 chars):
-  • "Federal Reserve maintains hawkish stance despite market turbulence, signaling more rate hikes ahead"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📄 ARTICLE CONTENT (220-280 words, 5 paragraphs)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-STRUCTURE (Inverted Pyramid):
-  Para 1 (40-50w): The Lead - WHO, WHAT, WHEN, WHERE (most critical facts)
-  Para 2 (45-55w): Key Details - HOW, specific numbers, named sources
-  Para 3 (45-55w): Context - Background needed to understand the story
-  Para 4 (45-55w): Supporting Info - Additional facts, reactions, quotes
-  Para 5 (40-50w): Implications - What happens next, broader significance
+STRUCTURE:
+  • WHO: Key people and organizations involved (20-50 chars)
+  • WHAT: The core action or event (30-60 chars)
+  • WHEN: Specific timing (15-40 chars)
+  • WHERE: Location(s) affected (20-50 chars)
+  • WHY: Cause or reason (30-60 chars)
 
 WRITING RULES:
-  ✓ Active voice throughout
-  ✓ Present tense for current news, past tense for completed actions
-  ✓ Sentences under 25 words
-  ✓ One idea per sentence
-  ✓ Include 5+ specific numbers
-  ✓ Include 3+ named entities (people, organizations, places)
-  ✓ No editorializing or opinion
-  ✓ No "according to" or source attribution phrases
+  ✓ Short, punchy phrases (not full sentences)
+  ✓ Most important entity/fact first in each field
+  ✓ Include specific numbers where relevant
+  ✓ 1-2 **bold** highlights per field
+  ✓ No repetition across fields
+  ✓ Can omit articles and verbs for brevity
 
-READABILITY TARGET:
-  Flesch Reading Ease: 60-70 (easily understood by average reader)
-  Grade Level: 7th-8th grade maximum
-  Use common vocabulary, short sentences, active voice
+EXAMPLE:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONTENT_NEWS STYLE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  five_ws: {{
+    "who": "**Tesla**, CEO **Elon Musk**",
+    "what": "Cutting **14,000** jobs (**10%** of workforce)",
+    "when": "Announced **Wednesday**, effective **Q2 2024**",
+    "where": "**US**, **Europe**, and **Asia** factories",
+    "why": "Overcapacity and **BYD** competition after Q4 sales loss"
+  }}
 
-AP/Reuters professional style:
-  • Full vocabulary range
-  • Complex sentence structures allowed (under 25 words)
-  • Industry terminology acceptable
-  • Active voice preferred
-  • Present tense for current news
+MORE EXAMPLES BY CATEGORY:
+
+  FINANCE:
+    "who": "**Federal Reserve**, Chair **Jerome Powell**",
+    "what": "Holds interest rates at **5.5%**",
+    "when": "**Wednesday**, sixth consecutive meeting",
+    "where": "**US** economy, global markets",
+    "why": "Inflation remains above **2%** target"
+
+  TECH:
+    "who": "**Apple**, CEO **Tim Cook**",
+    "what": "Launches **iPhone 16** with **AI** features",
+    "when": "**September 12**, available **September 20**",
+    "where": "**29 countries** at launch",
+    "why": "Competing with **Samsung** Galaxy AI push"
+
+  CRYPTO:
+    "who": "**Mt. Gox** creditors, **Bitcoin** holders",
+    "what": "**$9B** in Bitcoin repayments begin",
+    "when": "Starting **July 2024**, over 90 days",
+    "where": "Global, primarily **Japan** and **US**",
+    "why": "Court-ordered distribution after 2014 hack"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✨ HIGHLIGHTING REQUIREMENTS (**BOLD** SYNTAX)
@@ -717,52 +825,53 @@ WHAT NOT TO HIGHLIGHT:
   ✗ Generic terms: officials, experts, sources
 
 HIGHLIGHT COUNTS:
-  • Title: 2-3 highlights (main subject + key number/impact)
-  • Bullets: 2-3 highlights per bullet (6-9 total across 3 bullets)
-  • Content: 8-12 highlights distributed across all 5 paragraphs
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 CRITICAL: FACTUAL ACCURACY (ZERO TOLERANCE FOR ERRORS)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ACCURACY IS NON-NEGOTIABLE. Every fact must be verified against the sources.
-
-BEFORE WRITING, IDENTIFY AND LOCK:
-  1. COUNTRY/LOCATION: Which country/city is this about? Lock it. Never confuse.
-  2. KEY PEOPLE: Who are the main actors? Their exact names and roles.
-  3. ORGANIZATIONS: Which companies/governments/institutions are involved?
-  4. NUMBERS: What are the specific figures mentioned?
-  5. DATES/TIMING: When did this happen?
-
-ABSOLUTE RULES:
-  ✗ NEVER mix up countries (e.g., Spain vs Turkey, UK vs US)
-  ✗ NEVER confuse people's names or roles
-  ✗ NEVER invent facts not present in ANY source
-  ✗ NEVER combine facts from different unrelated events
-
-IF SOURCES CONFLICT:
-  • Use the fact mentioned by MOST sources
-  • Prefer more specific facts over vague ones
-  • Never blend contradictory facts into one statement
+  • Title: 2-3 highlights
+  • Bullets: 2-3 highlights per bullet (6-9 total)
+  • 5 W's: 1-2 highlights per field (5-10 total)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {{
-  "title_news": "40-60 char title with **2-3 bold** terms, strong verb, specific detail",
-  "summary_bullets_news": [
-    "WHAT: 60-80 chars with **2-3 highlights**",
-    "WHO/WHERE/WHEN: 60-80 chars with **2-3 highlights**",
-    "WHY IT MATTERS: 60-80 chars with **2-3 highlights**"
+  "title": "40-60 char title with **2-3 bold** terms",
+  "summary_bullets": [
+    "WHAT: 80-100 chars, **2-3 highlights**",
+    "WHO/HOW: 80-100 chars, **2-3 highlights**",
+    "WHY IT MATTERS: 80-100 chars, **2-3 highlights**"
   ],
-  "summary_bullets_detailed": [
-    "WHAT: 90-120 chars, expanded with more context, **2-3 highlights**",
-    "WHO/WHERE/WHEN: 90-120 chars, expanded with more context, **2-3 highlights**",
-    "WHY IT MATTERS: 90-120 chars, expanded with more context, **2-3 highlights**"
-  ],
-  "content_news": "220-280 words, 5 paragraphs, inverted pyramid, **8-12 highlights** distributed throughout, AP/Reuters style",
+  "five_ws": {{
+    "who": "Key people/orgs, 20-50 chars, **1-2 highlights**",
+    "what": "Core action, 30-60 chars, **1-2 highlights**",
+    "when": "Timing, 15-40 chars, **1-2 highlights**",
+    "where": "Location(s), 20-50 chars, **1-2 highlights**",
+    "why": "Cause/reason, 30-60 chars, **1-2 highlights**"
+  }},
   "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
+}}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 COMPLETE EXAMPLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{
+  "title": "**Tesla** Cuts **14,000** Jobs Amid Global EV Sales Slump",
+
+  "summary_bullets": [
+    "Layoffs eliminate **10%** of **Tesla's** 140,000 global workforce across **US**, **Europe**, and **Asia** factories",
+    "CEO **Elon Musk** blames overcapacity and intensifying price war with Chinese rival **BYD** after Q4 sales loss",
+    "Stock tumbles **8%** to **$165** in after-hours trading, erasing **$50B** in market value this week alone"
+  ],
+
+  "five_ws": {{
+    "who": "**Tesla**, CEO **Elon Musk**",
+    "what": "Cutting **14,000** jobs (**10%** of workforce)",
+    "when": "Announced **Wednesday**, effective **Q2 2024**",
+    "where": "**US**, **Europe**, and **Asia** factories",
+    "why": "Overcapacity and **BYD** competition after Q4 sales loss"
+  }},
+
+  "category": "Business"
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -774,31 +883,23 @@ TITLE:
   □ Active voice, present tense
   □ Strong verb in first 5 words
   □ Specific number included
-  □ No articles (a, an, the)
   □ 2-3 highlights
 
-BULLETS STANDARD (summary_bullets_news):
+BULLETS:
   □ Exactly 3 bullets
-  □ Each 60-80 characters
+  □ Each 80-100 characters
   □ Bullet 1 = What happened
-  □ Bullet 2 = Key context
+  □ Bullet 2 = Who/How
   □ Bullet 3 = Why it matters
+  □ Parallel structure
   □ 2-3 highlights per bullet
 
-BULLETS DETAILED (summary_bullets_detailed):
-  □ Exactly 3 bullets  
-  □ Each 90-120 characters
-  □ Same info as standard, expanded with more detail
-  □ 2-3 highlights per bullet
-
-CONTENT:
-  □ 220-280 words
-  □ 5 paragraphs (inverted pyramid)
-  □ 5+ specific numbers
-  □ 3+ named entities
-  □ Sentences under 25 words
-  □ Active voice throughout
-  □ 8-12 highlights distributed evenly
+5 W's:
+  □ All 5 fields completed (WHO/WHAT/WHEN/WHERE/WHY)
+  □ Short phrases, not full sentences
+  □ Specific facts in each field
+  □ 1-2 highlights per field
+  □ No repetition across fields
 
 Return ONLY valid JSON, no markdown, no explanations."""
     
@@ -829,9 +930,12 @@ Return ONLY valid JSON, no markdown, no explanations."""
             # Parse JSON
             result = json.loads(response_text)
             
-            # Validate required fields
-            required = ['title_news', 'summary_bullets_news', 'summary_bullets_detailed', 'content_news']
+            # Validate required fields (new format with 5W's - no content field)
+            required = ['title', 'summary_bullets', 'five_ws', 'category']
             if all(k in result for k in required):
+                # Map to old field names for backward compatibility
+                result['title_news'] = result['title']
+                result['summary_bullets_news'] = result['summary_bullets']
                 return result
             else:
                 missing = [k for k in required if k not in result]
@@ -881,16 +985,17 @@ def main():
     """Run continuous workflow"""
     
     print("\n" + "="*80)
-    print("🚀 COMPLETE 8-STEP CLUSTERED NEWS SYSTEM")
+    print("🚀 COMPLETE 9-STEP CLUSTERED NEWS SYSTEM")
     print("="*80)
     print("\nThis system will:")
     print("  📰 Fetch RSS from 171 sources")
-    print("  🎯 Score with Gemini")
+    print("  🎯 Score with Gemini V8.2")
     print("  🔗 Cluster similar events")
     print("  📡 Fetch full article text")
     print("  ✍️  Synthesize multi-source articles")
     print("  🔍 Search for context")
     print("  📊 Generate components")
+    print("  🔬 Verify facts (catch hallucinations)")
     print("  💾 Publish to Supabase")
     print("\nPress Ctrl+C to stop")
     print("="*80)

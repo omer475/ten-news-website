@@ -49,9 +49,41 @@ export default function Home() {
   // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
 
-  // Language mode for summaries (advanced vs B2)
-  const [languageMode, setLanguageMode] = useState({});  // Track language mode per article
+  // Language mode for summaries (advanced vs B2) - GLOBAL setting for all articles
+  const [languageMode, setLanguageMode] = useState('advanced');  // 'advanced' = bullets, 'b2' = 5W's
   const [showLanguageOptions, setShowLanguageOptions] = useState({});  // Track dropdown visibility per article
+
+  // Safe area color state - for dynamic notch/home indicator colors
+  const [safeAreaColor, setSafeAreaColor] = useState('#ffffff');
+
+  // Update safe area color when current article changes
+  useEffect(() => {
+    const currentStory = stories[currentIndex];
+    const isImportant = currentStory?.final_score >= 850 || currentStory?.isImportant || false;
+    const newColor = '#ffffff'; // Always white - important news only has red accent lines
+    
+    console.log(`🎨 Safe Area Update: index=${currentIndex}, title="${currentStory?.title?.substring(0, 30) || 'Opening'}...", score=${currentStory?.final_score || 'N/A'}, isImportant=${isImportant}, color=${newColor}`);
+    
+    // Update state
+    setSafeAreaColor(newColor);
+    
+    // Also update the theme-color meta tag directly for iOS Safari
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', newColor);
+    }
+    
+    // Update apple-mobile-web-app-status-bar-style
+    const statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (statusBarMeta) {
+      statusBarMeta.setAttribute('content', isImportant ? 'black' : 'default');
+    }
+    
+    // Also update body background for the safe area effect on some browsers
+    document.body.style.backgroundColor = newColor;
+    document.documentElement.style.backgroundColor = newColor;
+    
+  }, [currentIndex, stories]);
 
   // Close language dropdown when clicking outside
   useEffect(() => {
@@ -125,13 +157,7 @@ export default function Home() {
         return;
       }
       
-      // If detailed text is showing for current article, swipe right returns to summary
-      if (showDetailedText[currentIndex] && isRightSwipe) {
-        setShowDetailedText(prev => ({ ...prev, [currentIndex]: false }));
-        return;
-      }
-      
-      // No more bullet/summary toggle - only detailed text navigation
+      // Swipe navigation - no detailed text to handle anymore
     }
   };
 
@@ -147,10 +173,7 @@ export default function Home() {
     setSelectedArticle(null);
   };
 
-  // Function to toggle detailed text for current article
-  const toggleDetailedText = (storyIndex) => {
-    setShowDetailedText(prev => ({ ...prev, [storyIndex]: !prev[storyIndex] }));
-  };
+  // toggleDetailedText removed - now using language mode toggle instead
 
   // Helper function to count available components for a story
   const getAvailableComponentsCount = (story) => {
@@ -1100,7 +1123,14 @@ export default function Home() {
               title_news: article.title_news || null,
               content_news: article.content_news || null,
               summary_bullets_news: article.summary_bullets_news || null,
-              summary_bullets_detailed: article.summary_bullets_detailed || null,
+              // Parse five_ws if it's a string
+              five_ws: (() => {
+                let fw = article.five_ws || null;
+                if (typeof fw === 'string') {
+                  try { fw = JSON.parse(fw); } catch (e) { fw = null; }
+                }
+                return fw;
+              })(),
               detailed_text: article.detailed_text || article.content_news || null,
               summary_bullets: article.summary_bullets || article.summary_bullets_news || [],
               details: sampleDetails,
@@ -1221,6 +1251,12 @@ export default function Home() {
           const newsData = await response.json();
           console.log('📰 API Response:', newsData);
           console.log('📰 Articles count:', newsData.articles?.length);
+          // Debug: Log five_ws data from first few articles
+          if (newsData.articles?.length > 0) {
+            newsData.articles.slice(0, 3).forEach((a, i) => {
+              console.log(`📋 Article ${i} five_ws:`, typeof a.five_ws, a.five_ws);
+            });
+          }
           
           // Always create opening story, even if no articles
           const openingStory = {
@@ -1337,7 +1373,14 @@ export default function Home() {
                title_news: article.title_news || null,
                content_news: article.content_news || null,
                summary_bullets_news: article.summary_bullets_news || null,
-               summary_bullets_detailed: article.summary_bullets_detailed || null,
+               // Parse five_ws if it's a string
+               five_ws: (() => {
+                 let fw = article.five_ws || null;
+                 if (typeof fw === 'string') {
+                   try { fw = JSON.parse(fw); } catch (e) { fw = null; }
+                 }
+                 return fw;
+               })(),
                
                // Legacy fields for backward compatibility (old articles)
                detailed_text: article.detailed_text || article.content_news || null,
@@ -1467,6 +1510,13 @@ export default function Home() {
                   'US, China and EU signal unprecedented cooperation on environmental policy and green energy'
                 ],
                 summary_bullets_news: ['World leaders from 190+ nations gather in Geneva for landmark climate negotiations this week', 'Summit targets ambitious 50% carbon emission cuts by 2035, with binding commitments expected', 'US, China and EU signal unprecedented cooperation on environmental policy and green energy'],
+                five_ws: {
+                  who: '**190+ world leaders**, **US**, **China**, **EU**',
+                  what: 'Historic **climate summit** with binding emission targets',
+                  when: '**Today** in Geneva, 3-day conference',
+                  where: '**Geneva**, Switzerland',
+                  why: 'Combat climate change with **50% emission cuts** by 2035'
+                },
                 urlToImage: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800',
                 publishedAt: new Date().toISOString(),
                 source: 'Today+',
@@ -1499,6 +1549,13 @@ export default function Home() {
                   'Experts predict this breakthrough could accelerate timeline to artificial general intelligence'
                 ],
                 summary_bullets_news: ['Revolutionary AI system achieves unprecedented 97.3% accuracy on complex reasoning benchmarks', 'Model demonstrates human-level performance in mathematics, coding, and creative problem solving', 'Experts predict this breakthrough could accelerate timeline to artificial general intelligence'],
+                five_ws: {
+                  who: 'Leading **AI lab** researchers',
+                  what: 'New model achieves **97.3%** on reasoning benchmarks',
+                  when: '**Today**, announced at press conference',
+                  where: 'Global AI research community',
+                  why: 'Novel architecture enables **human-level reasoning**'
+                },
                 urlToImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800',
                 publishedAt: new Date(Date.now() - 3600000).toISOString(),
                 source: 'Today+',
@@ -1530,10 +1587,17 @@ export default function Home() {
                   'Inflation drops to 2.8% across G7 nations, opening door for central bank policy reversal'
                 ],
                 summary_bullets_news: ['Global stock indices surge to all-time highs as investors anticipate coordinated rate cuts', 'Federal Reserve, ECB and Bank of England all signal pivot toward easier monetary policy', 'Inflation drops to 2.8% across G7 nations, opening door for central bank policy reversal'],
+                five_ws: {
+                  who: '**Federal Reserve**, **ECB**, **Bank of England**',
+                  what: 'Signal coordinated **rate cuts**, markets rally to record highs',
+                  when: '**Today**, policy statements released',
+                  where: '**Global markets**, **US**, **Europe**, **UK**',
+                  why: 'Inflation drops to **2.8%**, easing concerns'
+                },
                 urlToImage: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800',
                 publishedAt: new Date(Date.now() - 7200000).toISOString(),
                 source: 'Today+',
-                final_score: 890,
+                final_score: 750,  // Regular article - NOT important
                 details: [
                   'S&P 500 gain: +2.4%',
                   'Current rate: 5.25%',
@@ -1561,10 +1625,17 @@ export default function Home() {
                   'Spectroscopic analysis reveals atmosphere containing oxygen and nitrogen, similar to Earth'
                 ],
                 summary_bullets_news: ['Astronomers discover Earth-sized planet orbiting Sun-like star just 40 light-years away', 'Planet Kepler-442c sits perfectly in habitable zone with signs of liquid water on surface', 'Spectroscopic analysis reveals atmosphere containing oxygen and nitrogen, similar to Earth'],
+                five_ws: {
+                  who: '**NASA** astronomers, international research team',
+                  what: 'Discovered **Kepler-442c** with Earth-like conditions',
+                  when: '**Today**, announced in Nature journal',
+                  where: '**40 light-years** from Earth, in habitable zone',
+                  why: 'Shows signs of **liquid water** and oxygen atmosphere'
+                },
                 urlToImage: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800',
                 publishedAt: new Date(Date.now() - 10800000).toISOString(),
                 source: 'Today+',
-                final_score: 870,
+                final_score: 720,  // Regular article - NOT important
                 details: [
                   'Distance: 40 light-years',
                   'Planet size: 1.2x Earth',
@@ -1592,10 +1663,17 @@ export default function Home() {
                   'FDA fast-track approval expected within 3 years following successful Phase 3 clinical trials'
                 ],
                 summary_bullets_news: ['Experimental Alzheimer\'s drug shows remarkable 60% reduction in cognitive decline in trials', 'Treatment works by targeting and clearing harmful amyloid plaques that accumulate in brain', 'FDA fast-track approval expected within 3 years following successful Phase 3 clinical trials'],
+                five_ws: {
+                  who: '**Pfizer** researchers, **1,200** trial patients',
+                  what: 'New drug reduces cognitive decline by **60%**',
+                  when: 'Trial results **today**, FDA approval in **3 years**',
+                  where: 'Clinical trials across **US** and **Europe**',
+                  why: 'Targets **amyloid plaques** that cause Alzheimer\'s'
+                },
                 urlToImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800',
                 publishedAt: new Date(Date.now() - 14400000).toISOString(),
                 source: 'Today+',
-                final_score: 860,
+                final_score: 680,  // Regular article - NOT important
                 details: [
                   'Decline reduction: 60%',
                   'Trial patients: 1,200',
@@ -1911,32 +1989,34 @@ export default function Home() {
 
 
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
-  const renderBoldText = (text, colors, category = null) => {
+  const renderBoldText = (text, colors, category = null, isImportant = false) => {
     if (!text) return '';
-    
-    const linkColor = colors?.blurColor || 
-      (category ? getCategoryColors(category).primary : '#000000');
+
+    // Use image blur color or category color for highlights
+    const highlightColor = colors?.blurColor || (category ? getCategoryColors(category).primary : '#000000');
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
         return (
-          <span key={i} style={{ fontWeight: '600', color: linkColor }}>
+          <span key={i} style={{ fontWeight: '600', color: highlightColor }}>
             {content}
           </span>
         );
       }
-      return <span key={i} style={{ color: '#000000' }}>{part}</span>;
+      return <span key={i} style={{ color: 'inherit' }}>{part}</span>;
     });
   };
 
   // Function to render title with highlighted important words (colored AND bold)
-  const renderTitleWithHighlight = (text, colors, category = null) => {
+  const renderTitleWithHighlight = (text, colors, category = null, isImportant = false) => {
     if (!text) return '';
-    
-    const highlightColor = colors?.highlight || 
-      (category ? getCategoryColors(category).primary : '#ffffff');
+
+    // For important articles (black bg), use bright/light highlight colors
+    const highlightColor = isImportant
+      ? '#F59E0B' // Bright amber/gold for important article titles (visible on black)
+      : (colors?.highlight || (category ? getCategoryColors(category).primary : '#ffffff'));
     
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
@@ -1981,12 +2061,6 @@ export default function Home() {
       }
       
       if (isTransitioning) return;
-      
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen) {
-        return; // Don't allow story navigation when article is open
-      }
       
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
@@ -2033,12 +2107,6 @@ export default function Home() {
       
       if (isTransitioning) return;
       
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen) {
-        return; // Don't allow story navigation when article is open
-      }
-      
       if (Math.abs(e.deltaY) > 30) {
         // Allow backward navigation, but prevent forward navigation when paywall is active
         const isPaywallActive = !user && currentIndex >= 5;
@@ -2063,12 +2131,6 @@ export default function Home() {
 
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
-
-      // Block navigation if article is open
-      const isArticleOpen = showDetailedText[currentIndex];
-      if (isArticleOpen && (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft')) {
-        return; // Don't allow story navigation when article is open
-      }
 
       const isPaywallActive = !user && currentIndex >= 5;
       
@@ -2113,7 +2175,7 @@ export default function Home() {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, stories.length, showDetailedText, user]);
+  }, [currentIndex, stories.length, user]);
 
   // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
   useEffect(() => {
@@ -2311,10 +2373,18 @@ export default function Home() {
     return headline;
   };
 
+  // Compute if current article is important (for inline usage)
+  const currentStoryData = stories[currentIndex];
+  const isCurrentArticleImportant = currentStoryData?.final_score >= 850 || currentStoryData?.isImportant || false;
+
   return (
     <>
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        {/* Dynamic theme-color - updated via useEffect for better iOS support */}
+        <meta name="theme-color" content={safeAreaColor} />
+        <meta name="apple-mobile-web-app-status-bar-style" content={isCurrentArticleImportant ? 'black' : 'default'} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
@@ -2358,6 +2428,40 @@ export default function Home() {
           padding-bottom: env(safe-area-inset-bottom, 0px);
           padding-left: env(safe-area-inset-left, 0px);
           padding-right: env(safe-area-inset-right, 0px);
+        }
+
+        /* Dynamic Safe Area Overlays - Changes based on article importance */
+        .safe-area-top {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: env(safe-area-inset-top, 47px);
+          min-height: env(safe-area-inset-top, 47px);
+          z-index: 99999;
+          pointer-events: none;
+          transition: background-color 0.25s ease-out;
+          will-change: background-color;
+        }
+        
+        .safe-area-bottom {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          height: env(safe-area-inset-bottom, 34px);
+          min-height: env(safe-area-inset-bottom, 34px);
+          z-index: 99999;
+          pointer-events: none;
+          transition: background-color 0.25s ease-out;
+          will-change: background-color;
+        }
+        
+        /* Ensure html/body also transition for complete effect */
+        html, body {
+          transition: background-color 0.25s ease-out !important;
         }
 
         /* Glassmorphism Variables */
@@ -4131,9 +4235,26 @@ export default function Home() {
           
         }
       `}</style>
-      
-      {/* Safe Area Overlays removed for bigger photo version */}
-      
+
+      {/* Dynamic Safe Area Overlays - Color changes based on article importance */}
+      {/* Using key prop to force re-render when color changes */}
+      <div 
+        key={`safe-top-${safeAreaColor}`}
+        className="safe-area-top" 
+        style={{ 
+          backgroundColor: safeAreaColor,
+          background: safeAreaColor 
+        }} 
+      />
+      <div 
+        key={`safe-bottom-${safeAreaColor}`}
+        className="safe-area-bottom" 
+        style={{ 
+          backgroundColor: safeAreaColor,
+          background: safeAreaColor 
+        }} 
+      />
+
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100dvh', overflow: 'hidden', touchAction: 'none' }}>
         {/* Logo - Always Visible, On Top of Image for News Pages - REMOVED */}
 
@@ -4174,6 +4295,9 @@ export default function Home() {
             // Return an empty placeholder to maintain array indices
             return <div key={index} style={{ display: 'none' }} />;
           }
+          
+          // Check if this is an important article (score >= 850)
+          const isImportantArticle = story.final_score >= 850 || story.isImportant;
           
           return (
           <div
@@ -4373,10 +4497,7 @@ export default function Home() {
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
                     // Original News Item View - Everything stays the same
-                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }} onClick={() => {
-                      // Toggle detailed text to show article under summary
-                      toggleDetailedText(index);
-                  }}>
+                  <div className="news-item" style={{ overflow: 'visible', padding: 0, position: 'relative' }}>
                     {/* News Image - With Rounded Corners and Spacing */}
                     <div style={{
                       position: 'fixed',
@@ -4721,7 +4842,7 @@ export default function Home() {
                         height: 'calc(42vh * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
-                        background: imageDominantColors[index]?.blurColor 
+                        background: imageDominantColors[index]?.blurColor
                           ? imageDominantColors[index].blurColor
                           : 'rgba(0,0,0,0.5)',
                         maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 10%, rgba(0,0,0,0.19) 20%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.79) 40%, rgba(0,0,0,1) 50%, rgba(0,0,0,1) 100%)',
@@ -4743,16 +4864,16 @@ export default function Home() {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
-                        background: imageDominantColors[index]?.blurColor 
-                          ? `linear-gradient(to bottom, 
-                              ${imageDominantColors[index].blurColor}26 0%, 
-                              ${imageDominantColors[index].blurColor}40 10%, 
-                              ${imageDominantColors[index].blurColor}73 30%, 
-                              ${imageDominantColors[index].blurColor}A6 50%, 
-                              ${imageDominantColors[index].blurColor}D9 70%, 
-                              ${imageDominantColors[index].blurColor}F2 80%, 
-                              ${imageDominantColors[index].blurColor}FA 90%, 
-                              ${imageDominantColors[index].blurColor}FF 95%, 
+                        background: imageDominantColors[index]?.blurColor
+                          ? `linear-gradient(to bottom,
+                              ${imageDominantColors[index].blurColor}26 0%,
+                              ${imageDominantColors[index].blurColor}40 10%,
+                              ${imageDominantColors[index].blurColor}73 30%,
+                              ${imageDominantColors[index].blurColor}A6 50%,
+                              ${imageDominantColors[index].blurColor}D9 70%,
+                              ${imageDominantColors[index].blurColor}F2 80%,
+                              ${imageDominantColors[index].blurColor}FA 90%,
+                              ${imageDominantColors[index].blurColor}FF 95%,
                               ${imageDominantColors[index].blurColor}FF 100%)`
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
                         zIndex: 2,
@@ -4764,43 +4885,6 @@ export default function Home() {
                       {/* IMPORTANT NEWS - Premium Visual Treatment for high-scoring articles (850+) */}
                       {(story.final_score >= 850 || story.isImportant) && (
                         <>
-                          {/* Left accent bar - full height */}
-                          <div style={{
-                            position: 'fixed',
-                            top: 'calc(env(safe-area-inset-top, 0px) + 56px)',
-                            left: '0',
-                            width: '5px',
-                            height: 'calc(42vh - 56px)',
-                            background: 'linear-gradient(180deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)',
-                            zIndex: 100,
-                            boxShadow: '0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4), 5px 0 20px rgba(239, 68, 68, 0.2)',
-                            animation: 'importantPulse 2s ease-in-out infinite'
-                          }} />
-                          
-                          {/* Right accent bar - full height */}
-                          <div style={{
-                            position: 'fixed',
-                            top: 'calc(env(safe-area-inset-top, 0px) + 56px)',
-                            right: '0',
-                            width: '5px',
-                            height: 'calc(42vh - 56px)',
-                            background: 'linear-gradient(180deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)',
-                            zIndex: 100,
-                            boxShadow: '0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4), -5px 0 20px rgba(239, 68, 68, 0.2)',
-                            animation: 'importantPulse 2s ease-in-out infinite'
-                          }} />
-
-                          {/* Subtle inner glow on image edges */}
-                          <div style={{
-                            position: 'fixed',
-                            top: '0',
-                            left: '0',
-                            right: '0',
-                            height: '42vh',
-                            zIndex: 3,
-                            pointerEvents: 'none',
-                            boxShadow: 'inset 5px 0 30px rgba(239, 68, 68, 0.15), inset -5px 0 30px rgba(239, 68, 68, 0.15)'
-                          }} />
                         </>
                       )}
                       
@@ -4824,11 +4908,11 @@ export default function Home() {
                           textShadow: '0 1px 4px rgba(0,0,0,0.3)',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
                         }}>{(() => {
-                          const mode = languageMode[index] || 'advanced';
+                          const mode = languageMode || 'advanced';
                           // Title is always the same now (no B2 version)
                           const title = story.title_news || story.title;
                           console.log(`🖼️ IMAGE Title [${index}]:`, { mode, title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
-                          return renderTitleWithHighlight(title, imageDominantColors[index], story.category);
+                          return renderTitleWithHighlight(title, imageDominantColors[index], story.category, false);
                         })()}</h3>
                       </div>
                     </div>
@@ -4879,6 +4963,36 @@ export default function Home() {
                       pointerEvents: 'none',
                       boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
+                    
+                    {/* Red accent lines for important articles - on image section */}
+                    {isImportantArticle && (
+                      <>
+                        {/* Left red line - with gap from top and rounded corners */}
+                        <div style={{
+                          position: 'fixed',
+                          top: 'calc(env(safe-area-inset-top, 0px) + 70px)',
+                          left: '6px',
+                          width: '4px',
+                          height: 'calc(42vh - 90px)',
+                          background: '#DC2626',
+                          zIndex: 100,
+                          pointerEvents: 'none',
+                          borderRadius: '4px'
+                        }} />
+                        {/* Right red line - with gap from top and rounded corners */}
+                        <div style={{
+                          position: 'fixed',
+                          top: 'calc(env(safe-area-inset-top, 0px) + 70px)',
+                          right: '6px',
+                          width: '4px',
+                          height: 'calc(42vh - 90px)',
+                          background: '#DC2626',
+                          zIndex: 100,
+                          pointerEvents: 'none',
+                          borderRadius: '4px'
+                        }} />
+                      </>
+                    )}
                     
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
@@ -4935,41 +5049,37 @@ export default function Home() {
                             {/* Language Toggle Button - Direct Toggle with Better Icons */}
                             <button
                               className="language-icon-btn"
+                              style={{}}
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                const currentMode = languageMode[index] || 'advanced';
+                                const currentMode = languageMode || 'advanced';
                                 const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
-                                setLanguageMode(prev => ({ ...prev, [index]: newMode }));
-                                console.log(`✅ Language toggled to: ${newMode} for article ${index}`);
+                                setLanguageMode(newMode);
+                                console.log(`✅ Language toggled globally to: ${newMode}`);
                               }}
                             >
                               {(() => {
-                                const currentMode = languageMode[index] || 'advanced';
+                                const currentMode = languageMode || 'advanced';
+                                const iconColor = darkMode ? '#ffffff' : '#000000';
                                 return currentMode === 'advanced' ? (
-                                  // Advanced Reading Icon - Book with sparkles/stars (expert, complex)
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                    <line x1="8" y1="7" x2="16" y2="7"/>
-                                    <line x1="8" y1="11" x2="16" y2="11"/>
-                                    <line x1="8" y1="15" x2="16" y2="15"/>
-                                    <line x1="8" y1="19" x2="12" y2="19"/>
-                                    {/* Sparkles for advanced/expert level */}
-                                    <circle cx="18" cy="5" r="1" fill="#000000"/>
-                                    <circle cx="19.5" cy="7.5" r="0.8" fill="#000000"/>
-                                    <circle cx="18" cy="10" r="0.6" fill="#000000"/>
-                              </svg>
+                                  // Minimal bullet list icon (currently showing bullets, tap to switch to 5W)
+                                  <svg width="16" height="16" viewBox="0 0 20 20" fill={iconColor}>
+                                    <circle cx="3" cy="5" r="1.5"/>
+                                    <rect x="7" y="4" width="11" height="2" rx="1"/>
+                                    <circle cx="3" cy="10" r="1.5"/>
+                                    <rect x="7" y="9" width="11" height="2" rx="1"/>
+                                    <circle cx="3" cy="15" r="1.5"/>
+                                    <rect x="7" y="14" width="11" height="2" rx="1"/>
+                                  </svg>
                                 ) : (
-                                  // Easy Reading Icon - Simple book with smiley (friendly, approachable)
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                                    <line x1="8" y1="9" x2="16" y2="9"/>
-                                    <line x1="8" y1="13" x2="16" y2="13"/>
-                                    {/* Smiley face for easy/friendly reading */}
-                                    <circle cx="12" cy="16.5" r="1.5" fill="none" stroke="#000000" strokeWidth="1.5"/>
-                                    <path d="M10 15.5 Q12 14.5 14 15.5" stroke="#000000" strokeWidth="1.5" fill="none"/>
+                                  // Minimal 5W grid icon (currently showing 5W, tap to switch to bullets)
+                                  <svg width="16" height="16" viewBox="0 0 20 20" fill={iconColor}>
+                                    <rect x="1" y="1" width="8" height="4" rx="1"/>
+                                    <rect x="11" y="1" width="8" height="4" rx="1"/>
+                                    <rect x="1" y="7.5" width="8" height="4" rx="1"/>
+                                    <rect x="11" y="7.5" width="8" height="4" rx="1"/>
+                                    <rect x="1" y="14" width="8" height="4" rx="1"/>
                                   </svg>
                                 );
                               })()}
@@ -4981,7 +5091,12 @@ export default function Home() {
                         {getAvailableComponentsCount(story) >= 1 && (
                           <div className="switcher" style={{ 
                             position: 'relative',
-                            flex: '0 0 auto'
+                            flex: '0 0 auto',
+                            ...(darkMode ? {
+                              '--c-glass': 'rgba(255, 255, 255, 0.08)',
+                              '--c-bg': 'rgba(40, 40, 40, 0.9)',
+                              background: 'rgba(40, 40, 40, 0.9)'
+                            } : {})
                           }}>
                             {getAvailableInformationTypes(story).map((infoType, buttonIndex) => {
                               const isActive = getCurrentInformationType(story, index) === infoType;
@@ -5023,25 +5138,25 @@ export default function Home() {
                                   <div className="switcher__icon">
                                     {infoType === 'details' && (
                                       <div className="grid-icon">
-                                        <div className="grid-square"></div>
-                                        <div className="grid-square"></div>
-                                        <div className="grid-square"></div>
-                                        <div className="grid-square"></div>
+                                        <div className="grid-square" style={darkMode ? { background: '#ffffff' } : {}}></div>
+                                        <div className="grid-square" style={darkMode ? { background: '#ffffff' } : {}}></div>
+                                        <div className="grid-square" style={darkMode ? { background: '#ffffff' } : {}}></div>
+                                        <div className="grid-square" style={darkMode ? { background: '#ffffff' } : {}}></div>
                                       </div>
                                     )}
                                     {infoType === 'timeline' && (
                                       <div className="list-icon">
                                         <div className="list-line">
-                                          <div className="list-dot"></div>
-                                          <div className="list-bar"></div>
+                                          <div className="list-dot" style={darkMode ? { background: '#ffffff', border: '1.5px solid #ffffff' } : {}}></div>
+                                          <div className="list-bar" style={darkMode ? { background: '#ffffff' } : {}}></div>
                                         </div>
                                         <div className="list-line">
-                                          <div className="list-dot"></div>
-                                          <div className="list-bar"></div>
+                                          <div className="list-dot" style={darkMode ? { background: '#ffffff', border: '1.5px solid #ffffff' } : {}}></div>
+                                          <div className="list-bar" style={darkMode ? { background: '#ffffff' } : {}}></div>
                                         </div>
                                         <div className="list-line">
-                                          <div className="list-dot"></div>
-                                          <div className="list-bar"></div>
+                                          <div className="list-dot" style={darkMode ? { background: '#ffffff', border: '1.5px solid #ffffff' } : {}}></div>
+                                          <div className="list-bar" style={darkMode ? { background: '#ffffff' } : {}}></div>
                                         </div>
                                       </div>
                                     )}
@@ -5091,25 +5206,25 @@ export default function Home() {
                                           <div style={{
                                             width: '2px',
                                             height: '3px',
-                                            background: '#000000',
+                                            background: darkMode ? '#ffffff' : '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '6px',
-                                            background: '#000000',
+                                            background: darkMode ? '#ffffff' : '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '4px',
-                                            background: '#000000',
+                                            background: darkMode ? '#ffffff' : '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                           <div style={{
                                             width: '2px',
                                             height: '8px',
-                                            background: '#000000',
+                                            background: darkMode ? '#ffffff' : '#000000',
                                             borderRadius: '1px'
                                           }}></div>
                                         </div>
@@ -5124,7 +5239,7 @@ export default function Home() {
                         </div>
                       </div>
                       
-                      {/* Summary/Bullet Points - Swipeable - Fixed Position */}
+                      {/* Summary/Bullet Points - Click/Tap to toggle between bullets and 5W's */}
                       <div 
                         className="news-summary" 
                         style={{ 
@@ -5137,86 +5252,43 @@ export default function Home() {
                           minHeight: '60px',
                           padding: '16px 0',
                           position: 'relative',
-                          zIndex: 5
+                          zIndex: 5,
+                          cursor: 'pointer'
                         }}
                         onTouchStart={(e) => {
-                          const startX = e.touches[0].clientX;
-                          const startY = e.touches[0].clientY;
-                          let hasMoved = false;
-                          let swipeDirection = null;
+                          // Store touch start position for tap detection
+                          e.currentTarget.touchStartX = e.touches[0].clientX;
+                          e.currentTarget.touchStartY = e.touches[0].clientY;
+                          e.currentTarget.touchStartTime = Date.now();
+                        }}
+                        onTouchEnd={(e) => {
+                          // Check if it was a tap (not a swipe)
+                          const diffX = Math.abs(e.changedTouches[0].clientX - (e.currentTarget.touchStartX || 0));
+                          const diffY = Math.abs(e.changedTouches[0].clientY - (e.currentTarget.touchStartY || 0));
+                          const timeDiff = Date.now() - (e.currentTarget.touchStartTime || 0);
                           
-                          const handleTouchMove = (moveEvent) => {
-                            const currentX = moveEvent.touches[0].clientX;
-                            const currentY = moveEvent.touches[0].clientY;
-                            const diffX = Math.abs(startX - currentX);
-                            const diffY = Math.abs(startY - currentY);
-                            
-                            if (diffX > 10 || diffY > 10) {
-                              hasMoved = true;
-                              
-                              // Determine swipe direction
-                              if (diffX > diffY && diffX > 50) {
-                                swipeDirection = 'horizontal';
-                                moveEvent.preventDefault();
-                                moveEvent.stopPropagation();
-                              } else if (diffY > diffX && diffY > 30) {
-                                swipeDirection = 'vertical';
-                              }
-                            }
-                          };
-                          
-                          const handleTouchEnd = (endEvent) => {
-                            const endX = endEvent.changedTouches[0].clientX;
-                            const diffX = Math.abs(startX - endX);
-                            
-                            // Only handle horizontal swipes for summary/bullet points toggle
-                            if (hasMoved && swipeDirection === 'horizontal' && diffX > 50) {
-                              console.log('Horizontal summary swipe detected for story', index);
-                              endEvent.preventDefault();
-                              endEvent.stopPropagation();
-                              toggleSummaryDisplayMode(index);
-                            }
-                            
-                            // Clean up listeners
-                            document.removeEventListener('touchmove', handleTouchMove);
-                            document.removeEventListener('touchend', handleTouchEnd);
-                          };
-                          
-                          document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                          document.addEventListener('touchend', handleTouchEnd, { passive: false });
+                          // If movement is small and duration is short, it's a tap
+                          if (diffX < 15 && diffY < 15 && timeDiff < 300) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Toggle between bullets and 5W's (same as language button)
+                            const currentMode = languageMode || 'advanced';
+                            const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
+                            setLanguageMode(newMode);
+                            console.log(`✅ Tapped on text - toggled to: ${newMode}`);
+                          }
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Toggle between bullets and 5W's (same as language button)
+                          const currentMode = languageMode || 'advanced';
+                          const newMode = currentMode === 'advanced' ? 'b2' : 'advanced';
+                          setLanguageMode(newMode);
+                          console.log(`✅ Clicked on text area - toggled to: ${newMode}`);
                         }}
                       >
                         <div 
                           className="summary-content"
-                          onTouchStart={(e) => {
-                            // Store start position for tap vs swipe detection
-                            e.currentTarget.touchStartX = e.touches[0].clientX;
-                            e.currentTarget.touchStartY = e.touches[0].clientY;
-                            e.currentTarget.touchMoved = false;
-                            onTouchStart(e);
-                          }}
-                          onTouchMove={(e) => {
-                            const diffX = Math.abs(e.touches[0].clientX - e.currentTarget.touchStartX);
-                            const diffY = Math.abs(e.touches[0].clientY - e.currentTarget.touchStartY);
-                            if (diffX > 10 || diffY > 10) {
-                              e.currentTarget.touchMoved = true;
-                            }
-                            onTouchMove(e);
-                          }}
-                          onTouchEnd={(e) => {
-                            // If it was a tap (no movement), toggle the article
-                            if (!e.currentTarget.touchMoved) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleDetailedText(index);
-                              return;
-                            }
-                            onTouchEnd(e);
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDetailedText(index);
-                          }}
                           style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                         >
                           {/* Show Only Bullet Text - Fixed Position */}
@@ -5228,21 +5300,97 @@ export default function Home() {
                             width: '100%'
                           }}>
                               {(() => {
-                                // Get bullets based on language mode
-                                // 'b2' mode = detailed (longer bullets 90-120 chars)
-                                // 'advanced' mode = standard (shorter bullets 60-80 chars)
-                                const mode = languageMode[index] || 'advanced';
+                                // Toggle between bullets and 5W's based on language mode
+                                // 'advanced' mode = narrative bullets (80-100 chars)
+                                // 'b2' mode = 5 W's structured format (WHO/WHAT/WHEN/WHERE/WHY)
+                                const mode = languageMode || 'advanced';
                                 
-                                // Get both bullet arrays
-                                const standardBullets = story.summary_bullets_news || story.summary_bullets || [];
-                                const detailedBullets = story.summary_bullets_detailed || [];
+                                // Get bullets and 5W's
+                                const bullets = story.summary_bullets_news || story.summary_bullets || [];
+                                // Parse five_ws if it's a string (failsafe)
+                                let fiveWs = story.five_ws || null;
+                                if (typeof fiveWs === 'string') {
+                                  try {
+                                    fiveWs = JSON.parse(fiveWs);
+                                  } catch (e) {
+                                    console.error('Error parsing five_ws string:', e);
+                                    fiveWs = null;
+                                  }
+                                }
                                 
-                                // Select based on mode - use detailed if available and mode is 'b2'
-                                const usingDetailed = mode === 'b2' && detailedBullets.length > 0;
-                                const bullets = usingDetailed ? detailedBullets : standardBullets;
+                                // Show 5W's if mode is 'b2' and five_ws exists with at least one field
+                                const hasFiveWsData = fiveWs && typeof fiveWs === 'object' && Object.keys(fiveWs).length > 0;
+                                const showFiveWs = mode === 'b2' && hasFiveWsData;
                                 
-                                console.log(`🔹 BULLETS [${index}]:`, { mode, usingDetailed, has_detailed: detailedBullets.length > 0, has_news: standardBullets.length > 0, bullets_count: bullets.length, first_bullet: bullets[0]?.substring(0, 30) });
+                                console.log(`🔹 SUMMARY [${index}]:`, { 
+                                  mode, 
+                                  showFiveWs, 
+                                  has_five_ws: !!fiveWs, 
+                                  has_five_ws_data: hasFiveWsData,
+                                  five_ws_keys: fiveWs ? Object.keys(fiveWs) : [],
+                                  five_ws_raw: fiveWs,
+                                  story_five_ws: story.five_ws,
+                                  bullets_count: bullets.length 
+                                });
                                 
+                                // Render 5 W's format
+                                if (showFiveWs) {
+                                  const wsLabels = [
+                                    { key: 'who', label: 'WHO' },
+                                    { key: 'what', label: 'WHAT' },
+                                    { key: 'when', label: 'WHEN' },
+                                    { key: 'where', label: 'WHERE' },
+                                    { key: 'why', label: 'WHY' }
+                                  ];
+                                  
+                                  return (
+                                    <div style={{
+                                      margin: 0,
+                                      marginTop: '4px',
+                                      padding: 0,
+                                      transition: 'opacity 0.3s ease'
+                                    }}>
+                                      {wsLabels.map((ws, i) => {
+                                        const value = fiveWs[ws.key];
+                                        if (!value) return null;
+                                        
+                                        return (
+                                          <div key={ws.key} style={{
+                                            marginBottom: '12px',
+                                            animation: 'fadeSlideIn 0.4s ease',
+                                            animationDelay: `${i * 0.06}s`,
+                                            animationFillMode: 'both',
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            gap: '10px'
+                                          }}>
+                                            <span style={{
+                                              fontSize: '11px',
+                                              fontWeight: '700',
+                                              color: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary,
+                                              minWidth: '50px',
+                                              letterSpacing: '0.05em',
+                                              paddingTop: '3px'
+                                            }}>
+                                              {ws.label}
+                                            </span>
+                                            <span style={{
+                                              fontSize: '16px',
+                                              lineHeight: '1.45',
+                                              fontWeight: '400',
+                                              color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)',
+                                              flex: 1
+                                            }}>
+                                              {renderBoldText(value, imageDominantColors[index], story.category, false)}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                }
+                                
+                                // Render narrative bullets (default)
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
                                   margin: 0,
@@ -5252,7 +5400,7 @@ export default function Home() {
                                   transition: 'opacity 0.3s ease'
                                 }}>
                                   {bullets.map((bullet, i) => (
-                                    <li key={`${languageMode[index]}-${i}`} style={{
+                                    <li key={`${languageMode}-${i}`} style={{
                                       marginBottom: '14px',
                                       fontSize: '17px',
                                       lineHeight: '1.5',
@@ -5275,7 +5423,7 @@ export default function Home() {
                                         borderRadius: '50%',
                                         background: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary
                                       }}></span>
-                                      {renderBoldText(bullet, imageDominantColors[index], story.category)}
+                                      {renderBoldText(bullet, imageDominantColors[index], story.category, false)}
                                     </li>
                                   ))}
                                 </ul>
@@ -5287,101 +5435,7 @@ export default function Home() {
                               })()}
                           </div>
                           
-                          {/* Show Detailed Article Text Below Bullets - Scrollable - Does NOT affect positions above */}
-                          {/* Apple HIG - Article Text */}
-                          {showDetailedText[index] && (
-                            <div 
-                              style={{
-                                marginTop: '24px',
-                                marginBottom: '100px',
-                                fontSize: '17px',
-                                lineHeight: '1.53',
-                                color: darkMode ? '#f5f5f7' : '#1d1d1f',
-                                letterSpacing: '-0.022em',
-                                opacity: 1,
-                                transform: 'translateY(0)',
-                                transition: 'all 0.5s cubic-bezier(0.28, 0, 0.4, 1)',
-                                animation: 'slideInFromBottom 0.5s cubic-bezier(0.28, 0, 0.4, 1)',
-                                position: 'relative',
-                                zIndex: 1,
-                                width: '100%',
-                                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
-                              }}
-                              onTouchStart={(e) => {
-                                const startX = e.touches[0].clientX;
-                                const startY = e.touches[0].clientY;
-                                let hasMoved = false;
-                                
-                                const handleTouchMove = (moveEvent) => {
-                                  const currentX = moveEvent.touches[0].clientX;
-                                  const diffX = Math.abs(currentX - startX);
-                                  const diffY = Math.abs(moveEvent.touches[0].clientY - startY);
-                                  
-                                  if (diffX > 10 || diffY > 10) {
-                                    hasMoved = true;
-                                  }
-                                };
-                                
-                                const handleTouchEnd = (endEvent) => {
-                                  const endX = endEvent.changedTouches[0].clientX;
-                                  const diffX = endX - startX;
-                                  
-                                  // Swipe right to close article
-                                  if (hasMoved && diffX > 100) {
-                                    endEvent.preventDefault();
-                                    endEvent.stopPropagation();
-                                    toggleDetailedText(index); // Close article
-                                  }
-                                  
-                                  document.removeEventListener('touchmove', handleTouchMove);
-                                  document.removeEventListener('touchend', handleTouchEnd);
-                                };
-                                
-                                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                document.addEventListener('touchend', handleTouchEnd, { passive: false });
-                              }}
-                            >
-                              <div dangerouslySetInnerHTML={{
-                                __html: (() => {
-                                  // Get a darker version of the blur color
-                                  const blurColor = imageDominantColors[index]?.blurColor || '#000000';
-                                  // Function to darken the color
-                                  const darkenColor = (color) => {
-                                    if (color.startsWith('rgb')) {
-                                      const match = color.match(/\d+/g);
-                                      if (match && match.length >= 3) {
-                                        const r = Math.max(0, parseInt(match[0]) - 80);
-                                        const g = Math.max(0, parseInt(match[1]) - 80);
-                                        const b = Math.max(0, parseInt(match[2]) - 80);
-                                        return `rgb(${r}, ${g}, ${b})`;
-                                      }
-                                    }
-                                    return '#1a1a1a';
-                                  };
-                                  const darkColor = darkenColor(blurColor);
-                                  
-                                  // Get article content (same for both modes now)
-                                  const articleText = story.content_news || story.detailed_text || story.article || '';
-                                  
-                                  console.log(`📄 ARTICLE [${index}]:`, { has_news: !!story.content_news, length: articleText.length, start: articleText.substring(0, 40) });
-                                  
-                                  return articleText
-                                    .replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${darkColor}; font-weight: 600;">$1</strong>`)
-                                    .split('. ')
-                                    .reduce((acc, sentence, i, arr) => {
-                                      // Group every 2-3 sentences into a paragraph
-                                      if (i % 3 === 0) {
-                                        const paragraph = arr.slice(i, i + 3).join('. ') + (i + 3 < arr.length ? '.' : '');
-                                        return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + paragraph + '</p>';
-                                      } else if (i % 3 === 1 && i === arr.length - 1) {
-                                        return acc + '<p style="margin-bottom: 16px; text-align: justify;">' + sentence + '</p>';
-                                      }
-                                      return acc;
-                                    }, '');
-                                })()
-                              }} />
-                            </div>
-                          )}
+                          {/* Article text removed - clicking on bullets/5W's now toggles between them */}
                         </div>
                         
                       </div>
@@ -5410,18 +5464,18 @@ export default function Home() {
                         return componentCount > 0;
                       })() && (
                       <div style={{
-                        position: showDetailedText[index] ? 'relative' : 'fixed',
-                        bottom: showDetailedText[index] ? 'auto' : '5px',
-                        left: showDetailedText[index] ? '0' : '50%',
-                        transform: showDetailedText[index] ? 'none' : 'translateX(-50%)',
+                        position: 'fixed',
+                        bottom: '5px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                         width: '100%',
-                        maxWidth: showDetailedText[index] ? '1200px' : '1200px',
+                        maxWidth: '1200px',
                         paddingLeft: '8px',
                         paddingRight: '8px',
                         zIndex: 99999,
-                        marginTop: showDetailedText[index] ? '0' : '0',
-                        marginLeft: showDetailedText[index] ? 'auto' : '0',
-                        marginRight: showDetailedText[index] ? 'auto' : '0',
+                        marginTop: '0',
+                        marginLeft: '0',
+                        marginRight: '0',
                         pointerEvents: 'auto',
                         display: 'block',
                         visibility: 'visible',
@@ -6207,8 +6261,8 @@ export default function Home() {
                           } else if (showDetails[index]) {
                             // Show Details
                             return story.details && (
-                              <div 
-                                className="glass-container details-container-desktop details-container-animated"
+                              <div
+                                className={`glass-container details-container-desktop details-container-animated`}
                                 style={{
                                   position: 'absolute',
                                   bottom: '0',
@@ -6251,15 +6305,15 @@ export default function Home() {
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                         flex: 1,
-                                        color: '#000000'
+                                        color: darkMode ? '#ffffff' : '#000000'
                                       }}>
-                                        <div className="news-detail-label" style={{ 
-                                          color: '#000000',
+                                        <div className="news-detail-label" style={{
+                                          color: darkMode ? 'rgba(255,255,255,0.7)' : '#000000',
                                           fontSize: '9px',
                                           fontWeight: '700',
                                           marginBottom: '3px',
                                           textAlign: 'center',
-                                          textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                          textShadow: darkMode ? 'none' : '1px 1px 1px rgba(255, 255, 255, 0.5)',
                                           opacity: 0.7,
                                           textTransform: 'uppercase',
                                           letterSpacing: '0.5px'
@@ -6273,11 +6327,11 @@ export default function Home() {
                                           lineHeight: '1.1'
                                         }}>{mainValue}</div>
                                         {subtitle && <div className="news-detail-subtitle" style={{ 
-                                          color: '#333333',
+                                          color: darkMode ? 'rgba(255,255,255,0.6)' : '#333333',
                                           fontSize: '9px',
                                           marginTop: '2px',
                                           textAlign: 'center',
-                                          textShadow: '1px 1px 1px rgba(255, 255, 255, 0.5)',
+                                          textShadow: darkMode ? 'none' : '1px 1px 1px rgba(255, 255, 255, 0.5)',
                                           opacity: 0.8
                                         }}>{subtitle}</div>}
                                       </div>
