@@ -16,7 +16,6 @@ export default function StreakGlobe({ size = 550 }) {
   const svgRef = useRef(null);
   const globeRef = useRef(null);
   const rotationRef = useRef({ x: 0, y: -20 });
-  const isRotatingRef = useRef(true);
   const animationFrameRef = useRef(null);
   
   // Randomly select a color on mount
@@ -77,11 +76,11 @@ export default function StreakGlobe({ size = 550 }) {
           .attr('stroke-width', 0.5)
           .attr('d', path);
 
-        // Start rotation animation
+        // Start rotation animation - auto-rotate only, no user interaction
         const rotate = () => {
           if (!isMounted) return;
           
-          if (isRotatingRef.current && globeRef.current) {
+          if (globeRef.current) {
             rotationRef.current.x += 0.15;
             globeRef.current.projection.rotate([rotationRef.current.x, rotationRef.current.y]);
             globeRef.current.globe.selectAll('path').attr('d', globeRef.current.path);
@@ -90,25 +89,8 @@ export default function StreakGlobe({ size = 550 }) {
         };
         rotate();
 
-        // Add drag interaction
-        const drag = d3.drag()
-          .on('start', () => {
-            isRotatingRef.current = false;
-          })
-          .on('drag', (event) => {
-            rotationRef.current.x += event.dx * 0.25;
-            rotationRef.current.y -= event.dy * 0.25;
-            rotationRef.current.y = Math.max(-90, Math.min(90, rotationRef.current.y));
-            if (globeRef.current) {
-              globeRef.current.projection.rotate([rotationRef.current.x, rotationRef.current.y]);
-              globeRef.current.globe.selectAll('path').attr('d', globeRef.current.path);
-            }
-          })
-          .on('end', () => {
-            setTimeout(() => { isRotatingRef.current = true; }, 2000);
-          });
-
-        svg.call(drag);
+        // Disable pointer events on the SVG
+        svg.style('pointer-events', 'none');
 
       } catch (error) {
         console.error('Failed to load world map:', error);
@@ -130,7 +112,7 @@ export default function StreakGlobe({ size = 550 }) {
       ref={svgRef}
       width={size}
       height={size}
-      style={{ cursor: 'grab' }}
+      style={{ pointerEvents: 'none' }}
     />
   );
 }
