@@ -230,14 +230,16 @@ export default function Home() {
   useEffect(() => {
     const currentStory = stories[currentIndex];
     if (currentStory && currentStory.type === 'streak') {
-      // Reset animation phase when entering streak page
-      setStreakAnimationPhase(0);
+      // Start with hidden state (-1), then show intro after 0.5s
+      setStreakAnimationPhase(-1);
       
       // Start animation sequence
-      const timer1 = setTimeout(() => setStreakAnimationPhase(1), 2000);
-      const timer2 = setTimeout(() => setStreakAnimationPhase(2), 5000);
+      const timer0 = setTimeout(() => setStreakAnimationPhase(0), 500);  // Show intro after 0.5s
+      const timer1 = setTimeout(() => setStreakAnimationPhase(1), 2500); // Show streak after 2.5s
+      const timer2 = setTimeout(() => setStreakAnimationPhase(2), 5500); // Show outro after 5.5s
       
       return () => {
+        clearTimeout(timer0);
         clearTimeout(timer1);
         clearTimeout(timer2);
       };
