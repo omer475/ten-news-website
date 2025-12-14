@@ -18,6 +18,12 @@ const StreakGlobe = dynamic(() => import('../components/StreakGlobe'), {
   loading: () => null
   });
 
+// Dynamically import MapboxMap to avoid SSR issues
+const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
+    ssr: false,
+  loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(30,41,59,0.9)', borderRadius: '8px' }} />
+  });
+
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -6325,7 +6331,7 @@ export default function Home() {
                                   right: '0',
                                   height: expandedMap[index] ? '320px' : '85px',
                                   maxHeight: expandedMap[index] ? '320px' : '85px',
-                                  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                                  transition: 'height 0.8s cubic-bezier(0.33, 1, 0.68, 1), max-height 0.8s cubic-bezier(0.33, 1, 0.68, 1)',
                                   minHeight: '85px',
                                   zIndex: '10',
                                   overflow: 'hidden'
@@ -6420,177 +6426,22 @@ export default function Home() {
                                       </span>
                                     </div>
 
-                                    {/* SVG World Map */}
+                                    {/* Mapbox Map */}
                                     <div style={{
                                       flex: 1,
                                       position: 'relative',
                                       borderRadius: '8px',
                                       overflow: 'hidden',
-                                      background: expandedMap[index] 
-                                        ? 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%)'
-                                        : 'linear-gradient(135deg, rgba(30,41,59,0.85) 0%, rgba(51,65,85,0.8) 100%)',
-                                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)',
+                                      height: expandedMap[index] ? '260px' : '50px',
                                       minHeight: expandedMap[index] ? '260px' : '50px',
-                                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                                      transition: 'height 0.8s cubic-bezier(0.33, 1, 0.68, 1), min-height 0.8s cubic-bezier(0.33, 1, 0.68, 1)'
                                     }}>
-                                      {/* Grid Lines - Background Pattern */}
-                                      <svg 
-                                        style={{
-                                          position: 'absolute',
-                                          top: 0,
-                                          left: 0,
-                                          width: '100%',
-                                          height: '100%',
-                                          opacity: 0.1
-                                        }}
-                                        preserveAspectRatio="none"
-                                        viewBox="0 0 100 100"
-                                      >
-                                        {[...Array(11)].map((_, i) => (
-                                          <line key={`h${i}`} x1="0" y1={i*10} x2="100" y2={i*10} stroke="#fff" strokeWidth="0.2"/>
-                                        ))}
-                                        {[...Array(11)].map((_, i) => (
-                                          <line key={`v${i}`} x1={i*10} y1="0" x2={i*10} y2="100" stroke="#fff" strokeWidth="0.2"/>
-                                        ))}
-                                      </svg>
-
-                                      {/* World Map SVG */}
-                                      <svg 
-                                        viewBox="0 0 1000 500" 
-                                        style={{
-                                          width: '100%',
-                                          height: '100%',
-                                          position: 'absolute',
-                                          top: 0,
-                                          left: 0
-                                        }}
-                                        preserveAspectRatio="xMidYMid slice"
-                                      >
-                                        <defs>
-                                          {/* Gradient for continents - Enhanced */}
-                                          <linearGradient id={`mapGradient${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor={imageDominantColors[index]?.highlight || '#3b82f6'} stopOpacity="0.6"/>
-                                            <stop offset="100%" stopColor={imageDominantColors[index]?.blurColor || '#1e40af'} stopOpacity="0.35"/>
-                                          </linearGradient>
-                                          {/* Glow filter for marker */}
-                                          <filter id={`glow${index}`} x="-50%" y="-50%" width="200%" height="200%">
-                                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                            <feMerge>
-                                              <feMergeNode in="coloredBlur"/>
-                                              <feMergeNode in="SourceGraphic"/>
-                                            </feMerge>
-                                          </filter>
-                                          {/* Pulse animation */}
-                                          <radialGradient id={`pulseGrad${index}`} cx="50%" cy="50%" r="50%">
-                                            <stop offset="0%" stopColor={imageDominantColors[index]?.highlight || '#3b82f6'} stopOpacity="0.8"/>
-                                            <stop offset="100%" stopColor={imageDominantColors[index]?.highlight || '#3b82f6'} stopOpacity="0"/>
-                                          </radialGradient>
-                                        </defs>
-
-                                        {/* Simplified World Map Paths - Enhanced Visibility */}
-                                        <g fill={`url(#mapGradient${index})`} stroke={imageDominantColors[index]?.highlight || '#3b82f6'} strokeWidth="1" strokeOpacity="0.8">
-                                          {/* North America */}
-                                          <path d="M150,120 L180,100 L220,95 L260,100 L280,120 L290,150 L280,180 L260,200 L240,220 L200,230 L180,220 L160,200 L150,170 Z" opacity="1"/>
-                                          {/* South America */}
-                                          <path d="M230,250 L260,240 L280,260 L290,300 L280,350 L260,380 L240,390 L220,370 L210,330 L215,290 L220,260 Z" opacity="1"/>
-                                          {/* Europe */}
-                                          <path d="M440,100 L480,90 L520,95 L540,110 L530,140 L510,150 L480,155 L450,150 L430,130 Z" opacity="1"/>
-                                          {/* Africa */}
-                                          <path d="M450,180 L500,170 L540,180 L560,220 L550,280 L530,330 L500,350 L470,340 L450,300 L440,250 L445,210 Z" opacity="1"/>
-                                          {/* Asia - Extended for Ukraine visibility */}
-                                          <path d="M540,70 L620,60 L700,70 L780,90 L830,120 L850,160 L830,200 L780,220 L700,210 L620,200 L560,180 L530,150 L525,110 Z" opacity="1"/>
-                                          {/* Australia */}
-                                          <path d="M780,300 L830,290 L870,310 L880,350 L860,380 L820,385 L780,370 L770,340 Z" opacity="1"/>
-                                          {/* Greenland */}
-                                          <path d="M320,50 L370,45 L390,60 L385,90 L360,100 L330,95 L315,75 Z" opacity="0.9"/>
-                                          {/* UK */}
-                                          <path d="M420,95 L435,90 L440,105 L430,115 L420,110 Z" opacity="1"/>
-                                          {/* Japan */}
-                                          <path d="M850,130 L870,125 L880,140 L875,160 L860,165 L850,155 Z" opacity="1"/>
-                                          {/* Middle East */}
-                                          <path d="M540,165 L580,155 L610,165 L605,190 L575,200 L545,190 Z" opacity="1"/>
-                                          {/* India */}
-                                          <path d="M640,180 L680,170 L700,200 L690,240 L660,250 L630,230 L625,200 Z" opacity="1"/>
-                                        </g>
-
-                                        {/* Location Marker with Animation */}
-                                        {(() => {
-                                          // Convert lat/lon to SVG coordinates
-                                          const lat = story.map.center?.lat || 0;
-                                          const lon = story.map.center?.lon || 0;
-                                          const x = ((lon + 180) / 360) * 1000;
-                                          const y = ((90 - lat) / 180) * 500;
-                                          
-                                          return (
-                                            <g>
-                                              {/* Outer pulse ring - Larger */}
-                                              <circle 
-                                                cx={x} cy={y} r="35" 
-                                                fill={`url(#pulseGrad${index})`}
-                                                style={{
-                                                  animation: 'mapPulse 2s ease-out infinite',
-                                                  transformOrigin: `${x}px ${y}px`
-                                                }}
-                                              />
-                                              {/* Middle ring */}
-                                              <circle 
-                                                cx={x} cy={y} r="22" 
-                                                fill={`url(#pulseGrad${index})`}
-                                                style={{
-                                                  animation: 'mapPulse 2s ease-out infinite 0.4s',
-                                                  transformOrigin: `${x}px ${y}px`
-                                                }}
-                                              />
-                                              {/* Inner pulse ring */}
-                                              <circle 
-                                                cx={x} cy={y} r="12" 
-                                                fill={`url(#pulseGrad${index})`}
-                                                style={{
-                                                  animation: 'mapPulse 2s ease-out infinite 0.8s',
-                                                  transformOrigin: `${x}px ${y}px`
-                                                }}
-                                              />
-                                              {/* Main marker dot - Larger */}
-                                              <circle 
-                                                cx={x} cy={y} r="8" 
-                                                fill={imageDominantColors[index]?.highlight || '#ef4444'}
-                                                filter={`url(#glow${index})`}
-                                                style={{
-                                                  animation: 'markerPulse 1.5s ease-in-out infinite'
-                                                }}
-                                              />
-                                              {/* Inner bright core */}
-                                              <circle 
-                                                cx={x} cy={y} r="4" 
-                                                fill="#ffffff"
-                                                opacity="0.95"
-                                              />
-                                            </g>
-                                          );
-                                        })()}
-
-                                        {/* Additional markers if available */}
-                                        {story.map.markers && story.map.markers.map((marker, mIdx) => {
-                                          const mx = ((marker.lon + 180) / 360) * 1000;
-                                          const my = ((90 - marker.lat) / 180) * 500;
-                                          return (
-                                            <g key={mIdx}>
-                                              <circle 
-                                                cx={mx} cy={my} r="12" 
-                                                fill={`url(#pulseGrad${index})`}
-                                                style={{
-                                                  animation: `mapPulse 2s ease-out infinite ${0.2 * mIdx}s`
-                                                }}
-                                              />
-                                              <circle 
-                                                cx={mx} cy={my} r="4" 
-                                                fill={imageDominantColors[index]?.highlight || '#3b82f6'}
-                                                opacity="0.8"
-                                              />
-                                            </g>
-                                          );
-                                        })}
-                                      </svg>
+                                      <MapboxMap
+                                        center={story.map.center || { lat: 0, lon: 0 }}
+                                        markers={story.map.markers || []}
+                                        expanded={expandedMap[index]}
+                                        highlightColor={imageDominantColors[index]?.highlight || '#3b82f6'}
+                                      />
 
                                       {/* Coordinates Display - Bottom Left */}
                                       <div style={{
@@ -6602,7 +6453,8 @@ export default function Home() {
                                         fontSize: '9px',
                                         fontFamily: 'SF Mono, Monaco, monospace',
                                         color: 'rgba(255,255,255,0.7)',
-                                        letterSpacing: '0.5px'
+                                        letterSpacing: '0.5px',
+                                        zIndex: 10
                                       }}>
                                         <span>LAT {story.map.center?.lat?.toFixed(4) || '0.0000'}°</span>
                                         <span>LON {story.map.center?.lon?.toFixed(4) || '0.0000'}°</span>
@@ -6619,9 +6471,10 @@ export default function Home() {
                                           color: imageDominantColors[index]?.highlight || '#3b82f6',
                                           textTransform: 'uppercase',
                                           letterSpacing: '1px',
-                                          background: 'rgba(0,0,0,0.3)',
+                                          background: 'rgba(0,0,0,0.5)',
                                           padding: '2px 8px',
-                                          borderRadius: '4px'
+                                          borderRadius: '4px',
+                                          zIndex: 10
                                         }}>
                                           {story.map.region}
                                         </div>
@@ -6641,7 +6494,8 @@ export default function Home() {
                                           fontSize: '11px',
                                           color: 'rgba(255,255,255,0.9)',
                                           lineHeight: '1.4',
-                                          animation: 'fadeIn 0.3s ease'
+                                          animation: 'fadeIn 0.3s ease',
+                                          zIndex: 10
                                         }}>
                                           {story.map.description}
                                         </div>
