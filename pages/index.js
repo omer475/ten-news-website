@@ -76,7 +76,7 @@ export default function Home() {
   // Update safe area color when current article changes
   useEffect(() => {
     const currentStory = stories[currentIndex];
-    const isImportant = currentStory?.final_score >= 850 || currentStory?.isImportant || false;
+    const isImportant = currentStory?.final_score >= 900 || currentStory?.isImportant || false;
     const newColor = '#ffffff'; // Always white - important news only has red accent lines
     
     console.log(`🎨 Safe Area Update: index=${currentIndex}, title="${currentStory?.title?.substring(0, 30) || 'Opening'}...", score=${currentStory?.final_score || 'N/A'}, isImportant=${isImportant}, color=${newColor}`);
@@ -154,7 +154,7 @@ export default function Home() {
   useEffect(() => {
     // Get all important articles from stories
     const importantArticles = stories.filter(s => 
-      s.type === 'news' && (s.final_score >= 850 || s.isImportant)
+      s.type === 'news' && (s.final_score >= 900 || s.isImportant)
     );
     
     if (importantArticles.length === 0 || streakPageInserted) return;
@@ -182,7 +182,7 @@ export default function Home() {
       
       // Find the index of the last important article
       const lastImportantIndex = stories.reduce((lastIdx, story, idx) => {
-        if (story.type === 'news' && (story.final_score >= 850 || story.isImportant)) {
+        if (story.type === 'news' && (story.final_score >= 900 || story.isImportant)) {
           return idx;
         }
         return lastIdx;
@@ -214,7 +214,7 @@ export default function Home() {
   useEffect(() => {
     const currentStory = stories[currentIndex];
     if (currentStory && currentStory.type === 'news' && currentStory.id) {
-      const isImportant = currentStory.final_score >= 850 || currentStory.isImportant;
+      const isImportant = currentStory.final_score >= 900 || currentStory.isImportant;
       if (isImportant) {
         setViewedImportantArticles(prev => {
           const newSet = new Set(prev);
@@ -1623,10 +1623,10 @@ export default function Home() {
               console.log('📊 Sorting news articles by score...');
               const sortedNews = sortArticlesByScore(newsArticles);
               
-              // Log articles that qualify as important (score >= 850)
-              const importantArticles = sortedNews.filter(a => a.final_score >= 850);
+              // Log articles that qualify as important (score >= 900)
+              const importantArticles = sortedNews.filter(a => a.final_score >= 900);
               if (importantArticles.length > 0) {
-                console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (score >= 850):`, 
+                console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (score >= 900):`, 
                   importantArticles.map(a => `${a.title?.substring(0, 30)}... (${a.final_score})`));
               }
               
@@ -2559,7 +2559,7 @@ export default function Home() {
 
   // Compute if current article is important (for inline usage)
   const currentStoryData = stories[currentIndex];
-  const isCurrentArticleImportant = currentStoryData?.final_score >= 850 || currentStoryData?.isImportant || false;
+  const isCurrentArticleImportant = currentStoryData?.final_score >= 900 || currentStoryData?.isImportant || false;
 
   return (
     <>
@@ -4519,8 +4519,8 @@ export default function Home() {
             return <div key={index} style={{ display: 'none' }} />;
           }
           
-          // Check if this is an important article (score >= 850)
-          const isImportantArticle = story.final_score >= 850 || story.isImportant;
+          // Check if this is an important article (score >= 900)
+          const isImportantArticle = story.final_score >= 900 || story.isImportant;
           
           return (
           <div
@@ -5253,8 +5253,8 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* IMPORTANT NEWS - Premium Visual Treatment for high-scoring articles (850+) */}
-                      {(story.final_score >= 850 || story.isImportant) && (
+                      {/* IMPORTANT NEWS - Premium Visual Treatment for high-scoring articles (900+) */}
+                      {(story.final_score >= 900 || story.isImportant) && (
                         <>
                         </>
                       )}
