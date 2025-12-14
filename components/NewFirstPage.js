@@ -532,6 +532,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           padding-top: 60px;
         }
 
+
         @keyframes fadeInDown {
           from { opacity: 0; transform: translateY(-20px); }
           to { opacity: 1; transform: translateY(0); }

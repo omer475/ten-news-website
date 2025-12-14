@@ -12,6 +12,12 @@ const GraphChart = dynamic(() => import('../components/GraphChart'), {
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
   });
 
+// Dynamically import StreakGlobe to avoid SSR issues with D3
+const StreakGlobe = dynamic(() => import('../components/StreakGlobe'), {
+    ssr: false,
+  loading: () => null
+  });
+
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -56,6 +62,17 @@ export default function Home() {
   // Safe area color state - for dynamic notch/home indicator colors
   const [safeAreaColor, setSafeAreaColor] = useState('#ffffff');
 
+  // Streak feature state
+  const [viewedImportantArticles, setViewedImportantArticles] = useState(new Set());
+  const [streakData, setStreakData] = useState({ count: 0, lastDate: null });
+  const [streakPageInserted, setStreakPageInserted] = useState(false);
+  const [streakAnimationPhase, setStreakAnimationPhase] = useState(0); // 0=intro, 1=streak, 2=outro
+
+  // Calculate paywall threshold - 2 articles after the streak page
+  // If no streak page exists yet, use a high number (no paywall until streak page appears)
+  const streakPageIndex = stories.findIndex(s => s.type === 'streak');
+  const paywallThreshold = streakPageIndex !== -1 ? streakPageIndex + 3 : 999; // streak + 1 (streak page itself) + 2 articles
+
   // Update safe area color when current article changes
   useEffect(() => {
     const currentStory = stories[currentIndex];
@@ -97,6 +114,135 @@ export default function Home() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  // Streak feature - Load streak data from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedStreak = localStorage.getItem('tennews_streak');
+      if (storedStreak) {
+        const parsed = JSON.parse(storedStreak);
+        const today = new Date().toDateString();
+        const lastDate = parsed.lastDate;
+        
+        if (lastDate) {
+          const lastDateObj = new Date(lastDate);
+          const todayObj = new Date(today);
+          const diffTime = todayObj - lastDateObj;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 0) {
+            // Same day - keep current streak
+            setStreakData(parsed);
+            console.log('🔥 Streak loaded (same day):', parsed.count);
+          } else if (diffDays === 1) {
+            // Yesterday - streak continues but not yet incremented today
+            setStreakData({ count: parsed.count, lastDate: lastDate });
+            console.log('🔥 Streak continues from yesterday:', parsed.count);
+          } else {
+            // Missed a day - reset streak
+            setStreakData({ count: 0, lastDate: null });
+            console.log('💔 Streak reset - missed', diffDays, 'days');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error loading streak data:', e);
+    }
+  }, []);
+
+  // Streak feature - Track when user views important articles and insert streak page
+  useEffect(() => {
+    // Get all important articles from stories
+    const importantArticles = stories.filter(s => 
+      s.type === 'news' && (s.final_score >= 850 || s.isImportant)
+    );
+    
+    if (importantArticles.length === 0 || streakPageInserted) return;
+    
+    // Check if all important articles have been viewed
+    const allImportantViewed = importantArticles.every(article => 
+      viewedImportantArticles.has(article.id)
+    );
+    
+    if (allImportantViewed && importantArticles.length > 0) {
+      console.log('🎉 All important articles viewed! Inserting streak page...');
+      
+      // Calculate new streak
+      const today = new Date().toDateString();
+      let newStreakCount = streakData.count;
+      
+      if (streakData.lastDate !== today) {
+        // First completion today - increment streak
+        newStreakCount = streakData.count + 1;
+        const newStreakData = { count: newStreakCount, lastDate: today };
+        setStreakData(newStreakData);
+        localStorage.setItem('tennews_streak', JSON.stringify(newStreakData));
+        console.log('🔥 Streak incremented to:', newStreakCount);
+      }
+      
+      // Find the index of the last important article
+      const lastImportantIndex = stories.reduce((lastIdx, story, idx) => {
+        if (story.type === 'news' && (story.final_score >= 850 || story.isImportant)) {
+          return idx;
+        }
+        return lastIdx;
+      }, -1);
+      
+      if (lastImportantIndex !== -1) {
+        // Insert streak page after the last important article
+        const streakPage = {
+          type: 'streak',
+          id: 'streak-page',
+          streakCount: newStreakCount
+        };
+        
+        setStories(prev => {
+          // Check if streak page already exists
+          if (prev.some(s => s.type === 'streak')) return prev;
+          
+          const newStories = [...prev];
+          newStories.splice(lastImportantIndex + 1, 0, streakPage);
+          return newStories;
+        });
+        
+        setStreakPageInserted(true);
+      }
+    }
+  }, [viewedImportantArticles, stories, streakPageInserted, streakData]);
+
+  // Track viewed important articles when currentIndex changes
+  useEffect(() => {
+    const currentStory = stories[currentIndex];
+    if (currentStory && currentStory.type === 'news' && currentStory.id) {
+      const isImportant = currentStory.final_score >= 850 || currentStory.isImportant;
+      if (isImportant) {
+        setViewedImportantArticles(prev => {
+          const newSet = new Set(prev);
+          newSet.add(currentStory.id);
+          return newSet;
+        });
+        console.log('👁️ Viewed important article:', currentStory.id);
+      }
+    }
+  }, [currentIndex, stories]);
+
+  // Streak page animation sequence
+  useEffect(() => {
+    const currentStory = stories[currentIndex];
+    if (currentStory && currentStory.type === 'streak') {
+      // Reset animation phase when entering streak page
+      setStreakAnimationPhase(0);
+      
+      // Start animation sequence
+      const timer1 = setTimeout(() => setStreakAnimationPhase(1), 2000);
+      const timer2 = setTimeout(() => setStreakAnimationPhase(2), 5000);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
+    }
+  }, [currentIndex, stories]);
 
   // Auto-refresh when user returns to the page after leaving Safari/Chrome
   // This ensures users always see fresh news when they come back
@@ -2105,7 +2251,7 @@ export default function Home() {
         isTransitioning = true;
 
         // Allow backward navigation, but prevent forward navigation when paywall is active
-        const isPaywallActive = !user && currentIndex >= 5;
+        const isPaywallActive = !user && currentIndex >= paywallThreshold;
         const isForwardNavigation = diff > 0; // diff > 0 means scrolling up/down to next story
 
         if (isPaywallActive && isForwardNavigation) {
@@ -2145,7 +2291,7 @@ export default function Home() {
       
       if (Math.abs(e.deltaY) > 30) {
         // Allow backward navigation, but prevent forward navigation when paywall is active
-        const isPaywallActive = !user && currentIndex >= 5;
+        const isPaywallActive = !user && currentIndex >= paywallThreshold;
         const isForwardNavigation = e.deltaY > 0; // deltaY > 0 means scrolling down to next story
 
         if (isPaywallActive && isForwardNavigation) {
@@ -2168,7 +2314,7 @@ export default function Home() {
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
 
-      const isPaywallActive = !user && currentIndex >= 5;
+      const isPaywallActive = !user && currentIndex >= paywallThreshold;
       
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
         // Allow forward navigation unless paywall is active
@@ -2211,11 +2357,11 @@ export default function Home() {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, stories.length, user]);
+  }, [currentIndex, stories.length, user, paywallThreshold]);
 
   // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
   useEffect(() => {
-    const isPaywallActive = !user && currentIndex >= 5;
+    const isPaywallActive = !user && currentIndex >= paywallThreshold;
 
     // TikTok-style: Always prevent scrolling - navigation is via swipe only
     document.body.style.overflow = 'hidden';
@@ -2226,7 +2372,7 @@ export default function Home() {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
     };
-  }, [user, currentIndex]);
+  }, [user, currentIndex, paywallThreshold]);
 
   console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
   
@@ -3053,6 +3199,12 @@ export default function Home() {
         @keyframes gentleBounce {
           0%, 100% { transform: translateX(-50%) translateY(0px); }
           50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        /* Streak page bounce animation */
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(6px); }
         }
 
         /* Authentication Styles */
@@ -4304,6 +4456,39 @@ export default function Home() {
             <div style={{ flex: 1 }}></div>
             
             <div className="header-right">
+              {/* Streak Indicator - Swept flame design */}
+              {streakData.count > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginRight: '16px'
+                }}>
+                  <svg 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 64 64" 
+                    fill="none"
+                  >
+                    <path 
+                      d="M24 12C24 12 18 22 20 32C21 38 16 40 12 38C12 46 18 56 30 58C44 60 54 52 52 40C50 30 42 28 42 22C42 16 36 6 32 8C32 14 28 18 26 16C24 14 24 12 24 12Z" 
+                      stroke="#F97316"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                  </svg>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#F97316',
+                    letterSpacing: '-0.3px'
+                  }}>
+                    {streakData.count}
+                  </span>
+                </div>
+              )}
               <span className="time">{currentTime}</span>
               {user ? (
                 <>
@@ -4349,7 +4534,7 @@ export default function Home() {
               }`,
               opacity: index === currentIndex ? 1 : 0,
               zIndex: index === currentIndex ? 10 : 1,
-              pointerEvents: (index === currentIndex && !(index >= 5 && !user)) ? 'auto' : 'none',
+              pointerEvents: (index === currentIndex && !(index >= paywallThreshold && !user)) ? 'auto' : 'none',
               background: 'transparent',
               boxSizing: 'border-box',
               // TikTok-style: No scrolling within stories, only swipe between stories
@@ -4357,12 +4542,12 @@ export default function Home() {
               touchAction: 'none'
             }}
           >
-            {/* Paywall for stories 6+ (index >= 5) */}
-            {index >= 5 && !user && (
+            {/* Paywall for stories after streak page + 2 articles */}
+            {index >= paywallThreshold && !user && (
               <div className="paywall-overlay">
                 <div className="paywall-modal">
                   <h2>Create Your Account</h2>
-                  <p>Continue reading beyond the 5th story by creating a free account.</p>
+                  <p>Create a free account to continue reading more news.</p>
                   <SignupForm onSubmit={handleSignup} />
                   <div className="paywall-footer">
                     <p>Already have an account? <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button></p>
@@ -4376,8 +4561,8 @@ export default function Home() {
                               style={{
                 background: 'transparent',
                 backgroundColor: 'transparent',
-                filter: index >= 5 && !user ? 'blur(5px)' : 'none',
-                pointerEvents: index >= 5 && !user ? 'none' : 'auto',
+                filter: index >= paywallThreshold && !user ? 'blur(5px)' : 'none',
+                pointerEvents: index >= paywallThreshold && !user ? 'none' : 'auto',
               }}
             >
               {story.type === 'opening' ? (
@@ -4528,6 +4713,154 @@ export default function Home() {
                       Refresh Reading List
                     </button>
                   )}
+                </div>
+              ) : story.type === 'streak' ? (
+                // Streak Page - Shows after all important articles are viewed
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100vh',
+                  background: '#fff',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  {/* Globe Container */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '75%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    opacity: streakAnimationPhase >= 0 ? 1 : 0,
+                    transition: 'opacity 1.2s ease',
+                    zIndex: 1
+                  }}>
+                    <StreakGlobe size={550} />
+                  </div>
+
+                  {/* Part 1: Intro Message */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '22%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                    textAlign: 'center',
+                    opacity: streakAnimationPhase === 0 ? 1 : 0,
+                    transition: 'opacity 0.6s ease, transform 0.6s ease',
+                    visibility: streakAnimationPhase === 0 ? 'visible' : 'hidden'
+                  }}>
+                    <p style={{
+                      fontSize: '22px',
+                      fontWeight: '600',
+                      color: '#000',
+                      lineHeight: '1.4',
+                      letterSpacing: '-0.3px',
+                      margin: 0
+                    }}>
+                      You have read all the<br/>must-know news
+                    </p>
+                  </div>
+
+                  {/* Part 2: Streak Display */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '22%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                    textAlign: 'center',
+                    opacity: streakAnimationPhase === 1 ? 1 : 0,
+                    transition: 'opacity 0.8s ease, transform 0.8s ease',
+                    visibility: streakAnimationPhase === 1 ? 'visible' : 'hidden'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{
+                        fontSize: '88px',
+                        fontWeight: '700',
+                        color: '#000',
+                        lineHeight: 1,
+                        letterSpacing: '-4px'
+                      }}>
+                        {story.streakCount || streakData.count || 1}
+                      </span>
+                      <span style={{
+                        fontSize: '22px',
+                        fontWeight: '600',
+                        color: '#999'
+                      }}>
+                        {(story.streakCount || streakData.count || 1) === 1 ? 'day' : 'days'}
+                      </span>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      marginTop: '16px'
+                    }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF6B35">
+                        <path d="M12 23C16.1421 23 19.5 19.6421 19.5 15.5C19.5 14.6345 19.2697 13.8032 19 13C19 13 18.5 14 17.5 14C17.5 14 18.5 11 17 8.5C17 8.5 16.5 10 15 10C15 10 16.5 7.5 15 4C13.5 5.5 13 7 12.5 9.5C12.1666 8.5 11.5 7.5 10.5 7C10.5 9 10 11 8 13C7.5 11.5 7 11 6 10.5C6 10.5 5.5 12 5.5 14C5.5 14 5 13.5 4.5 13.5C4.5 15 4.5 16 4.5 16C4.5 20 7.85786 23 12 23Z"/>
+                      </svg>
+                      <span style={{
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: '#000',
+                        letterSpacing: '-0.2px'
+                      }}>
+                        Streak
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Part 3: Outro Message */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '22%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                    textAlign: 'center',
+                    opacity: streakAnimationPhase === 2 ? 1 : 0,
+                    transition: 'opacity 0.8s ease',
+                    visibility: streakAnimationPhase === 2 ? 'visible' : 'hidden'
+                  }}>
+                    <p style={{
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      color: '#000',
+                      lineHeight: '1.4',
+                      letterSpacing: '-0.3px',
+                      margin: 0
+                    }}>
+                      Scroll to read more news
+                    </p>
+                    <div style={{ marginTop: '20px' }}>
+                      <svg 
+                        width="28" 
+                        height="28" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="#BABABA" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        style={{
+                          animation: 'bounce 1.5s ease-in-out infinite'
+                        }}
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+
                 </div>
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
