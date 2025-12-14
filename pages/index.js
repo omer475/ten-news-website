@@ -98,6 +98,42 @@ export default function Home() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Auto-refresh when user returns to the page after leaving Safari/Chrome
+  // This ensures users always see fresh news when they come back
+  useEffect(() => {
+    let hiddenTime = null;
+    const REFRESH_THRESHOLD_MS = 60 * 1000; // Refresh if hidden for more than 1 minute
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is being hidden (user switched apps, locked phone, etc.)
+        hiddenTime = Date.now();
+        console.log('📱 Page hidden - tracking time...');
+      } else {
+        // Page is visible again
+        if (hiddenTime) {
+          const timeHidden = Date.now() - hiddenTime;
+          console.log(`📱 Page visible again - was hidden for ${Math.round(timeHidden / 1000)}s`);
+          
+          if (timeHidden >= REFRESH_THRESHOLD_MS) {
+            // User was away for more than 1 minute - refresh for fresh news
+            console.log('🔄 Refreshing page for fresh news...');
+            window.location.reload();
+          }
+        }
+        hiddenTime = null;
+      }
+    };
+
+    // Add event listener for visibility change
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   // Swipe handling for summary/bullet toggle and detailed article navigation
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -2387,7 +2423,7 @@ export default function Home() {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
       </Head>
       
       <style>{`
@@ -5243,7 +5279,7 @@ export default function Home() {
                       <div 
                         className="news-summary" 
                         style={{ 
-                          marginTop: '0px',
+                          marginTop: '-16px',
                           marginBottom: '32px',
                           fontSize: '16px',
                           lineHeight: '1.6',
@@ -5343,6 +5379,21 @@ export default function Home() {
                                     { key: 'why', label: 'WHY' }
                                   ];
                                   
+                                  // Function to strip 5W labels from the text
+                                  const strip5WLabel = (text, labelKey) => {
+                                    if (!text || typeof text !== 'string') return text;
+                                    // Remove patterns like "WHO:", "Who:", "who:", "WHO -", "WHO–", etc.
+                                    const patterns = [
+                                      new RegExp(`^\\s*${labelKey}\\s*[:：\\-–—]\\s*`, 'i'),
+                                      new RegExp(`^\\s*${labelKey}\\s+`, 'i')
+                                    ];
+                                    let cleaned = text;
+                                    for (const pattern of patterns) {
+                                      cleaned = cleaned.replace(pattern, '');
+                                    }
+                                    return cleaned.trim();
+                                  };
+                                  
                                   return (
                                     <div style={{
                                       margin: 0,
@@ -5351,26 +5402,33 @@ export default function Home() {
                                       transition: 'opacity 0.3s ease'
                                     }}>
                                       {wsLabels.map((ws, i) => {
-                                        const value = fiveWs[ws.key];
+                                        let value = fiveWs[ws.key];
                                         if (!value) return null;
+                                        
+                                        // Strip any embedded 5W label from the text
+                                        value = strip5WLabel(value, ws.key);
                                         
                                         return (
                                           <div key={ws.key} style={{
-                                            marginBottom: '12px',
+                                            marginBottom: '10px',
                                             animation: 'fadeSlideIn 0.4s ease',
                                             animationDelay: `${i * 0.06}s`,
                                             animationFillMode: 'both',
                                             display: 'flex',
                                             alignItems: 'flex-start',
-                                            gap: '10px'
+                                            gap: '12px'
                                           }}>
                                             <span style={{
-                                              fontSize: '11px',
+                                              fontSize: '13px',
                                               fontWeight: '700',
+                                              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                               color: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary,
-                                              minWidth: '50px',
-                                              letterSpacing: '0.05em',
-                                              paddingTop: '3px'
+                                              width: '52px',
+                                              minWidth: '52px',
+                                              maxWidth: '52px',
+                                              letterSpacing: '0.03em',
+                                              paddingTop: '2px',
+                                              textAlign: 'left'
                                             }}>
                                               {ws.label}
                                             </span>
@@ -5401,7 +5459,7 @@ export default function Home() {
                                 }}>
                                   {bullets.map((bullet, i) => (
                                     <li key={`${languageMode}-${i}`} style={{
-                                      marginBottom: '14px',
+                                      marginBottom: '10px',
                                       fontSize: '17px',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
