@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -14,6 +14,7 @@ export default function MapboxMap({
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -114,16 +115,22 @@ export default function MapboxMap({
       }
     });
 
-    // Use ResizeObserver to handle container size changes
+    // Use ResizeObserver to handle container size changes with debounce
+    let resizeTimeout;
     const resizeObserver = new ResizeObserver(() => {
-      if (mapRef.current) {
-        mapRef.current.resize();
-      }
+      // Debounce resize calls to prevent flickering during animations
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      }, 50);
     });
     resizeObserver.observe(mapContainerRef.current);
 
     // Cleanup
     return () => {
+      clearTimeout(resizeTimeout);
       resizeObserver.disconnect();
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
@@ -135,6 +142,9 @@ export default function MapboxMap({
   useEffect(() => {
     if (mapRef.current) {
       const map = mapRef.current;
+      
+      // Start fade out
+      setIsTransitioning(true);
       
       if (expanded) {
         // Enable interactions when expanded
@@ -152,11 +162,21 @@ export default function MapboxMap({
         map.touchZoomRotate.disable();
       }
       
-      map.easeTo({
-        zoom: expanded ? 6 : 2,
-        duration: 800,
-        easing: (t) => 1 - Math.pow(1 - t, 3) // Ease out cubic - very smooth
-      });
+      // Set zoom immediately (no animation) after container finishes transitioning
+      const resizeTimeout = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+          mapRef.current.jumpTo({
+            zoom: expanded ? 6 : 2
+          });
+          // Fade back in
+          setTimeout(() => {
+            setIsTransitioning(false);
+          }, 50);
+        }
+      }, 400); // Wait for most of the container transition
+      
+      return () => clearTimeout(resizeTimeout);
     }
   }, [expanded]);
 
@@ -168,6 +188,11 @@ export default function MapboxMap({
         .mapboxgl-ctrl-bottom-left,
         .mapboxgl-ctrl-bottom-right {
           display: none !important;
+        }
+        
+        .mapboxgl-canvas-container,
+        .mapboxgl-canvas {
+          transition: opacity 0.3s ease !important;
         }
         
         @keyframes markerPulse {
@@ -190,7 +215,9 @@ export default function MapboxMap({
           right: 0,
           bottom: 0,
           borderRadius: '8px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          opacity: isTransitioning ? 0.3 : 1,
+          transition: 'opacity 0.25s ease-in-out'
         }} 
       />
     </>

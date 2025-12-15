@@ -5585,12 +5585,18 @@ export default function Home() {
                           flex: '0 0 auto'
                         }}>
                           {/* Publisher Logo - Clickable to visit source */}
-                          {story.source && (
-                            <a
-                              href={story.url || '#'}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
+                          {story.source && story.url && (
+                            <div
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(story.url, '_blank', 'noopener,noreferrer');
+                              }}
+                              onTouchEnd={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(story.url, '_blank', 'noopener,noreferrer');
+                              }}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -5621,7 +5627,7 @@ export default function Home() {
                                   e.target.style.opacity = '1';
                                 }}
                               />
-                            </a>
+                            </div>
                           )}
                           {/* Time Display */}
                           <div style={{
@@ -5712,6 +5718,36 @@ export default function Home() {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     console.log(`${infoType} option clicked for story`, index);
+                                    
+                                    // Disable auto-rotation for this article when user manually interacts
+                                    setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
+                                    
+                                    // Reset all states
+                                    setShowTimeline(prev => ({ ...prev, [index]: false }));
+                                    setShowDetails(prev => ({ ...prev, [index]: false }));
+                                    setShowMap(prev => ({ ...prev, [index]: false }));
+                                    setShowGraph(prev => ({ ...prev, [index]: false }));
+
+                                    // Set the selected state
+                                    switch (infoType) {
+                                      case 'timeline':
+                                        setShowTimeline(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'details':
+                                        setShowDetails(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'map':
+                                        setShowMap(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'graph':
+                                        setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                    }
+                                  }}
+                                  onTouchEnd={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log(`${infoType} option touched for story`, index);
                                     
                                     // Disable auto-rotation for this article when user manually interacts
                                     setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
@@ -5844,10 +5880,10 @@ export default function Home() {
                       </div>
                       
                       {/* Summary/Bullet Points - Click/Tap to toggle between bullets and 5W's */}
-                      <div 
-                        className="news-summary" 
-                        style={{ 
-                          marginTop: '-16px',
+                      <div
+                        className="news-summary"
+                        style={{
+                          marginTop: '4px',
                           marginBottom: '32px',
                           fontSize: '16px',
                           lineHeight: '1.6',
@@ -5987,7 +6023,7 @@ export default function Home() {
                                             gap: '12px'
                                           }}>
                                             <span style={{
-                                              fontSize: '13px',
+                                              fontSize: '12px',
                                               fontWeight: '700',
                                               fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif',
                                               color: imageDominantColors[index]?.blurColor || getCategoryColors(story.category).primary,
@@ -6001,7 +6037,7 @@ export default function Home() {
                                               {ws.label}
                                             </span>
                                             <span style={{
-                                              fontSize: '16px',
+                                              fontSize: '15px',
                                               lineHeight: '1.45',
                                               fontWeight: '400',
                                               color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)',
@@ -6028,7 +6064,7 @@ export default function Home() {
                                   {bullets.map((bullet, i) => (
                                     <li key={`${languageMode}-${i}`} style={{
                                       marginBottom: '10px',
-                                      fontSize: '17px',
+                                      fontSize: '16px',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
                                       letterSpacing: '-0.01em',
