@@ -6172,6 +6172,10 @@ export default function Home() {
                           const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                           if (isExpandIcon) return;
                           
+                          // Don't handle swipe/tap when any info box is expanded
+                          const isAnyExpanded = expandedMap[index] || expandedTimeline[index] || expandedGraph[index];
+                          if (isAnyExpanded) return;
+                          
                           // Only handle if there are multiple information types
                           if (getAvailableComponentsCount(story) <= 1) return;
                           
@@ -6223,8 +6227,11 @@ export default function Home() {
                               const touchTarget = endEvent.target;
                               const isExpandIcon = touchTarget.closest('[data-expand-icon]');
                               
-                              if (!isExpandIcon) {
-                                // Single tap switches information type
+                              // Check if any information box is expanded - don't switch if expanded
+                              const isAnyExpanded = expandedMap[index] || expandedTimeline[index] || expandedGraph[index];
+                              
+                              if (!isExpandIcon && !isAnyExpanded) {
+                                // Single tap switches information type (only when collapsed)
                                 console.log('Information box tap detected for story', index);
                                 endEvent.preventDefault();
                                 endEvent.stopPropagation();
