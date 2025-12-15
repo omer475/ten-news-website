@@ -303,6 +303,15 @@ export default function Home() {
         e.target.closest('.language-switcher__option')) {
       return;
     }
+    // Don't handle swipe when touching expanded information boxes
+    if (e.target.closest('.map-container-advanced') || 
+        e.target.closest('.timeline-container') ||
+        e.target.closest('.graph-container')) {
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        return;
+      }
+    }
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -316,6 +325,15 @@ export default function Home() {
         e.target.closest('.language-switcher__option')) {
       return;
     }
+    // Don't handle swipe when touching expanded information boxes
+    if (e.target.closest('.map-container-advanced') || 
+        e.target.closest('.timeline-container') ||
+        e.target.closest('.graph-container')) {
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        return;
+      }
+    }
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
@@ -327,6 +345,15 @@ export default function Home() {
         e.target.closest('.language-dropdown-box') ||
         e.target.closest('.language-switcher__option')) {
       return;
+    }
+    // Don't handle swipe when touching expanded information boxes
+    if (e.target.closest('.map-container-advanced') || 
+        e.target.closest('.timeline-container') ||
+        e.target.closest('.graph-container')) {
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        return;
+      }
     }
     
     if (!touchStart || !touchEnd) return;
@@ -481,6 +508,118 @@ export default function Home() {
     } catch (error) {
       return '';
     }
+  };
+
+  // Function to get source domain for logo.dev API
+  const getSourceDomain = (source) => {
+    if (!source) return null;
+    
+    // Common news source mappings to their domains
+    const sourceDomains = {
+      'cnn': 'cnn.com',
+      'bbc': 'bbc.com',
+      'bbc news': 'bbc.com',
+      'reuters': 'reuters.com',
+      'associated press': 'apnews.com',
+      'ap': 'apnews.com',
+      'ap news': 'apnews.com',
+      'new york times': 'nytimes.com',
+      'nyt': 'nytimes.com',
+      'the new york times': 'nytimes.com',
+      'washington post': 'washingtonpost.com',
+      'the washington post': 'washingtonpost.com',
+      'guardian': 'theguardian.com',
+      'the guardian': 'theguardian.com',
+      'fox news': 'foxnews.com',
+      'fox': 'foxnews.com',
+      'nbc': 'nbcnews.com',
+      'nbc news': 'nbcnews.com',
+      'abc news': 'abcnews.go.com',
+      'abc': 'abcnews.go.com',
+      'cbs news': 'cbsnews.com',
+      'cbs': 'cbsnews.com',
+      'cnbc': 'cnbc.com',
+      'bloomberg': 'bloomberg.com',
+      'financial times': 'ft.com',
+      'ft': 'ft.com',
+      'wall street journal': 'wsj.com',
+      'wsj': 'wsj.com',
+      'the wall street journal': 'wsj.com',
+      'politico': 'politico.com',
+      'axios': 'axios.com',
+      'the hill': 'thehill.com',
+      'huffpost': 'huffpost.com',
+      'huffington post': 'huffpost.com',
+      'the huffington post': 'huffpost.com',
+      'buzzfeed': 'buzzfeed.com',
+      'buzzfeed news': 'buzzfeed.com',
+      'vice': 'vice.com',
+      'vice news': 'vice.com',
+      'vox': 'vox.com',
+      'the verge': 'theverge.com',
+      'verge': 'theverge.com',
+      'techcrunch': 'techcrunch.com',
+      'wired': 'wired.com',
+      'ars technica': 'arstechnica.com',
+      'engadget': 'engadget.com',
+      'mashable': 'mashable.com',
+      'gizmodo': 'gizmodo.com',
+      'the atlantic': 'theatlantic.com',
+      'atlantic': 'theatlantic.com',
+      'npr': 'npr.org',
+      'pbs': 'pbs.org',
+      'al jazeera': 'aljazeera.com',
+      'sky news': 'news.sky.com',
+      'sky': 'news.sky.com',
+      'daily mail': 'dailymail.co.uk',
+      'the daily mail': 'dailymail.co.uk',
+      'telegraph': 'telegraph.co.uk',
+      'the telegraph': 'telegraph.co.uk',
+      'independent': 'independent.co.uk',
+      'the independent': 'independent.co.uk',
+      'times': 'thetimes.co.uk',
+      'the times': 'thetimes.co.uk',
+      'forbes': 'forbes.com',
+      'fortune': 'fortune.com',
+      'business insider': 'businessinsider.com',
+      'insider': 'businessinsider.com',
+      'yahoo': 'yahoo.com',
+      'yahoo news': 'news.yahoo.com',
+      'google news': 'news.google.com',
+      'usa today': 'usatoday.com',
+      'los angeles times': 'latimes.com',
+      'la times': 'latimes.com',
+      'chicago tribune': 'chicagotribune.com',
+      'today+': 'tennews.ai',
+      'tennews': 'tennews.ai',
+      'time': 'time.com',
+      'newsweek': 'newsweek.com',
+      'economist': 'economist.com',
+      'the economist': 'economist.com'
+    };
+    
+    const normalizedSource = source.toLowerCase().trim();
+    
+    // Check if we have a direct mapping
+    if (sourceDomains[normalizedSource]) {
+      return sourceDomains[normalizedSource];
+    }
+    
+    // If source looks like a domain already, use it directly
+    if (normalizedSource.includes('.')) {
+      return normalizedSource;
+    }
+    
+    // Try to construct a domain from the source name
+    const cleanName = normalizedSource.replace(/[^a-z0-9]/g, '');
+    return `${cleanName}.com`;
+  };
+
+  // Get logo URL from logo.dev
+  const getLogoUrl = (source) => {
+    const domain = getSourceDomain(source);
+    if (!domain) return null;
+    return `https://img.logo.dev/${domain}?token=pk_JnGAFnpEQqu1eh3MHrQM3A`;
   };
 
   // Extract color candidates using enhanced frequency analysis
@@ -2234,6 +2373,16 @@ export default function Home() {
         return;
       }
       
+      // Don't capture touch on expanded information boxes
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        if (e.target.closest('.map-container-advanced') || 
+            e.target.closest('.timeline-container') ||
+            e.target.closest('.graph-container')) {
+          return;
+        }
+      }
+      
       // Prevent default to stop any scrolling - TikTok style
       e.preventDefault();
       
@@ -2248,6 +2397,16 @@ export default function Home() {
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
         return;
+      }
+      
+      // Don't handle touch on expanded information boxes
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        if (e.target.closest('.map-container-advanced') || 
+            e.target.closest('.timeline-container') ||
+            e.target.closest('.graph-container')) {
+          return;
+        }
       }
       
       if (isTransitioning) return;
@@ -2287,6 +2446,17 @@ export default function Home() {
           e.target.closest('.language-switcher__option')) {
         return;
       }
+      
+      // Don't block touch on expanded information boxes
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        if (e.target.closest('.map-container-advanced') || 
+            e.target.closest('.timeline-container') ||
+            e.target.closest('.graph-container')) {
+          return;
+        }
+      }
+      
       // Prevent default scroll behavior - only swipe navigation allowed
       e.preventDefault();
     };
@@ -2296,6 +2466,17 @@ export default function Home() {
       e.preventDefault();
       
       if (isTransitioning) return;
+      
+      // Don't navigate when scrolling on expanded information boxes
+      const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
+      if (isAnyExpanded) {
+        const target = e.target;
+        if (target.closest('.map-container-advanced') || 
+            target.closest('.timeline-container') ||
+            target.closest('.graph-container')) {
+          return;
+        }
+      }
       
       if (Math.abs(e.deltaY) > 30) {
         // Allow backward navigation, but prevent forward navigation when paywall is active
@@ -2365,7 +2546,7 @@ export default function Home() {
       document.removeEventListener('wheel', handleWheel);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, stories.length, user, paywallThreshold]);
+  }, [currentIndex, stories.length, user, paywallThreshold, expandedMap, expandedTimeline, expandedGraph]);
 
   // Scroll lock for paywall - only prevent page-level scrolling, allow navigation
   useEffect(() => {
@@ -5396,16 +5577,62 @@ export default function Home() {
                         position: 'relative',
                         zIndex: 10005
                       }}>
-                        {/* Apple HIG - Time Display */}
+                        {/* Publisher Logo + Time Display */}
                         <div style={{
-                          fontSize: '13px',
-                          fontWeight: '400',
-                          color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.56)',
-                          letterSpacing: '-0.08px',
-                          flex: '0 0 auto',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flex: '0 0 auto'
                         }}>
-                          {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
+                          {/* Publisher Logo - Clickable to visit source */}
+                          {story.source && (
+                            <a
+                              href={story.url || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <img
+                                src={getLogoUrl(story.source)}
+                                alt={story.source}
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  borderRadius: '4px',
+                                  objectFit: 'contain',
+                                  backgroundColor: 'transparent',
+                                  transition: 'transform 0.2s ease, opacity 0.2s ease'
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.transform = 'scale(1.1)';
+                                  e.target.style.opacity = '0.8';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.transform = 'scale(1)';
+                                  e.target.style.opacity = '1';
+                                }}
+                              />
+                            </a>
+                          )}
+                          {/* Time Display */}
+                          <div style={{
+                            fontSize: '13px',
+                            fontWeight: '400',
+                            color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.56)',
+                            letterSpacing: '-0.08px',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif'
+                          }}>
+                            {story.publishedAt ? getTimeAgo(story.publishedAt) : '2h'}
+                          </div>
                         </div>
 
                         {/* Right Side Buttons Group - Language Toggle + Switcher */}
