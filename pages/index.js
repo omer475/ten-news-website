@@ -396,8 +396,7 @@ export default function Home() {
   const getAvailableComponentsCount = (story) => {
     let count = 0;
     if (story.details && story.details.length > 0) count++;
-    // Timeline disabled - all stories use same design
-    // if (story.timeline && story.timeline.length > 0) count++;
+    if (story.timeline && story.timeline.length > 0) count++;
     if (story.map) count++;
     if (story.graph) count++;
     return count;
@@ -431,8 +430,7 @@ export default function Home() {
     // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
-    // Timeline disabled - all stories use same design
-    // if (story.timeline && story.timeline.length > 0) types.push('timeline');
+    if (story.timeline && story.timeline.length > 0) types.push('timeline');
     if (story.map) types.push('map');
     if (story.graph) types.push('graph');
     return types;
@@ -6812,10 +6810,20 @@ export default function Home() {
                                   padding: '10px 16px'
                                 }}>
                                   {story.details.slice(0, 3).map((detail, i) => {
-                                    const detailStr = typeof detail === 'string' ? detail : String(detail || '');
-                                    const [label, value] = detailStr.split(':');
-                                    const cleanLabel = label?.trim() || '';
-                                    const cleanValue = value?.trim() || '';
+                                    // Handle both string and object formats
+                                    let cleanLabel = '';
+                                    let cleanValue = '';
+                                    
+                                    if (typeof detail === 'object' && detail !== null) {
+                                      // Object format: { label: 'Impact Score', value: '8.5/10' }
+                                      cleanLabel = detail.label || detail.name || '';
+                                      cleanValue = detail.value || detail.description || '';
+                                    } else if (typeof detail === 'string') {
+                                      // String format: "Impact Score: 8.5/10"
+                                      const [label, value] = detail.split(':');
+                                      cleanLabel = label?.trim() || '';
+                                      cleanValue = value?.trim() || '';
+                                    }
                                     
                                     // Extract main number/value and subtitle
                                     const valueMatch = cleanValue.match(/^([^a-z]*[0-9][^a-z]*)\s*(.*)$/i);
