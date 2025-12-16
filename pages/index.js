@@ -2320,11 +2320,14 @@ export default function Home() {
   // Function to render text with highlighted important words (for bullet texts - bold + colored)
   const renderBoldText = (text, colors, category = null, isImportant = false) => {
     if (!text) return '';
+    
+    // Ensure text is a string
+    const textStr = typeof text === 'string' ? text : String(text);
 
     // Use image blur color or category color for highlights
     const highlightColor = colors?.blurColor || (category ? getCategoryColors(category).primary : '#000000');
     
-    const parts = text.split(/(\*\*.*?\*\*)/g);
+    const parts = textStr.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
@@ -2341,13 +2344,16 @@ export default function Home() {
   // Function to render title with highlighted important words (colored AND bold)
   const renderTitleWithHighlight = (text, colors, category = null, isImportant = false) => {
     if (!text) return '';
+    
+    // Ensure text is a string
+    const textStr = typeof text === 'string' ? text : String(text);
 
     // For important articles (black bg), use bright/light highlight colors
     const highlightColor = isImportant
       ? '#F59E0B' // Bright amber/gold for important article titles (visible on black)
       : (colors?.highlight || (category ? getCategoryColors(category).primary : '#ffffff'));
     
-    const parts = text.split(/(\*\*.*?\*\*)/g);
+    const parts = textStr.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.replace(/\*\*/g, '');
@@ -6806,7 +6812,8 @@ export default function Home() {
                                   padding: '10px 16px'
                                 }}>
                                   {story.details.slice(0, 3).map((detail, i) => {
-                                    const [label, value] = detail.split(':');
+                                    const detailStr = typeof detail === 'string' ? detail : String(detail || '');
+                                    const [label, value] = detailStr.split(':');
                                     const cleanLabel = label?.trim() || '';
                                     const cleanValue = value?.trim() || '';
                                     
