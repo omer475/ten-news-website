@@ -3099,107 +3099,68 @@ export default function Home() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.75);
+          background: rgba(255, 255, 255, 0.95);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
           pointer-events: auto;
-          animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-          from { 
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
         }
 
         .paywall-modal {
-          background: ${darkMode ? 'linear-gradient(145deg, #1f2937 0%, #111827 100%)' : 'linear-gradient(145deg, #ffffff 0%, #f9fafb 100%)'};
-          border-radius: 24px;
-          padding: 40px 32px;
-          max-width: 380px;
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 32px;
+          max-width: 360px;
           width: 90%;
-          box-shadow: 
-            0 25px 50px -12px rgba(0, 0, 0, 0.5),
-            0 0 0 1px ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'},
-            inset 0 1px 0 ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)'};
           pointer-events: auto;
           position: relative;
           z-index: 1001;
-          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .paywall-modal::before {
-          content: '';
-          position: absolute;
-          top: -1px;
-          left: 20%;
-          right: 20%;
-          height: 3px;
-          background: linear-gradient(90deg, transparent, ${darkMode ? '#667eea' : '#667eea'}, transparent);
-          border-radius: 3px;
         }
 
         .paywall-modal h2 {
-          color: ${darkMode ? '#ffffff' : '#111827'};
-          font-size: 26px;
-          font-weight: 700;
-          margin: 0 0 12px 0;
+          color: #1d1d1f;
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0 0 8px 0;
           text-align: center;
-          letter-spacing: -0.5px;
+          letter-spacing: -0.3px;
         }
 
         .paywall-modal p {
-          color: ${darkMode ? 'rgba(255,255,255,0.6)' : '#6b7280'};
+          color: #86868b;
           font-size: 15px;
-          line-height: 1.6;
-          margin: 0 0 28px 0;
+          line-height: 1.5;
+          margin: 0 0 24px 0;
           text-align: center;
         }
 
         .paywall-footer {
-          margin-top: 28px;
-          padding-top: 20px;
-          border-top: 1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
+          margin-top: 24px;
+          padding-top: 16px;
+          border-top: 1px solid #e5e5e5;
           text-align: center;
         }
 
         .paywall-footer p {
           margin: 0;
-          color: ${darkMode ? 'rgba(255,255,255,0.5)' : '#9ca3af'};
+          color: #86868b;
           font-size: 14px;
         }
 
         .paywall-footer .auth-switch {
           background: none;
           border: none;
-          color: #667eea;
+          color: #0066cc;
           cursor: pointer;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 500;
           text-decoration: none;
-          transition: color 0.2s ease;
-          padding: 4px 8px;
-          border-radius: 4px;
           pointer-events: auto;
         }
 
         .paywall-footer .auth-switch:hover {
-          color: #5a6fd6;
-          background: ${darkMode ? 'rgba(102, 126, 234, 0.15)' : 'rgba(102, 126, 234, 0.1)'};
+          text-decoration: underline;
         }
 
         /* Ensure form inputs work in paywall modal */
@@ -3449,69 +3410,55 @@ export default function Home() {
           initial-value: -45deg;
         }
 
-        /* Professional Header Button Styles */
+        /* Minimal Header Button Styles */
         .auth-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          all: unset;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           pointer-events: auto;
-          padding: 8px 18px;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif;
-          letter-spacing: 0.02em;
-          font-weight: 500;
-          font-size: 13px;
-          color: ${darkMode ? 'rgba(255,255,255,0.9)' : '#374151'};
+          padding: 8px 16px;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+          letter-spacing: -0.01em;
+          font-weight: 400;
+          font-size: 14px;
+          color: ${darkMode ? 'rgba(255,255,255,0.9)' : '#1d1d1f'};
           background: transparent;
-          border-radius: 8px;
+          border-radius: 980px;
           transition: all 0.2s ease;
-          border: 1.5px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'};
-          text-transform: none;
-          min-height: 36px;
+          border: none;
         }
 
         .auth-btn:hover {
           background: ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'};
-          border-color: ${darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'};
         }
 
         .auth-btn:active {
-          transform: scale(0.97);
-          background: ${darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'};
+          transform: scale(0.96);
         }
 
         .subscribe-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          all: unset;
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           pointer-events: auto;
-          padding: 8px 20px;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif;
-          letter-spacing: 0.02em;
-          font-weight: 600;
-          font-size: 13px;
+          padding: 8px 16px;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+          letter-spacing: -0.01em;
+          font-weight: 400;
+          font-size: 14px;
           color: #ffffff;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 8px;
-          transition: all 0.25s ease;
+          background: #1d1d1f;
+          border-radius: 980px;
+          transition: all 0.2s ease;
           border: none;
-          text-transform: none;
-          min-height: 36px;
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.35);
         }
 
         .subscribe-btn:hover {
-          background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.45);
-          transform: translateY(-1px);
+          background: #333333;
         }
 
         .subscribe-btn:active {
-          transform: scale(0.97) translateY(0);
-          box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+          transform: scale(0.96);
         }
 
         .user-welcome {
@@ -3526,63 +3473,43 @@ export default function Home() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.75);
+          background: rgba(0, 0, 0, 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 2000;
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          animation: fadeIn 0.3s ease;
         }
 
         .auth-modal {
-          background: ${darkMode ? 'linear-gradient(145deg, #1f2937 0%, #111827 100%)' : 'linear-gradient(145deg, #ffffff 0%, #f9fafb 100%)'};
-          border-radius: 24px;
-          box-shadow: 
-            0 25px 50px -12px rgba(0, 0, 0, 0.5),
-            0 0 0 1px ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'},
-            inset 0 1px 0 ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)'};
+          background: ${darkMode ? '#1f2937' : '#ffffff'};
+          border-radius: 16px;
           width: 90%;
-          max-width: 380px;
+          max-width: 360px;
           max-height: 90vh;
           overflow-y: auto;
-          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          position: relative;
-        }
-
-        .auth-modal::before {
-          content: '';
-          position: absolute;
-          top: -1px;
-          left: 20%;
-          right: 20%;
-          height: 3px;
-          background: linear-gradient(90deg, transparent, #667eea, transparent);
-          border-radius: 3px;
         }
 
         .auth-modal-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 28px 28px 0;
+          padding: 24px 24px 0;
           margin-bottom: 20px;
         }
 
         .auth-modal-header h2 {
           font-size: 22px;
-          font-weight: 700;
-          color: ${darkMode ? '#ffffff' : '#111827'};
+          font-weight: 600;
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           margin: 0;
-          letter-spacing: -0.5px;
+          letter-spacing: -0.3px;
         }
 
         .auth-close {
-          background: ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
+          background: none;
           border: none;
-          font-size: 18px;
-          color: ${darkMode ? 'rgba(255,255,255,0.6)' : '#9ca3af'};
+          font-size: 24px;
+          color: ${darkMode ? '#94a3b8' : '#86868b'};
           cursor: pointer;
           padding: 0;
           width: 32px;
@@ -3590,159 +3517,123 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 10px;
-          transition: all 0.2s ease;
+          border-radius: 50%;
+          transition: all 0.2s;
         }
 
         .auth-close:hover {
-          background: ${darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'};
-          color: ${darkMode ? '#ffffff' : '#374151'};
-          transform: scale(1.05);
+          background: ${darkMode ? '#374151' : '#f5f5f7'};
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
         }
 
         .auth-modal-body {
-          padding: 0 28px 28px;
+          padding: 0 24px 24px;
         }
 
         .auth-error {
-          background: ${darkMode ? 'rgba(220, 38, 38, 0.15)' : '#fef2f2'};
-          color: ${darkMode ? '#fca5a5' : '#dc2626'};
-          padding: 14px 16px;
-          border-radius: 12px;
+          background: #fef2f2;
+          color: #dc2626;
+          padding: 12px 16px;
+          border-radius: 8px;
           font-size: 14px;
-          margin-bottom: 20px;
-          border: 1px solid ${darkMode ? 'rgba(220, 38, 38, 0.3)' : '#fecaca'};
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .auth-error::before {
-          content: '!';
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          background: ${darkMode ? '#dc2626' : '#dc2626'};
-          color: white;
-          border-radius: 50%;
-          font-size: 12px;
-          font-weight: 700;
-          flex-shrink: 0;
+          margin-bottom: 16px;
         }
 
         .auth-form {
           display: flex;
           flex-direction: column;
-          gap: 18px;
+          gap: 16px;
         }
 
         .auth-field {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 6px;
         }
 
         .auth-field label {
-          font-size: 13px;
-          font-weight: 600;
-          color: ${darkMode ? 'rgba(255,255,255,0.7)' : '#4b5563'};
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          font-size: 14px;
+          font-weight: 500;
+          color: ${darkMode ? '#d1d5db' : '#1d1d1f'};
         }
 
         .auth-field input {
-          padding: 14px 16px;
-          border: 1.5px solid ${darkMode ? 'rgba(255,255,255,0.15)' : '#e5e7eb'};
-          border-radius: 12px;
+          padding: 12px 14px;
+          border: 1px solid ${darkMode ? '#374151' : '#d2d2d7'};
+          border-radius: 8px;
           font-size: 16px;
-          background: ${darkMode ? 'rgba(255,255,255,0.05)' : '#ffffff'};
-          color: ${darkMode ? '#ffffff' : '#111827'};
-          transition: all 0.25s ease;
+          background: ${darkMode ? '#111827' : '#ffffff'};
+          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
+          transition: border-color 0.2s;
         }
 
         .auth-field input:focus {
           outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
-          background: ${darkMode ? 'rgba(255,255,255,0.08)' : '#ffffff'};
+          border-color: #0066cc;
         }
 
         .auth-field input::placeholder {
-          color: ${darkMode ? 'rgba(255,255,255,0.35)' : '#9ca3af'};
+          color: ${darkMode ? '#6b7280' : '#86868b'};
         }
 
         .auth-field-error {
           font-size: 12px;
-          color: #ef4444;
+          color: #dc2626;
           margin-top: 4px;
-          display: flex;
-          align-items: center;
-          gap: 4px;
         }
 
         .auth-submit {
-          padding: 16px 24px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 14px 24px;
+          background: #1d1d1f;
           color: white;
           border: none;
-          border-radius: 12px;
+          border-radius: 980px;
           font-size: 16px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.25s ease;
+          transition: all 0.2s;
           margin-top: 8px;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
-          letter-spacing: 0.3px;
         }
 
         .auth-submit:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45);
-          background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+          background: #333333;
         }
 
         .auth-submit:active:not(:disabled) {
-          transform: translateY(0);
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+          transform: scale(0.98);
         }
 
         .auth-submit:disabled {
-          opacity: 0.6;
+          opacity: 0.5;
           cursor: not-allowed;
-          transform: none;
         }
 
         .auth-modal-footer {
-          margin-top: 24px;
-          padding-top: 20px;
-          border-top: 1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
+          margin-top: 20px;
+          padding-top: 16px;
+          border-top: 1px solid ${darkMode ? '#374151' : '#e5e5e5'};
           text-align: center;
         }
 
         .auth-modal-footer p {
           margin: 0;
           font-size: 14px;
-          color: ${darkMode ? 'rgba(255,255,255,0.5)' : '#9ca3af'};
+          color: ${darkMode ? '#94a3b8' : '#86868b'};
         }
 
         .auth-switch {
           background: none;
           border: none;
-          color: #667eea;
-          font-weight: 600;
+          color: #0066cc;
+          font-weight: 500;
           cursor: pointer;
           text-decoration: none;
-          transition: all 0.2s ease;
-          padding: 2px 6px;
-          border-radius: 4px;
+          padding: 0;
           font-size: inherit;
         }
 
         .auth-switch:hover {
-          color: #5a6fd6;
-          background: ${darkMode ? 'rgba(102, 126, 234, 0.15)' : 'rgba(102, 126, 234, 0.1)'};
+          text-decoration: underline;
         }
 
         @keyframes progressFill {
