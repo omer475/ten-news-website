@@ -3447,14 +3447,14 @@ export default function Home() {
           font-weight: 400;
           font-size: 14px;
           color: #ffffff;
-          background: #1d1d1f;
+          background: #007AFF;
           border-radius: 980px;
           transition: all 0.2s ease;
           border: none;
         }
 
         .subscribe-btn:hover {
-          background: #333333;
+          background: #0066d6;
         }
 
         .subscribe-btn:active {
@@ -3584,7 +3584,7 @@ export default function Home() {
 
         .auth-submit {
           padding: 14px 24px;
-          background: #1d1d1f;
+          background: #007AFF;
           color: white;
           border: none;
           border-radius: 980px;
@@ -3596,7 +3596,7 @@ export default function Home() {
         }
 
         .auth-submit:hover:not(:disabled) {
-          background: #333333;
+          background: #0066d6;
         }
 
         .auth-submit:active:not(:disabled) {
