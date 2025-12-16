@@ -3101,8 +3101,9 @@ export default function Home() {
           bottom: 0;
           background: rgba(255, 255, 255, 0.95);
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
+          padding-top: 15vh;
           z-index: 1000;
           pointer-events: auto;
         }
@@ -5509,7 +5510,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(42vh + 50px)',
+                      top: 'calc(42vh + 20px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -5571,7 +5572,7 @@ export default function Home() {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '8px',
-                        marginTop: '0px',
+                        marginTop: '18px',
                         width: '100%',
                         position: 'relative',
                         zIndex: 10005
@@ -5882,7 +5883,7 @@ export default function Home() {
                       <div
                         className="news-summary"
                         style={{
-                          marginTop: '4px',
+                          marginTop: '-18px',
                           marginBottom: '32px',
                           fontSize: '16px',
                           lineHeight: '1.6',
