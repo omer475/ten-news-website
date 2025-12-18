@@ -2995,7 +2995,7 @@ export default function Home() {
           background: ${darkMode ? 'rgba(0,0,0,0.8)' : 'rgba(251,251,253,0.8)'};
           backdrop-filter: saturate(180%) blur(20px);
           -webkit-backdrop-filter: saturate(180%) blur(20px);
-          z-index: 1000;
+          z-index: 10000;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -3005,6 +3005,8 @@ export default function Home() {
           padding-right: 20px;
           border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
           transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
+          touch-action: auto;
+          pointer-events: auto;
         }
 
         /* Logo - Apple-inspired Typography */
@@ -3417,6 +3419,7 @@ export default function Home() {
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           pointer-events: auto;
+          touch-action: auto;
           padding: 8px 16px;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
           letter-spacing: -0.01em;
@@ -3442,6 +3445,7 @@ export default function Home() {
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           pointer-events: auto;
+          touch-action: auto;
           padding: 8px 16px;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
           letter-spacing: -0.01em;
@@ -4691,12 +4695,12 @@ export default function Home() {
               <span className="time">{currentTime}</span>
               {user ? (
                 <>
-                  <button className="auth-btn" onClick={handleLogout}>Log out</button>
+                  <button className="auth-btn" onClick={handleLogout} onTouchEnd={(e) => { e.preventDefault(); handleLogout(); }}>Log out</button>
                 </>
               ) : (
                 <>
-                  <button className="auth-btn" onClick={() => setAuthModal('login')}>Log in</button>
-                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')}>Sign up</button>
+                  <button className="auth-btn" onClick={() => setAuthModal('login')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('login'); }}>Log in</button>
+                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('signup'); }}>Sign up</button>
                 </>
               )}
             </div>
