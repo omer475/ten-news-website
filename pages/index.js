@@ -3530,6 +3530,8 @@ export default function Home() {
           justify-content: center;
           border-radius: 50%;
           transition: all 0.2s;
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
 
         .auth-close:hover {
@@ -3539,6 +3541,8 @@ export default function Home() {
 
         .auth-modal-body {
           padding: 0 24px 24px;
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
 
         .auth-error {
@@ -3554,12 +3558,21 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           gap: 16px;
+          pointer-events: auto !important;
+          touch-action: auto !important;
+        }
+        
+        .auth-form * {
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
 
         .auth-field {
           display: flex;
           flex-direction: column;
           gap: 6px;
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
 
         .auth-field label {
@@ -3577,8 +3590,11 @@ export default function Home() {
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           transition: border-color 0.2s;
           pointer-events: auto !important;
-          -webkit-user-select: text;
-          user-select: text;
+          touch-action: auto !important;
+          -webkit-user-select: text !important;
+          user-select: text !important;
+          -webkit-appearance: none;
+          appearance: none;
         }
 
         .auth-field input:focus {
@@ -6974,7 +6990,7 @@ export default function Home() {
             <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
               <div className="auth-modal-header">
                 <h2>{authModal === 'login' ? 'Login to Today+' : 'Create Your Account'}</h2>
-                <button className="auth-close" onClick={() => setAuthModal(null)}>×</button>
+                <button className="auth-close" onClick={() => setAuthModal(null)} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}>×</button>
               </div>
 
               <div className="auth-modal-body">
