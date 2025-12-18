@@ -6984,62 +6984,6 @@ export default function Home() {
         );
         })}
 
-        {/* Authentication Modal */}
-        {authModal && (
-          <div 
-            className="auth-modal-overlay" 
-            onClick={() => setAuthModal(null)}
-            onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); setAuthModal(null); } }}
-            style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-          >
-            <div 
-              className="auth-modal" 
-              onClick={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
-              style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-            >
-              <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                <h2>{authModal === 'login' ? 'Login to Today+' : 'Create Your Account'}</h2>
-                <button 
-                  className="auth-close" 
-                  onClick={() => setAuthModal(null)} 
-                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
-                  style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-                >×</button>
-              </div>
-
-              <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                {authError && (
-                  <div className="auth-error">{authError}</div>
-                )}
-
-                {authModal === 'login' ? (
-                  <LoginForm onSubmit={handleLogin} formData={formData} setFormData={setFormData} />
-                ) : (
-                  <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
-                )}
-
-                <div className="auth-modal-footer">
-                  {authModal === 'login' ? (
-                    <p>Don't have an account? <button className="auth-switch" onClick={() => {setAuthModal('signup'); setAuthError('');}}>Sign up</button></p>
-                  ) : (
-                    <p>Already have an account? <button className="auth-switch" onClick={() => {setAuthModal('login'); setAuthError('');}}>Login</button></p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Email Confirmation Modal */}
-        {emailConfirmation && (
-          <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)}>
-            <EmailConfirmation
-              email={emailConfirmation.email}
-              onBack={() => setEmailConfirmation(null)}
-            />
-          </div>
-        )}
 
         {/* Detailed Article Overlay */}
         {showDetailedArticle && selectedArticle && (
@@ -7228,6 +7172,63 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Authentication Modal - OUTSIDE main container for touch events */}
+      {authModal && (
+        <div 
+          className="auth-modal-overlay" 
+          onClick={() => setAuthModal(null)}
+          onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); setAuthModal(null); } }}
+          style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+        >
+          <div 
+            className="auth-modal" 
+            onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+          >
+            <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+              <h2>{authModal === 'login' ? 'Login to Today+' : 'Create Your Account'}</h2>
+              <button 
+                className="auth-close" 
+                onClick={() => setAuthModal(null)} 
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
+                style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+              >×</button>
+            </div>
+
+            <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+              {authError && (
+                <div className="auth-error">{authError}</div>
+              )}
+
+              {authModal === 'login' ? (
+                <LoginForm onSubmit={handleLogin} formData={formData} setFormData={setFormData} />
+              ) : (
+                <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
+              )}
+
+              <div className="auth-modal-footer">
+                {authModal === 'login' ? (
+                  <p>Don't have an account? <button className="auth-switch" onClick={() => {setAuthModal('signup'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('signup'); setAuthError(''); }}>Sign up</button></p>
+                ) : (
+                  <p>Already have an account? <button className="auth-switch" onClick={() => {setAuthModal('login'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); setAuthError(''); }}>Login</button></p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Confirmation Modal - OUTSIDE main container for touch events */}
+      {emailConfirmation && (
+        <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)} onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); setEmailConfirmation(null); } }} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+          <EmailConfirmation
+            email={emailConfirmation.email}
+            onBack={() => setEmailConfirmation(null)}
+          />
+        </div>
+      )}
     </>
   );
 }
