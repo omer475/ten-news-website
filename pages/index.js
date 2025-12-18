@@ -6986,14 +6986,29 @@ export default function Home() {
 
         {/* Authentication Modal */}
         {authModal && (
-          <div className="auth-modal-overlay" onClick={() => setAuthModal(null)}>
-            <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="auth-modal-header">
+          <div 
+            className="auth-modal-overlay" 
+            onClick={() => setAuthModal(null)}
+            onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); setAuthModal(null); } }}
+            style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+          >
+            <div 
+              className="auth-modal" 
+              onClick={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+            >
+              <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
                 <h2>{authModal === 'login' ? 'Login to Today+' : 'Create Your Account'}</h2>
-                <button className="auth-close" onClick={() => setAuthModal(null)} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}>×</button>
+                <button 
+                  className="auth-close" 
+                  onClick={() => setAuthModal(null)} 
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
+                  style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+                >×</button>
               </div>
 
-              <div className="auth-modal-body">
+              <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
                 {authError && (
                   <div className="auth-error">{authError}</div>
                 )}
@@ -7245,8 +7260,8 @@ function LoginForm({ onSubmit, formData, setFormData }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      <div className="auth-field">
+    <form onSubmit={handleSubmit} className="auth-form" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+      <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <label htmlFor="login-email">Email</label>
         <input
           id="login-email"
@@ -7258,10 +7273,11 @@ function LoginForm({ onSubmit, formData, setFormData }) {
           }}
           placeholder="Enter your email"
           required
+          style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
         />
       </div>
 
-      <div className="auth-field">
+      <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <label htmlFor="login-password">Password</label>
         <input
           id="login-password"
@@ -7273,10 +7289,16 @@ function LoginForm({ onSubmit, formData, setFormData }) {
           }}
           placeholder="Enter your password"
           required
+          style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
         />
       </div>
 
-      <button type="submit" className="auth-submit" disabled={loading}>
+      <button 
+        type="submit" 
+        className="auth-submit" 
+        disabled={loading}
+        style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+      >
         {loading ? 'Logging in...' : 'Login'}
       </button>
     </form>
@@ -7340,8 +7362,8 @@ function SignupForm({ onSubmit, formData, setFormData }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      <div className="auth-field">
+    <form onSubmit={handleSubmit} className="auth-form" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+      <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <label htmlFor="signup-name">Full Name</label>
         <input
           id="signup-name"
@@ -7353,10 +7375,11 @@ function SignupForm({ onSubmit, formData, setFormData }) {
           }}
           placeholder="Enter your full name"
           required
+          style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
         />
       </div>
 
-      <div className="auth-field">
+      <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <label htmlFor="signup-email">Email</label>
         <input
           id="signup-email"
@@ -7368,10 +7391,11 @@ function SignupForm({ onSubmit, formData, setFormData }) {
           }}
           placeholder="Enter your email"
           required
+          style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
         />
       </div>
 
-      <div className="auth-field">
+      <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <label htmlFor="signup-password">Password</label>
         <input
           id="signup-password"
@@ -7383,11 +7407,17 @@ function SignupForm({ onSubmit, formData, setFormData }) {
           }}
           placeholder="Create a password (min 8 characters)"
           required
+          style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
         />
         {passwordError && <span className="auth-field-error">{passwordError}</span>}
       </div>
 
-      <button type="submit" className="auth-submit" disabled={loading || passwordError}>
+      <button 
+        type="submit" 
+        className="auth-submit" 
+        disabled={loading || passwordError}
+        style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+      >
         {loading ? 'Creating Account...' : 'Create Account'}
       </button>
     </form>
@@ -7397,13 +7427,13 @@ function SignupForm({ onSubmit, formData, setFormData }) {
 // Email Confirmation Component
 function EmailConfirmation({ email, onBack }) {
   return (
-    <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-      <div className="auth-modal-header">
+    <div className="auth-modal" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+      <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <h2>Check Your Email</h2>
-        <button className="auth-close" onClick={onBack}>×</button>
+        <button className="auth-close" onClick={onBack} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onBack(); }} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>×</button>
       </div>
 
-      <div className="auth-modal-body">
+      <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{
             fontSize: '48px',
