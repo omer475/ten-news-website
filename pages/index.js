@@ -2370,6 +2370,11 @@ export default function Home() {
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
+      // Don't capture touch if it's on auth modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+        return;
+      }
+      
       // Don't capture touch if it's on the language switcher
       if (e.target.closest('.language-icon-btn') || 
           e.target.closest('.language-dropdown-box') ||
@@ -2396,6 +2401,11 @@ export default function Home() {
     };
 
     const handleTouchEnd = (e) => {
+      // Don't handle touch if it's on auth modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+        return;
+      }
+      
       // Don't handle touch if it's on the language switcher
       if (e.target.closest('.language-icon-btn') || 
           e.target.closest('.language-dropdown-box') ||
@@ -2444,6 +2454,11 @@ export default function Home() {
 
     // Prevent any scrolling during touch - TikTok style
     const handleTouchMove = (e) => {
+      // Don't block touch if it's on auth modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+        return;
+      }
+      
       // Don't block touch if it's on the language switcher
       if (e.target.closest('.language-icon-btn') || 
           e.target.closest('.language-dropdown-box') ||
@@ -2466,16 +2481,21 @@ export default function Home() {
     };
 
     const handleWheel = (e) => {
+      // Don't block wheel if it's on auth modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+        return;
+      }
+      
       // Always prevent default scrolling - TikTok style
       e.preventDefault();
-      
+
       if (isTransitioning) return;
-      
+
       // Don't navigate when scrolling on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
         const target = e.target;
-        if (target.closest('.map-container-advanced') || 
+        if (target.closest('.map-container-advanced') ||
             target.closest('.timeline-container') ||
             target.closest('.graph-container')) {
           return;
