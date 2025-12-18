@@ -149,7 +149,7 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
                 
                 # Delay between batches to avoid rate limits (except for last batch)
                 if i + batch_size < len(articles):
-                    time.sleep(2)  # 2 second delay between batches
+                    time.sleep(5)  # 5 second delay between batches to avoid rate limits
                     
             except Exception as e:
                 print(f"  ❌ Batch {batch_num} failed: {e}")
@@ -1418,9 +1418,9 @@ Rules:
             # Make API request
             response = requests.post(url, json=request_data, timeout=120)
             
-            # Handle rate limiting (429) with exponential backoff
+            # Handle rate limiting (429) with longer exponential backoff
             if response.status_code == 429:
-                wait_time = (2 ** attempt) * 2  # Exponential backoff: 2s, 4s, 8s
+                wait_time = (2 ** attempt) * 15  # Longer backoff: 15s, 30s, 60s
                 if attempt < max_retries - 1:
                     print(f"  ⚠️ Rate limited (429), waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
                     time.sleep(wait_time)

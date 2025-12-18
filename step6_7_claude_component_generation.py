@@ -35,94 +35,173 @@ class ComponentWriterConfig:
 # COMPONENT GENERATION PROMPT
 # ==========================================
 
-COMPONENT_PROMPT = """You are generating supplementary components for a news article using web search context data.
+COMPONENT_PROMPT = """Generate news article components using the provided search data.
 
-You will receive:
-1. Article title (for context)
-2. Selected components to generate (timeline, details, and/or graph)
-3. Perplexity search context data for each selected component
+ARTICLE TITLE: {title}
+BULLET SUMMARY: {bullets}
+SELECTED COMPONENTS: {components}
+SEARCH CONTEXT DATA: {context}
 
-Generate ONLY the selected components based on the provided context data.
+Generate ONLY the selected components. Follow formats EXACTLY.
 
-=== TIMELINE ===
-- 2-4 events in chronological order (oldest first)
-- Use context data provided from Perplexity search
-- Each event: date + description (≤14 words)
-- Focus on contextual events (background, related developments, upcoming)
-- DO NOT include the main news event from the title
+═══════════════════════════════════════════════════════════════
+🗺️ MAP (if selected)
+═══════════════════════════════════════════════════════════════
 
-Date formats:
-- Different days: "Oct 14, 2024"
-- Same day recent: "14:30, Oct 14"
-- Month only: "Oct 2024"
-- Future: "Dec 2024"
+Generate 1-3 PRECISE location markers for the story.
 
-Format:
+PRECISION REQUIREMENTS:
+✓ Use the most specific location possible (port, base, facility, city)
+✓ NEVER use just a country name
+✓ Include exact coordinates
+✓ Description explains what happened at this specific location
+
+PRECISION HIERARCHY (use most specific available):
+1. Specific sites: "Novorossiysk Naval Base", "Zaporizhzhia Nuclear Plant"
+2. Ports/Facilities: "Port of Novorossiysk", "Ben Gurion Airport"
+3. Infrastructure: "Crimean Bridge", "Nord Stream Pipeline"
+4. Districts/Areas: "Gaza City's Shifa Hospital"
+5. Cities: "Novorossiysk", "Kharkiv" (only if no more specific location)
+
+OUTPUT FORMAT:
 [
-  {"date": "Jul 27, 2023", "event": "ECB begins rate hike cycle with increase to 3.75 percent"},
-  {"date": "Mar 2024", "event": "ECB holds rates steady for first time in eight months"}
+  {
+    "name": "Novorossiysk Naval Base",
+    "city": "Novorossiysk",
+    "country": "Russia",
+    "coordinates": {"lat": 44.7234, "lng": 37.7687},
+    "description": "Site of underwater drone attack on Kilo-class submarine"
+  }
 ]
 
-=== DETAILS ===
-- EXACTLY 3 data points
-- Format: "Label: Value"
-- Label: 1-3 words, Value: specific number/data
-- Total per detail: under 8 words
-- EVERY detail MUST contain a NUMBER
+GOOD MAP EXAMPLES:
+✓ {"name": "Novorossiysk Port", "city": "Novorossiysk", "country": "Russia", ...}
+✓ {"name": "Shifa Hospital", "city": "Gaza City", "country": "Palestine", ...}
+✓ {"name": "Crimean Bridge", "city": "Kerch Strait", "country": "Russia", ...}
 
-CRITICAL: Each detail must include:
-- Percentage: 4.25%, 5.3%
-- Amount/Count: 340M, $2.8T, 10 consecutive
-- Date: 2023, Mar 2024, Since 2001
-- Rate/Ratio: 6.4%, 0.1%
+BAD MAP EXAMPLES (REJECTED):
+✗ {"name": "Ukraine", "city": "", "country": "Ukraine", ...} - Just a country
+✗ {"name": "Russia", "city": "", "country": "Russia", ...} - Just a country
+✗ {"name": "Middle East", ...} - A region, not a location
 
-Use context data from Perplexity. DO NOT repeat data from title/summary.
+═══════════════════════════════════════════════════════════════
+📅 TIMELINE (if selected)
+═══════════════════════════════════════════════════════════════
 
-Examples:
-✓ "Previous rate: 4.25%"
-✓ "Inflation target: 2%"
-✓ "GDP growth: 0.1%"
+Generate 2-4 events providing CONTEXT for the story.
 
-❌ "Platform: Social media" - no number
-❌ "Status: Ongoing" - no number
+CRITICAL RULES:
+✗ DO NOT include the main news event from the title
+✓ Include background events, prior developments, upcoming dates
+✓ Chronological order (oldest → newest)
+✓ Each event description: MAX 12 words
 
-=== GRAPH ===
-Format graph data from Perplexity context:
+DATE FORMATS:
+- Past events: "Mar 15, 2024" or "Mar 2024" (month only if day unknown)
+- Future events: "Expected Dec 2024" or "Q1 2025"
+- Same-day events: "14:30 GMT"
 
+OUTPUT FORMAT:
+[
+  {"date": "Mar 2023", "event": "Ukraine debuts Sea Baby surface drones against Russian fleet"},
+  {"date": "Sep 2023", "event": "Drone strike damages Russian landing ship in Sevastopol"},
+  {"date": "Jan 2024", "event": "SBU announces development of underwater drone capability"}
+]
+
+═══════════════════════════════════════════════════════════════
+📋 DETAILS (if selected)
+═══════════════════════════════════════════════════════════════
+
+Generate EXACTLY 3 fact cards with information NOT in the bullet summary.
+
+CRITICAL RULES:
+✓ Facts must NOT duplicate information in bullet summary
+✓ Prioritize interesting details from full article text
+✓ Supplement with internet search findings
+✓ EVERY detail MUST contain a number or specific data
+✓ Label: 1-3 words | Value: specific data
+✓ MAX 7 words per detail
+
+SOURCES (in priority order):
+1. Interesting facts from full article NOT in bullets
+2. Contextual data from internet search
+3. Historical comparisons or background stats
+
+NUMBER TYPES:
+- Quantities: 4 missiles, 340 km range
+- Specifications: 533mm torpedoes, 2,500 kg payload
+- Counts: 12 previous attacks, 3rd successful strike
+- Dates/Duration: Since 2022, 18-month development
+
+GOOD EXAMPLES (assuming these are NOT in bullets):
+✓ "Kalibr missile range: 2,500 km"
+✓ "Kilo-class crew size: 52 sailors"
+✓ "Sub displacement: 2,350 tons"
+✓ "Previous drone attacks: 12"
+
+BAD EXAMPLES:
+✗ Any fact already stated in bullet summary
+✗ "Status: Ongoing" (no number)
+✗ "Target: Submarine" (no specific data)
+
+OUTPUT FORMAT:
+[
+  {"label": "Kalibr range", "value": "2,500 km"},
+  {"label": "Submarine crew", "value": "52 sailors"},
+  {"label": "Kilo-class built", "value": "Since 1980"}
+]
+
+═══════════════════════════════════════════════════════════════
+📊 GRAPH (if selected)
+═══════════════════════════════════════════════════════════════
+
+Generate chart data from the search context.
+
+GRAPH TYPE SELECTION:
+- "line": Continuous trends over time (rates, prices, temperatures)
+- "bar": Comparing categories or discrete periods (quarterly results, countries)
+- "area": Cumulative data or ranges (total cases, market share)
+
+REQUIREMENTS:
+✓ Minimum 4 data points
+✓ Dates in YYYY-MM format
+✓ Values as pure numbers (no units in value field)
+✓ Clear, concise title (max 6 words)
+✓ Axis labels with units
+
+OUTPUT FORMAT:
 {
-  "type": "line",  // or "bar", "area", "column"
-  "title": "Federal Funds Rate 2020-2024",
+  "type": "line",
+  "title": "Ukrainian Drone Attacks 2022-2024",
   "data": [
-    {"date": "2020-03", "value": 0.25},
-    {"date": "2022-03", "value": 0.50},
-    {"date": "2023-07", "value": 5.25},
-    {"date": "2024-01", "value": 5.50}
+    {"date": "2022-10", "value": 2},
+    {"date": "2023-03", "value": 5},
+    {"date": "2023-09", "value": 8},
+    {"date": "2024-01", "value": 14}
   ],
-  "y_label": "Interest Rate (%)",
+  "y_label": "Attacks",
   "x_label": "Date"
 }
 
-Use data from Perplexity search. Ensure:
-- At least 4 data points
-- Dates in YYYY-MM format
-- Values as numbers only
-- Clear axis labels
+═══════════════════════════════════════════════════════════════
+FINAL OUTPUT
+═══════════════════════════════════════════════════════════════
 
-=== OUTPUT FORMAT ===
-Return ONLY valid JSON with the selected components:
+Return ONLY valid JSON with selected components:
 
 {
-  "timeline": [...],  // Only if timeline selected
-  "details": [...],   // Only if details selected
-  "graph": {...}      // Only if graph selected
+  "map": [...],         // Include ONLY if map was selected
+  "timeline": [...],    // Include ONLY if timeline was selected
+  "details": [...],     // Include ONLY if details was selected
+  "graph": {...}        // Include ONLY if graph was selected
 }
 
-VALIDATION CHECKLIST:
-- Timeline: 2-4 events, chronological, ≤14 words per event (if selected)
-- Details: Exactly 3, all have numbers, <8 words each (if selected)
-- Graph: At least 4 data points, correct format (if selected)
-
-Return ONLY valid JSON, no markdown, no explanations."""
+PRE-SUBMISSION CHECKLIST:
+□ Map: 1-3 PRECISE locations (not countries), with coordinates and descriptions
+□ Timeline: 2-4 events, chronological, ≤12 words each, main event NOT included
+□ Details: Exactly 3, ALL have numbers, NOT duplicating bullet summary
+□ Graph: 4+ data points, YYYY-MM dates, numeric values only
+□ Valid JSON (no trailing commas, no markdown)"""
 
 
 # ==========================================
@@ -165,8 +244,8 @@ class ClaudeComponentWriter:
         if not components:
             return {}  # No components selected
         
-        # Build user prompt
-        prompt = self._build_prompt(article, components)
+        # Build formatted system prompt with article data
+        system_prompt = self._build_system_prompt(article, components)
         
         # Try up to retry_attempts times
         for attempt in range(self.config.retry_attempts):
@@ -176,19 +255,43 @@ class ClaudeComponentWriter:
                     max_tokens=self.config.max_tokens,
                     temperature=self.config.temperature,
                     timeout=self.config.timeout,
-                    system=COMPONENT_PROMPT,
+                    system=system_prompt,
                     messages=[{
                         "role": "user",
-                        "content": prompt
+                        "content": "Generate the components now. Return ONLY valid JSON."
                     }]
                 )
                 
                 # Extract response
                 response_text = response.content[0].text
+                print(f"   📝 Raw Claude response: {response_text[:300]}...")
                 
                 # Remove markdown code blocks if present
-                response_text = response_text.replace('```json', '').replace('```', '')
+                import re
+                json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response_text)
+                if json_match:
+                    response_text = json_match.group(1).strip()
+                else:
+                    response_text = response_text.replace('```json', '').replace('```', '')
+                    response_text = response_text.strip()
+                
+                # Try to find JSON object with braces if not starting with {
+                if not response_text.startswith('{'):
+                    json_obj_match = re.search(r'\{[\s\S]*\}', response_text)
+                    if json_obj_match:
+                        response_text = json_obj_match.group(0)
+                    elif '"timeline"' in response_text or '"details"' in response_text or '"map"' in response_text or '"graph"' in response_text:
+                        # Wrap bare JSON content in braces
+                        response_text = '{' + response_text.strip() + '}'
+                
+                # Clean up trailing commas
+                response_text = re.sub(r',\s*}', '}', response_text)
+                response_text = re.sub(r',\s*]', ']', response_text)
+                
+                # Remove any leading/trailing whitespace and newlines inside the JSON
                 response_text = response_text.strip()
+                
+                print(f"   📝 Cleaned JSON: {response_text[:200]}...")
                 
                 # Parse JSON
                 result = json.loads(response_text)
@@ -215,32 +318,37 @@ class ClaudeComponentWriter:
         
         return None  # Failed after all retries
     
-    def _build_prompt(self, article: Dict, components: List[str]) -> str:
-        """Build user prompt for component generation"""
+    def _build_system_prompt(self, article: Dict, components: List[str]) -> str:
+        """Build system prompt with article data filled in"""
         
         title = article.get('title_news', article.get('title', 'Unknown'))
+        
+        # Get bullet summary
+        bullets = article.get('summary_bullets_news', article.get('summary_bullets', []))
+        if isinstance(bullets, list):
+            bullets_text = '\n'.join([f"• {b}" for b in bullets])
+        else:
+            bullets_text = str(bullets)
+        
+        # Build context string from context_data
         context_data = article.get('context_data', {})
-        
-        prompt = f"""Generate components for this news article:
-
-TITLE: {title}
-
-SELECTED COMPONENTS: {', '.join(components)}
-
-"""
-        
-        # Add context data for each component
+        context_parts = []
         for component in components:
             if component in context_data and context_data[component]:
-                prompt += f"\n=== {component.upper()} CONTEXT DATA ===\n"
-                # context_data[component] is a dict with 'results' key
                 context_text = context_data[component].get('results', '') if isinstance(context_data[component], dict) else str(context_data[component])
-                prompt += context_text[:2000]  # Limit context length
-                prompt += "\n"
+                context_parts.append(context_text[:2500])  # Limit per component
         
-        prompt += "\nReturn ONLY valid JSON."
+        context_str = '\n\n'.join(context_parts) if context_parts else 'No additional context available.'
         
-        return prompt
+        # Format the prompt template with article data
+        formatted_prompt = COMPONENT_PROMPT.format(
+            title=title,
+            bullets=bullets_text,
+            components=', '.join(components),
+            context=context_str
+        )
+        
+        return formatted_prompt
     
     def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
         """
@@ -264,12 +372,36 @@ SELECTED COMPONENTS: {', '.join(components)}
                 errors.append(f"Details count: {len(result['details'])} (need exactly 3)")
             else:
                 for i, detail in enumerate(result['details']):
-                    if not any(char.isdigit() for char in detail):
-                        errors.append(f"Detail {i+1} has no number: '{detail}'")
+                    # Handle both old format (string) and new format (dict with label/value)
+                    if isinstance(detail, dict):
+                        # New format: {"label": "...", "value": "..."}
+                        value = str(detail.get('value', ''))
+                        if not any(char.isdigit() for char in value):
+                            errors.append(f"Detail {i+1} has no number in value: '{value}'")
+                    elif isinstance(detail, str):
+                        # Old format: "Label: Value"
+                        if not any(char.isdigit() for char in detail):
+                            errors.append(f"Detail {i+1} has no number: '{detail}'")
         
         if 'graph' in selected_components:
             if 'graph' not in result:
                 errors.append("Graph selected but not in output")
+        
+        if 'map' in selected_components:
+            if 'map' not in result:
+                errors.append("Map selected but not in output")
+            elif not isinstance(result['map'], list) or len(result['map']) < 1:
+                errors.append("Map must have at least 1 location")
+            else:
+                # Validate each location has required fields and is precise (not just country)
+                vague_locations = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states', 'middle east', 'europe', 'asia']
+                for i, loc in enumerate(result['map']):
+                    if not isinstance(loc, dict):
+                        errors.append(f"Map location {i+1} is not a dict")
+                    elif 'name' not in loc or 'coordinates' not in loc:
+                        errors.append(f"Map location {i+1} missing name or coordinates")
+                    elif loc.get('name', '').lower() in vague_locations:
+                        errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific site/city)")
         
         return len(errors) == 0, errors
     

@@ -1,0 +1,64 @@
+# Cloud Build configuration for Ten News
+# Builds and deploys to Cloud Run Jobs
+
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/tennews-workflow:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/tennews-workflow:latest'
+      - '.'
+
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/tennews-workflow:$COMMIT_SHA'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/tennews-workflow:latest'
+
+  # Deploy to Cloud Run Jobs
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'jobs'
+      - 'deploy'
+      - 'tennews-workflow'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/tennews-workflow:$COMMIT_SHA'
+      - '--region'
+      - '${_REGION}'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--task-timeout'
+      - '30m'
+      - '--max-retries'
+      - '1'
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,BRIGHTDATA_API_KEY=BRIGHTDATA_API_KEY:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest'
+
+# Substitutions (can be overridden)
+substitutions:
+  _REGION: 'us-central1'
+
+# Store images in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/tennews-workflow:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/tennews-workflow:latest'
+
+# Timeout for the build
+timeout: '1800s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+

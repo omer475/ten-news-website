@@ -227,12 +227,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'BBC News Entertainment & Arts',
-        'url': 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml',
-        'category': 'consumer',
-        'tier': 'premium'
-    },
-    {
         'name': 'Sky News Home',
         'url': 'https://feeds.skynews.com/feeds/rss/home.xml',
         'category': 'news',

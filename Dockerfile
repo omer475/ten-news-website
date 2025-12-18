@@ -1,5 +1,5 @@
-# Dockerfile for Railway Deployment - Python News Generator
-FROM python:3.10-slim
+# Ten News - Cloud Run Deployment
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
@@ -7,20 +7,38 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python requirements
+# Copy requirements first (for better caching)
 COPY requirements.txt .
 
-# Install Python packages
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only Python files (not Next.js)
-COPY *.py .
-COPY unified_news_scoring.py .
-COPY supabase_storage.py .
+# Add python-dotenv if not in requirements
+RUN pip install --no-cache-dir python-dotenv
 
-# Default command (will be overridden by Procfile)
-CMD ["python3", "news-part1-breaking.py"]
+# Copy application code
+COPY rss_sources.py .
+COPY complete_clustered_8step_workflow.py .
+COPY step1_gemini_news_scoring_filtering.py .
+COPY step1_5_event_clustering.py .
+COPY step2_brightdata_full_article_fetching.py .
+COPY step3_image_selection.py .
+COPY step4_multi_source_synthesis.py .
+COPY step5_gemini_component_selection.py .
+COPY step2_gemini_context_search.py .
+COPY step6_7_claude_component_generation.py .
+COPY step8_fact_verification.py .
+COPY article_deduplication.py .
 
+# Copy the Cloud Run entrypoint
+COPY cloudrun_entrypoint.py .
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Run the entrypoint
+CMD ["python", "cloudrun_entrypoint.py"]

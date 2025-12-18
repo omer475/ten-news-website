@@ -23,35 +23,62 @@ def search_gemini_context(claude_title: str, claude_summary: str) -> Dict[str, s
     # Use Gemini 2.0 Flash with Google Search grounding
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     
-    prompt = f"""You are a research assistant gathering context for a news article.
+    prompt = f"""You are gathering structured data for news article components.
 
 ARTICLE TITLE: {claude_title}
-
 ARTICLE SUMMARY: {claude_summary}
 
-Please search for and provide:
+Search for and organize information into these FOUR categories:
 
-1. TIMELINE CONTEXT:
-   - Key dates and events related to this story
-   - Historical background (what happened before)
-   - Recent developments leading to this event
-   - Upcoming scheduled events or deadlines
+═══ 1. TIMELINE DATA ═══
+Find 4-6 dated events related to this story:
+- Historical precedents (similar past events)
+- Key developments leading to this event
+- Scheduled future events or deadlines
+- Policy changes or decisions in this domain
 
-2. CONTEXTUAL DATA POINTS:
-   - Relevant statistics and numbers
-   - Comparisons (historical, regional, global)
-   - Economic/social impact figures
-   - Key metrics and measurements
+FORMAT EACH AS: [DATE] - [WHAT HAPPENED]
+Example: "Mar 15, 2024 - Fed held rates at 5.25% for fifth consecutive meeting"
 
-3. ADDITIONAL CONTEXT:
-   - Geographic scope and affected regions
-   - Key stakeholders and their positions
-   - Related policies or regulations
-   - Expert opinions or official statements
+═══ 2. STATISTICAL DATA (for Details component) ═══
+Find 5-8 specific numbers related to this story:
+- Quantities (deaths, attendees, units sold)
+- Percentages (growth rates, approval ratings, changes)
+- Money figures (costs, revenues, damages)
+- Comparisons (previous values, averages, records)
 
-Format your response with clear sections and numbered points.
-Focus on FACTS that would help readers understand the full context of this news story.
-Include specific dates, numbers, and verifiable information."""
+FORMAT EACH AS: [LABEL]: [NUMBER WITH UNIT]
+Example: "Previous death toll: 340" or "Market share: 23.5%"
+
+═══ 3. TREND DATA (for Graph component) ═══
+Find time-series data if this story involves:
+- Economic indicators (rates, prices, GDP)
+- Polling/election data over time
+- Growth/decline metrics
+- Any measurable change over time
+
+FORMAT AS: List of (date, value) pairs
+Example: "Interest rates: Jan 2022: 0.25%, Mar 2022: 0.50%, Jul 2023: 5.25%"
+
+If no clear trend data exists, write: "NO TREND DATA AVAILABLE"
+
+═══ 4. GEOGRAPHIC DATA (for Map component) ═══
+Find specific locations central to this story:
+- Exact cities, regions, or countries where events occurred
+- Areas directly affected or impacted
+- Locations of key stakeholders or decisions
+
+FORMAT EACH AS: [CITY, COUNTRY] - [WHY RELEVANT]
+Example: "Gaza City, Palestine - main conflict zone" or "Brussels, Belgium - EU headquarters where decision announced"
+
+If no specific locations are central to story, write: "NO GEOGRAPHIC DATA AVAILABLE"
+
+═══ RULES ═══
+- Include ONLY verifiable facts with specific numbers/dates/locations
+- Prioritize recent data (last 2-3 years)
+- Skip vague statements without concrete data
+- If a category has no relevant data, write "NO DATA AVAILABLE"
+"""
 
     request_data = {
         "contents": [

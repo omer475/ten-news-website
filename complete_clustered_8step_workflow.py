@@ -15,7 +15,7 @@ Step 9: Publishing to Supabase
 """
 
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import feedparser
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -363,53 +363,84 @@ def run_complete_pipeline():
             
             print(f"   ✅ Synthesized: {synthesized['title_news'][:60]}...")
             
-            # STEP 5: Component Selection & Gemini Search
-            print(f"\n🔍 STEP 5: COMPONENT SELECTION & GEMINI SEARCH")
+            # STEP 5: Gemini Search & Component Selection
+            print(f"\n🔍 STEP 5: GEMINI SEARCH & COMPONENT SELECTION")
             
-            # Select components based on synthesized title + summary bullets
+            # First: Get search context with Gemini
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
-            article_for_selection = {
-                'title': synthesized['title_news'],
-                'text': bullets_text  # Use summary bullets as text context
-            }
             
-            component_result = component_selector.select_components(article_for_selection)
-            selected = component_result.get('components', [])  # Fixed: was 'selected_components'
-            print(f"   Selected components: {', '.join(selected) if selected else 'none'}")
+            # Combine full article text from all sources (for better context)
+            combined_full_text = "\n\n---\n\n".join([
+                f"[{s.get('source_name', 'Unknown')}]: {s.get('full_text', '')[:1500]}"
+                for s in cluster_sources
+                if s.get('full_text') and len(s.get('full_text', '')) > 100
+            ])
             
-            context_data = {}
-            if selected and gemini_key:
-                # Get context using title and summary bullets (now using Gemini)
+            # Get search context first (needed for component selection)
+            gemini_result = None
+            search_context_text = ""
+            if gemini_key:
                 gemini_result = search_gemini_context(
                     synthesized['title_news'], 
-                    bullets_text  # Use summary bullets for context search
+                    bullets_text
                 )
-                # Use same context for all selected components
+                search_context_text = gemini_result.get('results', '') if gemini_result else ""
+                print(f"   ✅ Search context fetched ({len(search_context_text)} chars)")
+            
+            # Then: Select components based on synthesized article + search context
+            article_for_selection = {
+                'title': synthesized['title_news'],
+                'text': bullets_text,
+                'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
+            }
+            
+            # Component selection with robust fallback
+            try:
+                component_result = component_selector.select_components(article_for_selection, search_context_text)
+                selected = component_result.get('components', []) if isinstance(component_result, dict) else []
+            except Exception as comp_error:
+                print(f"   ⚠️ Component selection failed: {comp_error}")
+                print(f"   📋 Using default components: timeline, details")
+                selected = ['timeline', 'details']  # Default fallback
+                component_result = {'components': selected, 'emoji': '📰'}
+            
+            print(f"   Selected components: {', '.join(selected) if selected else 'none'}")
+            
+            # Build context_data for component generation
+            context_data = {}
+            if selected and gemini_result:
                 for component in selected:
                     context_data[component] = gemini_result
-                print(f"   ✅ Context fetched for {len(context_data)} components")
+                print(f"   ✅ Context assigned for {len(context_data)} components")
             
             # STEP 5 & 6: Generate components with Claude
             print(f"\n📊 STEPS 6-7: COMPONENT GENERATION")
             
             components = {}
             if selected and context_data:
-                article_for_components = {
-                    'title_news': synthesized['title_news'],
-                    'selected_components': selected,
-                    'context_data': context_data
-                }
-                component_result = component_writer.write_components(article_for_components)
-                if component_result:
-                    # Extract individual components from result
-                    components = {
-                        'timeline': component_result.get('timeline'),
-                        'details': component_result.get('details'),
-                        'graph': component_result.get('graph')
+                try:
+                    article_for_components = {
+                        'title_news': synthesized['title_news'],
+                        'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])),
+                        'selected_components': selected,
+                        'context_data': context_data
                     }
-                    # Remove None values
-                    components = {k: v for k, v in components.items() if v is not None}
-                    print(f"   ✅ Generated: {', '.join(components.keys())}")
+                    component_result = component_writer.write_components(article_for_components)
+                    if component_result:
+                        # Extract individual components from result
+                        components = {
+                            'timeline': component_result.get('timeline'),
+                            'details': component_result.get('details'),
+                            'graph': component_result.get('graph'),
+                            'map': component_result.get('map')
+                        }
+                        # Remove None values
+                        components = {k: v for k, v in components.items() if v is not None}
+                        print(f"   ✅ Generated: {', '.join(components.keys())}")
+                except Exception as comp_gen_error:
+                    print(f"   ⚠️ Component generation failed: {comp_gen_error}")
+                    print(f"   📋 Continuing without components")
+                    components = {}
             
             # STEP 8: Fact Verification (Hallucination Check)
             print(f"\n🔍 STEP 8: FACT VERIFICATION")
@@ -493,14 +524,60 @@ def run_complete_pipeline():
                 print(f"   ⏭️ Cluster {cluster_id} already published (ID: {existing.data[0]['id']}), skipping...")
                 continue
             
+            # Get title for duplicate checking
+            title = synthesized.get('title', synthesized.get('title_news', ''))
+            
+            # CHECK FOR SIMILAR TITLES in recently published articles (last 24 hours)
+            # This catches duplicates that slipped through clustering
+            is_duplicate = False
+            try:
+                from difflib import SequenceMatcher
+                import re
+                
+                cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
+                recent_articles = supabase.table('published_articles')\
+                    .select('id, title_news')\
+                    .gte('published_at', cutoff_time)\
+                    .execute()
+                
+                # Clean title for comparison (remove bold markers, lowercase)
+                def clean_title(t):
+                    if not t:
+                        return ''
+                    t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)  # Remove **bold**
+                    t = re.sub(r'[^\w\s]', '', t.lower())  # Remove punctuation
+                    return t.strip()
+                
+                clean_new_title = clean_title(title)
+                
+                for recent in (recent_articles.data or []):
+                    recent_title = recent.get('title_news', '')
+                    clean_recent_title = clean_title(recent_title)
+                    
+                    if clean_new_title and clean_recent_title:
+                        similarity = SequenceMatcher(None, clean_new_title, clean_recent_title).ratio()
+                        
+                        if similarity >= 0.70:  # 70% similar = likely same news
+                            print(f"   ⏭️ DUPLICATE TITLE DETECTED (similarity: {similarity:.0%})")
+                            print(f"      New: {title[:60]}...")
+                            print(f"      Existing (ID {recent['id']}): {recent_title[:60]}...")
+                            print(f"      Skipping cluster {cluster_id}")
+                            is_duplicate = True
+                            break  # Exit the inner loop
+                            
+            except Exception as e:
+                print(f"   ⚠️ Title duplicate check error (continuing anyway): {e}")
+            
+            if is_duplicate:
+                continue  # Skip this cluster, move to next
+            
             # Use the HIGHEST persona score from Step 1 (from any source in cluster)
             source_scores = [s.get('score', 0) for s in cluster_sources if s.get('score')]
             article_score = max(source_scores) if source_scores else 50
             
             print(f"   📊 Article score: {article_score}/100 (highest from {len(cluster_sources)} source(s))")
             
-            # Get title
-            title = synthesized.get('title', synthesized.get('title_news', ''))
+            # Title already set above for duplicate checking
             
             # Get bullets (new format: summary_bullets, 80-100 chars)
             bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
@@ -975,6 +1052,35 @@ Return ONLY valid JSON, no markdown, no explanations."""
     
     print(f"   ❌ Failed after 3 attempts")
     return None
+
+
+# ==========================================
+# SINGLE CYCLE (for Cloud Run)
+# ==========================================
+
+def run_single_cycle():
+    """
+    Run a single iteration of the workflow.
+    Used by Cloud Run to execute once per trigger.
+    
+    Returns:
+        dict with stats about the run
+    """
+    stats = {
+        'articles_processed': 0,
+        'articles_published': 0,
+        'clusters_found': 0,
+        'errors': []
+    }
+    
+    try:
+        run_complete_pipeline()
+        # Note: run_complete_pipeline doesn't return stats currently
+        # You can enhance it later to return detailed stats
+        return stats
+    except Exception as e:
+        stats['errors'].append(str(e))
+        raise
 
 
 # ==========================================

@@ -3478,7 +3478,8 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 2000;
+          z-index: 9999;
+          pointer-events: auto;
         }
 
         .auth-modal {
@@ -3488,6 +3489,11 @@ export default function Home() {
           max-width: 360px;
           max-height: 90vh;
           overflow-y: auto;
+          pointer-events: auto;
+        }
+
+        .auth-modal * {
+          pointer-events: auto;
         }
 
         .auth-modal-header {
@@ -3566,6 +3572,9 @@ export default function Home() {
           background: ${darkMode ? '#111827' : '#ffffff'};
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           transition: border-color 0.2s;
+          pointer-events: auto !important;
+          -webkit-user-select: text;
+          user-select: text;
         }
 
         .auth-field input:focus {
@@ -3594,6 +3603,7 @@ export default function Home() {
           cursor: pointer;
           transition: all 0.2s;
           margin-top: 8px;
+          pointer-events: auto !important;
         }
 
         .auth-submit:hover:not(:disabled) {

@@ -1,28 +1,82 @@
-# Ignore Next.js and Node files
-node_modules/
-.next/
-package.json
-package-lock.json
-next.config.js
-vercel.json
+# Git
+.git
+.gitignore
 
-# Ignore frontend files
+# Environment files (secrets should come from Secret Manager)
+.env
+.env.local
+.env.production
+
+# Node.js (frontend - not needed for Python workflow)
+node_modules
+.next
+out
+build
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv
+env
+.venv
+
+# IDE
+.vscode
+.idea
+.cursor
+
+# Logs and temp files
+logs/
+*.log
+*.pid
+*.txt
+!requirements.txt
+
+# JSON data files (backup data)
+*.json
+!package.json
+!package-lock.json
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+test_*.py
+*_test.py
+
+# Old/backup files
+*.backup
+*.bak
+*-backup-*
+*-old-*
+
+# Frontend pages (Next.js - deployed separately)
 pages/
 components/
 styles/
 public/
 lib/
+utils/
 
-# Ignore docs and configs
-*.md
+# Other deployment configs
+.railway-deploy
+.timeline-deploy
+.vercelignore
+railway.json
+
+# SQL files
+*.sql
+
+# HTML preview files
 *.html
-.git/
-.gitignore
-.vercel/
 
-# Ignore data files
-*.json
-!requirements.txt
+# Shell scripts (except deploy script)
+*.sh
+!deploy-cloudrun.sh
 
-# Keep only Python files
-
+# GitHub
+.github/

@@ -12,7 +12,7 @@ import re
 import os
 import numpy as np
 import requests
-from typing import List, Dict, Optional, Set, Tuple
+from typing import List, Dict, Optional, Set, Tuple, Union
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from collections import Counter
@@ -79,8 +79,7 @@ def get_embedding(text: str) -> List[float]:
 
 def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
     """
-    Get embeddings for multiple texts using Gemini.
-    Gemini doesn't support batch embeddings, so we process one at a time.
+    Get embeddings for multiple texts using Gemini with PARALLEL processing.
     
     Args:
         texts: List of texts to embed
@@ -88,31 +87,49 @@ def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
     Returns:
         List of embeddings (same order as input)
     """
-    embeddings = []
     api_key = get_gemini_api_key()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
     
-    for text in texts:
-        try:
-            # Clean text
-            clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
-            clean_text = clean_text.strip()[:500]
-            
-            payload = {
-                "model": "models/text-embedding-004",
-                "content": {
-                    "parts": [{"text": clean_text}]
+    def get_single_embedding(idx_text):
+        idx, text = idx_text
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
+                clean_text = clean_text.strip()[:500]
+                
+                payload = {
+                    "model": "models/text-embedding-004",
+                    "content": {
+                        "parts": [{"text": clean_text}]
+                    }
                 }
-            }
-            
-            response = requests.post(url, json=payload, timeout=30)
-            response.raise_for_status()
-            result = response.json()
-            
-            embeddings.append(result['embedding']['values'])
-        except Exception as e:
-            print(f"  ⚠️ Batch embedding error: {e}")
-            embeddings.append(None)
+                
+                response = requests.post(url, json=payload, timeout=30)
+                
+                # Handle rate limiting
+                if response.status_code == 429:
+                    wait_time = (attempt + 1) * 2  # 2, 4, 6 seconds
+                    time.sleep(wait_time)
+                    continue
+                    
+                response.raise_for_status()
+                result = response.json()
+                return idx, result['embedding']['values']
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+                    continue
+                print(f"  ⚠️ Embedding error for text {idx}: {e}")
+                return idx, None
+        return idx, None
+    
+    # Process in parallel with 3 workers (reduced to avoid Gemini rate limits)
+    embeddings = [None] * len(texts)
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = executor.map(get_single_embedding, enumerate(texts))
+        for idx, embedding in futures:
+            embeddings[idx] = embedding
     
     return embeddings
 
@@ -163,11 +180,11 @@ class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
     # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.87  # Cosine similarity threshold for same event (INCREASED for accuracy)
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.78  # Cosine similarity threshold - LOWERED AGGRESSIVELY to catch duplicates
     # 0.90+ = Almost identical titles
-    # 0.87-0.90 = Same event, different wording
-    # 0.82-0.87 = Related topics but possibly different events (TOO RISKY)
-    # 0.70-0.82 = Related topics, probably different events
+    # 0.85-0.90 = Same event, different wording
+    # 0.78-0.85 = Same event, significantly different wording (MATCH THESE)
+    # 0.70-0.78 = Related topics, might be different events
     # <0.70 = Definitely different events
     
     # FALLBACK: String-based matching (if embeddings fail)
@@ -402,6 +419,7 @@ Nothing else."""
         response = client.messages.create(
             model="claude-3-5-haiku-20241022",
             max_tokens=200,
+            temperature=0,  # Deterministic matching
             messages=[
                 {"role": "user", "content": prompt}
             ]
@@ -497,6 +515,7 @@ Reply ONLY the matches."""
         response = client.messages.create(
             model="claude-3-5-haiku-20241022",
             max_tokens=500,
+            temperature=0,  # Deterministic matching
             messages=[
                 {"role": "user", "content": prompt}
             ]
@@ -735,7 +754,7 @@ class EventClusteringEngine:
         self.supabase = get_supabase_client()
         self.config = ClusteringConfig()
     
-    def get_or_create_source_article(self, article: Dict, max_retries: int = 3) -> Optional[int]:
+    def get_or_create_source_article(self, article: Dict, max_retries: int = 3) -> Optional[Tuple[int, bool]]:
         """
         Get existing article from source_articles by URL, or create if not exists.
         Includes retry logic for transient connection issues.
@@ -745,7 +764,8 @@ class EventClusteringEngine:
             max_retries: Number of retry attempts for connection failures
             
         Returns:
-            Article ID if successful, None if failed
+            Tuple of (Article ID, already_clustered) if successful, None if failed
+            - already_clustered: True if article already has a cluster_id (skip clustering)
         """
         import time
         
@@ -754,14 +774,16 @@ class EventClusteringEngine:
                 # Normalize URL
                 normalized_url = normalize_url(article.get('url', ''))
                 
-                # Try to find existing article first
-                result = self.supabase.table('source_articles').select('id').eq(
+                # Try to find existing article first - also check if already clustered
+                result = self.supabase.table('source_articles').select('id, cluster_id').eq(
                     'normalized_url', normalized_url
                 ).execute()
                 
                 if result.data and len(result.data) > 0:
-                    # Article already exists, return its ID
-                    return result.data[0]['id']
+                    # Article already exists
+                    existing_article = result.data[0]
+                    already_clustered = existing_article.get('cluster_id') is not None
+                    return (existing_article['id'], already_clustered)
                 
                 # Article doesn't exist, create it
                 # Extract keywords and entities
@@ -796,7 +818,7 @@ class EventClusteringEngine:
                 result = self.supabase.table('source_articles').insert(article_data).execute()
                 
                 if result.data:
-                    return result.data[0]['id']
+                    return (result.data[0]['id'], False)  # New article, not yet clustered
                 
                 return None
                 
@@ -807,14 +829,16 @@ class EventClusteringEngine:
                 # Handle duplicate key violation (article already exists)
                 if '23505' in error_str or 'duplicate key' in error_lower or 'unique_normalized_url' in error_str:
                     # This is expected - article was inserted by another process or previous run
-                    # Try to fetch the existing article
+                    # Try to fetch the existing article with cluster_id check
                     try:
                         normalized_url = normalize_url(article.get('url', ''))
-                        result = self.supabase.table('source_articles').select('id').eq(
+                        result = self.supabase.table('source_articles').select('id, cluster_id').eq(
                             'normalized_url', normalized_url
                         ).execute()
                         if result.data and len(result.data) > 0:
-                            return result.data[0]['id']  # Return existing article ID
+                            existing_article = result.data[0]
+                            already_clustered = existing_article.get('cluster_id') is not None
+                            return (existing_article['id'], already_clustered)
                     except:
                         pass
                     return None  # Could not fetch, but not a critical error
@@ -1000,6 +1024,7 @@ class EventClusteringEngine:
             'saved_articles': 0,
             'matched_to_existing': 0,
             'new_clusters_created': 0,
+            'already_clustered': 0,  # Articles skipped because already in a cluster
             'failed': 0,
             'cluster_ids': []  # Track ALL affected cluster IDs (new + updated)
         }
@@ -1029,25 +1054,40 @@ class EventClusteringEngine:
         # PHASE 1: Save all articles to database in parallel
         print(f"📝 Phase 1: Saving articles to database...")
         article_source_ids = {}  # article_index -> source_id
+        already_clustered_ids = set()  # Track articles that are already in a cluster (SKIP THESE)
         
         def save_article(idx_article_tuple):
             idx, article = idx_article_tuple
-            source_id = self.get_or_create_source_article(article)
-            return idx, source_id
+            result = self.get_or_create_source_article(article)
+            if result is None:
+                return idx, None, False
+            source_id, already_clustered = result
+            return idx, source_id, already_clustered
         
         with ThreadPoolExecutor(max_workers=self.config.PARALLEL_WORKERS) as executor:
             futures = [executor.submit(save_article, (i, a)) for i, a in enumerate(articles)]
             for future in as_completed(futures):
-                idx, source_id = future.result()
+                idx, source_id, already_clustered = future.result()
                 if source_id:
-                    article_source_ids[idx] = source_id
+                    if already_clustered:
+                        # Article already exists AND is already in a cluster - SKIP clustering
+                        already_clustered_ids.add(idx)
+                    else:
+                        # New article or existing but not yet clustered
+                        article_source_ids[idx] = source_id
                     with stats_lock:
                         stats['saved_articles'] += 1
                 else:
                     with stats_lock:
                         stats['failed'] += 1
         
-        print(f"✅ Saved {stats['saved_articles']}/{len(articles)} articles\n")
+        skipped_count = len(already_clustered_ids)
+        stats['already_clustered'] = skipped_count
+        print(f"✅ Saved {stats['saved_articles']}/{len(articles)} articles")
+        if skipped_count > 0:
+            print(f"⏭️  Skipping {skipped_count} articles already in clusters\n")
+        else:
+            print()
         
         # Prepare articles for clustering (add keywords/entities)
         for i, article in enumerate(articles):
@@ -1176,6 +1216,49 @@ class EventClusteringEngine:
                         if matched_cluster['id'] not in stats['cluster_ids']:
                             stats['cluster_ids'].append(matched_cluster['id'])
             else:
+                # BEFORE creating a new cluster, check if similar article is already PUBLISHED
+                # This prevents duplicate news from being processed at all
+                skip_article = False
+                try:
+                    from difflib import SequenceMatcher
+                    import re
+                    
+                    cutoff_time = (datetime.utcnow() - timedelta(hours=24)).isoformat()
+                    recent_published = self.supabase.table('published_articles')\
+                        .select('id, title_news')\
+                        .gte('published_at', cutoff_time)\
+                        .execute()
+                    
+                    def clean_title(t):
+                        if not t:
+                            return ''
+                        t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
+                        t = re.sub(r'[^\w\s]', '', t.lower())
+                        return t.strip()
+                    
+                    clean_new_title = clean_title(full_title)
+                    
+                    for pub in (recent_published.data or []):
+                        pub_title = pub.get('title_news', '')
+                        clean_pub_title = clean_title(pub_title)
+                        
+                        if clean_new_title and clean_pub_title:
+                            similarity = SequenceMatcher(None, clean_new_title, clean_pub_title).ratio()
+                            
+                            if similarity >= 0.65:  # 65% = likely same story
+                                print(f"\n   ⏭️ SKIPPING - Similar to published article (similarity: {similarity:.0%})")
+                                print(f"      New: {full_title[:60]}...")
+                                print(f"      Published (ID {pub['id']}): {pub_title[:60]}...")
+                                skip_article = True
+                                break
+                except Exception as e:
+                    print(f"   ⚠️ Published article check error: {e}")
+                
+                if skip_article:
+                    with stats_lock:
+                        stats['failed'] += 1
+                    continue
+                
                 # Create new cluster
                 cluster_id = self.create_cluster(article, source_id)
                 if cluster_id:
@@ -1223,6 +1306,8 @@ class EventClusteringEngine:
         print(f"✓ Articles saved: {stats['saved_articles']}/{stats['total_articles']}")
         print(f"✓ Matched to existing clusters: {stats['matched_to_existing']}")
         print(f"✓ New clusters created: {stats['new_clusters_created']}")
+        if stats['already_clustered'] > 0:
+            print(f"⏭️ Already in clusters (skipped): {stats['already_clustered']}")
         print(f"✓ Total active clusters: {len(active_clusters)}")
         print(f"✓ Embedding threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
         if stats['failed'] > 0:

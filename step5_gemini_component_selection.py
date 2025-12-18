@@ -38,166 +38,90 @@ class ComponentConfig:
 # SYSTEM PROMPT - COMPONENT SELECTION LOGIC
 # ==========================================
 
-COMPONENT_SELECTION_PROMPT = """You are analyzing news articles to select the MOST RELEVANT visual components for each story.
+COMPONENT_SELECTION_PROMPT = """Select visual components for this news article based on available search data.
 
-CRITICAL: You will receive BOTH the article TITLE and the FULL ARTICLE CONTENT (200 words synthesized by Claude). Analyze both to make the best component selection.
+ARTICLE TITLE: {title}
+BULLET SUMMARY: {bullets}
+SEARCH CONTEXT: {search_context}
 
-AVAILABLE COMPONENTS (select 1-3 of these, ONLY if truly relevant):
-1. timeline - Historical events and chronology
-2. details - Key facts, numbers, statistics
-3. graph - Data visualization and trends
+═══ AVAILABLE COMPONENTS ═══
 
-NOTE: Map component is currently disabled.
+🗺️ MAP - For stories with SPECIFIC geographic locations
+   Requires: At least 1 PRECISE location (port, facility, city - NOT just country)
+   Good: "Novorossiysk Port", "Shifa Hospital", "Crimean Bridge"
+   Bad: "Ukraine", "Russia", "Middle East"
 
-SELECTION PHILOSOPHY: QUALITY OVER QUANTITY
-- Choose ONLY components that add genuine value to understanding the story
-- If only 1 component is relevant, select only 1
-- If 2 are relevant, select 2
-- If 3 are relevant, select 3
-- NEVER select irrelevant components just to meet a minimum
+📊 GRAPH - For stories with measurable trends over time
+   Requires: At least 4 data points across different time periods
 
-COMPONENT SELECTION GUIDE:
+📅 TIMELINE - For evolving stories with multiple dated events
+   Requires: At least 3 distinct dated events (not just the main news event)
 
-<!-- 🗺️ MAP - DISABLED (kept for future re-enabling)
-- Natural disasters (earthquake, hurricane, flood)
-- Wars, conflicts, border disputes
-- Multiple countries/cities mentioned
-- Travel, migration stories
-Examples: "Earthquake strikes Turkey", "War in Gaza", "Hurricane hits Florida"
--->
+📋 DETAILS - For stories with interesting facts beyond the bullet summary
+   Requires: At least 3 specific facts NOT already in bullet summary
+   Source: From full article text OR from internet search
 
-📊 GRAPH - Choose for data/trend/comparison stories:
-- Economic data (rates, prices, stocks, GDP)
-- Election results, polls, voting data
-- Climate data (temperatures, emissions)
-- Growth/decline trends ("increases to", "falls to")
-Examples: "Interest rates rise to 4.5%", "Election results", "Stock market crashes"
+═══ SELECTION RULES ═══
 
-📅 TIMELINE - Choose for evolving/historical stories:
-- Ongoing investigations, scandals, crises
-- Peace talks, negotiations, diplomatic events
-- Policy changes with history
-- Stories with "recalls", "resigns", "announces"
-Examples: "Ambassador recalled", "CEO resigns", "Nuclear deal collapses"
+1. Select ONLY components that have sufficient data in the search context
+2. Select 1-4 components (quality over quantity)
+3. Order by relevance (most important first)
+4. If search context lacks data for a component, DO NOT select it
 
-📋 DETAILS - Choose for fact-heavy stories:
-- Product launches (specs, prices, dates)
-- Deaths, casualties (numbers, names)
-- Scientific discoveries (measurements, findings)
-- Business deals (amounts, companies)
-Examples: "Pope canonizes 7 saints", "iPhone 16 announced", "Company acquires rival"
+═══ DATA VALIDATION CHECKLIST ═══
 
-SELECTION STRATEGY BY TITLE TYPE (choose ONLY relevant ones):
+Before selecting each component, verify in search context:
 
-Disasters/Conflicts → ["details", "timeline"] (if ongoing) or ["details"] (if single event)
-Economic/Financial → ["graph", "details"] (if data-heavy) or ["details"] (if simple announcement)
-Politics/Diplomacy → ["timeline", "details"] (if ongoing) or ["details"] (if single event)
-Product/Tech News → ["details"] (usually just specs) or ["details", "graph"] (if market data)
-Science/Research → ["details"] (usually just findings) or ["details", "graph"] (if data)
-Elections → ["graph", "details"] (if results) or ["details"] (if single announcement)
-Deaths/Casualties → ["details"] (if single event) or ["timeline", "details"] (if ongoing)
+□ MAP: 
+  - Is there at least 1 SPECIFIC location (not just country)?
+  - Can you pinpoint it on a map (port, city, facility)?
+  - If only country names available → DO NOT select map
 
-OUTPUT FORMAT - RETURN ONLY THESE EXACT KEYWORDS:
+□ GRAPH: 
+  - Are there 4+ dated numerical data points for a trend?
+
+□ TIMELINE: 
+  - Are there 3+ distinct dated events beyond the main story?
+
+□ DETAILS: 
+  - Are there 3+ specific facts NOT mentioned in bullet summary?
+  - Facts can be from article text OR internet search
+
+SELECT ONLY components that pass their validation check.
+
+═══ EMOJI SELECTION ═══
+
+Select ONE emoji that captures the story's core topic:
+
+🌍 Geopolitics/International  📈 Economy/Markets    🏛️ Politics/Government
+💻 Technology                 🔬 Science            💊 Health/Medicine
+⚽ Sports                     🎭 Entertainment      🌱 Environment/Climate
+⚔️ Conflict/Military         ⚠️ Disasters          💀 Death/Tragedy
+🎓 Education                  ⚖️ Law/Justice        🏆 Awards
+🚀 Space                      🔐 Security/Cyber     🎉 Celebrations
+🌊 Natural disasters          🚗 Transportation     🏗️ Infrastructure
+💣 Military/Weapons           🚢 Naval/Maritime     ✈️ Aviation
+
+═══ OUTPUT FORMAT ═══
+
+Return ONLY valid JSON:
 {
-  "components": ["graph", "details"],
-  "emoji": "📈",
-  "graph_type": "line",
-  "graph_data_needed": "historical trend data"
+  "components": ["map", "details", "timeline"],
+  "emoji": "💣",
+  "graph_type": null,
+  "graph_data_available": false,
+  "map_locations": ["Novorossiysk Port, Krasnodar Krai, Russia"]
 }
 
-IMPORTANT: Order components by importance (most important first).
-Example: If graph is most relevant, then timeline: ["graph", "timeline"]
-
-EMOJI SELECTION:
-Choose ONE emoji that best represents the story's main topic:
-
-📰 News & Media: 📰 📻 📺 🗞️
-🌍 Geography & Travel: 🌍 🌎 🌏 🗺️ ✈️ 🚢
-🏛️ Politics & Government: 🏛️ ⚖️ 🗳️ 🏴 🏳️
-💼 Business & Economy: 💼 💰 📈 📉 💵 💶 💷 💴 🏢 🏦
-🔬 Science & Research: 🔬 🧬 🧪 🔭 🌌 ⚗️
-💊 Health & Medicine: 💊 🏥 🩺 💉 🧬 🦠
-🌱 Environment & Climate: 🌱 ♻️ 🌳 🌊 ⛰️ 🌡️ ⚡ 🌤️ 🌧️ 🌪️ 🔥
-⚽ Sports: ⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🥊 🏆 🥇
-🎭 Arts & Entertainment: 🎭 🎬 🎵 🎨 📚 🎪 🎤
-💻 Technology: 💻 📱 🤖 🔌 💾 🖥️ ⌨️ 🖱️ 📡
-🚗 Transportation: 🚗 🚙 🚕 ✈️ 🚂 🚁 🚢 🚀
-🏗️ Infrastructure: 🏗️ 🏘️ 🌉 🏭 ⚡
-⚠️ Disasters & Emergencies: 🔥 🌊 ⚡ 🌪️ 💥 ⚠️ 🚨
-⚔️ Conflicts & Security: ⚔️ 🛡️ 💣 🚨 👮 🔫
-🎓 Education: 🎓 📚 🏫 ✏️ 📖
-👨‍👩‍👧 Society & Culture: 👥 🤝 ❤️ 👶 👴 ⚡
-🍔 Food & Agriculture: 🍔 🌾 🍎 🐄 🌽 🥖
-⚖️ Law & Justice: ⚖️ 👨‍⚖️ 🏛️ 📜
-🏆 Awards & Achievements: 🏆 🥇 🥈 🥉 ⭐ 🎖️
-💀 Death & Tragedy: 💀 ⚰️ 🕊️ 🖤
-🎉 Celebrations & Events: 🎉 🎊 🎈 🎁 🎂
-🔐 Privacy & Security: 🔐 🔒 🔑 🛡️ 👁️
-
-Examples:
-- "Earthquake in Turkey" → 🌊
-- "Fed raises interest rates" → 📈
-- "SpaceX launches satellite" → 🚀
-- "Climate summit in Paris" → 🌍
-- "Apple announces iPhone 16" → 📱
-- "World Cup final" → ⚽
-- "Nobel Prize winner announced" → 🏆
-
-CRITICAL RULES:
-1. Use ONLY these exact words: "timeline", "details", "graph", "map"
-2. NO descriptive names like "Timeline of events" - just "timeline"
-3. Choose ONE emoji that best captures the story's essence
-3. Return 1-4 components (choose ONLY relevant ones)
-4. Choose the MOST RELEVANT components for the title
-5. Quality over quantity - better to have 1 perfect component than 2 mediocre ones
-6. Ask yourself: "Does this component genuinely help understand this story?"
-
-EXAMPLES:
-
-Article: "Earthquake strikes Turkey near Gaziantep"
-Content: Mentions death toll, previous earthquakes in region, rescue timeline
-Output: {"components": ["details", "timeline"], "emoji": "🌊", "graph_type": null, "graph_data_needed": null}
-(Details for casualties, timeline for historical context and rescue progression)
-
-Article: "Nvidia Reports Record $57 Billion Revenue"
-Content: Discusses revenue growth, quarterly comparisons, year-over-year trends
-Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "Nvidia revenue over quarters", "emoji": "📈"}
-(Graph for revenue trend, details for key numbers)
-
-Article: "Interest rates rise to 4.5 percent"
-Content: Mentions previous rate, Fed's decision timeline, economic impact
-Output: {"components": ["graph", "details"], "graph_type": "line", "graph_data_needed": "interest rates over time"}
-(Graph for rate trend, details for context)
-
-Article: "iPhone 16 announced with $999 price"
-Content: Lists specs, storage options, release date, pricing tiers
-Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Details for specs and pricing - no graph needed for single product)
-
-Article: "Colombia recalls ambassador after Trump accusations"
-Content: Describes diplomatic timeline, previous incidents, relationship history
-Output: {"components": ["timeline", "details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Timeline for diplomatic progression, details for key facts)
-
-Article: "Scientists discover new Earth-like planet"
-Content: Describes planet size, distance, discovery method, significance
-Output: {"components": ["details"], "graph_type": null, "graph_data_needed": null, "map_locations": null}
-(Details for discovery facts - no timeline or graph needed)
-
-Article: "Hurricane Milton approaches Florida coast"
-Content: Current position, forecast path, previous hurricane hits, evacuation numbers
-Output: {"components": ["details", "timeline"], "emoji": "🌪️", "graph_type": null, "graph_data_needed": null}
-(Details for current status, timeline for storm progression)
-
-REMEMBER: 
-- Analyze BOTH the title AND the full article content
-- Use the article content to understand context, numbers, and facts
-- Use exact keywords: "timeline", "details", "graph", "map"
-- Select 1-4 components that are TRULY relevant to the story
-- Be GENEROUS in selecting components if the article has rich data
-- Ask: "Would a reader genuinely benefit from this component?"
-
-Return ONLY valid JSON with the exact keyword strings."""
+FIELD RULES:
+- components: Array of selected components, ordered by importance
+- emoji: Single emoji for the story
+- graph_type: "line", "bar", or "area" if graph selected, null otherwise
+- graph_data_available: true if graph selected, false otherwise
+- map_locations: Array of PRECISE location strings if map selected, null otherwise
+  Format: "Specific Place, City/Region, Country"
+  ✓ "Novorossiysk Port, Krasnodar Krai, Russia"
+  ✗ "Russia" (rejected - too vague)"""
 
 
 # ==========================================
@@ -224,7 +148,7 @@ class GeminiComponentSelector:
         # Configure Gemini
         genai.configure(api_key=api_key)
         
-        # Initialize model with system instruction
+        # Initialize model (response_schema removed - not well supported by gemini-2.0-flash)
         self.model = genai.GenerativeModel(
             model_name=self.config.model,
             generation_config={
@@ -233,20 +157,20 @@ class GeminiComponentSelector:
                 'top_k': self.config.top_k,
                 'max_output_tokens': self.config.max_output_tokens,
                 'response_mime_type': 'application/json'
-            },
-            system_instruction=COMPONENT_SELECTION_PROMPT
+            }
         )
         
         print(f"✓ Initialized Gemini component selector")
         print(f"  Model: {self.config.model}")
         print(f"  Components per article: {self.config.min_components}-{self.config.max_components}")
     
-    def select_components(self, article: Dict) -> Dict:
+    def select_components(self, article: Dict, search_context: str = "") -> Dict:
         """
         Select components for a single article
         
         Args:
             article: Dict with 'title' and 'text' (full article content from Step 3)
+            search_context: Optional search context from Gemini search
         
         Returns:
             Dict with component selection
@@ -255,26 +179,25 @@ class GeminiComponentSelector:
         article_title = article.get('title', 'No title')
         article_content = article.get('text', '')
         
-        # Limit content to 1000 chars to save tokens
-        if len(article_content) > 1000:
-            article_content = article_content[:1000] + "..."
+        # Get bullet summary if available
+        bullets = article.get('summary_bullets_news', article.get('summary_bullets', []))
+        if isinstance(bullets, list):
+            bullets_text = '\n'.join([f"• {b}" for b in bullets])
+        else:
+            bullets_text = str(bullets) if bullets else article_content[:500]
         
-        user_prompt = f"""Analyze this news article (title + content) and select the MOST RELEVANT components (1-4).
-
-TITLE: {article_title}
-
-ARTICLE CONTENT:
-{article_content}
-
-REQUIREMENTS:
-- Analyze BOTH the title AND the full article content above
-- Look for: numbers, dates, trends, historical context, key facts
-- Be GENEROUS if the article has rich data that would benefit from visualization
-- Select 1-4 components that are TRULY relevant to this story
-- Use exact keywords: "timeline", "details", "graph", "map"
-- Ask yourself: "Would a reader genuinely benefit from this component?"
-
-Return ONLY valid JSON with exact component keywords."""
+        # Use article content as search context if none provided
+        if not search_context:
+            search_context = article_content[:2000] if article_content else "No search context available."
+        
+        # Format the prompt with article data
+        formatted_prompt = COMPONENT_SELECTION_PROMPT.format(
+            title=article_title,
+            bullets=bullets_text,
+            search_context=search_context[:3000]  # Limit search context
+        )
+        
+        user_prompt = formatted_prompt + "\n\nAnalyze and return ONLY valid JSON."
 
         # Retry logic
         for attempt in range(self.config.retry_attempts):
@@ -300,6 +223,30 @@ Return ONLY valid JSON with exact component keywords."""
                 print(f"      Title: {article_title[:80]}...")
                 print(f"      Content length sent: {len(article_content)} chars")
                 print(f"      Gemini returned: {result_text[:300]}")
+                
+                # Extract JSON from potential markdown code blocks
+                import re
+                
+                # Method 1: Extract from markdown code blocks
+                json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', result_text)
+                if json_match:
+                    result_text = json_match.group(1).strip()
+                
+                # Method 2: Try to find JSON object with braces
+                if not result_text.startswith('{'):
+                    json_obj_match = re.search(r'\{[\s\S]*\}', result_text)
+                    if json_obj_match:
+                        result_text = json_obj_match.group(0)
+                    else:
+                        # Method 3: Gemini returned JSON content without braces - wrap it
+                        if '"components"' in result_text or "'components'" in result_text:
+                            result_text = '{' + result_text + '}'
+                
+                # Clean up any trailing commas before closing brace
+                result_text = re.sub(r',\s*}', '}', result_text)
+                result_text = re.sub(r',\s*]', ']', result_text)
+                
+                print(f"      Cleaned JSON: {result_text[:200]}")
                 
                 result = json.loads(result_text)
                 
@@ -369,15 +316,15 @@ Return ONLY valid JSON with exact component keywords."""
             return self._get_fallback_selection()
         
         # Filter out any non-string components
-        # NOTE: 'map' is disabled but kept in code for future re-enabling
-        valid_component_names = {'timeline', 'details', 'graph'}  # 'map' removed - disabled
+        # NOTE: 'map' is now re-enabled
+        valid_component_names = {'timeline', 'details', 'graph', 'map'}  # All 4 components enabled
         filtered_components = []
         for comp in components:
             if isinstance(comp, str):
                 if comp in valid_component_names:
                     filtered_components.append(comp)
                 else:
-                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph)")
+                    print(f"  ⚠ Invalid component name: '{comp}' (expected: timeline, details, graph, map)")
             elif isinstance(comp, dict):
                 # Sometimes Gemini returns dicts - try to extract the component name
                 if 'name' in comp:
@@ -437,24 +384,14 @@ Return ONLY valid JSON with exact component keywords."""
         # Simple keyword-based fallback
         title_lower = article_title.lower()
         
-        # NOTE: Map selection disabled but kept for future re-enabling
-        # Check for geographic indicators (commented out - map disabled)
-        # if any(word in title_lower for word in ['earthquake', 'hurricane', 'flood', 'strikes', 'war', 'conflict', 'border', 'country']):
-        #     return {
-        #         'components': ['map', 'details'],
-        #         'emoji': '🌍',
-        #         'graph_type': None,
-        #         'graph_data_needed': None,
-        #         'map_locations': []
-        #     }
-        
-        # Fallback for geographic stories (map disabled, use details + timeline instead)
+        # Fallback for geographic stories (map re-enabled)
         if any(word in title_lower for word in ['earthquake', 'hurricane', 'flood', 'strikes', 'war', 'conflict', 'border', 'country']):
             return {
-                'components': ['details', 'timeline'],
+                'components': ['map', 'details'],
                 'emoji': '🌍',
                 'graph_type': None,
-                'graph_data_needed': None
+                'graph_data_needed': None,
+                'map_locations': []
             }
         
         # Check for data/trend indicators
