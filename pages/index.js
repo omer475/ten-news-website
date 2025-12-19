@@ -413,7 +413,7 @@ export default function Home() {
           case 'details':
             return story.details && story.details.length > 0;
           case 'timeline':
-            return false; // Timeline disabled - all stories use same design
+            return story.timeline && story.timeline.length > 0;
           case 'map':
             return story.map;
           case 'graph':
