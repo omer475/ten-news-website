@@ -2370,8 +2370,9 @@ export default function Home() {
     let isTransitioning = false;
 
     const handleTouchStart = (e) => {
-      // Don't capture touch if it's on auth modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+      // Don't capture touch if it's on auth modal or paywall modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
+          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
         return;
       }
       
@@ -2401,8 +2402,9 @@ export default function Home() {
     };
 
     const handleTouchEnd = (e) => {
-      // Don't handle touch if it's on auth modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+      // Don't handle touch if it's on auth modal or paywall modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
+          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
         return;
       }
       
@@ -2481,8 +2483,9 @@ export default function Home() {
     };
 
     const handleWheel = (e) => {
-      // Don't block wheel if it's on auth modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+      // Don't block wheel if it's on auth modal or paywall modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
+          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
         return;
       }
       
@@ -3127,7 +3130,8 @@ export default function Home() {
           justify-content: center;
           padding-top: 15vh;
           z-index: 1000;
-          pointer-events: auto;
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
 
         .paywall-modal {
@@ -3136,9 +3140,15 @@ export default function Home() {
           padding: 32px;
           max-width: 360px;
           width: 90%;
-          pointer-events: auto;
+          pointer-events: auto !important;
+          touch-action: auto !important;
           position: relative;
           z-index: 1001;
+        }
+        
+        .paywall-modal * {
+          pointer-events: auto !important;
+          touch-action: auto !important;
         }
 
         .paywall-modal h2 {
@@ -4783,13 +4793,21 @@ export default function Home() {
           >
             {/* Paywall for stories after streak page + 2 articles */}
             {index >= paywallThreshold && !user && (
-              <div className="paywall-overlay">
-                <div className="paywall-modal">
+              <div 
+                className="paywall-overlay"
+                style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+              >
+                <div 
+                  className="paywall-modal"
+                  style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+                  onClick={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                >
                   <h2>Create Your Account</h2>
                   <p>Create a free account to continue reading more news.</p>
                   <SignupForm onSubmit={handleSignup} />
-                  <div className="paywall-footer">
-                    <p>Already have an account? <button className="auth-switch" onClick={() => setAuthModal('login')}>Login</button></p>
+                  <div className="paywall-footer" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+                    <p>Already have an account? <button className="auth-switch" onClick={() => setAuthModal('login')} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); }} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>Login</button></p>
                   </div>
                 </div>
               </div>

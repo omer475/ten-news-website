@@ -239,17 +239,24 @@ class ClaudeComponentWriter:
         Returns:
             Dict with generated components or None if failed
         """
+        print(f"   🔧 DEBUG: Starting component generation...")
+        
         # Get selected components
         components = article.get('components', article.get('selected_components', []))
+        print(f"   🔧 DEBUG: Components to generate: {components}")
+        
         if not components:
             return {}  # No components selected
         
         # Build formatted system prompt with article data
+        print(f"   🔧 DEBUG: Building system prompt...")
         system_prompt = self._build_system_prompt(article, components)
+        print(f"   🔧 DEBUG: System prompt built ({len(system_prompt)} chars)")
         
         # Try up to retry_attempts times
         for attempt in range(self.config.retry_attempts):
             try:
+                print(f"   🔧 DEBUG: Calling Claude API (attempt {attempt + 1})...")
                 response = self.client.messages.create(
                     model=self.config.model,
                     max_tokens=self.config.max_tokens,
@@ -340,13 +347,13 @@ class ClaudeComponentWriter:
         
         context_str = '\n\n'.join(context_parts) if context_parts else 'No additional context available.'
         
-        # Format the prompt template with article data
-        formatted_prompt = COMPONENT_PROMPT.format(
-            title=title,
-            bullets=bullets_text,
-            components=', '.join(components),
-            context=context_str
-        )
+        # Format the prompt template with article data using replace (not .format() 
+        # because the prompt contains JSON examples with braces)
+        formatted_prompt = COMPONENT_PROMPT
+        formatted_prompt = formatted_prompt.replace('{title}', title)
+        formatted_prompt = formatted_prompt.replace('{bullets}', bullets_text)
+        formatted_prompt = formatted_prompt.replace('{components}', ', '.join(components))
+        formatted_prompt = formatted_prompt.replace('{context}', context_str)
         
         return formatted_prompt
     
