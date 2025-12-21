@@ -257,7 +257,7 @@ export default function MapboxMap({
     if (mapRef.current) {
       const map = mapRef.current;
       
-      // Start fade out
+      // Quick, subtle fade for smoothness
       setIsTransitioning(true);
       
       if (expanded) {
@@ -276,22 +276,36 @@ export default function MapboxMap({
         map.touchZoomRotate.disable();
       }
       
-      // Set zoom immediately (no animation) after container finishes transitioning
-      // Collapsed = zoomed IN (focus on location), Expanded = zoomed OUT (show context)
-      const resizeTimeout = setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.resize();
-          mapRef.current.jumpTo({
-            zoom: expanded ? 6 : 10  // Collapsed: zoom 10 (focused), Expanded: zoom 6 (context)
-          });
-          // Fade back in
-          setTimeout(() => {
-            setIsTransitioning(false);
-          }, 50);
-        }
-      }, 400); // Wait for most of the container transition
+      // Smoothly animate zoom change during container transition
+      // Use flyTo for smooth animation instead of jumpTo
+      const targetZoom = expanded ? 6 : 10;  // Collapsed: zoom 10 (focused), Expanded: zoom 6 (context)
       
-      return () => clearTimeout(resizeTimeout);
+      // Start zoom animation immediately - it will animate alongside container
+      map.easeTo({
+        zoom: targetZoom,
+        duration: 350,  // Match container transition duration
+        easing: (t) => 1 - Math.pow(1 - t, 3)  // Smooth ease-out curve
+      });
+      
+      // Resize multiple times during transition for smooth scaling
+      const resizeTimes = [50, 150, 250, 350];
+      const timeouts = resizeTimes.map(time => 
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.resize();
+          }
+        }, time)
+      );
+      
+      // Fade back in quickly
+      const fadeTimeout = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 100);
+      
+      return () => {
+        timeouts.forEach(t => clearTimeout(t));
+        clearTimeout(fadeTimeout);
+      };
     }
   }, [expanded]);
 
@@ -321,8 +335,10 @@ export default function MapboxMap({
           bottom: 0,
           borderRadius: '8px',
           overflow: 'hidden',
-          opacity: isTransitioning ? 0.3 : 1,
-          transition: 'opacity 0.25s ease-in-out'
+          // Subtle opacity dip during transition - barely noticeable but smooths resize
+          opacity: isTransitioning ? 0.85 : 1,
+          transition: 'opacity 0.15s ease-out',
+          willChange: 'opacity'
         }} 
       />
     </>

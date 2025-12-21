@@ -6761,10 +6761,14 @@ export default function Home() {
                                   right: '0',
                                   height: expandedMap[index] ? '320px' : '85px',
                                   maxHeight: expandedMap[index] ? '320px' : '85px',
-                                  transition: 'height 0.8s cubic-bezier(0.33, 1, 0.68, 1), max-height 0.8s cubic-bezier(0.33, 1, 0.68, 1)',
+                                  // Smooth spring animation - faster expand, natural deceleration
+                                  transition: expandedMap[index] 
+                                    ? 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1), max-height 0.4s cubic-bezier(0.32, 0.72, 0, 1)'
+                                    : 'height 0.35s cubic-bezier(0.32, 0.72, 0, 1), max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
                                   minHeight: '85px',
                                   zIndex: '10',
-                                  overflow: 'hidden'
+                                  overflow: 'hidden',
+                                  willChange: 'height, max-height'
                                 }}>
                                 <div className="glass-filter"></div>
                                 <div className="glass-overlay"></div>
@@ -6864,7 +6868,11 @@ export default function Home() {
                                       overflow: 'hidden',
                                       height: expandedMap[index] ? '260px' : '50px',
                                       minHeight: expandedMap[index] ? '260px' : '50px',
-                                      transition: 'height 0.8s cubic-bezier(0.33, 1, 0.68, 1), min-height 0.8s cubic-bezier(0.33, 1, 0.68, 1)'
+                                      // Match outer container's smooth spring animation
+                                      transition: expandedMap[index]
+                                        ? 'height 0.4s cubic-bezier(0.32, 0.72, 0, 1), min-height 0.4s cubic-bezier(0.32, 0.72, 0, 1)'
+                                        : 'height 0.35s cubic-bezier(0.32, 0.72, 0, 1), min-height 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+                                      willChange: 'height, min-height'
                                     }}>
                                       <MapboxMap
                                         center={story.map.center || { lat: 0, lon: 0 }}
