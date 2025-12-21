@@ -32,6 +32,8 @@ export default function Home() {
   // TikTok-style smooth swipe states
   const [dragOffset, setDragOffset] = useState(0);  // Current drag position (px)
   const [isDragging, setIsDragging] = useState(false);  // Is user currently dragging
+  const [swipeVelocity, setSwipeVelocity] = useState(0);  // Velocity for spring animation
+  const [transitionDuration, setTransitionDuration] = useState(0.4);  // Dynamic transition duration
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
   const [showDetails, setShowDetails] = useState({});
@@ -2376,6 +2378,12 @@ export default function Home() {
     let startY = 0;
     let isTransitioning = false;
     let currentDragOffset = 0;
+    
+    // Velocity tracking for smooth physics
+    let lastY = 0;
+    let lastTime = 0;
+    let velocityY = 0;
+    const velocityDecay = 0.95;  // Smooth velocity decay
 
     const handleTouchStart = (e) => {
       // Don't capture touch if it's on auth modal or paywall modal
@@ -2405,10 +2413,15 @@ export default function Home() {
       e.preventDefault();
 
       if (!isTransitioning) {
-        startY = e.touches[0].clientY;
+        const touch = e.touches[0];
+        startY = touch.clientY;
+        lastY = touch.clientY;
+        lastTime = Date.now();
+        velocityY = 0;
         currentDragOffset = 0;
         setIsDragging(true);
         setDragOffset(0);
+        setSwipeVelocity(0);
       }
     };
 
@@ -2436,6 +2449,17 @@ export default function Home() {
         }
       }
 
+      // Calculate final velocity for spring animation
+      const absVelocity = Math.abs(velocityY);
+      setSwipeVelocity(velocityY);
+      
+      // Dynamic transition duration based on velocity
+      // Faster swipes = quicker transitions (more responsive feel)
+      const baseDuration = 0.35;
+      const velocityBoost = Math.min(absVelocity / 3000, 0.15);  // Up to 0.15s faster
+      const dynamicDuration = Math.max(0.2, baseDuration - velocityBoost);
+      setTransitionDuration(dynamicDuration);
+
       setIsDragging(false);
       setDragOffset(0);
 
@@ -2443,36 +2467,47 @@ export default function Home() {
 
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
-      const velocity = Math.abs(diff) / 100; // Simple velocity estimation
+      
+      // TikTok-style: Use velocity for navigation decision
+      // Fast flicks navigate even with small distance
+      const velocityThreshold = 500;  // px/s
+      const distanceThreshold = absVelocity > velocityThreshold ? 15 : 50;
 
-      // TikTok-style: lower threshold + velocity boost
-      const threshold = velocity > 1.5 ? 20 : 60;
-
-      if (Math.abs(diff) > threshold) {
+      if (Math.abs(diff) > distanceThreshold || absVelocity > velocityThreshold) {
         isTransitioning = true;
 
         // Allow backward navigation, but prevent forward navigation when paywall is active
         const isPaywallActive = !user && currentIndex >= paywallThreshold;
-        const isForwardNavigation = diff > 0; // diff > 0 means scrolling up/down to next story
+        
+        // Use velocity direction if strong enough, otherwise use distance
+        const navigateForward = absVelocity > velocityThreshold ? velocityY > 0 : diff > 0;
 
-        if (isPaywallActive && isForwardNavigation) {
+        if (isPaywallActive && navigateForward) {
           // Block forward navigation when paywall is active
           isTransitioning = false;
+          setTransitionDuration(0.35);
           return;
         }
 
-        if (diff > 0) {
+        if (navigateForward) {
           nextStory();
         } else {
           prevStory();
         }
+        
+        // Transition time based on velocity
+        const transitionTime = dynamicDuration * 1000 + 50;
         setTimeout(() => {
           isTransitioning = false;
-        }, 350); // Faster transition
+          setTransitionDuration(0.35);
+        }, transitionTime);
+      } else {
+        // Snap back with spring animation
+        setTransitionDuration(0.35);
       }
     };
 
-    // TikTok-style: Card follows finger during drag
+    // TikTok-style: Card follows finger during drag with smooth physics
     const handleTouchMove = (e) => {
       // Don't block touch if it's on auth modal
       if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
@@ -2499,12 +2534,32 @@ export default function Home() {
       // Prevent default scroll behavior - only swipe navigation allowed
       e.preventDefault();
 
-      // Calculate drag offset for visual feedback
+      // Calculate drag offset with velocity tracking
       if (startY && !isTransitioning) {
-        const currentY = e.touches[0].clientY;
+        const touch = e.touches[0];
+        const currentY = touch.clientY;
+        const currentTime = Date.now();
+        const deltaTime = currentTime - lastTime;
+        
+        // Calculate instantaneous velocity (px per second)
+        if (deltaTime > 0) {
+          const deltaY = lastY - currentY;  // Positive = dragging up (next)
+          const instantVelocity = (deltaY / deltaTime) * 1000;
+          // Smooth velocity with decay for natural feel
+          velocityY = velocityY * velocityDecay + instantVelocity * (1 - velocityDecay);
+        }
+        
+        lastY = currentY;
+        lastTime = currentTime;
+
         const diff = startY - currentY;
-        // Apply resistance at edges (rubber band effect)
-        const resistance = 0.4;
+        
+        // Higher resistance for smoother follow (0.75 = card follows finger closely)
+        // Apply slight rubber-band at edges
+        const isAtEdge = (currentIndex === 0 && diff < 0) || 
+                         (currentIndex === stories.length - 1 && diff > 0);
+        const resistance = isAtEdge ? 0.3 : 0.75;
+        
         currentDragOffset = diff * resistance;
         setDragOffset(currentDragOffset);
       }
@@ -4807,23 +4862,25 @@ export default function Home() {
             style={{
               transform: `${
                 index === currentIndex 
-                  ? `translateY(${-dragOffset}px) scale(${1 - Math.abs(dragOffset) * 0.0002})` 
+                  ? `translateY(${-dragOffset}px) scale(${1 - Math.abs(dragOffset) * 0.00015})` 
                   : index < currentIndex 
-                    ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.3 : 0}px)) scale(0.92)` 
-                    : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.3 : 0}px)) scale(0.95)`
+                    ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.5 : 0}px)) scale(0.94)` 
+                    : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.5 : 0}px)) scale(0.96)`
               }`,
-              opacity: index === currentIndex ? 1 : (Math.abs(dragOffset) > 50 ? 0.4 : 0),
+              opacity: index === currentIndex ? 1 : (Math.abs(dragOffset) > 30 ? 0.6 : 0),
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: index === currentIndex ? 'auto' : 'none',
               background: 'transparent',
               boxSizing: 'border-box',
-              // TikTok-style smooth spring transition
+              // TikTok-style smooth spring transition with dynamic duration
+              // Using spring-like cubic-bezier for natural overshoot feel
               transition: isDragging 
                 ? 'none'  // No transition while dragging (instant follow)
-                : 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease',
+                : `transform ${transitionDuration}s cubic-bezier(0.32, 0.72, 0, 1), opacity ${transitionDuration * 0.8}s ease-out`,
               // TikTok-style: No scrolling within stories, only swipe between stories
               overflow: 'hidden',
-              touchAction: 'none'
+              touchAction: 'none',
+              willChange: isDragging ? 'transform' : 'auto'
             }}
           >
             {/* Paywall for stories after streak page + 2 articles */}
