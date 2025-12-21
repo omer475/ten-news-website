@@ -757,18 +757,19 @@ def run_complete_pipeline():
 
 def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
-    Synthesize one article from multiple sources using Claude
+    Synthesize one article from multiple sources using Gemini (temporarily switched from Claude)
     
     Args:
         sources: List of source articles
         cluster_id: Cluster ID
         verification_feedback: Optional dict with 'discrepancies' and 'summary' from failed verification
     """
-    import anthropic
+    import requests
     import json
     import time
     
-    client = anthropic.Anthropic(api_key=anthropic_key)
+    # Use Gemini API (temporarily instead of Claude)
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -1105,19 +1106,38 @@ Return ONLY valid JSON, no markdown, no explanations."""
     # Try up to 3 times
     for attempt in range(3):
         try:
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=2048,
-                temperature=0.3,
-                timeout=60,
-                messages=[{"role": "user", "content": prompt}]
-            )
+            # Build Gemini API request
+            request_data = {
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [{"text": prompt}]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 2048,
+                    "responseMimeType": "application/json"
+                }
+            }
             
-            # Get response text
-            response_text = response.content[0].text if response.content else ""
+            response = requests.post(gemini_url, json=request_data, timeout=60)
+            
+            # Handle rate limiting
+            if response.status_code == 429:
+                wait_time = (attempt + 1) * 5
+                print(f"   ⚠️  Rate limited (attempt {attempt + 1}/3) - waiting {wait_time}s...")
+                time.sleep(wait_time)
+                continue
+            
+            response.raise_for_status()
+            response_json = response.json()
+            
+            # Get response text from Gemini format
+            response_text = response_json['candidates'][0]['content']['parts'][0]['text']
             
             if not response_text:
-                print(f"   ⚠️  Empty response from Claude (attempt {attempt + 1}/3)")
+                print(f"   ⚠️  Empty response from Gemini (attempt {attempt + 1}/3)")
                 if attempt < 2:
                     time.sleep(3)
                     continue
@@ -1151,18 +1171,11 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 continue
             return None
             
-        except anthropic.APIError as e:
+        except requests.exceptions.RequestException as e:
             error_msg = str(e)
-            if 'overloaded' in error_msg.lower():
-                print(f"   ⚠️  Claude overloaded (attempt {attempt + 1}/3) - waiting 10s...")
-                time.sleep(10)
-            elif 'rate_limit' in error_msg.lower():
-                print(f"   ⚠️  Rate limited (attempt {attempt + 1}/3) - waiting 5s...")
-                time.sleep(5)
-            else:
-                print(f"   ⚠️  API error: {error_msg[:100]}")
-                if attempt < 2:
-                    time.sleep(3)
+            print(f"   ⚠️  API error (attempt {attempt + 1}/3): {error_msg[:100]}")
+            if attempt < 2:
+                time.sleep(3)
             continue
             
         except Exception as e:

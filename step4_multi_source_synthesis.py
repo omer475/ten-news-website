@@ -3,13 +3,13 @@
 STEP 4: MULTI-SOURCE SYNTHESIS
 ==========================================
 Purpose: Generate AI-written articles by synthesizing multiple sources about the same event
-Model: Claude Sonnet 4.5
+Model: Gemini 2.5 Flash (temporarily switched from Claude)
 Input: Cluster with N source articles (full text from Step 2) + selected image from Step 3
 Output: ONE comprehensive 220-280 word article with standard + detailed bullet summaries
 Key Feature: Combines information from ALL sources, resolves conflicts, writes as firsthand reporting
 """
 
-import anthropic
+import requests
 import json
 import time
 import os
@@ -25,7 +25,7 @@ from datetime import datetime
 @dataclass
 class SynthesisConfig:
     """Configuration for multi-source synthesis"""
-    model: str = "claude-sonnet-4-20250514"
+    model: str = "gemini-2.5-flash-preview-05-20"  # Temporarily using Gemini instead of Claude
     max_tokens: int = 3000  # Enough for content + both bullet versions
     temperature: float = 0.3
     timeout: int = 90
@@ -454,6 +454,7 @@ class MultiSourceSynthesizer:
     """
     Generates AI-written articles by synthesizing multiple sources.
     Replaces single-article processing from original Step 3.
+    Now uses Gemini API (temporarily switched from Claude).
     """
     
     def __init__(self, api_key: str, config: Optional[SynthesisConfig] = None):
@@ -461,11 +462,12 @@ class MultiSourceSynthesizer:
         Initialize synthesizer with API key and config.
         
         Args:
-            api_key: Anthropic API key
+            api_key: Gemini API key (temporarily, was Anthropic)
             config: SynthesisConfig instance (uses defaults if None)
         """
-        self.client = anthropic.Anthropic(api_key=api_key)
+        self.api_key = api_key
         self.config = config or SynthesisConfig()
+        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.model}:generateContent?key={api_key}"
     
     def synthesize_cluster(self, cluster: Dict, full_articles: List[Dict], is_update: bool = False, current_article: Dict = None) -> Optional[Dict]:
         """
@@ -498,20 +500,39 @@ class MultiSourceSynthesizer:
         # Try up to retry_attempts times
         for attempt in range(self.config.retry_attempts):
             try:
-                response = self.client.messages.create(
-                    model=self.config.model,
-                    max_tokens=self.config.max_tokens,
-                    temperature=self.config.temperature,
-                    timeout=self.config.timeout,
-                    system=SYSTEM_PROMPT,
-                    messages=[{
-                        "role": "user",
-                        "content": prompt
-                    }]
+                # Build Gemini API request
+                request_data = {
+                    "contents": [
+                        {
+                            "role": "user",
+                            "parts": [{"text": SYSTEM_PROMPT + "\n\n" + prompt}]
+                        }
+                    ],
+                    "generationConfig": {
+                        "temperature": self.config.temperature,
+                        "maxOutputTokens": self.config.max_tokens,
+                        "responseMimeType": "application/json"
+                    }
+                }
+                
+                response = requests.post(
+                    self.api_url,
+                    json=request_data,
+                    timeout=self.config.timeout
                 )
                 
-                # Extract response
-                response_text = response.content[0].text
+                if response.status_code == 429:
+                    # Rate limited - wait and retry
+                    wait_time = (attempt + 1) * 3
+                    print(f"   ⚠️ Rate limited, waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+                
+                response.raise_for_status()
+                response_json = response.json()
+                
+                # Extract response text from Gemini format
+                response_text = response_json['candidates'][0]['content']['parts'][0]['text']
                 
                 # Remove markdown code blocks if present
                 response_text = response_text.replace('```json', '').replace('```', '').strip()

@@ -529,9 +529,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .greeting-section {
           text-align: center;
           animation: fadeInDown 0.8s ease-out;
-          padding-top: 60px;
+          padding-top: 40px;
         }
-
 
         @keyframes fadeInDown {
           from { opacity: 0; transform: translateY(-20px); }
@@ -539,22 +538,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .greeting-hi {
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.2em;
-          color: #6366f1;
-          margin-bottom: 16px;
-          text-transform: uppercase;
+          font-size: 42px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: #0f172a;
+          margin-bottom: 12px;
+          line-height: 1.1;
         }
 
         .greeting-sub {
-          font-size: 34px;
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.025em;
-          color: #0f172a;
-          max-width: 420px;
+          font-size: 24px;
+          font-weight: 500;
+          line-height: 1.35;
+          letter-spacing: -0.01em;
+          color: #475569;
+          max-width: 340px;
           margin: 0 auto;
+          margin-top: 8px;
         }
 
         .greeting-sub::first-letter {
@@ -618,17 +618,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             overflow: hidden;
           }
           .greeting-section {
-            padding-top: 100px;
-            padding-left: 20px;
-            padding-right: 20px;
-          }
-          .greeting-sub {
-            font-size: 26px;
-            max-width: 300px;
-            line-height: 1.3;
+            padding-top: 80px;
+            padding-left: 24px;
+            padding-right: 24px;
           }
           .greeting-hi {
-            font-size: 11px;
+            font-size: 36px;
+            margin-bottom: 10px;
+          }
+          .greeting-sub {
+            font-size: 20px;
+            max-width: 300px;
+            line-height: 1.35;
           }
           .globe-section {
             overflow: hidden;
@@ -650,8 +651,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         @media (max-width: 375px) {
+          .greeting-hi {
+            font-size: 32px;
+          }
           .greeting-sub {
-            font-size: 22px;
+            font-size: 18px;
             max-width: 260px;
           }
         }

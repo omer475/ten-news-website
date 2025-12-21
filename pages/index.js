@@ -2377,13 +2377,10 @@ export default function Home() {
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
-    let currentDragOffset = 0;
     
-    // Velocity tracking for smooth physics
-    let lastY = 0;
-    let lastTime = 0;
-    let velocityY = 0;
-    const velocityDecay = 0.95;  // Smooth velocity decay
+    // Velocity tracking - using array for smooth averaging
+    let velocityHistory = [];
+    const VELOCITY_SAMPLES = 5;
 
     const handleTouchStart = (e) => {
       // Don't capture touch if it's on auth modal or paywall modal
@@ -2409,19 +2406,15 @@ export default function Home() {
         }
       }
 
-      // Prevent default to stop any scrolling - TikTok style
+      // Prevent default to stop any scrolling
       e.preventDefault();
 
       if (!isTransitioning) {
         const touch = e.touches[0];
         startY = touch.clientY;
-        lastY = touch.clientY;
-        lastTime = Date.now();
-        velocityY = 0;
-        currentDragOffset = 0;
+        velocityHistory = [{ y: touch.clientY, t: Date.now() }];
         setIsDragging(true);
         setDragOffset(0);
-        setSwipeVelocity(0);
       }
     };
 
@@ -2449,15 +2442,24 @@ export default function Home() {
         }
       }
 
-      // Calculate final velocity for spring animation
-      const absVelocity = Math.abs(velocityY);
-      setSwipeVelocity(velocityY);
+      // Calculate velocity from history (average of recent samples)
+      let velocity = 0;
+      if (velocityHistory.length >= 2) {
+        const recent = velocityHistory.slice(-3);  // Last 3 samples
+        const first = recent[0];
+        const last = recent[recent.length - 1];
+        const dt = last.t - first.t;
+        if (dt > 0) {
+          velocity = ((first.y - last.y) / dt) * 1000;  // px/s, positive = swiping up
+        }
+      }
       
-      // Dynamic transition duration based on velocity
-      // Faster swipes = quicker transitions (more responsive feel)
-      const baseDuration = 0.35;
-      const velocityBoost = Math.min(absVelocity / 3000, 0.15);  // Up to 0.15s faster
-      const dynamicDuration = Math.max(0.2, baseDuration - velocityBoost);
+      const absVelocity = Math.abs(velocity);
+      
+      // Smooth transitions - not too fast, not too slow
+      const dynamicDuration = absVelocity > 2000 ? 0.3 : 
+                              absVelocity > 1000 ? 0.35 : 
+                              absVelocity > 500 ? 0.4 : 0.45;
       setTransitionDuration(dynamicDuration);
 
       setIsDragging(false);
@@ -2468,46 +2470,42 @@ export default function Home() {
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
       
-      // TikTok-style: Use velocity for navigation decision
-      // Fast flicks navigate even with small distance
-      const velocityThreshold = 500;  // px/s
-      const distanceThreshold = absVelocity > velocityThreshold ? 15 : 50;
+      // Very responsive thresholds - small swipes work
+      const FLICK_VELOCITY = 300;  // Lower = more sensitive
+      const MIN_DISTANCE = 30;     // Minimum distance for slow swipes
+      
+      const shouldNavigate = absVelocity > FLICK_VELOCITY || Math.abs(diff) > MIN_DISTANCE;
+      const direction = absVelocity > FLICK_VELOCITY ? (velocity > 0 ? 1 : -1) : (diff > 0 ? 1 : -1);
 
-      if (Math.abs(diff) > distanceThreshold || absVelocity > velocityThreshold) {
+      if (shouldNavigate) {
         isTransitioning = true;
 
         // Allow backward navigation, but prevent forward navigation when paywall is active
         const isPaywallActive = !user && currentIndex >= paywallThreshold;
-        
-        // Use velocity direction if strong enough, otherwise use distance
-        const navigateForward = absVelocity > velocityThreshold ? velocityY > 0 : diff > 0;
 
-        if (isPaywallActive && navigateForward) {
-          // Block forward navigation when paywall is active
+        if (isPaywallActive && direction > 0) {
           isTransitioning = false;
-          setTransitionDuration(0.35);
+          setTransitionDuration(0.3);
           return;
         }
 
-        if (navigateForward) {
+        if (direction > 0) {
           nextStory();
         } else {
           prevStory();
         }
         
-        // Transition time based on velocity
-        const transitionTime = dynamicDuration * 1000 + 50;
         setTimeout(() => {
           isTransitioning = false;
-          setTransitionDuration(0.35);
-        }, transitionTime);
+          setTransitionDuration(0.4);
+        }, dynamicDuration * 1000 + 50);
       } else {
-        // Snap back with spring animation
+        // Snap back smoothly
         setTransitionDuration(0.35);
       }
     };
 
-    // TikTok-style: Card follows finger during drag with smooth physics
+    // Card follows finger 1:1 during drag
     const handleTouchMove = (e) => {
       // Don't block touch if it's on auth modal
       if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
@@ -2531,37 +2529,38 @@ export default function Home() {
         }
       }
 
-      // Prevent default scroll behavior - only swipe navigation allowed
+      // Prevent default scroll behavior
       e.preventDefault();
 
-      // Calculate drag offset with velocity tracking
       if (startY && !isTransitioning) {
         const touch = e.touches[0];
         const currentY = touch.clientY;
-        const currentTime = Date.now();
-        const deltaTime = currentTime - lastTime;
+        const now = Date.now();
         
-        // Calculate instantaneous velocity (px per second)
-        if (deltaTime > 0) {
-          const deltaY = lastY - currentY;  // Positive = dragging up (next)
-          const instantVelocity = (deltaY / deltaTime) * 1000;
-          // Smooth velocity with decay for natural feel
-          velocityY = velocityY * velocityDecay + instantVelocity * (1 - velocityDecay);
+        // Track velocity history
+        velocityHistory.push({ y: currentY, t: now });
+        if (velocityHistory.length > VELOCITY_SAMPLES) {
+          velocityHistory.shift();
         }
-        
-        lastY = currentY;
-        lastTime = currentTime;
 
         const diff = startY - currentY;
         
-        // Higher resistance for smoother follow (0.75 = card follows finger closely)
-        // Apply slight rubber-band at edges
-        const isAtEdge = (currentIndex === 0 && diff < 0) || 
-                         (currentIndex === stories.length - 1 && diff > 0);
-        const resistance = isAtEdge ? 0.3 : 0.75;
+        // 1:1 follow - card moves exactly with finger
+        // Only apply rubber-band resistance at edges
+        const isAtStart = currentIndex === 0 && diff < 0;
+        const isAtEnd = currentIndex === stories.length - 1 && diff > 0;
         
-        currentDragOffset = diff * resistance;
-        setDragOffset(currentDragOffset);
+        let offset;
+        if (isAtStart || isAtEnd) {
+          // Rubber-band effect at edges - exponential resistance
+          const resistance = 0.4;
+          offset = diff * resistance * (1 - Math.min(Math.abs(diff) / 500, 0.5));
+        } else {
+          // Full 1:1 tracking in the middle
+          offset = diff;
+        }
+        
+        setDragOffset(offset);
       }
     };
 
@@ -4862,25 +4861,23 @@ export default function Home() {
             style={{
               transform: `${
                 index === currentIndex 
-                  ? `translateY(${-dragOffset}px) scale(${1 - Math.abs(dragOffset) * 0.00015})` 
+                  ? `translateY(${-dragOffset}px)` 
                   : index < currentIndex 
-                    ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.5 : 0}px)) scale(0.94)` 
-                    : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.5 : 0}px)) scale(0.96)`
+                    ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.8 : 0}px))` 
+                    : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.8 : 0}px))`
               }`,
-              opacity: index === currentIndex ? 1 : (Math.abs(dragOffset) > 30 ? 0.6 : 0),
+              opacity: index === currentIndex ? 1 : (Math.abs(dragOffset) > 20 ? 0.7 : 0),
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: index === currentIndex ? 'auto' : 'none',
               background: 'transparent',
               boxSizing: 'border-box',
-              // TikTok-style smooth spring transition with dynamic duration
-              // Using spring-like cubic-bezier for natural overshoot feel
+              // Instant response while dragging, smooth ease when releasing
               transition: isDragging 
-                ? 'none'  // No transition while dragging (instant follow)
-                : `transform ${transitionDuration}s cubic-bezier(0.32, 0.72, 0, 1), opacity ${transitionDuration * 0.8}s ease-out`,
-              // TikTok-style: No scrolling within stories, only swipe between stories
+                ? 'none'
+                : `transform ${transitionDuration}s cubic-bezier(0.25, 0.1, 0.25, 1), opacity ${transitionDuration * 0.8}s ease-out`,
               overflow: 'hidden',
               touchAction: 'none',
-              willChange: isDragging ? 'transform' : 'auto'
+              willChange: 'transform'
             }}
           >
             {/* Paywall for stories after streak page + 2 articles */}
