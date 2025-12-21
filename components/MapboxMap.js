@@ -5,26 +5,111 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 // Mapbox access token
 mapboxgl.accessToken = 'pk.eyJ1Ijoib21lcnMzOTQ4IiwiYSI6ImNtajY0bjFycTBqNjkzZnF5bzduenA0NmIifQ.8I1Q5aYeoGB3GihpfaC_WQ';
 
+// Country code mapping for common countries (ISO 3166-1 alpha-3)
+// These are LARGE AREAS that should be highlighted, not pinned
+const COUNTRY_CODES = {
+  'usa': 'USA', 'united states': 'USA', 'america': 'USA',
+  'uk': 'GBR', 'united kingdom': 'GBR', 'britain': 'GBR', 'england': 'GBR',
+  'russia': 'RUS', 'russian federation': 'RUS',
+  'ukraine': 'UKR', 'china': 'CHN', 'india': 'IND',
+  'france': 'FRA', 'germany': 'DEU', 'italy': 'ITA', 'spain': 'ESP',
+  'japan': 'JPN', 'south korea': 'KOR', 'north korea': 'PRK',
+  'iran': 'IRN', 'iraq': 'IRQ', 'syria': 'SYR', 'israel': 'ISR',
+  'palestine': 'PSE', 'gaza': 'PSE', 'turkey': 'TUR', 'egypt': 'EGY',
+  'saudi arabia': 'SAU', 'australia': 'AUS', 'canada': 'CAN',
+  'brazil': 'BRA', 'mexico': 'MEX', 'argentina': 'ARG',
+  'poland': 'POL', 'netherlands': 'NLD', 'belgium': 'BEL',
+  'sweden': 'SWE', 'norway': 'NOR', 'finland': 'FIN', 'denmark': 'DNK',
+  'afghanistan': 'AFG', 'pakistan': 'PAK', 'indonesia': 'IDN',
+  'philippines': 'PHL', 'vietnam': 'VNM', 'thailand': 'THA',
+  'taiwan': 'TWN', 'hong kong': 'HKG', 'singapore': 'SGP',
+  'south africa': 'ZAF', 'nigeria': 'NGA', 'kenya': 'KEN', 'ethiopia': 'ETH'
+};
+
+// Helper to detect if a location name is a large region (country) or specific place
+const isLargeRegion = (locationName) => {
+  if (!locationName) return false;
+  const nameLower = locationName.toLowerCase().trim();
+  
+  // Check if it's a known country/region
+  if (COUNTRY_CODES[nameLower]) return true;
+  
+  // Check for country-like patterns (single word country names)
+  const countryNames = Object.keys(COUNTRY_CODES);
+  for (const country of countryNames) {
+    if (nameLower === country || nameLower.endsWith(country)) return true;
+  }
+  
+  // Large regions that should be highlighted
+  const largeRegions = [
+    'middle east', 'eastern europe', 'western europe', 'central europe',
+    'east asia', 'southeast asia', 'south asia', 'central asia',
+    'north africa', 'sub-saharan africa', 'latin america', 'caribbean',
+    'gaza strip', 'west bank', 'crimea', 'donbas', 'kurdistan'
+  ];
+  
+  for (const region of largeRegions) {
+    if (nameLower.includes(region)) return true;
+  }
+  
+  return false;
+};
+
+// Helper to get country code from location name
+const getCountryCode = (locationName) => {
+  if (!locationName) return null;
+  const nameLower = locationName.toLowerCase().trim();
+  return COUNTRY_CODES[nameLower] || null;
+};
+
 export default function MapboxMap({ 
   center = { lat: 0, lon: 0 }, 
   markers = [], 
   expanded = false,
-  highlightColor = '#3b82f6'
+  highlightColor = '#3b82f6',
+  locationType = 'auto',  // 'pin', 'area', or 'auto' (auto-detect from location name)
+  regionName = null,      // Country/region name to highlight when locationType is 'area'
+  location = null         // Location name for auto-detection (e.g., "Ukraine", "White House")
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Auto-detect location type based on location name
+  const effectiveLocationType = (() => {
+    if (locationType === 'area') return 'area';
+    if (locationType === 'pin') return 'pin';
+    // Auto-detect: check if location name is a country/large region
+    const locationToCheck = location || regionName;
+    if (locationToCheck && isLargeRegion(locationToCheck)) {
+      return 'area';
+    }
+    return 'pin';  // Default to pin for specific locations
+  })();
+
+  // Get the country code for area highlighting
+  const effectiveRegionCode = (() => {
+    if (regionName) return getCountryCode(regionName) || regionName.toUpperCase();
+    if (location) return getCountryCode(location) || null;
+    return null;
+  })();
+
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Initialize map
+    // Initialize map with LIGHT theme (white background)
+    // When collapsed: zoom IN to show specific location (zoom 8-10)
+    // When expanded: zoom OUT to show more context (zoom 4-6)
+    const initialZoom = expanded 
+      ? (effectiveLocationType === 'area' ? 4 : 6)   // Expanded: show context
+      : (effectiveLocationType === 'area' ? 5 : 10); // Collapsed: focus on location
+    
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/light-v11',  // LIGHT theme (white)
       center: [center.lon || 0, center.lat || 0],
-      zoom: expanded ? 5 : 2,
+      zoom: initialZoom,
       interactive: true,
       attributionControl: false,
       logoPosition: 'bottom-left',
@@ -53,53 +138,56 @@ export default function MapboxMap({
 
     mapRef.current = map;
 
-    // Wait for map to load before adding markers
+    // Wait for map to load before adding markers or area highlights
     map.on('load', () => {
-      // Create custom marker element - modern pulsing dot
+      // Create custom marker element - minimal modern design
       const createCustomMarker = (color, isMain = true) => {
         const el = document.createElement('div');
+        const size = isMain ? 16 : 12;
+        
         el.style.cssText = `
-          width: ${isMain ? '14px' : '10px'};
-          height: ${isMain ? '14px' : '10px'};
+          width: ${size}px;
+          height: ${size}px;
           background: ${color};
           border-radius: 50%;
-          border: 2px solid rgba(255, 255, 255, 0.9);
-          box-shadow: 0 0 0 4px ${color}33, 0 2px 8px rgba(0,0,0,0.3);
+          border: 2.5px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
           cursor: pointer;
           position: relative;
         `;
         
-        // Add pulse animation ring
+        // Subtle outer ring for main marker
         if (isMain) {
-          const pulse = document.createElement('div');
-          pulse.style.cssText = `
+          const ring = document.createElement('div');
+          ring.style.cssText = `
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            background: ${color};
+            width: ${size + 12}px;
+            height: ${size + 12}px;
+            border: 2px solid ${color};
             border-radius: 50%;
-            animation: markerPulse 2s ease-out infinite;
             opacity: 0.4;
             pointer-events: none;
           `;
-          el.appendChild(pulse);
+          el.appendChild(ring);
         }
         
         return el;
       };
 
-      // Add main marker
+      console.log('🗺️ MapboxMap loaded:', { effectiveLocationType, effectiveRegionCode, center, location });
+      
+      // ALWAYS add a pin marker first (visible for both pin and area types)
       const mainMarker = new mapboxgl.Marker({
         element: createCustomMarker(highlightColor, true),
         anchor: 'center'
       })
         .setLngLat([center.lon || 0, center.lat || 0])
         .addTo(map);
-
       markersRef.current.push(mainMarker);
+      console.log('📍 Pin marker added at:', center);
 
       // Add additional markers if available
       if (markers && markers.length > 0) {
@@ -112,6 +200,32 @@ export default function MapboxMap({
             .addTo(map);
           markersRef.current.push(m);
         });
+      }
+
+      // ADDITIONALLY for AREA type - try to highlight country/region
+      if (effectiveLocationType === 'area' && effectiveRegionCode) {
+        console.log('🌍 Attempting area highlight for:', effectiveRegionCode);
+        try {
+          const countryCode = effectiveRegionCode;
+          
+          // Try to add country highlight using admin boundaries
+          // This works with most Mapbox styles
+          map.addLayer({
+            'id': 'country-highlight-fill',
+            'type': 'fill',
+            'source': 'composite',
+            'source-layer': 'admin-0-boundary-bg',
+            'filter': ['==', ['get', 'iso_3166_1'], countryCode.substring(0, 2)],
+            'paint': {
+              'fill-color': highlightColor,
+              'fill-opacity': 0.25
+            }
+          });
+          console.log('✅ Area fill layer added');
+        } catch (err) {
+          console.log('⚠️ Could not add area highlight (this is OK):', err.message);
+          // Marker is already added above, so we're fine
+        }
       }
     });
 
@@ -136,7 +250,7 @@ export default function MapboxMap({
       markersRef.current = [];
       map.remove();
     };
-  }, [center.lat, center.lon, highlightColor]);
+  }, [center.lat, center.lon, highlightColor, effectiveLocationType, effectiveRegionCode]);
 
   // Handle expand/collapse - update zoom level and enable/disable interactions
   useEffect(() => {
@@ -163,11 +277,12 @@ export default function MapboxMap({
       }
       
       // Set zoom immediately (no animation) after container finishes transitioning
+      // Collapsed = zoomed IN (focus on location), Expanded = zoomed OUT (show context)
       const resizeTimeout = setTimeout(() => {
         if (mapRef.current) {
           mapRef.current.resize();
           mapRef.current.jumpTo({
-            zoom: expanded ? 6 : 2
+            zoom: expanded ? 6 : 10  // Collapsed: zoom 10 (focused), Expanded: zoom 6 (context)
           });
           // Fade back in
           setTimeout(() => {
@@ -195,16 +310,6 @@ export default function MapboxMap({
           transition: opacity 0.3s ease !important;
         }
         
-        @keyframes markerPulse {
-          0% {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 0.4;
-          }
-          100% {
-            transform: translate(-50%, -50%) scale(3);
-            opacity: 0;
-          }
-        }
       `}</style>
       <div 
         ref={mapContainerRef} 

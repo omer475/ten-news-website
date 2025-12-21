@@ -135,6 +135,50 @@ export default async function handler(req, res) {
         }
       }
 
+      // Parse map if it's a string
+      let mapData = null;
+      if (article.map) {
+        try {
+          const rawMap = typeof article.map === 'string' 
+            ? JSON.parse(article.map) 
+            : article.map;
+          
+          // Format map data for frontend
+          if (Array.isArray(rawMap) && rawMap.length > 0) {
+            const primaryLocation = rawMap[0];
+            mapData = {
+              center: {
+                lat: primaryLocation.coordinates?.lat || 0,
+                lon: primaryLocation.coordinates?.lng || primaryLocation.coordinates?.lon || 0
+              },
+              markers: rawMap.slice(1).map(loc => ({
+                lat: loc.coordinates?.lat || 0,
+                lon: loc.coordinates?.lng || loc.coordinates?.lon || 0
+              })),
+              name: primaryLocation.name,
+              description: primaryLocation.description,
+              location_type: primaryLocation.location_type || 'pin',
+              region_name: primaryLocation.region_name || null
+            };
+          } else if (rawMap && !Array.isArray(rawMap)) {
+            // Handle object format
+            mapData = {
+              center: {
+                lat: rawMap.coordinates?.lat || rawMap.lat || 0,
+                lon: rawMap.coordinates?.lng || rawMap.coordinates?.lon || rawMap.lon || 0
+              },
+              markers: [],
+              name: rawMap.name,
+              description: rawMap.description,
+              location_type: rawMap.location_type || 'pin',
+              region_name: rawMap.region_name || null
+            };
+          }
+        } catch (e) {
+          console.error('Error parsing map:', e);
+        }
+      }
+
       // Parse summary_bullets if it's a string
       let summaryBullets = [];
       if (article.summary_bullets) {
@@ -175,7 +219,7 @@ export default async function handler(req, res) {
         console.log(`⚠️ Article ${article.id} has NO detailed bullets in database`);
       }
 
-      // Parse five_ws (5 W's format) if it exists
+       // Parse five_ws (5 W's format) if it exists
       let fiveWs = null;
       console.log(`📋 Article ${article.id} raw five_ws:`, typeof article.five_ws, article.five_ws);
       if (article.five_ws) {
@@ -251,6 +295,7 @@ export default async function handler(req, res) {
         
         timeline: timelineData,
         graph: graphData,  // Include graph data
+        map: mapData,      // Include map data with location_type for pin vs area
         // Support both 'components_order' (new) and 'components' (old)
         components: article.components_order || (article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null),
         details: article.details_section ? article.details_section.split('\n') : (article.details ? (typeof article.details === 'string' ? JSON.parse(article.details) : article.details) : []),

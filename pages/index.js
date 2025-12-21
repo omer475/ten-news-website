@@ -21,13 +21,17 @@ const StreakGlobe = dynamic(() => import('../components/StreakGlobe'), {
 // Dynamically import MapboxMap to avoid SSR issues
 const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
     ssr: false,
-  loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(30,41,59,0.9)', borderRadius: '8px' }} />
+  loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(245,245,245,0.95)', borderRadius: '8px' }} />
   });
 
 export default function Home() {
   const [stories, setStories] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  // TikTok-style smooth swipe states
+  const [dragOffset, setDragOffset] = useState(0);  // Current drag position (px)
+  const [isDragging, setIsDragging] = useState(false);  // Is user currently dragging
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTimeline, setShowTimeline] = useState({});
   const [showDetails, setShowDetails] = useState({});
@@ -1677,9 +1681,12 @@ export default function Home() {
                     return {
                       center: { lat: mapData.lat, lon: mapData.lon },
                       location: mapData.location,
+                      name: mapData.location,  // For auto-detection
                       region: mapData.region,
                       description: mapData.description,
-                      zoom: 5
+                      zoom: 5,
+                      location_type: 'auto',  // Let MapboxMap auto-detect based on location name
+                      region_name: null
                     };
                   }
                 }
@@ -2368,6 +2375,7 @@ export default function Home() {
   useEffect(() => {
     let startY = 0;
     let isTransitioning = false;
+    let currentDragOffset = 0;
 
     const handleTouchStart = (e) => {
       // Don't capture touch if it's on auth modal or paywall modal
@@ -2375,29 +2383,32 @@ export default function Home() {
           e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
         return;
       }
-      
+
       // Don't capture touch if it's on the language switcher
-      if (e.target.closest('.language-icon-btn') || 
+      if (e.target.closest('.language-icon-btn') ||
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
         return;
       }
-      
+
       // Don't capture touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
-        if (e.target.closest('.map-container-advanced') || 
+        if (e.target.closest('.map-container-advanced') ||
             e.target.closest('.timeline-container') ||
             e.target.closest('.graph-container')) {
           return;
         }
       }
-      
+
       // Prevent default to stop any scrolling - TikTok style
       e.preventDefault();
-      
+
       if (!isTransitioning) {
         startY = e.touches[0].clientY;
+        currentDragOffset = 0;
+        setIsDragging(true);
+        setDragOffset(0);
       }
     };
 
@@ -2407,30 +2418,37 @@ export default function Home() {
           e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
         return;
       }
-      
+
       // Don't handle touch if it's on the language switcher
-      if (e.target.closest('.language-icon-btn') || 
+      if (e.target.closest('.language-icon-btn') ||
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
         return;
       }
-      
+
       // Don't handle touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
-        if (e.target.closest('.map-container-advanced') || 
+        if (e.target.closest('.map-container-advanced') ||
             e.target.closest('.timeline-container') ||
             e.target.closest('.graph-container')) {
           return;
         }
       }
-      
+
+      setIsDragging(false);
+      setDragOffset(0);
+
       if (isTransitioning) return;
-      
+
       const endY = e.changedTouches[0].clientY;
       const diff = startY - endY;
-      
-      if (Math.abs(diff) > 30) {
+      const velocity = Math.abs(diff) / 100; // Simple velocity estimation
+
+      // TikTok-style: lower threshold + velocity boost
+      const threshold = velocity > 1.5 ? 20 : 60;
+
+      if (Math.abs(diff) > threshold) {
         isTransitioning = true;
 
         // Allow backward navigation, but prevent forward navigation when paywall is active
@@ -2450,36 +2468,46 @@ export default function Home() {
         }
         setTimeout(() => {
           isTransitioning = false;
-        }, 500);
+        }, 350); // Faster transition
       }
     };
 
-    // Prevent any scrolling during touch - TikTok style
+    // TikTok-style: Card follows finger during drag
     const handleTouchMove = (e) => {
       // Don't block touch if it's on auth modal
       if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
         return;
       }
-      
+
       // Don't block touch if it's on the language switcher
-      if (e.target.closest('.language-icon-btn') || 
+      if (e.target.closest('.language-icon-btn') ||
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
         return;
       }
-      
+
       // Don't block touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
-        if (e.target.closest('.map-container-advanced') || 
+        if (e.target.closest('.map-container-advanced') ||
             e.target.closest('.timeline-container') ||
             e.target.closest('.graph-container')) {
           return;
         }
       }
-      
+
       // Prevent default scroll behavior - only swipe navigation allowed
       e.preventDefault();
+
+      // Calculate drag offset for visual feedback
+      if (startY && !isTransitioning) {
+        const currentY = e.touches[0].clientY;
+        const diff = startY - currentY;
+        // Apply resistance at edges (rubber band effect)
+        const resistance = 0.4;
+        currentDragOffset = diff * resistance;
+        setDragOffset(currentDragOffset);
+      }
     };
 
     const handleWheel = (e) => {
@@ -2523,7 +2551,7 @@ export default function Home() {
         }
         setTimeout(() => {
           isTransitioning = false;
-        }, 500);
+        }, 350);  // Match TikTok-style faster transition
       }
     };
 
@@ -2531,7 +2559,7 @@ export default function Home() {
       if (isTransitioning) return;
 
       const isPaywallActive = !user && currentIndex >= paywallThreshold;
-      
+
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
         // Allow forward navigation unless paywall is active
         if (isPaywallActive) return;
@@ -2541,7 +2569,7 @@ export default function Home() {
         nextStory();
         setTimeout(() => {
           isTransitioning = false;
-        }, 500);
+        }, 350);  // Match TikTok-style faster transition
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         // Always allow backward navigation
         e.preventDefault();
@@ -2549,7 +2577,7 @@ export default function Home() {
         prevStory();
         setTimeout(() => {
           isTransitioning = false;
-        }, 500);
+        }, 350);  // Match TikTok-style faster transition
       } else if (e.key === 's' || e.key === 'S') {
         // Toggle summary/bullet points with 'S' key
         e.preventDefault();
@@ -3089,10 +3117,13 @@ export default function Home() {
           padding-left: calc(20px + env(safe-area-inset-left, 0px));
           padding-right: calc(20px + env(safe-area-inset-right, 0px));
           background: ${darkMode ? '#000000' : '#f5f5f7'};
-          transition: all 0.5s cubic-bezier(0.28, 0, 0.4, 1);
+          /* TikTok-style smooth spring transition */
+          transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                      opacity 0.3s ease-out;
           overflow: hidden;
           touch-action: none;
           z-index: 10;
+          will-change: transform, opacity;
         }
         
         .story-container::after {
@@ -4776,16 +4807,20 @@ export default function Home() {
             style={{
               transform: `${
                 index === currentIndex 
-                  ? 'translateY(0) scale(1)' 
+                  ? `translateY(${-dragOffset}px) scale(${1 - Math.abs(dragOffset) * 0.0002})` 
                   : index < currentIndex 
-                    ? 'translateY(-100%) scale(0.9)' 
-                    : 'translateY(100%) scale(0.95)'
+                    ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.3 : 0}px)) scale(0.92)` 
+                    : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.3 : 0}px)) scale(0.95)`
               }`,
-              opacity: index === currentIndex ? 1 : 0,
+              opacity: index === currentIndex ? 1 : (Math.abs(dragOffset) > 50 ? 0.4 : 0),
               zIndex: index === currentIndex ? 10 : 1,
               pointerEvents: index === currentIndex ? 'auto' : 'none',
               background: 'transparent',
               boxSizing: 'border-box',
+              // TikTok-style smooth spring transition
+              transition: isDragging 
+                ? 'none'  // No transition while dragging (instant follow)
+                : 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease',
               // TikTok-style: No scrolling within stories, only swipe between stories
               overflow: 'hidden',
               touchAction: 'none'
@@ -6779,6 +6814,9 @@ export default function Home() {
                                         markers={story.map.markers || []}
                                         expanded={expandedMap[index]}
                                         highlightColor={imageDominantColors[index]?.highlight || '#3b82f6'}
+                                        locationType={story.map.location_type || 'auto'}
+                                        regionName={story.map.region_name || null}
+                                        location={story.map.location || story.map.name || null}
                                       />
 
                                       {/* Coordinates Display - Bottom Left */}

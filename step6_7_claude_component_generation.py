@@ -45,141 +45,194 @@ SEARCH CONTEXT DATA: {context}
 Generate ONLY the selected components. Follow formats EXACTLY.
 
 ═══════════════════════════════════════════════════════════════
-🗺️ MAP (if selected)
+🗺️ MAP
 ═══════════════════════════════════════════════════════════════
 
-Generate 1-3 PRECISE location markers for the story.
+Generate 1-2 precise, interesting location markers.
 
-PRECISION REQUIREMENTS:
-✓ Use the most specific location possible (port, base, facility, city)
-✓ NEVER use just a country name
-✓ Include exact coordinates
-✓ Description explains what happened at this specific location
+THE LOCATION MUST BE:
+✓ Specific venue, building, facility, or installation
+✓ Directly relevant to the story (where it happened, where subject is)
+✓ Interesting enough that readers would want to see it
+✓ Verified from article text or reliable search
 
-PRECISION HIERARCHY (use most specific available):
-1. Specific sites: "Novorossiysk Naval Base", "Zaporizhzhia Nuclear Plant"
-2. Ports/Facilities: "Port of Novorossiysk", "Ben Gurion Airport"
-3. Infrastructure: "Crimean Bridge", "Nord Stream Pipeline"
-4. Districts/Areas: "Gaza City's Shifa Hospital"
-5. Cities: "Novorossiysk", "Kharkiv" (only if no more specific location)
+LOCATION TYPES:
 
-OUTPUT FORMAT:
+Government Buildings:
+- "The Kremlin" - Russian government
+- "The White House" - US President
+- "Capitol Building" - US Congress
+- "Pentagon" - US Military
+- "10 Downing Street" - UK Prime Minister
+
+Military/Nuclear Facilities:
+- "Yongbyon Nuclear Complex" - North Korea nuclear
+- "Novorossiysk Naval Base" - Russian Black Sea Fleet
+- "Zaporizhzhia Nuclear Plant" - Ukraine nuclear
+- "Area 51" - US military
+- "Natanz Nuclear Facility" - Iran nuclear
+
+Entertainment Venues:
+- "Studio 8H, 30 Rockefeller Plaza" - SNL studio
+- "Dolby Theatre" - Oscars venue
+- "Madison Square Garden" - Major events
+- "Hollywood Bowl" - Concerts
+
+Meeting/Event Venues:
+- "Mar-a-Lago" - Trump's Florida residence
+- "Davos Congress Centre" - World Economic Forum
+- "UN Headquarters" - United Nations
+
+LOCATION TYPE RULES:
+═════════════════════
+Use "location_type": "pin" for SPECIFIC locations (buildings, venues, facilities)
+Use "location_type": "area" for LARGER regions when the whole country/region is relevant
+
+PIN examples (specific places):
+- White House, Studio 8H, Kremlin, Pentagon, specific nuclear facilities
+
+AREA examples (highlight entire country/region):
+- War zones (Ukraine, Gaza, Syria)
+- Country-wide sanctions/policies
+- Natural disasters affecting entire regions
+- Elections/referendums nationwide
+
+NEVER USE AREA FOR:
+✗ Stories about specific events at specific locations
+✗ When a building or venue can be identified
+
+OUTPUT FORMAT FOR PIN (specific location):
 [
   {
-    "name": "Novorossiysk Naval Base",
-    "city": "Novorossiysk",
-    "country": "Russia",
-    "coordinates": {"lat": 44.7234, "lng": 37.7687},
-    "description": "Site of underwater drone attack on Kilo-class submarine"
+    "name": "Studio 8H, 30 Rockefeller Plaza",
+    "type": "venue",
+    "location_type": "pin",
+    "city": "New York",
+    "country": "USA",
+    "coordinates": {"lat": 40.7593, "lng": -73.9794},
+    "description": "Historic studio where SNL has broadcast since 1975"
   }
 ]
 
-GOOD MAP EXAMPLES:
-✓ {"name": "Novorossiysk Port", "city": "Novorossiysk", "country": "Russia", ...}
-✓ {"name": "Shifa Hospital", "city": "Gaza City", "country": "Palestine", ...}
-✓ {"name": "Crimean Bridge", "city": "Kerch Strait", "country": "Russia", ...}
+OUTPUT FORMAT FOR AREA (country/region highlight):
+[
+  {
+    "name": "Ukraine",
+    "type": "country",
+    "location_type": "area",
+    "region_name": "Ukraine",
+    "coordinates": {"lat": 48.3794, "lng": 31.1656},
+    "description": "War zone where Russian offensive continues"
+  }
+]
 
-BAD MAP EXAMPLES (REJECTED):
-✗ {"name": "Ukraine", "city": "", "country": "Ukraine", ...} - Just a country
-✗ {"name": "Russia", "city": "", "country": "Russia", ...} - Just a country
-✗ {"name": "Middle East", ...} - A region, not a location
+REAL CORRECTIONS FOR YOUR EXAMPLES:
+
+❌ WRONG: "Seoul, South Korea" for North Korea nuclear story
+✓ CORRECT: {
+    "name": "Yongbyon Nuclear Complex",
+    "type": "military",
+    "city": "Yongbyon",
+    "country": "North Korea",
+    "coordinates": {"lat": 39.7947, "lng": 125.7553},
+    "description": "North Korea's main nuclear weapons facility"
+  }
+
+❌ WRONG: "Ukraine" for peace talks story
+✓ CORRECT: {
+    "name": "Mar-a-Lago",
+    "type": "venue",
+    "city": "Palm Beach",
+    "country": "USA",
+    "coordinates": {"lat": 26.6777, "lng": -80.0367},
+    "description": "Trump's residence hosting Russia-Ukraine negotiations"
+  }
+
+❌ WRONG: "United States" for SNL story
+✓ CORRECT: {
+    "name": "Studio 8H, 30 Rockefeller Plaza",
+    "type": "venue",
+    "city": "New York",
+    "country": "USA",
+    "coordinates": {"lat": 40.7593, "lng": -73.9794},
+    "description": "SNL studio where Trump parody sketch aired"
+  }
+
+❌ WRONG: "United States" for Trump policy story
+✓ CORRECT: {
+    "name": "The White House",
+    "type": "building",
+    "city": "Washington DC",
+    "country": "USA",
+    "coordinates": {"lat": 38.8977, "lng": -77.0365},
+    "description": "Where Trump announced cash payment policy"
+  }
+OR: {
+    "name": "Capitol Building",
+    "type": "building",
+    "city": "Washington DC",
+    "country": "USA",
+    "coordinates": {"lat": 38.8899, "lng": -77.0091},
+    "description": "Where Congress will vote on Trump Accounts"
+  }
 
 ═══════════════════════════════════════════════════════════════
-📅 TIMELINE (if selected)
+📅 TIMELINE
 ═══════════════════════════════════════════════════════════════
 
-Generate 2-4 events providing CONTEXT for the story.
+Generate 2-4 events ONLY if timeline was selected.
 
-CRITICAL RULES:
+Remember: Timeline should only be selected for complex stories that need historical context.
+
+RULES:
 ✗ DO NOT include the main news event from the title
-✓ Include background events, prior developments, upcoming dates
+✓ Only background events that help understanding
 ✓ Chronological order (oldest → newest)
-✓ Each event description: MAX 12 words
-
-DATE FORMATS:
-- Past events: "Mar 15, 2024" or "Mar 2024" (month only if day unknown)
-- Future events: "Expected Dec 2024" or "Q1 2025"
-- Same-day events: "14:30 GMT"
+✓ Each event: MAX 12 words
+✓ Events should answer "how did we get here?"
 
 OUTPUT FORMAT:
 [
-  {"date": "Mar 2023", "event": "Ukraine debuts Sea Baby surface drones against Russian fleet"},
-  {"date": "Sep 2023", "event": "Drone strike damages Russian landing ship in Sevastopol"},
-  {"date": "Jan 2024", "event": "SBU announces development of underwater drone capability"}
+  {"date": "Feb 2022", "event": "Russia invades Ukraine beginning full-scale war"},
+  {"date": "Apr 2024", "event": "Previous peace talks collapse after Bucha massacre revealed"},
+  {"date": "Nov 2024", "event": "Trump wins election promising quick peace deal"}
 ]
 
 ═══════════════════════════════════════════════════════════════
-📋 DETAILS (if selected)
+📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Generate EXACTLY 3 fact cards with information NOT in the bullet summary.
+Generate EXACTLY 3 fact cards NOT in the bullet summary.
 
-CRITICAL RULES:
-✓ Facts must NOT duplicate information in bullet summary
-✓ Prioritize interesting details from full article text
-✓ Supplement with internet search findings
-✓ EVERY detail MUST contain a number or specific data
-✓ Label: 1-3 words | Value: specific data
+RULES:
+✓ Every fact MUST contain a number
+✓ Facts must NOT duplicate bullet summary
 ✓ MAX 7 words per detail
-
-SOURCES (in priority order):
-1. Interesting facts from full article NOT in bullets
-2. Contextual data from internet search
-3. Historical comparisons or background stats
-
-NUMBER TYPES:
-- Quantities: 4 missiles, 340 km range
-- Specifications: 533mm torpedoes, 2,500 kg payload
-- Counts: 12 previous attacks, 3rd successful strike
-- Dates/Duration: Since 2022, 18-month development
-
-GOOD EXAMPLES (assuming these are NOT in bullets):
-✓ "Kalibr missile range: 2,500 km"
-✓ "Kilo-class crew size: 52 sailors"
-✓ "Sub displacement: 2,350 tons"
-✓ "Previous drone attacks: 12"
-
-BAD EXAMPLES:
-✗ Any fact already stated in bullet summary
-✗ "Status: Ongoing" (no number)
-✗ "Target: Submarine" (no specific data)
+✓ Prioritize interesting "hidden" facts from article
 
 OUTPUT FORMAT:
 [
-  {"label": "Kalibr range", "value": "2,500 km"},
-  {"label": "Submarine crew", "value": "52 sailors"},
-  {"label": "Kilo-class built", "value": "Since 1980"}
+  {"label": "SNL season", "value": "50th anniversary"},
+  {"label": "Episode runtime", "value": "90 minutes"},
+  {"label": "James Austin Johnson tenure", "value": "Since 2021"}
 ]
 
 ═══════════════════════════════════════════════════════════════
-📊 GRAPH (if selected)
+📊 GRAPH
 ═══════════════════════════════════════════════════════════════
 
-Generate chart data from the search context.
-
-GRAPH TYPE SELECTION:
-- "line": Continuous trends over time (rates, prices, temperatures)
-- "bar": Comparing categories or discrete periods (quarterly results, countries)
-- "area": Cumulative data or ranges (total cases, market share)
-
-REQUIREMENTS:
-✓ Minimum 4 data points
-✓ Dates in YYYY-MM format
-✓ Values as pure numbers (no units in value field)
-✓ Clear, concise title (max 6 words)
-✓ Axis labels with units
+Generate chart data only if graph was selected.
 
 OUTPUT FORMAT:
 {
   "type": "line",
-  "title": "Ukrainian Drone Attacks 2022-2024",
+  "title": "Interest Rate 2022-2024",
   "data": [
-    {"date": "2022-10", "value": 2},
-    {"date": "2023-03", "value": 5},
-    {"date": "2023-09", "value": 8},
-    {"date": "2024-01", "value": 14}
+    {"date": "2022-03", "value": 0.50},
+    {"date": "2023-07", "value": 5.25},
+    {"date": "2024-01", "value": 5.50}
   ],
-  "y_label": "Attacks",
+  "y_label": "Rate (%)",
   "x_label": "Date"
 }
 
@@ -187,21 +240,39 @@ OUTPUT FORMAT:
 FINAL OUTPUT
 ═══════════════════════════════════════════════════════════════
 
-Return ONLY valid JSON with selected components:
-
 {
-  "map": [...],         // Include ONLY if map was selected
-  "timeline": [...],    // Include ONLY if timeline was selected
-  "details": [...],     // Include ONLY if details was selected
-  "graph": {...}        // Include ONLY if graph was selected
+  "map": [...],
+  "timeline": [...],
+  "details": [...],
+  "graph": {...}
 }
 
-PRE-SUBMISSION CHECKLIST:
-□ Map: 1-3 PRECISE locations (not countries), with coordinates and descriptions
-□ Timeline: 2-4 events, chronological, ≤12 words each, main event NOT included
-□ Details: Exactly 3, ALL have numbers, NOT duplicating bullet summary
-□ Graph: 4+ data points, YYYY-MM dates, numeric values only
-□ Valid JSON (no trailing commas, no markdown)"""
+Include ONLY selected components.
+
+═══════════════════════════════════════════════════════════════
+PRE-SUBMISSION CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+□ MAP:
+  - Is location a specific venue/building/facility?
+  - Is it the RIGHT location for this story?
+  - NOT a country, city, or state?
+  - Coordinates point to exact spot?
+
+□ TIMELINE:
+  - Was timeline actually needed for this story?
+  - Does NOT include the main news event?
+  - Only 2-4 contextual events?
+
+□ DETAILS:
+  - Exactly 3 details?
+  - All have numbers?
+  - None duplicate bullet summary?
+
+□ GRAPH:
+  - At least 4 data points?
+  - Clear trend to visualize?
+"""
 
 
 # ==========================================
@@ -327,16 +398,16 @@ class ClaudeComponentWriter:
     
     def _build_system_prompt(self, article: Dict, components: List[str]) -> str:
         """Build system prompt with article data filled in"""
-        
+
         title = article.get('title_news', article.get('title', 'Unknown'))
-        
+
         # Get bullet summary
         bullets = article.get('summary_bullets_news', article.get('summary_bullets', []))
         if isinstance(bullets, list):
             bullets_text = '\n'.join([f"• {b}" for b in bullets])
         else:
             bullets_text = str(bullets)
-        
+
         # Build context string from context_data
         context_data = article.get('context_data', {})
         context_parts = []
@@ -344,17 +415,25 @@ class ClaudeComponentWriter:
             if component in context_data and context_data[component]:
                 context_text = context_data[component].get('results', '') if isinstance(context_data[component], dict) else str(context_data[component])
                 context_parts.append(context_text[:2500])  # Limit per component
-        
+
         context_str = '\n\n'.join(context_parts) if context_parts else 'No additional context available.'
         
-        # Format the prompt template with article data using replace (not .format() 
+        # Add map_locations to context if available (from Step 6 selection)
+        map_locations = article.get('map_locations', [])
+        if map_locations and 'map' in components:
+            map_hint = f"\n\nSELECTED MAP LOCATIONS (use these for map generation):\n"
+            for loc in map_locations:
+                map_hint += f"• {loc}\n"
+            context_str += map_hint
+
+        # Format the prompt template with article data using replace (not .format()
         # because the prompt contains JSON examples with braces)
         formatted_prompt = COMPONENT_PROMPT
         formatted_prompt = formatted_prompt.replace('{title}', title)
         formatted_prompt = formatted_prompt.replace('{bullets}', bullets_text)
         formatted_prompt = formatted_prompt.replace('{components}', ', '.join(components))
         formatted_prompt = formatted_prompt.replace('{context}', context_str)
-        
+
         return formatted_prompt
     
     def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
@@ -400,15 +479,26 @@ class ClaudeComponentWriter:
             elif not isinstance(result['map'], list) or len(result['map']) < 1:
                 errors.append("Map must have at least 1 location")
             else:
-                # Validate each location has required fields and is precise (not just country)
-                vague_locations = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states', 'middle east', 'europe', 'asia']
+                # Validate each location has required fields and is precise (not just country/city)
+                vague_locations = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states', 
+                                   'middle east', 'europe', 'asia', 'australia', 'sydney', 'moscow', 'gaza city',
+                                   'baltimore', 'new york', 'london', 'paris', 'tokyo', 'beijing', 'california',
+                                   'new south wales', 'eastern europe', 'downtown', 'city center', 'suburbs']
+                valid_types = ['venue', 'building', 'landmark', 'infrastructure', 'military', 'transport', 'street']
                 for i, loc in enumerate(result['map']):
                     if not isinstance(loc, dict):
                         errors.append(f"Map location {i+1} is not a dict")
                     elif 'name' not in loc or 'coordinates' not in loc:
                         errors.append(f"Map location {i+1} missing name or coordinates")
                     elif loc.get('name', '').lower() in vague_locations:
-                        errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific site/city)")
+                        errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific venue/building/landmark)")
+                    # Validate type field if present
+                    if 'type' in loc and loc['type'] not in valid_types:
+                        errors.append(f"Map location {i+1} has invalid type: '{loc.get('type')}'")
+                    # Validate coordinates format
+                    if 'coordinates' in loc and isinstance(loc['coordinates'], dict):
+                        if 'lat' not in loc['coordinates'] or 'lng' not in loc['coordinates']:
+                            errors.append(f"Map location {i+1} coordinates missing lat or lng")
         
         return len(errors) == 0, errors
     

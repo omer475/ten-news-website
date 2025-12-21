@@ -1,6 +1,6 @@
 # TEN NEWS - CLEANED ELITE RSS FEED LIST
 # Removed: 49 low-quality/specialized sources
-# Total: ~251 Premium Elite Sources
+# Total: ~287 Premium Elite Sources (added MIT, Stanford, Harvard, Science Daily)
 # Categories: News, Business, Technology, Science, Consumer
 
 RSS_FEEDS = [
@@ -847,6 +847,214 @@ RSS_FEEDS = [
     {
         'name': 'Quanta Magazine',
         'url': 'https://www.quantamagazine.org/feed/',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Science Daily',
+        'url': 'https://www.sciencedaily.com/rss/all.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Scientific American Basic Science',
+        'url': 'http://rss.sciam.com/basic-science',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    
+    # ========================================
+    # UNIVERSITY & RESEARCH INSTITUTIONS
+    # ========================================
+    {
+        'name': 'MIT News',
+        'url': 'https://news.mit.edu/rss/feed',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Research',
+        'url': 'https://news.mit.edu/rss/research',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Architecture',
+        'url': 'https://news.mit.edu/rss/topic/architecture',
+        'category': 'science',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Biology & Genetics',
+        'url': 'https://news.mit.edu/rss/topic/biology-and-genetics',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Neuroscience',
+        'url': 'https://news.mit.edu/rss/topic/neuroscience-neurology-and-cognitive-sciences',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Business',
+        'url': 'https://news.mit.edu/rss/topic/business',
+        'category': 'business',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Chemistry',
+        'url': 'https://news.mit.edu/rss/topic/chemistry',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Chemical Engineering',
+        'url': 'https://news.mit.edu/rss/topic/chemical-engineering',
+        'category': 'science',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Civil Engineering',
+        'url': 'https://news.mit.edu/rss/topic/civil-engineering',
+        'category': 'science',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Climate & Sustainability',
+        'url': 'https://news.mit.edu/rss/topic/climate-change-and-sustainability',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Earth & Atmospheric Sciences',
+        'url': 'https://news.mit.edu/rss/topic/earth-and-atmospheric-sciences',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Economics',
+        'url': 'https://news.mit.edu/rss/topic/economics',
+        'category': 'business',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Energy',
+        'url': 'https://news.mit.edu/rss/topic/energy',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Environment',
+        'url': 'https://news.mit.edu/rss/topic/environment',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Health Sciences',
+        'url': 'https://news.mit.edu/rss/topic/health-sciences-and-technology',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT History',
+        'url': 'https://news.mit.edu/rss/topic/history',
+        'category': 'news',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Humanities',
+        'url': 'https://news.mit.edu/rss/topic/humanities',
+        'category': 'news',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Materials Science',
+        'url': 'https://news.mit.edu/rss/topic/materials-science-and-engineering',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Mathematics',
+        'url': 'https://news.mit.edu/rss/topic/mathematics',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Mechanical Engineering',
+        'url': 'https://news.mit.edu/rss/topic/mechanical-engineering',
+        'category': 'science',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Nanotech',
+        'url': 'https://news.mit.edu/rss/topic/nanotech',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Nuclear Engineering',
+        'url': 'https://news.mit.edu/rss/topic/nuclear-engineering',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Oceans',
+        'url': 'https://news.mit.edu/rss/topic/oceans',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Physics',
+        'url': 'https://news.mit.edu/rss/topic/physics',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Political Science',
+        'url': 'https://news.mit.edu/rss/topic/political-science',
+        'category': 'news',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Real Estate',
+        'url': 'https://news.mit.edu/rss/topic/real-estate',
+        'category': 'business',
+        'tier': 'standard'
+    },
+    {
+        'name': 'MIT Robotics',
+        'url': 'https://news.mit.edu/topic/mitrobotics-rss.xml',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Artificial Intelligence',
+        'url': 'https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Space',
+        'url': 'https://news.mit.edu/topic/mitspace-rss.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MIT Science Technology & Society',
+        'url': 'https://news.mit.edu/rss/topic/science-technology-and-society',
+        'category': 'science',
+        'tier': 'standard'
+    },
+    {
+        'name': 'Stanford News',
+        'url': 'https://news.stanford.edu/feed',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Harvard Gazette',
+        'url': 'https://news.harvard.edu/gazette/feed/',
         'category': 'science',
         'tier': 'premium'
     },

@@ -3,13 +3,14 @@ import json
 import os
 from typing import Dict, Tuple
 
-def search_gemini_context(claude_title: str, claude_summary: str) -> Dict[str, str]:
+def search_gemini_context(claude_title: str, claude_summary: str, full_text: str = "") -> Dict[str, str]:
     """
     Search Gemini for contextual facts using Google Search grounding
     
     Args:
         claude_title: str, title written by Claude in Step 1
         claude_summary: str, summary written by Claude in Step 1
+        full_text: str, full article text (optional)
     
     Returns:
         dict with 'results' and 'citations'
@@ -23,61 +24,151 @@ def search_gemini_context(claude_title: str, claude_summary: str) -> Dict[str, s
     # Use Gemini 2.0 Flash with Google Search grounding
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     
+    # Use full_text if provided, otherwise use summary
+    article_text = full_text if full_text else claude_summary
+    
     prompt = f"""You are gathering structured data for news article components.
 
 ARTICLE TITLE: {claude_title}
-ARTICLE SUMMARY: {claude_summary}
+BULLET SUMMARY: {claude_summary}
+FULL ARTICLE TEXT: {article_text[:3000]}
 
 Search for and organize information into these FOUR categories:
 
-═══ 1. TIMELINE DATA ═══
-Find 4-6 dated events related to this story:
-- Historical precedents (similar past events)
-- Key developments leading to this event
-- Scheduled future events or deadlines
-- Policy changes or decisions in this domain
+═══════════════════════════════════════════════════════════════
+1. TIMELINE DATA
+═══════════════════════════════════════════════════════════════
 
-FORMAT EACH AS: [DATE] - [WHAT HAPPENED]
-Example: "Mar 15, 2024 - Fed held rates at 5.25% for fifth consecutive meeting"
+IMPORTANT: Only gather timeline data if this story REQUIRES historical context to understand.
 
-═══ 2. STATISTICAL DATA (for Details component) ═══
-Find 5-8 specific numbers related to this story:
-- Quantities (deaths, attendees, units sold)
-- Percentages (growth rates, approval ratings, changes)
-- Money figures (costs, revenues, damages)
-- Comparisons (previous values, averages, records)
+Stories that NEED timeline:
+- Ongoing conflicts with complex history (wars, diplomatic crises)
+- Multi-stage investigations or trials
+- Policy changes that reverse previous decisions
+- Events that are part of a longer sequence
 
-FORMAT EACH AS: [LABEL]: [NUMBER WITH UNIT]
-Example: "Previous death toll: 340" or "Market share: 23.5%"
+Stories that DO NOT need timeline:
+- Single announcements or statements
+- Entertainment news (TV shows, movies, celebrities)
+- Simple policy proposals
+- Breaking news without complex backstory
+- Speeches or remarks
 
-═══ 3. TREND DATA (for Graph component) ═══
-Find time-series data if this story involves:
-- Economic indicators (rates, prices, GDP)
-- Polling/election data over time
-- Growth/decline metrics
-- Any measurable change over time
+If timeline IS needed, find 3-5 dated events:
+- Key events that led to this moment
+- Previous similar incidents
+- Important turning points
 
-FORMAT AS: List of (date, value) pairs
-Example: "Interest rates: Jan 2022: 0.25%, Mar 2022: 0.50%, Jul 2023: 5.25%"
+FORMAT: [DATE] - [WHAT HAPPENED]
 
-If no clear trend data exists, write: "NO TREND DATA AVAILABLE"
+If timeline is NOT needed, write: "TIMELINE NOT REQUIRED - Story is self-contained"
 
-═══ 4. GEOGRAPHIC DATA (for Map component) ═══
-Find specific locations central to this story:
-- Exact cities, regions, or countries where events occurred
-- Areas directly affected or impacted
-- Locations of key stakeholders or decisions
+═══════════════════════════════════════════════════════════════
+2. DETAILS DATA
+═══════════════════════════════════════════════════════════════
 
-FORMAT EACH AS: [CITY, COUNTRY] - [WHY RELEVANT]
-Example: "Gaza City, Palestine - main conflict zone" or "Brussels, Belgium - EU headquarters where decision announced"
+Find interesting facts NOT already in the bullet summary.
 
-If no specific locations are central to story, write: "NO GEOGRAPHIC DATA AVAILABLE"
+STEP A - Extract from FULL ARTICLE TEXT:
+Read carefully and find specific facts/numbers NOT in bullets:
+- Numbers, measurements, quantities
+- Technical specifications
+- Names, titles, ages
+- Costs, amounts, percentages
+- Historical comparisons
 
-═══ RULES ═══
-- Include ONLY verifiable facts with specific numbers/dates/locations
-- Prioritize recent data (last 2-3 years)
-- Skip vague statements without concrete data
-- If a category has no relevant data, write "NO DATA AVAILABLE"
+STEP B - Search internet for additional context:
+- Background statistics
+- Comparative data
+- Related metrics
+
+FORMAT: [LABEL]: [VALUE] | Source: [article/search]
+
+CRITICAL: Do NOT include facts already in BULLET SUMMARY.
+
+═══════════════════════════════════════════════════════════════
+3. TREND DATA (for Graph)
+═══════════════════════════════════════════════════════════════
+
+Find time-series data only if story involves measurable trends:
+- Economic indicators over time
+- Poll numbers over time
+- Casualty/case counts over time
+- Price changes over time
+
+FORMAT: List of (date, value) pairs with at least 4 points
+
+If no trend data exists, write: "NO TREND DATA AVAILABLE"
+
+═══════════════════════════════════════════════════════════════
+4. EXACT LOCATION DATA (for Map)
+═══════════════════════════════════════════════════════════════
+
+Find the MOST INTERESTING and SPECIFIC location related to this story.
+
+LOCATION PRIORITY (choose the most relevant):
+
+1. WHERE THE EVENT ACTUALLY HAPPENED:
+   - "Studio 8H, 30 Rockefeller Plaza" for SNL sketch
+   - "Mar-a-Lago" for Florida meetings
+   - "Oval Office" for presidential announcements
+
+2. WHERE THE SUBJECT IS LOCATED:
+   - "Yongbyon Nuclear Complex" for North Korea nuclear news
+   - "Zaporizhzhia Nuclear Plant" for Ukraine nuclear news
+   - "Kremlin" for Russian government decisions
+
+3. WHERE THE IMPACT WILL BE FELT:
+   - Specific affected facility or site
+   - Target location mentioned in threats
+
+SEARCH STRATEGY:
+1. Read article for ANY specific place names (buildings, facilities, bases)
+2. If article says "talks in Florida" - find the EXACT venue
+3. If article mentions nuclear weapons - find the specific facility
+4. If article is about a TV show - find the studio location
+5. If article is about government action - find the specific building
+
+WHAT TO LOOK FOR:
+- Venue names: "Mar-a-Lago", "Studio 8H", "Crocus City Hall"
+- Government buildings: "The Kremlin", "Pentagon", "Capitol Building"
+- Military sites: "Yongbyon Nuclear Complex", "Novorossiysk Naval Base"
+- Facilities: "Zaporizhzhia Nuclear Plant", "Tesla Gigafactory"
+- Studios/Offices: "30 Rockefeller Plaza", "Apple Park"
+
+FORMAT:
+[EXACT LOCATION] | [CITY] | [COUNTRY] | [WHY THIS LOCATION] | [COORDINATES]
+
+GOOD EXAMPLES:
+✓ "Studio 8H, 30 Rockefeller Plaza | New York | USA | Where SNL is filmed and broadcast | 40.7593, -73.9794"
+✓ "Mar-a-Lago | Palm Beach | USA | Trump's residence where meetings held | 26.6777, -80.0367"
+✓ "Yongbyon Nuclear Complex | Yongbyon | North Korea | Main nuclear weapons facility | 39.7947, 125.7553"
+✓ "The Kremlin | Moscow | Russia | Russian government headquarters | 55.7520, 37.6175"
+✓ "Capitol Building | Washington DC | USA | Where legislation is passed | 38.8899, -77.0091"
+
+BAD EXAMPLES (REJECTED):
+✗ "Seoul, South Korea" - Not even relevant to North Korea/Japan story
+✗ "Ukraine" - Just a country, no specific location
+✗ "United States" - Completely useless
+✗ "Florida" - State only, need exact venue
+✗ "New York" - City only, need exact building
+
+SPECIAL CASES:
+
+For GOVERNMENT/POLICY news:
+- Find the specific building (White House, Capitol, Kremlin, etc.)
+
+For ENTERTAINMENT news:
+- Find the studio, theater, or venue
+
+For MILITARY/WEAPONS news:
+- Find the specific base, facility, or installation
+
+For DIPLOMATIC news:
+- Find the exact meeting location (hotel, resort, government building)
+
+If NO specific location can be found, write:
+"NO SPECIFIC LOCATION - Only general areas mentioned, map not recommended"
 """
 
     request_data = {

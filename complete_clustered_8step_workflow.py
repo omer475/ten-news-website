@@ -1,20 +1,22 @@
 """
-COMPLETE 9-STEP NEWS WORKFLOW WITH CLUSTERING
-==============================================
+COMPLETE 10-STEP NEWS WORKFLOW WITH CLUSTERING
+===============================================
 
-Step 0: RSS Feed Collection (171 sources)
+Step 0: RSS Feed Collection (287 sources)
 Step 1: Gemini V8.2 Scoring & Filtering (score ≥70)
 Step 1.5: Event Clustering (clusters similar articles)
 Step 2: Bright Data Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
 Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
-Step 5: Component Selection & Gemini Search (decides which components + fetches data)
-Steps 6-7: Claude Component Generation (timeline, details, graph)
+Step 5: Gemini Context Search (Google Search grounding for component data)
+Step 6: Gemini Component Selection (decides which components based on search data)
+Step 7: Claude Component Generation (timeline, details, graph, map)
 Step 8: Fact Verification (catches hallucinations, regenerates if needed)
 Step 9: Publishing to Supabase
 """
 
 import time
+import re
 from datetime import datetime, timedelta
 import feedparser
 import requests
@@ -44,6 +46,120 @@ warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
 # Load environment
 load_dotenv()
+
+# ============================================================================
+# IMPROVED IMAGE EXTRACTION (Step 0)
+# ============================================================================
+# Regex to extract src from <img> tags in HTML content
+IMG_TAG_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
+
+def extract_image_url(entry) -> Optional[str]:
+    """
+    Extract the best image URL from an RSS feed entry.
+    
+    Priority order:
+    1. media:content - choose largest image by area (width * height)
+    2. media:thumbnail - first URL
+    3. enclosures - only image/* types
+    4. links - image/* types or rel="enclosure"
+    5. HTML fallback - <img> tags in content/summary/description
+    
+    Args:
+        entry: A feedparser entry object
+        
+    Returns:
+        Image URL string or None if no image found
+    """
+    
+    # 1) media:content – choose the "best" candidate (largest image)
+    media_content = getattr(entry, 'media_content', None)
+    if media_content:
+        best = None
+        best_area = 0
+        for m in media_content:
+            url = m.get('url')
+            if not url:
+                continue
+
+            mtype = m.get('type', '')
+            # Skip non-image types (but allow empty type as it might still be image)
+            if mtype and not mtype.startswith('image/'):
+                continue
+
+            try:
+                w = int(m.get('width') or 0)
+                h = int(m.get('height') or 0)
+            except (ValueError, TypeError):
+                w, h = 0, 0
+            area = w * h
+
+            # Prefer larger images, or take first valid one if no dimensions
+            if area > best_area or (best is None and area == 0):
+                best_area = area
+                best = url
+
+        if best:
+            return best
+
+    # 2) media:thumbnail - take first URL
+    media_thumb = getattr(entry, 'media_thumbnail', None)
+    if media_thumb:
+        for t in media_thumb:
+            url = t.get('url')
+            if url:
+                return url
+
+    # 3) enclosures with image/* type
+    enclosures = getattr(entry, 'enclosures', None)
+    if enclosures:
+        for enc in enclosures:
+            mtype = enc.get('type', '')
+            if mtype.startswith('image/'):
+                url = enc.get('href') or enc.get('url')
+                if url:
+                    return url
+
+    # 4) links with image/* type or rel="enclosure"
+    links = getattr(entry, 'links', None)
+    if links:
+        for link in links:
+            ltype = link.get('type', '')
+            if ltype.startswith('image/') or link.get('rel') == 'enclosure':
+                url = link.get('href')
+                if url:
+                    return url
+
+    # 5) HTML fallback: <img src="..."> in content/summary/description
+    html_candidates = []
+
+    # Check entry.content (list of content blocks)
+    if hasattr(entry, 'content'):
+        for c in entry.content:
+            val = c.get('value') if isinstance(c, dict) else None
+            if val:
+                html_candidates.append(val)
+
+    # Check entry.summary
+    if hasattr(entry, 'summary') and entry.summary:
+        html_candidates.append(entry.summary)
+
+    # Check entry.description
+    if hasattr(entry, 'description') and entry.description:
+        html_candidates.append(entry.description)
+
+    for html in html_candidates:
+        if not html:
+            continue
+        match = IMG_TAG_RE.search(html)
+        if match:
+            img_url = match.group(1)
+            # Handle protocol-relative URLs
+            if img_url.startswith('//'):
+                img_url = 'https:' + img_url
+            return img_url
+
+    # 6) Nothing found
+    return None
 
 # Initialize clients
 def get_supabase_client():
@@ -120,30 +236,8 @@ def fetch_rss_articles(max_articles_per_source=10):
                 if published_date == '':
                     published_date = None
                 
-                # Extract image URL from RSS entry
-                image_url = None
-                
-                # Try media:content (most common in news RSS)
-                if hasattr(entry, 'media_content') and entry.media_content:
-                    image_url = entry.media_content[0].get('url')
-                
-                # Try media:thumbnail
-                elif hasattr(entry, 'media_thumbnail') and entry.media_thumbnail:
-                    image_url = entry.media_thumbnail[0].get('url')
-                
-                # Try enclosures (some news sites use this)
-                elif hasattr(entry, 'enclosures') and entry.enclosures:
-                    for enclosure in entry.enclosures:
-                        if enclosure.get('type', '').startswith('image/'):
-                            image_url = enclosure.get('href')
-                            break
-                
-                # Try links array
-                elif hasattr(entry, 'links'):
-                    for link in entry.links:
-                        if link.get('type', '').startswith('image/') or link.get('rel') == 'enclosure':
-                            image_url = link.get('href')
-                            break
+                # Extract image URL from RSS entry using improved extraction
+                image_url = extract_image_url(entry)
                 
                 source_articles.append({
                     'url': article_url,
@@ -198,7 +292,7 @@ def run_complete_pipeline():
     """Run the complete 9-step clustered news workflow"""
     
     print("\n" + "="*80)
-    print("🚀 COMPLETE 9-STEP CLUSTERED NEWS WORKFLOW")
+    print("🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW")
     print("="*80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
@@ -363,31 +457,47 @@ def run_complete_pipeline():
             
             print(f"   ✅ Synthesized: {synthesized['title_news'][:60]}...")
             
-            # STEP 5: Gemini Search & Component Selection
-            print(f"\n🔍 STEP 5: GEMINI SEARCH & COMPONENT SELECTION")
+            # ==========================================
+            # STEP 5: GEMINI CONTEXT SEARCH
+            # ==========================================
+            print(f"\n🔍 STEP 5: GEMINI CONTEXT SEARCH")
+            print(f"   Searching for component data with Google Search grounding...")
             
-            # First: Get search context with Gemini
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
             
-            # Combine full article text from all sources (for better context)
-            combined_full_text = "\n\n---\n\n".join([
-                f"[{s.get('source_name', 'Unknown')}]: {s.get('full_text', '')[:1500]}"
-                for s in cluster_sources
-                if s.get('full_text') and len(s.get('full_text', '')) > 100
-            ])
+            # Get the full article text from sources (use first source with content)
+            full_article_text = ""
+            for source in cluster_sources:
+                if source.get('full_text') and len(source.get('full_text', '')) > 100:
+                    full_article_text = source['full_text'][:3000]  # Limit to 3000 chars
+                    break
             
-            # Get search context first (needed for component selection)
+            # Get search context with Gemini (uses Google Search grounding)
             gemini_result = None
             search_context_text = ""
             if gemini_key:
-                gemini_result = search_gemini_context(
-                    synthesized['title_news'], 
-                    bullets_text
-                )
-                search_context_text = gemini_result.get('results', '') if gemini_result else ""
-                print(f"   ✅ Search context fetched ({len(search_context_text)} chars)")
+                try:
+                    gemini_result = search_gemini_context(
+                        synthesized['title_news'], 
+                        bullets_text,
+                        full_article_text
+                    )
+                    search_context_text = gemini_result.get('results', '') if gemini_result else ""
+                    print(f"   ✅ Step 5 Complete: Search context fetched ({len(search_context_text)} chars)")
+                except Exception as search_error:
+                    print(f"   ⚠️ Step 5 Failed: {search_error}")
+                    print(f"   📋 Continuing with limited context...")
+                    search_context_text = ""
+            else:
+                print(f"   ⚠️ No Gemini API key - skipping context search")
             
-            # Then: Select components based on synthesized article + search context
+            # ==========================================
+            # STEP 6: GEMINI COMPONENT SELECTION
+            # ==========================================
+            print(f"\n📋 STEP 6: GEMINI COMPONENT SELECTION")
+            print(f"   Analyzing search data to select appropriate components...")
+            
+            # Build article data for component selection
             article_for_selection = {
                 'title': synthesized['title_news'],
                 'text': bullets_text,
@@ -395,52 +505,63 @@ def run_complete_pipeline():
             }
             
             # Component selection with robust fallback
+            selected = []
+            component_result = {}
             try:
                 component_result = component_selector.select_components(article_for_selection, search_context_text)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
+                print(f"   ✅ Step 6 Complete: Selected [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
-                print(f"   ⚠️ Component selection failed: {comp_error}")
+                print(f"   ⚠️ Step 6 Failed: {comp_error}")
                 print(f"   📋 Using default components: timeline, details")
                 selected = ['timeline', 'details']  # Default fallback
                 component_result = {'components': selected, 'emoji': '📰'}
-            
-            print(f"   Selected components: {', '.join(selected) if selected else 'none'}")
             
             # Build context_data for component generation
             context_data = {}
             if selected and gemini_result:
                 for component in selected:
                     context_data[component] = gemini_result
-                print(f"   ✅ Context assigned for {len(context_data)} components")
             
-            # STEP 5 & 6: Generate components with Claude
-            print(f"\n📊 STEPS 6-7: COMPONENT GENERATION")
+            # ==========================================
+            # STEP 7: CLAUDE COMPONENT GENERATION
+            # ==========================================
+            print(f"\n📊 STEP 7: CLAUDE COMPONENT GENERATION")
+            print(f"   Generating content for: {', '.join(selected) if selected else 'none'}")
             
             components = {}
+            # Get map_locations from component selection result
+            map_locations = component_result.get('map_locations', []) if isinstance(component_result, dict) else []
+            
             if selected and context_data:
                 try:
                     article_for_components = {
                         'title_news': synthesized['title_news'],
                         'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])),
                         'selected_components': selected,
-                        'context_data': context_data
+                        'context_data': context_data,
+                        'map_locations': map_locations  # Pass map locations to component generation
                     }
-                    component_result = component_writer.write_components(article_for_components)
-                    if component_result:
+                    generation_result = component_writer.write_components(article_for_components)
+                    if generation_result:
                         # Extract individual components from result
                         components = {
-                            'timeline': component_result.get('timeline'),
-                            'details': component_result.get('details'),
-                            'graph': component_result.get('graph'),
-                            'map': component_result.get('map')
+                            'timeline': generation_result.get('timeline'),
+                            'details': generation_result.get('details'),
+                            'graph': generation_result.get('graph'),
+                            'map': generation_result.get('map')
                         }
                         # Remove None values
                         components = {k: v for k, v in components.items() if v is not None}
-                        print(f"   ✅ Generated: {', '.join(components.keys())}")
+                        print(f"   ✅ Step 7 Complete: Generated [{', '.join(components.keys())}]")
+                    else:
+                        print(f"   ⚠️ Step 7 Failed: No components generated")
                 except Exception as comp_gen_error:
-                    print(f"   ⚠️ Component generation failed: {comp_gen_error}")
+                    print(f"   ⚠️ Step 7 Failed: {comp_gen_error}")
                     print(f"   📋 Continuing without components")
                     components = {}
+            else:
+                print(f"   ⏭️ Skipping - no components selected or no context data")
             
             # STEP 8: Fact Verification (Hallucination Check)
             print(f"\n🔍 STEP 8: FACT VERIFICATION")
@@ -599,6 +720,7 @@ def run_complete_pipeline():
                 'timeline': components.get('timeline'),
                 'details': components.get('details'),
                 'graph': components.get('graph'),
+                'map': components.get('map'),  # Map component with location data
                 'components_order': selected,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
@@ -1091,16 +1213,17 @@ def main():
     """Run continuous workflow"""
     
     print("\n" + "="*80)
-    print("🚀 COMPLETE 9-STEP CLUSTERED NEWS SYSTEM")
+    print("🚀 COMPLETE 10-STEP CLUSTERED NEWS SYSTEM")
     print("="*80)
     print("\nThis system will:")
-    print("  📰 Fetch RSS from 171 sources")
+    print("  📰 Fetch RSS from 287 sources")
     print("  🎯 Score with Gemini V8.2")
     print("  🔗 Cluster similar events")
     print("  📡 Fetch full article text")
     print("  ✍️  Synthesize multi-source articles")
-    print("  🔍 Search for context")
-    print("  📊 Generate components")
+    print("  🔍 Step 5: Search for context (Gemini)")
+    print("  📋 Step 6: Select components (Gemini)")
+    print("  📊 Step 7: Generate components (Claude)")
     print("  🔬 Verify facts (catch hallucinations)")
     print("  💾 Publish to Supabase")
     print("\nPress Ctrl+C to stop")

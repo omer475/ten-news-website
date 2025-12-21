@@ -112,7 +112,7 @@ def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
                     wait_time = (attempt + 1) * 2  # 2, 4, 6 seconds
                     time.sleep(wait_time)
                     continue
-                    
+                
                 response.raise_for_status()
                 result = response.json()
                 return idx, result['embedding']['values']

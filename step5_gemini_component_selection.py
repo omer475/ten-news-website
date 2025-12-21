@@ -38,90 +38,218 @@ class ComponentConfig:
 # SYSTEM PROMPT - COMPONENT SELECTION LOGIC
 # ==========================================
 
-COMPONENT_SELECTION_PROMPT = """Select visual components for this news article based on available search data.
+COMPONENT_SELECTION_PROMPT = """Select visual components for this news article based on search data.
 
 ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
 SEARCH CONTEXT: {search_context}
 
-═══ AVAILABLE COMPONENTS ═══
+═══════════════════════════════════════════════════════════════
+AVAILABLE COMPONENTS
+═══════════════════════════════════════════════════════════════
 
-🗺️ MAP - For stories with SPECIFIC geographic locations
-   Requires: At least 1 PRECISE location (port, facility, city - NOT just country)
-   Good: "Novorossiysk Port", "Shifa Hospital", "Crimean Bridge"
-   Bad: "Ukraine", "Russia", "Middle East"
+🗺️ MAP
+Shows an interesting, specific location related to the story.
 
-📊 GRAPH - For stories with measurable trends over time
-   Requires: At least 4 data points across different time periods
+ONLY SELECT IF search context contains:
+- Exact venue/building name (not just city/country)
+- A location that adds insight to the story
+- Coordinates for a specific spot
 
-📅 TIMELINE - For evolving stories with multiple dated events
-   Requires: At least 3 distinct dated events (not just the main news event)
+GOOD LOCATIONS:
+✓ "Studio 8H, 30 Rockefeller Plaza" - Where SNL is filmed
+✓ "Mar-a-Lago" - Specific meeting venue
+✓ "Yongbyon Nuclear Complex" - Specific facility
+✓ "The Kremlin" - Government building
+✓ "Capitol Building" - Where laws are made
 
-📋 DETAILS - For stories with interesting facts beyond the bullet summary
-   Requires: At least 3 specific facts NOT already in bullet summary
-   Source: From full article text OR from internet search
+BAD LOCATIONS (DO NOT SELECT MAP):
+✗ "United States" - Useless
+✗ "Ukraine" - Too vague
+✗ "Seoul, South Korea" - Generic city
+✗ "Florida" - State only
+✗ "New York" - City only
 
-═══ SELECTION RULES ═══
+ASK: "Would someone find this location interesting to see on a map?"
+- "Studio 8H where SNL is filmed" → YES, interesting
+- "United States" → NO, everyone knows where that is
 
-1. Select ONLY components that have sufficient data in the search context
-2. Select 1-4 components (quality over quantity)
-3. Order by relevance (most important first)
-4. If search context lacks data for a component, DO NOT select it
+───────────────────────────────────────────────────────────────
 
-═══ DATA VALIDATION CHECKLIST ═══
+📅 TIMELINE
+Shows chronological context for complex stories.
 
-Before selecting each component, verify in search context:
+ONLY SELECT IF the story REQUIRES history to understand:
 
-□ MAP: 
-  - Is there at least 1 SPECIFIC location (not just country)?
-  - Can you pinpoint it on a map (port, city, facility)?
-  - If only country names available → DO NOT select map
+✓ SELECT TIMELINE FOR:
+- Ongoing wars/conflicts with complex history
+- Multi-year diplomatic negotiations
+- Criminal investigations with many developments
+- Policy reversals (need to show what changed)
+- Stories where readers would ask "how did we get here?"
 
-□ GRAPH: 
-  - Are there 4+ dated numerical data points for a trend?
+✗ DO NOT SELECT TIMELINE FOR:
+- Single announcements or statements
+- Entertainment news (TV shows, movies, awards)
+- Simple proposals or pledges
+- Breaking news without complex backstory
+- Speeches, remarks, or comments
+- Intelligence reports or assessments
+- Most daily news stories
 
-□ TIMELINE: 
-  - Are there 3+ distinct dated events beyond the main story?
+EXAMPLES:
 
-□ DETAILS: 
-  - Are there 3+ specific facts NOT mentioned in bullet summary?
-  - Facts can be from article text OR internet search
+"SNL Mocks Trump Over Epstein Files" → NO TIMELINE
+(It's a comedy sketch, no historical context needed)
 
-SELECT ONLY components that pass their validation check.
+"Trump Pledges Cash Payments" → NO TIMELINE
+(It's a policy proposal, self-explanatory)
 
-═══ EMOJI SELECTION ═══
+"North Korea Warns Japan" → MAYBE TIMELINE
+(Only if showing history of nuclear tensions adds value)
 
-Select ONE emoji that captures the story's core topic:
+"Russia-Ukraine Peace Talks" → YES TIMELINE
+(Complex ongoing conflict, history helps understanding)
 
-🌍 Geopolitics/International  📈 Economy/Markets    🏛️ Politics/Government
-💻 Technology                 🔬 Science            💊 Health/Medicine
-⚽ Sports                     🎭 Entertainment      🌱 Environment/Climate
-⚔️ Conflict/Military         ⚠️ Disasters          💀 Death/Tragedy
-🎓 Education                  ⚖️ Law/Justice        🏆 Awards
-🚀 Space                      🔐 Security/Cyber     🎉 Celebrations
-🌊 Natural disasters          🚗 Transportation     🏗️ Infrastructure
-💣 Military/Weapons           🚢 Naval/Maritime     ✈️ Aviation
+ASK: "Would this story be confusing without historical context?"
+- If YES → Select timeline
+- If NO → Do NOT select timeline
 
-═══ OUTPUT FORMAT ═══
+───────────────────────────────────────────────────────────────
 
-Return ONLY valid JSON:
+📊 GRAPH
+Shows data trends over time.
+
+ONLY SELECT IF:
+- 4+ numerical data points with dates exist
+- There's a clear trend to visualize
+- The data adds insight beyond the article
+
+───────────────────────────────────────────────────────────────
+
+📋 DETAILS
+Shows key facts and statistics.
+
+ONLY SELECT IF:
+- 3+ specific facts with numbers exist
+- Facts are NOT already in bullet summary
+- Facts add depth to the story
+
+═══════════════════════════════════════════════════════════════
+SELECTION RULES
+═══════════════════════════════════════════════════════════════
+
+1. BE SELECTIVE - Not every story needs every component
+2. MOST stories only need 1-2 components
+3. TIMELINE should be rare - only for complex stories
+4. MAP only if location is specific AND interesting
+5. DETAILS is usually the safest choice if facts exist
+
+TYPICAL SELECTIONS:
+
+Entertainment news → [details] only, maybe [map] if specific venue
+Policy announcements → [details] only
+Economic news → [graph, details]
+Ongoing conflicts → [timeline, details, map] if specific location
+Breaking incidents → [map, details] if exact location known
+Speeches/statements → [details] only
+
+═══════════════════════════════════════════════════════════════
+VALIDATION CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+Before selecting MAP, verify:
+□ Is location more specific than a city? (venue, building, facility)
+□ Is it the RIGHT location for this story? (not just a related country)
+□ Would readers find it interesting to see?
+
+Before selecting TIMELINE, verify:
+□ Is this story part of a longer, complex sequence of events?
+□ Would readers be confused without historical context?
+□ Is it NOT just a simple announcement/statement/proposal?
+
+Before selecting GRAPH, verify:
+□ Are there 4+ data points with dates?
+□ Is there a meaningful trend to show?
+
+Before selecting DETAILS, verify:
+□ Are there 3+ facts NOT in the bullet summary?
+□ Do all facts contain numbers?
+
+═══════════════════════════════════════════════════════════════
+APPLYING TO YOUR EXAMPLES
+═══════════════════════════════════════════════════════════════
+
+"SNL Mocks Trump Over Redacted Epstein Files"
+- Map: YES → "Studio 8H, 30 Rockefeller Plaza" (where SNL films)
+- Timeline: NO → It's a comedy sketch, doesn't need history
+- Details: YES → If there are facts about the sketch not in bullets
+→ components: ["map", "details"]
+
+"Trump Pledges Multiple Cash Payments"
+- Map: MAYBE → "White House" or "Capitol Building" if mentioned
+- Timeline: NO → It's a policy proposal, self-explanatory
+- Details: YES → Payment amounts, eligibility details
+→ components: ["details"] or ["map", "details"]
+
+"North Korea Warns Japan Over Nuclear Weapons"
+- Map: YES → "Yongbyon Nuclear Complex" (North Korea's main nuclear site)
+- Timeline: MAYBE → Only if nuclear history adds value
+- Details: YES → Missile specifications, previous threats
+→ components: ["map", "details"]
+
+"Russia Reports Constructive Ukraine Peace Talks"
+- Map: YES → The actual meeting venue in Florida (find exact location!)
+- Timeline: YES → Ongoing war, history helps
+- Details: YES → Negotiator names, meeting details
+→ components: ["map", "timeline", "details"]
+
+"US Intel Warns Putin Seeks Full Ukraine Control"
+- Map: MAYBE → "Pentagon" or "CIA Headquarters" where report from
+- Timeline: MAYBE → If showing war progression
+- Details: YES → Intelligence findings
+→ components: ["details"] or ["map", "details"]
+
+═══════════════════════════════════════════════════════════════
+EMOJI SELECTION
+═══════════════════════════════════════════════════════════════
+
+Choose ONE emoji:
+
+🌍 Geopolitics        📈 Economy/Markets     🏛️ Politics
+💻 Technology         🔬 Science             💊 Health
+⚽ Sports             🎭 Entertainment       🌱 Environment
+⚔️ Conflict/War       ⚠️ Disasters           💀 Death
+🎓 Education          ⚖️ Law/Justice         🏆 Awards
+🚀 Space              🔐 Security            🎉 Celebrations
+💣 Military           🚢 Naval               ✈️ Aviation
+🔪 Crime              💰 Business            📺 TV/Media
+☢️ Nuclear            🗳️ Elections           🤝 Diplomacy
+
+═══════════════════════════════════════════════════════════════
+OUTPUT FORMAT
+═══════════════════════════════════════════════════════════════
+
 {
-  "components": ["map", "details", "timeline"],
-  "emoji": "💣",
+  "components": ["map", "details"],
+  "emoji": "📺",
   "graph_type": null,
-  "graph_data_available": false,
-  "map_locations": ["Novorossiysk Port, Krasnodar Krai, Russia"]
+  "map_locations": ["Studio 8H, 30 Rockefeller Plaza, New York, USA"]
 }
 
-FIELD RULES:
-- components: Array of selected components, ordered by importance
-- emoji: Single emoji for the story
-- graph_type: "line", "bar", or "area" if graph selected, null otherwise
-- graph_data_available: true if graph selected, false otherwise
-- map_locations: Array of PRECISE location strings if map selected, null otherwise
-  Format: "Specific Place, City/Region, Country"
-  ✓ "Novorossiysk Port, Krasnodar Krai, Russia"
-  ✗ "Russia" (rejected - too vague)"""
+MAP LOCATION FORMAT:
+"Exact Venue/Building, City, Country"
+
+✓ "Studio 8H, 30 Rockefeller Plaza, New York, USA"
+✓ "Yongbyon Nuclear Complex, Yongbyon, North Korea"
+✓ "Mar-a-Lago, Palm Beach, USA"
+✓ "The Kremlin, Moscow, Russia"
+
+✗ "United States" - REJECTED
+✗ "Seoul, South Korea" - REJECTED
+✗ "Ukraine" - REJECTED
+✗ "New York" - REJECTED (need specific building)
+"""
 
 
 # ==========================================
@@ -190,12 +318,12 @@ class GeminiComponentSelector:
         if not search_context:
             search_context = article_content[:2000] if article_content else "No search context available."
         
-        # Format the prompt with article data
-        formatted_prompt = COMPONENT_SELECTION_PROMPT.format(
-            title=article_title,
-            bullets=bullets_text,
-            search_context=search_context[:3000]  # Limit search context
-        )
+        # Format the prompt with article data using replace (not .format()
+        # because the prompt contains JSON examples with braces)
+        formatted_prompt = COMPONENT_SELECTION_PROMPT
+        formatted_prompt = formatted_prompt.replace('{title}', article_title)
+        formatted_prompt = formatted_prompt.replace('{bullets}', bullets_text)
+        formatted_prompt = formatted_prompt.replace('{search_context}', search_context[:3000])
         
         user_prompt = formatted_prompt + "\n\nAnalyze and return ONLY valid JSON."
 
