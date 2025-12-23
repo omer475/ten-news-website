@@ -184,8 +184,8 @@ if not all([gemini_key, anthropic_key, brightdata_key]):
 brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
 
 component_selector = GeminiComponentSelector(api_key=gemini_key)
-component_writer = ClaudeComponentWriter(api_key=anthropic_key)
-fact_verifier = FactVerifier(api_key=anthropic_key)
+component_writer = ClaudeComponentWriter(api_key=gemini_key)  # Temporarily using Gemini instead of Claude
+fact_verifier = FactVerifier(api_key=gemini_key)  # Temporarily using Gemini instead of Claude
 
 
 # ==========================================
@@ -769,7 +769,7 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import time
     
     # Use Gemini API (temporarily instead of Claude)
-    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={gemini_key}"
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources

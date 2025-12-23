@@ -25,7 +25,7 @@ from datetime import datetime
 @dataclass
 class SynthesisConfig:
     """Configuration for multi-source synthesis"""
-    model: str = "gemini-2.5-flash-preview-05-20"  # Temporarily using Gemini instead of Claude
+    model: str = "gemini-2.0-flash-exp"  # Temporarily using Gemini instead of Claude
     max_tokens: int = 3000  # Enough for content + both bullet versions
     temperature: float = 0.3
     timeout: int = 90

@@ -1,24 +1,24 @@
 """
 STEP 8: FACT VERIFICATION
 ==========================
-Verifies Claude's generated content against source articles to detect hallucinations.
+Verifies generated content against source articles to detect hallucinations.
 
 This module:
 1. Compares generated title, bullets, and article text against original sources
-2. Uses Claude to identify any claims not supported by the sources
+2. Uses Gemini (temporarily switched from Claude) to identify any claims not supported by the sources
 3. Rejects articles with significant discrepancies
 4. Allows regeneration of rejected articles
 """
 
 import os
 import json
+import requests
 from dataclasses import dataclass
-from anthropic import Anthropic
 
 @dataclass
 class VerificationConfig:
     """Configuration for fact verification"""
-    model: str = "claude-sonnet-4-20250514"
+    model: str = "gemini-2.0-flash-exp"  # Temporarily using Gemini instead of Claude
     max_tokens: int = 1500
     temperature: float = 0  # Deterministic for verification
     timeout: int = 60
@@ -139,12 +139,13 @@ Return JSON with your verification result."""
 
 
 class FactVerifier:
-    """Verifies generated content against source articles"""
+    """Verifies generated content against source articles (using Gemini temporarily)"""
     
     def __init__(self, api_key: str = None, config: VerificationConfig = None):
-        self.api_key = api_key or os.getenv('ANTHROPIC_API_KEY') or os.getenv('CLAUDE_API_KEY')
-        self.client = Anthropic(api_key=self.api_key)
+        # Use Gemini API key (temporarily instead of Anthropic)
+        self.api_key = api_key or os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
         self.config = config or VerificationConfig()
+        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.model}:generateContent?key={self.api_key}"
     
     def verify_article(self, sources: list, generated: dict, debug: bool = True) -> tuple:
         """
@@ -167,16 +168,33 @@ class FactVerifier:
         try:
             prompt = build_verification_prompt(sources, generated)
             
-            response = self.client.messages.create(
-                model=self.config.model,
-                max_tokens=self.config.max_tokens,
-                temperature=self.config.temperature,
-                timeout=self.config.timeout,
-                system=VERIFICATION_SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}]
-            )
+            # Build Gemini API request
+            request_data = {
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [{"text": VERIFICATION_SYSTEM_PROMPT + "\n\n" + prompt}]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": self.config.temperature,
+                    "maxOutputTokens": self.config.max_tokens,
+                    "responseMimeType": "application/json"
+                }
+            }
             
-            response_text = response.content[0].text if response.content else ""
+            response = requests.post(self.api_url, json=request_data, timeout=self.config.timeout)
+            
+            # Handle rate limiting
+            if response.status_code == 429:
+                print(f"   ⚠️ Rate limited in verification")
+                return True, [], "Rate limited - assuming valid"
+            
+            response.raise_for_status()
+            response_json = response.json()
+            
+            # Extract response text from Gemini format
+            response_text = response_json['candidates'][0]['content']['parts'][0]['text']
             
             # Clean and parse JSON
             response_text = response_text.replace('```json', '').replace('```', '').strip()

@@ -189,21 +189,70 @@ def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: in
         dict with 'approved' and 'filtered' lists
     """
     
-    system_prompt = """# TEN NEWS SCORING V11 - GLOBAL IMPORTANCE ONLY
+    system_prompt = """# TEN NEWS SCORING V11 - GLOBAL + SHAREABLE
 
 ## 🎯 CORE PRINCIPLE
 
-**Ten News curates the 10 most globally important stories each day.**
+**Ten News curates 10 stories daily that are globally important OR universally interesting.**
 
-A story must pass ALL THREE gates to score above 700:
+Two paths to a high score:
 
 ```
-GATE 1: GLOBAL ENTITY CHECK → Must be globally recognized
-GATE 2: INTERNATIONAL RELEVANCE → Must matter outside its region  
-GATE 3: NEWS VALUE → Must be newsworthy (not lifestyle/filler)
+PATH A: HARD NEWS (Traditional importance)
+→ Global entity + International relevance + Newsworthy event
+
+PATH B: SHAREABLE INSIGHTS (Universal interest)  
+→ Surprising facts/statistics + Universal topic + "Wow factor"
 ```
 
-**If any gate fails, the story scores below 500.**
+**Both paths require the story to be about GLOBAL topics, not regional issues or unknown individuals.**
+
+---
+
+## 🌟 PATH B: SHAREABLE INSIGHTS (Score 850-950)
+
+These stories may not be "breaking news" but they're **universally interesting** and highly shareable. They make people say "Did you know...?" or "That's crazy!"
+
+### What Makes a Shareable Insight?
+
+| Factor | Description | Example |
+|--------|-------------|---------|
+| **SURPRISING STATISTIC** | Numbers that shock or change perspective | "Concert tickets up 2,600% since Beatles" |
+| **RECORD/MILESTONE** | Historic achievement or first | "Data centers hit $61B record investment" |
+| **TREND REVELATION** | Shows how the world is changing | "AI startup valuations tripling in months" |
+| **UNIVERSAL TOPIC** | Something everyone can relate to | Concerts, movies, technology, money |
+| **QUOTABLE** | People will repeat this fact | "Avatar 3 opens at $345M worldwide" |
+
+### ✅ Examples of HIGH-SCORING Shareable Insights
+
+| Article | Score | Why It Works |
+|---------|-------|--------------|
+| "Concert Tickets Surge 2,600% Since Beatles Era" | **920** | Shocking statistic + Universal topic (music/prices) + Everyone can relate |
+| "Data Centers Hit $61B Investment Record in 2025" | **900** | Record milestone + Global tech trend + AI angle |
+| "Avatar 3 Opens with $345M Worldwide Box Office" | **910** | Globally known franchise + Record-level numbers + Entertainment event |
+| "Lovable Hits $6.6B Valuation with AI Coding" | **880** | AI industry milestone + Explosive growth story + Tech trend |
+| "Trump Renames Kennedy Center, Gulf of Mexico" | **920** | Known entity + Shocking action + Everyone will discuss |
+| "90% of Ocean Plastic Comes from 10 Rivers" | **900** | Surprising fact + Changes perspective + Environmental topic |
+| "China Built More in 3 Years Than US in 100 Years" | **910** | Mind-blowing comparison + Global powers |
+| "Only 8 Men Own Same Wealth as Poorest 50%" | **900** | Shocking inequality stat + Universal relevance |
+| "Japan Now Has More People Over 80 Than Under 10" | **890** | Surprising demographic fact + Makes you think |
+
+### ❌ NOT Shareable Insights (Still fails)
+
+| Article | Score | Why It Fails |
+|---------|-------|--------------|
+| "7-Year-Old Invites Shop Owner to Party" | **100** | Unknown person, not a global insight |
+| "62-Year-Old Applies for 900 Jobs" | **150** | Individual story, not a trend or statistic |
+| "Liver Disease Shows Silent Symptoms" | **350** | Generic health info, not surprising |
+| "UK House Has 44.7m Christmas Tree" | **300** | Quirky local record, not universal interest |
+
+### The KEY Distinction:
+
+**✅ SHAREABLE INSIGHT:** "Concert ticket prices have increased 2,600% since the 1960s" 
+→ This is a FACT about the WORLD that surprises people
+
+**❌ HUMAN INTEREST FLUFF:** "62-year-old man applied to 900 jobs"
+→ This is a story about ONE UNKNOWN PERSON
 
 ---
 
@@ -379,6 +428,8 @@ Stories that DO have international relevance:
 
 ## 📊 SCORING MATRIX
 
+### PATH A: Hard News Scoring
+
 | Gate 1: Known? | Gate 2: International? | Gate 3: News? | Score Range |
 |----------------|------------------------|---------------|-------------|
 | ✅ Yes | ✅ Yes | ✅ Yes + Memorable | **900-950** |
@@ -388,6 +439,41 @@ Stories that DO have international relevance:
 | ✅ Yes | ❌ Regional | ❌ No | **400-550** |
 | ❌ Unknown | Any | Any | **100-400** |
 | Any | Any | ❌ Lifestyle/Fluff | **100-400** |
+
+### PATH B: Shareable Insight Scoring
+
+| Universal Topic? | Surprising/Record? | Quotable? | Score Range |
+|------------------|-------------------|-----------|-------------|
+| ✅ Yes (global) | ✅ Very surprising | ✅ Yes | **900-950** |
+| ✅ Yes (global) | ✅ Somewhat surprising | ✅ Yes | **850-899** |
+| ✅ Yes (global) | ✅ Interesting | ⚠️ Maybe | **800-849** |
+| ⚠️ Niche topic | ✅ Surprising | ✅ Yes | **750-850** |
+| ❌ Regional only | Any | Any | **400-600** |
+| ❌ About unknown person | Any | Any | **100-300** |
+
+### Quick Decision Tree
+
+```
+Is it about an UNKNOWN INDIVIDUAL? 
+  → YES: Score 100-300 (STOP)
+  → NO: Continue
+
+Is it REGIONAL news with no global relevance?
+  → YES: Score 400-600 (STOP)  
+  → NO: Continue
+
+Is it PATH A (Hard News) or PATH B (Shareable Insight)?
+
+PATH A: Does it involve a globally known entity + international event?
+  → YES + Very memorable: 900-950
+  → YES + Standard news: 800-899
+  → YES + Routine: 700-799
+
+PATH B: Does it have surprising stats/facts about a universal topic?
+  → YES + Mind-blowing + Quotable: 900-950
+  → YES + Interesting + Shareable: 850-899
+  → YES + Good insight: 800-849
+```
 
 ---
 
@@ -416,6 +502,9 @@ Once a story passes all three gates, add memorability bonus:
 | "SpaceX Fram2 First Polar Orbit" | **900** | Known (SpaceX) + International + Historic first |
 | "China Exports US-Based Surveillance Tech Globally" | **900** | Known (China/US) + International security + Impactful |
 | "Thailand-Cambodia Clashes Displace 500,000" | **850** | International conflict + Humanitarian crisis |
+| "Concert Tickets Surge 2,600% Since Beatles Era" | **920** | PATH B: Shocking stat + Universal topic |
+| "Data Centers Hit $61B Investment Record" | **900** | PATH B: Record + Global tech trend |
+| "Avatar 3 Opens with $345M Worldwide" | **910** | PATH B: Global franchise + Record numbers |
 
 ### 📰 Score 700-850 (All gates passed)
 
@@ -426,6 +515,7 @@ Once a story passes all three gates, add memorability bonus:
 | "Kremlin Denies 3-Way US-Ukraine-Russia Talks" | **820** | Known + International diplomacy |
 | "Japan Pledges $6B for AI Development" | **780** | Known (Japan) + International tech race |
 | "Macron Visits UAE for Security Talks" | **750** | Known (Macron) + International diplomacy |
+| "Lovable Hits $6.6B Valuation with AI Coding" | **880** | PATH B: AI milestone + Growth story |
 
 ### ⚠️ Score 500-650 (Known but Regional)
 
@@ -452,33 +542,41 @@ Once a story passes all three gates, add memorability bonus:
 
 ## ⚠️ COMMON MISTAKES TO AVOID
 
-1. **Don't be fooled by dramatic language** 
-   - "62-Year-Old Applies for 900 Jobs" sounds dramatic but it's an unknown person
+1. **Don't confuse "unknown person story" with "shareable insight"**
+   - ❌ "62-Year-Old Applies for 900 Jobs" = Unknown person story (100-300)
+   - ✅ "Job applications up 400% among seniors" = Shareable insight about a trend (850+)
    
-2. **Don't confuse "interesting" with "important"**
-   - Polar bear adopting cub is cute, not globally important
+2. **Don't penalize surprising statistics just because they're not "breaking news"**
+   - ✅ "Concert tickets up 2,600%" is HIGHLY valuable even if not a breaking event
    
 3. **Don't let famous names override regional scope**
-   - Modi is known, but Maharashtra local polls are not international news
+   - Modi is known, but Maharashtra local polls are regional (500)
    
-4. **Don't score health content high just because it affects everyone**
-   - Generic health tips are not news events
-   
-5. **Don't score year-end lists as news**
-   - "Best of 2025" lists are editorial content, not news
+4. **Don't score lifestyle fluff high just because it mentions a celebrity**
+   - Paris Hilton's pink mansion = still fluff (250)
 
-6. **Regional Fed officials ≠ Fed Chair Powell**
-   - Beth Hammack is not globally known; only score high if it's Powell or major Fed announcement
+5. **Do recognize when a "record" or "milestone" makes something shareable**
+   - "$61B data center investment RECORD" = the record makes it notable (900)
+   - "Data centers continue to grow" = boring without the hook (700)
+
+6. **Do value the "wow factor" - stories people will talk about**
+   - Ask: "Would someone share this at dinner?"
+   - Ask: "Would this make someone say 'Did you know...?'"
 
 ---
 
 ## ✅ THE ULTIMATE TEST
 
-Before assigning a score above 700, ask:
+Before assigning a score, ask TWO questions:
 
+**For PATH A (Hard News):**
 > "Would this story be discussed in news broadcasts in New York, London, Tokyo, São Paulo, and Lagos?"
 
-If the answer is no, the score should be below 700.
+**For PATH B (Shareable Insights):**
+> "Would someone share this fact with friends and say 'Did you know...?' or 'That's crazy!'?"
+
+If YES to either → Score 800+
+If NO to both → Score below 700
 
 ---
 
@@ -489,6 +587,8 @@ Return ONLY valid JSON array with exactly this structure for each article:
 [
   {
     "title": "exact article title here",
+    "path": "A_HARD_NEWS",
+    "disqualifier": null,
     "gate1_global_entity": {
       "passed": true,
       "entity": "Apple, Tim Cook",
@@ -502,36 +602,71 @@ Return ONLY valid JSON array with exactly this structure for each article:
       "passed": true,
       "reasoning": "Major product announcement with consequences"
     },
+    "for_path_b": null,
     "memorable_factors": ["IMPACTFUL", "QUOTABLE"],
     "score": 900,
     "status": "APPROVED",
     "category": "Technology"
   },
   {
-    "title": "another article title",
+    "title": "Concert Tickets Surge 2,600% Since Beatles Era",
+    "path": "B_SHAREABLE_INSIGHT",
+    "disqualifier": null,
     "gate1_global_entity": {
-      "passed": false,
-      "entity": "regional company",
-      "reasoning": "Not known outside the region"
+      "passed": true,
+      "entity": "Music/Entertainment industry",
+      "reasoning": "Universal topic everyone relates to"
     },
     "gate2_international": {
-      "passed": false,
-      "reasoning": "Only affects local market"
+      "passed": true,
+      "reasoning": "Global trend in entertainment pricing"
     },
     "gate3_news_value": {
       "passed": true,
-      "reasoning": "Actual news event"
+      "reasoning": "Surprising statistic with wow factor"
     },
+    "for_path_b": {
+      "universal_topic": true,
+      "topic": "Entertainment/Money",
+      "surprise_factor": "MIND_BLOWING",
+      "quotable": true
+    },
+    "memorable_factors": ["SHOCKING", "QUOTABLE", "EDUCATIONAL"],
+    "score": 920,
+    "status": "APPROVED",
+    "category": "Entertainment"
+  },
+  {
+    "title": "62-Year-Old Applies for 900 Jobs",
+    "path": "DISQUALIFIED",
+    "disqualifier": "UNKNOWN_PERSON",
+    "gate1_global_entity": {
+      "passed": false,
+      "entity": "Unknown individual",
+      "reasoning": "Person described by age, not name"
+    },
+    "gate2_international": {
+      "passed": false,
+      "reasoning": "Personal story, no global relevance"
+    },
+    "gate3_news_value": {
+      "passed": false,
+      "reasoning": "Human interest fluff, not news"
+    },
+    "for_path_b": null,
     "memorable_factors": [],
-    "score": 350,
+    "score": 150,
     "status": "FILTERED",
-    "category": "Business"
+    "category": "Other"
   }
 ]
 
 Rules:
 - status = "APPROVED" if score >= 700
 - status = "FILTERED" if score < 700
+- path = "A_HARD_NEWS" or "B_SHAREABLE_INSIGHT" or "DISQUALIFIED"
+- disqualifier = null or "UNKNOWN_PERSON" or "LIFESTYLE_FLUFF" or "REGIONAL_ONLY" or "GENERIC_HEALTH"
+- for_path_b: include only for PATH B stories, null otherwise
 - All three gates must be evaluated for each article
 - memorable_factors: array of ["SHOCKING", "HISTORIC", "IMPACTFUL", "QUOTABLE", "EDUCATIONAL"] or empty []
 - category: Tech, Business, Science, Politics, Finance, Crypto, Health, Entertainment, Sports, World, Other

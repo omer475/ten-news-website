@@ -4861,7 +4861,7 @@ export default function Home() {
             style={{
               transform: `${
                 index === currentIndex 
-                  ? `translateY(${-dragOffset}px)` 
+                  ? (story.type === 'opening' ? 'translateY(0)' : `translateY(${-dragOffset}px)`)
                   : index < currentIndex 
                     ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.8 : 0}px))` 
                     : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.8 : 0}px))`
@@ -4872,12 +4872,13 @@ export default function Home() {
               background: 'transparent',
               boxSizing: 'border-box',
               // Instant response while dragging, smooth ease when releasing
-              transition: isDragging 
+              // First page (opening) doesn't need transform transitions
+              transition: isDragging || story.type === 'opening'
                 ? 'none'
                 : `transform ${transitionDuration}s cubic-bezier(0.25, 0.1, 0.25, 1), opacity ${transitionDuration * 0.8}s ease-out`,
               overflow: 'hidden',
               touchAction: 'none',
-              willChange: 'transform'
+              willChange: story.type === 'opening' ? 'auto' : 'transform'
             }}
           >
             {/* Paywall for stories after streak page + 2 articles */}
@@ -5242,16 +5243,54 @@ export default function Home() {
                                           String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
                         
                         if (!hasImageUrl) {
+                          // Professional placeholder with category-based gradient
+                          const categoryGradients = {
+                            'Tech': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            'Business': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                            'Finance': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                            'Politics': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                            'World': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                            'Science': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                            'Health': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                            'Sports': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                            'Entertainment': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                            'Crypto': 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)'
+                          };
+                          const gradient = categoryGradients[story.category] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                          const categoryEmojis = {
+                            'Tech': '💻', 'Business': '📊', 'Finance': '💰', 'Politics': '🏛️',
+                            'World': '🌍', 'Science': '🔬', 'Health': '🏥', 'Sports': '⚽',
+                            'Entertainment': '🎬', 'Crypto': '₿'
+                          };
+                          const emoji = categoryEmojis[story.category] || story.emoji || '📰';
+                          
                           return (
                             <div style={{
-                              fontSize: '72px',
+                              width: '100%',
+                              height: '100%',
+                              background: gradient,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              width: '100%',
-                              height: '100%'
+                              flexDirection: 'column',
+                              gap: '12px'
                             }}>
-                              {story.emoji || '📰'}
+                              <div style={{
+                                fontSize: '64px',
+                                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
+                              }}>
+                                {emoji}
+                              </div>
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: 'rgba(255,255,255,0.9)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '2px',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                              }}>
+                                {story.category || 'News'}
+                              </div>
                             </div>
                           );
                         }
@@ -5517,18 +5556,40 @@ export default function Home() {
                                   imgElement.src = imageUrl + separator + '_t=' + Date.now();
                                 }, 100 * retryCount);
                               } else {
-                                // All retries failed - show emoji fallback
-                                console.warn('⚠️ All retries failed, showing emoji');
-                                  imgElement.style.display = 'none';
+                                // All retries failed - show professional category-based fallback
+                                console.warn('⚠️ All retries failed, showing category fallback');
+                                imgElement.style.display = 'none';
                                 if (parentElement && !parentElement.querySelector('.image-fallback')) {
-                                      parentElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                      // Category-based gradients for visual appeal
+                                      const categoryGradients = {
+                                        'Tech': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        'Business': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                                        'Finance': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                        'Politics': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                        'World': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                                        'Science': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                                        'Health': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                                        'Sports': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                                        'Entertainment': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                                        'Crypto': 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)'
+                                      };
+                                      const categoryEmojis = {
+                                        'Tech': '💻', 'Business': '📊', 'Finance': '💰', 'Politics': '🏛️',
+                                        'World': '🌍', 'Science': '🔬', 'Health': '🏥', 'Sports': '⚽',
+                                        'Entertainment': '🎬', 'Crypto': '₿'
+                                      };
+                                      const gradient = categoryGradients[story.category] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                      const emoji = categoryEmojis[story.category] || story.emoji || '📰';
+                                      
+                                      parentElement.style.background = gradient;
                                       const fallback = document.createElement('div');
                                       fallback.className = 'image-fallback';
                                       fallback.style.cssText = `
-                                        font-size: 72px;
                                         display: flex;
+                                        flex-direction: column;
                                         align-items: center;
                                         justify-content: center;
+                                        gap: 12px;
                                         width: 100%;
                                         height: 100%;
                                         position: absolute;
@@ -5536,7 +5597,10 @@ export default function Home() {
                                         left: 0;
                                         z-index: 1;
                                       `;
-                                      fallback.textContent = story.emoji || '📰';
+                                      fallback.innerHTML = `
+                                        <div style="font-size: 64px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));">${emoji}</div>
+                                        <div style="font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${story.category || 'News'}</div>
+                                      `;
                                       parentElement.appendChild(fallback);
                                     }
                                   }
@@ -5632,37 +5696,67 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    {/* Emoji fallback when no image */}
-                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (
-                      <div style={{
-                      position: 'fixed',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      width: '100vw',
-                      height: '42vh',
-                      margin: 0,
-                      padding: 0,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: '1',
-                      overflow: 'hidden',
-                      pointerEvents: 'none'
-                    }}>
+                    {/* Professional category-based fallback when no image */}
+                    {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (() => {
+                      const categoryGradients = {
+                        'Tech': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'Business': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                        'Finance': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'Politics': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'World': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'Science': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        'Health': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        'Sports': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                        'Entertainment': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                        'Crypto': 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)'
+                      };
+                      const categoryEmojis = {
+                        'Tech': '💻', 'Business': '📊', 'Finance': '💰', 'Politics': '🏛️',
+                        'World': '🌍', 'Science': '🔬', 'Health': '🏥', 'Sports': '⚽',
+                        'Entertainment': '🎬', 'Crypto': '₿'
+                      };
+                      const gradient = categoryGradients[story.category] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                      const emoji = categoryEmojis[story.category] || story.emoji || '📰';
+                      
+                      return (
                         <div style={{
-                        fontSize: '72px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '100%',
-                        height: '100%'
-                      }}>
-                        {story.emoji || '📰'}
+                          position: 'fixed',
+                          top: '0',
+                          left: '0',
+                          right: '0',
+                          width: '100vw',
+                          height: '42vh',
+                          margin: 0,
+                          padding: 0,
+                          background: gradient,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                          zIndex: '1',
+                          overflow: 'hidden',
+                          pointerEvents: 'none'
+                        }}>
+                          <div style={{
+                            fontSize: '64px',
+                            filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
+                          }}>
+                            {emoji}
+                          </div>
+                          <div style={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: 'rgba(255,255,255,0.9)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '2px',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                          }}>
+                            {story.category || 'News'}
+                          </div>
                         </div>
-                    </div>
-                    )}
+                      );
+                    })()}
                     
                     {/* Apple HIG - Content Container */}
                     <div style={{

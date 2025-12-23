@@ -1,14 +1,14 @@
-# STEP 6: CLAUDE COMPONENT GENERATION (Timeline, Details, Graph)
+# STEP 6: COMPONENT GENERATION (Timeline, Details, Graph)
 # ================================================================
 # Purpose: Generate supplementary components using Perplexity search context
-# Model: Claude Sonnet 4.5 (best quality for writing)
+# Model: Gemini 2.0 Flash (temporarily switched from Claude)
 # Input: Articles with dual-language content from Step 5 + Perplexity context from Step 4
 # Output: Timeline, Details, Graph based on web search results
 # Writes: timeline, details, graph (as selected by Gemini in Step 3)
 # Cost: ~$0.60 per 100 articles
 # Time: ~2-3 minutes for 100 articles
 
-import anthropic
+import requests
 import json
 import time
 from typing import List, Dict, Optional
@@ -21,8 +21,8 @@ from dataclasses import dataclass
 
 @dataclass
 class ComponentWriterConfig:
-    """Configuration for Claude component writer"""
-    model: str = "claude-sonnet-4-20250514"
+    """Configuration for component writer (using Gemini temporarily)"""
+    model: str = "gemini-2.0-flash-exp"  # Temporarily using Gemini instead of Claude
     max_tokens: int = 1536  # Enough for timeline + details + graph
     temperature: float = 0.3
     timeout: int = 60
@@ -281,7 +281,7 @@ PRE-SUBMISSION CHECKLIST
 
 class ClaudeComponentWriter:
     """
-    Generates article components using Claude Sonnet 4.5
+    Generates article components using Gemini (temporarily switched from Claude)
     Components: Timeline, Details, Graph
     Based on Perplexity search context data
     """
@@ -291,11 +291,12 @@ class ClaudeComponentWriter:
         Initialize writer with API key and optional config
         
         Args:
-            api_key: Anthropic API key
+            api_key: Gemini API key (temporarily, was Anthropic)
             config: ComponentWriterConfig instance (uses defaults if None)
         """
-        self.client = anthropic.Anthropic(api_key=api_key)
+        self.api_key = api_key
         self.config = config or ComponentWriterConfig()
+        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.model}:generateContent?key={api_key}"
     
     def write_components(self, article: Dict) -> Optional[Dict]:
         """
@@ -327,22 +328,38 @@ class ClaudeComponentWriter:
         # Try up to retry_attempts times
         for attempt in range(self.config.retry_attempts):
             try:
-                print(f"   🔧 DEBUG: Calling Claude API (attempt {attempt + 1})...")
-                response = self.client.messages.create(
-                    model=self.config.model,
-                    max_tokens=self.config.max_tokens,
-                    temperature=self.config.temperature,
-                    timeout=self.config.timeout,
-                    system=system_prompt,
-                    messages=[{
-                        "role": "user",
-                        "content": "Generate the components now. Return ONLY valid JSON."
-                    }]
-                )
+                print(f"   🔧 DEBUG: Calling Gemini API (attempt {attempt + 1})...")
                 
-                # Extract response
-                response_text = response.content[0].text
-                print(f"   📝 Raw Claude response: {response_text[:300]}...")
+                # Build Gemini API request
+                request_data = {
+                    "contents": [
+                        {
+                            "role": "user",
+                            "parts": [{"text": system_prompt + "\n\nGenerate the components now. Return ONLY valid JSON."}]
+                        }
+                    ],
+                    "generationConfig": {
+                        "temperature": self.config.temperature,
+                        "maxOutputTokens": self.config.max_tokens,
+                        "responseMimeType": "application/json"
+                    }
+                }
+                
+                response = requests.post(self.api_url, json=request_data, timeout=self.config.timeout)
+                
+                # Handle rate limiting
+                if response.status_code == 429:
+                    wait_time = (attempt + 1) * 3
+                    print(f"   ⚠️ Rate limited, waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+                
+                response.raise_for_status()
+                response_json = response.json()
+                
+                # Extract response text from Gemini format
+                response_text = response_json['candidates'][0]['content']['parts'][0]['text']
+                print(f"   📝 Raw Gemini response: {response_text[:300]}...")
                 
                 # Remove markdown code blocks if present
                 import re
