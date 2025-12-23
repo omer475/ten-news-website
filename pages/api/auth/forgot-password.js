@@ -24,12 +24,12 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get the site URL for the redirect
+    // Get the site URL for the redirect - use dedicated reset password page
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
                     (process.env.NODE_ENV === 'production' 
                       ? 'https://tennews.ai' 
                       : 'http://localhost:3000')
-    const redirectUrl = `${siteUrl}/auth/callback?type=recovery`
+    const redirectUrl = `${siteUrl}/auth/reset-password`
 
     console.log('🔐 Password reset request for:', email)
     console.log('📍 Redirect URL:', redirectUrl)

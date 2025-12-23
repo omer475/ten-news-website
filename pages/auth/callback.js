@@ -17,15 +17,28 @@ export default function AuthCallback() {
     const supabase = createClient()
     
     // Check if this is a password reset (recovery) flow
+    // Supabase can put type in query params OR in the hash fragment
     const urlParams = new URLSearchParams(window.location.search)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const type = urlParams.get('type') || hashParams.get('type')
+    const hash = window.location.hash.substring(1)
+    const hashParams = new URLSearchParams(hash)
     
-    console.log('Callback type:', type)
-    console.log('URL:', window.location.href)
+    // Check multiple places for recovery type
+    const queryType = urlParams.get('type')
+    const hashType = hashParams.get('type')
+    const isRecoveryUrl = window.location.href.includes('type=recovery')
+    const isRecoveryHash = hash.includes('type=recovery')
     
-    if (type === 'recovery') {
+    console.log('Callback URL:', window.location.href)
+    console.log('Query type:', queryType)
+    console.log('Hash type:', hashType)
+    console.log('Is recovery URL:', isRecoveryUrl)
+    console.log('Is recovery Hash:', isRecoveryHash)
+    
+    const isRecovery = queryType === 'recovery' || hashType === 'recovery' || isRecoveryUrl || isRecoveryHash
+    
+    if (isRecovery) {
       // This is a password reset flow
+      console.log('🔐 Password reset flow detected')
       setIsPasswordReset(true)
       setStatus('Reset Your Password')
       
@@ -35,6 +48,20 @@ export default function AuthCallback() {
       // Regular email verification
       setStatus('Verifying your email...')
       handleSession(supabase, false)
+    }
+    
+    // Also listen for PASSWORD_RECOVERY event
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event)
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('🔐 PASSWORD_RECOVERY event detected')
+        setIsPasswordReset(true)
+        setStatus('Reset Your Password')
+      }
+    })
+    
+    return () => {
+      authListener?.subscription?.unsubscribe()
     }
   }, [])
 
