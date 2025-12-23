@@ -2168,16 +2168,30 @@ export default function Home() {
         body: JSON.stringify({ email, password, fullName }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError);
+        setAuthError('Server error. Please try again.');
+        return;
+      }
+
+      console.log('Signup response:', { ok: response.ok, status: response.status, data });
 
       if (response.ok && data.success) {
         setAuthModal(null);
         setEmailConfirmation({ email });
       } else {
-        // Ensure we always display a proper error string
-        const errorMessage = typeof data.message === 'string' 
-          ? data.message 
-          : (typeof data.error === 'string' ? data.error : 'Signup failed. Please try again.');
+        // Ensure we always display a proper error string, never an object
+        let errorMessage = 'Signup failed. Please try again.';
+        if (typeof data === 'string') {
+          errorMessage = data;
+        } else if (data && typeof data.message === 'string' && data.message.length > 0) {
+          errorMessage = data.message;
+        } else if (data && typeof data.error === 'string' && data.error.length > 0) {
+          errorMessage = data.error;
+        }
         setAuthError(errorMessage);
       }
     } catch (error) {
@@ -4944,6 +4958,9 @@ export default function Home() {
                 >
                   <h2>Create Your Account</h2>
                   <p>Create a free account to continue reading more news.</p>
+                  {authError && (
+                    <div className="auth-error" style={{ marginBottom: '16px' }}>{authError}</div>
+                  )}
                   <SignupForm onSubmit={handleSignup} />
                   <div className="paywall-footer" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
                     <p>Already have an account? <button className="auth-switch" onClick={() => setAuthModal('login')} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); }} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>Login</button></p>

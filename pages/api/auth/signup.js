@@ -16,6 +16,7 @@ export default async function handler(req, res) {
   if (!email || !password || !fullName) {
     console.error('❌ Missing required fields')
     return res.status(400).json({
+      success: false,
       message: 'Email, password, and full name are required'
     })
   }
@@ -24,6 +25,7 @@ export default async function handler(req, res) {
   if (password.length < 8) {
     console.error('❌ Password too short')
     return res.status(400).json({
+      success: false,
       message: 'Password must be at least 8 characters long'
     })
   }
@@ -36,7 +38,8 @@ export default async function handler(req, res) {
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ Supabase credentials missing:', { hasUrl: !!supabaseUrl, hasKey: !!supabaseKey })
       return res.status(500).json({
-        message: 'Server configuration error. Please contact support.'
+        success: false,
+        message: 'Server configuration error. Please try again later.'
       })
     }
 
@@ -101,22 +104,35 @@ export default async function handler(req, res) {
           error.message.includes('already been registered') ||
           error.message.includes('already exists')) {
         return res.status(409).json({
+          success: false,
           message: 'You already have an account with this email address. Please try logging in instead.',
           error: error.message
         })
       }
 
       return res.status(error.status || 400).json({
-        message: error.message || 'Signup failed',
+        success: false,
+        message: error.message || 'Signup failed. Please try again.',
         error: error.message
       })
     }
 
     if (!data || !data.user) {
-      console.error('❌ No user data returned from Supabase:', data)
+      console.error('❌ No user data returned from Supabase:', JSON.stringify(data))
       return res.status(500).json({
-        message: 'User creation failed. No user data returned.',
-        error: 'No user data'
+        success: false,
+        message: 'User creation failed. Please try again.',
+        error: 'No user data returned'
+      })
+    }
+
+    // Check if user already exists (Supabase returns user with empty identities array)
+    if (data.user.identities && data.user.identities.length === 0) {
+      console.log('⚠️ User already exists (empty identities array):', email)
+      return res.status(409).json({
+        success: false,
+        message: 'An account with this email already exists. Please try logging in instead.',
+        error: 'User already exists'
       })
     }
 
@@ -235,8 +251,9 @@ export default async function handler(req, res) {
       fullError: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
     })
     return res.status(500).json({ 
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Please try again later'
+      success: false,
+      message: 'Something went wrong. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     })
   }
 }
