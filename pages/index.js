@@ -7972,10 +7972,68 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [settingUpSession, setSettingUpSession] = useState(true);
+
+  // Set up session from URL tokens when modal mounts
+  useEffect(() => {
+    const setupSession = async () => {
+      try {
+        // Check if there are tokens in the URL hash
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+          console.log('🔐 Found tokens in URL, setting up session...');
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const access_token = hashParams.get('access_token');
+          const refresh_token = hashParams.get('refresh_token');
+
+          if (access_token && refresh_token) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token,
+              refresh_token
+            });
+
+            if (error) {
+              console.error('❌ Error setting session:', error);
+              setError('Failed to verify reset link. Please request a new one.');
+              setSettingUpSession(false);
+              return;
+            }
+
+            if (data?.session) {
+              console.log('✅ Session established for password reset');
+              setSessionReady(true);
+            }
+          }
+        } else {
+          // Try to get existing session
+          const { data } = await supabase.auth.getSession();
+          if (data?.session) {
+            console.log('✅ Existing session found');
+            setSessionReady(true);
+          } else {
+            setError('Reset link expired or invalid. Please request a new one.');
+          }
+        }
+      } catch (err) {
+        console.error('❌ Session setup error:', err);
+        setError('Failed to verify reset link. Please try again.');
+      } finally {
+        setSettingUpSession(false);
+      }
+    };
+
+    setupSession();
+  }, [supabase]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!sessionReady) {
+      setError('Session not ready. Please wait or request a new reset link.');
+      return;
+    }
 
     if (newPassword.length < 8) {
       setError('Password must be at least 8 characters');
@@ -8010,6 +8068,22 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
       setLoading(false);
     }
   };
+
+  if (settingUpSession) {
+    return (
+      <div className="auth-modal" onClick={(e) => e.stopPropagation()} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+        <div className="auth-modal-header">
+          <h2>Reset Password</h2>
+        </div>
+        <div className="auth-modal-body" style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <div style={{ fontSize: '32px', marginBottom: '16px' }}>⏳</div>
+          <p style={{ color: '#666', fontSize: '16px' }}>
+            Verifying reset link...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
