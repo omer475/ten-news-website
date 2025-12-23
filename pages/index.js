@@ -2170,9 +2170,18 @@ export default function Home() {
 
       let data;
       try {
-        data = await response.json();
+        const text = await response.text();
+        console.log('Raw response:', text);
+        console.log('Response status:', response.status);
+        try {
+          data = JSON.parse(text);
+        } catch (jsonError) {
+          console.error('Failed to parse JSON:', jsonError, 'Raw text:', text);
+          setAuthError('Server error: Invalid response. Status: ' + response.status);
+          return;
+        }
       } catch (parseError) {
-        console.error('Failed to parse response:', parseError);
+        console.error('Failed to get response:', parseError);
         setAuthError('Server error. Please try again.');
         return;
       }
