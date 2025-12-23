@@ -2170,15 +2170,47 @@ export default function Home() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         setAuthModal(null);
         setEmailConfirmation({ email });
       } else {
-        setAuthError(data.message || 'Signup failed');
+        // Ensure we always display a proper error string
+        const errorMessage = typeof data.message === 'string' 
+          ? data.message 
+          : (typeof data.error === 'string' ? data.error : 'Signup failed. Please try again.');
+        setAuthError(errorMessage);
       }
     } catch (error) {
       console.error('Signup error:', error);
-      setAuthError('Signup failed. Please try again.');
+      setAuthError('Signup failed. Please check your connection and try again.');
+    }
+  };
+
+  const handleForgotPassword = async (email) => {
+    setAuthError('');
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAuthModal(null);
+        setEmailConfirmation({ email, type: 'reset' });
+      } else {
+        const errorMessage = typeof data.message === 'string' 
+          ? data.message 
+          : 'Failed to send reset email. Please try again.';
+        setAuthError(errorMessage);
+      }
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      setAuthError('Failed to send reset email. Please try again.');
     }
   };
 
@@ -7452,7 +7484,7 @@ export default function Home() {
               )}
 
               {authModal === 'login' ? (
-                <LoginForm onSubmit={handleLogin} formData={formData} setFormData={setFormData} />
+                <LoginForm onSubmit={handleLogin} onForgotPassword={handleForgotPassword} formData={formData} setFormData={setFormData} />
               ) : (
                 <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
               )}
@@ -7474,6 +7506,7 @@ export default function Home() {
         <div className="auth-modal-overlay" onClick={() => setEmailConfirmation(null)} onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); setEmailConfirmation(null); } }} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
           <EmailConfirmation
             email={emailConfirmation.email}
+            type={emailConfirmation.type}
             onBack={() => setEmailConfirmation(null)}
           />
         </div>
@@ -7483,10 +7516,12 @@ export default function Home() {
 }
 
 // Login Form Component
-function LoginForm({ onSubmit, formData, setFormData }) {
+function LoginForm({ onSubmit, onForgotPassword, formData, setFormData }) {
   const [email, setEmail] = useState(formData?.loginEmail || '');
   const [password, setPassword] = useState(formData?.loginPassword || '');
   const [loading, setLoading] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Sync with global formData
   useEffect(() => {
@@ -7508,6 +7543,69 @@ function LoginForm({ onSubmit, formData, setFormData }) {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setResetLoading(true);
+    try {
+      await onForgotPassword(email);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  if (forgotPasswordMode) {
+    return (
+      <form onSubmit={handleForgotPassword} className="auth-form" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+        <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '16px', textAlign: 'center' }}>
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
+        <div className="auth-field" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+          <label htmlFor="reset-email">Email</label>
+          <input
+            id="reset-email"
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setFormData(prev => ({ ...prev, loginEmail: e.target.value }));
+            }}
+            onKeyDown={(e) => e.stopPropagation()}
+            placeholder="Enter your email"
+            required
+            style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          className="auth-submit" 
+          disabled={resetLoading}
+          style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+        >
+          {resetLoading ? 'Sending...' : 'Send Reset Link'}
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => setForgotPasswordMode(false)}
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            color: '#3b82f6', 
+            cursor: 'pointer', 
+            fontSize: '14px',
+            marginTop: '12px',
+            textDecoration: 'underline'
+          }}
+        >
+          Back to Login
+        </button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="auth-form" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
@@ -7544,6 +7642,24 @@ function LoginForm({ onSubmit, formData, setFormData }) {
           style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
         />
       </div>
+
+      <button 
+        type="button"
+        onClick={() => setForgotPasswordMode(true)}
+        style={{ 
+          background: 'none', 
+          border: 'none', 
+          color: '#3b82f6', 
+          cursor: 'pointer', 
+          fontSize: '14px',
+          marginBottom: '8px',
+          textAlign: 'right',
+          width: '100%',
+          padding: 0
+        }}
+      >
+        Forgot password?
+      </button>
 
       <button 
         type="submit" 
@@ -7680,7 +7796,9 @@ function SignupForm({ onSubmit, formData, setFormData }) {
 }
 
 // Email Confirmation Component
-function EmailConfirmation({ email, onBack }) {
+function EmailConfirmation({ email, type, onBack }) {
+  const isReset = type === 'reset';
+  
   return (
     <div className="auth-modal" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
       <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
@@ -7694,14 +7812,14 @@ function EmailConfirmation({ email, onBack }) {
             fontSize: '48px',
             marginBottom: '16px',
             opacity: '0.8'
-          }}>📧</div>
+          }}>{isReset ? '🔐' : '📧'}</div>
 
           <h3 style={{
             color: '#1f2937',
             fontSize: '20px',
             fontWeight: '600',
             margin: '0 0 12px 0'
-          }}>Verification Email Sent!</h3>
+          }}>{isReset ? 'Password Reset Email Sent!' : 'Verification Email Sent!'}</h3>
 
           <p style={{
             color: '#6b7280',
@@ -7709,7 +7827,10 @@ function EmailConfirmation({ email, onBack }) {
             lineHeight: '1.5',
             margin: '0 0 20px 0'
           }}>
-            We've sent a verification link to <strong>{email}</strong>
+            {isReset 
+              ? <>We've sent a password reset link to <strong>{email}</strong></>
+              : <>We've sent a verification link to <strong>{email}</strong></>
+            }
           </p>
 
           <div style={{
@@ -7732,8 +7853,8 @@ function EmailConfirmation({ email, onBack }) {
               lineHeight: '1.6'
             }}>
               <li>Check your email inbox (and spam folder)</li>
-              <li>Click the verification link</li>
-              <li>Return here and log in with your credentials</li>
+              <li>Click the {isReset ? 'reset' : 'verification'} link</li>
+              <li>{isReset ? 'Create a new password' : 'Return here and log in with your credentials'}</li>
             </ol>
           </div>
 

@@ -202,19 +202,40 @@ OUTPUT FORMAT:
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Generate EXACTLY 3 fact cards NOT in the bullet summary.
+Generate AT LEAST 5 fact cards, we will select the best 3.
+
+⚠️ CRITICAL: EVERY detail value MUST contain a NUMBER (digit 0-9)
+Details WITHOUT numbers will be REJECTED.
 
 RULES:
-✓ Every fact MUST contain a number
+✓ EVERY value MUST have at least one digit (0-9)
 ✓ Facts must NOT duplicate bullet summary
 ✓ MAX 7 words per detail
-✓ Prioritize interesting "hidden" facts from article
+✓ Prioritize interesting "hidden" facts with statistics
+
+✅ GOOD EXAMPLES (all have numbers):
+[
+  {"label": "Company founded", "value": "2019"},
+  {"label": "Employees affected", "value": "14,000 workers"},
+  {"label": "Stock decline", "value": "Down 8.5%"},
+  {"label": "Revenue", "value": "$23.4 billion"},
+  {"label": "Duration", "value": "90 minutes"}
+]
+
+❌ BAD EXAMPLES (NO numbers - will be REJECTED):
+[
+  {"label": "Status", "value": "Ongoing"},
+  {"label": "Location", "value": "Multiple sites"},
+  {"label": "Outcome", "value": "Under investigation"}
+]
 
 OUTPUT FORMAT:
 [
-  {"label": "SNL season", "value": "50th anniversary"},
-  {"label": "Episode runtime", "value": "90 minutes"},
-  {"label": "James Austin Johnson tenure", "value": "Since 2021"}
+  {"label": "Short label", "value": "Value WITH number"},
+  {"label": "Short label", "value": "Value WITH number"},
+  {"label": "Short label", "value": "Value WITH number"},
+  {"label": "Short label", "value": "Value WITH number"},
+  {"label": "Short label", "value": "Value WITH number"}
 ]
 
 ═══════════════════════════════════════════════════════════════
@@ -471,20 +492,23 @@ class ClaudeComponentWriter:
         if 'details' in selected_components:
             if 'details' not in result:
                 errors.append("Details selected but not in output")
-            elif len(result['details']) != 3:
-                errors.append(f"Details count: {len(result['details'])} (need exactly 3)")
             else:
-                for i, detail in enumerate(result['details']):
-                    # Handle both old format (string) and new format (dict with label/value)
+                # Filter to only details that have numbers, then keep best 3
+                valid_details = []
+                for detail in result['details']:
                     if isinstance(detail, dict):
-                        # New format: {"label": "...", "value": "..."}
                         value = str(detail.get('value', ''))
-                        if not any(char.isdigit() for char in value):
-                            errors.append(f"Detail {i+1} has no number in value: '{value}'")
+                        if any(char.isdigit() for char in value):
+                            valid_details.append(detail)
                     elif isinstance(detail, str):
-                        # Old format: "Label: Value"
-                        if not any(char.isdigit() for char in detail):
-                            errors.append(f"Detail {i+1} has no number: '{detail}'")
+                        if any(char.isdigit() for char in detail):
+                            valid_details.append(detail)
+                
+                if len(valid_details) >= 3:
+                    # Keep only the first 3 valid details (with numbers)
+                    result['details'] = valid_details[:3]
+                else:
+                    errors.append(f"Only {len(valid_details)} details have numbers (need at least 3)")
         
         if 'graph' in selected_components:
             if 'graph' not in result:
