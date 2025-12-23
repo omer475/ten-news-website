@@ -1,16 +1,18 @@
-import { createClient } from '@supabase/supabase-js'
-
 export default async function handler(req, res) {
-  // Always set JSON content type
+  // Always set JSON content type first
   res.setHeader('Content-Type', 'application/json')
   
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' })
-  }
-
-  console.log('📝 Signup request received')
-
+  // Wrap everything in try-catch to catch any errors including import errors
   try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ success: false, message: 'Method not allowed' })
+    }
+
+    console.log('📝 Signup request received')
+
+    // Dynamic import to catch any import errors
+    const { createClient } = await import('@supabase/supabase-js')
+    
     const body = req.body || {}
     const { email, password, fullName } = body
 
