@@ -4,185 +4,258 @@ import { createClient } from '../../lib/supabase'
 
 export default function AuthCallback() {
   const router = useRouter()
-  const [status, setStatus] = useState('Verifying your email...')
+  const [status, setStatus] = useState('Processing...')
   const [error, setError] = useState(null)
-  const [debugInfo, setDebugInfo] = useState([])
-  
-  const addDebugInfo = (message) => {
-    setDebugInfo(prev => [...prev, message])
-    console.log(message)
-  }
+  const [isPasswordReset, setIsPasswordReset] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
     
-    addDebugInfo('🔐 Processing email confirmation callback...')
-    addDebugInfo(`📍 URL: ${window.location.href.substring(0, 100)}...`)
+    // Check if this is a password reset (recovery) flow
+    const urlParams = new URLSearchParams(window.location.search)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const type = urlParams.get('type') || hashParams.get('type')
     
-    const urlHash = window.location.hash.substring(0, 200)
-    const urlSearch = window.location.search
-    addDebugInfo(`📍 Hash: ${urlHash ? urlHash.substring(0, 50) + '...' : 'empty'}`)
-    addDebugInfo(`📍 Search: ${urlSearch || 'empty'}`)
+    console.log('Callback type:', type)
+    console.log('URL:', window.location.href)
     
-    let sessionHandled = false
-    
-    // Set up auth state change listener to catch the session when it's set
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      addDebugInfo(`🔄 Auth state changed: ${event} ${session ? '(Session exists)' : '(No session)'}`)
+    if (type === 'recovery') {
+      // This is a password reset flow
+      setIsPasswordReset(true)
+      setStatus('Reset Your Password')
       
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !sessionHandled) {
-        sessionHandled = true
-        addDebugInfo(`✅ Session obtained! User: ${session.user.email}`)
-        setStatus('Email verified successfully!')
+      // Still need to set the session from the tokens
+      handleSession(supabase, true)
+    } else {
+      // Regular email verification
+      setStatus('Verifying your email...')
+      handleSession(supabase, false)
+    }
+  }, [])
+
+  const handleSession = async (supabase, isRecovery) => {
+    try {
+      // If there's a hash fragment with tokens, set session
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const access_token = hashParams.get('access_token')
+        const refresh_token = hashParams.get('refresh_token')
         
-        // Store session in localStorage (Supabase client automatically saves to its own storage)
-        localStorage.setItem('tennews_session', JSON.stringify(session))
-        localStorage.setItem('tennews_user', JSON.stringify(session.user))
-        addDebugInfo('💾 Session saved to localStorage')
-        
-        // Wait a moment to ensure session is fully set in Supabase client
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Redirect to home page
-        addDebugInfo('🔄 Redirecting to home page...')
-        setTimeout(() => {
-          router.push('/?verified=true')
-        }, 1500)
-      }
-    })
-    
-    // Also try to get session immediately
-    const checkSession = async () => {
-      try {
-        // If there's a hash fragment with tokens, manually extract and set session
-        if (window.location.hash && window.location.hash.includes('access_token')) {
-          addDebugInfo('🔑 Hash fragment detected, manually parsing tokens...')
+        if (access_token && refresh_token) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token
+          })
           
-          // Parse the hash fragment
-          const hashParams = new URLSearchParams(window.location.hash.substring(1))
-          const access_token = hashParams.get('access_token')
-          const refresh_token = hashParams.get('refresh_token')
-          
-          if (access_token && refresh_token) {
-            addDebugInfo('🔓 Tokens found, setting session...')
-            
-            // Manually set the session with the tokens
-            const { data, error } = await supabase.auth.setSession({
-              access_token,
-              refresh_token
-            })
-            
-            if (error) {
-              addDebugInfo(`❌ Error setting session: ${error.message}`)
-              setError(`Session setup failed: ${error.message}`)
-              setStatus('Verification failed')
-              return
-            }
-            
-            if (data?.session) {
-              addDebugInfo(`✅ Session created! User: ${data.session.user.email}`)
-              setStatus('Email verified successfully!')
-              
-              localStorage.setItem('tennews_session', JSON.stringify(data.session))
-              localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
-              addDebugInfo('💾 Session saved to localStorage')
-              
-              addDebugInfo('🔄 Redirecting to home page...')
-              setTimeout(() => {
-                router.push('/?verified=true')
-              }, 1500)
-              return
-            }
-          } else {
-            addDebugInfo('⚠️ Tokens not found in hash fragment')
-          }
-        }
-        
-        // Check for code in query params
-        const urlParams = new URLSearchParams(window.location.search)
-        const code = urlParams.get('code')
-        
-        if (code) {
-          addDebugInfo('📧 Found code in URL, exchanging for session...')
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-          
-          if (exchangeError) {
-            addDebugInfo(`❌ Code exchange error: ${exchangeError.message}`)
-            setError(`Code exchange failed: ${exchangeError.message}`)
-          } else if (data.session) {
-            addDebugInfo('✅ Session obtained from code exchange!')
-            setStatus('Email verified successfully!')
-            
-            localStorage.setItem('tennews_session', JSON.stringify(data.session))
-            localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
-            addDebugInfo('💾 Session saved to localStorage')
-            
-            addDebugInfo('🔄 Redirecting to home page...')
-            setTimeout(() => {
-              router.push('/?verified=true')
-            }, 1500)
+          if (error) {
+            setError(`Session setup failed: ${error.message}`)
             return
           }
+          
+          if (data?.session && !isRecovery) {
+            // Only auto-redirect for email verification, not password reset
+            localStorage.setItem('tennews_session', JSON.stringify(data.session))
+            localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
+            setStatus('Email verified successfully!')
+            setTimeout(() => router.push('/?verified=true'), 1500)
+          }
+          return
         }
-        
-        // Try getting session
-        addDebugInfo('📧 Getting session from Supabase...')
-        const { data, error } = await supabase.auth.getSession()
+      }
+      
+      // Check for code in query params
+      const urlParams = new URLSearchParams(window.location.search)
+      const code = urlParams.get('code')
+      
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         
         if (error) {
-          addDebugInfo(`❌ Get session error: ${error.message}`)
-          setError(`Email verification failed: ${error.message}`)
-          setStatus('Verification failed')
+          setError(`Verification failed: ${error.message}`)
           return
         }
         
-        if (data.session) {
-          addDebugInfo(`✅ Session found! User: ${data.session.user.email}`)
-          setStatus('Email verified successfully!')
-          
-          // Save to localStorage (Supabase client automatically saves to its own storage)
+        if (data?.session && !isRecovery) {
           localStorage.setItem('tennews_session', JSON.stringify(data.session))
           localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
-          addDebugInfo('💾 Session saved to localStorage')
-          
-          // Ensure Supabase client has the session by refreshing
-          await supabase.auth.refreshSession()
-          addDebugInfo('🔄 Session refreshed in Supabase client')
-          
-          // Wait a moment to ensure session is fully set
-          await new Promise(resolve => setTimeout(resolve, 500))
-          
-          addDebugInfo('🔄 Redirecting to home page...')
-          setTimeout(() => {
-            router.push('/?verified=true')
-          }, 1500)
-        } else {
-          addDebugInfo('⏳ No session yet, waiting for auth state change...')
-          // Wait a bit for the auth state change listener to fire
-          setTimeout(async () => {
-            const { data: retryData } = await supabase.auth.getSession()
-            if (!retryData?.session) {
-              addDebugInfo('❌ No session found after waiting')
-              setError('No session found. The confirmation link may have expired. Please try signing up again.')
-              setStatus('Verification failed')
-            }
-          }, 3000)
+          setStatus('Email verified successfully!')
+          setTimeout(() => router.push('/?verified=true'), 1500)
         }
-      } catch (err) {
-        addDebugInfo(`❌ Callback error: ${err.message}`)
-        setError(`An error occurred: ${err.message}`)
-        setStatus('Verification failed')
       }
+    } catch (err) {
+      setError(`An error occurred: ${err.message}`)
     }
-    
-    checkSession()
-    
-    // Cleanup listener on unmount
-    return () => {
-      authListener?.subscription?.unsubscribe()
-    }
-  }, [router])
+  }
 
+  const handlePasswordReset = async (e) => {
+    e.preventDefault()
+    setPasswordError('')
+    
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
+      return
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+    
+    setLoading(true)
+    
+    try {
+      const supabase = createClient()
+      
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+      
+      if (error) {
+        setPasswordError(error.message)
+        setLoading(false)
+        return
+      }
+      
+      setPasswordSuccess(true)
+      setStatus('Password updated successfully!')
+      
+      // Redirect to home after 2 seconds
+      setTimeout(() => {
+        router.push('/')
+      }, 2000)
+      
+    } catch (err) {
+      setPasswordError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Password Reset Form
+  if (isPasswordReset && !passwordSuccess) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ffffff',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        padding: '20px'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '360px',
+          width: '100%'
+        }}>
+          <div style={{ marginBottom: '24px' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: '#000000',
+            marginBottom: '8px'
+          }}>
+            Reset Your Password
+          </h1>
+          
+          <p style={{
+            color: '#666666',
+            fontSize: '14px',
+            marginBottom: '24px'
+          }}>
+            Enter your new password below
+          </p>
+          
+          <form onSubmit={handlePasswordReset}>
+            <div style={{ marginBottom: '16px', textAlign: 'left' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  fontSize: '16px',
+                  border: '1px solid #d2d2d7',
+                  borderRadius: '8px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '16px', textAlign: 'left' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  fontSize: '16px',
+                  border: '1px solid #d2d2d7',
+                  borderRadius: '8px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            
+            {passwordError && (
+              <p style={{
+                color: '#dc2626',
+                fontSize: '14px',
+                marginBottom: '16px',
+                textAlign: 'left'
+              }}>
+                {passwordError}
+              </p>
+            )}
+            
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '500',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
+              }}
+            >
+              {loading ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // Success/Error/Loading View
   return (
     <div style={{
       minHeight: '100vh',
@@ -198,68 +271,45 @@ export default function AuthCallback() {
         maxWidth: '360px',
         width: '100%'
       }}>
-        {/* Icon */}
-        <div style={{
-          marginBottom: '32px',
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
+        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}>
           {error ? (
-            // Error X Icon
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="15" y1="9" x2="9" y2="15"></line>
               <line x1="9" y1="9" x2="15" y2="15"></line>
             </svg>
           ) : status.includes('successfully') ? (
-            // Success Check Icon
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="9 12 11 14 15 10"></polyline>
             </svg>
           ) : (
-            // Loading Spinner Icon
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
               <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8"></circle>
             </svg>
           )}
         </div>
         
-        {/* Title */}
         <h1 style={{
           fontSize: '20px',
           fontWeight: '500',
           color: '#000000',
-          marginBottom: '8px',
-          letterSpacing: '-0.3px'
+          marginBottom: '8px'
         }}>
           {status}
         </h1>
         
-        {/* Subtitle */}
-        {!error && status.includes('successfully') && (
-          <p style={{
-            color: '#666666',
-            fontSize: '14px',
-            fontWeight: '400',
-            marginTop: '8px'
-          }}>
+        {status.includes('successfully') && (
+          <p style={{ color: '#666666', fontSize: '14px', marginTop: '8px' }}>
             Redirecting...
           </p>
         )}
         
-        {/* Error Message */}
         {error && (
           <div style={{ marginTop: '16px' }}>
-            <p style={{
-              color: '#666666',
-              fontSize: '14px',
-              marginBottom: '24px',
-              lineHeight: '1.5'
-            }}>
+            <p style={{ color: '#666666', fontSize: '14px', marginBottom: '24px' }}>
               {error}
             </p>
-            
             <button
               onClick={() => router.push('/')}
               style={{
@@ -270,72 +320,19 @@ export default function AuthCallback() {
                 border: 'none',
                 fontSize: '14px',
                 fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'opacity 0.2s ease'
+                cursor: 'pointer'
               }}
-              onMouseOver={(e) => e.target.style.opacity = '0.8'}
-              onMouseOut={(e) => e.target.style.opacity = '1'}
             >
               Go Home
             </button>
           </div>
         )}
-        
-        {/* Loading Dots */}
-        {!error && !status.includes('successfully') && (
-          <div style={{
-            marginTop: '24px',
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '8px'
-          }}>
-            <div style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: '#000000',
-              animation: 'dot1 1.4s infinite'
-            }} />
-            <div style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: '#000000',
-              animation: 'dot2 1.4s infinite'
-            }} />
-            <div style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: '#000000',
-              animation: 'dot3 1.4s infinite'
-            }} />
-          </div>
-        )}
       </div>
       
-      {/* CSS Animations */}
       <style jsx>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
-        }
-        
-        @keyframes dot1 {
-          0%, 80%, 100% { opacity: 0.3; }
-          40% { opacity: 1; }
-        }
-        
-        @keyframes dot2 {
-          0%, 80%, 100% { opacity: 0.3; }
-          40% { opacity: 1; }
-          0% { animation-delay: 0.2s; }
-        }
-        
-        @keyframes dot3 {
-          0%, 80%, 100% { opacity: 0.3; }
-          40% { opacity: 1; }
-          0% { animation-delay: 0.4s; }
         }
       `}</style>
     </div>
