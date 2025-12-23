@@ -2,16 +2,28 @@ export default async function handler(req, res) {
   // Always set JSON content type first
   res.setHeader('Content-Type', 'application/json')
   
+  console.log('🔵 Signup endpoint hit:', req.method)
+  
   // Wrap everything in try-catch to catch any errors including import errors
   try {
     if (req.method !== 'POST') {
       return res.status(405).json({ success: false, message: 'Method not allowed' })
     }
 
-    console.log('📝 Signup request received')
+    console.log('📝 Signup POST request received')
+    console.log('📝 Body type:', typeof req.body)
+    console.log('📝 Body:', JSON.stringify(req.body))
+
+    // TEMPORARY: Test if we can respond to POST at all
+    // Remove this after testing
+    if (req.query.test === 'early') {
+      return res.status(200).json({ success: true, message: 'Early test passed', body: req.body })
+    }
 
     // Dynamic import to catch any import errors
+    console.log('📦 Importing Supabase...')
     const { createClient } = await import('@supabase/supabase-js')
+    console.log('✅ Supabase imported')
     
     const body = req.body || {}
     const { email, password, fullName } = body
