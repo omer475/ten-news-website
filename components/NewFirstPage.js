@@ -151,63 +151,101 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     'georgia': 268, 'czech republic': 203, 'hungary': 348, 'romania': 642, 'bulgaria': 100
   };
 
+  // Time-based theme colors for professional design
+  const getTimeTheme = () => {
+    const time = getTimeOfDay();
+    const themes = {
+      morning: {
+        greeting: 'Good morning',
+        primary: '#f97316',      // Warm orange
+        secondary: '#ea580c',    // Deep orange
+        accent: '#fbbf24',       // Golden yellow
+        gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%)',
+        glow: 'rgba(249, 115, 22, 0.3)'
+      },
+      afternoon: {
+        greeting: 'Good afternoon',
+        primary: '#0ea5e9',      // Sky blue
+        secondary: '#0284c7',    // Ocean blue
+        accent: '#06b6d4',       // Cyan
+        gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%)',
+        glow: 'rgba(14, 165, 233, 0.3)'
+      },
+      evening: {
+        greeting: 'Good evening',
+        primary: '#8b5cf6',      // Violet
+        secondary: '#7c3aed',    // Purple
+        accent: '#a855f7',       // Magenta
+        gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
+        glow: 'rgba(139, 92, 246, 0.3)'
+      },
+      night: {
+        greeting: 'Good evening',
+        primary: '#6366f1',      // Indigo
+        secondary: '#4f46e5',    // Deep indigo
+        accent: '#818cf8',       // Light indigo
+        gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%)',
+        glow: 'rgba(99, 102, 241, 0.3)'
+      }
+    };
+    return themes[time];
+  };
+
   // Generate personalized greeting
   const getPersonalizedGreeting = () => {
-    const time = getTimeOfDay();
-    const name = firstName ? ` ${firstName}` : '';
+    const theme = getTimeTheme();
     const analysis = analyzeStories();
     const lastVisit = getLastVisitInfo();
     
     // Use the precise time text from getLastVisitInfo
     const timePeriod = lastVisit.text;
-    
-    const greetings = {
-      morning: `Good morning${name}`,
-      afternoon: `Good afternoon${name}`,
-      evening: `Good evening${name}`,
-      night: `Good evening${name}`
-    };
 
     const topCat = analysis.topCategories[0] || 'current events';
     const catLabel = categoryLabels[topCat] || topCat;
     const capCat = catLabel.charAt(0).toUpperCase() + catLabel.slice(1);
 
+    // Generate sub messages with highlight markers for styling
     let subMessages = [];
     if (analysis.hasBreaking) {
       subMessages = [
-        `Major ${catLabel} developments ${timePeriod}`,
-        `Breaking ${catLabel} news ${timePeriod}`,
-        `Important ${catLabel} updates ${timePeriod}`
+        { highlight: `Major ${catLabel} developments`, rest: timePeriod },
+        { highlight: `Breaking ${catLabel} news`, rest: timePeriod },
+        { highlight: `Important ${catLabel} updates`, rest: timePeriod }
       ];
     } else if (analysis.hasVeryHigh) {
       subMessages = [
-        `${capCat} had significant updates ${timePeriod}`,
-        `Notable ${catLabel} developments ${timePeriod}`,
-        `${capCat} made headlines ${timePeriod}`
+        { highlight: `${capCat} had significant updates`, rest: timePeriod },
+        { highlight: `Notable ${catLabel} developments`, rest: timePeriod },
+        { highlight: `${capCat} made headlines`, rest: timePeriod }
       ];
     } else if (analysis.highScoredCount >= 5) {
       subMessages = [
-        `Active day for ${catLabel} ${timePeriod}`,
-        `Plenty happening in ${catLabel} ${timePeriod}`,
-        `${capCat} has been busy ${timePeriod}`
+        { highlight: `Active day for ${catLabel}`, rest: timePeriod },
+        { highlight: `Plenty happening`, rest: `in ${catLabel} ${timePeriod}` },
+        { highlight: `${capCat} has been busy`, rest: timePeriod }
       ];
     } else if (analysis.highScoredCount >= 1) {
       subMessages = [
-        `Some ${catLabel} updates ${timePeriod}`,
-        `A few ${catLabel} stories ${timePeriod}`,
-        `${capCat} news ${timePeriod}`
+        { highlight: `Some ${catLabel} updates`, rest: timePeriod },
+        { highlight: `A few ${catLabel} stories`, rest: timePeriod },
+        { highlight: `${capCat} news`, rest: timePeriod }
       ];
     } else {
       subMessages = [
-        `Here's what's happening ${timePeriod}`,
-        `Your news update ${timePeriod}`,
-        `The latest ${timePeriod}`
+        { highlight: `Here's what's happening`, rest: timePeriod },
+        { highlight: `Your news update`, rest: timePeriod },
+        { highlight: `The latest`, rest: timePeriod }
       ];
     }
 
+    const selectedSub = subMessages[Math.floor(Math.random() * subMessages.length)];
+
     return {
-      hi: greetings[time],
-      sub: subMessages[Math.floor(Math.random() * subMessages.length)]
+      greeting: theme.greeting,
+      name: firstName || null,
+      subHighlight: selectedSub.highlight,
+      subRest: selectedSub.rest,
+      theme
     };
   };
 
@@ -541,23 +579,49 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-size: 42px;
           font-weight: 700;
           letter-spacing: -0.03em;
-          color: #0f172a;
           margin-bottom: 12px;
           line-height: 1.1;
         }
 
+        .greeting-name {
+          font-weight: 800;
+        }
+
         .greeting-sub {
-          font-size: 24px;
-          font-weight: 500;
-          line-height: 1.35;
-          letter-spacing: -0.01em;
-          color: #475569;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
           max-width: 340px;
           margin: 0 auto;
           margin-top: 8px;
         }
 
-        .greeting-sub::first-letter {
+        .sub-highlight {
+          font-size: 24px;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+          line-height: 1.35;
+          color: #1e293b;
+          text-align: center;
+        }
+
+        .sub-accent {
+          display: block;
+          width: 60px;
+          height: 3px;
+          border-radius: 3px;
+          opacity: 0.9;
+        }
+
+        .sub-rest {
+          font-size: 16px;
+          font-weight: 400;
+          color: #64748b;
+          letter-spacing: 0.01em;
+        }
+
+        .sub-rest::first-letter {
           text-transform: uppercase;
         }
 
@@ -627,9 +691,19 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-bottom: 10px;
           }
           .greeting-sub {
-            font-size: 20px;
             max-width: 300px;
+            gap: 10px;
+          }
+          .sub-highlight {
+            font-size: 20px;
             line-height: 1.35;
+          }
+          .sub-accent {
+            width: 50px;
+            height: 3px;
+          }
+          .sub-rest {
+            font-size: 14px;
           }
           .globe-section {
             overflow: hidden;
@@ -654,8 +728,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .greeting-hi {
             font-size: 32px;
           }
-          .greeting-sub {
+          .sub-highlight {
             font-size: 18px;
+          }
+          .sub-rest {
+            font-size: 13px;
             max-width: 260px;
           }
         }
@@ -670,8 +747,26 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       >
         <div className="content-wrapper">
           <div className="greeting-section">
-            <div className="greeting-hi">{personalGreeting.hi}</div>
-            <div className="greeting-sub">{personalGreeting.sub}</div>
+            <div 
+              className="greeting-hi"
+              style={{ 
+                background: personalGreeting.theme.gradient,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              {personalGreeting.greeting}
+              {personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
+            </div>
+            <div className="greeting-sub">
+              <span className="sub-highlight">{personalGreeting.subHighlight}</span>
+              <span 
+                className="sub-accent"
+                style={{ background: personalGreeting.theme.gradient }}
+              ></span>
+              <span className="sub-rest">{personalGreeting.subRest}</span>
+            </div>
           </div>
 
           <div className="globe-section">
