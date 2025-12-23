@@ -4924,7 +4924,7 @@ export default function Home() {
             style={{
               transform: `${
                 index === currentIndex 
-                  ? (story.type === 'opening' ? 'translateY(0)' : `translateY(${-dragOffset}px)`)
+                  ? `translateY(${-dragOffset}px)` 
                   : index < currentIndex 
                     ? `translateY(calc(-100% - ${dragOffset > 0 ? dragOffset * 0.8 : 0}px))` 
                     : `translateY(calc(100% - ${dragOffset < 0 ? dragOffset * 0.8 : 0}px))`
@@ -4935,13 +4935,12 @@ export default function Home() {
               background: 'transparent',
               boxSizing: 'border-box',
               // Instant response while dragging, smooth ease when releasing
-              // First page (opening) doesn't need transform transitions
-              transition: isDragging || story.type === 'opening'
+              transition: isDragging
                 ? 'none'
                 : `transform ${transitionDuration}s cubic-bezier(0.25, 0.1, 0.25, 1), opacity ${transitionDuration * 0.8}s ease-out`,
               overflow: 'hidden',
               touchAction: 'none',
-              willChange: story.type === 'opening' ? 'auto' : 'transform'
+              willChange: 'transform'
             }}
           >
             {/* Paywall for stories after streak page + 2 articles */}

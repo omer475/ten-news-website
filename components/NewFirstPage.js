@@ -487,7 +487,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       
       <style jsx>{`
         .first-page-container {
-          position: fixed;
+          position: absolute;
           top: 0;
           left: 0;
           right: 0;
@@ -495,7 +495,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           flex-direction: column;
           background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
-          z-index: 1000;
+          z-index: 1;
           overflow: hidden;
           font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
