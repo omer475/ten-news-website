@@ -1,52 +1,41 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Make Resend optional - only import if API key is set
-let resend = null
-if (process.env.RESEND_API_KEY) {
-  try {
-    const { Resend } = require('resend')
-    resend = new Resend(process.env.RESEND_API_KEY)
-  } catch (e) {
-    console.log('Resend not available:', e.message)
-  }
-}
-
 export default async function handler(req, res) {
-  // Set CORS headers
+  // Always set JSON content type
   res.setHeader('Content-Type', 'application/json')
   
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
 
-  try {
-    const { email, password, fullName } = req.body || {}
+  console.log('📝 Signup request received')
 
-    console.log('📝 Signup request received:', { email, hasPassword: !!password, fullName })
+  try {
+    const body = req.body || {}
+    const { email, password, fullName } = body
+
+    console.log('📝 Request body:', { email, hasPassword: !!password, fullName })
 
     if (!email || !password || !fullName) {
-      console.error('❌ Missing required fields')
       return res.status(400).json({
         success: false,
         message: 'Email, password, and full name are required'
       })
     }
 
-    // Validate password strength
     if (password.length < 8) {
-      console.error('❌ Password too short')
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 8 characters long'
       })
     }
 
-    // Use direct Supabase client for signup (more reliable than auth helpers)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+    console.log('🔧 Supabase config:', { hasUrl: !!supabaseUrl, hasKey: !!supabaseKey })
+
     if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ Supabase credentials missing:', { hasUrl: !!supabaseUrl, hasKey: !!supabaseKey })
       return res.status(500).json({
         success: false,
         message: 'Server configuration error. Please try again later.'
@@ -55,215 +44,82 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Check if user already exists in profiles table
-    console.log('🔍 Checking if user already exists...')
-    let existingProfile = null
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', email)
-        .single()
-      existingProfile = data
-    } catch (error) {
-      // Ignore error - user doesn't exist, which is fine
-      console.log('ℹ️ No existing profile found (expected for new users)')
-    }
-
-    // Note: We'll let Supabase handle duplicate detection in auth.users, but log if found in profiles
-    if (existingProfile) {
-      console.warn('⚠️ User exists in profiles table:', email)
-      // Don't block signup - Supabase will handle duplicate emails
-    }
-
-    // Create the user account
-    // Use environment variable for site URL, fallback to localhost for development
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-                    (process.env.NODE_ENV === 'production' 
-                      ? 'https://tennews.ai' 
-                      : 'http://localhost:3000')
+    // Get redirect URL
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tennews.ai'
     const redirectUrl = `${siteUrl}/auth/callback`
     
-    console.log('🔐 Signup attempt for:', email)
-    console.log('📍 Redirect URL:', redirectUrl)
-    console.log('🌍 Environment:', process.env.NODE_ENV)
-    
-    console.log('🚀 Attempting to create user in Supabase...')
+    console.log('🚀 Creating user with Supabase...')
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-        },
+        data: { full_name: fullName },
         emailRedirectTo: redirectUrl
       }
     })
 
     if (error) {
-      console.error('❌ Supabase signup error:', {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-        fullError: JSON.stringify(error, null, 2)
-      })
+      console.error('❌ Supabase error:', error.message)
       
-      // Handle specific Supabase errors
-      if (error.message.includes('already registered') || 
-          error.message.includes('User already registered') || 
-          error.message.includes('already been registered') ||
-          error.message.includes('already exists')) {
+      if (error.message.includes('already') || error.message.includes('exists')) {
         return res.status(409).json({
           success: false,
-          message: 'You already have an account with this email address. Please try logging in instead.',
-          error: error.message
+          message: 'An account with this email already exists. Please try logging in.'
         })
       }
 
-      return res.status(error.status || 400).json({
+      return res.status(400).json({
         success: false,
-        message: error.message || 'Signup failed. Please try again.',
-        error: error.message
+        message: error.message || 'Signup failed'
       })
     }
 
-    if (!data || !data.user) {
-      console.error('❌ No user data returned from Supabase:', JSON.stringify(data))
+    if (!data?.user) {
+      console.error('❌ No user data returned')
       return res.status(500).json({
         success: false,
-        message: 'User creation failed. Please try again.',
-        error: 'No user data returned'
+        message: 'Failed to create account. Please try again.'
       })
     }
 
-    // Check if user already exists (Supabase returns user with empty identities array)
-    if (data.user.identities && data.user.identities.length === 0) {
-      console.log('⚠️ User already exists (empty identities array):', email)
+    // Check if user already exists (empty identities means duplicate)
+    if (data.user.identities?.length === 0) {
       return res.status(409).json({
         success: false,
-        message: 'An account with this email already exists. Please try logging in instead.',
-        error: 'User already exists'
+        message: 'An account with this email already exists. Please try logging in.'
       })
     }
 
-    console.log('✅ User created successfully:', {
-      userId: data.user.id,
-      email: data.user.email,
-      emailConfirmed: !!data.user.email_confirmed_at,
-      createdAt: data.user.created_at
-    })
-    
-    // Check if email was sent
-    if (data.user && !data.user.email_confirmed_at) {
-      console.log('📬 Confirmation email should be sent by Supabase')
-      console.log('📧 Check Supabase Settings -> Authentication -> Email to ensure emails are enabled')
-    } else if (data.user?.email_confirmed_at) {
-      console.log('⚠️ User email already confirmed (auto-confirmed in Supabase settings)')
-      console.log('💡 This means "Enable email confirmations" is OFF in Supabase')
-    }
+    console.log('✅ User created:', data.user.id)
 
-    // Create user profile
-    if (data.user) {
-      console.log('📋 Creating user profile...')
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
-            email: email,
-            full_name: fullName,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ])
-        .select()
-
-      if (profileError) {
-        console.error('❌ Profile creation error:', {
-          message: profileError.message,
-          code: profileError.code,
-          details: profileError.details,
-          hint: profileError.hint
-        })
-        // Don't fail the signup if profile creation fails, but log it
-      } else {
-        console.log('✅ User profile created:', profileData)
-      }
-    }
-
-    // Send welcome email (optional - skip if Resend not configured)
-    if (resend) {
-      try {
-        await resend.emails.send({
-          from: 'Ten News <onboarding@resend.dev>',
-          to: email,
-          subject: 'Welcome to Ten News! 🎉',
-          html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #1f2937; text-align: center;">Welcome to Ten News, ${fullName}! 🎉</h1>
-
-            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">
-              Thank you for joining Ten News! Your account has been created successfully.
-            </p>
-
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #1f2937; margin-top: 0;">What happens next?</h2>
-              <ul style="color: #4b5563; line-height: 1.6;">
-                <li><strong>Verify your email:</strong> Check your inbox for a verification link from Supabase</li>
-                <li><strong>Daily news:</strong> Get AI-curated global news summaries every day</li>
-                <li><strong>Timeline feature:</strong> Explore historical context for current events</li>
-                <li><strong>Dark mode:</strong> Switch between light and dark themes</li>
-              </ul>
-            </div>
-
-            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">
-              If you have any questions, feel free to reply to this email.
-            </p>
-
-            <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">
-              Happy reading! 📰<br>
-              The Ten News Team
-            </p>
-
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-
-            <p style="font-size: 12px; color: #6b7280; text-align: center;">
-              You're receiving this email because you signed up for Ten News.<br>
-              If you didn't create this account, please ignore this email.
-            </p>
-          </div>
-        `
-        })
-        console.log('✅ Welcome email sent to:', email)
-      } catch (emailError) {
-        console.error('⚠️ Failed to send welcome email:', emailError)
-        // Don't fail signup if email fails
-      }
-    } else {
-      console.log('ℹ️ Resend not configured - skipping welcome email (verification email still sent by Supabase)')
+    // Try to create profile (non-blocking)
+    try {
+      await supabase.from('profiles').insert([{
+        id: data.user.id,
+        email: email,
+        full_name: fullName,
+        created_at: new Date().toISOString()
+      }])
+      console.log('✅ Profile created')
+    } catch (profileError) {
+      console.error('⚠️ Profile error (non-fatal):', profileError.message)
     }
 
     return res.status(201).json({
       success: true,
+      message: 'Account created! Check your email for verification.',
       user: {
         id: data.user.id,
-        email: data.user.email,
-        email_confirmed: !!data.user.email_confirmed_at
-      },
-      message: 'Account created successfully! Check your email for a welcome message and verification instructions.'
+        email: data.user.email
+      }
     })
 
   } catch (error) {
-    console.error('❌ Unexpected signup error:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
-    })
-    return res.status(500).json({ 
+    console.error('❌ Unexpected error:', error.message, error.stack)
+    return res.status(500).json({
       success: false,
-      message: 'Something went wrong. Please try again.',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      message: 'Something went wrong. Please try again.'
     })
   }
 }
