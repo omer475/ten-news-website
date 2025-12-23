@@ -1183,6 +1183,7 @@ export default function Home() {
   const [authModal, setAuthModal] = useState(null); // 'login', 'signup', or null
   const [authError, setAuthError] = useState('');
   const [emailConfirmation, setEmailConfirmation] = useState(null); // { email: string } or null
+  const [showResetPassword, setShowResetPassword] = useState(false); // Password reset modal
 
   // Form data persistence
   const [formData, setFormData] = useState({
@@ -1196,6 +1197,31 @@ export default function Home() {
     if (typeof window === 'undefined') return null;
     return createClient();
   });
+
+  // Listen for password recovery event
+  useEffect(() => {
+    if (!supabase || typeof window === 'undefined') return;
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event);
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('🔐 Password recovery detected - showing reset modal');
+        setShowResetPassword(true);
+      }
+    });
+    
+    // Also check URL for recovery type
+    const hash = window.location.hash;
+    const search = window.location.search;
+    if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+      console.log('🔐 Recovery type in URL - showing reset modal');
+      setShowResetPassword(true);
+    }
+    
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [supabase]);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -7544,6 +7570,28 @@ export default function Home() {
           />
         </div>
       )}
+
+      {/* Reset Password Modal */}
+      {showResetPassword && (
+        <div className="auth-modal-overlay" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+          <ResetPasswordModal 
+            supabase={supabase}
+            onSuccess={() => {
+              setShowResetPassword(false);
+              // Clear the hash from URL
+              if (typeof window !== 'undefined') {
+                window.history.replaceState(null, '', window.location.pathname);
+              }
+            }}
+            onCancel={() => {
+              setShowResetPassword(false);
+              if (typeof window !== 'undefined') {
+                window.history.replaceState(null, '', window.location.pathname);
+              }
+            }}
+          />
+        </div>
+      )}
     </>
   );
 }
@@ -7915,4 +7963,144 @@ function EmailConfirmation({ email, type, onBack }) {
       </div>
     </div>
   );
-}// Force deployment - Thu Oct 23 15:14:36 BST 2025
+}
+
+// Reset Password Modal Component
+function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) {
+        setError(updateError.message);
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        onSuccess();
+      }, 2000);
+
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="auth-modal" onClick={(e) => e.stopPropagation()} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+        <div className="auth-modal-header">
+          <h2>Password Updated!</h2>
+        </div>
+        <div className="auth-modal-body" style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+          <p style={{ color: '#22c55e', fontSize: '16px', fontWeight: '500' }}>
+            Your password has been successfully updated.
+          </p>
+          <p style={{ color: '#666', fontSize: '14px', marginTop: '8px' }}>
+            Redirecting...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth-modal" onClick={(e) => e.stopPropagation()} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+      <div className="auth-modal-header">
+        <h2>Reset Password</h2>
+        <button className="auth-close" onClick={onCancel}>×</button>
+      </div>
+
+      <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+        <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+          Enter your new password below
+        </p>
+
+        {error && (
+          <div className="auth-error" style={{ marginBottom: '16px' }}>{error}</div>
+        )}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-field">
+            <label htmlFor="new-password">New Password</label>
+            <input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="Enter new password (min 8 characters)"
+              required
+              style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
+            />
+          </div>
+
+          <div className="auth-field">
+            <label htmlFor="confirm-password">Confirm Password</label>
+            <input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="Confirm new password"
+              required
+              style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-submit" 
+            disabled={loading}
+            style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+          >
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
+          <button
+            onClick={onCancel}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              fontSize: '14px',
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
