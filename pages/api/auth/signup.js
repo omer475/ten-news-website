@@ -20,11 +20,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, message: 'Early test passed', body: req.body })
     }
 
-    // Dynamic import to catch any import errors
-    console.log('📦 Importing Supabase...')
-    const { createClient } = await import('@supabase/supabase-js')
-    console.log('✅ Supabase imported')
-    
     const body = req.body || {}
     const { email, password, fullName } = body
 
@@ -56,7 +51,17 @@ export default async function handler(req, res) {
       })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    // Dynamic import to catch any import errors
+    console.log('📦 Importing Supabase...')
+    const { createClient } = await import('@supabase/supabase-js')
+    console.log('✅ Supabase imported')
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     // Get redirect URL
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tennews.ai'
@@ -64,7 +69,8 @@ export default async function handler(req, res) {
     
     console.log('🚀 Creating user with Supabase...')
 
-    const { data, error } = await supabase.auth.signUp({
+    // Add timeout wrapper to prevent hanging
+    const signupPromise = supabase.auth.signUp({
       email,
       password,
       options: {
@@ -72,6 +78,12 @@ export default async function handler(req, res) {
         emailRedirectTo: redirectUrl
       }
     })
+
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Signup timed out after 25 seconds')), 25000)
+    )
+
+    const { data, error } = await Promise.race([signupPromise, timeoutPromise])
 
     if (error) {
       console.error('❌ Supabase error:', error.message)
