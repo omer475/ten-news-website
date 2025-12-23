@@ -1,36 +1,46 @@
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
 
-// Make Resend optional for local development
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+// Make Resend optional - only import if API key is set
+let resend = null
+if (process.env.RESEND_API_KEY) {
+  try {
+    const { Resend } = require('resend')
+    resend = new Resend(process.env.RESEND_API_KEY)
+  } catch (e) {
+    console.log('Resend not available:', e.message)
+  }
+}
 
 export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Content-Type', 'application/json')
+  
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  const { email, password, fullName } = req.body
-
-  console.log('📝 Signup request received:', { email, hasPassword: !!password, fullName })
-
-  if (!email || !password || !fullName) {
-    console.error('❌ Missing required fields')
-    return res.status(400).json({
-      success: false,
-      message: 'Email, password, and full name are required'
-    })
-  }
-
-  // Validate password strength
-  if (password.length < 8) {
-    console.error('❌ Password too short')
-    return res.status(400).json({
-      success: false,
-      message: 'Password must be at least 8 characters long'
-    })
+    return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
 
   try {
+    const { email, password, fullName } = req.body || {}
+
+    console.log('📝 Signup request received:', { email, hasPassword: !!password, fullName })
+
+    if (!email || !password || !fullName) {
+      console.error('❌ Missing required fields')
+      return res.status(400).json({
+        success: false,
+        message: 'Email, password, and full name are required'
+      })
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      console.error('❌ Password too short')
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      })
+    }
+
     // Use direct Supabase client for signup (more reliable than auth helpers)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
