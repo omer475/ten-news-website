@@ -2507,8 +2507,9 @@ export default function Home() {
 
     // Card follows finger 1:1 during drag
     const handleTouchMove = (e) => {
-      // Don't block touch if it's on auth modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
+      // Don't block touch if it's on auth modal or paywall modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
+          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
         return;
       }
 
@@ -2612,6 +2613,28 @@ export default function Home() {
     const handleKeyDown = (e) => {
       if (isTransitioning) return;
 
+      // Don't intercept keyboard shortcuts when user is typing in an input field
+      const activeElement = document.activeElement;
+      const target = e.target;
+      const isInputFocused = (
+        (activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.isContentEditable
+        )) ||
+        (target && (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        )) ||
+        (target && target.closest && (
+          target.closest('.auth-modal') ||
+          target.closest('.paywall-modal') ||
+          target.closest('.auth-form')
+        ))
+      );
+      if (isInputFocused) return;
+
       const isPaywallActive = !user && currentIndex >= paywallThreshold;
 
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
@@ -2632,14 +2655,8 @@ export default function Home() {
         setTimeout(() => {
           isTransitioning = false;
         }, 350);  // Match TikTok-style faster transition
-      } else if (e.key === 's' || e.key === 'S') {
-        // Toggle summary/bullet points with 'S' key
-        e.preventDefault();
-        const currentStory = stories[currentIndex];
-        if (currentStory && currentStory.type === 'news') {
-          toggleSummaryDisplayMode(currentIndex);
-        }
       }
+      // Removed 's' key handler - was interfering with typing in login/signup forms
     };
 
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -7504,6 +7521,7 @@ function LoginForm({ onSubmit, formData, setFormData }) {
             setEmail(e.target.value);
             setFormData(prev => ({ ...prev, loginEmail: e.target.value }));
           }}
+          onKeyDown={(e) => e.stopPropagation()}
           placeholder="Enter your email"
           required
           style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
@@ -7520,6 +7538,7 @@ function LoginForm({ onSubmit, formData, setFormData }) {
             setPassword(e.target.value);
             setFormData(prev => ({ ...prev, loginPassword: e.target.value }));
           }}
+          onKeyDown={(e) => e.stopPropagation()}
           placeholder="Enter your password"
           required
           style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
@@ -7606,6 +7625,7 @@ function SignupForm({ onSubmit, formData, setFormData }) {
             setFullName(e.target.value);
             updateFormData('signupFullName', e.target.value);
           }}
+          onKeyDown={(e) => e.stopPropagation()}
           placeholder="Enter your full name"
           required
           style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
@@ -7622,6 +7642,7 @@ function SignupForm({ onSubmit, formData, setFormData }) {
             setEmail(e.target.value);
             updateFormData('signupEmail', e.target.value);
           }}
+          onKeyDown={(e) => e.stopPropagation()}
           placeholder="Enter your email"
           required
           style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
@@ -7638,6 +7659,7 @@ function SignupForm({ onSubmit, formData, setFormData }) {
             handlePasswordChange(e.target.value);
             updateFormData('signupPassword', e.target.value);
           }}
+          onKeyDown={(e) => e.stopPropagation()}
           placeholder="Create a password (min 8 characters)"
           required
           style={{ touchAction: 'auto', pointerEvents: 'auto', WebkitUserSelect: 'text', userSelect: 'text' }}
