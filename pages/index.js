@@ -2185,13 +2185,21 @@ export default function Home() {
       } else {
         // Ensure we always display a proper error string, never an object
         let errorMessage = 'Signup failed. Please try again.';
-        if (typeof data === 'string') {
+        
+        // Debug: log what we received
+        console.log('Signup failed - data type:', typeof data, 'data:', data);
+        
+        if (typeof data === 'string' && data.length > 0) {
           errorMessage = data;
         } else if (data && typeof data.message === 'string' && data.message.length > 0) {
           errorMessage = data.message;
         } else if (data && typeof data.error === 'string' && data.error.length > 0) {
           errorMessage = data.error;
+        } else if (data && Object.keys(data).length === 0) {
+          // Empty object case
+          errorMessage = 'Server returned an empty response. Please try again.';
         }
+        
         setAuthError(errorMessage);
       }
     } catch (error) {
