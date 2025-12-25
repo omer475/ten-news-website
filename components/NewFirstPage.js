@@ -467,47 +467,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     });
   }, [mapLoaded, newsCountByCountry]);
 
-  const handleContinue = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Click/tap handler for navigation - parent handles swipe
+  const handleClick = (e) => {
     if (onContinue) onContinue();
-  };
-
-  // Touch swipe detection for the container - VERY LENIENT
-  const touchStartRef = useRef({ y: 0, x: 0, time: 0 });
-
-  const handleTouchStart = (e) => {
-    touchStartRef.current = {
-      y: e.touches[0].clientY,
-      x: e.touches[0].clientX,
-      time: Date.now()
-    };
-  };
-
-  const handleTouchMove = (e) => {
-    // Check for swipe during move for immediate response
-    const deltaY = touchStartRef.current.y - e.touches[0].clientY;
-    // If swiping up more than 50px, navigate immediately
-    if (deltaY > 50) {
-      e.preventDefault();
-      if (onContinue) onContinue();
-    }
-  };
-
-  const handleTouchEnd = (e) => {
-    const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY;
-    const deltaX = Math.abs(touchStartRef.current.x - e.changedTouches[0].clientX);
-    const deltaTime = Date.now() - touchStartRef.current.time;
-
-    // SUPER LENIENT: Any upward movement of 15px+ within 2 seconds
-    // OR any tap (deltaY and deltaX both small)
-    const isSwipeUp = deltaY > 15 && deltaTime < 2000;
-    const isTap = Math.abs(deltaY) < 10 && deltaX < 10 && deltaTime < 500;
-    
-    if (isSwipeUp || isTap) {
-      e.preventDefault();
-      if (onContinue) onContinue();
-    }
   };
 
   return (
@@ -528,8 +490,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           position: absolute;
           top: 0;
           left: 0;
-          right: 0;
-          bottom: 0;
+          width: 100%;
+          height: 100%;
           display: flex;
           flex-direction: column;
           background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
@@ -562,23 +524,34 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           position: relative;
           z-index: 1;
           gap: 24px;
+          overflow: hidden;
         }
 
         .greeting-section {
           text-align: center;
-          animation: fadeInDown 0.8s ease-out;
+          animation: glassReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           padding-top: 40px;
+          opacity: 0;
         }
 
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes glassReveal {
+          0% { 
+            opacity: 0; 
+            transform: translateY(-30px) scale(0.95);
+            filter: blur(10px);
+          }
+          100% { 
+            opacity: 1; 
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+          }
         }
 
         .greeting-hi {
           font-size: 42px;
           font-weight: 700;
           letter-spacing: -0.03em;
+          color: #0f172a;
           margin-bottom: 12px;
           line-height: 1.1;
         }
@@ -595,6 +568,21 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           max-width: 340px;
           margin: 0 auto;
           margin-top: 8px;
+          animation: subReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+          opacity: 0;
+        }
+
+        @keyframes subReveal {
+          0% { 
+            opacity: 0; 
+            transform: translateY(20px);
+            filter: blur(8px);
+          }
+          100% { 
+            opacity: 1; 
+            transform: translateY(0);
+            filter: blur(0);
+          }
         }
 
         .sub-highlight {
@@ -602,16 +590,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-weight: 500;
           letter-spacing: -0.01em;
           line-height: 1.35;
-          color: #1e293b;
+          color: #475569;
           text-align: center;
         }
 
         .sub-accent {
-          display: block;
-          width: 60px;
-          height: 3px;
-          border-radius: 3px;
-          opacity: 0.9;
+          display: none;
         }
 
         .sub-rest {
@@ -633,12 +617,21 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           min-height: 0;
           max-height: 55vh;
           position: relative;
-          animation: fadeIn 1s ease-out 0.3s both;
+          animation: globeReveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+          opacity: 0;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
+        @keyframes globeReveal {
+          0% { 
+            opacity: 0; 
+            transform: scale(0.8) translateY(30px);
+            filter: blur(15px);
+          }
+          100% { 
+            opacity: 1; 
+            transform: scale(1) translateY(0);
+            filter: blur(0);
+          }
         }
 
         .globe-container {
@@ -698,10 +691,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             font-size: 20px;
             line-height: 1.35;
           }
-          .sub-accent {
-            width: 50px;
-            height: 3px;
-          }
           .sub-rest {
             font-size: 14px;
           }
@@ -740,31 +729,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
       <div 
         className="first-page-container" 
-        onClick={handleContinue}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
       >
         <div className="content-wrapper">
           <div className="greeting-section">
-            <div 
-              className="greeting-hi"
-              style={{ 
-                background: personalGreeting.theme.gradient,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
-            >
+            <div className="greeting-hi">
               {personalGreeting.greeting}
               {personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
             </div>
             <div className="greeting-sub">
               <span className="sub-highlight">{personalGreeting.subHighlight}</span>
-              <span 
-                className="sub-accent"
-                style={{ background: personalGreeting.theme.gradient }}
-              ></span>
+              <span className="sub-accent"></span>
               <span className="sub-rest">{personalGreeting.subRest}</span>
             </div>
           </div>
