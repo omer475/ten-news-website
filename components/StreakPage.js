@@ -1,19 +1,21 @@
 import { useEffect, useState, useRef } from 'react';
 
 export default function StreakPage({ streakCount = 1, onAnimationComplete }) {
-  const [phase, setPhase] = useState(0); // Start with section 1 visible immediately
+  const [phase, setPhase] = useState(-1); // Start hidden
   const [displayCount, setDisplayCount] = useState(0);
   const countIntervalRef = useRef(null);
 
   useEffect(() => {
-    // Animation timeline - section 1 is already visible
-    const timer1 = setTimeout(() => setPhase(1), 3200);     // Transition to section 2 after 3.2s
-    const timer2 = setTimeout(() => setPhase(2), 8000);     // Transition to section 3 after 8s
+    // Animation timeline
+    const timer0 = setTimeout(() => setPhase(0), 1000);     // Show section 1 after 1s
+    const timer1 = setTimeout(() => setPhase(1), 3000);     // Show section 2 after 1s + 2s = 3s
+    const timer2 = setTimeout(() => setPhase(2), 5000);     // Show section 3 after 3s + 2s = 5s
     const timer3 = setTimeout(() => {
       if (onAnimationComplete) onAnimationComplete();
-    }, 9000);
+    }, 6000);
 
     return () => {
+      clearTimeout(timer0);
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
