@@ -12,8 +12,8 @@ const GraphChart = dynamic(() => import('../components/GraphChart'), {
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
   });
 
-// Dynamically import StreakGlobe to avoid SSR issues with D3
-const StreakGlobe = dynamic(() => import('../components/StreakGlobe'), {
+// Dynamically import StreakPage to avoid SSR issues
+const StreakPage = dynamic(() => import('../components/StreakPage'), {
     ssr: false,
   loading: () => null
   });
@@ -78,7 +78,6 @@ export default function Home() {
   const [viewedImportantArticles, setViewedImportantArticles] = useState(new Set());
   const [streakData, setStreakData] = useState({ count: 0, lastDate: null });
   const [streakPageInserted, setStreakPageInserted] = useState(false);
-  const [streakAnimationPhase, setStreakAnimationPhase] = useState(0); // 0=intro, 1=streak, 2=outro
 
   // Calculate paywall threshold - 2 articles after the streak page
   // If no streak page exists yet, use a high number (no paywall until streak page appears)
@@ -235,26 +234,6 @@ export default function Home() {
         });
         console.log('👁️ Viewed important article:', currentStory.id);
       }
-    }
-  }, [currentIndex, stories]);
-
-  // Streak page animation sequence
-  useEffect(() => {
-    const currentStory = stories[currentIndex];
-    if (currentStory && currentStory.type === 'streak') {
-      // Start with hidden state (-1), then show intro after 0.5s
-      setStreakAnimationPhase(-1);
-      
-      // Start animation sequence
-      const timer0 = setTimeout(() => setStreakAnimationPhase(0), 500);  // Show intro after 0.5s
-      const timer1 = setTimeout(() => setStreakAnimationPhase(1), 2500); // Show streak after 2.5s
-      const timer2 = setTimeout(() => setStreakAnimationPhase(2), 5500); // Show outro after 5.5s
-      
-      return () => {
-        clearTimeout(timer0);
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
     }
   }, [currentIndex, stories]);
 
@@ -5171,152 +5150,9 @@ export default function Home() {
                 </div>
               ) : story.type === 'streak' ? (
                 // Streak Page - Shows after all important articles are viewed
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  height: '100vh',
-                  background: '#fff',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  {/* Globe Container */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '75%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    opacity: streakAnimationPhase >= 0 ? 1 : 0,
-                    transition: 'opacity 1.2s ease',
-                    zIndex: 1
-                  }}>
-                    <StreakGlobe size={550} />
-                  </div>
-
-                  {/* Part 1: Intro Message */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '22%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10,
-                    textAlign: 'center',
-                    opacity: streakAnimationPhase === 0 ? 1 : 0,
-                    transition: 'opacity 0.6s ease, transform 0.6s ease',
-                    visibility: streakAnimationPhase === 0 ? 'visible' : 'hidden'
-                  }}>
-                    <p style={{
-                      fontSize: '22px',
-                      fontWeight: '600',
-                      color: '#000',
-                      lineHeight: '1.4',
-                      letterSpacing: '-0.3px',
-                      margin: 0
-                    }}>
-                      You have read all the<br/>must-know news
-                    </p>
-                  </div>
-
-                  {/* Part 2: Streak Display */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '22%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10,
-                    textAlign: 'center',
-                    opacity: streakAnimationPhase === 1 ? 1 : 0,
-                    transition: 'opacity 0.8s ease, transform 0.8s ease',
-                    visibility: streakAnimationPhase === 1 ? 'visible' : 'hidden'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'baseline',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}>
-                      <span style={{
-                        fontSize: '88px',
-                        fontWeight: '700',
-                        color: '#000',
-                        lineHeight: 1,
-                        letterSpacing: '-4px'
-                      }}>
-                        {story.streakCount || streakData.count || 1}
-                      </span>
-                      <span style={{
-                        fontSize: '22px',
-                        fontWeight: '600',
-                        color: '#999'
-                      }}>
-                        {(story.streakCount || streakData.count || 1) === 1 ? 'day' : 'days'}
-                      </span>
-                    </div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      marginTop: '16px'
-                    }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF6B35">
-                        <path d="M12 23C16.1421 23 19.5 19.6421 19.5 15.5C19.5 14.6345 19.2697 13.8032 19 13C19 13 18.5 14 17.5 14C17.5 14 18.5 11 17 8.5C17 8.5 16.5 10 15 10C15 10 16.5 7.5 15 4C13.5 5.5 13 7 12.5 9.5C12.1666 8.5 11.5 7.5 10.5 7C10.5 9 10 11 8 13C7.5 11.5 7 11 6 10.5C6 10.5 5.5 12 5.5 14C5.5 14 5 13.5 4.5 13.5C4.5 15 4.5 16 4.5 16C4.5 20 7.85786 23 12 23Z"/>
-                      </svg>
-                      <span style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#000',
-                        letterSpacing: '-0.2px'
-                      }}>
-                        Streak
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Part 3: Outro Message */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '22%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10,
-                    textAlign: 'center',
-                    opacity: streakAnimationPhase === 2 ? 1 : 0,
-                    transition: 'opacity 0.8s ease',
-                    visibility: streakAnimationPhase === 2 ? 'visible' : 'hidden'
-                  }}>
-                    <p style={{
-                      fontSize: '20px',
-                      fontWeight: '600',
-                      color: '#000',
-                      lineHeight: '1.4',
-                      letterSpacing: '-0.3px',
-                      margin: 0
-                    }}>
-                      Scroll to read more news
-                    </p>
-                    <div style={{ marginTop: '20px' }}>
-                      <svg 
-                        width="28" 
-                        height="28" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="#BABABA" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                        style={{
-                          animation: 'bounce 1.5s ease-in-out infinite'
-                        }}
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
-                  </div>
-
-                </div>
+                <StreakPage 
+                  streakCount={story.streakCount || streakData.count || 1}
+                />
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
