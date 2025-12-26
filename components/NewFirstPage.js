@@ -560,52 +560,108 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-weight: 800;
         }
 
+        /* Liquid Glass Variables */
         .greeting-sub {
+          --c-glass: #ffffff;
+          --c-light: #fff;
+          --c-dark: #000;
+          --glass-reflex-dark: 1;
+          --glass-reflex-light: 1;
+          --saturation: 180%;
+          
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 12px;
-          max-width: 340px;
+          gap: 0;
           margin: 0 auto;
-          margin-top: 8px;
-          animation: subReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+          margin-top: 28px;
+          animation: subReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
           opacity: 0;
         }
 
         @keyframes subReveal {
           0% { 
             opacity: 0; 
-            transform: translateY(20px);
+            transform: translateY(25px) scale(0.95);
             filter: blur(8px);
           }
           100% { 
             opacity: 1; 
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
             filter: blur(0);
           }
         }
 
-        .sub-highlight {
-          font-size: 24px;
-          font-weight: 500;
-          letter-spacing: -0.01em;
-          line-height: 1.35;
-          color: #475569;
-          text-align: center;
+        /* Apple Liquid Glass Pill */
+        .glass-pill {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          padding: 16px 32px;
+          border-radius: 50px;
+          
+          /* Liquid Glass Background */
+          background-color: color-mix(in srgb, var(--c-glass) 40%, transparent);
+          backdrop-filter: blur(24px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(24px) saturate(var(--saturation));
+          
+          /* Multi-layer Glass Reflections - Premium Apple Style */
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 20%), transparent),
+            inset 1.2px 2.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 98%), transparent), 
+            inset -1.2px -1.2px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -2.5px -6px 1.5px -4px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 70%), transparent), 
+            inset -0.25px -0.75px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 6%), transparent), 
+            inset -1.2px 2px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset 0px 2.5px 4px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            inset 2px -5px 1.5px -3px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 6%), transparent), 
+            0px 1.5px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent),
+            0px 12px 32px -8px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 6%), transparent);
+          
+          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .sub-accent {
-          display: none;
+        .glass-pill:hover {
+          transform: translateY(-3px) scale(1.03);
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 25%), transparent),
+            inset 1.2px 2.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 100%), transparent), 
+            inset -1.2px -1.2px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 95%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
+            0px 12px 28px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent);
         }
 
-        .sub-rest {
+        .pill-main {
+          font-size: 17px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          line-height: 1.1;
+          color: #1e293b;
+        }
+
+        .pill-divider {
+          width: 1.5px;
+          height: 20px;
+          background: linear-gradient(180deg, 
+            transparent 0%, 
+            rgba(100, 116, 139, 0.25) 15%, 
+            rgba(100, 116, 139, 0.4) 50%, 
+            rgba(100, 116, 139, 0.25) 85%, 
+            transparent 100%
+          );
+          margin: 0 16px;
+        }
+
+        .pill-sub {
           font-size: 16px;
-          font-weight: 400;
-          color: #64748b;
-          letter-spacing: 0.01em;
+          font-weight: 500;
+          color: #475569;
+          letter-spacing: 0em;
         }
 
-        .sub-rest::first-letter {
+        .pill-sub::first-letter {
           text-transform: uppercase;
         }
 
@@ -684,15 +740,20 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-bottom: 10px;
           }
           .greeting-sub {
-            max-width: 300px;
-            gap: 10px;
+            max-width: 340px;
           }
-          .sub-highlight {
-            font-size: 20px;
-            line-height: 1.35;
+          .glass-pill {
+            padding: 14px 26px;
           }
-          .sub-rest {
-            font-size: 14px;
+          .pill-main {
+            font-size: 16px;
+          }
+          .pill-divider {
+            height: 18px;
+            margin: 0 14px;
+          }
+          .pill-sub {
+            font-size: 15px;
           }
           .globe-section {
             overflow: hidden;
@@ -717,12 +778,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .greeting-hi {
             font-size: 32px;
           }
-          .sub-highlight {
-            font-size: 18px;
+          .glass-pill {
+            padding: 12px 20px;
           }
-          .sub-rest {
+          .pill-main {
+            font-size: 14px;
+          }
+          .pill-divider {
+            height: 16px;
+            margin: 0 12px;
+          }
+          .pill-sub {
             font-size: 13px;
-            max-width: 260px;
           }
         }
       `}</style>
@@ -738,9 +805,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
               {personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
             </div>
             <div className="greeting-sub">
-              <span className="sub-highlight">{personalGreeting.subHighlight}</span>
-              <span className="sub-accent"></span>
-              <span className="sub-rest">{personalGreeting.subRest}</span>
+              <div className="glass-pill">
+                <span className="pill-main">{personalGreeting.subHighlight}</span>
+                <span className="pill-divider"></span>
+                <span className="pill-sub">{personalGreeting.subRest}</span>
+              </div>
             </div>
           </div>
 
