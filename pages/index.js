@@ -2451,10 +2451,18 @@ export default function Home() {
     const VELOCITY_SAMPLES = 5;
 
     const handleTouchStart = (e) => {
-      // Don't capture touch if it's on auth modal or paywall modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
-          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
+      // Don't capture touch if it's on auth modal (but allow paywall - need to swipe back)
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
         return;
+      }
+      
+      // For paywall, only block if touching form elements
+      if (e.target.closest('.paywall-modal')) {
+        const isFormElement = e.target.tagName === 'INPUT' || 
+                              e.target.tagName === 'BUTTON' || 
+                              e.target.tagName === 'TEXTAREA' ||
+                              e.target.closest('.auth-form');
+        if (isFormElement) return;
       }
 
       // Don't capture touch if it's on the language switcher
@@ -2487,10 +2495,21 @@ export default function Home() {
     };
 
     const handleTouchEnd = (e) => {
-      // Don't handle touch if it's on auth modal or paywall modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
-          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
+      // Don't handle touch if it's on auth modal (but allow paywall - need to swipe back)
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
         return;
+      }
+      
+      // For paywall, only block if touching form elements
+      if (e.target.closest('.paywall-modal')) {
+        const isFormElement = e.target.tagName === 'INPUT' || 
+                              e.target.tagName === 'BUTTON' || 
+                              e.target.tagName === 'TEXTAREA' ||
+                              e.target.closest('.auth-form');
+        if (isFormElement) {
+          setDragOffset(0);
+          return;
+        }
       }
 
       // Don't handle touch if it's on the language switcher
@@ -2552,8 +2571,10 @@ export default function Home() {
         const isPaywallActive = !user && currentIndex >= paywallThreshold;
 
         if (isPaywallActive && direction > 0) {
+          // Block forward navigation but reset state properly
           isTransitioning = false;
           setTransitionDuration(0.3);
+          setDragOffset(0);
           return;
         }
 
@@ -2575,10 +2596,18 @@ export default function Home() {
 
     // Card follows finger 1:1 during drag
     const handleTouchMove = (e) => {
-      // Don't block touch if it's on auth modal or paywall modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
-          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
+      // Don't block touch if it's on auth modal (but allow paywall - need to swipe back)
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
         return;
+      }
+      
+      // For paywall, only block if touching form elements
+      if (e.target.closest('.paywall-modal')) {
+        const isFormElement = e.target.tagName === 'INPUT' || 
+                              e.target.tagName === 'BUTTON' || 
+                              e.target.tagName === 'TEXTAREA' ||
+                              e.target.closest('.auth-form');
+        if (isFormElement) return;
       }
 
       // Don't block touch if it's on the language switcher
@@ -2634,9 +2663,8 @@ export default function Home() {
     };
 
     const handleWheel = (e) => {
-      // Don't block wheel if it's on auth modal or paywall modal
-      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal') ||
-          e.target.closest('.paywall-overlay') || e.target.closest('.paywall-modal')) {
+      // Don't block wheel if it's on auth modal
+      if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
         return;
       }
       
