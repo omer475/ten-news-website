@@ -5478,27 +5478,34 @@ export default function Home() {
                               const parentElement = imgElement.parentElement;
                               
                               let retryCount = parseInt(imgElement.dataset.retryCount || '0');
-                              const maxRetries = 3; // Reduced retries since we start without CORS
+                              const maxRetries = 4;
                               
                               if (retryCount < maxRetries) {
                                   retryCount++;
                                   imgElement.dataset.retryCount = retryCount.toString();
-                                console.log(`🔄 Retry ${retryCount}/${maxRetries}`);
+                                console.log(`🔄 Retry ${retryCount}/${maxRetries} for: ${imageUrl.substring(0, 60)}...`);
                                   
-                                  // Try different referrer policies
+                                // Try different strategies on each retry
                                 if (retryCount === 1) {
-                                    imgElement.referrerPolicy = 'no-referrer-when-downgrade';
+                                    // Retry 1: Remove referrer policy entirely
+                                    imgElement.removeAttribute('referrerPolicy');
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 200);
                                 } else if (retryCount === 2) {
+                                    // Retry 2: Use CORS anonymous
+                                    imgElement.crossOrigin = 'anonymous';
+                                    imgElement.referrerPolicy = 'no-referrer';
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 300);
+                                } else if (retryCount === 3) {
+                                    // Retry 3: Remove CORS, try with origin referrer
+                                    imgElement.removeAttribute('crossOrigin');
                                     imgElement.referrerPolicy = 'origin';
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 400);
                                   } else {
-                                  imgElement.referrerPolicy = 'unsafe-url';
+                                    // Retry 4: Last attempt with use-credentials
+                                    imgElement.crossOrigin = 'use-credentials';
+                                    imgElement.referrerPolicy = 'strict-origin-when-cross-origin';
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 500);
                                   }
-                                  
-                                // Reload
-                                setTimeout(() => {
-                                  const separator = imageUrl.includes('?') ? '&' : '?';
-                                  imgElement.src = imageUrl + separator + '_t=' + Date.now();
-                                }, 100 * retryCount);
                               } else {
                                 // All retries failed - show professional category-based fallback
                                 console.warn('⚠️ All retries failed, showing category fallback');
