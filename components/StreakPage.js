@@ -8,11 +8,11 @@ export default function StreakPage({ streakCount = 1, onAnimationComplete }) {
   useEffect(() => {
     // Animation timeline
     const timer0 = setTimeout(() => setPhase(0), 1000);     // Show section 1 after 1s
-    const timer1 = setTimeout(() => setPhase(1), 3000);     // Show section 2 after 1s + 2s = 3s
-    const timer2 = setTimeout(() => setPhase(2), 5000);     // Show section 3 after 3s + 2s = 5s
+    const timer1 = setTimeout(() => setPhase(1), 4000);     // Show section 2 after 1s + 3s = 4s
+    const timer2 = setTimeout(() => setPhase(2), 7000);     // Show section 3 after 4s + 3s = 7s
     const timer3 = setTimeout(() => {
       if (onAnimationComplete) onAnimationComplete();
-    }, 6000);
+    }, 8000);
 
     return () => {
       clearTimeout(timer0);
