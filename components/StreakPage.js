@@ -94,9 +94,8 @@ export default function StreakPage({ streakCount = 1, onAnimationComplete }) {
       <style jsx>{`
         .streak-screen {
           width: 100%;
-          height: 100%;
-          max-width: 430px;
-          margin: 0 auto;
+          height: 100vh;
+          min-height: 100vh;
           background: #FFFFFF;
           display: flex;
           align-items: center;
