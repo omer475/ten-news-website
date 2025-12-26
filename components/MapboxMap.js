@@ -137,75 +137,74 @@ export default function MapboxMap({
       
       // Custom professional light theme with terrain-based color variations
       
-      // Water: soft light blue
+      // Water: refined slate blue - sophisticated & modern
       if (map.getLayer('water')) {
-        map.setPaintProperty('water', 'fill-color', '#dbeafe');
+        map.setPaintProperty('water', 'fill-color', '#c7d2e0');
       }
       
-      // Landcover with terrain-based grey variations
-      // Different land types get subtly different grey tones
+      // Land: Elegant warm cream/beige palette - premium aesthetic
       if (map.getLayer('landcover')) {
         map.setPaintProperty('landcover', 'fill-color', [
           'match',
           ['get', 'class'],
-          'wood', '#e8ebe8',           // Forest: slight green-grey
-          'scrub', '#eaebe8',          // Scrubland: warm grey
-          'grass', '#ebeee9',          // Grassland: light sage grey
-          'crop', '#f0efe8',           // Agricultural: warm cream grey
-          'snow', '#f8fafc',           // Snow/ice: very light cool grey
-          'wetland', '#e5eaed',        // Wetland: blue-grey
-          'sand', '#f5f3ed',           // Desert/sand: warm beige grey
-          '#f1f3f4'                    // Default: neutral grey
+          'wood', '#e8e4dc',           // Forest: warm taupe
+          'scrub', '#ebe7df',          // Scrubland: light sand
+          'grass', '#eae6de',          // Grassland: cream beige
+          'crop', '#f2ede5',           // Agricultural: soft ivory
+          'snow', '#f5f5f5',           // Snow/ice: pure light
+          'wetland', '#dde3e8',        // Wetland: cool slate
+          'sand', '#f0ebe0',           // Desert/sand: warm sand
+          '#ebe7e0'                    // Default: elegant cream
         ]);
-        map.setPaintProperty('landcover', 'fill-opacity', 0.6);
+        map.setPaintProperty('landcover', 'fill-opacity', 0.7);
       }
       
-      // Landuse with activity-based variations
+      // Landuse: Subtle warm tones for different zones
       if (map.getLayer('landuse')) {
         map.setPaintProperty('landuse', 'fill-color', [
           'match',
           ['get', 'class'],
-          'park', '#e5ede5',           // Parks: soft sage
-          'cemetery', '#eaecea',       // Cemetery: muted grey-green
-          'hospital', '#f5f0f0',       // Hospital: warm pink-grey
-          'school', '#f0f0f5',         // School: cool grey
-          'industrial', '#e8e8e8',     // Industrial: neutral grey
-          'commercial', '#f2f2f0',     // Commercial: warm light grey
-          'residential', '#f5f5f3',    // Residential: cream grey
-          'agriculture', '#f0efe8',    // Agriculture: warm cream
-          'airport', '#ebebeb',        // Airport: cool grey
-          'pitch', '#e8ede8',          // Sports: light green-grey
-          '#f1f3f4'                    // Default
+          'park', '#dfe8dc',           // Parks: muted sage
+          'cemetery', '#e5e5e0',       // Cemetery: neutral cream
+          'hospital', '#f0eae8',       // Hospital: warm blush
+          'school', '#eae8ed',         // School: soft lavender-grey
+          'industrial', '#e2e2e0',     // Industrial: cool grey
+          'commercial', '#ede8e3',     // Commercial: warm cream
+          'residential', '#f0ebe5',    // Residential: ivory
+          'agriculture', '#ebe6dc',    // Agriculture: wheat cream
+          'airport', '#e5e5e5',        // Airport: neutral
+          'pitch', '#e0e8dc',          // Sports: soft green-grey
+          '#ebe7e0'                    // Default: warm cream
         ]);
-        map.setPaintProperty('landuse', 'fill-opacity', 0.5);
+        map.setPaintProperty('landuse', 'fill-opacity', 0.6);
       }
       
       // Hillshade for terrain depth (if available)
       if (map.getLayer('hillshade')) {
-        map.setPaintProperty('hillshade', 'hillshade-shadow-color', '#e0e0e0');
-        map.setPaintProperty('hillshade', 'hillshade-highlight-color', '#fafafa');
-        map.setPaintProperty('hillshade', 'hillshade-exaggeration', 0.3);
+        map.setPaintProperty('hillshade', 'hillshade-shadow-color', '#d8d4cc');
+        map.setPaintProperty('hillshade', 'hillshade-highlight-color', '#fafaf8');
+        map.setPaintProperty('hillshade', 'hillshade-exaggeration', 0.25);
       }
       
-      // Parks/green areas: soft sage tones
+      // Parks/green areas: refined sage tones
       if (map.getLayer('park')) {
-        map.setPaintProperty('park', 'fill-color', '#e5ede5');
+        map.setPaintProperty('park', 'fill-color', '#dce5d8');
       }
       if (map.getLayer('national_park')) {
-        map.setPaintProperty('national_park', 'fill-color', '#e2eae2');
+        map.setPaintProperty('national_park', 'fill-color', '#d8e2d5');
       }
       
-      // Buildings: subtle warm grey
+      // Buildings: warm ivory grey
       if (map.getLayer('building')) {
-        map.setPaintProperty('building', 'fill-color', '#e5e5e5');
-        map.setPaintProperty('building', 'fill-opacity', 0.7);
+        map.setPaintProperty('building', 'fill-color', '#ddd8d0');
+        map.setPaintProperty('building', 'fill-opacity', 0.65);
       }
       
-      // Roads: soft grey tones
+      // Roads: refined warm grey tones
       const roadLayers = ['road-street', 'road-minor', 'road-major', 'road-primary', 'road-secondary', 'road-motorway', 'road-trunk'];
       roadLayers.forEach(layerId => {
         if (map.getLayer(layerId)) {
-          map.setPaintProperty(layerId, 'line-color', '#d4d4d4');
+          map.setPaintProperty(layerId, 'line-color', '#ccc8c0');
         }
       });
     });
