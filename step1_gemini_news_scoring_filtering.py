@@ -190,7 +190,7 @@ def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: in
         dict with 'approved' and 'filtered' lists
     """
     
-    system_prompt = """# TEN NEWS SCORING V12 - GLOBAL + SHAREABLE + CULTURALLY INTERESTING
+    system_prompt = """# TEN NEWS SCORING V13 - STRICTER CRITERIA + BETTER 900+ IDENTIFICATION
 
 ## 🎯 CORE PRINCIPLE
 
@@ -209,335 +209,371 @@ PATH C: WATER COOLER STORIES (Culturally fascinating)
 → Bizarre/unusual events + High discussability + Viral potential
 ```
 
-**All paths require the story to be about GLOBAL topics or entities, not regional issues or unknown individuals.**
+---
+
+## 🚨 NEW IN V13: ADDITIONAL DISQUALIFIERS
+
+### LISTICLES = Score 300-500
+
+Articles formatted as lists or rankings without breaking news value:
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "Snowflake CEO's 4 Rules for Effective Meetings" | **400** | Business listicle, not news |
+| "Countries Ranked: Reading Proficiency Revealed" | **450** | Ranking/listicle format |
+| "Top 10 AI Trends for 2026" | **350** | Year-end listicle |
+| "5 Ways to Improve Your Morning Routine" | **200** | Self-help listicle |
+
+**Pattern to detect:** Headlines with numbers followed by "rules", "ways", "tips", "trends", "things", "ranked"
+
+### GENERIC TREND PIECES = Score 400-600
+
+Vague societal trends without hard data or breaking news:
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "Gen Z and Millennials Embrace Analog Activities" | **500** | Vague trend, no hard news |
+| "Open Earbuds Trend Surges" | **450** | Product trend, not news |
+| "Customer Survey Fatigue Surges" | **400** | Generic business trend |
+| "Remote Work Continues to Grow" | **450** | Vague trend piece |
+
+**Exception:** Trend pieces WITH shocking statistics become Path B (e.g., "Concert Tickets Up 2,600%" = 890)
+
+### CLICKBAIT SCIENCE/TRIVIA = Score 300-500
+
+Quirky science or trivia without real importance:
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "Human Body: Counting the Holes and Their Purpose" | **350** | Clickbait trivia |
+| "Why Do We Yawn?" | **300** | Evergreen trivia |
+| "Scientists Discover New Species of Frog" | **450** | Minor discovery |
+
+**Exception:** Major scientific breakthroughs score 850+ (e.g., "Cancer Cure Found" = 920)
+
+### MINOR CULTURAL/LIFESTYLE = Score 400-600
+
+Cultural pieces without global significance:
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "Japan Celebrates Milestone Birthdays: 60, 77, 88" | **450** | Cultural trivia |
+| "How Different Countries Celebrate New Year" | **400** | Seasonal fluff |
+| "The History of Pizza" | **350** | Evergreen content |
+
+### RANDOM/QUIRKY STORIES = Score 400-600
+
+Unusual stories about unknown entities:
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "China Students Use Chalk Dust to Crack Phone Safe" | **500** | Quirky but not important |
+| "Man Builds House Entirely from Bottles" | **350** | Human interest quirk |
 
 ---
 
-## 🔥 SCORE THRESHOLD PHILOSOPHY
+## 🔥 SCORE THRESHOLD PHILOSOPHY (UPDATED)
 
-### 900+ = MUST-KNOW NEWS
-Stories that **everyone needs to know**. Breaking developments that will be discussed on every major news network worldwide. Historic moments, major deals between global giants, shocking policy changes by world leaders, significant war developments.
+### 900-950 = MUST-KNOW NEWS
+Stories that **everyone needs to know**. These would be the TOP story on CNN, BBC, Al Jazeera simultaneously.
 
-**Examples of 900+ stories:**
-- Peace treaties, war escalations, historic firsts in major conflicts
-- Billion-dollar deals between globally known companies
-- Shocking policy changes by world leaders (Trump renames Gulf of Mexico)
-- Major geopolitical shifts (North Korea nuclear developments)
+**Automatic 900+ triggers:**
+- ✅ Active war developments (attacks, escalations, peace treaties)
+- ✅ Billion-dollar deals between global giants
+- ✅ World leader summits/meetings with major stakes
+- ✅ Deaths of global icons
+- ✅ Major geopolitical shifts (nuclear threats, invasions)
+- ✅ Historic firsts in major conflicts
+- ✅ Government deals worth $5B+ 
 
-### 850-899 = HIGHLY INTERESTING NEWS
-Stories that **everyone wants to know**. Fascinating, shareable, viral-worthy content that people will discuss at dinner or share on social media. Records, milestones, cultural shifts, bizarre events.
+**Examples that SHOULD be 900+:**
+| Article | Score | Why |
+|---------|-------|-----|
+| "Russia Launches Air Attack on Kyiv" | **920** | Active war attack |
+| "Zelenskyy to Meet Trump" | **910** | Major diplomatic summit |
+| "Putin Warns of Escalation if Ukraine Rejects Talks" | **900** | Nuclear power escalation warning |
+| "Trump Admin Buys 10% Stake in Intel for $8.8B" | **920** | Massive government deal |
+| "Brigitte Bardot Dies at 91" | **900** | Global icon death |
+| "Disney Strikes $1B OpenAI Deal" | **920** | Two global giants deal |
 
-**Examples of 850-899 stories:**
-- Mind-blowing statistics (Concert tickets up 2,600%)
-- Viral government actions (ICE Santa ad)
-- Cultural shifts (British alcohol consumption record low)
-- Tech milestones (Starlink reaches 9M users)
-- Box office records (Avatar 3 opens $345M)
+### 850-899 = HIGHLY IMPORTANT NEWS
+Stories that **everyone should know**. Significant global developments, major policy changes, important milestones.
 
-### 800-849 = SOLID NEWS
-Good, newsworthy stories worth including but not exceptional.
+**Examples:**
+| Article | Score | Why |
+|---------|-------|-----|
+| "South Korea Closes 4,000 Schools Amid Crisis" | **880** | Massive social crisis |
+| "Musk Oversees $10B in US Budget Cuts" | **880** | Major policy impact |
+| "Chile Forms Giant Lithium Firm with China" | **870** | Major resource deal |
+| "Concert Tickets Up 2,600% Since Beatles" | **890** | Mind-blowing stat |
+| "Data Centers Hit $61B Record" | **880** | Record milestone |
 
-### Below 800 = FILTERED OUT
-Regional news, lifestyle fluff, unknown individuals, routine announcements.
+### 800-849 = NOTABLE NEWS
+Good, newsworthy stories with global relevance. Worth including but not exceptional.
+
+**Examples:**
+| Article | Score | Why |
+|---------|-------|-----|
+| "Taiwan Shaken by 6.6 Magnitude Earthquake" | **830** | Natural disaster, known location |
+| "Philippines Accuses China of Water Cannon Attack" | **820** | International incident |
+| "Japan's H3 Rocket Fails" | **810** | Tech setback, known entity |
+
+### 700-799 = BORDERLINE
+May include on slow news days. Not priority.
+
+### Below 700 = FILTER OUT
+Regional news, lifestyle fluff, unknown individuals, listicles, generic trends.
 
 ---
 
 ## 🚨 INSTANT DISQUALIFIERS (Check First)
 
-Before evaluating anything else, check for these automatic failures:
+### TIER 1: Score 100-300 (Always Filter)
 
-### UNKNOWN INDIVIDUALS = Score 100-300
+| Type | Score Range | Examples |
+|------|-------------|----------|
+| **Unknown Individuals** | 100-300 | "62-Year-Old Applies for 900 Jobs" |
+| **Lifestyle Fluff** | 200-300 | "Paris Hilton Transforms Mansion" |
+| **Self-Help Listicles** | 200-300 | "5 Ways to Improve Your Life" |
+| **Clickbait Trivia** | 200-350 | "Why Do We Yawn?" |
 
-Stories about **unnamed or unknown private individuals** are NOT news:
+### TIER 2: Score 300-500 (Usually Filter)
 
-| Article | Score | Why |
-|---------|-------|-----|
-| "7-Year-Old Invites Shop Owner to Birthday Party" | **100** | Unknown child, human interest fluff |
-| "62-Year-Old Applies for 900 Jobs After Layoff" | **150** | Anonymous person, not newsworthy |
-| "Woman Sells Home, Moves to France at 55" | **100** | Random person lifestyle choice |
-| "Deaf Woman Breaks 16-Year Silence on Abuse" | **200** | Personal story, no global impact |
-| "Family Ditches Christmas Gifts for Home Projects" | **100** | Random family, lifestyle content |
+| Type | Score Range | Examples |
+|------|-------------|----------|
+| **Business Listicles** | 300-500 | "CEO's 4 Rules for Meetings" |
+| **Generic Rankings** | 400-500 | "Countries Ranked by Reading" |
+| **Generic Trend Pieces** | 400-500 | "Gen Z Embraces Analog" |
+| **Minor Cultural** | 400-500 | "Japan Celebrates Birthdays" |
+| **Quirky Stories** | 400-500 | "Students Crack Phone with Chalk" |
 
-**The rule:** If the headline describes a person by age, gender, occupation, or generic descriptor instead of their NAME → they are unknown → Score 100-300 max.
+### TIER 3: Score 500-700 (Filter Unless Slow Day)
 
-### LIFESTYLE/ENTERTAINMENT FLUFF = Score 200-400
-
-| Article | Score | Why |
-|---------|-------|-----|
-| "Paris Hilton Transforms Mansion into Pink Wonderland" | **250** | Celebrity home decor, zero importance |
-| "Rock Stars' 10 Hard Christmas Alternatives" | **200** | Listicle entertainment filler |
-| "Laura Dern Recalls Spielberg's Awkward Dinosaur Roar" | **200** | Old celebrity anecdote |
-| "UK House Breaks Record with 44.7m Christmas Tree" | **250** | Quirky local interest |
-| "The Verge's 13 Top Art Projects from 2025" | **200** | Publication's year-end list |
-
-### GENERIC HEALTH/WELLNESS = Score 300-450
-
-| Article | Score | Why |
-|---------|-------|-----|
-| "Liver Disease Shows Silent Symptoms" | **350** | Generic health education |
-| "Orange Juice Cuts Blood Pressure" | **300** | Clickbait health tip |
-
-**Exception:** Major medical breakthroughs (cure discovered, pandemic news) can score 900+
-
-### REGIONAL NEWS = Score 400-600
-
-| Article | Score | Why |
-|---------|-------|-----|
-| "Modi Hails Win in Maharashtra Local Polls" | **450** | Indian state politics |
-| "BJP Leader at Tamil Nadu Rally" | **350** | Indian regional event |
-| "Louisiana Captures Jail Escapee" | **350** | US local crime |
-| "UK Bans Trail Hunting" | **450** | UK domestic policy |
-| "Fed's Hammack Signals Rates Steady" | **550** | Regional Fed official |
+| Type | Score Range | Examples |
+|------|-------------|----------|
+| **Regional News** | 500-600 | "Modi Wins Maharashtra Polls" |
+| **Minor International** | 600-700 | "France Cuts Emissions 30%" |
+| **Routine Announcements** | 600-700 | "Japan Pledges $6B for AI" |
 
 ---
 
-## 🚨 GATE 1: GLOBAL ENTITY CHECK
-
-**Question: Is the main entity recognized by average people in USA, Europe, AND Asia?**
-
-### ✅ GLOBALLY KNOWN ENTITIES
-
-**World Leaders:** Putin, Trump, Biden, Xi Jinping, Zelensky, Modi, Macron, Kim Jong Un, Netanyahu, Pope Francis
-
-**Tech Giants:** Apple, Google, Microsoft, Amazon, Meta, Tesla, Netflix, OpenAI, ChatGPT, Nvidia, Samsung, TikTok, SpaceX, Starlink
-
-**Global Companies:** Disney, Nike, Ferrari, Toyota, McDonald's, Coca-Cola, Boeing, Airbus, LVMH, Pfizer
-
-**Entertainment:** Taylor Swift, Beyoncé, BTS, Marvel, Star Wars, Avatar, James Cameron
-
-**Countries/Organizations:** USA, China, Russia, EU, UK, NATO, UN, WHO, Ukraine, Israel, North Korea, Iran, Japan
-
-**Government Agencies (when notable):** ICE, FBI, CIA, Pentagon, NASA
-
-### ❌ NOT GLOBALLY KNOWN
-
-Regional politicians, regional companies, regional celebrities, niche sports figures
-
----
-
-## 🚨 GATE 2: INTERNATIONAL RELEVANCE CHECK
-
-**Question: Would this story matter to people in at least 3 different continents?**
-
-Stories that DO have international relevance:
-- Wars/Conflicts affecting multiple nations
-- Global economic policy (Fed Chair Powell, not regional Fed presidents)
-- Climate/Environment affecting planet
-- International diplomacy (treaties, summits, sanctions)
-- Major tech/science breakthroughs
-- Cultural shifts in major countries
-- Bizarre government actions that spark international discussion
-
----
-
-## 🌟 PATH A: HARD NEWS (Score 800-950)
-
-Traditional breaking news with global significance.
+## 🌟 PATH A: HARD NEWS (Score 700-950)
 
 ### Score 900-950: MUST-KNOW Hard News
-- Historic events (peace treaties, major escalations)
-- Billion-dollar deals between global giants
-- Shocking policy changes by world leaders
-- Major geopolitical shifts
-- Significant war developments with strategic impact
+
+**Automatic 900+ criteria (ANY of these = 900+):**
+1. Active military attacks/operations in major conflicts
+2. Peace treaties or major diplomatic breakthroughs
+3. World leader summits with high stakes (Trump-Zelenskyy, Xi-Putin)
+4. Deaths of globally recognized icons
+5. Deals worth $5B+ between global entities
+6. Nuclear threats or escalations
+7. Major invasions or territorial changes
+8. Historic firsts in warfare/diplomacy
+
+| Article | Score | Trigger |
+|---------|-------|---------|
+| "Russia Launches Air Attack on Kyiv" | **920** | Active military attack |
+| "Zelenskyy to Meet Trump Amid Rising Tensions" | **910** | High-stakes summit |
+| "Putin Warns of Escalation" | **900** | Nuclear power warning |
+| "Trump Admin Buys 10% Intel Stake for $8.8B" | **920** | $8.8B government deal |
+| "Brigitte Bardot Dies at 91" | **900** | Global icon death |
+| "Ukraine Strikes Russian Sub with Drones" | **910** | Historic first in war |
+| "North Korea Warns Japan Over Nuclear Push" | **900** | Nuclear threat |
 
 ### Score 850-899: Important Hard News
-- Notable diplomatic developments
-- Significant but not historic military events
-- Major corporate announcements
-- International flashpoints
 
-### Score 800-849: Solid Hard News
-- Routine but newsworthy international events
-- Standard diplomatic meetings
-- Expected policy announcements
-
-### ✅ Examples
+- Major policy changes affecting millions
+- Significant diplomatic developments (not summits)
+- Large-scale crises (4,000 schools closing)
+- Important military movements (not attacks)
+- Major corporate restructuring with global impact
 
 | Article | Score | Reasoning |
 |---------|-------|-----------|
-| "Russia-Ukraine Sign Peace Treaty" | **950** | Historic, war-ending event |
-| "Disney Strikes $1B OpenAI Deal" | **920** | Two global giants + Industry-shaping |
-| "Ukraine Strikes Russian Sub with Underwater Drones" | **910** | Historic first + Major war development |
-| "Trump Renames Kennedy Center, Gulf of Mexico" | **920** | World leader + Shocking action |
-| "North Korea Warns Japan Over Nuclear Weapons Push" | **900** | Nuclear tensions + Major powers |
-| "US Intel Warns Putin Seeks Full Ukraine Control" | **880** | Important intel but not breaking action |
-| "Israel Approves 19 New West Bank Settlements" | **860** | International flashpoint, ongoing issue |
-| "Japan Pledges $6B for AI Development" | **820** | Notable but routine announcement |
+| "South Korea Closes 4,000 Schools Amid Crisis" | **880** | Massive social impact |
+| "Musk Oversees $10B in US Budget Cuts" | **880** | Major policy impact |
+| "Israel Seals Off West Bank Village" | **860** | International flashpoint |
+| "Poland Races to Build Bomb Shelters" | **860** | Security escalation |
+
+### Score 800-849: Notable Hard News
+
+- International incidents without escalation
+- Natural disasters in known locations
+- Routine diplomatic activities
+- Policy announcements without immediate impact
+
+| Article | Score | Reasoning |
+|---------|-------|-----------|
+| "Taiwan 6.6 Magnitude Earthquake" | **830** | Natural disaster |
+| "Philippines Accuses China of Attack" | **820** | Incident, not escalation |
+| "Syria Protests After Mosque Bombing" | **820** | Regional unrest |
 
 ---
 
-## 🌟 PATH B: SHAREABLE INSIGHTS (Score 800-899)
+## 🌟 PATH B: SHAREABLE INSIGHTS (Score 700-899)
 
-Stories with surprising statistics, records, or facts that make people say "Did you know...?"
-
-**Note:** Path B stories max out at 899 because they are fascinating but not "must-know breaking news."
+**Note:** Path B caps at 899. Statistics are fascinating but not "must-know breaking news."
 
 ### Score 870-899: Mind-Blowing Insights
-- Shocking statistics that change perspective
-- Record-breaking milestones
-- Data that reveals how the world is changing
+
+Must have SHOCKING statistics that change perspective:
+
+| Article | Score | Why It Works |
+|---------|-------|--------------|
+| "Concert Tickets Up 2,600% Since Beatles" | **890** | Mind-blowing percentage |
+| "Only 8 Men Own Same Wealth as Poorest 50%" | **890** | Shocking inequality |
+| "Data Centers Hit $61B Record" | **880** | Record + AI trend |
+| "90% of Ocean Plastic from 10 Rivers" | **885** | Perspective-changing |
 
 ### Score 850-869: Very Surprising Insights
-- Impressive records and milestones
-- Interesting trend data
-- Notable achievements
+
+Impressive but not jaw-dropping:
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "Starlink Reaches 9M Users, 20K/Day" | **865** | Strong growth |
+| "Waymo Achieves 14 Million Rides" | **860** | Major milestone |
+| "Gold Prices Surge to Record Highs" | **855** | Record but expected |
 
 ### Score 800-849: Interesting Insights
-- Good statistics worth sharing
-- Minor records
-- Industry milestones
 
-### ✅ Examples
+Worth noting but not shareable:
 
-| Article | Score | Reasoning |
-|---------|-------|-----------|
-| "Concert Tickets Surge 2,600% Since Beatles Era" | **890** | Mind-blowing stat + Universal topic |
-| "Data Centers Hit $61B Investment Record in 2025" | **880** | Record milestone + AI angle |
-| "Avatar 3 Opens with $345M Worldwide Box Office" | **875** | Big numbers + Global franchise |
-| "Starlink Adds 20,000 Users Daily, Reaches 9M" | **870** | Growth milestone + Known entity |
-| "Lovable Hits $6.6B Valuation with AI Coding" | **865** | AI milestone + Explosive growth |
-| "90% of Ocean Plastic Comes from 10 Rivers" | **880** | Surprising fact + Environmental |
-| "Only 8 Men Own Same Wealth as Poorest 50%" | **885** | Shocking inequality stat |
-| "Japan Has More People Over 80 Than Under 10" | **870** | Mind-bending demographic fact |
+| Article | Score | Why |
+|---------|-------|-----|
+| "Coffee Prices Skyrocket" | **820** | Price news |
+| "AI Boom Drives RAM Chip Shortage" | **830** | Tech impact |
+
+### ❌ NOT Path B (Disqualified)
+
+| Article | Score | Why It Fails |
+|---------|-------|--------------|
+| "Gen Z Embraces Analog Activities" | **500** | No shocking stat, vague trend |
+| "Countries Ranked: Reading Proficiency" | **450** | Listicle format |
+| "Customer Survey Fatigue Surges" | **400** | Generic business |
 
 ---
 
-## 🌟 PATH C: WATER COOLER STORIES (Score 800-899)
+## 🌟 PATH C: WATER COOLER STORIES (Score 700-899)
 
-Stories that are culturally fascinating and highly discussable. They make people say "Can you believe this?"
+**Note:** Path C caps at 899 unless the action IS major policy (then it's Path A).
 
-**Note:** Path C stories max out at 899 unless they cross into Path A territory (world leader doing something shocking that IS the news itself, like Trump renaming Gulf of Mexico).
+### Score 870-899: Shocking/Bizarre from Major Entities
 
-### Score 870-899: Shocking/Bizarre Events
-- Bizarre government actions that go viral
-- Controversial decisions sparking debate
-- Unprecedented actions by known entities
+| Article | Score | Why |
+|---------|-------|-----|
+| "ICE Christmas Ad Shows Santa Detaining Migrants" | **880** | US gov + Bizarre + Viral |
+| "Pentagon Releases UFO Footage" | **875** | Government + Mystery |
+| "China Bans Effeminate Men on TV" | **870** | Major country + Controversial |
 
-### Score 850-869: Very Unusual Events
-- Unusual corporate/government behavior
-- Cultural shifts with data
-- Highly shareable moments
+### Score 850-869: Unusual Actions
 
-### Score 800-849: Interesting Cultural Moments
-- Notable but less shocking events
-- Trend indicators
-- Discussable but not viral
-
-### ✅ Examples
-
-| Article | Score | Reasoning |
-|---------|-------|-----------|
-| "ICE Christmas Ad Shows Santa Detaining Migrants" | **880** | Bizarre government action + Viral |
-| "Trump to Co-Lead Navy Ship Design for 'Golden Fleet'" | **865** | Unprecedented action + Quotable |
-| "British Alcohol Consumption Falls to Record Low" | **855** | Cultural shift + Surprising trend |
-| "China Bans Effeminate Men on Television" | **870** | Major country + Controversial policy |
-| "France Bans Short-Haul Flights Where Trains Exist" | **860** | Unusual policy + Climate angle |
-| "Pentagon Releases New UFO Footage" | **875** | Government + Mysterious + Viral |
+| Article | Score | Why |
+|---------|-------|-----|
+| "Trump to Design Navy Ships" | **865** | Unusual but announcement |
+| "France Bans Short-Haul Flights" | **860** | Unusual policy |
+| "British Alcohol Hits Record Low" | **855** | Cultural shift + data |
 
 ### When Path C Becomes Path A (900+)
 
-If a "bizarre" action is SO significant that it's the news itself (not just interesting), it becomes Path A:
+If the bizarre action IS significant policy:
 
-| Article | Score | Why It's Path A, Not C |
-|---------|-------|------------------------|
-| "Trump Renames Gulf of Mexico" | **920** | This IS major policy news, not just bizarre |
-| "China Annexes Taiwan" | **950** | Historic geopolitical event |
+| Article | Score | Why It's Path A |
+|---------|-------|-----------------|
+| "Trump Renames Gulf of Mexico" | **920** | Actual policy change |
 
 ---
 
-## 📊 COMPLETE SCORING MATRIX
+## 📊 COMPLETE SCORING MATRIX V13
 
 ### Quick Reference
 
-| Score Range | Category | Description |
-|-------------|----------|-------------|
-| **900-950** | MUST-KNOW | Breaking news everyone needs to know. Historic events, major deals, shocking world leader actions, war developments. |
-| **870-899** | HIGHLY INTERESTING | Fascinating stories everyone wants to know. Mind-blowing stats, viral moments, bizarre events. |
-| **850-869** | VERY INTERESTING | Strong stories worth attention. Good records, unusual events, notable milestones. |
-| **800-849** | SOLID NEWS | Newsworthy stories worth including. |
-| **600-799** | BORDERLINE | May or may not make the cut. |
-| **400-599** | REGIONAL | Known entity but regional scope. |
-| **200-399** | FLUFF | Lifestyle, generic health, entertainment filler. |
-| **100-199** | DISQUALIFIED | Unknown individuals, human interest fluff. |
-
-### Path-Specific Ranges
-
-| Path | Score Range | Criteria |
-|------|-------------|----------|
-| **A: Hard News** | 900-950 | Historic + Global giants + Shocking/Breaking |
-| **A: Hard News** | 850-899 | Important + International + Notable |
-| **A: Hard News** | 800-849 | Solid + International + Routine |
-| **B: Shareable** | 870-899 | Mind-blowing stat + Universal + Quotable |
-| **B: Shareable** | 850-869 | Very surprising + Shareable |
-| **B: Shareable** | 800-849 | Interesting + Worth sharing |
-| **C: Water Cooler** | 870-899 | Bizarre/Shocking + Viral + Discussable |
-| **C: Water Cooler** | 850-869 | Very unusual + Shareable |
-| **C: Water Cooler** | 800-849 | Interesting cultural moment |
+| Score | Category | What Qualifies |
+|-------|----------|----------------|
+| **900-950** | MUST-KNOW | Active war, major summits, $5B+ deals, icon deaths, nuclear threats |
+| **870-899** | HIGHLY IMPORTANT | Major crises, mind-blowing stats, shocking events |
+| **850-869** | VERY IMPORTANT | Policy changes, strong milestones, unusual actions |
+| **800-849** | NOTABLE | Good international news, interesting insights |
+| **700-799** | BORDERLINE | May include on slow days |
+| **500-699** | WEAK | Regional, minor international |
+| **300-499** | FILTER | Listicles, trends, quirky stories |
+| **100-299** | DISQUALIFIED | Unknown people, lifestyle fluff |
 
 ---
 
 ## ⚠️ COMMON MISTAKES TO AVOID
 
-1. **Don't give 900+ to fascinating-but-not-breaking stories**
-   - ❌ "Concert Tickets Up 2,600%" = 890, not 920 (fascinating stat, not must-know)
-   - ❌ "ICE Santa Ad" = 880, not 900 (viral, not essential news)
-   - ✅ "Disney $1B OpenAI Deal" = 920 (two global giants, industry-shaping)
+### 1. Missing 900+ Stories
 
-2. **Don't confuse "bizarre" with "must-know"**
-   - "Trump designs Navy ships" = 865 (unusual announcement)
-   - "Trump renames Gulf of Mexico" = 920 (this IS significant policy news)
+❌ WRONG: "Zelenskyy to Meet Trump" → 870
+✅ CORRECT: "Zelenskyy to Meet Trump" → 910 (high-stakes summit)
 
-3. **Path B and C cap at 899 unless crossing into Path A**
-   - Statistics, no matter how mind-blowing, are 899 max
-   - Bizarre events are 899 max unless they ARE major policy/news
+❌ WRONG: "Russia Attacks Kyiv" → 860
+✅ CORRECT: "Russia Attacks Kyiv" → 920 (active war attack)
 
-4. **Don't undervalue Path B and C stories**
-   - They should still score 850-899, making them Top 10 worthy
-   - Just not in the "must-know" 900+ tier
+❌ WRONG: "Trump Buys Intel Stake for $8.8B" → 800
+✅ CORRECT: "Trump Buys Intel Stake for $8.8B" → 920 (massive deal)
 
-5. **Reserve 900+ for stories that would lead every news broadcast**
-   - Would CNN/BBC/Al Jazeera all lead with this?
-   - If yes → 900+
-   - If "interesting segment" → 850-899
+### 2. Letting Listicles Score High
+
+❌ WRONG: "CEO's 4 Rules for Meetings" → 800
+✅ CORRECT: "CEO's 4 Rules for Meetings" → 400 (listicle = disqualified)
+
+### 3. Letting Generic Trends Score High
+
+❌ WRONG: "Gen Z Embraces Analog Activities" → 800
+✅ CORRECT: "Gen Z Embraces Analog Activities" → 500 (generic trend)
+
+### 4. Missing the Difference Between Trends and Stats
+
+❌ "Gen Z Embraces Analog" = Generic trend (500)
+✅ "Concert Tickets Up 2,600%" = Mind-blowing stat (890)
+
+The difference: One has a SHOCKING NUMBER, the other doesn't.
 
 ---
 
 ## ✅ THE ULTIMATE TESTS
 
 **For 900+ (Must-Know):**
-> "Would this be the TOP story on CNN, BBC, and Al Jazeera simultaneously?"
+> "Would this be BREAKING NEWS on CNN, BBC, and Al Jazeera RIGHT NOW?"
 
-**For 850-899 (Highly Interesting):**
-> "Would someone share this saying 'Did you know?' or 'Can you believe this?'"
+**For 850-899 (Highly Important):**
+> "Would this be a LEAD STORY (not breaking) on major networks?"
 
-**For 800-849 (Solid News):**
-> "Is this newsworthy and relevant to a global audience?"
+**For 800-849 (Notable):**
+> "Would this get significant coverage on international news?"
+
+**For Disqualification:**
+> "Is this a listicle, generic trend, quirky story, or clickbait?"
 
 ---
 
-## 📋 FINAL CALIBRATED EXAMPLES
+## 📋 FINAL V13 CALIBRATED EXAMPLES
 
 | Article | Path | Score | Key Factor |
 |---------|------|-------|------------|
-| "Disney Strikes $1B OpenAI Deal" | A | **920** | Two global giants |
-| "Trump Renames Gulf of Mexico" | A | **920** | World leader shocking policy |
-| "Ukraine Strikes Russian Sub" | A | **910** | Historic first in major war |
-| "North Korea Warns Japan Nuclear" | A | **900** | Nuclear tensions |
+| "Russia Attacks Kyiv" | A | **920** | Active war attack |
+| "Trump Buys Intel Stake $8.8B" | A | **920** | Massive deal |
+| "Zelenskyy Meets Trump" | A | **910** | High-stakes summit |
+| "Brigitte Bardot Dies at 91" | A | **900** | Icon death |
+| "Putin Warns Escalation" | A | **900** | Nuclear warning |
 | "Concert Tickets Up 2,600%" | B | **890** | Mind-blowing stat |
-| "Data Centers Hit $61B Record" | B | **880** | Record milestone |
-| "ICE Santa Ad Detaining Migrants" | C | **880** | Bizarre + Viral |
-| "US Intel: Putin Wants All Ukraine" | A | **880** | Important intel |
-| "Avatar 3 Opens $345M" | B | **875** | Big box office |
-| "Starlink Reaches 9M Users" | B | **870** | Growth milestone |
-| "Lovable Hits $6.6B Valuation" | B | **865** | AI growth |
-| "Trump to Design Navy Ships" | C | **865** | Unusual announcement |
-| "Israel Approves Settlements" | A | **860** | Ongoing flashpoint |
+| "South Korea Closes 4,000 Schools" | A | **880** | Major crisis |
+| "ICE Santa Ad" | C | **880** | Bizarre + Viral |
+| "Musk $10B Budget Cuts" | A | **880** | Major policy |
+| "Data Centers $61B Record" | B | **880** | Record milestone |
+| "Starlink Reaches 9M Users" | B | **865** | Growth milestone |
+| "Trump Designs Navy Ships" | C | **865** | Unusual action |
+| "Israel Seals West Bank" | A | **860** | Flashpoint |
 | "British Alcohol Record Low" | C | **855** | Cultural shift |
-| "Japan $6B AI Pledge" | A | **820** | Routine announcement |
-| "Modi Wins Maharashtra" | - | **500** | Regional |
-| "Paris Hilton Mansion" | - | **250** | Lifestyle fluff |
-| "7-Year-Old Invites Shop Owner" | - | **100** | Unknown person |
+| "Taiwan 6.6 Earthquake" | A | **830** | Natural disaster |
+| "Coffee Prices Skyrocket" | B | **820** | Price news |
+| "Gen Z Embraces Analog" | DISQ | **500** | Generic trend |
+| "CEO's 4 Rules" | DISQ | **400** | Listicle |
+| "Human Body Holes" | DISQ | **350** | Clickbait trivia |
+| "Countries Ranked Reading" | DISQ | **450** | Listicle |
 
 ---
 
@@ -551,69 +587,36 @@ Return ONLY valid JSON array with exactly this structure for each article:
     "path": "A_HARD_NEWS",
     "disqualifier": null,
     "is_must_know": true,
-    "must_know_reason": "GLOBAL_GIANTS_DEAL",
-    "for_path_a": {
-      "globally_known_entity": true,
-      "entity": "Disney, OpenAI",
-      "international_relevance": true,
-      "historic_or_breaking": true,
-      "memorable_factors": ["SHOCKING", "HISTORIC", "IMPACTFUL"]
-    },
-    "for_path_b": null,
-    "for_path_c": null,
+    "must_know_trigger": "ACTIVE_WAR_ATTACK",
+    "globally_known_entity": true,
+    "entity": "Russia, Ukraine",
     "score": 920,
     "status": "APPROVED",
-    "category": "Technology"
+    "category": "World"
   },
   {
-    "title": "Concert Tickets Surge 2,600% Since Beatles Era",
+    "title": "Concert Tickets Up 2,600% Since Beatles",
     "path": "B_SHAREABLE_INSIGHT",
     "disqualifier": null,
     "is_must_know": false,
-    "must_know_reason": null,
-    "for_path_a": null,
-    "for_path_b": {
-      "universal_topic": true,
-      "topic": "Entertainment/Money",
-      "surprise_factor": "MIND_BLOWING",
-      "quotable": true
-    },
-    "for_path_c": null,
+    "must_know_trigger": null,
+    "globally_known_entity": true,
+    "entity": "Entertainment industry",
     "score": 890,
     "status": "APPROVED",
     "category": "Entertainment"
   },
   {
-    "title": "ICE Christmas Ad Shows Santa Detaining Migrants",
-    "path": "C_WATER_COOLER",
-    "disqualifier": null,
-    "is_must_know": false,
-    "must_know_reason": null,
-    "for_path_a": null,
-    "for_path_b": null,
-    "for_path_c": {
-      "known_entity": true,
-      "entity": "ICE (US Government)",
-      "bizarre_factor": "SHOCKING",
-      "viral_potential": true,
-      "cultural_significance": true
-    },
-    "score": 880,
-    "status": "APPROVED",
-    "category": "Politics"
-  },
-  {
-    "title": "62-Year-Old Applies for 900 Jobs",
+    "title": "CEO's 4 Rules for Meetings",
     "path": "DISQUALIFIED",
-    "disqualifier": "UNKNOWN_PERSON",
+    "disqualifier": "LISTICLE",
     "is_must_know": false,
-    "must_know_reason": null,
-    "for_path_a": null,
-    "for_path_b": null,
-    "for_path_c": null,
-    "score": 150,
+    "must_know_trigger": null,
+    "globally_known_entity": false,
+    "entity": null,
+    "score": 400,
     "status": "FILTERED",
-    "category": "Other"
+    "category": "Business"
   }
 ]
 
@@ -621,10 +624,9 @@ Rules:
 - status = "APPROVED" if score >= 800
 - status = "FILTERED" if score < 800
 - path = "A_HARD_NEWS" or "B_SHAREABLE_INSIGHT" or "C_WATER_COOLER" or "DISQUALIFIED"
-- disqualifier = null or "UNKNOWN_PERSON" or "LIFESTYLE_FLUFF" or "REGIONAL_ONLY" or "GENERIC_HEALTH"
+- disqualifier = null or "UNKNOWN_PERSON" or "LIFESTYLE_FLUFF" or "LISTICLE" or "GENERIC_TREND" or "CLICKBAIT_TRIVIA" or "QUIRKY_RANDOM" or "REGIONAL"
 - is_must_know = true only for 900+ scores
-- must_know_reason = null or "HISTORIC_EVENT" or "GLOBAL_GIANTS_DEAL" or "WORLD_LEADER_SHOCKING_POLICY" or "MAJOR_WAR_DEVELOPMENT"
-- Include only the relevant path object (for_path_a, for_path_b, or for_path_c), set others to null
+- must_know_trigger = null or "ACTIVE_WAR_ATTACK" or "PEACE_TREATY" or "HIGH_STAKES_SUMMIT" or "ICON_DEATH" or "MAJOR_DEAL_5B+" or "NUCLEAR_THREAT" or "HISTORIC_FIRST"
 - category: Tech, Business, Science, Politics, Finance, Crypto, Health, Entertainment, Sports, World, Other
 - Maintain order of input articles
 - No explanations outside the JSON
