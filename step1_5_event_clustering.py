@@ -10,6 +10,7 @@ Algorithm: Gemini embeddings + cosine similarity (threshold 0.87 - strict for ac
 
 import re
 import os
+import time
 import numpy as np
 import requests
 from typing import List, Dict, Optional, Set, Tuple, Union
@@ -180,10 +181,10 @@ class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
     # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.78  # Cosine similarity threshold - LOWERED AGGRESSIVELY to catch duplicates
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.75  # Cosine similarity threshold - VERY AGGRESSIVE to catch all duplicates
     # 0.90+ = Almost identical titles
     # 0.85-0.90 = Same event, different wording
-    # 0.78-0.85 = Same event, significantly different wording (MATCH THESE)
+    # 0.75-0.85 = Same event OR same topic, significantly different wording (MATCH THESE)
     # 0.70-0.78 = Related topics, might be different events
     # <0.70 = Definitely different events
     

@@ -5,7 +5,7 @@ Verifies generated content against source articles to detect hallucinations.
 
 This module:
 1. Compares generated title, bullets, and article text against original sources
-2. Uses Gemini (temporarily switched from Claude) to identify any claims not supported by the sources
+2. Uses Gemini to identify any claims not supported by the sources
 3. Rejects articles with significant discrepancies
 4. Allows regeneration of rejected articles
 """
@@ -18,7 +18,7 @@ from dataclasses import dataclass
 @dataclass
 class VerificationConfig:
     """Configuration for fact verification"""
-    model: str = "gemini-2.0-flash-exp"  # Temporarily using Gemini instead of Claude
+    model: str = "gemini-2.0-flash-exp"
     max_tokens: int = 1500
     temperature: float = 0  # Deterministic for verification
     timeout: int = 60
@@ -139,11 +139,10 @@ Return JSON with your verification result."""
 
 
 class FactVerifier:
-    """Verifies generated content against source articles (using Gemini temporarily)"""
+    """Verifies generated content against source articles"""
     
     def __init__(self, api_key: str = None, config: VerificationConfig = None):
-        # Use Gemini API key (temporarily instead of Anthropic)
-        self.api_key = api_key or os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+        self.api_key = api_key or os.getenv('GEMINI_API_KEY')
         self.config = config or VerificationConfig()
         self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.model}:generateContent?key={self.api_key}"
     
@@ -168,7 +167,6 @@ class FactVerifier:
         try:
             prompt = build_verification_prompt(sources, generated)
             
-            # Build Gemini API request
             request_data = {
                 "contents": [
                     {
@@ -183,18 +181,19 @@ class FactVerifier:
                 }
             }
             
-            response = requests.post(self.api_url, json=request_data, timeout=self.config.timeout)
-            
-            # Handle rate limiting
-            if response.status_code == 429:
-                print(f"   ⚠️ Rate limited in verification")
-                return True, [], "Rate limited - assuming valid"
-            
+            response = requests.post(
+                self.api_url,
+                json=request_data,
+                timeout=self.config.timeout
+            )
             response.raise_for_status()
-            response_json = response.json()
+            result = response.json()
             
             # Extract response text from Gemini format
-            response_text = response_json['candidates'][0]['content']['parts'][0]['text']
+            if 'candidates' not in result or len(result['candidates']) == 0:
+                raise Exception("No candidates in Gemini response")
+            
+            response_text = result['candidates'][0]['content']['parts'][0]['text']
             
             # Clean and parse JSON
             response_text = response_text.replace('```json', '').replace('```', '').strip()

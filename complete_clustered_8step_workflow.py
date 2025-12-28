@@ -184,8 +184,8 @@ if not all([gemini_key, anthropic_key, brightdata_key]):
 brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
 
 component_selector = GeminiComponentSelector(api_key=gemini_key)
-component_writer = ClaudeComponentWriter(api_key=gemini_key)  # Temporarily using Gemini instead of Claude
-fact_verifier = FactVerifier(api_key=gemini_key)  # Temporarily using Gemini instead of Claude
+component_writer = ClaudeComponentWriter(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
+fact_verifier = FactVerifier(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
 
 
 # ==========================================
@@ -311,9 +311,35 @@ def run_complete_pipeline():
     
     scoring_result = score_news_articles_step1(articles, gemini_key)
     approved_articles = scoring_result.get('approved', [])
-    filtered_count = len(scoring_result.get('filtered', []))
-    
+    filtered_articles = scoring_result.get('filtered', [])
+    filtered_count = len(filtered_articles)
+
     print(f"\n✅ Step 1 Complete: {len(approved_articles)} approved, {filtered_count} filtered")
+    
+    # SAVE FILTERED ARTICLES TO SUPABASE (for analysis)
+    if filtered_articles:
+        try:
+            filtered_to_save = []
+            for article in filtered_articles:
+                filtered_to_save.append({
+                    'title': article.get('title', 'Unknown'),
+                    'score': article.get('score', 0),
+                    'source': article.get('source', 'Unknown'),
+                    'url': article.get('url', ''),
+                    'category': article.get('category', 'Other'),
+                    'path': article.get('path', 'DISQUALIFIED'),
+                    'disqualifier': article.get('disqualifier', None),
+                    'filtered_at': datetime.now().isoformat()
+                })
+            
+            # Insert in batches of 50
+            for i in range(0, len(filtered_to_save), 50):
+                batch = filtered_to_save[i:i+50]
+                supabase.table('filtered_articles').insert(batch).execute()
+            
+            print(f"   📊 Saved {len(filtered_to_save)} filtered articles to Supabase")
+        except Exception as e:
+            print(f"   ⚠️ Could not save filtered articles: {e}")
     
     if not approved_articles:
         print("⚠️  No articles approved - ending cycle")
@@ -651,6 +677,7 @@ def run_complete_pipeline():
             # CHECK FOR SIMILAR TITLES in recently published articles (last 24 hours)
             # This catches duplicates that slipped through clustering
             is_duplicate = False
+            skip_reason = None
             try:
                 from difflib import SequenceMatcher
                 import re
@@ -669,8 +696,37 @@ def run_complete_pipeline():
                     t = re.sub(r'[^\w\s]', '', t.lower())  # Remove punctuation
                     return t.strip()
                 
-                clean_new_title = clean_title(title)
+                # Extract main entities from title (capitalized words, proper nouns)
+                def extract_entities(t):
+                    if not t:
+                        return set()
+                    # Remove bold markers first
+                    t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
+                    # Find capitalized words (likely names/entities)
+                    entities = set()
+                    words = t.split()
+                    for word in words:
+                        # Clean the word
+                        clean_word = re.sub(r'[^\w]', '', word)
+                        # Check if it starts with uppercase and is substantial
+                        if clean_word and clean_word[0].isupper() and len(clean_word) >= 3:
+                            # Skip common non-entity words
+                            skip_words = {'The', 'This', 'That', 'These', 'Those', 'What', 'When', 'Where', 'Why', 'How', 'New', 'Breaking', 'Latest', 'Report', 'Says', 'After', 'Before', 'During', 'Between', 'Over', 'Under', 'Into', 'From', 'With', 'About'}
+                            if clean_word not in skip_words:
+                                entities.add(clean_word.lower())
+                    return entities
                 
+                clean_new_title = clean_title(title)
+                new_entities = extract_entities(title)
+                
+                # Track entity counts from recent articles
+                entity_counts = {}
+                for recent in (recent_articles.data or []):
+                    recent_title = recent.get('title_news', '')
+                    for entity in extract_entities(recent_title):
+                        entity_counts[entity] = entity_counts.get(entity, 0) + 1
+                
+                # CHECK 1: Title similarity (65% threshold - stricter)
                 for recent in (recent_articles.data or []):
                     recent_title = recent.get('title_news', '')
                     clean_recent_title = clean_title(recent_title)
@@ -678,18 +734,30 @@ def run_complete_pipeline():
                     if clean_new_title and clean_recent_title:
                         similarity = SequenceMatcher(None, clean_new_title, clean_recent_title).ratio()
                         
-                        if similarity >= 0.70:  # 70% similar = likely same news
+                        if similarity >= 0.65:  # 65% similar = likely same news (STRICTER)
                             print(f"   ⏭️ DUPLICATE TITLE DETECTED (similarity: {similarity:.0%})")
                             print(f"      New: {title[:60]}...")
                             print(f"      Existing (ID {recent['id']}): {recent_title[:60]}...")
-                            print(f"      Skipping cluster {cluster_id}")
                             is_duplicate = True
-                            break  # Exit the inner loop
+                            skip_reason = "duplicate_title"
+                            break
+                
+                # CHECK 2: Entity saturation (max 2 articles per main entity per day)
+                MAX_ARTICLES_PER_ENTITY = 2
+                if not is_duplicate and new_entities:
+                    for entity in new_entities:
+                        if entity_counts.get(entity, 0) >= MAX_ARTICLES_PER_ENTITY:
+                            print(f"   ⏭️ ENTITY SATURATION: '{entity}' already in {entity_counts[entity]} articles today")
+                            print(f"      New title: {title[:60]}...")
+                            is_duplicate = True
+                            skip_reason = f"entity_saturation_{entity}"
+                            break
                             
             except Exception as e:
-                print(f"   ⚠️ Title duplicate check error (continuing anyway): {e}")
+                print(f"   ⚠️ Title/entity duplicate check error (continuing anyway): {e}")
             
             if is_duplicate:
+                print(f"      Skipping cluster {cluster_id} (reason: {skip_reason})")
                 continue  # Skip this cluster, move to next
             
             # Use the HIGHEST persona score from Step 1 (from any source in cluster)

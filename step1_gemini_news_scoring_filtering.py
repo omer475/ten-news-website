@@ -127,6 +127,7 @@ def score_news_articles_step1(articles: List[Dict], api_key: str, batch_size: in
     articles = articles_with_images
     
     # Use gemini-2.0-flash-exp as gemini-2.5-flash may not be available yet
+    # Using gemini-2.0-flash-exp
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
     
     # Process articles in batches to avoid rate limits
@@ -189,13 +190,13 @@ def _process_batch(articles: List[Dict], url: str, api_key: str, max_retries: in
         dict with 'approved' and 'filtered' lists
     """
     
-    system_prompt = """# TEN NEWS SCORING V11 - GLOBAL + SHAREABLE
+    system_prompt = """# TEN NEWS SCORING V12 - GLOBAL + SHAREABLE + CULTURALLY INTERESTING
 
 ## 🎯 CORE PRINCIPLE
 
-**Ten News curates 10 stories daily that are globally important OR universally interesting.**
+**Ten News curates 10 stories daily that are globally important, universally interesting, OR culturally fascinating.**
 
-Two paths to a high score:
+Three paths to a high score:
 
 ```
 PATH A: HARD NEWS (Traditional importance)
@@ -203,60 +204,45 @@ PATH A: HARD NEWS (Traditional importance)
 
 PATH B: SHAREABLE INSIGHTS (Universal interest)  
 → Surprising facts/statistics + Universal topic + "Wow factor"
+
+PATH C: WATER COOLER STORIES (Culturally fascinating)
+→ Bizarre/unusual events + High discussability + Viral potential
 ```
 
-**Both paths require the story to be about GLOBAL topics, not regional issues or unknown individuals.**
+**All paths require the story to be about GLOBAL topics or entities, not regional issues or unknown individuals.**
 
 ---
 
-## 🌟 PATH B: SHAREABLE INSIGHTS (Score 850-950)
+## 🔥 SCORE THRESHOLD PHILOSOPHY
 
-These stories may not be "breaking news" but they're **universally interesting** and highly shareable. They make people say "Did you know...?" or "That's crazy!"
+### 900+ = MUST-KNOW NEWS
+Stories that **everyone needs to know**. Breaking developments that will be discussed on every major news network worldwide. Historic moments, major deals between global giants, shocking policy changes by world leaders, significant war developments.
 
-### What Makes a Shareable Insight?
+**Examples of 900+ stories:**
+- Peace treaties, war escalations, historic firsts in major conflicts
+- Billion-dollar deals between globally known companies
+- Shocking policy changes by world leaders (Trump renames Gulf of Mexico)
+- Major geopolitical shifts (North Korea nuclear developments)
 
-| Factor | Description | Example |
-|--------|-------------|---------|
-| **SURPRISING STATISTIC** | Numbers that shock or change perspective | "Concert tickets up 2,600% since Beatles" |
-| **RECORD/MILESTONE** | Historic achievement or first | "Data centers hit $61B record investment" |
-| **TREND REVELATION** | Shows how the world is changing | "AI startup valuations tripling in months" |
-| **UNIVERSAL TOPIC** | Something everyone can relate to | Concerts, movies, technology, money |
-| **QUOTABLE** | People will repeat this fact | "Avatar 3 opens at $345M worldwide" |
+### 850-899 = HIGHLY INTERESTING NEWS
+Stories that **everyone wants to know**. Fascinating, shareable, viral-worthy content that people will discuss at dinner or share on social media. Records, milestones, cultural shifts, bizarre events.
 
-### ✅ Examples of HIGH-SCORING Shareable Insights
+**Examples of 850-899 stories:**
+- Mind-blowing statistics (Concert tickets up 2,600%)
+- Viral government actions (ICE Santa ad)
+- Cultural shifts (British alcohol consumption record low)
+- Tech milestones (Starlink reaches 9M users)
+- Box office records (Avatar 3 opens $345M)
 
-| Article | Score | Why It Works |
-|---------|-------|--------------|
-| "Concert Tickets Surge 2,600% Since Beatles Era" | **920** | Shocking statistic + Universal topic (music/prices) + Everyone can relate |
-| "Data Centers Hit $61B Investment Record in 2025" | **900** | Record milestone + Global tech trend + AI angle |
-| "Avatar 3 Opens with $345M Worldwide Box Office" | **910** | Globally known franchise + Record-level numbers + Entertainment event |
-| "Lovable Hits $6.6B Valuation with AI Coding" | **880** | AI industry milestone + Explosive growth story + Tech trend |
-| "Trump Renames Kennedy Center, Gulf of Mexico" | **920** | Known entity + Shocking action + Everyone will discuss |
-| "90% of Ocean Plastic Comes from 10 Rivers" | **900** | Surprising fact + Changes perspective + Environmental topic |
-| "China Built More in 3 Years Than US in 100 Years" | **910** | Mind-blowing comparison + Global powers |
-| "Only 8 Men Own Same Wealth as Poorest 50%" | **900** | Shocking inequality stat + Universal relevance |
-| "Japan Now Has More People Over 80 Than Under 10" | **890** | Surprising demographic fact + Makes you think |
+### 800-849 = SOLID NEWS
+Good, newsworthy stories worth including but not exceptional.
 
-### ❌ NOT Shareable Insights (Still fails)
-
-| Article | Score | Why It Fails |
-|---------|-------|--------------|
-| "7-Year-Old Invites Shop Owner to Party" | **100** | Unknown person, not a global insight |
-| "62-Year-Old Applies for 900 Jobs" | **150** | Individual story, not a trend or statistic |
-| "Liver Disease Shows Silent Symptoms" | **350** | Generic health info, not surprising |
-| "UK House Has 44.7m Christmas Tree" | **300** | Quirky local record, not universal interest |
-
-### The KEY Distinction:
-
-**✅ SHAREABLE INSIGHT:** "Concert ticket prices have increased 2,600% since the 1960s" 
-→ This is a FACT about the WORLD that surprises people
-
-**❌ HUMAN INTEREST FLUFF:** "62-year-old man applied to 900 jobs"
-→ This is a story about ONE UNKNOWN PERSON
+### Below 800 = FILTERED OUT
+Regional news, lifestyle fluff, unknown individuals, routine announcements.
 
 ---
 
-## 🚫 INSTANT DISQUALIFIERS (Score 0-400)
+## 🚨 INSTANT DISQUALIFIERS (Check First)
 
 Before evaluating anything else, check for these automatic failures:
 
@@ -271,14 +257,8 @@ Stories about **unnamed or unknown private individuals** are NOT news:
 | "Woman Sells Home, Moves to France at 55" | **100** | Random person lifestyle choice |
 | "Deaf Woman Breaks 16-Year Silence on Abuse" | **200** | Personal story, no global impact |
 | "Family Ditches Christmas Gifts for Home Projects" | **100** | Random family, lifestyle content |
-| "21-Year-Old Student Wins Local Election" | **150** | Unknown person, local politics |
 
 **The rule:** If the headline describes a person by age, gender, occupation, or generic descriptor instead of their NAME → they are unknown → Score 100-300 max.
-
-**Exceptions that CAN score higher:**
-- Whistleblowers exposing major scandals (name may be protected)
-- Victims in major international incidents
-- Statistical studies about demographics (the story is the data, not individuals)
 
 ### LIFESTYLE/ENTERTAINMENT FLUFF = Score 200-400
 
@@ -288,11 +268,7 @@ Stories about **unnamed or unknown private individuals** are NOT news:
 | "Rock Stars' 10 Hard Christmas Alternatives" | **200** | Listicle entertainment filler |
 | "Laura Dern Recalls Spielberg's Awkward Dinosaur Roar" | **200** | Old celebrity anecdote |
 | "UK House Breaks Record with 44.7m Christmas Tree" | **250** | Quirky local interest |
-| "Aaron Paul Partners with Chef on Luxury Caviar" | **200** | Celebrity business venture |
 | "The Verge's 13 Top Art Projects from 2025" | **200** | Publication's year-end list |
-| "Croatia Expert Reveals 4 Hidden Gems" | **150** | Travel listicle |
-| "Pent Audio Unveils $7,200 Speakers" | **200** | Product launch, niche luxury |
-| "Sea Devils Return in Doctor Who Spin-Off" | **300** | TV show announcement |
 
 ### GENERIC HEALTH/WELLNESS = Score 300-450
 
@@ -300,10 +276,18 @@ Stories about **unnamed or unknown private individuals** are NOT news:
 |---------|-------|-----|
 | "Liver Disease Shows Silent Symptoms" | **350** | Generic health education |
 | "Orange Juice Cuts Blood Pressure" | **300** | Clickbait health tip |
-| "Pain Management Shifts to Control Over Cure" | **350** | Industry trend piece |
-| "Holiday Grief Affects 36% Who Skip Celebrations" | **400** | Seasonal psychology piece |
 
 **Exception:** Major medical breakthroughs (cure discovered, pandemic news) can score 900+
+
+### REGIONAL NEWS = Score 400-600
+
+| Article | Score | Why |
+|---------|-------|-----|
+| "Modi Hails Win in Maharashtra Local Polls" | **450** | Indian state politics |
+| "BJP Leader at Tamil Nadu Rally" | **350** | Indian regional event |
+| "Louisiana Captures Jail Escapee" | **350** | US local crime |
+| "UK Bans Trail Hunting" | **450** | UK domestic policy |
+| "Fed's Hammack Signals Rates Steady" | **550** | Regional Fed official |
 
 ---
 
@@ -313,49 +297,21 @@ Stories about **unnamed or unknown private individuals** are NOT news:
 
 ### ✅ GLOBALLY KNOWN ENTITIES
 
-**World Leaders (everyone knows):**
-- Putin, Trump, Biden, Xi Jinping, Zelensky, Modi, Macron, Scholz
-- Kim Jong Un, Khamenei, Netanyahu, Pope Francis
+**World Leaders:** Putin, Trump, Biden, Xi Jinping, Zelensky, Modi, Macron, Kim Jong Un, Netanyahu, Pope Francis
 
-**Tech Giants (everyone knows):**
-- Apple, Google, Microsoft, Amazon, Meta, Tesla, Netflix
-- OpenAI, ChatGPT, Nvidia, Samsung, TikTok
+**Tech Giants:** Apple, Google, Microsoft, Amazon, Meta, Tesla, Netflix, OpenAI, ChatGPT, Nvidia, Samsung, TikTok, SpaceX, Starlink
 
-**Global Companies (everyone knows):**
-- Disney, Nike, Ferrari, Toyota, McDonald's, Coca-Cola
-- Boeing, Airbus, LVMH, Pfizer, SpaceX
+**Global Companies:** Disney, Nike, Ferrari, Toyota, McDonald's, Coca-Cola, Boeing, Airbus, LVMH, Pfizer
 
-**Sports Icons (everyone knows):**
-- Messi, Ronaldo, LeBron James
-- World Cup, Olympics, Champions League Final
+**Entertainment:** Taylor Swift, Beyoncé, BTS, Marvel, Star Wars, Avatar, James Cameron
 
-**Entertainment Icons (everyone knows):**
-- Taylor Swift, Beyoncé, BTS
-- Marvel, Star Wars, major Oscar winners
+**Countries/Organizations:** USA, China, Russia, EU, UK, NATO, UN, WHO, Ukraine, Israel, North Korea, Iran, Japan
 
-**Countries/Organizations (everyone knows):**
-- USA, China, Russia, EU, UK, NATO, UN, WHO
-- Ukraine, Israel, Gaza, North Korea, Iran
+**Government Agencies (when notable):** ICE, FBI, CIA, Pentagon, NASA
 
-### ❌ NOT GLOBALLY KNOWN (Regional/Niche)
+### ❌ NOT GLOBALLY KNOWN
 
-**Regional Politicians:**
-- Fadnavis, Kejriwal, Mahayuti, Beth Hammack, Todd Blanche
-- Any state/provincial level politician
-- Cabinet ministers (unless major powers like US Secretary of State)
-
-**Regional Companies:**
-- Nippon Steel, Manulife, Xpeng, Pony.ai
-- Regional banks, local retailers, B2B companies
-
-**Regional Celebrities:**
-- David Walliams (UK only), Lindsey Vonn (sports niche)
-- MTV co-founders, regional TV personalities
-
-**Niche Sports:**
-- Scottish Premiership (Hearts, Rangers)
-- Premier League regular matches
-- Regional cricket, AFC Nations League
+Regional politicians, regional companies, regional celebrities, niche sports figures
 
 ---
 
@@ -363,220 +319,225 @@ Stories about **unnamed or unknown private individuals** are NOT news:
 
 **Question: Would this story matter to people in at least 3 different continents?**
 
-### ❌ REGIONAL NEWS (Score 400-550)
-
-Even if it involves a known entity, regional scope = low score:
-
-| Article | Score | Why |
-|---------|-------|-----|
-| "Modi Hails Win in Maharashtra Local Polls" | **450** | Indian state politics |
-| "Modi Accuses Congress of Settling Migrants" | **450** | Indian domestic politics |
-| "BJP Leader at Tamil Nadu Rally" | **350** | Indian regional event |
-| "FCI Train Delivers Tonnes to Kashmir" | **300** | Indian logistics |
-| "Kashmir Snowfall Revives Tourism" | **350** | Regional weather/tourism |
-| "India Faces 543K Consumer Complaints" | **400** | Domestic bureaucracy |
-| "Hong Kong Tourists Risk Lives for Selfies" | **400** | Local safety story |
-| "Hong Kong Construction Veteran Exposes Bid-Rigging" | **450** | Local corruption |
-| "Louisiana Captures Jail Escapee" | **350** | US local crime |
-| "Police Sexual Convictions Surge 34% (UK)" | **500** | UK domestic stats |
-| "UK Bans Trail Hunting" | **450** | UK domestic policy |
-| "Electoral Commission Clears Farage" | **450** | UK domestic politics |
-| "Fed's Hammack Signals Rates Steady" | **550** | US monetary (regional Fed official) |
-| "Air India Express Issues Notice to Pilot" | **300** | Regional airline HR |
-
-### ✅ INTERNATIONAL RELEVANCE
-
 Stories that DO have international relevance:
-- **Wars/Conflicts affecting multiple nations** (Ukraine, Gaza, Thailand-Cambodia)
-- **Global economic policy** (Fed Chair Powell, not regional Fed presidents)
-- **Climate/Environment affecting planet** (not regional weather)
-- **International diplomacy** (treaties, summits, sanctions)
-- **Global health crises** (pandemics, not generic health tips)
-- **Major tech/science breakthroughs** (AI milestones, space discoveries)
+- Wars/Conflicts affecting multiple nations
+- Global economic policy (Fed Chair Powell, not regional Fed presidents)
+- Climate/Environment affecting planet
+- International diplomacy (treaties, summits, sanctions)
+- Major tech/science breakthroughs
+- Cultural shifts in major countries
+- Bizarre government actions that spark international discussion
 
 ---
 
-## 🚨 GATE 3: NEWS VALUE CHECK
+## 🌟 PATH A: HARD NEWS (Score 800-950)
 
-**Question: Is this actual news or filler content?**
+Traditional breaking news with global significance.
 
-### ❌ NOT NEWS (Score 200-450)
+### Score 900-950: MUST-KNOW Hard News
+- Historic events (peace treaties, major escalations)
+- Billion-dollar deals between global giants
+- Shocking policy changes by world leaders
+- Major geopolitical shifts
+- Significant war developments with strategic impact
 
-| Type | Examples | Score |
-|------|----------|-------|
-| **Year-end lists** | "Best of 2025", "Top 10 picks" | 200-300 |
-| **Celebrity lifestyle** | Home tours, fashion, dating | 200-300 |
-| **Travel guides** | "Hidden gems", "Must-visit places" | 150-250 |
-| **Product launches** | Luxury items, niche tech | 200-400 |
-| **TV/Movie announcements** | Spin-offs, casting news | 300-400 |
-| **Seasonal content** | Holiday tips, gift guides | 200-300 |
-| **Sports injuries** | Player misses match | 300-400 |
-| **Regular matches** | Non-final, non-championship | 300-500 |
-| **Corporate holiday videos** | Blackstone holiday video | 200-300 |
-| **Human interest fluff** | Heartwarming local stories | 100-300 |
+### Score 850-899: Important Hard News
+- Notable diplomatic developments
+- Significant but not historic military events
+- Major corporate announcements
+- International flashpoints
 
-### ✅ ACTUAL NEWS
+### Score 800-849: Solid Hard News
+- Routine but newsworthy international events
+- Standard diplomatic meetings
+- Expected policy announcements
 
-- Events that JUST HAPPENED with consequences
-- Policy changes affecting millions
-- Conflicts, crises, emergencies
-- Major economic shifts
-- Scientific discoveries with applications
-- Political developments with global impact
+### ✅ Examples
+
+| Article | Score | Reasoning |
+|---------|-------|-----------|
+| "Russia-Ukraine Sign Peace Treaty" | **950** | Historic, war-ending event |
+| "Disney Strikes $1B OpenAI Deal" | **920** | Two global giants + Industry-shaping |
+| "Ukraine Strikes Russian Sub with Underwater Drones" | **910** | Historic first + Major war development |
+| "Trump Renames Kennedy Center, Gulf of Mexico" | **920** | World leader + Shocking action |
+| "North Korea Warns Japan Over Nuclear Weapons Push" | **900** | Nuclear tensions + Major powers |
+| "US Intel Warns Putin Seeks Full Ukraine Control" | **880** | Important intel but not breaking action |
+| "Israel Approves 19 New West Bank Settlements" | **860** | International flashpoint, ongoing issue |
+| "Japan Pledges $6B for AI Development" | **820** | Notable but routine announcement |
 
 ---
 
-## 📊 SCORING MATRIX
+## 🌟 PATH B: SHAREABLE INSIGHTS (Score 800-899)
 
-### PATH A: Hard News Scoring
+Stories with surprising statistics, records, or facts that make people say "Did you know...?"
 
-| Gate 1: Known? | Gate 2: International? | Gate 3: News? | Score Range |
-|----------------|------------------------|---------------|-------------|
-| ✅ Yes | ✅ Yes | ✅ Yes + Memorable | **900-950** |
-| ✅ Yes | ✅ Yes | ✅ Yes | **800-899** |
-| ✅ Yes | ✅ Yes | ⚠️ Routine | **700-799** |
-| ✅ Yes | ❌ Regional | ✅ Yes | **500-650** |
-| ✅ Yes | ❌ Regional | ❌ No | **400-550** |
-| ❌ Unknown | Any | Any | **100-400** |
-| Any | Any | ❌ Lifestyle/Fluff | **100-400** |
+**Note:** Path B stories max out at 899 because they are fascinating but not "must-know breaking news."
 
-### PATH B: Shareable Insight Scoring
+### Score 870-899: Mind-Blowing Insights
+- Shocking statistics that change perspective
+- Record-breaking milestones
+- Data that reveals how the world is changing
 
-| Universal Topic? | Surprising/Record? | Quotable? | Score Range |
-|------------------|-------------------|-----------|-------------|
-| ✅ Yes (global) | ✅ Very surprising | ✅ Yes | **900-950** |
-| ✅ Yes (global) | ✅ Somewhat surprising | ✅ Yes | **850-899** |
-| ✅ Yes (global) | ✅ Interesting | ⚠️ Maybe | **800-849** |
-| ⚠️ Niche topic | ✅ Surprising | ✅ Yes | **750-850** |
-| ❌ Regional only | Any | Any | **400-600** |
-| ❌ About unknown person | Any | Any | **100-300** |
+### Score 850-869: Very Surprising Insights
+- Impressive records and milestones
+- Interesting trend data
+- Notable achievements
 
-### Quick Decision Tree
+### Score 800-849: Interesting Insights
+- Good statistics worth sharing
+- Minor records
+- Industry milestones
 
-```
-Is it about an UNKNOWN INDIVIDUAL? 
-  → YES: Score 100-300 (STOP)
-  → NO: Continue
+### ✅ Examples
 
-Is it REGIONAL news with no global relevance?
-  → YES: Score 400-600 (STOP)  
-  → NO: Continue
-
-Is it PATH A (Hard News) or PATH B (Shareable Insight)?
-
-PATH A: Does it involve a globally known entity + international event?
-  → YES + Very memorable: 900-950
-  → YES + Standard news: 800-899
-  → YES + Routine: 700-799
-
-PATH B: Does it have surprising stats/facts about a universal topic?
-  → YES + Mind-blowing + Quotable: 900-950
-  → YES + Interesting + Shareable: 850-899
-  → YES + Good insight: 800-849
-```
+| Article | Score | Reasoning |
+|---------|-------|-----------|
+| "Concert Tickets Surge 2,600% Since Beatles Era" | **890** | Mind-blowing stat + Universal topic |
+| "Data Centers Hit $61B Investment Record in 2025" | **880** | Record milestone + AI angle |
+| "Avatar 3 Opens with $345M Worldwide Box Office" | **875** | Big numbers + Global franchise |
+| "Starlink Adds 20,000 Users Daily, Reaches 9M" | **870** | Growth milestone + Known entity |
+| "Lovable Hits $6.6B Valuation with AI Coding" | **865** | AI milestone + Explosive growth |
+| "90% of Ocean Plastic Comes from 10 Rivers" | **880** | Surprising fact + Environmental |
+| "Only 8 Men Own Same Wealth as Poorest 50%" | **885** | Shocking inequality stat |
+| "Japan Has More People Over 80 Than Under 10" | **870** | Mind-bending demographic fact |
 
 ---
 
-## 🎯 MEMORABILITY BONUS (Only for stories passing all gates)
+## 🌟 PATH C: WATER COOLER STORIES (Score 800-899)
 
-Once a story passes all three gates, add memorability bonus:
+Stories that are culturally fascinating and highly discussable. They make people say "Can you believe this?"
 
-| Factor | Description | Bonus |
-|--------|-------------|-------|
-| **SHOCKING** | Unexpected, "wow" factor | +50-100 |
-| **HISTORIC** | First time, record, milestone | +50-100 |
-| **IMPACTFUL** | Changes policy, affects millions | +30-80 |
-| **QUOTABLE** | People will discuss at dinner | +20-50 |
-| **EDUCATIONAL** | Surprising global statistic | +30-60 |
+**Note:** Path C stories max out at 899 unless they cross into Path A territory (world leader doing something shocking that IS the news itself, like Trump renaming Gulf of Mexico).
+
+### Score 870-899: Shocking/Bizarre Events
+- Bizarre government actions that go viral
+- Controversial decisions sparking debate
+- Unprecedented actions by known entities
+
+### Score 850-869: Very Unusual Events
+- Unusual corporate/government behavior
+- Cultural shifts with data
+- Highly shareable moments
+
+### Score 800-849: Interesting Cultural Moments
+- Notable but less shocking events
+- Trend indicators
+- Discussable but not viral
+
+### ✅ Examples
+
+| Article | Score | Reasoning |
+|---------|-------|-----------|
+| "ICE Christmas Ad Shows Santa Detaining Migrants" | **880** | Bizarre government action + Viral |
+| "Trump to Co-Lead Navy Ship Design for 'Golden Fleet'" | **865** | Unprecedented action + Quotable |
+| "British Alcohol Consumption Falls to Record Low" | **855** | Cultural shift + Surprising trend |
+| "China Bans Effeminate Men on Television" | **870** | Major country + Controversial policy |
+| "France Bans Short-Haul Flights Where Trains Exist" | **860** | Unusual policy + Climate angle |
+| "Pentagon Releases New UFO Footage" | **875** | Government + Mysterious + Viral |
+
+### When Path C Becomes Path A (900+)
+
+If a "bizarre" action is SO significant that it's the news itself (not just interesting), it becomes Path A:
+
+| Article | Score | Why It's Path A, Not C |
+|---------|-------|------------------------|
+| "Trump Renames Gulf of Mexico" | **920** | This IS major policy news, not just bizarre |
+| "China Annexes Taiwan" | **950** | Historic geopolitical event |
 
 ---
 
-## ✅ EXAMPLES OF CORRECT SCORING
+## 📊 COMPLETE SCORING MATRIX
 
-### 🔥 Score 900-950 (All gates passed + Very Memorable)
+### Quick Reference
 
-| Article | Score | Reasoning |
-|---------|-------|-----------|
-| "Russia-Ukraine Sign Peace Treaty" | **950** | Known + International + Historic |
-| "OpenAI Releases GPT-5" | **930** | Known + International + Industry-changing |
-| "SpaceX Fram2 First Polar Orbit" | **900** | Known (SpaceX) + International + Historic first |
-| "China Exports US-Based Surveillance Tech Globally" | **900** | Known (China/US) + International security + Impactful |
-| "Thailand-Cambodia Clashes Displace 500,000" | **850** | International conflict + Humanitarian crisis |
-| "Concert Tickets Surge 2,600% Since Beatles Era" | **920** | PATH B: Shocking stat + Universal topic |
-| "Data Centers Hit $61B Investment Record" | **900** | PATH B: Record + Global tech trend |
-| "Avatar 3 Opens with $345M Worldwide" | **910** | PATH B: Global franchise + Record numbers |
+| Score Range | Category | Description |
+|-------------|----------|-------------|
+| **900-950** | MUST-KNOW | Breaking news everyone needs to know. Historic events, major deals, shocking world leader actions, war developments. |
+| **870-899** | HIGHLY INTERESTING | Fascinating stories everyone wants to know. Mind-blowing stats, viral moments, bizarre events. |
+| **850-869** | VERY INTERESTING | Strong stories worth attention. Good records, unusual events, notable milestones. |
+| **800-849** | SOLID NEWS | Newsworthy stories worth including. |
+| **600-799** | BORDERLINE | May or may not make the cut. |
+| **400-599** | REGIONAL | Known entity but regional scope. |
+| **200-399** | FLUFF | Lifestyle, generic health, entertainment filler. |
+| **100-199** | DISQUALIFIED | Unknown individuals, human interest fluff. |
 
-### 📰 Score 700-850 (All gates passed)
+### Path-Specific Ranges
 
-| Article | Score | Reasoning |
-|---------|-------|-----------|
-| "Trump Labels Fentanyl Weapon of Mass Destruction" | **850** | Known (Trump) + International drug policy |
-| "Israel Approves 19 New West Bank Settlements" | **850** | Known + International flashpoint |
-| "Kremlin Denies 3-Way US-Ukraine-Russia Talks" | **820** | Known + International diplomacy |
-| "Japan Pledges $6B for AI Development" | **780** | Known (Japan) + International tech race |
-| "Macron Visits UAE for Security Talks" | **750** | Known (Macron) + International diplomacy |
-| "Lovable Hits $6.6B Valuation with AI Coding" | **880** | PATH B: AI milestone + Growth story |
-
-### ⚠️ Score 500-650 (Known but Regional)
-
-| Article | Score | Reasoning |
-|---------|-------|-----------|
-| "Modi Hails Win in Maharashtra Polls" | **500** | Known (Modi) but regional election |
-| "Fed's Hammack Signals Rates Steady" | **550** | Fed but regional official, not Chair |
-| "UK Bans Trail Hunting" | **500** | Known (UK) but domestic policy |
-| "803 Migrants Cross Channel" | **550** | Known issue but UK-specific stat |
-
-### ❌ Score 100-400 (Fails one or more gates)
-
-| Article | Score | Reasoning |
-|---------|-------|-----------|
-| "7-Year-Old Invites Shop Owner to Party" | **100** | Unknown person + Not news |
-| "62-Year-Old Applies for 900 Jobs" | **150** | Unknown person + Human interest |
-| "Paris Hilton Pink Mansion" | **250** | Known but lifestyle fluff |
-| "Liver Disease Silent Symptoms" | **350** | Generic health education |
-| "Hearts Beat Rangers 2-1" | **400** | Regional sports |
-| "David Walliams Dropped by Publisher" | **450** | Regional celebrity (UK) |
-| "The Verge's Best of 2025" | **200** | Year-end list, not news |
+| Path | Score Range | Criteria |
+|------|-------------|----------|
+| **A: Hard News** | 900-950 | Historic + Global giants + Shocking/Breaking |
+| **A: Hard News** | 850-899 | Important + International + Notable |
+| **A: Hard News** | 800-849 | Solid + International + Routine |
+| **B: Shareable** | 870-899 | Mind-blowing stat + Universal + Quotable |
+| **B: Shareable** | 850-869 | Very surprising + Shareable |
+| **B: Shareable** | 800-849 | Interesting + Worth sharing |
+| **C: Water Cooler** | 870-899 | Bizarre/Shocking + Viral + Discussable |
+| **C: Water Cooler** | 850-869 | Very unusual + Shareable |
+| **C: Water Cooler** | 800-849 | Interesting cultural moment |
 
 ---
 
 ## ⚠️ COMMON MISTAKES TO AVOID
 
-1. **Don't confuse "unknown person story" with "shareable insight"**
-   - ❌ "62-Year-Old Applies for 900 Jobs" = Unknown person story (100-300)
-   - ✅ "Job applications up 400% among seniors" = Shareable insight about a trend (850+)
-   
-2. **Don't penalize surprising statistics just because they're not "breaking news"**
-   - ✅ "Concert tickets up 2,600%" is HIGHLY valuable even if not a breaking event
-   
-3. **Don't let famous names override regional scope**
-   - Modi is known, but Maharashtra local polls are regional (500)
-   
-4. **Don't score lifestyle fluff high just because it mentions a celebrity**
-   - Paris Hilton's pink mansion = still fluff (250)
+1. **Don't give 900+ to fascinating-but-not-breaking stories**
+   - ❌ "Concert Tickets Up 2,600%" = 890, not 920 (fascinating stat, not must-know)
+   - ❌ "ICE Santa Ad" = 880, not 900 (viral, not essential news)
+   - ✅ "Disney $1B OpenAI Deal" = 920 (two global giants, industry-shaping)
 
-5. **Do recognize when a "record" or "milestone" makes something shareable**
-   - "$61B data center investment RECORD" = the record makes it notable (900)
-   - "Data centers continue to grow" = boring without the hook (700)
+2. **Don't confuse "bizarre" with "must-know"**
+   - "Trump designs Navy ships" = 865 (unusual announcement)
+   - "Trump renames Gulf of Mexico" = 920 (this IS significant policy news)
 
-6. **Do value the "wow factor" - stories people will talk about**
-   - Ask: "Would someone share this at dinner?"
-   - Ask: "Would this make someone say 'Did you know...?'"
+3. **Path B and C cap at 899 unless crossing into Path A**
+   - Statistics, no matter how mind-blowing, are 899 max
+   - Bizarre events are 899 max unless they ARE major policy/news
+
+4. **Don't undervalue Path B and C stories**
+   - They should still score 850-899, making them Top 10 worthy
+   - Just not in the "must-know" 900+ tier
+
+5. **Reserve 900+ for stories that would lead every news broadcast**
+   - Would CNN/BBC/Al Jazeera all lead with this?
+   - If yes → 900+
+   - If "interesting segment" → 850-899
 
 ---
 
-## ✅ THE ULTIMATE TEST
+## ✅ THE ULTIMATE TESTS
 
-Before assigning a score, ask TWO questions:
+**For 900+ (Must-Know):**
+> "Would this be the TOP story on CNN, BBC, and Al Jazeera simultaneously?"
 
-**For PATH A (Hard News):**
-> "Would this story be discussed in news broadcasts in New York, London, Tokyo, São Paulo, and Lagos?"
+**For 850-899 (Highly Interesting):**
+> "Would someone share this saying 'Did you know?' or 'Can you believe this?'"
 
-**For PATH B (Shareable Insights):**
-> "Would someone share this fact with friends and say 'Did you know...?' or 'That's crazy!'?"
+**For 800-849 (Solid News):**
+> "Is this newsworthy and relevant to a global audience?"
 
-If YES to either → Score 800+
-If NO to both → Score below 700
+---
+
+## 📋 FINAL CALIBRATED EXAMPLES
+
+| Article | Path | Score | Key Factor |
+|---------|------|-------|------------|
+| "Disney Strikes $1B OpenAI Deal" | A | **920** | Two global giants |
+| "Trump Renames Gulf of Mexico" | A | **920** | World leader shocking policy |
+| "Ukraine Strikes Russian Sub" | A | **910** | Historic first in major war |
+| "North Korea Warns Japan Nuclear" | A | **900** | Nuclear tensions |
+| "Concert Tickets Up 2,600%" | B | **890** | Mind-blowing stat |
+| "Data Centers Hit $61B Record" | B | **880** | Record milestone |
+| "ICE Santa Ad Detaining Migrants" | C | **880** | Bizarre + Viral |
+| "US Intel: Putin Wants All Ukraine" | A | **880** | Important intel |
+| "Avatar 3 Opens $345M" | B | **875** | Big box office |
+| "Starlink Reaches 9M Users" | B | **870** | Growth milestone |
+| "Lovable Hits $6.6B Valuation" | B | **865** | AI growth |
+| "Trump to Design Navy Ships" | C | **865** | Unusual announcement |
+| "Israel Approves Settlements" | A | **860** | Ongoing flashpoint |
+| "British Alcohol Record Low" | C | **855** | Cultural shift |
+| "Japan $6B AI Pledge" | A | **820** | Routine announcement |
+| "Modi Wins Maharashtra" | - | **500** | Regional |
+| "Paris Hilton Mansion" | - | **250** | Lifestyle fluff |
+| "7-Year-Old Invites Shop Owner" | - | **100** | Unknown person |
 
 ---
 
@@ -589,22 +550,18 @@ Return ONLY valid JSON array with exactly this structure for each article:
     "title": "exact article title here",
     "path": "A_HARD_NEWS",
     "disqualifier": null,
-    "gate1_global_entity": {
-      "passed": true,
-      "entity": "Apple, Tim Cook",
-      "reasoning": "Global tech company known worldwide"
-    },
-    "gate2_international": {
-      "passed": true,
-      "reasoning": "Affects global tech industry"
-    },
-    "gate3_news_value": {
-      "passed": true,
-      "reasoning": "Major product announcement with consequences"
+    "is_must_know": true,
+    "must_know_reason": "GLOBAL_GIANTS_DEAL",
+    "for_path_a": {
+      "globally_known_entity": true,
+      "entity": "Disney, OpenAI",
+      "international_relevance": true,
+      "historic_or_breaking": true,
+      "memorable_factors": ["SHOCKING", "HISTORIC", "IMPACTFUL"]
     },
     "for_path_b": null,
-    "memorable_factors": ["IMPACTFUL", "QUOTABLE"],
-    "score": 900,
+    "for_path_c": null,
+    "score": 920,
     "status": "APPROVED",
     "category": "Technology"
   },
@@ -612,49 +569,48 @@ Return ONLY valid JSON array with exactly this structure for each article:
     "title": "Concert Tickets Surge 2,600% Since Beatles Era",
     "path": "B_SHAREABLE_INSIGHT",
     "disqualifier": null,
-    "gate1_global_entity": {
-      "passed": true,
-      "entity": "Music/Entertainment industry",
-      "reasoning": "Universal topic everyone relates to"
-    },
-    "gate2_international": {
-      "passed": true,
-      "reasoning": "Global trend in entertainment pricing"
-    },
-    "gate3_news_value": {
-      "passed": true,
-      "reasoning": "Surprising statistic with wow factor"
-    },
+    "is_must_know": false,
+    "must_know_reason": null,
+    "for_path_a": null,
     "for_path_b": {
       "universal_topic": true,
       "topic": "Entertainment/Money",
       "surprise_factor": "MIND_BLOWING",
       "quotable": true
     },
-    "memorable_factors": ["SHOCKING", "QUOTABLE", "EDUCATIONAL"],
-    "score": 920,
+    "for_path_c": null,
+    "score": 890,
     "status": "APPROVED",
     "category": "Entertainment"
+  },
+  {
+    "title": "ICE Christmas Ad Shows Santa Detaining Migrants",
+    "path": "C_WATER_COOLER",
+    "disqualifier": null,
+    "is_must_know": false,
+    "must_know_reason": null,
+    "for_path_a": null,
+    "for_path_b": null,
+    "for_path_c": {
+      "known_entity": true,
+      "entity": "ICE (US Government)",
+      "bizarre_factor": "SHOCKING",
+      "viral_potential": true,
+      "cultural_significance": true
+    },
+    "score": 880,
+    "status": "APPROVED",
+    "category": "Politics"
   },
   {
     "title": "62-Year-Old Applies for 900 Jobs",
     "path": "DISQUALIFIED",
     "disqualifier": "UNKNOWN_PERSON",
-    "gate1_global_entity": {
-      "passed": false,
-      "entity": "Unknown individual",
-      "reasoning": "Person described by age, not name"
-    },
-    "gate2_international": {
-      "passed": false,
-      "reasoning": "Personal story, no global relevance"
-    },
-    "gate3_news_value": {
-      "passed": false,
-      "reasoning": "Human interest fluff, not news"
-    },
+    "is_must_know": false,
+    "must_know_reason": null,
+    "for_path_a": null,
     "for_path_b": null,
-    "memorable_factors": [],
+    "for_path_c": null,
     "score": 150,
     "status": "FILTERED",
     "category": "Other"
@@ -662,13 +618,13 @@ Return ONLY valid JSON array with exactly this structure for each article:
 ]
 
 Rules:
-- status = "APPROVED" if score >= 700
-- status = "FILTERED" if score < 700
-- path = "A_HARD_NEWS" or "B_SHAREABLE_INSIGHT" or "DISQUALIFIED"
+- status = "APPROVED" if score >= 800
+- status = "FILTERED" if score < 800
+- path = "A_HARD_NEWS" or "B_SHAREABLE_INSIGHT" or "C_WATER_COOLER" or "DISQUALIFIED"
 - disqualifier = null or "UNKNOWN_PERSON" or "LIFESTYLE_FLUFF" or "REGIONAL_ONLY" or "GENERIC_HEALTH"
-- for_path_b: include only for PATH B stories, null otherwise
-- All three gates must be evaluated for each article
-- memorable_factors: array of ["SHOCKING", "HISTORIC", "IMPACTFUL", "QUOTABLE", "EDUCATIONAL"] or empty []
+- is_must_know = true only for 900+ scores
+- must_know_reason = null or "HISTORIC_EVENT" or "GLOBAL_GIANTS_DEAL" or "WORLD_LEADER_SHOCKING_POLICY" or "MAJOR_WAR_DEVELOPMENT"
+- Include only the relevant path object (for_path_a, for_path_b, or for_path_c), set others to null
 - category: Tech, Business, Science, Politics, Finance, Crypto, Health, Entertainment, Sports, World, Other
 - Maintain order of input articles
 - No explanations outside the JSON

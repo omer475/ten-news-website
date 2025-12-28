@@ -1,11 +1,11 @@
 # STEP 6: COMPONENT GENERATION (Timeline, Details, Graph)
 # ================================================================
 # Purpose: Generate supplementary components using Perplexity search context
-# Model: Gemini 2.0 Flash (temporarily switched from Claude)
+# Model: Gemini 2.0 Flash (switched from Claude due to API limits)
 # Input: Articles with dual-language content from Step 5 + Perplexity context from Step 4
 # Output: Timeline, Details, Graph based on web search results
 # Writes: timeline, details, graph (as selected by Gemini in Step 3)
-# Cost: ~$0.60 per 100 articles
+# Cost: ~$0.10 per 100 articles
 # Time: ~2-3 minutes for 100 articles
 
 import requests
@@ -21,8 +21,8 @@ from dataclasses import dataclass
 
 @dataclass
 class ComponentWriterConfig:
-    """Configuration for component writer (using Gemini temporarily)"""
-    model: str = "gemini-2.0-flash-exp"  # Temporarily using Gemini instead of Claude
+    """Configuration for Gemini component writer"""
+    model: str = "gemini-2.0-flash-exp"
     max_tokens: int = 1536  # Enough for timeline + details + graph
     temperature: float = 0.3
     timeout: int = 60
@@ -35,231 +35,296 @@ class ComponentWriterConfig:
 # COMPONENT GENERATION PROMPT
 # ==========================================
 
-COMPONENT_PROMPT = """Generate news article components using the provided search data.
+COMPONENT_PROMPT = """Generate components for this news article.
 
 ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
 SELECTED COMPONENTS: {components}
-SEARCH CONTEXT DATA: {context}
+SEARCH CONTEXT: {context}
 
-Generate ONLY the selected components. Follow formats EXACTLY.
-
-═══════════════════════════════════════════════════════════════
-🗺️ MAP
-═══════════════════════════════════════════════════════════════
-
-Generate 1-2 precise, interesting location markers.
-
-THE LOCATION MUST BE:
-✓ Specific venue, building, facility, or installation
-✓ Directly relevant to the story (where it happened, where subject is)
-✓ Interesting enough that readers would want to see it
-✓ Verified from article text or reliable search
-
-LOCATION TYPES:
-
-Government Buildings:
-- "The Kremlin" - Russian government
-- "The White House" - US President
-- "Capitol Building" - US Congress
-- "Pentagon" - US Military
-- "10 Downing Street" - UK Prime Minister
-
-Military/Nuclear Facilities:
-- "Yongbyon Nuclear Complex" - North Korea nuclear
-- "Novorossiysk Naval Base" - Russian Black Sea Fleet
-- "Zaporizhzhia Nuclear Plant" - Ukraine nuclear
-- "Area 51" - US military
-- "Natanz Nuclear Facility" - Iran nuclear
-
-Entertainment Venues:
-- "Studio 8H, 30 Rockefeller Plaza" - SNL studio
-- "Dolby Theatre" - Oscars venue
-- "Madison Square Garden" - Major events
-- "Hollywood Bowl" - Concerts
-
-Meeting/Event Venues:
-- "Mar-a-Lago" - Trump's Florida residence
-- "Davos Congress Centre" - World Economic Forum
-- "UN Headquarters" - United Nations
-
-LOCATION TYPE RULES:
-═════════════════════
-Use "location_type": "pin" for SPECIFIC locations (buildings, venues, facilities)
-Use "location_type": "area" for LARGER regions when the whole country/region is relevant
-
-PIN examples (specific places):
-- White House, Studio 8H, Kremlin, Pentagon, specific nuclear facilities
-
-AREA examples (highlight entire country/region):
-- War zones (Ukraine, Gaza, Syria)
-- Country-wide sanctions/policies
-- Natural disasters affecting entire regions
-- Elections/referendums nationwide
-
-NEVER USE AREA FOR:
-✗ Stories about specific events at specific locations
-✗ When a building or venue can be identified
-
-OUTPUT FORMAT FOR PIN (specific location):
-[
-  {
-    "name": "Studio 8H, 30 Rockefeller Plaza",
-    "type": "venue",
-    "location_type": "pin",
-    "city": "New York",
-    "country": "USA",
-    "coordinates": {"lat": 40.7593, "lng": -73.9794},
-    "description": "Historic studio where SNL has broadcast since 1975"
-  }
-]
-
-OUTPUT FORMAT FOR AREA (country/region highlight):
-[
-  {
-    "name": "Ukraine",
-    "type": "country",
-    "location_type": "area",
-    "region_name": "Ukraine",
-    "coordinates": {"lat": 48.3794, "lng": 31.1656},
-    "description": "War zone where Russian offensive continues"
-  }
-]
-
-REAL CORRECTIONS FOR YOUR EXAMPLES:
-
-❌ WRONG: "Seoul, South Korea" for North Korea nuclear story
-✓ CORRECT: {
-    "name": "Yongbyon Nuclear Complex",
-    "type": "military",
-    "city": "Yongbyon",
-    "country": "North Korea",
-    "coordinates": {"lat": 39.7947, "lng": 125.7553},
-    "description": "North Korea's main nuclear weapons facility"
-  }
-
-❌ WRONG: "Ukraine" for peace talks story
-✓ CORRECT: {
-    "name": "Mar-a-Lago",
-    "type": "venue",
-    "city": "Palm Beach",
-    "country": "USA",
-    "coordinates": {"lat": 26.6777, "lng": -80.0367},
-    "description": "Trump's residence hosting Russia-Ukraine negotiations"
-  }
-
-❌ WRONG: "United States" for SNL story
-✓ CORRECT: {
-    "name": "Studio 8H, 30 Rockefeller Plaza",
-    "type": "venue",
-    "city": "New York",
-    "country": "USA",
-    "coordinates": {"lat": 40.7593, "lng": -73.9794},
-    "description": "SNL studio where Trump parody sketch aired"
-  }
-
-❌ WRONG: "United States" for Trump policy story
-✓ CORRECT: {
-    "name": "The White House",
-    "type": "building",
-    "city": "Washington DC",
-    "country": "USA",
-    "coordinates": {"lat": 38.8977, "lng": -77.0365},
-    "description": "Where Trump announced cash payment policy"
-  }
-OR: {
-    "name": "Capitol Building",
-    "type": "building",
-    "city": "Washington DC",
-    "country": "USA",
-    "coordinates": {"lat": 38.8899, "lng": -77.0091},
-    "description": "Where Congress will vote on Trump Accounts"
-  }
-
-═══════════════════════════════════════════════════════════════
-📅 TIMELINE
-═══════════════════════════════════════════════════════════════
-
-Generate 2-4 events ONLY if timeline was selected.
-
-Remember: Timeline should only be selected for complex stories that need historical context.
-
-RULES:
-✗ DO NOT include the main news event from the title
-✓ Only background events that help understanding
-✓ Chronological order (oldest → newest)
-✓ Each event: MAX 12 words
-✓ Events should answer "how did we get here?"
-
-OUTPUT FORMAT:
-[
-  {"date": "Feb 2022", "event": "Russia invades Ukraine beginning full-scale war"},
-  {"date": "Apr 2024", "event": "Previous peace talks collapse after Bucha massacre revealed"},
-  {"date": "Nov 2024", "event": "Trump wins election promising quick peace deal"}
-]
+Generate ONLY the selected components.
 
 ═══════════════════════════════════════════════════════════════
 📋 DETAILS
 ═══════════════════════════════════════════════════════════════
 
-Generate AT LEAST 5 fact cards, we will select the best 3.
+Generate EXACTLY 3 fact cards with NEW information.
 
-⚠️ CRITICAL: EVERY detail value MUST contain a NUMBER (digit 0-9)
-Details WITHOUT numbers will be REJECTED.
+CRITICAL RULE: No duplicates from bullet summary.
 
-RULES:
-✓ EVERY value MUST have at least one digit (0-9)
-✓ Facts must NOT duplicate bullet summary
-✓ MAX 7 words per detail
-✓ Prioritize interesting "hidden" facts with statistics
+Before writing each detail:
+1. Check if fact is in BULLET SUMMARY
+2. If YES → Do NOT include it
+3. If NO → Include it
 
-✅ GOOD EXAMPLES (all have numbers):
-[
-  {"label": "Company founded", "value": "2019"},
-  {"label": "Employees affected", "value": "14,000 workers"},
-  {"label": "Stock decline", "value": "Down 8.5%"},
-  {"label": "Revenue", "value": "$23.4 billion"},
-  {"label": "Duration", "value": "90 minutes"}
-]
-
-❌ BAD EXAMPLES (NO numbers - will be REJECTED):
-[
-  {"label": "Status", "value": "Ongoing"},
-  {"label": "Location", "value": "Multiple sites"},
-  {"label": "Outcome", "value": "Under investigation"}
-]
+REQUIREMENTS:
+✓ Every detail must contain a number
+✓ Must NOT be in bullet summary
+✓ Must be relevant to the story
+✓ Label: 1-3 words
+✓ Value: Number with unit
+✓ Maximum 7 words total per detail
 
 OUTPUT FORMAT:
 [
-  {"label": "Short label", "value": "Value WITH number"},
-  {"label": "Short label", "value": "Value WITH number"},
-  {"label": "Short label", "value": "Value WITH number"},
-  {"label": "Short label", "value": "Value WITH number"},
-  {"label": "Short label", "value": "Value WITH number"}
+  {"label": "Crew members", "value": "5 aboard"},
+  {"label": "Flight origin", "value": "Leipzig, Germany"},
+  {"label": "Runway length", "value": "2,515 meters"}
 ]
+
+BAD DETAILS (never do):
+✗ Duplicates from bullets
+✗ No number: {"label": "Status", "value": "Ongoing"}
+✗ Irrelevant: {"label": "Temple founded", "value": "628 AD"} for tech story
+
+═══════════════════════════════════════════════════════════════
+📅 TIMELINE
+═══════════════════════════════════════════════════════════════
+
+Generate 2-4 events with CLEAR, COMPLETE descriptions.
+
+EACH EVENT MUST BE:
+✓ 15-25 words long
+✓ A complete thought explaining WHAT happened AND WHY it matters
+✓ From recent past (usually last 1-5 years)
+✓ Directly relevant to this specific story
+
+DATE FORMAT:
+- Use full month: "January 2024" not "Jan 2024"
+- Always include year
+
+═══════════════════════════════════════════════════════════════
+BAD TIMELINE (too short, unclear):
+═══════════════════════════════════════════════════════════════
+
+✗ {"date": "Jul 2019", "event": "Epstein arrested"}
+✗ {"date": "Feb 2022", "event": "Russia invades Ukraine"}  
+✗ {"date": "Aug 2019", "event": "Epstein found dead"}
+
+These are useless! Reader learns almost nothing.
+
+═══════════════════════════════════════════════════════════════
+GOOD TIMELINE (clear, informative, complete):
+═══════════════════════════════════════════════════════════════
+
+✓ {
+    "date": "July 2019", 
+    "event": "Jeffrey Epstein arrested on federal sex trafficking charges involving dozens of underage victims, reopening investigations that had been closed since 2008"
+  }
+
+✓ {
+    "date": "August 2019", 
+    "event": "Epstein found dead in Manhattan jail cell under suspicious circumstances, officially ruled suicide but sparking widespread conspiracy theories and investigations"
+  }
+
+✓ {
+    "date": "December 2021", 
+    "event": "Ghislaine Maxwell convicted on five federal charges for recruiting and grooming underage girls for Epstein's sex trafficking network"
+  }
+
+✓ {
+    "date": "February 2022", 
+    "event": "Russia launched full-scale military invasion of Ukraine with attacks on Kyiv, beginning the largest armed conflict in Europe since World War II"
+  }
+
+✓ {
+    "date": "January 2024", 
+    "event": "William Lai elected Taiwan's president with 40% of the vote despite Chinese pressure, securing unprecedented third consecutive term for DPP party"
+  }
+
+OUTPUT FORMAT:
+[
+  {
+    "date": "July 2019", 
+    "event": "Jeffrey Epstein arrested on federal sex trafficking charges involving dozens of underage victims, reopening investigations closed since 2008"
+  },
+  {
+    "date": "August 2019", 
+    "event": "Epstein found dead in Manhattan federal jail cell under suspicious circumstances, officially ruled suicide amid widespread skepticism"
+  },
+  {
+    "date": "December 2021", 
+    "event": "Ghislaine Maxwell convicted on five federal charges for her role in recruiting and grooming girls for Epstein's trafficking network"
+  }
+]
+
+═══════════════════════════════════════════════════════════════
+🗺️ MAP
+═══════════════════════════════════════════════════════════════
+
+Generate 1-2 locations showing WHERE THE NEWS HAPPENED.
+
+THE PURPOSE: Users want to see "Where did this actually happen?"
+
+═══════════════════════════════════════════════════════════════
+GOOD MAP LOCATIONS (users want to see these):
+═══════════════════════════════════════════════════════════════
+
+INCIDENT LOCATIONS:
+✓ {
+    "name": "Vilnius International Airport",
+    "type": "transport",
+    "city": "Vilnius",
+    "country": "Lithuania",
+    "coordinates": {"lat": 54.6341, "lng": 25.2858},
+    "description": "Crash site where UPS cargo plane went down on Christmas morning"
+  }
+
+✓ {
+    "name": "Crocus City Hall",
+    "type": "venue",
+    "city": "Moscow",
+    "country": "Russia",
+    "coordinates": {"lat": 55.8244, "lng": 37.3958},
+    "description": "Concert venue where terrorist attack killed over 140 people in March 2024"
+  }
+
+✓ {
+    "name": "Francis Scott Key Bridge",
+    "type": "infrastructure",
+    "city": "Baltimore",
+    "country": "USA",
+    "coordinates": {"lat": 39.2177, "lng": -76.5284},
+    "description": "Bridge that collapsed after being struck by container ship Dali"
+  }
+
+DISASTER LOCATIONS:
+✓ {
+    "name": "Gaziantep Province",
+    "type": "landmark",
+    "city": "Gaziantep",
+    "country": "Turkey",
+    "coordinates": {"lat": 37.0662, "lng": 37.3833},
+    "description": "Region near epicenter of magnitude 7.8 earthquake that killed over 50,000"
+  }
+
+DISPUTED TERRITORIES:
+✓ {
+    "name": "Woody Island",
+    "type": "military",
+    "city": "Sansha",
+    "country": "China",
+    "coordinates": {"lat": 16.8333, "lng": 112.3333},
+    "description": "Disputed South China Sea island where China constructed military facilities"
+  }
+
+MILITARY/SECRET FACILITIES:
+✓ {
+    "name": "Yongbyon Nuclear Complex",
+    "type": "military",
+    "city": "Yongbyon",
+    "country": "North Korea",
+    "coordinates": {"lat": 39.7947, "lng": 125.7553},
+    "description": "North Korea's primary nuclear weapons research and production facility"
+  }
+
+═══════════════════════════════════════════════════════════════
+BAD MAP LOCATIONS (never use these):
+═══════════════════════════════════════════════════════════════
+
+FAMOUS GOVERNMENT BUILDINGS:
+✗ {
+    "name": "The Kremlin",
+    "description": "Russian government headquarters"
+  }
+  → EVERYONE KNOWS WHERE THIS IS
+
+✗ {
+    "name": "Capitol Building",
+    "description": "Where US Congress meets"
+  }
+  → EVERYONE KNOWS WHERE THIS IS
+
+✗ {
+    "name": "The White House",
+    "description": "US presidential residence"
+  }
+  → EVERYONE KNOWS WHERE THIS IS
+
+TV STATIONS & OFFICES:
+✗ {
+    "name": "Channel 4 Television Centre",
+    "description": "Where broadcast aired"
+  }
+  → NOBODY CARES WHERE A TV STATION IS
+
+GENERIC LOCATIONS:
+✗ {
+    "name": "Lithuania",
+    "description": "Country where crash happened"
+  }
+  → TOO VAGUE - Show the specific airport/crash site!
+
+✗ {
+    "name": "United States",
+    "description": "Where policy announced"
+  }
+  → COMPLETELY USELESS
+
+OUTPUT FORMAT:
+[
+  {
+    "name": "Vilnius International Airport",
+    "type": "transport",
+    "city": "Vilnius",
+    "country": "Lithuania",
+    "coordinates": {"lat": 54.6341, "lng": 25.2858},
+    "description": "Crash site where UPS cargo plane went down killing all 5 crew"
+  }
+]
+
+TYPE OPTIONS:
+- transport: Airports, train stations, ports
+- venue: Concert halls, stadiums, theaters, malls
+- infrastructure: Bridges, pipelines, power plants, dams
+- military: Bases, nuclear facilities, shipyards
+- landmark: Mountains, islands, natural features, parks
+- building: Hospitals, factories, specific buildings
 
 ═══════════════════════════════════════════════════════════════
 📊 GRAPH
 ═══════════════════════════════════════════════════════════════
 
-Generate chart data only if graph was selected.
+Generate chart using ONLY REAL, VERIFIED data.
+
+CRITICAL: Do NOT fabricate data.
+
+Only use numbers that:
+✓ Come from search context
+✓ Have a cited source
+✓ Are verifiable facts
+
+REQUIREMENTS:
+✓ At least 4 data points
+✓ Real data from reliable source
+✓ Include source field
+✓ Dates in YYYY-MM or YYYY format
 
 OUTPUT FORMAT:
 {
   "type": "line",
-  "title": "Interest Rate 2022-2024",
+  "title": "Federal Reserve Interest Rate 2022-2024",
   "data": [
     {"date": "2022-03", "value": 0.50},
+    {"date": "2022-12", "value": 4.25},
     {"date": "2023-07", "value": 5.25},
     {"date": "2024-01", "value": 5.50}
   ],
-  "y_label": "Rate (%)",
-  "x_label": "Date"
+  "y_label": "Interest Rate (%)",
+  "x_label": "Date",
+  "source": "Federal Reserve"
 }
+
+BAD GRAPH DATA:
+✗ Numbers too clean: 8, 9, 10, 11, 12 (obviously fake)
+✗ No source cited
+✗ Made-up projections
 
 ═══════════════════════════════════════════════════════════════
 FINAL OUTPUT
 ═══════════════════════════════════════════════════════════════
+
+Return ONLY valid JSON with selected components:
 
 {
   "map": [...],
@@ -268,31 +333,34 @@ FINAL OUTPUT
   "graph": {...}
 }
 
-Include ONLY selected components.
+Include ONLY components that were selected.
 
 ═══════════════════════════════════════════════════════════════
-PRE-SUBMISSION CHECKLIST
+CHECKLIST BEFORE SUBMITTING
 ═══════════════════════════════════════════════════════════════
-
-□ MAP:
-  - Is location a specific venue/building/facility?
-  - Is it the RIGHT location for this story?
-  - NOT a country, city, or state?
-  - Coordinates point to exact spot?
-
-□ TIMELINE:
-  - Was timeline actually needed for this story?
-  - Does NOT include the main news event?
-  - Only 2-4 contextual events?
 
 □ DETAILS:
-  - Exactly 3 details?
-  - All have numbers?
   - None duplicate bullet summary?
+  - All contain numbers?
+  - All relevant to story?
+
+□ TIMELINE:
+  - Each event 15-25 words?
+  - Each explains WHAT happened AND WHY it matters?
+  - Recent events (1-5 years)?
+  - Directly relevant?
+
+□ MAP:
+  - Shows WHERE something happened?
+  - NOT a famous government building?
+  - Users would want to see this location?
+  - Specific enough (not just country/city)?
 
 □ GRAPH:
-  - At least 4 data points?
-  - Clear trend to visualize?
+  - All data from verified source?
+  - Source cited?
+  - At least 4 real data points?
+  - Not fabricated?
 """
 
 
@@ -302,7 +370,7 @@ PRE-SUBMISSION CHECKLIST
 
 class ClaudeComponentWriter:
     """
-    Generates article components using Gemini (temporarily switched from Claude)
+    Generates article components using Gemini 2.0 Flash
     Components: Timeline, Details, Graph
     Based on Perplexity search context data
     """
@@ -312,7 +380,7 @@ class ClaudeComponentWriter:
         Initialize writer with API key and optional config
         
         Args:
-            api_key: Gemini API key (temporarily, was Anthropic)
+            api_key: Gemini API key
             config: ComponentWriterConfig instance (uses defaults if None)
         """
         self.api_key = api_key
@@ -351,7 +419,6 @@ class ClaudeComponentWriter:
             try:
                 print(f"   🔧 DEBUG: Calling Gemini API (attempt {attempt + 1})...")
                 
-                # Build Gemini API request
                 request_data = {
                     "contents": [
                         {
@@ -366,21 +433,28 @@ class ClaudeComponentWriter:
                     }
                 }
                 
-                response = requests.post(self.api_url, json=request_data, timeout=self.config.timeout)
+                response = requests.post(
+                    self.api_url,
+                    json=request_data,
+                    timeout=self.config.timeout
+                )
                 
                 # Handle rate limiting
                 if response.status_code == 429:
-                    wait_time = (attempt + 1) * 3
+                    wait_time = 15 * (attempt + 1)
                     print(f"   ⚠️ Rate limited, waiting {wait_time}s...")
                     time.sleep(wait_time)
                     continue
                 
                 response.raise_for_status()
-                response_json = response.json()
+                result = response.json()
                 
                 # Extract response text from Gemini format
-                response_text = response_json['candidates'][0]['content']['parts'][0]['text']
-                print(f"   📝 Raw Gemini response: {response_text[:300]}...")
+                if 'candidates' not in result or len(result['candidates']) == 0:
+                    raise Exception("No candidates in Gemini response")
+                
+                response_text = result['candidates'][0]['content']['parts'][0]['text']
+                print(f"   📝 Raw Claude response: {response_text[:300]}...")
                 
                 # Remove markdown code blocks if present
                 import re

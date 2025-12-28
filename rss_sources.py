@@ -292,6 +292,24 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
+    {
+        'name': 'Daily Mail News',
+        'url': 'https://www.dailymail.co.uk/news/index.rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Daily Mail Home',
+        'url': 'https://www.dailymail.co.uk/home/index.rss',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Daily Mail Money',
+        'url': 'https://www.dailymail.co.uk/money/index.rss',
+        'category': 'business',
+        'tier': 'premium'
+    },
     
     # ========================================
     # INTERNATIONAL PREMIUM NEWS (EXPANDED)

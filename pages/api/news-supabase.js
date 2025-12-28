@@ -146,6 +146,14 @@ export default async function handler(req, res) {
           // Format map data for frontend
           if (Array.isArray(rawMap) && rawMap.length > 0) {
             const primaryLocation = rawMap[0];
+            // Build full location string for geocoding (name + city + country)
+            const locationParts = [
+              primaryLocation.name,
+              primaryLocation.city,
+              primaryLocation.country
+            ].filter(Boolean);
+            const fullLocation = locationParts.join(', ');
+            
             mapData = {
               center: {
                 lat: primaryLocation.coordinates?.lat || 0,
@@ -156,12 +164,23 @@ export default async function handler(req, res) {
                 lon: loc.coordinates?.lng || loc.coordinates?.lon || 0
               })),
               name: primaryLocation.name,
+              location: fullLocation,  // Full location for geocoding boundaries
+              city: primaryLocation.city,
+              country: primaryLocation.country,
+              region: primaryLocation.country,  // Use country as region
               description: primaryLocation.description,
-              location_type: primaryLocation.location_type || 'pin',
-              region_name: primaryLocation.region_name || null
+              location_type: primaryLocation.location_type || 'auto',
+              region_name: primaryLocation.region_name || primaryLocation.country || null
             };
           } else if (rawMap && !Array.isArray(rawMap)) {
             // Handle object format
+            const locationParts = [
+              rawMap.name,
+              rawMap.city,
+              rawMap.country
+            ].filter(Boolean);
+            const fullLocation = locationParts.join(', ');
+            
             mapData = {
               center: {
                 lat: rawMap.coordinates?.lat || rawMap.lat || 0,
@@ -169,9 +188,13 @@ export default async function handler(req, res) {
               },
               markers: [],
               name: rawMap.name,
+              location: fullLocation || rawMap.name,
+              city: rawMap.city,
+              country: rawMap.country,
+              region: rawMap.country,
               description: rawMap.description,
-              location_type: rawMap.location_type || 'pin',
-              region_name: rawMap.region_name || null
+              location_type: rawMap.location_type || 'auto',
+              region_name: rawMap.region_name || rawMap.country || null
             };
           }
         } catch (e) {

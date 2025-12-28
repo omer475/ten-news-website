@@ -38,177 +38,195 @@ class ComponentConfig:
 # SYSTEM PROMPT - COMPONENT SELECTION LOGIC
 # ==========================================
 
-COMPONENT_SELECTION_PROMPT = """Select visual components for this news article based on search data.
+COMPONENT_SELECTION_PROMPT = """Select components for this news article.
 
 ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
 SEARCH CONTEXT: {search_context}
 
 ═══════════════════════════════════════════════════════════════
-AVAILABLE COMPONENTS
+COMPONENTS OVERVIEW
 ═══════════════════════════════════════════════════════════════
 
-🗺️ MAP
-Shows an interesting, specific location related to the story.
+📋 DETAILS - Key facts not in bullets (~70% of stories)
+📅 TIMELINE - Historical context (~10% of stories, rare)
+🗺️ MAP - Where it happened (~20% of stories)
+📊 GRAPH - Data trends (~10% of stories)
 
-ONLY SELECT IF search context contains:
-- Exact venue/building name (not just city/country)
-- A location that adds insight to the story
-- Coordinates for a specific spot
+═══════════════════════════════════════════════════════════════
+📋 DETAILS
+═══════════════════════════════════════════════════════════════
 
-GOOD LOCATIONS:
-✓ "Studio 8H, 30 Rockefeller Plaza" - Where SNL is filmed
-✓ "Mar-a-Lago" - Specific meeting venue
-✓ "Yongbyon Nuclear Complex" - Specific facility
-✓ "The Kremlin" - Government building
-✓ "Capitol Building" - Where laws are made
+Shows additional facts and statistics.
 
-BAD LOCATIONS (DO NOT SELECT MAP):
-✗ "United States" - Useless
-✗ "Ukraine" - Too vague
-✗ "Seoul, South Korea" - Generic city
-✗ "Florida" - State only
-✗ "New York" - City only
+SELECT IF:
+- Search found 3+ facts NOT in bullet summary
+- Facts contain actual numbers
+- Facts are relevant to the story
 
-ASK: "Would someone find this location interesting to see on a map?"
-- "Studio 8H where SNL is filmed" → YES, interesting
-- "United States" → NO, everyone knows where that is
+DO NOT SELECT IF:
+- All facts duplicate bullet summary
+- Only irrelevant trivia available
 
-───────────────────────────────────────────────────────────────
+FREQUENCY: ~70% of stories
 
+═══════════════════════════════════════════════════════════════
 📅 TIMELINE
-Shows chronological context for complex stories.
+═══════════════════════════════════════════════════════════════
 
-ONLY SELECT IF the story REQUIRES history to understand:
+Shows historical context for complex ongoing stories.
 
-✓ SELECT TIMELINE FOR:
-- Ongoing wars/conflicts with complex history
-- Multi-year diplomatic negotiations
-- Criminal investigations with many developments
-- Policy reversals (need to show what changed)
-- Stories where readers would ask "how did we get here?"
+CRITICAL: Timeline is OVERUSED. Be very selective.
 
-✗ DO NOT SELECT TIMELINE FOR:
-- Single announcements or statements
-- Entertainment news (TV shows, movies, awards)
-- Simple proposals or pledges
-- Breaking news without complex backstory
-- Speeches, remarks, or comments
-- Intelligence reports or assessments
-- Most daily news stories
+SELECT ONLY IF story genuinely requires history to understand:
+✓ Ongoing wars/conflicts (Ukraine, Gaza)
+✓ Multi-year investigations (Epstein case)
+✓ Complex political crises
+✓ Stories where "how did we get here" truly matters
 
-EXAMPLES:
+DO NOT SELECT FOR:
+✗ Single announcements
+✗ Product/tech news
+✗ Entertainment news
+✗ Speeches or statements
+✗ Simple policy proposals
+✗ One-time incidents
+✗ Business deals
+✗ Sports news
 
-"SNL Mocks Trump Over Epstein Files" → NO TIMELINE
-(It's a comedy sketch, no historical context needed)
-
-"Trump Pledges Cash Payments" → NO TIMELINE
-(It's a policy proposal, self-explanatory)
-
-"North Korea Warns Japan" → MAYBE TIMELINE
-(Only if showing history of nuclear tensions adds value)
-
-"Russia-Ukraine Peace Talks" → YES TIMELINE
-(Complex ongoing conflict, history helps understanding)
-
-ASK: "Would this story be confusing without historical context?"
+ASK: "Would readers be confused without historical context?"
+- If NO → Don't select timeline
 - If YES → Select timeline
-- If NO → Do NOT select timeline
 
-───────────────────────────────────────────────────────────────
+FREQUENCY: ~10% of stories (rare!)
 
+═══════════════════════════════════════════════════════════════
+🗺️ MAP
+═══════════════════════════════════════════════════════════════
+
+Shows WHERE the news happened.
+
+SELECT IF the story has a specific location users want to see:
+
+✓ INCIDENTS & ACCIDENTS:
+  - Plane crashes → Show crash site
+  - Attacks → Show attack location
+  - Shootings → Show where it happened
+  - Collapses → Show the structure
+
+✓ NATURAL DISASTERS:
+  - Earthquakes → Show epicenter
+  - Hurricanes → Show landfall
+  - Floods → Show affected area
+
+✓ DISPUTED TERRITORIES:
+  - South China Sea islands
+  - Contested regions
+  - Border disputes
+
+✓ SECRETIVE FACILITIES:
+  - Nuclear complexes
+  - Military bases
+
+DO NOT SELECT IF only location available is:
+
+✗ Famous government buildings:
+  - Kremlin, Capitol, White House, 10 Downing Street
+  - Everyone knows where these are
+
+✗ TV stations or corporate offices:
+  - Nobody cares where Channel 4 is located
+
+✗ Generic city/country:
+  - "United States" or "Russia" alone is useless
+
+ASK: "Would users tap this map and think 'Oh, that's where it happened!'?"
+- If YES → Select map
+- If NO → Don't select map
+
+FREQUENCY: ~20% of stories
+
+═══════════════════════════════════════════════════════════════
 📊 GRAPH
+═══════════════════════════════════════════════════════════════
+
 Shows data trends over time.
 
-ONLY SELECT IF:
-- 4+ numerical data points with dates exist
-- There's a clear trend to visualize
-- The data adds insight beyond the article
+SELECT ONLY IF:
+- REAL data from verified source exists
+- At least 4 data points
+- Source is cited
+- Shows meaningful trend
 
-───────────────────────────────────────────────────────────────
+DO NOT SELECT IF:
+- Data looks fabricated (too clean: 8, 9, 10, 11)
+- No source cited
+- Fewer than 4 points
+- Data is estimated/projected
 
-📋 DETAILS
-Shows key facts and statistics.
-
-ONLY SELECT IF:
-- 3+ specific facts with numbers exist
-- Facts are NOT already in bullet summary
-- Facts add depth to the story
-
-═══════════════════════════════════════════════════════════════
-SELECTION RULES
-═══════════════════════════════════════════════════════════════
-
-1. BE SELECTIVE - Not every story needs every component
-2. MOST stories only need 1-2 components
-3. TIMELINE should be rare - only for complex stories
-4. MAP only if location is specific AND interesting
-5. DETAILS is usually the safest choice if facts exist
-
-TYPICAL SELECTIONS:
-
-Entertainment news → [details] only, maybe [map] if specific venue
-Policy announcements → [details] only
-Economic news → [graph, details]
-Ongoing conflicts → [timeline, details, map] if specific location
-Breaking incidents → [map, details] if exact location known
-Speeches/statements → [details] only
+FREQUENCY: ~10% of stories
 
 ═══════════════════════════════════════════════════════════════
-VALIDATION CHECKLIST
+TYPICAL SELECTIONS
 ═══════════════════════════════════════════════════════════════
 
-Before selecting MAP, verify:
-□ Is location more specific than a city? (venue, building, facility)
-□ Is it the RIGHT location for this story? (not just a related country)
-□ Would readers find it interesting to see?
+Most stories: ["details"]
+Incidents/disasters: ["map", "details"]
+Economic news with data: ["graph", "details"]
+Complex ongoing conflicts: ["timeline", "details"] or ["map", "timeline", "details"]
 
-Before selecting TIMELINE, verify:
-□ Is this story part of a longer, complex sequence of events?
-□ Would readers be confused without historical context?
-□ Is it NOT just a simple announcement/statement/proposal?
-
-Before selecting GRAPH, verify:
-□ Are there 4+ data points with dates?
-□ Is there a meaningful trend to show?
-
-Before selecting DETAILS, verify:
-□ Are there 3+ facts NOT in the bullet summary?
-□ Do all facts contain numbers?
+MISTAKES TO AVOID:
+✗ Adding timeline to every story
+✗ Adding map with Kremlin/Capitol/White House
+✗ Adding graph with made-up data
+✗ Adding details that duplicate bullets
 
 ═══════════════════════════════════════════════════════════════
-APPLYING TO YOUR EXAMPLES
+DECISION EXAMPLES
 ═══════════════════════════════════════════════════════════════
 
-"SNL Mocks Trump Over Redacted Epstein Files"
-- Map: YES → "Studio 8H, 30 Rockefeller Plaza" (where SNL films)
-- Timeline: NO → It's a comedy sketch, doesn't need history
-- Details: YES → If there are facts about the sketch not in bullets
+"UPS Plane Crash Death Toll Climbs to 15"
+→ MAP: YES - Show crash site (users want to see where)
+→ TIMELINE: NO - Single incident, no complex history
+→ DETAILS: YES - If additional facts available
 → components: ["map", "details"]
 
-"Trump Pledges Multiple Cash Payments"
-- Map: MAYBE → "White House" or "Capitol Building" if mentioned
-- Timeline: NO → It's a policy proposal, self-explanatory
-- Details: YES → Payment amounts, eligibility details
-→ components: ["details"] or ["map", "details"]
+"Putin Announces New Nuclear Policy"
+→ MAP: NO - Kremlin is boring, everyone knows
+→ TIMELINE: NO - Single announcement
+→ DETAILS: YES
+→ components: ["details"]
 
-"North Korea Warns Japan Over Nuclear Weapons"
-- Map: YES → "Yongbyon Nuclear Complex" (North Korea's main nuclear site)
-- Timeline: MAYBE → Only if nuclear history adds value
-- Details: YES → Missile specifications, previous threats
+"Epstein Files Released After Years of Secrecy"
+→ MAP: NO - No specific incident location
+→ TIMELINE: YES - Complex multi-year case
+→ DETAILS: YES
+→ components: ["timeline", "details"]
+
+"Fed Raises Interest Rates to 5.5%"
+→ MAP: NO - No incident location
+→ TIMELINE: NO - Not needed for understanding
+→ GRAPH: YES - Real rate history from Fed
+→ DETAILS: YES
+→ components: ["graph", "details"]
+
+"Earthquake Kills 50 in Turkey"
+→ MAP: YES - Show epicenter (users want to see where)
+→ TIMELINE: NO - Single disaster
+→ DETAILS: YES
 → components: ["map", "details"]
 
-"Russia Reports Constructive Ukraine Peace Talks"
-- Map: YES → The actual meeting venue in Florida (find exact location!)
-- Timeline: YES → Ongoing war, history helps
-- Details: YES → Negotiator names, meeting details
-→ components: ["map", "timeline", "details"]
+"SNL Mocks Trump in Christmas Sketch"
+→ MAP: NO - Nobody cares where TV studio is
+→ TIMELINE: NO - Entertainment news
+→ DETAILS: YES - If additional facts
+→ components: ["details"]
 
-"US Intel Warns Putin Seeks Full Ukraine Control"
-- Map: MAYBE → "Pentagon" or "CIA Headquarters" where report from
-- Timeline: MAYBE → If showing war progression
-- Details: YES → Intelligence findings
-→ components: ["details"] or ["map", "details"]
+"Ukraine Drone Strikes Russian Oil Depot"
+→ MAP: YES - Show the depot location
+→ TIMELINE: MAYBE - If part of ongoing war context
+→ DETAILS: YES
+→ components: ["map", "details"] or ["map", "timeline", "details"]
 
 ═══════════════════════════════════════════════════════════════
 EMOJI SELECTION
@@ -225,6 +243,7 @@ Choose ONE emoji:
 💣 Military           🚢 Naval               ✈️ Aviation
 🔪 Crime              💰 Business            📺 TV/Media
 ☢️ Nuclear            🗳️ Elections           🤝 Diplomacy
+✈️ Plane crash        🌊 Natural disaster    🔥 Fire
 
 ═══════════════════════════════════════════════════════════════
 OUTPUT FORMAT
@@ -232,23 +251,16 @@ OUTPUT FORMAT
 
 {
   "components": ["map", "details"],
-  "emoji": "📺",
+  "emoji": "✈️",
   "graph_type": null,
-  "map_locations": ["Studio 8H, 30 Rockefeller Plaza, New York, USA"]
+  "map_locations": ["Vilnius International Airport, Vilnius, Lithuania"]
 }
 
-MAP LOCATION FORMAT:
-"Exact Venue/Building, City, Country"
-
-✓ "Studio 8H, 30 Rockefeller Plaza, New York, USA"
-✓ "Yongbyon Nuclear Complex, Yongbyon, North Korea"
-✓ "Mar-a-Lago, Palm Beach, USA"
-✓ "The Kremlin, Moscow, Russia"
-
-✗ "United States" - REJECTED
-✗ "Seoul, South Korea" - REJECTED
-✗ "Ukraine" - REJECTED
-✗ "New York" - REJECTED (need specific building)
+RULES:
+- components: Array ordered by importance
+- emoji: Single emoji for the story
+- graph_type: "line", "bar", or "area" if graph selected, null otherwise
+- map_locations: Array of specific locations if map selected, null otherwise
 """
 
 

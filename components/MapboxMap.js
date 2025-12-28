@@ -5,61 +5,71 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 // Mapbox access token
 mapboxgl.accessToken = 'pk.eyJ1Ijoib21lcnMzOTQ4IiwiYSI6ImNtajY0bjFycTBqNjkzZnF5bzduenA0NmIifQ.8I1Q5aYeoGB3GihpfaC_WQ';
 
-// Country code mapping for common countries (ISO 3166-1 alpha-3)
-// These are LARGE AREAS that should be highlighted, not pinned
-const COUNTRY_CODES = {
-  'usa': 'USA', 'united states': 'USA', 'america': 'USA',
-  'uk': 'GBR', 'united kingdom': 'GBR', 'britain': 'GBR', 'england': 'GBR',
-  'russia': 'RUS', 'russian federation': 'RUS',
-  'ukraine': 'UKR', 'china': 'CHN', 'india': 'IND',
-  'france': 'FRA', 'germany': 'DEU', 'italy': 'ITA', 'spain': 'ESP',
-  'japan': 'JPN', 'south korea': 'KOR', 'north korea': 'PRK',
-  'iran': 'IRN', 'iraq': 'IRQ', 'syria': 'SYR', 'israel': 'ISR',
-  'palestine': 'PSE', 'gaza': 'PSE', 'turkey': 'TUR', 'egypt': 'EGY',
-  'saudi arabia': 'SAU', 'australia': 'AUS', 'canada': 'CAN',
-  'brazil': 'BRA', 'mexico': 'MEX', 'argentina': 'ARG',
-  'poland': 'POL', 'netherlands': 'NLD', 'belgium': 'BEL',
-  'sweden': 'SWE', 'norway': 'NOR', 'finland': 'FIN', 'denmark': 'DNK',
-  'afghanistan': 'AFG', 'pakistan': 'PAK', 'indonesia': 'IDN',
-  'philippines': 'PHL', 'vietnam': 'VNM', 'thailand': 'THA',
-  'taiwan': 'TWN', 'hong kong': 'HKG', 'singapore': 'SGP',
-  'south africa': 'ZAF', 'nigeria': 'NGA', 'kenya': 'KEN', 'ethiopia': 'ETH'
+// Cache for location boundaries to avoid repeated API calls
+const boundaryCache = new Map();
+
+// Fetch location boundary from Nominatim (OpenStreetMap)
+const fetchLocationBoundary = async (locationName, lat, lon) => {
+  // Check cache first
+  const cacheKey = `${locationName}-${lat}-${lon}`;
+  if (boundaryCache.has(cacheKey)) {
+    return boundaryCache.get(cacheKey);
+  }
+
+  try {
+    // Search by name and coordinates for better accuracy
+    const searchQuery = encodeURIComponent(locationName);
+    const url = `https://nominatim.openstreetmap.org/search?q=${searchQuery}&format=json&polygon_geojson=1&limit=1`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'TenNews/1.0 (news app)'
+      }
+    });
+    
+    if (!response.ok) {
+      console.log('⚠️ Nominatim API error:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.length > 0 && data[0].geojson) {
+      const result = {
+        geojson: data[0].geojson,
+        boundingbox: data[0].boundingbox,
+        displayName: data[0].display_name
+      };
+      boundaryCache.set(cacheKey, result);
+      return result;
+    }
+    
+    return null;
+  } catch (err) {
+    console.log('⚠️ Failed to fetch boundary:', err.message);
+    return null;
+  }
 };
 
-// Helper to detect if a location name is a large region (country) or specific place
-const isLargeRegion = (locationName) => {
-  if (!locationName) return false;
-  const nameLower = locationName.toLowerCase().trim();
+// Create a bounding box polygon from coordinates
+const createBoundingBoxPolygon = (lat, lon, radiusKm = 5) => {
+  // Approximate degrees per km (varies by latitude)
+  const latDegPerKm = 1 / 111;
+  const lonDegPerKm = 1 / (111 * Math.cos(lat * Math.PI / 180));
   
-  // Check if it's a known country/region
-  if (COUNTRY_CODES[nameLower]) return true;
+  const latOffset = radiusKm * latDegPerKm;
+  const lonOffset = radiusKm * lonDegPerKm;
   
-  // Check for country-like patterns (single word country names)
-  const countryNames = Object.keys(COUNTRY_CODES);
-  for (const country of countryNames) {
-    if (nameLower === country || nameLower.endsWith(country)) return true;
-  }
-  
-  // Large regions that should be highlighted
-  const largeRegions = [
-    'middle east', 'eastern europe', 'western europe', 'central europe',
-    'east asia', 'southeast asia', 'south asia', 'central asia',
-    'north africa', 'sub-saharan africa', 'latin america', 'caribbean',
-    'gaza strip', 'west bank', 'crimea', 'donbas', 'kurdistan'
-  ];
-  
-  for (const region of largeRegions) {
-    if (nameLower.includes(region)) return true;
-  }
-  
-  return false;
-};
-
-// Helper to get country code from location name
-const getCountryCode = (locationName) => {
-  if (!locationName) return null;
-  const nameLower = locationName.toLowerCase().trim();
-  return COUNTRY_CODES[nameLower] || null;
+  return {
+    type: 'Polygon',
+    coordinates: [[
+      [lon - lonOffset, lat - latOffset],
+      [lon + lonOffset, lat - latOffset],
+      [lon + lonOffset, lat + latOffset],
+      [lon - lonOffset, lat + latOffset],
+      [lon - lonOffset, lat - latOffset]
+    ]]
+  };
 };
 
 export default function MapboxMap({ 
@@ -67,47 +77,39 @@ export default function MapboxMap({
   markers = [], 
   expanded = false,
   highlightColor = '#3b82f6',
-  locationType = 'auto',  // 'pin', 'area', or 'auto' (auto-detect from location name)
-  regionName = null,      // Country/region name to highlight when locationType is 'area'
-  location = null         // Location name for auto-detection (e.g., "Ukraine", "White House")
+  locationType = 'auto',
+  regionName = null,
+  location = null
 }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [boundaryData, setBoundaryData] = useState(null);
 
-  // Auto-detect location type based on location name
-  const effectiveLocationType = (() => {
-    if (locationType === 'area') return 'area';
-    if (locationType === 'pin') return 'pin';
-    // Auto-detect: check if location name is a country/large region
-    const locationToCheck = location || regionName;
-    if (locationToCheck && isLargeRegion(locationToCheck)) {
-      return 'area';
+  // Fetch boundary when location changes
+  useEffect(() => {
+    const locationToSearch = location || regionName;
+    if (locationToSearch && center.lat && center.lon) {
+      fetchLocationBoundary(locationToSearch, center.lat, center.lon)
+        .then(data => {
+          if (data) {
+            console.log('🗺️ Fetched boundary for:', locationToSearch);
+            setBoundaryData(data);
+          }
+        });
     }
-    return 'pin';  // Default to pin for specific locations
-  })();
-
-  // Get the country code for area highlighting
-  const effectiveRegionCode = (() => {
-    if (regionName) return getCountryCode(regionName) || regionName.toUpperCase();
-    if (location) return getCountryCode(location) || null;
-    return null;
-  })();
+  }, [location, regionName, center.lat, center.lon]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Initialize map with custom professional light theme
-    // When collapsed: zoom IN to show specific location (zoom 8-10)
-    // When expanded: zoom OUT to show more context (zoom 4-6)
-    const initialZoom = expanded 
-      ? (effectiveLocationType === 'area' ? 4 : 6)   // Expanded: show context
-      : (effectiveLocationType === 'area' ? 5 : 10); // Collapsed: focus on location
+    // Initialize map
+    const initialZoom = expanded ? 8 : 11;
     
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/light-v11',  // Start with light base
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [center.lon || 0, center.lat || 0],
       zoom: initialZoom,
       interactive: true,
@@ -128,65 +130,46 @@ export default function MapboxMap({
       map.touchZoomRotate.disable();
     }
 
-    // Hide the Mapbox logo and apply custom light theme colors
+    // Apply custom theme colors
     map.on('load', () => {
-      const logo = mapContainerRef.current.querySelector('.mapboxgl-ctrl-logo');
+      // Hide Mapbox branding
+      const logo = mapContainerRef.current?.querySelector('.mapboxgl-ctrl-logo');
       if (logo) logo.style.display = 'none';
-      const attrib = mapContainerRef.current.querySelector('.mapboxgl-ctrl-attrib');
+      const attrib = mapContainerRef.current?.querySelector('.mapboxgl-ctrl-attrib');
       if (attrib) attrib.style.display = 'none';
       
-      // Custom professional light theme with terrain-based color variations
-      
-      // Water: refined slate blue - sophisticated & modern
+      // Custom professional light theme
       if (map.getLayer('water')) {
         map.setPaintProperty('water', 'fill-color', '#c7d2e0');
       }
       
-      // Land: Elegant warm cream/beige palette - premium aesthetic
       if (map.getLayer('landcover')) {
         map.setPaintProperty('landcover', 'fill-color', [
-          'match',
-          ['get', 'class'],
-          'wood', '#e8e4dc',           // Forest: warm taupe
-          'scrub', '#ebe7df',          // Scrubland: light sand
-          'grass', '#eae6de',          // Grassland: cream beige
-          'crop', '#f2ede5',           // Agricultural: soft ivory
-          'snow', '#f5f5f5',           // Snow/ice: pure light
-          'wetland', '#dde3e8',        // Wetland: cool slate
-          'sand', '#f0ebe0',           // Desert/sand: warm sand
-          '#ebe7e0'                    // Default: elegant cream
+          'match', ['get', 'class'],
+          'wood', '#e8e4dc', 'scrub', '#ebe7df', 'grass', '#eae6de',
+          'crop', '#f2ede5', 'snow', '#f5f5f5', 'wetland', '#dde3e8',
+          'sand', '#f0ebe0', '#ebe7e0'
         ]);
         map.setPaintProperty('landcover', 'fill-opacity', 0.7);
       }
       
-      // Landuse: Subtle warm tones for different zones
       if (map.getLayer('landuse')) {
         map.setPaintProperty('landuse', 'fill-color', [
-          'match',
-          ['get', 'class'],
-          'park', '#dfe8dc',           // Parks: muted sage
-          'cemetery', '#e5e5e0',       // Cemetery: neutral cream
-          'hospital', '#f0eae8',       // Hospital: warm blush
-          'school', '#eae8ed',         // School: soft lavender-grey
-          'industrial', '#e2e2e0',     // Industrial: cool grey
-          'commercial', '#ede8e3',     // Commercial: warm cream
-          'residential', '#f0ebe5',    // Residential: ivory
-          'agriculture', '#ebe6dc',    // Agriculture: wheat cream
-          'airport', '#e5e5e5',        // Airport: neutral
-          'pitch', '#e0e8dc',          // Sports: soft green-grey
-          '#ebe7e0'                    // Default: warm cream
+          'match', ['get', 'class'],
+          'park', '#dfe8dc', 'cemetery', '#e5e5e0', 'hospital', '#f0eae8',
+          'school', '#eae8ed', 'industrial', '#e2e2e0', 'commercial', '#ede8e3',
+          'residential', '#f0ebe5', 'agriculture', '#ebe6dc', 'airport', '#e5e5e5',
+          'pitch', '#e0e8dc', '#ebe7e0'
         ]);
         map.setPaintProperty('landuse', 'fill-opacity', 0.6);
       }
       
-      // Hillshade for terrain depth (if available)
       if (map.getLayer('hillshade')) {
         map.setPaintProperty('hillshade', 'hillshade-shadow-color', '#d8d4cc');
         map.setPaintProperty('hillshade', 'hillshade-highlight-color', '#fafaf8');
         map.setPaintProperty('hillshade', 'hillshade-exaggeration', 0.25);
       }
       
-      // Parks/green areas: refined sage tones
       if (map.getLayer('park')) {
         map.setPaintProperty('park', 'fill-color', '#dce5d8');
       }
@@ -194,13 +177,11 @@ export default function MapboxMap({
         map.setPaintProperty('national_park', 'fill-color', '#d8e2d5');
       }
       
-      // Buildings: warm ivory grey
       if (map.getLayer('building')) {
         map.setPaintProperty('building', 'fill-color', '#ddd8d0');
         map.setPaintProperty('building', 'fill-opacity', 0.65);
       }
       
-      // Roads: refined warm grey tones
       const roadLayers = ['road-street', 'road-minor', 'road-major', 'road-primary', 'road-secondary', 'road-motorway', 'road-trunk'];
       roadLayers.forEach(layerId => {
         if (map.getLayer(layerId)) {
@@ -211,101 +192,117 @@ export default function MapboxMap({
 
     mapRef.current = map;
 
-    // Wait for map to load before adding markers or area highlights
+    // Add boundary/area highlighting when map loads
     map.on('load', () => {
-      // Create custom marker element - minimal modern design
-      const createCustomMarker = (color, isMain = true) => {
-        const el = document.createElement('div');
-        const size = isMain ? 16 : 12;
-        
-        el.style.cssText = `
-          width: ${size}px;
-          height: ${size}px;
-          background: ${color};
-          border-radius: 50%;
-          border: 2.5px solid white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          cursor: pointer;
-          position: relative;
-        `;
-        
-        // Subtle outer ring for main marker
-        if (isMain) {
-          const ring = document.createElement('div');
-          ring.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: ${size + 12}px;
-            height: ${size + 12}px;
-            border: 2px solid ${color};
-            border-radius: 50%;
-            opacity: 0.4;
-            pointer-events: none;
-          `;
-          el.appendChild(ring);
-        }
-        
-        return el;
-      };
-
-      console.log('🗺️ MapboxMap loaded:', { effectiveLocationType, effectiveRegionCode, center, location });
+      console.log('🗺️ MapboxMap loaded, boundary data:', !!boundaryData);
       
-      // ALWAYS add a pin marker first (visible for both pin and area types)
-      const mainMarker = new mapboxgl.Marker({
-        element: createCustomMarker(highlightColor, true),
-        anchor: 'center'
-      })
-        .setLngLat([center.lon || 0, center.lat || 0])
-        .addTo(map);
-      markersRef.current.push(mainMarker);
-      console.log('📍 Pin marker added at:', center);
-
-      // Add additional markers if available
-      if (markers && markers.length > 0) {
-        markers.forEach((marker) => {
-          const m = new mapboxgl.Marker({
-            element: createCustomMarker(highlightColor, false),
-            anchor: 'center'
-          })
-            .setLngLat([marker.lon || 0, marker.lat || 0])
-            .addTo(map);
-          markersRef.current.push(m);
+      // Determine what geometry to use
+      let areaGeometry = null;
+      
+      if (boundaryData && boundaryData.geojson) {
+        // Use actual boundary from Nominatim
+        areaGeometry = boundaryData.geojson;
+        console.log('✅ Using real boundary polygon');
+        
+        // Fit map to boundary
+        if (boundaryData.boundingbox) {
+          const [south, north, west, east] = boundaryData.boundingbox.map(Number);
+          map.fitBounds([[west, south], [east, north]], {
+            padding: 40,
+            duration: 0
+          });
+        }
+      } else {
+        // Fallback: create a rectangular area around the point
+        areaGeometry = createBoundingBoxPolygon(center.lat, center.lon, 3);
+        console.log('📦 Using fallback bounding box');
+      }
+      
+      // Add the area source
+      try {
+        map.addSource('location-boundary', {
+          'type': 'geojson',
+          'data': {
+            'type': 'Feature',
+            'geometry': areaGeometry
+          }
         });
+
+        // Fill layer - semi-transparent area
+        map.addLayer({
+          'id': 'location-boundary-fill',
+          'type': 'fill',
+          'source': 'location-boundary',
+          'paint': {
+            'fill-color': highlightColor,
+            'fill-opacity': 0.15
+          }
+        });
+
+        // Outline layer - solid border
+        map.addLayer({
+          'id': 'location-boundary-outline',
+          'type': 'line',
+          'source': 'location-boundary',
+          'paint': {
+            'line-color': highlightColor,
+            'line-width': 2,
+            'line-opacity': 0.6
+          }
+        });
+
+        // Outer glow effect
+        map.addLayer({
+          'id': 'location-boundary-glow',
+          'type': 'line',
+          'source': 'location-boundary',
+          'paint': {
+            'line-color': highlightColor,
+            'line-width': 8,
+            'line-opacity': 0.15,
+            'line-blur': 4
+          }
+        }, 'location-boundary-outline');
+
+        console.log('✅ Boundary layers added');
+      } catch (err) {
+        console.log('⚠️ Could not add boundary layers:', err.message);
       }
 
-      // ADDITIONALLY for AREA type - try to highlight country/region
-      if (effectiveLocationType === 'area' && effectiveRegionCode) {
-        console.log('🌍 Attempting area highlight for:', effectiveRegionCode);
-        try {
-          const countryCode = effectiveRegionCode;
-          
-          // Try to add country highlight using admin boundaries
-          // This works with most Mapbox styles
-          map.addLayer({
-            'id': 'country-highlight-fill',
-            'type': 'fill',
-            'source': 'composite',
-            'source-layer': 'admin-0-boundary-bg',
-            'filter': ['==', ['get', 'iso_3166_1'], countryCode.substring(0, 2)],
-            'paint': {
-              'fill-color': highlightColor,
-              'fill-opacity': 0.25
+      // Add small center marker for reference
+      try {
+        map.addSource('center-point', {
+          'type': 'geojson',
+          'data': {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'Point',
+              'coordinates': [center.lon || 0, center.lat || 0]
             }
-          });
-          console.log('✅ Area fill layer added');
-        } catch (err) {
-          console.log('⚠️ Could not add area highlight (this is OK):', err.message);
-          // Marker is already added above, so we're fine
-        }
+          }
+        });
+
+        map.addLayer({
+          'id': 'center-point-marker',
+          'type': 'circle',
+          'source': 'center-point',
+          'paint': {
+            'circle-radius': 4,
+            'circle-color': highlightColor,
+            'circle-opacity': 0.8,
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-opacity': 1
+          }
+        });
+      } catch (err) {
+        console.log('⚠️ Could not add center point:', err.message);
       }
     });
 
-    // Use ResizeObserver to handle container size changes with debounce
+    // Handle resize
     let resizeTimeout;
     const resizeObserver = new ResizeObserver(() => {
-      // Debounce resize calls to prevent flickering during animations
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         if (mapRef.current) {
@@ -323,25 +320,53 @@ export default function MapboxMap({
       markersRef.current = [];
       map.remove();
     };
-  }, [center.lat, center.lon, highlightColor, effectiveLocationType, effectiveRegionCode]);
+  }, [center.lat, center.lon, highlightColor, boundaryData]);
 
-  // Handle expand/collapse - update zoom level and enable/disable interactions
+  // Update boundary when data arrives after map is already loaded
+  useEffect(() => {
+    if (mapRef.current && boundaryData && boundaryData.geojson) {
+      const map = mapRef.current;
+      
+      try {
+        // Update the source with new boundary data
+        const source = map.getSource('location-boundary');
+        if (source) {
+          source.setData({
+            'type': 'Feature',
+            'geometry': boundaryData.geojson
+          });
+          
+          // Fit to new boundary
+          if (boundaryData.boundingbox) {
+            const [south, north, west, east] = boundaryData.boundingbox.map(Number);
+            map.fitBounds([[west, south], [east, north]], {
+              padding: 40,
+              duration: 500
+            });
+          }
+          
+          console.log('✅ Updated boundary with real data');
+        }
+      } catch (err) {
+        console.log('⚠️ Could not update boundary:', err.message);
+      }
+    }
+  }, [boundaryData]);
+
+  // Handle expand/collapse
   useEffect(() => {
     if (mapRef.current) {
       const map = mapRef.current;
       
-      // Quick, subtle fade for smoothness
       setIsTransitioning(true);
       
       if (expanded) {
-        // Enable interactions when expanded
         map.scrollZoom.enable();
         map.boxZoom.enable();
         map.dragPan.enable();
         map.doubleClickZoom.enable();
         map.touchZoomRotate.enable();
       } else {
-        // Disable interactions when collapsed
         map.scrollZoom.disable();
         map.boxZoom.disable();
         map.dragPan.disable();
@@ -349,18 +374,16 @@ export default function MapboxMap({
         map.touchZoomRotate.disable();
       }
       
-      // Smoothly animate zoom change during container transition
-      // Use flyTo for smooth animation instead of jumpTo
-      const targetZoom = expanded ? 6 : 10;  // Collapsed: zoom 10 (focused), Expanded: zoom 6 (context)
+      // Adjust zoom for expand/collapse
+      const targetZoom = expanded ? 8 : 11;
       
-      // Start zoom animation immediately - it will animate alongside container
       map.easeTo({
         zoom: targetZoom,
-        duration: 350,  // Match container transition duration
-        easing: (t) => 1 - Math.pow(1 - t, 3)  // Smooth ease-out curve
+        duration: 350,
+        easing: (t) => 1 - Math.pow(1 - t, 3)
       });
       
-      // Resize multiple times during transition for smooth scaling
+      // Resize during transition
       const resizeTimes = [50, 150, 250, 350];
       const timeouts = resizeTimes.map(time => 
         setTimeout(() => {
@@ -370,7 +393,6 @@ export default function MapboxMap({
         }, time)
       );
       
-      // Fade back in quickly
       const fadeTimeout = setTimeout(() => {
         setIsTransitioning(false);
       }, 100);
@@ -396,7 +418,6 @@ export default function MapboxMap({
         .mapboxgl-canvas {
           transition: opacity 0.3s ease !important;
         }
-        
       `}</style>
       <div 
         ref={mapContainerRef} 
@@ -408,7 +429,6 @@ export default function MapboxMap({
           bottom: 0,
           borderRadius: '8px',
           overflow: 'hidden',
-          // Subtle opacity dip during transition - barely noticeable but smooths resize
           opacity: isTransitioning ? 0.85 : 1,
           transition: 'opacity 0.15s ease-out',
           willChange: 'opacity'
@@ -417,4 +437,3 @@ export default function MapboxMap({
     </>
   );
 }
-

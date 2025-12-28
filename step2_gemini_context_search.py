@@ -27,148 +27,223 @@ def search_gemini_context(claude_title: str, claude_summary: str, full_text: str
     # Use full_text if provided, otherwise use summary
     article_text = full_text if full_text else claude_summary
     
-    prompt = f"""You are gathering structured data for news article components.
+    prompt = f"""You are gathering data for news article components.
 
 ARTICLE TITLE: {claude_title}
 BULLET SUMMARY: {claude_summary}
 FULL ARTICLE TEXT: {article_text[:3000]}
 
-Search for and organize information into these FOUR categories:
+Gather information for these FOUR categories:
 
 ═══════════════════════════════════════════════════════════════
 1. TIMELINE DATA
 ═══════════════════════════════════════════════════════════════
 
-IMPORTANT: Only gather timeline data if this story REQUIRES historical context to understand.
+TIMELINE IS RARELY NEEDED - only about 10% of news stories.
 
-Stories that NEED timeline:
-- Ongoing conflicts with complex history (wars, diplomatic crises)
-- Multi-stage investigations or trials
-- Policy changes that reverse previous decisions
-- Events that are part of a longer sequence
+ASK: "Would readers be confused without knowing what happened before?"
+- YES → Gather timeline
+- NO → Write "TIMELINE NOT NEEDED"
 
-Stories that DO NOT need timeline:
+STORIES THAT NEED TIMELINE:
+- Ongoing wars/conflicts (Ukraine, Gaza, Syria)
+- Multi-year legal cases or investigations (Epstein case)
+- Political crises with multiple developments over time
+- Complex diplomatic situations
+
+STORIES THAT DON'T NEED TIMELINE (most news):
 - Single announcements or statements
-- Entertainment news (TV shows, movies, celebrities)
-- Simple policy proposals
-- Breaking news without complex backstory
+- Product launches or tech news
+- Entertainment news
 - Speeches or remarks
+- Policy proposals
+- Accidents or incidents (unless part of ongoing pattern)
+- Business deals
+- Sports news
 
-If timeline IS needed, find 3-5 dated events:
-- Key events that led to this moment
-- Previous similar incidents
-- Important turning points
+IF TIMELINE IS NEEDED:
 
-FORMAT: [DATE] - [WHAT HAPPENED]
+Find 2-4 events that are:
+✓ From recent past (last 1-5 years)
+✓ Directly relevant to THIS specific story
+✓ Help readers understand "how we got here"
 
-If timeline is NOT needed, write: "TIMELINE NOT REQUIRED - Story is self-contained"
+Write CLEAR, COMPLETE descriptions (15-25 words each).
+Each event should explain WHAT happened AND WHY it matters.
+
+FORMAT:
+[FULL DATE] | [CLEAR 15-25 WORD DESCRIPTION]
+
+GOOD EXAMPLES:
+✓ "July 2019 | Jeffrey Epstein was arrested on federal sex trafficking charges involving dozens of underage girls, reopening investigations that had been closed for years"
+✓ "February 2022 | Russia launched a full-scale military invasion of Ukraine, beginning the largest armed conflict in Europe since World War II"
+✓ "January 2024 | William Lai won Taiwan's presidential election with 40% of the vote, securing an unprecedented third consecutive term for the DPP party"
+
+BAD EXAMPLES:
+✗ "Jul 2019 | Epstein arrested" - TOO SHORT, unclear
+✗ "Ancient Greece | Philosophers create aphorisms" - IRRELEVANT padding
+✗ "Late 1970s | North Korea begins missile program" - TOO OLD
+✗ "2004 | Facebook launches" - IRRELEVANT to most stories
 
 ═══════════════════════════════════════════════════════════════
 2. DETAILS DATA
 ═══════════════════════════════════════════════════════════════
 
-Find interesting facts NOT already in the bullet summary.
+Find interesting facts that are NOT in the bullet summary.
 
-STEP A - Extract from FULL ARTICLE TEXT:
-Read carefully and find specific facts/numbers NOT in bullets:
-- Numbers, measurements, quantities
-- Technical specifications
-- Names, titles, ages
-- Costs, amounts, percentages
-- Historical comparisons
+STEP 1: Read BULLET SUMMARY carefully
+Write down every number and fact mentioned. These are OFF LIMITS.
 
-STEP B - Search internet for additional context:
-- Background statistics
-- Comparative data
-- Related metrics
+STEP 2: Read FULL ARTICLE
+Find NEW facts with numbers that bullets didn't mention.
 
-FORMAT: [LABEL]: [VALUE] | Source: [article/search]
+STEP 3: Search internet
+Find additional relevant statistics.
 
-CRITICAL: Do NOT include facts already in BULLET SUMMARY.
-
-═══════════════════════════════════════════════════════════════
-3. TREND DATA (for Graph)
-═══════════════════════════════════════════════════════════════
-
-Find time-series data only if story involves measurable trends:
-- Economic indicators over time
-- Poll numbers over time
-- Casualty/case counts over time
-- Price changes over time
-
-FORMAT: List of (date, value) pairs with at least 4 points
-
-If no trend data exists, write: "NO TREND DATA AVAILABLE"
-
-═══════════════════════════════════════════════════════════════
-4. EXACT LOCATION DATA (for Map)
-═══════════════════════════════════════════════════════════════
-
-Find the MOST INTERESTING and SPECIFIC location related to this story.
-
-LOCATION PRIORITY (choose the most relevant):
-
-1. WHERE THE EVENT ACTUALLY HAPPENED:
-   - "Studio 8H, 30 Rockefeller Plaza" for SNL sketch
-   - "Mar-a-Lago" for Florida meetings
-   - "Oval Office" for presidential announcements
-
-2. WHERE THE SUBJECT IS LOCATED:
-   - "Yongbyon Nuclear Complex" for North Korea nuclear news
-   - "Zaporizhzhia Nuclear Plant" for Ukraine nuclear news
-   - "Kremlin" for Russian government decisions
-
-3. WHERE THE IMPACT WILL BE FELT:
-   - Specific affected facility or site
-   - Target location mentioned in threats
-
-SEARCH STRATEGY:
-1. Read article for ANY specific place names (buildings, facilities, bases)
-2. If article says "talks in Florida" - find the EXACT venue
-3. If article mentions nuclear weapons - find the specific facility
-4. If article is about a TV show - find the studio location
-5. If article is about government action - find the specific building
-
-WHAT TO LOOK FOR:
-- Venue names: "Mar-a-Lago", "Studio 8H", "Crocus City Hall"
-- Government buildings: "The Kremlin", "Pentagon", "Capitol Building"
-- Military sites: "Yongbyon Nuclear Complex", "Novorossiysk Naval Base"
-- Facilities: "Zaporizhzhia Nuclear Plant", "Tesla Gigafactory"
-- Studios/Offices: "30 Rockefeller Plaza", "Apple Park"
+RULES:
+✓ Must contain a specific number
+✓ Must NOT be in bullet summary
+✓ Must be relevant to the main story
 
 FORMAT:
-[EXACT LOCATION] | [CITY] | [COUNTRY] | [WHY THIS LOCATION] | [COORDINATES]
+[LABEL]: [VALUE] | Source: [article/search] | In bullets: NO
 
-GOOD EXAMPLES:
-✓ "Studio 8H, 30 Rockefeller Plaza | New York | USA | Where SNL is filmed and broadcast | 40.7593, -73.9794"
-✓ "Mar-a-Lago | Palm Beach | USA | Trump's residence where meetings held | 26.6777, -80.0367"
-✓ "Yongbyon Nuclear Complex | Yongbyon | North Korea | Main nuclear weapons facility | 39.7947, 125.7553"
-✓ "The Kremlin | Moscow | Russia | Russian government headquarters | 55.7520, 37.6175"
-✓ "Capitol Building | Washington DC | USA | Where legislation is passed | 38.8899, -77.0091"
+GOOD DETAILS:
+✓ Technical specs not mentioned in bullets
+✓ Background statistics that add context
+✓ Comparisons (previous records, averages)
+✓ Relevant numbers from the article body
 
-BAD EXAMPLES (REJECTED):
-✗ "Seoul, South Korea" - Not even relevant to North Korea/Japan story
-✗ "Ukraine" - Just a country, no specific location
-✗ "United States" - Completely useless
-✗ "Florida" - State only, need exact venue
-✗ "New York" - City only, need exact building
+BAD DETAILS:
+✗ ANYTHING already in bullet summary - FORBIDDEN
+✗ Irrelevant trivia ("Temple founded 628 AD" for AirPods story)
+✗ Facts without numbers
+✗ Vague information
 
-SPECIAL CASES:
+If bullets already contain all key facts, write: "NO ADDITIONAL DETAILS"
 
-For GOVERNMENT/POLICY news:
-- Find the specific building (White House, Capitol, Kremlin, etc.)
+═══════════════════════════════════════════════════════════════
+3. GRAPH DATA
+═══════════════════════════════════════════════════════════════
 
-For ENTERTAINMENT news:
-- Find the studio, theater, or venue
+CRITICAL: Graph data must be REAL from verified sources.
+DO NOT make up numbers.
 
-For MILITARY/WEAPONS news:
-- Find the specific base, facility, or installation
+WHEN TO GATHER GRAPH DATA:
+- Economic news with rate/price history (interest rates, stock prices)
+- Scientific data with measurements over time (temperatures, emissions)
+- Election polling or results over time
+- Statistics that genuinely change over time
 
-For DIPLOMATIC news:
-- Find the exact meeting location (hotel, resort, government building)
+REQUIREMENTS:
+✓ Data from reliable source (government agency, research institution, major publication)
+✓ At least 4 verified data points
+✓ Source name must be cited
+✓ Numbers must be real, not estimated
 
-If NO specific location can be found, write:
-"NO SPECIFIC LOCATION - Only general areas mentioned, map not recommended"
+FORMAT:
+Source: [SOURCE NAME]
+[DATE]: [VALUE]
+[DATE]: [VALUE]
+[DATE]: [VALUE]
+[DATE]: [VALUE]
+
+GOOD EXAMPLE:
+"Source: Federal Reserve
+March 2022: 0.50%
+December 2022: 4.25%
+July 2023: 5.25%
+January 2024: 5.50%"
+
+BAD EXAMPLES:
+✗ Numbers that look too clean: 8, 9, 10, 11, 12 (likely fabricated)
+✗ Data without source citation
+✗ "Estimated" or "projected" numbers
+✗ Made-up statistics
+
+If no verified data exists, write: "NO VERIFIED GRAPH DATA"
+
+═══════════════════════════════════════════════════════════════
+4. MAP LOCATION DATA
+═══════════════════════════════════════════════════════════════
+
+Find the location WHERE THE NEWS ACTUALLY HAPPENED.
+
+THE KEY QUESTION: "Where did this happen?"
+
+ALWAYS FIND LOCATION FOR:
+
+1. INCIDENTS & ACCIDENTS:
+   - Plane crash → Find the crash site or airport
+   - Car accident → Find the accident location
+   - Shooting → Find where it happened
+   - Attack → Find the exact venue
+   
+2. NATURAL DISASTERS:
+   - Earthquake → Find epicenter or most affected area
+   - Hurricane → Find landfall location
+   - Flood → Find affected region
+   - Wildfire → Find fire location
+
+3. SPECIFIC EVENTS:
+   - "Attack at X" → Find X
+   - "Explosion at X" → Find X
+   - "Fire at X" → Find X
+   - "Protest at X" → Find X
+
+4. DISPUTED TERRITORIES & FACILITIES:
+   - South China Sea islands
+   - Nuclear facilities
+   - Military bases
+   - Contested regions
+
+NEVER BOTHER WITH:
+
+✗ Famous government buildings:
+  - Kremlin, White House, Capitol Building
+  - Parliament buildings, presidential palaces
+  - Everyone already knows where these are
+
+✗ TV stations & corporate offices:
+  - "Channel 4 headquarters" - nobody cares
+  - Generic company offices
+
+✗ Famous landmarks everyone knows:
+  - Eiffel Tower, Big Ben, etc.
+
+✗ Just a country or city name:
+  - "Lithuania" is useless - find the specific crash site
+  - "Moscow" is useless - find the specific venue
+
+EXAMPLES:
+
+"UPS Plane Crash Death Toll Climbs to 15"
+→ FIND: Vilnius International Airport crash site
+→ Users want to see WHERE the plane crashed
+
+"Earthquake Kills Thousands in Turkey"
+→ FIND: Epicenter location or Gaziantep
+→ Users want to see WHERE the earthquake hit
+
+"Terrorist Attack at Moscow Concert Hall"
+→ FIND: Crocus City Hall exact location
+→ Users want to see WHERE the attack happened
+
+"Putin Announces New Policy"
+→ DON'T BOTHER: Everyone knows where Kremlin is
+→ Write "NO INTERESTING LOCATION"
+
+"Congress Passes New Bill"
+→ DON'T BOTHER: Everyone knows where Capitol is
+→ Write "NO INTERESTING LOCATION"
+
+FORMAT:
+[EXACT LOCATION NAME] | [CITY] | [COUNTRY] | [WHY USERS WANT TO SEE] | [COORDINATES]
+
+Example:
+"Vilnius International Airport | Vilnius | Lithuania | Crash site where UPS cargo plane went down | 54.6341, 25.2858"
+
+If only boring/famous locations available, write: "NO INTERESTING LOCATION"
 """
 
     request_data = {
