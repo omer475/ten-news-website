@@ -401,7 +401,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         const rotate = () => {
           if (!isActive) return;
           if (isRotatingRef.current && !isDraggingRef.current) {
-            rotationRef.current.x += 0.05;
+            rotationRef.current.x += 0.15;
             projection.rotate([rotationRef.current.x, rotationRef.current.y]);
             globe.selectAll('path').attr('d', path);
           }
@@ -494,24 +494,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           height: 100%;
           display: flex;
           flex-direction: column;
-          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+          background: #fafafa;
           z-index: 1;
           overflow: hidden;
           font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
-        /* Subtle geometric pattern overlay */
-        .first-page-container::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image: 
-            radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
-          pointer-events: none;
         }
 
         .content-wrapper {
@@ -519,150 +505,84 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 40px 24px;
+          justify-content: flex-start;
+          padding: 0 24px;
           position: relative;
           z-index: 1;
-          gap: 24px;
           overflow: hidden;
         }
 
         .greeting-section {
           text-align: center;
-          animation: glassReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          padding-top: 40px;
+          animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          padding-top: 120px;
           opacity: 0;
+          z-index: 2;
         }
 
-        @keyframes glassReveal {
+        @keyframes fadeUp {
           0% { 
             opacity: 0; 
-            transform: translateY(-30px) scale(0.95);
-            filter: blur(10px);
+            transform: translateY(20px);
           }
           100% { 
             opacity: 1; 
-            transform: translateY(0) scale(1);
-            filter: blur(0);
+            transform: translateY(0);
           }
         }
 
         .greeting-hi {
-          font-size: 42px;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          color: #0f172a;
-          margin-bottom: 12px;
-          line-height: 1.1;
+          font-size: 52px;
+          font-weight: 600;
+          letter-spacing: -0.035em;
+          color: #000000;
+          margin-bottom: 0;
+          line-height: 1;
+          font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         .greeting-name {
-          font-weight: 800;
+          font-weight: 600;
         }
 
-        /* Liquid Glass Variables */
         .greeting-sub {
-          --c-glass: #ffffff;
-          --c-light: #fff;
-          --c-dark: #000;
-          --glass-reflex-dark: 1;
-          --glass-reflex-light: 1;
-          --saturation: 180%;
-          
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 0;
           margin: 0 auto;
-          margin-top: 28px;
-          animation: subReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+          margin-top: 16px;
+          animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
           opacity: 0;
         }
 
-        @keyframes subReveal {
-          0% { 
-            opacity: 0; 
-            transform: translateY(25px) scale(0.95);
-            filter: blur(8px);
-          }
-          100% { 
-            opacity: 1; 
-            transform: translateY(0) scale(1);
-            filter: blur(0);
-          }
-        }
-
-        /* Apple Liquid Glass Pill */
-        .glass-pill {
+        .status-line {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0;
-          padding: 16px 32px;
-          border-radius: 50px;
-          
-          /* Liquid Glass Background */
-          background-color: color-mix(in srgb, var(--c-glass) 40%, transparent);
-          backdrop-filter: blur(24px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(24px) saturate(var(--saturation));
-          
-          /* Multi-layer Glass Reflections - Premium Apple Style */
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 20%), transparent),
-            inset 1.2px 2.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 98%), transparent), 
-            inset -1.2px -1.2px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -2.5px -6px 1.5px -4px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 70%), transparent), 
-            inset -0.25px -0.75px 4px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 6%), transparent), 
-            inset -1.2px 2px 0px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-            inset 0px 2.5px 4px -1px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-            inset 2px -5px 1.5px -3px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 6%), transparent), 
-            0px 1.5px 5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 6px 16px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent),
-            0px 12px 32px -8px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 6%), transparent);
-          
-          transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          gap: 10px;
         }
 
-        .glass-pill:hover {
-          transform: translateY(-3px) scale(1.03);
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 25%), transparent),
-            inset 1.2px 2.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 100%), transparent), 
-            inset -1.2px -1.2px 0px -0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 95%), transparent), 
-            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 12%), transparent), 
-            0px 12px 28px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent);
-        }
-
-        .pill-main {
+        .status-text {
           font-size: 17px;
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          line-height: 1.1;
-          color: #1e293b;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+          color: #1f2937;
+          font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .pill-divider {
-          width: 1.5px;
-          height: 20px;
-          background: linear-gradient(180deg, 
-            transparent 0%, 
-            rgba(100, 116, 139, 0.25) 15%, 
-            rgba(100, 116, 139, 0.4) 50%, 
-            rgba(100, 116, 139, 0.25) 85%, 
-            transparent 100%
-          );
-          margin: 0 16px;
+        .status-time {
+          font-size: 17px;
+          font-weight: 400;
+          color: #6b7280;
+          font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .pill-sub {
-          font-size: 16px;
-          font-weight: 500;
-          color: #475569;
-          letter-spacing: 0em;
-        }
-
-        .pill-sub::first-letter {
-          text-transform: uppercase;
+        .status-dot {
+          width: 4px;
+          height: 4px;
+          background: #9ca3af;
+          border-radius: 50%;
         }
 
         .globe-section {
@@ -671,31 +591,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           align-items: center;
           justify-content: center;
           min-height: 0;
-          max-height: 55vh;
           position: relative;
-          animation: globeReveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
           opacity: 0;
-        }
-
-        @keyframes globeReveal {
-          0% { 
-            opacity: 0; 
-            transform: scale(0.8) translateY(30px);
-            filter: blur(15px);
-          }
-          100% { 
-            opacity: 1; 
-            transform: scale(1) translateY(0);
-            filter: blur(0);
-          }
+          width: 100%;
         }
 
         .globe-container {
           position: relative;
           width: 100%;
           height: 100%;
-          max-width: 380px;
-          max-height: 380px;
+          max-width: 420px;
+          max-height: 420px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -714,46 +621,42 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .globe-container :global(.country) {
-          fill: #c9cdd3;
-          stroke: #e8eaed;
-          stroke-width: 0.5;
+          fill: #d1d5db;
+          stroke: #e5e7eb;
+          stroke-width: 0.4;
           transition: fill 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .globe-container :global(.country.highlighted) {
-          stroke: #e8eaed;
-          stroke-width: 0.6;
+          stroke: #e5e7eb;
+          stroke-width: 0.5;
         }
 
         @media (max-width: 480px) {
           .content-wrapper {
-            padding: 30px 0;
+            padding: 0;
             overflow: hidden;
           }
           .greeting-section {
-            padding-top: 80px;
+            padding-top: 100px;
             padding-left: 24px;
             padding-right: 24px;
           }
           .greeting-hi {
-            font-size: 36px;
-            margin-bottom: 10px;
+            font-size: 44px;
           }
           .greeting-sub {
-            max-width: 340px;
+            margin-top: 14px;
           }
-          .glass-pill {
-            padding: 14px 26px;
-          }
-          .pill-main {
+          .status-text {
             font-size: 16px;
           }
-          .pill-divider {
-            height: 18px;
-            margin: 0 14px;
+          .status-time {
+            font-size: 16px;
           }
-          .pill-sub {
-            font-size: 15px;
+          .status-dot {
+            width: 4px;
+            height: 4px;
           }
           .globe-section {
             overflow: hidden;
@@ -766,9 +669,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .globe-container {
             max-width: none;
             max-height: none;
-            width: 180vw;
-            height: 180vw;
-            margin-top: 5vh;
+            width: 160vw;
+            height: 160vw;
+            margin-top: 0;
             touch-action: none;
             pointer-events: none;
           }
@@ -776,20 +679,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         @media (max-width: 375px) {
           .greeting-hi {
-            font-size: 32px;
+            font-size: 38px;
           }
-          .glass-pill {
-            padding: 12px 20px;
+          .greeting-sub {
+            margin-top: 12px;
           }
-          .pill-main {
-            font-size: 14px;
+          .status-line {
+            gap: 8px;
           }
-          .pill-divider {
-            height: 16px;
-            margin: 0 12px;
+          .status-text {
+            font-size: 15px;
           }
-          .pill-sub {
-            font-size: 13px;
+          .status-time {
+            font-size: 15px;
+          }
+          .status-dot {
+            width: 3px;
+            height: 3px;
           }
         }
       `}</style>
@@ -805,10 +711,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
               {personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
             </div>
             <div className="greeting-sub">
-              <div className="glass-pill">
-                <span className="pill-main">{personalGreeting.subHighlight}</span>
-                <span className="pill-divider"></span>
-                <span className="pill-sub">{personalGreeting.subRest}</span>
+              <div className="status-line">
+                <span className="status-text">{personalGreeting.subHighlight}</span>
+                <span className="status-dot"></span>
+                <span className="status-time">{personalGreeting.subRest}</span>
               </div>
             </div>
           </div>
