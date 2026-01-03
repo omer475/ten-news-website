@@ -5198,9 +5198,8 @@ export default function Home() {
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
-                      zIndex: '1',
-                      overflow: 'hidden',
-                      pointerEvents: 'none'
+                      zIndex: '20',
+                      overflow: 'hidden'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -5717,7 +5716,7 @@ export default function Home() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          zIndex: 15,
+                          zIndex: 25,
                           background: 'rgba(255, 255, 255, 0.12)',
                           backdropFilter: 'blur(16px) saturate(150%)',
                           WebkitBackdropFilter: 'blur(16px) saturate(150%)',
@@ -5726,8 +5725,7 @@ export default function Home() {
                             inset 0.5px 1px 0px -0.5px rgba(255, 255, 255, 0.4),
                             0px 2px 6px rgba(0, 0, 0, 0.12)
                           `,
-                          transition: 'all 0.2s ease',
-                          pointerEvents: 'auto'
+                          transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = 'scale(1.08)';
