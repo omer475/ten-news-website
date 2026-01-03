@@ -52,6 +52,7 @@ export default function Home() {
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
   const [sharedArticleId, setSharedArticleId] = useState(null); // Track shared article from URL parameter
+  const [sharedArticleData, setSharedArticleData] = useState(null); // The actual shared article data
   
   // Pagination state for loading articles in batches
   // MAX_ARTICLES prevents memory issues with 600+ articles
@@ -1305,8 +1306,12 @@ export default function Home() {
           .then(article => {
             if (article && !article.error) {
               console.log('✅ Fetched shared article:', article.title?.substring(0, 40));
-              // Store it for later use
-              window.__sharedArticle = article;
+              // Store it in state for use when building stories
+              setSharedArticleData({
+                ...article,
+                type: 'news',
+                number: 0
+              });
             } else {
               console.log('⚠️ Could not fetch shared article');
             }
@@ -1319,6 +1324,47 @@ export default function Home() {
       }
     }
   }, []);
+
+  // Handle shared article after it's fetched - insert it and navigate
+  useEffect(() => {
+    if (sharedArticleData && stories.length > 1 && !loading) {
+      console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
+      
+      // Check if this article is already in the list
+      const existingIndex = stories.findIndex(s => 
+        s.type === 'news' && String(s.id) === String(sharedArticleData.id)
+      );
+      
+      if (existingIndex > 1) {
+        // Article exists but not at the front - move it
+        setStories(prev => {
+          const newStories = [...prev];
+          const [article] = newStories.splice(existingIndex, 1);
+          newStories.splice(1, 0, article); // Insert after opening story
+          return newStories;
+        });
+        console.log('✅ Moved existing shared article to front');
+      } else if (existingIndex === -1) {
+        // Article not in list - add it at position 1
+        setStories(prev => {
+          const newStories = [...prev];
+          newStories.splice(1, 0, sharedArticleData); // Insert after opening story
+          return newStories;
+        });
+        console.log('✅ Added shared article to front');
+      }
+      
+      // Navigate to the shared article (index 1)
+      setTimeout(() => {
+        setCurrentIndex(1);
+        console.log('🎯 Navigated to shared article');
+      }, 200);
+      
+      // Clear the shared article data
+      setSharedArticleData(null);
+      setSharedArticleId(null);
+    }
+  }, [sharedArticleData, stories.length, loading]);
 
   // Add debug helpers for sorting (with access to stories state)
   useEffect(() => {
@@ -1845,25 +1891,21 @@ export default function Home() {
                     sortedNews = [sharedFromAll, ...sortedNews];
                     console.log('✅ Shared article (previously read) added to front:', sharedFromAll.title?.substring(0, 40));
                     foundSharedArticle = true;
-                  } else if (typeof window !== 'undefined' && window.__sharedArticle) {
-                    // Use the article we fetched from the API
-                    const fetchedArticle = {
-                      ...window.__sharedArticle,
-                      type: 'news',
-                      number: 0
-                    };
-                    sortedNews = [fetchedArticle, ...sortedNews];
-                    console.log('✅ Shared article (from API) added to front:', fetchedArticle.title?.substring(0, 40));
+                  } else if (sharedArticleData) {
+                    // Use the article we fetched from the API (stored in state)
+                    sortedNews = [sharedArticleData, ...sortedNews];
+                    console.log('✅ Shared article (from API) added to front:', sharedArticleData.title?.substring(0, 40));
                     foundSharedArticle = true;
-                    // Clean up
-                    delete window.__sharedArticle;
                   } else {
-                    console.log('⚠️ Shared article not found in any list');
+                    console.log('⚠️ Shared article not found, waiting for API fetch...');
                   }
                 }
                 
-                // Clear the shared article ID after processing
-                setSharedArticleId(null);
+                // Only clear if we found it
+                if (foundSharedArticle) {
+                  setSharedArticleId(null);
+                  setSharedArticleData(null);
+                }
               }
               
               // Log articles that qualify as important (score >= 900)
