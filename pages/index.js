@@ -1287,6 +1287,36 @@ export default function Home() {
     }
   }, []);
 
+  // Handle shared article URL parameter (?article=<id>)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && stories.length > 0 && !loading) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedArticleId = urlParams.get('article');
+      
+      if (sharedArticleId) {
+        console.log('🔗 Shared article detected:', sharedArticleId);
+        
+        // Find the index of the shared article
+        const articleIndex = stories.findIndex(story => 
+          story.id === sharedArticleId || 
+          story.id === parseInt(sharedArticleId) ||
+          String(story.id) === sharedArticleId
+        );
+        
+        if (articleIndex !== -1) {
+          console.log('✅ Found shared article at index:', articleIndex);
+          setCurrentIndex(articleIndex);
+          
+          // Clean up the URL (remove the ?article= parameter) without causing a page reload
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        } else {
+          console.log('⚠️ Shared article not found in current stories');
+        }
+      }
+    }
+  }, [stories, loading]);
+
   // Add debug helpers for sorting (with access to stories state)
   useEffect(() => {
     if (typeof window !== 'undefined' && window.debugSorting) {
@@ -5693,16 +5723,17 @@ export default function Home() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        const shareUrl = `https://todayplus.news/?article=${story.id || index}`;
                         const shareData = {
                           title: story.title_news || story.title,
-                          text: story.summary || '',
-                          url: story.url || window.location.href
+                          text: `${story.title_news || story.title} - Read on Today+`,
+                          url: shareUrl
                         };
                         if (navigator.share) {
                           navigator.share(shareData).catch(console.error);
                         } else {
                           // Fallback: copy to clipboard
-                          navigator.clipboard.writeText(shareData.url).then(() => {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
                             alert('Link copied to clipboard!');
                           }).catch(console.error);
                         }
@@ -5710,15 +5741,16 @@ export default function Home() {
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        const shareUrl = `https://todayplus.news/?article=${story.id || index}`;
                         const shareData = {
                           title: story.title_news || story.title,
-                          text: story.summary || '',
-                          url: story.url || window.location.href
+                          text: `${story.title_news || story.title} - Read on Today+`,
+                          url: shareUrl
                         };
                         if (navigator.share) {
                           navigator.share(shareData).catch(console.error);
                         } else {
-                          navigator.clipboard.writeText(shareData.url).then(() => {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
                             alert('Link copied to clipboard!');
                           }).catch(console.error);
                         }
