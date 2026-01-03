@@ -5758,14 +5758,16 @@ export default function Home() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const shareUrl = `https://todayplus.news/?article=${story.id || index}`;
-                        const shareData = {
-                          title: story.title_news || story.title,
-                          text: `${story.title_news || story.title} - Read on Today+`,
-                          url: shareUrl
-                        };
+                        const articleId = encodeURIComponent(story.id || index);
+                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        const shareTitle = story.title_news || story.title || 'News on Today+';
+                        
                         if (navigator.share) {
-                          navigator.share(shareData).catch(console.error);
+                          // Only share URL and title - no text to prevent URL corruption
+                          navigator.share({
+                            title: shareTitle,
+                            url: shareUrl
+                          }).catch(console.error);
                         } else {
                           // Fallback: copy to clipboard
                           navigator.clipboard.writeText(shareUrl).then(() => {
@@ -5776,14 +5778,16 @@ export default function Home() {
                       onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const shareUrl = `https://todayplus.news/?article=${story.id || index}`;
-                        const shareData = {
-                          title: story.title_news || story.title,
-                          text: `${story.title_news || story.title} - Read on Today+`,
-                          url: shareUrl
-                        };
+                        const articleId = encodeURIComponent(story.id || index);
+                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        const shareTitle = story.title_news || story.title || 'News on Today+';
+                        
                         if (navigator.share) {
-                          navigator.share(shareData).catch(console.error);
+                          // Only share URL and title - no text to prevent URL corruption
+                          navigator.share({
+                            title: shareTitle,
+                            url: shareUrl
+                          }).catch(console.error);
                         } else {
                           navigator.clipboard.writeText(shareUrl).then(() => {
                             alert('Link copied to clipboard!');
