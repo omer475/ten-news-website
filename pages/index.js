@@ -1289,6 +1289,7 @@ export default function Home() {
   }, []);
 
   // Capture shared article ID from URL on initial load (before stories load)
+  // Also fetch the article from API to ensure we have it
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
@@ -1297,6 +1298,20 @@ export default function Home() {
       if (articleId) {
         console.log('🔗 Shared article ID captured:', articleId);
         setSharedArticleId(articleId);
+        
+        // Fetch the shared article from API to ensure we have it
+        fetch(`/api/article/${articleId}`)
+          .then(res => res.json())
+          .then(article => {
+            if (article && !article.error) {
+              console.log('✅ Fetched shared article:', article.title?.substring(0, 40));
+              // Store it for later use
+              window.__sharedArticle = article;
+            } else {
+              console.log('⚠️ Could not fetch shared article');
+            }
+          })
+          .catch(err => console.error('Error fetching shared article:', err));
         
         // Clean up the URL immediately
         const newUrl = window.location.pathname;
@@ -1830,6 +1845,18 @@ export default function Home() {
                     sortedNews = [sharedFromAll, ...sortedNews];
                     console.log('✅ Shared article (previously read) added to front:', sharedFromAll.title?.substring(0, 40));
                     foundSharedArticle = true;
+                  } else if (typeof window !== 'undefined' && window.__sharedArticle) {
+                    // Use the article we fetched from the API
+                    const fetchedArticle = {
+                      ...window.__sharedArticle,
+                      type: 'news',
+                      number: 0
+                    };
+                    sortedNews = [fetchedArticle, ...sortedNews];
+                    console.log('✅ Shared article (from API) added to front:', fetchedArticle.title?.substring(0, 40));
+                    foundSharedArticle = true;
+                    // Clean up
+                    delete window.__sharedArticle;
                   } else {
                     console.log('⚠️ Shared article not found in any list');
                   }

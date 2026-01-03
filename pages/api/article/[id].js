@@ -18,7 +18,8 @@ export default async function handler(req, res) {
 
     // If specific ID requested, find that article
     if (id) {
-      const article = newsData.articles.find(a => a.id === id);
+      // Compare as strings to handle both number and string IDs
+      const article = newsData.articles.find(a => String(a.id) === String(id));
       if (!article) {
         return res.status(404).json({ error: 'Article not found' });
       }
