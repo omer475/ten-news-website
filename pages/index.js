@@ -51,6 +51,7 @@ export default function Home() {
   const [showDetailedText, setShowDetailedText] = useState({}); // Track which articles show detailed text
   const [imageDominantColors, setImageDominantColors] = useState({}); // Store dominant color for each image
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
+  const [sharedArticleId, setSharedArticleId] = useState(null); // Track shared article from URL parameter
   
   // Pagination state for loading articles in batches
   // MAX_ARTICLES prevents memory issues with 600+ articles
@@ -1287,35 +1288,22 @@ export default function Home() {
     }
   }, []);
 
-  // Handle shared article URL parameter (?article=<id>)
+  // Capture shared article ID from URL on initial load (before stories load)
   useEffect(() => {
-    if (typeof window !== 'undefined' && stories.length > 0 && !loading) {
+    if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      const sharedArticleId = urlParams.get('article');
+      const articleId = urlParams.get('article');
       
-      if (sharedArticleId) {
-        console.log('🔗 Shared article detected:', sharedArticleId);
+      if (articleId) {
+        console.log('🔗 Shared article ID captured:', articleId);
+        setSharedArticleId(articleId);
         
-        // Find the index of the shared article
-        const articleIndex = stories.findIndex(story => 
-          story.id === sharedArticleId || 
-          story.id === parseInt(sharedArticleId) ||
-          String(story.id) === sharedArticleId
-        );
-        
-        if (articleIndex !== -1) {
-          console.log('✅ Found shared article at index:', articleIndex);
-          setCurrentIndex(articleIndex);
-          
-          // Clean up the URL (remove the ?article= parameter) without causing a page reload
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
-        } else {
-          console.log('⚠️ Shared article not found in current stories');
-        }
+        // Clean up the URL immediately
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
       }
     }
-  }, [stories, loading]);
+  }, []);
 
   // Add debug helpers for sorting (with access to stories state)
   useEffect(() => {
@@ -1805,10 +1793,51 @@ export default function Home() {
             let finalStories = unreadStories;
             if (unreadStories.length > 1) {
               const openingStory = unreadStories[0]; // First story (opening page)
-              const newsArticles = unreadStories.slice(1); // All news articles
+              let newsArticles = unreadStories.slice(1); // All news articles
               
               console.log('📊 Sorting news articles by score...');
-              const sortedNews = sortArticlesByScore(newsArticles);
+              let sortedNews = sortArticlesByScore(newsArticles);
+              
+              // Handle shared article - prioritize it to appear first
+              let foundSharedArticle = false;
+              if (sharedArticleId) {
+                console.log('🔗 Looking for shared article:', sharedArticleId);
+                
+                // First, try to find it in the current sorted list
+                const sharedIndex = sortedNews.findIndex(story => 
+                  String(story.id) === String(sharedArticleId)
+                );
+                
+                if (sharedIndex !== -1) {
+                  // Found in current list - move it to the front
+                  const sharedArticle = sortedNews[sharedIndex];
+                  sortedNews = [
+                    sharedArticle,
+                    ...sortedNews.slice(0, sharedIndex),
+                    ...sortedNews.slice(sharedIndex + 1)
+                  ];
+                  console.log('✅ Shared article moved to front:', sharedArticle.title?.substring(0, 40));
+                  foundSharedArticle = true;
+                } else {
+                  // Not in current list - check if it was filtered out (already read)
+                  // Look in the full processed stories list
+                  const sharedFromAll = processedStories.find(story => 
+                    story.type === 'news' && String(story.id) === String(sharedArticleId)
+                  );
+                  
+                  if (sharedFromAll) {
+                    // Add it to the front even if it was read
+                    sortedNews = [sharedFromAll, ...sortedNews];
+                    console.log('✅ Shared article (previously read) added to front:', sharedFromAll.title?.substring(0, 40));
+                    foundSharedArticle = true;
+                  } else {
+                    console.log('⚠️ Shared article not found in any list');
+                  }
+                }
+                
+                // Clear the shared article ID after processing
+                setSharedArticleId(null);
+              }
               
               // Log articles that qualify as important (score >= 900)
               const importantArticles = sortedNews.filter(a => a.final_score >= 900);
@@ -1833,6 +1862,12 @@ export default function Home() {
                   subtitle: "Come back in a few minutes"
                 };
                 finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
+              }
+              
+              // If we found a shared article, navigate directly to it (index 1 = first news after opening)
+              if (foundSharedArticle && finalStories.length > 1) {
+                console.log('🎯 Navigating to shared article at index 1');
+                setTimeout(() => setCurrentIndex(1), 100);
               }
             } else if (unreadStories.length === 1) {
               // Only opening story left, all articles have been read
