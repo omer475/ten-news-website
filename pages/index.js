@@ -5661,8 +5661,8 @@ export default function Home() {
                       {/* Title - In front of everything */}
                       {/* Apple HIG - Title Typography */}
                       <div style={{
-                        position: 'fixed',
-                        bottom: 'calc(100vh - 42vh - 50px)',
+                        position: 'absolute',
+                        bottom: '12px',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
@@ -5685,6 +5685,73 @@ export default function Home() {
                           return renderTitleWithHighlight(title, imageDominantColors[index], story.category, false);
                         })()}</h3>
                       </div>
+                      
+                      {/* Share Button - Top Right of Image */}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const shareData = {
+                            title: story.title_news || story.title,
+                            text: story.summary || '',
+                            url: story.url || window.location.href
+                          };
+                          if (navigator.share) {
+                            navigator.share(shareData).catch(console.error);
+                          } else {
+                            // Fallback: copy to clipboard
+                            navigator.clipboard.writeText(shareData.url).then(() => {
+                              alert('Link copied to clipboard!');
+                            }).catch(console.error);
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '16px',
+                          right: '16px',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 15,
+                          background: 'rgba(255, 255, 255, 0.12)',
+                          backdropFilter: 'blur(16px) saturate(150%)',
+                          WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+                          boxShadow: `
+                            inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
+                            inset 0.5px 1px 0px -0.5px rgba(255, 255, 255, 0.4),
+                            0px 2px 6px rgba(0, 0, 0, 0.12)
+                          `,
+                          transition: 'all 0.2s ease',
+                          pointerEvents: 'auto'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.08)';
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+                        }}
+                      >
+                        <svg 
+                          width="18" 
+                          height="18" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="#ffffff" 
+                          strokeWidth="2.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
+                        >
+                          <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
+                        </svg>
+                      </button>
                     </div>
                     
                     {/* Professional category-based fallback when no image */}
