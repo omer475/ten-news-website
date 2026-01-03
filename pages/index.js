@@ -5198,8 +5198,9 @@ export default function Home() {
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
-                      zIndex: '20',
-                      overflow: 'hidden'
+                      zIndex: '1',
+                      overflow: 'hidden',
+                      pointerEvents: 'none'
                     }}>
                       {(() => {
                         // Always try to show image if URL exists - be very lenient with validation
@@ -5685,72 +5686,73 @@ export default function Home() {
                         })()}</h3>
                       </div>
                       
-                      {/* Share Button - Top Right of Image */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const shareData = {
-                            title: story.title_news || story.title,
-                            text: story.summary || '',
-                            url: story.url || window.location.href
-                          };
-                          if (navigator.share) {
-                            navigator.share(shareData).catch(console.error);
-                          } else {
-                            // Fallback: copy to clipboard
-                            navigator.clipboard.writeText(shareData.url).then(() => {
-                              alert('Link copied to clipboard!');
-                            }).catch(console.error);
-                          }
-                        }}
-                        style={{
-                          position: 'absolute',
-                          top: '16px',
-                          right: '16px',
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '50%',
-                          border: 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          zIndex: 25,
-                          background: 'rgba(255, 255, 255, 0.12)',
-                          backdropFilter: 'blur(16px) saturate(150%)',
-                          WebkitBackdropFilter: 'blur(16px) saturate(150%)',
-                          boxShadow: `
-                            inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
-                            inset 0.5px 1px 0px -0.5px rgba(255, 255, 255, 0.4),
-                            0px 2px 6px rgba(0, 0, 0, 0.12)
-                          `,
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'scale(1.08)';
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                        }}
-                      >
-                        <svg 
-                          width="18" 
-                          height="18" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="#ffffff" 
-                          strokeWidth="2.5" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
-                        >
-                          <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
-                        </svg>
-                      </button>
                     </div>
+                    
+                    {/* Share Button - Fixed position outside image container */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const shareData = {
+                          title: story.title_news || story.title,
+                          text: story.summary || '',
+                          url: story.url || window.location.href
+                        };
+                        if (navigator.share) {
+                          navigator.share(shareData).catch(console.error);
+                        } else {
+                          // Fallback: copy to clipboard
+                          navigator.clipboard.writeText(shareData.url).then(() => {
+                            alert('Link copied to clipboard!');
+                          }).catch(console.error);
+                        }
+                      }}
+                      style={{
+                        position: 'fixed',
+                        top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+                        right: '16px',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 100,
+                        background: 'rgba(255, 255, 255, 0.12)',
+                        backdropFilter: 'blur(16px) saturate(150%)',
+                        WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+                        boxShadow: `
+                          inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
+                          inset 0.5px 1px 0px -0.5px rgba(255, 255, 255, 0.4),
+                          0px 2px 6px rgba(0, 0, 0, 0.12)
+                        `,
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.08)';
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+                      }}
+                    >
+                      <svg 
+                        width="18" 
+                        height="18" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="#ffffff" 
+                        strokeWidth="2.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
+                      >
+                        <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
+                      </svg>
+                    </button>
                     
                     {/* Professional category-based fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (() => {
