@@ -5506,7 +5506,7 @@ export default function Home() {
                               const parentElement = imgElement.parentElement;
                               
                               let retryCount = parseInt(imgElement.dataset.retryCount || '0');
-                              const maxRetries = 4;
+                              const maxRetries = 6;
                               
                               if (retryCount < maxRetries) {
                                   retryCount++;
@@ -5517,22 +5517,34 @@ export default function Home() {
                                 if (retryCount === 1) {
                                     // Retry 1: Remove referrer policy entirely
                                     imgElement.removeAttribute('referrerPolicy');
-                                    setTimeout(() => { imgElement.src = imageUrl; }, 200);
+                                    imgElement.removeAttribute('crossOrigin');
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 150);
                                 } else if (retryCount === 2) {
-                                    // Retry 2: Use CORS anonymous
+                                    // Retry 2: Try with unsafe-url referrer (some CDNs need this)
+                                    imgElement.referrerPolicy = 'unsafe-url';
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 200);
+                                } else if (retryCount === 3) {
+                                    // Retry 3: Use CORS anonymous with no-referrer
                                     imgElement.crossOrigin = 'anonymous';
                                     imgElement.referrerPolicy = 'no-referrer';
-                                    setTimeout(() => { imgElement.src = imageUrl; }, 300);
-                                } else if (retryCount === 3) {
-                                    // Retry 3: Remove CORS, try with origin referrer
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 250);
+                                } else if (retryCount === 4) {
+                                    // Retry 4: Remove CORS, use origin referrer
                                     imgElement.removeAttribute('crossOrigin');
                                     imgElement.referrerPolicy = 'origin';
-                                    setTimeout(() => { imgElement.src = imageUrl; }, 400);
+                                    setTimeout(() => { imgElement.src = imageUrl; }, 300);
+                                } else if (retryCount === 5) {
+                                    // Retry 5: Try CORS proxy (images.weserv.nl - free image proxy)
+                                    console.log(`🔄 Trying image proxy for: ${imageUrl.substring(0, 60)}...`);
+                                    imgElement.removeAttribute('crossOrigin');
+                                    imgElement.removeAttribute('referrerPolicy');
+                                    const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(imageUrl)}&n=-1`;
+                                    setTimeout(() => { imgElement.src = proxyUrl; }, 350);
                                   } else {
-                                    // Retry 4: Last attempt with use-credentials
-                                    imgElement.crossOrigin = 'use-credentials';
-                                    imgElement.referrerPolicy = 'strict-origin-when-cross-origin';
-                                    setTimeout(() => { imgElement.src = imageUrl; }, 500);
+                                    // Retry 6: Alternative proxy (wsrv.nl)
+                                    console.log(`🔄 Trying alternative proxy for: ${imageUrl.substring(0, 60)}...`);
+                                    const altProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&n=-1`;
+                                    setTimeout(() => { imgElement.src = altProxyUrl; }, 400);
                                   }
                               } else {
                                 // All retries failed - show professional category-based fallback
@@ -6114,16 +6126,20 @@ export default function Home() {
                         className="news-summary"
                         style={{
                           marginTop: '-18px',
-                          marginBottom: '32px',
+                          marginBottom: '0',
                           fontSize: '16px',
                           lineHeight: '1.6',
                           color: '#4a4a4a',
                           opacity: '1',
-                          minHeight: '60px',
-                          padding: '16px 0',
+                          padding: '8px 0',
                           position: 'relative',
                           zIndex: 5,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          height: 'calc(58vh - 180px)',
+                          minHeight: '160px',
+                          maxHeight: 'calc(58vh - 140px)'
                         }}
                         onTouchStart={(e) => {
                           // Store touch start position for tap detection
@@ -6159,7 +6175,14 @@ export default function Home() {
                       >
                         <div 
                           className="summary-content"
-                          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+                          style={{ 
+                            cursor: 'pointer', 
+                            pointerEvents: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            flex: 1,
+                            height: '100%'
+                          }}
                         >
                           {/* Show Only Bullet Text - Fixed Position */}
                           <div style={{ 
@@ -6167,7 +6190,11 @@ export default function Home() {
                             marginTop: '-3px',
                             marginBottom: '0px',
                             position: 'relative',
-                            width: '100%'
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            flex: 1,
+                            height: '100%'
                           }}>
                               {(() => {
                                 // Toggle between bullets and 5W's based on language mode
@@ -6231,9 +6258,15 @@ export default function Home() {
                                   return (
                                     <div style={{
                                       margin: 0,
-                                      marginTop: '4px',
+                                      marginTop: '0',
                                       padding: 0,
-                                      transition: 'opacity 0.3s ease'
+                                      transition: 'opacity 0.3s ease',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      justifyContent: 'space-evenly',
+                                      flex: 1,
+                                      height: '100%',
+                                      minHeight: '150px'
                                     }}>
                                       {wsLabels.map((ws, i) => {
                                         let value = fiveWs[ws.key];
@@ -6244,13 +6277,14 @@ export default function Home() {
                                         
                                         return (
                                           <div key={ws.key} style={{
-                                            marginBottom: '10px',
+                                            marginBottom: '0',
                                             animation: 'fadeSlideIn 0.4s ease',
                                             animationDelay: `${i * 0.06}s`,
                                             animationFillMode: 'both',
                                             display: 'flex',
                                             alignItems: 'flex-start',
-                                            gap: '12px'
+                                            gap: '12px',
+                                            flex: '0 0 auto'
                                           }}>
                                             <span style={{
                                               fontSize: '12px',
@@ -6286,14 +6320,20 @@ export default function Home() {
                                 return bullets && bullets.length > 0 ? (
                                 <ul style={{
                                   margin: 0,
-                                  marginTop: '4px',
+                                  marginTop: '0',
                                   padding: 0,
                                   listStyle: 'none',
-                                  transition: 'opacity 0.3s ease'
+                                  transition: 'opacity 0.3s ease',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'space-evenly',
+                                  flex: 1,
+                                  height: '100%',
+                                  minHeight: '150px'
                                 }}>
                                   {bullets.map((bullet, i) => (
                                     <li key={`${languageMode}-${i}`} style={{
-                                      marginBottom: '10px',
+                                      marginBottom: '0',
                                       fontSize: '16px',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
@@ -6304,7 +6344,8 @@ export default function Home() {
                                       animationFillMode: 'both',
                                       paddingLeft: '20px',
                                       position: 'relative',
-                                      color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)'
+                                      color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)',
+                                      flex: '0 0 auto'
                                     }}>
                                       <span style={{
                                         position: 'absolute',
