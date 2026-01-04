@@ -5739,11 +5739,11 @@ export default function Home() {
                       
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
-                        position: 'fixed',
-                        top: 'calc(42vh * 0.55)',
+                        position: 'absolute',
+                        top: '55%',
                         left: '0',
                         width: '100%',
-                        height: 'calc(42vh * 0.45 + 74px)',
+                        height: '45%',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor
@@ -5780,26 +5780,27 @@ export default function Home() {
                       }}></div>
                       )}
                       
-                      {/* NEWS TITLE - Separate element, in front of everything */}
-                      <h3 style={{
-                        position: 'absolute',
-                        bottom: '-4px',
-                        left: '16px',
-                        right: '16px',
-                        margin: 0,
-                        fontSize: '22px',
-                        fontWeight: '800',
-                        lineHeight: '1.2',
-                        letterSpacing: '-0.5px',
-                        color: '#ffffff',
-                        zIndex: 50,
-                        pointerEvents: 'none'
-                      }}>{(() => {
-                        const title = story.title_news || story.title;
-                        return renderTitleWithHighlight(title, imageDominantColors[index], story.category, false);
-                      })()}</h3>
-                      
                     </div>
+                    
+                    {/* NEWS TITLE - Absolute position, highest z-index to be in front of all blurs */}
+                    <h3 style={{
+                      position: 'absolute',
+                      top: 'calc(38vh - 50px)',
+                      left: '16px',
+                      right: '16px',
+                      margin: 0,
+                      fontSize: '26px',
+                      fontWeight: '700',
+                      lineHeight: '1.15',
+                      letterSpacing: '-0.6px',
+                      color: '#ffffff',
+                      zIndex: 100,
+                      pointerEvents: 'none',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                    }}>{(() => {
+                      const title = story.title_news || story.title;
+                      return renderTitleWithHighlight(title, imageDominantColors[index], story.category, false);
+                    })()}</h3>
                     
                     {/* Share Button - Fixed position outside image container */}
                     <button
