@@ -5784,10 +5784,10 @@ export default function Home() {
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          fontSize: '30px',
+                          fontSize: '32px',
                           fontWeight: '700',
-                          lineHeight: '1.12',
-                          letterSpacing: '-0.7px',
+                          lineHeight: '1.1',
+                          letterSpacing: '-0.8px',
                           color: '#ffffff'
                         }}>{(() => {
                           const title = story.title_news || story.title;
