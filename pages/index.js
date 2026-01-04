@@ -5755,19 +5755,14 @@ export default function Home() {
                         zIndex: 2
                       }}></div>
                       
-                      {/* Title Overlay with Image-Based Color Gradient - Starts from Top */}
-                      {/* Only show overlay if image exists, and limit it to not cover bottom area */}
+                      {/* Color Gradient Overlay - No title inside */}
                       {story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined' && (
                       <div style={{
                         position: 'absolute',
                         top: 0,
-                        bottom: '-12px',
+                        bottom: 0,
                         left: 0,
                         right: 0,
-                        padding: '24px 16px 4px 16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
                         background: imageDominantColors[index]?.blurColor
                           ? `linear-gradient(to bottom,
                               ${imageDominantColors[index].blurColor}26 0%,
@@ -5780,45 +5775,29 @@ export default function Home() {
                               ${imageDominantColors[index].blurColor}FF 95%,
                               ${imageDominantColors[index].blurColor}FF 100%)`
                           : 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 10%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0.98) 90%, rgba(0,0,0,1.0) 95%, rgba(0,0,0,1.0) 100%)',
-                        zIndex: 2,
+                        zIndex: 3,
                         pointerEvents: 'none'
-                      }}>
-                        </div>
+                      }}></div>
                       )}
                       
-                      {/* IMPORTANT NEWS - Premium Visual Treatment for high-scoring articles (900+) */}
-                      {(story.final_score >= 900 || story.isImportant) && (
-                        <>
-                        </>
-                      )}
-                      
-                      {/* Title - In front of everything */}
-                      {/* Apple HIG - Title Typography */}
-                      <div style={{
+                      {/* NEWS TITLE - Separate element, in front of everything */}
+                      <h3 style={{
                         position: 'absolute',
-                        bottom: '24px',
-                        left: '20px',
-                        right: '20px',
-                        zIndex: 10,
+                        bottom: '-4px',
+                        left: '16px',
+                        right: '16px',
+                        margin: 0,
+                        fontSize: '22px',
+                        fontWeight: '800',
+                        lineHeight: '1.2',
+                        letterSpacing: '-0.5px',
+                        color: '#ffffff',
+                        zIndex: 50,
                         pointerEvents: 'none'
-                      }}>
-                        <h3 style={{ 
-                          margin: 0,
-                          fontSize: '28px',
-                          fontWeight: '700',
-                          lineHeight: '1.14',
-                          letterSpacing: '-0.8px',
-                          color: '#ffffff',
-                          textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-                        }}>{(() => {
-                          const mode = languageMode || 'advanced';
-                          // Title is always the same now (no B2 version)
-                          const title = story.title_news || story.title;
-                          console.log(`🖼️ IMAGE Title [${index}]:`, { mode, title_news: story.title_news?.substring(0, 30), selected: title?.substring(0, 30) });
-                          return renderTitleWithHighlight(title, imageDominantColors[index], story.category, false);
-                        })()}</h3>
-                      </div>
+                      }}>{(() => {
+                        const title = story.title_news || story.title;
+                        return renderTitleWithHighlight(title, imageDominantColors[index], story.category, false);
+                      })()}</h3>
                       
                     </div>
                     
