@@ -5796,7 +5796,7 @@ export default function Home() {
                       {/* Apple HIG - Title Typography */}
                       <div style={{
                         position: 'absolute',
-                        bottom: '12px',
+                        bottom: '24px',
                         left: '20px',
                         right: '20px',
                         zIndex: 10,
