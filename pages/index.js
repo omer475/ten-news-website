@@ -5333,7 +5333,7 @@ export default function Home() {
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       display: 'block',
                       zIndex: '1',
-                      overflow: 'hidden',
+                      overflow: 'visible',
                       pointerEvents: 'none'
                     }}>
                       {(() => {
