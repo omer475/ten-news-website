@@ -5881,50 +5881,55 @@ export default function Home() {
                           }).catch(console.error);
                         }
                       }}
+                      className="share-button"
                       style={{
                         position: 'fixed',
                         top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
                         right: '16px',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '50%',
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '12px',
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 100,
-                        background: 'rgba(255, 255, 255, 0.12)',
-                        backdropFilter: 'blur(16px) saturate(150%)',
-                        WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+                        backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
+                        backdropFilter: 'blur(4px) saturate(150%)',
+                        WebkitBackdropFilter: 'blur(4px) saturate(150%)',
                         boxShadow: `
-                          inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
-                          inset 0.5px 1px 0px -0.5px rgba(255, 255, 255, 0.4),
-                          0px 2px 6px rgba(0, 0, 0, 0.12)
+                          inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+                          inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.9),
+                          inset -1px -1px 0px -1px rgba(255, 255, 255, 0.8),
+                          inset -1.5px -4px 0.5px -3px rgba(255, 255, 255, 0.6),
+                          inset -0.15px -0.5px 2px 0px rgba(0, 0, 0, 0.12),
+                          inset -0.75px 1.25px 0px -1px rgba(0, 0, 0, 0.2),
+                          inset 0px 1.5px 2px -1px rgba(0, 0, 0, 0.2),
+                          inset 1px -3.25px 0.5px -2px rgba(0, 0, 0, 0.1),
+                          0px 0.5px 2.5px 0px rgba(0, 0, 0, 0.1),
+                          0px 3px 8px 0px rgba(0, 0, 0, 0.08)
                         `,
                         transition: 'all 0.2s ease',
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.08)';
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        e.currentTarget.style.transform = 'scale(1.05)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
                       }}
                     >
                       <svg 
-                        width="18" 
-                        height="18" 
+                        width="16" 
+                        height="16" 
                         viewBox="0 0 24 24" 
                         fill="none" 
                         stroke="#ffffff" 
                         strokeWidth="2.5" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
-                        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
                       >
                         <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
                       </svg>
