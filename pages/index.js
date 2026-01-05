@@ -72,6 +72,8 @@ export default function Home() {
   
   // Track if we've already handled the shared article navigation (prevent race conditions)
   const sharedArticleHandledRef = useRef(false);
+  // Store the shared article ID in a ref for immediate access (avoids React state timing issues)
+  const sharedArticleIdRef = useRef(null);
 
   // Language mode for summaries (advanced vs B2) - GLOBAL setting for all articles
   const [languageMode, setLanguageMode] = useState('advanced');  // 'advanced' = bullets, 'b2' = 5W's
@@ -1304,6 +1306,8 @@ export default function Home() {
         console.log('🔗 Shared article ID captured:', articleId);
         // Reset the handled flag for new shared article
         sharedArticleHandledRef.current = false;
+        // Store in ref for immediate access (state updates are async)
+        sharedArticleIdRef.current = articleId;
         setSharedArticleId(articleId);
         
         // Fetch the shared article from API to ensure we have it
@@ -1884,13 +1888,15 @@ export default function Home() {
               
               // Handle shared article - prioritize it to appear first
               // Skip if already handled by the useEffect
+              // Use ref for immediate access (state might not be updated yet due to async nature)
               let foundSharedArticle = false;
-              if (sharedArticleId && !sharedArticleHandledRef.current) {
-                console.log('🔗 Looking for shared article:', sharedArticleId);
+              const targetArticleId = sharedArticleIdRef.current || sharedArticleId;
+              if (targetArticleId && !sharedArticleHandledRef.current) {
+                console.log('🔗 Looking for shared article:', targetArticleId);
                 
                 // First, try to find it in the current sorted list
                 const sharedIndex = sortedNews.findIndex(story => 
-                  String(story.id) === String(sharedArticleId)
+                  String(story.id) === String(targetArticleId)
                 );
                 
                 if (sharedIndex !== -1) {
@@ -1908,7 +1914,7 @@ export default function Home() {
                   // Not in current list - check if it was filtered out (already read)
                   // Look in the full processed stories list
                   const sharedFromAll = processedStories.find(story => 
-                    story.type === 'news' && String(story.id) === String(sharedArticleId)
+                    story.type === 'news' && String(story.id) === String(targetArticleId)
                   );
                   
                   if (sharedFromAll) {
@@ -1930,6 +1936,7 @@ export default function Home() {
                 
                 // Only clear if we found it
                 if (foundSharedArticle) {
+                  sharedArticleIdRef.current = null;
                   setSharedArticleId(null);
                   setSharedArticleData(null);
                 }
