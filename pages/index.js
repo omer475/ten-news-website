@@ -5811,7 +5811,7 @@ export default function Home() {
                       }}>
                         <h3 style={{ 
                           margin: 0,
-                          fontSize: '32px',
+                          fontSize: '30px',
                           fontWeight: '700',
                           lineHeight: '1.1',
                           letterSpacing: '-0.8px',
@@ -5831,10 +5831,10 @@ export default function Home() {
                         e.preventDefault();
                         e.stopPropagation();
                         const articleId = encodeURIComponent(story.id || index);
-                        // Use current domain for localhost testing, tennews.ai for production
+                        // Use current domain for localhost testing, todayplus.news for production
                         const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
                           ? `${window.location.origin}` 
-                          : 'https://tennews.ai';
+                          : 'https://todayplus.news';
                         const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
@@ -5855,10 +5855,10 @@ export default function Home() {
                         e.preventDefault();
                         e.stopPropagation();
                         const articleId = encodeURIComponent(story.id || index);
-                        // Use current domain for localhost testing, tennews.ai for production
+                        // Use current domain for localhost testing, todayplus.news for production
                         const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
                           ? `${window.location.origin}` 
-                          : 'https://tennews.ai';
+                          : 'https://todayplus.news';
                         const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
