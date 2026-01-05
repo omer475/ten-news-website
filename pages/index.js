@@ -53,6 +53,7 @@ export default function Home() {
   const [loadedImages, setLoadedImages] = useState(new Set()); // Track which images have successfully loaded
   const [sharedArticleId, setSharedArticleId] = useState(null); // Track shared article from URL parameter
   const [sharedArticleData, setSharedArticleData] = useState(null); // The actual shared article data
+  const [pendingNavigation, setPendingNavigation] = useState(null); // Track pending navigation to shared article index
   
   // Pagination state for loading articles in batches
   // MAX_ARTICLES prevents memory issues with 600+ articles
@@ -68,6 +69,9 @@ export default function Home() {
   
   // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
+  
+  // Track if we've already handled the shared article navigation (prevent race conditions)
+  const sharedArticleHandledRef = useRef(false);
 
   // Language mode for summaries (advanced vs B2) - GLOBAL setting for all articles
   const [languageMode, setLanguageMode] = useState('advanced');  // 'advanced' = bullets, 'b2' = 5W's
@@ -1298,6 +1302,8 @@ export default function Home() {
       
       if (articleId) {
         console.log('🔗 Shared article ID captured:', articleId);
+        // Reset the handled flag for new shared article
+        sharedArticleHandledRef.current = false;
         setSharedArticleId(articleId);
         
         // Fetch the shared article from API to ensure we have it
@@ -1327,44 +1333,61 @@ export default function Home() {
 
   // Handle shared article after it's fetched - insert it and navigate
   useEffect(() => {
-    if (sharedArticleData && stories.length > 1 && !loading) {
-      console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
-      
-      // Check if this article is already in the list
-      const existingIndex = stories.findIndex(s => 
-        s.type === 'news' && String(s.id) === String(sharedArticleData.id)
-      );
-      
-      if (existingIndex > 1) {
-        // Article exists but not at the front - move it
-        setStories(prev => {
-          const newStories = [...prev];
-          const [article] = newStories.splice(existingIndex, 1);
-          newStories.splice(1, 0, article); // Insert after opening story
-          return newStories;
-        });
-        console.log('✅ Moved existing shared article to front');
-      } else if (existingIndex === -1) {
-        // Article not in list - add it at position 1
-        setStories(prev => {
-          const newStories = [...prev];
-          newStories.splice(1, 0, sharedArticleData); // Insert after opening story
-          return newStories;
-        });
-        console.log('✅ Added shared article to front');
-      }
-      
-      // Navigate to the shared article (index 1)
-      setTimeout(() => {
-        setCurrentIndex(1);
-        console.log('🎯 Navigated to shared article');
-      }, 200);
-      
-      // Clear the shared article data
-      setSharedArticleData(null);
-      setSharedArticleId(null);
+    // Skip if already handled or no data
+    if (sharedArticleHandledRef.current || !sharedArticleData || stories.length <= 1 || loading) {
+      return;
     }
+    
+    console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
+    
+    // Mark as handled to prevent race conditions
+    sharedArticleHandledRef.current = true;
+    
+    // Check if this article is already in the list
+    const existingIndex = stories.findIndex(s => 
+      s.type === 'news' && String(s.id) === String(sharedArticleData.id)
+    );
+    
+    if (existingIndex > 1) {
+      // Article exists but not at the front - move it
+      setStories(prev => {
+        const newStories = [...prev];
+        const [article] = newStories.splice(existingIndex, 1);
+        newStories.splice(1, 0, article); // Insert after opening story
+        return newStories;
+      });
+      console.log('✅ Moved existing shared article to front');
+    } else if (existingIndex === -1) {
+      // Article not in list - add it at position 1
+      setStories(prev => {
+        const newStories = [...prev];
+        newStories.splice(1, 0, sharedArticleData); // Insert after opening story
+        return newStories;
+      });
+      console.log('✅ Added shared article to front');
+    }
+    
+    // Set pending navigation to the shared article (index 1)
+    setPendingNavigation(1);
+    console.log('🎯 Set pending navigation to shared article');
+    
+    // Clear the shared article data
+    setSharedArticleData(null);
+    setSharedArticleId(null);
   }, [sharedArticleData, stories.length, loading]);
+
+  // Handle pending navigation - navigate after stories are fully loaded
+  useEffect(() => {
+    if (pendingNavigation !== null && stories.length > pendingNavigation && !loading) {
+      console.log(`🚀 Executing pending navigation to index ${pendingNavigation}`);
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        setCurrentIndex(pendingNavigation);
+        setPendingNavigation(null);
+        console.log(`✅ Navigated to shared article at index ${pendingNavigation}`);
+      });
+    }
+  }, [pendingNavigation, stories.length, loading]);
 
   // Add debug helpers for sorting (with access to stories state)
   useEffect(() => {
@@ -1860,8 +1883,9 @@ export default function Home() {
               let sortedNews = sortArticlesByScore(newsArticles);
               
               // Handle shared article - prioritize it to appear first
+              // Skip if already handled by the useEffect
               let foundSharedArticle = false;
-              if (sharedArticleId) {
+              if (sharedArticleId && !sharedArticleHandledRef.current) {
                 console.log('🔗 Looking for shared article:', sharedArticleId);
                 
                 // First, try to find it in the current sorted list
@@ -1879,6 +1903,7 @@ export default function Home() {
                   ];
                   console.log('✅ Shared article moved to front:', sharedArticle.title?.substring(0, 40));
                   foundSharedArticle = true;
+                  sharedArticleHandledRef.current = true; // Mark as handled
                 } else {
                   // Not in current list - check if it was filtered out (already read)
                   // Look in the full processed stories list
@@ -1891,11 +1916,13 @@ export default function Home() {
                     sortedNews = [sharedFromAll, ...sortedNews];
                     console.log('✅ Shared article (previously read) added to front:', sharedFromAll.title?.substring(0, 40));
                     foundSharedArticle = true;
+                    sharedArticleHandledRef.current = true; // Mark as handled
                   } else if (sharedArticleData) {
                     // Use the article we fetched from the API (stored in state)
                     sortedNews = [sharedArticleData, ...sortedNews];
                     console.log('✅ Shared article (from API) added to front:', sharedArticleData.title?.substring(0, 40));
                     foundSharedArticle = true;
+                    sharedArticleHandledRef.current = true; // Mark as handled
                   } else {
                     console.log('⚠️ Shared article not found, waiting for API fetch...');
                   }
@@ -1933,10 +1960,10 @@ export default function Home() {
                 finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
               }
               
-              // If we found a shared article, navigate directly to it (index 1 = first news after opening)
+              // If we found a shared article, set pending navigation (will be executed after stories are set)
               if (foundSharedArticle && finalStories.length > 1) {
-                console.log('🎯 Navigating to shared article at index 1');
-                setTimeout(() => setCurrentIndex(1), 100);
+                console.log('🎯 Setting pending navigation to shared article at index 1');
+                setPendingNavigation(1);
               }
             } else if (unreadStories.length === 1) {
               // Only opening story left, all articles have been read
@@ -5804,7 +5831,11 @@ export default function Home() {
                         e.preventDefault();
                         e.stopPropagation();
                         const articleId = encodeURIComponent(story.id || index);
-                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        // Use current domain for localhost testing, tennews.ai for production
+                        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+                          ? `${window.location.origin}` 
+                          : 'https://tennews.ai';
+                        const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
                         if (navigator.share) {
@@ -5824,7 +5855,11 @@ export default function Home() {
                         e.preventDefault();
                         e.stopPropagation();
                         const articleId = encodeURIComponent(story.id || index);
-                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        // Use current domain for localhost testing, tennews.ai for production
+                        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+                          ? `${window.location.origin}` 
+                          : 'https://tennews.ai';
+                        const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
                         if (navigator.share) {

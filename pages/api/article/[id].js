@@ -3,8 +3,11 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   try {
-    // Fetch news data from your existing API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/news`);
+    // Fetch news data from the same server's news API
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers.host || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+    const response = await fetch(`${baseUrl}/api/news`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch news data');
