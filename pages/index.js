@@ -1352,6 +1352,8 @@ export default function Home() {
       s.type === 'news' && String(s.id) === String(sharedArticleData.id)
     );
     
+    let targetIndex = 1; // Default target is index 1 (after opening story)
+    
     if (existingIndex > 1) {
       // Article exists but not at the front - move it
       setStories(prev => {
@@ -1361,6 +1363,9 @@ export default function Home() {
         return newStories;
       });
       console.log('✅ Moved existing shared article to front');
+    } else if (existingIndex === 1) {
+      // Article is already at position 1 - just navigate there
+      console.log('✅ Shared article already at position 1');
     } else if (existingIndex === -1) {
       // Article not in list - add it at position 1
       setStories(prev => {
@@ -1371,9 +1376,12 @@ export default function Home() {
       console.log('✅ Added shared article to front');
     }
     
-    // Set pending navigation to the shared article (index 1)
-    setPendingNavigation(1);
-    console.log('🎯 Set pending navigation to shared article');
+    // Always navigate to the shared article at index 1
+    // Use setTimeout to ensure state updates are processed first
+    setTimeout(() => {
+      setCurrentIndex(targetIndex);
+      console.log(`✅ Navigated directly to shared article at index ${targetIndex}`);
+    }, 50);
     
     // Clear the shared article data
     setSharedArticleData(null);
@@ -1384,12 +1392,10 @@ export default function Home() {
   useEffect(() => {
     if (pendingNavigation !== null && stories.length > pendingNavigation && !loading) {
       console.log(`🚀 Executing pending navigation to index ${pendingNavigation}`);
-      // Use requestAnimationFrame to ensure DOM is updated
-      requestAnimationFrame(() => {
-        setCurrentIndex(pendingNavigation);
-        setPendingNavigation(null);
-        console.log(`✅ Navigated to shared article at index ${pendingNavigation}`);
-      });
+      // Navigate immediately - no need to defer with requestAnimationFrame
+      setCurrentIndex(pendingNavigation);
+      setPendingNavigation(null);
+      console.log(`✅ Navigated to shared article at index ${pendingNavigation}`);
     }
   }, [pendingNavigation, stories.length, loading]);
 
@@ -1967,10 +1973,14 @@ export default function Home() {
                 finalStories = [openingStory, ...sortedNews, allCaughtUpStory];
               }
               
-              // If we found a shared article, set pending navigation (will be executed after stories are set)
+              // If we found a shared article, navigate directly to it
               if (foundSharedArticle && finalStories.length > 1) {
-                console.log('🎯 Setting pending navigation to shared article at index 1');
-                setPendingNavigation(1);
+                console.log('🎯 Navigating directly to shared article at index 1');
+                // Use setTimeout to ensure stories state is set before navigation
+                setTimeout(() => {
+                  setCurrentIndex(1);
+                  console.log('✅ Navigated to shared article at index 1');
+                }, 100);
               }
             } else if (unreadStories.length === 1) {
               // Only opening story left, all articles have been read
