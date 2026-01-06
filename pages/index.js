@@ -5891,11 +5891,6 @@ export default function Home() {
                           }).catch(console.error);
                         }
                       }}
-                      onTouchEnd={(e) => {
-                        // Prevent double-firing with onClick
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
                       className="share-button"
                       style={{
                         position: 'fixed',
