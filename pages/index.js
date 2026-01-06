@@ -5847,49 +5847,54 @@ export default function Home() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const articleId = encodeURIComponent(story.id || index);
-                        // Use current domain for localhost testing, todayplus.news for production
+                        
+                        // Get article ID - use story.id if available, fallback to index
+                        const articleId = story.id || index;
+                        console.log('📤 Share button clicked - story.id:', story.id, 'index:', index, 'articleId:', articleId);
+                        
+                        // Build share URL
                         const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
                           ? `${window.location.origin}` 
                           : 'https://todayplus.news';
                         const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
-                        if (navigator.share) {
-                          // Only share URL and title - no text to prevent URL corruption
+                        console.log('📤 Share URL:', shareUrl);
+                        
+                        // Always copy to clipboard first for reliability
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            console.log('📋 URL copied to clipboard:', shareUrl);
+                            // Then try native share if available
+                            if (navigator.share) {
+                              navigator.share({
+                                title: shareTitle,
+                                url: shareUrl
+                              }).catch(err => console.log('Share cancelled or failed:', err));
+                            } else {
+                              alert('Link copied!');
+                            }
+                          }).catch(err => {
+                            console.error('Clipboard write failed:', err);
+                            // Fallback: try native share
+                            if (navigator.share) {
+                              navigator.share({
+                                title: shareTitle,
+                                url: shareUrl
+                              }).catch(console.error);
+                            }
+                          });
+                        } else if (navigator.share) {
                           navigator.share({
                             title: shareTitle,
                             url: shareUrl
-                          }).catch(console.error);
-                        } else {
-                          // Fallback: copy to clipboard
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            alert('Link copied to clipboard!');
                           }).catch(console.error);
                         }
                       }}
                       onTouchEnd={(e) => {
+                        // Prevent double-firing with onClick
                         e.preventDefault();
                         e.stopPropagation();
-                        const articleId = encodeURIComponent(story.id || index);
-                        // Use current domain for localhost testing, todayplus.news for production
-                        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-                          ? `${window.location.origin}` 
-                          : 'https://todayplus.news';
-                        const shareUrl = `${baseUrl}/?article=${articleId}`;
-                        const shareTitle = story.title_news || story.title || 'News on Today+';
-                        
-                        if (navigator.share) {
-                          // Only share URL and title - no text to prevent URL corruption
-                          navigator.share({
-                            title: shareTitle,
-                            url: shareUrl
-                          }).catch(console.error);
-                        } else {
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            alert('Link copied to clipboard!');
-                          }).catch(console.error);
-                        }
                       }}
                       className="share-button"
                       style={{
