@@ -6027,34 +6027,60 @@ export default function Home() {
                       boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
                     
-                    {/* Red accent lines for important articles - on image section */}
+                    {/* MUST KNOW badge for important articles - liquid glass style on top left */}
                     {isImportantArticle && (
-                      <>
-                        {/* Left red line - with gap from top and rounded corners */}
-                        <div style={{
-                          position: 'fixed',
-                          top: 'calc(env(safe-area-inset-top, 0px) + 70px)',
-                          left: '6px',
-                          width: '4px',
-                          height: 'calc(42vh - 90px)',
-                          background: '#DC2626',
-                          zIndex: 100,
-                          pointerEvents: 'none',
-                          borderRadius: '4px'
-                        }} />
-                        {/* Right red line - with gap from top and rounded corners */}
-                        <div style={{
-                          position: 'fixed',
-                          top: 'calc(env(safe-area-inset-top, 0px) + 70px)',
-                          right: '6px',
-                          width: '4px',
-                          height: 'calc(42vh - 90px)',
-                          background: '#DC2626',
-                          zIndex: 100,
-                          pointerEvents: 'none',
-                          borderRadius: '4px'
-                        }} />
-                      </>
+                      <div style={{
+                        position: 'fixed',
+                        top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+                        left: '16px',
+                        height: '34px',
+                        paddingLeft: '10px',
+                        paddingRight: '12px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        zIndex: 100,
+                        pointerEvents: 'none',
+                        backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
+                        backdropFilter: 'blur(4px) saturate(150%)',
+                        WebkitBackdropFilter: 'blur(4px) saturate(150%)',
+                        boxShadow: `
+                          inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+                          inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.9),
+                          inset -1px -1px 0px -1px rgba(255, 255, 255, 0.8),
+                          inset -1.5px -4px 0.5px -3px rgba(255, 255, 255, 0.6),
+                          inset -0.15px -0.5px 2px 0px rgba(0, 0, 0, 0.12),
+                          inset -0.75px 1.25px 0px -1px rgba(0, 0, 0, 0.2),
+                          inset 0px 1.5px 2px -1px rgba(0, 0, 0, 0.2),
+                          inset 1px -3.25px 0.5px -2px rgba(0, 0, 0, 0.1),
+                          0px 0.5px 2.5px 0px rgba(0, 0, 0, 0.1),
+                          0px 3px 8px 0px rgba(0, 0, 0, 0.08)
+                        `
+                      }}>
+                        {/* Lightning bolt icon */}
+                        <svg 
+                          width="14" 
+                          height="14" 
+                          viewBox="0 0 24 24" 
+                          fill="#ffffff"
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}
+                        >
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        {/* MUST KNOW text */}
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#ffffff',
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                        }}>
+                          Must Know
+                        </span>
+                      </div>
                     )}
                     
                     {/* Content Area - Starts After Image */}
