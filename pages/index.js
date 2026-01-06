@@ -6027,20 +6027,17 @@ export default function Home() {
                       boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
                     
-                    {/* MUST KNOW badge for important articles - liquid glass style on top left */}
+                    {/* Must Know badge for important articles - liquid glass style on top left */}
                     {isImportantArticle && (
                       <div style={{
                         position: 'fixed',
                         top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
                         left: '16px',
-                        height: '34px',
-                        paddingLeft: '10px',
-                        paddingRight: '12px',
-                        borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
                         gap: '6px',
+                        padding: '6px 12px 6px 8px',
+                        borderRadius: '12px',
                         zIndex: 100,
                         pointerEvents: 'none',
                         backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
@@ -6059,7 +6056,7 @@ export default function Home() {
                           0px 3px 8px 0px rgba(0, 0, 0, 0.08)
                         `
                       }}>
-                        {/* Lightning bolt icon */}
+                        {/* Lightning bolt icon for urgency */}
                         <svg 
                           width="14" 
                           height="14" 
@@ -6069,13 +6066,12 @@ export default function Home() {
                         >
                           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                         </svg>
-                        {/* MUST KNOW text */}
                         <span style={{
                           fontSize: '11px',
-                          fontWeight: '700',
+                          fontWeight: '600',
                           color: '#ffffff',
-                          letterSpacing: '0.5px',
                           textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
                           textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                         }}>
                           Must Know
