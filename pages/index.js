@@ -5848,72 +5848,50 @@ export default function Home() {
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Get article ID - use story.id if available, fallback to index
-                        const articleId = story.id || index;
-                        console.log('📤 Share button clicked - story.id:', story.id, 'index:', index, 'articleId:', articleId);
+                        // Get article ID - use story.id if available
+                        const articleId = story.id;
+                        if (!articleId) {
+                          console.error('No article ID found for sharing');
+                          return;
+                        }
                         
                         // Build share URL
-                        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-                          ? `${window.location.origin}` 
-                          : 'https://todayplus.news';
-                        const shareUrl = `${baseUrl}/?article=${articleId}`;
+                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
-                        console.log('📤 Share URL:', shareUrl);
+                        console.log('📤 Share clicked - articleId:', articleId, 'URL:', shareUrl);
                         
-                        // Use native share on mobile if available (works better on iOS/Android)
-                        if (navigator.share) {
-                          navigator.share({
-                            title: shareTitle,
-                            url: shareUrl
-                          }).catch(err => {
-                            console.log('Share cancelled or failed:', err);
-                            // Fallback to clipboard
-                            if (navigator.clipboard && navigator.clipboard.writeText) {
-                              navigator.clipboard.writeText(shareUrl).then(() => {
-                                alert('Link copied!');
+                        // Copy to clipboard first, then show share sheet
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            console.log('📋 Copied:', shareUrl);
+                            // Then show native share if available
+                            if (navigator.share) {
+                              navigator.share({
+                                title: shareTitle,
+                                text: shareTitle,
+                                url: shareUrl
+                              }).catch(() => {
+                                // User cancelled or share failed - URL already copied
+                              });
+                            } else {
+                              alert('Link copied!');
+                            }
+                          }).catch(() => {
+                            // Clipboard failed, try share directly
+                            if (navigator.share) {
+                              navigator.share({
+                                title: shareTitle,
+                                text: shareTitle,
+                                url: shareUrl
                               }).catch(() => {});
                             }
                           });
-                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          // Desktop fallback - copy to clipboard
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            console.log('📋 URL copied to clipboard:', shareUrl);
-                            alert('Link copied!');
-                          }).catch(err => {
-                            console.error('Clipboard write failed:', err);
-                          });
-                        }
-                      }}
-                      onTouchEnd={(e) => {
-                        // Handle touch on mobile - trigger share directly
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const articleId = story.id || index;
-                        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-                          ? `${window.location.origin}` 
-                          : 'https://todayplus.news';
-                        const shareUrl = `${baseUrl}/?article=${articleId}`;
-                        const shareTitle = story.title_news || story.title || 'News on Today+';
-                        
-                        console.log('📤 Share touch - URL:', shareUrl);
-                        
-                        if (navigator.share) {
+                        } else if (navigator.share) {
                           navigator.share({
                             title: shareTitle,
+                            text: shareTitle,
                             url: shareUrl
-                          }).catch(err => {
-                            console.log('Share cancelled:', err);
-                            if (navigator.clipboard && navigator.clipboard.writeText) {
-                              navigator.clipboard.writeText(shareUrl).then(() => {
-                                alert('Link copied!');
-                              }).catch(() => {});
-                            }
-                          });
-                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            alert('Link copied!');
                           }).catch(() => {});
                         }
                       }}
