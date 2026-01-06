@@ -5861,34 +5861,60 @@ export default function Home() {
                         
                         console.log('📤 Share URL:', shareUrl);
                         
-                        // Always copy to clipboard first for reliability
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            console.log('📋 URL copied to clipboard:', shareUrl);
-                            // Then try native share if available
-                            if (navigator.share) {
-                              navigator.share({
-                                title: shareTitle,
-                                url: shareUrl
-                              }).catch(err => console.log('Share cancelled or failed:', err));
-                            } else {
-                              alert('Link copied!');
-                            }
-                          }).catch(err => {
-                            console.error('Clipboard write failed:', err);
-                            // Fallback: try native share
-                            if (navigator.share) {
-                              navigator.share({
-                                title: shareTitle,
-                                url: shareUrl
-                              }).catch(console.error);
-                            }
-                          });
-                        } else if (navigator.share) {
+                        // Use native share on mobile if available (works better on iOS/Android)
+                        if (navigator.share) {
                           navigator.share({
                             title: shareTitle,
                             url: shareUrl
-                          }).catch(console.error);
+                          }).catch(err => {
+                            console.log('Share cancelled or failed:', err);
+                            // Fallback to clipboard
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(shareUrl).then(() => {
+                                alert('Link copied!');
+                              }).catch(() => {});
+                            }
+                          });
+                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                          // Desktop fallback - copy to clipboard
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            console.log('📋 URL copied to clipboard:', shareUrl);
+                            alert('Link copied!');
+                          }).catch(err => {
+                            console.error('Clipboard write failed:', err);
+                          });
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        // Handle touch on mobile - trigger share directly
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const articleId = story.id || index;
+                        const baseUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+                          ? `${window.location.origin}` 
+                          : 'https://todayplus.news';
+                        const shareUrl = `${baseUrl}/?article=${articleId}`;
+                        const shareTitle = story.title_news || story.title || 'News on Today+';
+                        
+                        console.log('📤 Share touch - URL:', shareUrl);
+                        
+                        if (navigator.share) {
+                          navigator.share({
+                            title: shareTitle,
+                            url: shareUrl
+                          }).catch(err => {
+                            console.log('Share cancelled:', err);
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(shareUrl).then(() => {
+                                alert('Link copied!');
+                              }).catch(() => {});
+                            }
+                          });
+                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            alert('Link copied!');
+                          }).catch(() => {});
                         }
                       }}
                       className="share-button"
@@ -5896,15 +5922,16 @@ export default function Home() {
                         position: 'fixed',
                         top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
                         right: '16px',
-                        width: '34px',
-                        height: '34px',
+                        width: '44px',
+                        height: '44px',
                         borderRadius: '12px',
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        zIndex: 100,
+                        zIndex: 10000,
+                        pointerEvents: 'auto',
                         backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
                         backdropFilter: 'blur(4px) saturate(150%)',
                         WebkitBackdropFilter: 'blur(4px) saturate(150%)',
