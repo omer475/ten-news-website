@@ -5843,55 +5843,28 @@ export default function Home() {
                     </div>
                     
                     {/* Share Button - Fixed position outside image container */}
-                    <button
-                      onClick={(e) => {
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onPointerUp={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        // Get article ID - use story.id if available
                         const articleId = story.id;
-                        if (!articleId) {
-                          console.error('No article ID found for sharing');
-                          return;
-                        }
+                        if (!articleId) return;
                         
-                        // Build share URL
                         const shareUrl = `https://todayplus.news/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
-                        console.log('📤 Share clicked - articleId:', articleId, 'URL:', shareUrl);
-                        
-                        // Copy to clipboard first, then show share sheet
-                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            console.log('📋 Copied:', shareUrl);
-                            // Then show native share if available
-                            if (navigator.share) {
-                              navigator.share({
-                                title: shareTitle,
-                                text: shareTitle,
-                                url: shareUrl
-                              }).catch(() => {
-                                // User cancelled or share failed - URL already copied
-                              });
-                            } else {
-                              alert('Link copied!');
-                            }
-                          }).catch(() => {
-                            // Clipboard failed, try share directly
-                            if (navigator.share) {
-                              navigator.share({
-                                title: shareTitle,
-                                text: shareTitle,
-                                url: shareUrl
-                              }).catch(() => {});
-                            }
-                          });
-                        } else if (navigator.share) {
+                        // Use native share on mobile
+                        if (navigator.share) {
                           navigator.share({
                             title: shareTitle,
-                            text: shareTitle,
                             url: shareUrl
+                          }).catch(() => {});
+                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            alert('Link copied!');
                           }).catch(() => {});
                         }
                       }}
@@ -5927,13 +5900,9 @@ export default function Home() {
                         `,
                         transition: 'all 0.2s ease',
                         WebkitTapHighlightColor: 'transparent',
-                        touchAction: 'manipulation'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
+                        touchAction: 'manipulation',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none'
                       }}
                     >
                       <svg 
@@ -5945,10 +5914,11 @@ export default function Home() {
                         strokeWidth="2.5" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
+                        style={{ pointerEvents: 'none' }}
                       >
                         <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
                       </svg>
-                    </button>
+                    </div>
                     
                     {/* Professional category-based fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (() => {
