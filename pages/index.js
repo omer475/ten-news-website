@@ -293,7 +293,8 @@ export default function Home() {
         e.target.closest('[data-expand-icon]') ||
         e.target.closest('.language-icon-btn') ||
         e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
+        e.target.closest('.language-switcher__option') ||
+        e.target.closest('.share-button')) {
       return;
     }
     // Don't handle swipe when touching expanded information boxes
@@ -315,7 +316,8 @@ export default function Home() {
         e.target.closest('[data-expand-icon]') ||
         e.target.closest('.language-icon-btn') ||
         e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
+        e.target.closest('.language-switcher__option') ||
+        e.target.closest('.share-button')) {
       return;
     }
     // Don't handle swipe when touching expanded information boxes
@@ -336,7 +338,8 @@ export default function Home() {
         e.target.closest('[data-expand-icon]') ||
         e.target.closest('.language-icon-btn') ||
         e.target.closest('.language-dropdown-box') ||
-        e.target.closest('.language-switcher__option')) {
+        e.target.closest('.language-switcher__option') ||
+        e.target.closest('.share-button')) {
       return;
     }
     // Don't handle swipe when touching expanded information boxes
@@ -1342,50 +1345,50 @@ export default function Home() {
       return;
     }
     
-    console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
+      console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
     
     // Mark as handled to prevent race conditions
     sharedArticleHandledRef.current = true;
-    
-    // Check if this article is already in the list
-    const existingIndex = stories.findIndex(s => 
-      s.type === 'news' && String(s.id) === String(sharedArticleData.id)
-    );
+      
+      // Check if this article is already in the list
+      const existingIndex = stories.findIndex(s => 
+        s.type === 'news' && String(s.id) === String(sharedArticleData.id)
+      );
     
     let targetIndex = 1; // Default target is index 1 (after opening story)
-    
-    if (existingIndex > 1) {
-      // Article exists but not at the front - move it
-      setStories(prev => {
-        const newStories = [...prev];
-        const [article] = newStories.splice(existingIndex, 1);
-        newStories.splice(1, 0, article); // Insert after opening story
-        return newStories;
-      });
-      console.log('✅ Moved existing shared article to front');
+      
+      if (existingIndex > 1) {
+        // Article exists but not at the front - move it
+        setStories(prev => {
+          const newStories = [...prev];
+          const [article] = newStories.splice(existingIndex, 1);
+          newStories.splice(1, 0, article); // Insert after opening story
+          return newStories;
+        });
+        console.log('✅ Moved existing shared article to front');
     } else if (existingIndex === 1) {
       // Article is already at position 1 - just navigate there
       console.log('✅ Shared article already at position 1');
-    } else if (existingIndex === -1) {
-      // Article not in list - add it at position 1
-      setStories(prev => {
-        const newStories = [...prev];
-        newStories.splice(1, 0, sharedArticleData); // Insert after opening story
-        return newStories;
-      });
-      console.log('✅ Added shared article to front');
-    }
-    
+      } else if (existingIndex === -1) {
+        // Article not in list - add it at position 1
+        setStories(prev => {
+          const newStories = [...prev];
+          newStories.splice(1, 0, sharedArticleData); // Insert after opening story
+          return newStories;
+        });
+        console.log('✅ Added shared article to front');
+      }
+      
     // Always navigate to the shared article at index 1
     // Use setTimeout to ensure state updates are processed first
-    setTimeout(() => {
+      setTimeout(() => {
       setCurrentIndex(targetIndex);
       console.log(`✅ Navigated directly to shared article at index ${targetIndex}`);
     }, 50);
-    
-    // Clear the shared article data
-    setSharedArticleData(null);
-    setSharedArticleId(null);
+      
+      // Clear the shared article data
+      setSharedArticleData(null);
+      setSharedArticleId(null);
   }, [sharedArticleData, stories.length, loading]);
 
   // Handle pending navigation - navigate after stories are fully loaded
@@ -5843,10 +5846,8 @@ export default function Home() {
                     </div>
                     
                     {/* Share Button - Fixed position outside image container */}
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onPointerUp={(e) => {
+                    <button
+                      onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -5856,7 +5857,7 @@ export default function Home() {
                         const shareUrl = `https://todayplus.news/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
-                        // Use native share on mobile
+                        // Use native share on mobile, clipboard on desktop
                         if (navigator.share) {
                           navigator.share({
                             title: shareTitle,
@@ -5914,11 +5915,10 @@ export default function Home() {
                         strokeWidth="2.5" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
-                        style={{ pointerEvents: 'none' }}
                       >
                         <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
                       </svg>
-                    </div>
+                    </button>
                     
                     {/* Professional category-based fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (() => {
@@ -5999,8 +5999,8 @@ export default function Home() {
                     
                     {/* Must Know badge for important articles - liquid glass style on top left */}
                     {isImportantArticle && (
-                      <div style={{
-                        position: 'fixed',
+                        <div style={{
+                          position: 'fixed',
                         top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
                         left: '16px',
                         display: 'flex',
@@ -6008,8 +6008,8 @@ export default function Home() {
                         gap: '6px',
                         padding: '6px 12px 6px 8px',
                         borderRadius: '12px',
-                        zIndex: 100,
-                        pointerEvents: 'none',
+                          zIndex: 100,
+                          pointerEvents: 'none',
                         backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
                         backdropFilter: 'blur(4px) saturate(150%)',
                         WebkitBackdropFilter: 'blur(4px) saturate(150%)',
