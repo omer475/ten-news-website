@@ -1298,142 +1298,90 @@ export default function Home() {
     }
   }, []);
 
-  // Capture shared article ID from URL on initial load (before stories load)
-  // Also fetch the article from API to ensure we have it
+  // Capture shared article ID from URL on initial load
+  // Use sessionStorage to persist across any page reloads on mobile
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const articleId = urlParams.get('article');
       
       if (articleId) {
-        console.log('🔗 Shared article ID captured:', articleId);
-        // Reset the handled flag for new shared article
-        sharedArticleHandledRef.current = false;
-        // Store in ref for immediate access (state updates are async)
+        console.log('🔗 Shared article ID from URL:', articleId);
+        // Store in sessionStorage for persistence across reloads
+        sessionStorage.setItem('sharedArticleId', articleId);
+        // Store in ref for immediate access
         sharedArticleIdRef.current = articleId;
+        sharedArticleHandledRef.current = false;
         setSharedArticleId(articleId);
         
-        // Fetch the shared article from API to ensure we have it
-        // Use absolute URL for mobile compatibility
-        const apiUrl = `${window.location.origin}/api/article/${articleId}`;
-        console.log('🔗 Fetching shared article from:', apiUrl);
-        
-        fetch(apiUrl)
-          .then(res => {
-            console.log('🔗 API response status:', res.status);
-            return res.json();
-          })
-          .then(article => {
-            if (article && !article.error) {
-              console.log('✅ Fetched shared article:', article.title?.substring(0, 40));
-              // Store it in state for use when building stories
-              setSharedArticleData({
-                ...article,
-                type: 'news',
-                number: 0
-              });
-            } else {
-              console.log('⚠️ Could not fetch shared article, error:', article?.error);
-            }
-          })
-          .catch(err => {
-            console.error('❌ Error fetching shared article:', err);
-          });
-        
-        // Clean up the URL after a delay to ensure it's been captured
-        setTimeout(() => {
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
-        }, 100);
+        // Clean up the URL
+        window.history.replaceState({}, '', window.location.pathname);
+      } else {
+        // Check sessionStorage for a shared article ID (in case page reloaded)
+        const storedId = sessionStorage.getItem('sharedArticleId');
+        if (storedId && !sharedArticleHandledRef.current) {
+          console.log('🔗 Shared article ID from sessionStorage:', storedId);
+          sharedArticleIdRef.current = storedId;
+          setSharedArticleId(storedId);
+        }
       }
     }
   }, []);
 
-  // Handle shared article after it's fetched - insert it and navigate
+  // Handle shared article - find it in loaded stories and navigate
   useEffect(() => {
-    // Skip if already handled or no data
-    if (sharedArticleHandledRef.current || !sharedArticleData || stories.length <= 1 || loading) {
+    // Skip if already handled or stories not loaded yet
+    if (sharedArticleHandledRef.current || stories.length <= 1 || loading) {
       return;
     }
     
-    console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
+    // Get shared article ID from ref, state, or sessionStorage
+    const targetId = sharedArticleIdRef.current || sharedArticleId || 
+      (typeof window !== 'undefined' ? sessionStorage.getItem('sharedArticleId') : null);
     
-    // Mark as handled to prevent race conditions
-    sharedArticleHandledRef.current = true;
+    if (!targetId) {
+      return;
+    }
     
-    // Check if this article is already in the list
-    const existingIndex = stories.findIndex(s => 
-      s.type === 'news' && String(s.id) === String(sharedArticleData.id)
+    console.log('🔗 Looking for shared article:', targetId, 'in', stories.length, 'stories');
+    
+    // Find the article in loaded stories
+    const foundIndex = stories.findIndex(s => 
+      s.type === 'news' && String(s.id) === String(targetId)
     );
     
-    if (existingIndex > 1) {
-      // Article exists but not at the front - move it
-      setStories(prev => {
-        const newStories = [...prev];
-        const [article] = newStories.splice(existingIndex, 1);
-        newStories.splice(1, 0, article); // Insert after opening story
-        return newStories;
-      });
-      console.log('✅ Moved existing shared article to position 1');
-    } else if (existingIndex === 1) {
-      // Article is already at position 1 - just navigate there
-      console.log('✅ Shared article already at position 1');
-    } else if (existingIndex === -1) {
-      // Article not in list - add it at position 1
-      setStories(prev => {
-        const newStories = [...prev];
-        newStories.splice(1, 0, sharedArticleData); // Insert after opening story
-        return newStories;
-      });
-      console.log('✅ Added shared article to position 1');
-    }
-    
-    // Navigate to the shared article at index 1
-    // Use longer timeout for mobile to ensure state updates are processed
-    setTimeout(() => {
-      setCurrentIndex(1);
-      console.log('✅ Navigated to shared article at index 1');
-    }, 150);
-    
-    // Clear the shared article data
-    setSharedArticleData(null);
-    setSharedArticleId(null);
-  }, [sharedArticleData, stories.length, loading]);
-
-  // Backup: If we have a sharedArticleId but no sharedArticleData (API failed), try to find it in loaded stories
-  useEffect(() => {
-    if (sharedArticleIdRef.current && !sharedArticleHandledRef.current && !sharedArticleData && stories.length > 1 && !loading) {
-      const targetId = sharedArticleIdRef.current;
-      console.log('🔗 Backup: Looking for shared article in loaded stories:', targetId);
+    if (foundIndex > 0) {
+      console.log('✅ Found shared article at index:', foundIndex);
       
-      const foundIndex = stories.findIndex(s => 
-        s.type === 'news' && String(s.id) === String(targetId)
-      );
+      // Mark as handled
+      sharedArticleHandledRef.current = true;
+      sessionStorage.removeItem('sharedArticleId');
       
-      if (foundIndex > 0) {
-        console.log('✅ Found shared article at index:', foundIndex);
-        sharedArticleHandledRef.current = true;
-        
-        if (foundIndex > 1) {
-          // Move to front
-          setStories(prev => {
-            const newStories = [...prev];
-            const [article] = newStories.splice(foundIndex, 1);
-            newStories.splice(1, 0, article);
-            return newStories;
-          });
-        }
-        
-        setTimeout(() => {
-          setCurrentIndex(1);
-          console.log('✅ Navigated to shared article');
-        }, 150);
-        
-        sharedArticleIdRef.current = null;
-        setSharedArticleId(null);
+      if (foundIndex > 1) {
+        // Move to position 1
+        setStories(prev => {
+          const newStories = [...prev];
+          const [article] = newStories.splice(foundIndex, 1);
+          newStories.splice(1, 0, article);
+          return newStories;
+        });
+        console.log('✅ Moved shared article to position 1');
       }
+      
+      // Navigate to position 1
+      setTimeout(() => {
+        setCurrentIndex(1);
+        console.log('✅ Navigated to shared article');
+      }, 200);
+      
+      // Clear state
+      sharedArticleIdRef.current = null;
+      setSharedArticleId(null);
+      setSharedArticleData(null);
+    } else {
+      console.log('⚠️ Shared article not found in stories yet, will retry...');
     }
-  }, [stories, loading, sharedArticleData]);
+  }, [stories, loading, sharedArticleId]);
 
   // Handle pending navigation - navigate after stories are fully loaded
   useEffect(() => {
@@ -1940,10 +1888,10 @@ export default function Home() {
               let sortedNews = sortArticlesByScore(newsArticles);
               
               // Handle shared article - prioritize it to appear first
-              // Skip if already handled by the useEffect
-              // Use ref for immediate access (state might not be updated yet due to async nature)
+              // Check ref, state, and sessionStorage for the shared article ID
               let foundSharedArticle = false;
-              const targetArticleId = sharedArticleIdRef.current || sharedArticleId;
+              const storedArticleId = typeof window !== 'undefined' ? sessionStorage.getItem('sharedArticleId') : null;
+              const targetArticleId = sharedArticleIdRef.current || sharedArticleId || storedArticleId;
               if (targetArticleId && !sharedArticleHandledRef.current) {
                 console.log('🔗 Looking for shared article:', targetArticleId);
                 
@@ -1992,6 +1940,9 @@ export default function Home() {
                   sharedArticleIdRef.current = null;
                   setSharedArticleId(null);
                   setSharedArticleData(null);
+                  if (typeof window !== 'undefined') {
+                    sessionStorage.removeItem('sharedArticleId');
+                  }
                 }
               }
               
