@@ -5867,19 +5867,21 @@ export default function Home() {
                         const shareUrl = `https://todayplus.news/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
-                        // Use native share on mobile, clipboard on desktop
                         if (navigator.share) {
-                          navigator.share({
-                            title: shareTitle,
-                            url: shareUrl
-                          }).catch(() => {});
+                          navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
                         } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            alert('Link copied!');
-                          }).catch(() => {});
+                          navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied!')).catch(() => {});
                         }
                       }}
+                      onTouchStart={(e) => {
+                        // Mark that touch started on this button
+                        e.currentTarget.dataset.touchStarted = 'true';
+                      }}
                       onTouchEnd={(e) => {
+                        // Only fire if touch started on this button
+                        if (e.currentTarget.dataset.touchStarted !== 'true') return;
+                        e.currentTarget.dataset.touchStarted = 'false';
+                        
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -5889,16 +5891,10 @@ export default function Home() {
                         const shareUrl = `https://todayplus.news/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
-                        // Use native share on mobile
                         if (navigator.share) {
-                          navigator.share({
-                            title: shareTitle,
-                            url: shareUrl
-                          }).catch(() => {});
+                          navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
                         } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => {
-                            alert('Link copied!');
-                          }).catch(() => {});
+                          navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied!')).catch(() => {});
                         }
                       }}
                       className="share-button"
@@ -5906,10 +5902,8 @@ export default function Home() {
                         position: 'fixed',
                         top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
                         right: '16px',
-                        width: '44px',
-                        height: '44px',
-                        minWidth: '44px',
-                        minHeight: '44px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: '12px',
                         border: 'none',
                         cursor: 'pointer',
@@ -5934,13 +5928,11 @@ export default function Home() {
                           0px 0.5px 2.5px 0px rgba(0, 0, 0, 0.1),
                           0px 3px 8px 0px rgba(0, 0, 0, 0.08)
                         `,
-                        transition: 'none',
-                        WebkitTapHighlightColor: 'rgba(255,255,255,0.2)',
+                        transition: 'all 0.2s ease',
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
                         userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        WebkitAppearance: 'none',
-                        appearance: 'none',
-                        outline: 'none'
+                        WebkitUserSelect: 'none'
                       }}
                     >
                       <svg 
