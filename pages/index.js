@@ -1314,8 +1314,15 @@ export default function Home() {
         setSharedArticleId(articleId);
         
         // Fetch the shared article from API to ensure we have it
-        fetch(`/api/article/${articleId}`)
-          .then(res => res.json())
+        // Use absolute URL for mobile compatibility
+        const apiUrl = `${window.location.origin}/api/article/${articleId}`;
+        console.log('🔗 Fetching shared article from:', apiUrl);
+        
+        fetch(apiUrl)
+          .then(res => {
+            console.log('🔗 API response status:', res.status);
+            return res.json();
+          })
           .then(article => {
             if (article && !article.error) {
               console.log('✅ Fetched shared article:', article.title?.substring(0, 40));
@@ -1326,14 +1333,18 @@ export default function Home() {
                 number: 0
               });
             } else {
-              console.log('⚠️ Could not fetch shared article');
+              console.log('⚠️ Could not fetch shared article, error:', article?.error);
             }
           })
-          .catch(err => console.error('Error fetching shared article:', err));
+          .catch(err => {
+            console.error('❌ Error fetching shared article:', err);
+          });
         
-        // Clean up the URL immediately
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
+        // Clean up the URL after a delay to ensure it's been captured
+        setTimeout(() => {
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }, 100);
       }
     }
   }, []);
@@ -1345,51 +1356,84 @@ export default function Home() {
       return;
     }
     
-      console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
+    console.log('🔗 Inserting shared article into stories:', sharedArticleData.title?.substring(0, 40));
     
     // Mark as handled to prevent race conditions
     sharedArticleHandledRef.current = true;
-      
-      // Check if this article is already in the list
-      const existingIndex = stories.findIndex(s => 
-        s.type === 'news' && String(s.id) === String(sharedArticleData.id)
-      );
     
-    let targetIndex = 1; // Default target is index 1 (after opening story)
-      
-      if (existingIndex > 1) {
-        // Article exists but not at the front - move it
-        setStories(prev => {
-          const newStories = [...prev];
-          const [article] = newStories.splice(existingIndex, 1);
-          newStories.splice(1, 0, article); // Insert after opening story
-          return newStories;
-        });
-        console.log('✅ Moved existing shared article to front');
+    // Check if this article is already in the list
+    const existingIndex = stories.findIndex(s => 
+      s.type === 'news' && String(s.id) === String(sharedArticleData.id)
+    );
+    
+    if (existingIndex > 1) {
+      // Article exists but not at the front - move it
+      setStories(prev => {
+        const newStories = [...prev];
+        const [article] = newStories.splice(existingIndex, 1);
+        newStories.splice(1, 0, article); // Insert after opening story
+        return newStories;
+      });
+      console.log('✅ Moved existing shared article to position 1');
     } else if (existingIndex === 1) {
       // Article is already at position 1 - just navigate there
       console.log('✅ Shared article already at position 1');
-      } else if (existingIndex === -1) {
-        // Article not in list - add it at position 1
-        setStories(prev => {
-          const newStories = [...prev];
-          newStories.splice(1, 0, sharedArticleData); // Insert after opening story
-          return newStories;
-        });
-        console.log('✅ Added shared article to front');
-      }
-      
-    // Always navigate to the shared article at index 1
-    // Use setTimeout to ensure state updates are processed first
-      setTimeout(() => {
-      setCurrentIndex(targetIndex);
-      console.log(`✅ Navigated directly to shared article at index ${targetIndex}`);
-    }, 50);
-      
-      // Clear the shared article data
-      setSharedArticleData(null);
-      setSharedArticleId(null);
+    } else if (existingIndex === -1) {
+      // Article not in list - add it at position 1
+      setStories(prev => {
+        const newStories = [...prev];
+        newStories.splice(1, 0, sharedArticleData); // Insert after opening story
+        return newStories;
+      });
+      console.log('✅ Added shared article to position 1');
+    }
+    
+    // Navigate to the shared article at index 1
+    // Use longer timeout for mobile to ensure state updates are processed
+    setTimeout(() => {
+      setCurrentIndex(1);
+      console.log('✅ Navigated to shared article at index 1');
+    }, 150);
+    
+    // Clear the shared article data
+    setSharedArticleData(null);
+    setSharedArticleId(null);
   }, [sharedArticleData, stories.length, loading]);
+
+  // Backup: If we have a sharedArticleId but no sharedArticleData (API failed), try to find it in loaded stories
+  useEffect(() => {
+    if (sharedArticleIdRef.current && !sharedArticleHandledRef.current && !sharedArticleData && stories.length > 1 && !loading) {
+      const targetId = sharedArticleIdRef.current;
+      console.log('🔗 Backup: Looking for shared article in loaded stories:', targetId);
+      
+      const foundIndex = stories.findIndex(s => 
+        s.type === 'news' && String(s.id) === String(targetId)
+      );
+      
+      if (foundIndex > 0) {
+        console.log('✅ Found shared article at index:', foundIndex);
+        sharedArticleHandledRef.current = true;
+        
+        if (foundIndex > 1) {
+          // Move to front
+          setStories(prev => {
+            const newStories = [...prev];
+            const [article] = newStories.splice(foundIndex, 1);
+            newStories.splice(1, 0, article);
+            return newStories;
+          });
+        }
+        
+        setTimeout(() => {
+          setCurrentIndex(1);
+          console.log('✅ Navigated to shared article');
+        }, 150);
+        
+        sharedArticleIdRef.current = null;
+        setSharedArticleId(null);
+      }
+    }
+  }, [stories, loading, sharedArticleData]);
 
   // Handle pending navigation - navigate after stories are fully loaded
   useEffect(() => {
