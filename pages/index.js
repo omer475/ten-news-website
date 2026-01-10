@@ -54,7 +54,6 @@ export default function Home() {
   const [sharedArticleId, setSharedArticleId] = useState(null); // Track shared article from URL parameter
   const [sharedArticleData, setSharedArticleData] = useState(null); // The actual shared article data
   const [pendingNavigation, setPendingNavigation] = useState(null); // Track pending navigation to shared article index
-  const [debugMsg, setDebugMsg] = useState(''); // Debug message for mobile testing
   
   // Pagination state for loading articles in batches
   // MAX_ARTICLES prevents memory issues with 600+ articles
@@ -75,6 +74,8 @@ export default function Home() {
   const sharedArticleHandledRef = useRef(false);
   // Store the shared article ID in a ref for immediate access (avoids React state timing issues)
   const sharedArticleIdRef = useRef(null);
+  // Store stories in a ref so we can access latest value in intervals/callbacks
+  const storiesRef = useRef([]);
 
   // Language mode for summaries (advanced vs B2) - GLOBAL setting for all articles
   const [languageMode, setLanguageMode] = useState('advanced');  // 'advanced' = bullets, 'b2' = 5W's
@@ -1299,6 +1300,11 @@ export default function Home() {
     }
   }, []);
 
+  // Keep storiesRef updated with latest stories value
+  useEffect(() => {
+    storiesRef.current = stories;
+  }, [stories]);
+
   // Capture shared article ID from URL on initial load
   // Use sessionStorage to persist across any page reloads on mobile
   useEffect(() => {
@@ -1308,7 +1314,6 @@ export default function Home() {
       
       if (articleId) {
         console.log('🔗 Shared article ID from URL:', articleId);
-        setDebugMsg(`URL article: ${articleId}`);
         // Store in sessionStorage for persistence across reloads
         sessionStorage.setItem('sharedArticleId', articleId);
         // Store in ref for immediate access
@@ -1322,7 +1327,6 @@ export default function Home() {
         const storedId = sessionStorage.getItem('sharedArticleId');
         if (storedId && !sharedArticleHandledRef.current) {
           console.log('🔗 Shared article ID from sessionStorage:', storedId);
-          setDebugMsg(`Session article: ${storedId}`);
           sharedArticleIdRef.current = storedId;
           setSharedArticleId(storedId);
         }
@@ -1335,80 +1339,79 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    // Get shared article ID from all sources
+    const targetId = sharedArticleIdRef.current || sharedArticleId || 
+      sessionStorage.getItem('sharedArticleId');
+    
+    // No shared article to look for
+    if (!targetId || sharedArticleHandledRef.current) return;
+    
+    console.log('🔗 Starting shared article search for:', targetId);
+    
     const checkAndNavigate = () => {
       // Skip if already handled
       if (sharedArticleHandledRef.current) return true;
       
+      // Use ref to get latest stories value (fixes closure issue)
+      const currentStories = storiesRef.current;
+      
       // Skip if stories not loaded yet
-      if (stories.length <= 1 || loading) {
-        setDebugMsg(prev => `${prev} | waiting (${stories.length} stories, loading: ${loading})`);
+      if (currentStories.length <= 1) {
+        console.log('🔗 Waiting for stories to load...', currentStories.length);
         return false;
       }
       
-      // Get shared article ID from all sources
-      const targetId = sharedArticleIdRef.current || sharedArticleId || 
-        sessionStorage.getItem('sharedArticleId');
-      
-      if (!targetId) return true; // No shared article, stop checking
-      
-      console.log('🔗 Checking for shared article:', targetId);
-      setDebugMsg(`Looking for ${targetId} in ${stories.length} stories`);
+      console.log('🔗 Searching for article', targetId, 'in', currentStories.length, 'stories');
       
       // Find the article in loaded stories
-      const foundIndex = stories.findIndex(s => 
+      const foundIndex = currentStories.findIndex(s => 
         s.type === 'news' && String(s.id) === String(targetId)
       );
       
       if (foundIndex > 0) {
         console.log('✅ Found shared article at index:', foundIndex);
-        setDebugMsg(`FOUND at index ${foundIndex}! Navigating...`);
         
         // Mark as handled FIRST
         sharedArticleHandledRef.current = true;
         sessionStorage.removeItem('sharedArticleId');
         sharedArticleIdRef.current = null;
+        setSharedArticleId(null);
         
-        // Clean up the URL now that we've found it
+        // Clean up the URL
         window.history.replaceState({}, '', window.location.pathname);
         
-        // Navigate directly to the found index (don't move article, just navigate)
+        // Navigate directly to the found index
         setCurrentIndex(foundIndex);
         console.log('✅ Navigated to index:', foundIndex);
         
-        // Clear debug after 3 seconds
-        setTimeout(() => setDebugMsg(''), 3000);
-        
         return true; // Success
-      } else {
-        // Log all story IDs for debugging
-        const storyIds = stories.filter(s => s.type === 'news').map(s => s.id).slice(0, 5);
-        setDebugMsg(`Not found. Target: ${targetId}, First 5 IDs: ${storyIds.join(',')}`);
       }
       
+      console.log('🔗 Article not found yet, will retry...');
       return false; // Keep trying
     };
     
     // Try immediately
     if (checkAndNavigate()) return;
     
-    // Keep trying every 100ms for up to 3 seconds
+    // Keep trying every 200ms for up to 5 seconds (mobile can be slow)
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 25;
     const interval = setInterval(() => {
       attempts++;
       if (checkAndNavigate() || attempts >= maxAttempts) {
         clearInterval(interval);
         if (attempts >= maxAttempts) {
           console.log('⚠️ Gave up looking for shared article after', maxAttempts, 'attempts');
-          setDebugMsg(`FAILED after ${maxAttempts} attempts`);
           sessionStorage.removeItem('sharedArticleId');
-          setTimeout(() => setDebugMsg(''), 5000);
+          sharedArticleIdRef.current = null;
+          setSharedArticleId(null);
         }
       }
-    }, 100);
+    }, 200);
     
     return () => clearInterval(interval);
-  }, [stories, loading, sharedArticleId]);
+  }, [sharedArticleId]);
 
   // Handle pending navigation - navigate after stories are fully loaded
   useEffect(() => {
@@ -5082,27 +5085,6 @@ export default function Home() {
           
         }
       `}</style>
-
-      {/* DEBUG OVERLAY - Remove after fixing share issue */}
-      {debugMsg && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'rgba(255, 0, 0, 0.9)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '10px',
-          zIndex: 999999,
-          fontSize: '14px',
-          maxWidth: '90%',
-          textAlign: 'center',
-          fontFamily: 'monospace'
-        }}>
-          {debugMsg}
-        </div>
-      )}
 
       {/* Dynamic Safe Area Overlays - Color changes based on article importance */}
       {/* Using key prop to force re-render when color changes */}
