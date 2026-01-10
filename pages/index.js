@@ -54,6 +54,7 @@ export default function Home() {
   const [sharedArticleId, setSharedArticleId] = useState(null); // Track shared article from URL parameter
   const [sharedArticleData, setSharedArticleData] = useState(null); // The actual shared article data
   const [pendingNavigation, setPendingNavigation] = useState(null); // Track pending navigation to shared article index
+  const [debugMsg, setDebugMsg] = useState(''); // Debug message for mobile testing
   
   // Pagination state for loading articles in batches
   // MAX_ARTICLES prevents memory issues with 600+ articles
@@ -1307,6 +1308,7 @@ export default function Home() {
       
       if (articleId) {
         console.log('🔗 Shared article ID from URL:', articleId);
+        setDebugMsg(`URL article: ${articleId}`);
         // Store in sessionStorage for persistence across reloads
         sessionStorage.setItem('sharedArticleId', articleId);
         // Store in ref for immediate access
@@ -1314,13 +1316,13 @@ export default function Home() {
         sharedArticleHandledRef.current = false;
         setSharedArticleId(articleId);
         
-        // Clean up the URL
-        window.history.replaceState({}, '', window.location.pathname);
+        // DON'T clean up the URL yet - wait until we've navigated
       } else {
         // Check sessionStorage for a shared article ID (in case page reloaded)
         const storedId = sessionStorage.getItem('sharedArticleId');
         if (storedId && !sharedArticleHandledRef.current) {
           console.log('🔗 Shared article ID from sessionStorage:', storedId);
+          setDebugMsg(`Session article: ${storedId}`);
           sharedArticleIdRef.current = storedId;
           setSharedArticleId(storedId);
         }
@@ -1338,7 +1340,10 @@ export default function Home() {
       if (sharedArticleHandledRef.current) return true;
       
       // Skip if stories not loaded yet
-      if (stories.length <= 1 || loading) return false;
+      if (stories.length <= 1 || loading) {
+        setDebugMsg(prev => `${prev} | waiting (${stories.length} stories, loading: ${loading})`);
+        return false;
+      }
       
       // Get shared article ID from all sources
       const targetId = sharedArticleIdRef.current || sharedArticleId || 
@@ -1347,6 +1352,7 @@ export default function Home() {
       if (!targetId) return true; // No shared article, stop checking
       
       console.log('🔗 Checking for shared article:', targetId);
+      setDebugMsg(`Looking for ${targetId} in ${stories.length} stories`);
       
       // Find the article in loaded stories
       const foundIndex = stories.findIndex(s => 
@@ -1355,17 +1361,28 @@ export default function Home() {
       
       if (foundIndex > 0) {
         console.log('✅ Found shared article at index:', foundIndex);
+        setDebugMsg(`FOUND at index ${foundIndex}! Navigating...`);
         
         // Mark as handled FIRST
         sharedArticleHandledRef.current = true;
         sessionStorage.removeItem('sharedArticleId');
         sharedArticleIdRef.current = null;
         
+        // Clean up the URL now that we've found it
+        window.history.replaceState({}, '', window.location.pathname);
+        
         // Navigate directly to the found index (don't move article, just navigate)
         setCurrentIndex(foundIndex);
         console.log('✅ Navigated to index:', foundIndex);
         
+        // Clear debug after 3 seconds
+        setTimeout(() => setDebugMsg(''), 3000);
+        
         return true; // Success
+      } else {
+        // Log all story IDs for debugging
+        const storyIds = stories.filter(s => s.type === 'news').map(s => s.id).slice(0, 5);
+        setDebugMsg(`Not found. Target: ${targetId}, First 5 IDs: ${storyIds.join(',')}`);
       }
       
       return false; // Keep trying
@@ -1383,7 +1400,9 @@ export default function Home() {
         clearInterval(interval);
         if (attempts >= maxAttempts) {
           console.log('⚠️ Gave up looking for shared article after', maxAttempts, 'attempts');
+          setDebugMsg(`FAILED after ${maxAttempts} attempts`);
           sessionStorage.removeItem('sharedArticleId');
+          setTimeout(() => setDebugMsg(''), 5000);
         }
       }
     }, 100);
@@ -5063,6 +5082,27 @@ export default function Home() {
           
         }
       `}</style>
+
+      {/* DEBUG OVERLAY - Remove after fixing share issue */}
+      {debugMsg && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(255, 0, 0, 0.9)',
+          color: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          zIndex: 999999,
+          fontSize: '14px',
+          maxWidth: '90%',
+          textAlign: 'center',
+          fontFamily: 'monospace'
+        }}>
+          {debugMsg}
+        </div>
+      )}
 
       {/* Dynamic Safe Area Overlays - Color changes based on article importance */}
       {/* Using key prop to force re-render when color changes */}
