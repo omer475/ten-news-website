@@ -5998,54 +5998,15 @@ export default function Home() {
                         // Try native share first (requires HTTPS)
                         if (navigator.share) {
                           navigator.share({ title: shareTitle, url: shareUrl }).catch((err) => {
+                            // Don't show fallback if user just cancelled the share
+                            if (err.name === 'AbortError') return;
                             console.log('Share failed:', err);
-                            // Fallback to prompt
-                            prompt('Copy this link to share:', shareUrl);
                           });
                         } else if (navigator.clipboard && navigator.clipboard.writeText) {
                           navigator.clipboard.writeText(shareUrl)
                             .then(() => alert('Link copied!'))
                             .catch(() => {
-                              // Fallback to prompt if clipboard fails
-                              prompt('Copy this link to share:', shareUrl);
-                            });
-                        } else {
-                          // Final fallback - show prompt dialog to copy manually
-                          prompt('Copy this link to share:', shareUrl);
-                        }
-                      }}
-                      onTouchStart={(e) => {
-                        // Mark that touch started on this button
-                        e.currentTarget.dataset.touchStarted = 'true';
-                      }}
-                      onTouchEnd={(e) => {
-                        // Only fire if touch started on this button
-                        if (e.currentTarget.dataset.touchStarted !== 'true') return;
-                        e.currentTarget.dataset.touchStarted = 'false';
-                        
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const articleId = story.id;
-                        if (!articleId) return;
-                        
-                        // Use current domain for share URL (works on localhost and production)
-                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://todayplus.news';
-                        const shareUrl = `${baseUrl}/?article=${articleId}`;
-                        const shareTitle = story.title_news || story.title || 'News on Today+';
-                        
-                        // Try native share first (requires HTTPS)
-                        if (navigator.share) {
-                          navigator.share({ title: shareTitle, url: shareUrl }).catch((err) => {
-                            console.log('Share failed:', err);
-                            // Fallback to prompt
-                            prompt('Copy this link to share:', shareUrl);
-                          });
-                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl)
-                            .then(() => alert('Link copied!'))
-                            .catch(() => {
-                              // Fallback to prompt if clipboard fails
+                              // Fallback to prompt if clipboard fails (non-HTTPS)
                               prompt('Copy this link to share:', shareUrl);
                             });
                         } else {
