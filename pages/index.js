@@ -1312,6 +1312,53 @@ export default function Home() {
       const urlParams = new URLSearchParams(window.location.search);
       const articleId = urlParams.get('article');
       
+      const fetchSharedArticle = async (id) => {
+        try {
+          console.log('🔗 Fetching shared article directly from API:', id);
+          const response = await fetch(`/api/article/${id}?t=${Date.now()}`);
+          if (response.ok) {
+            const articleData = await response.json();
+            if (articleData && articleData.id) {
+              console.log('✅ Fetched shared article:', articleData.title?.substring(0, 50));
+              // Process the article the same way as other articles
+              const processedArticle = {
+                id: articleData.id,
+                type: 'news',
+                number: 1, // Will be shown first
+                category: (articleData.category || 'WORLD NEWS').toUpperCase(),
+                emoji: articleData.emoji || '📰',
+                title: articleData.title_news || articleData.title || 'News Story',
+                title_news: articleData.title_news,
+                summary: articleData.summary_text || articleData.summary || '',
+                summary_b2: articleData.summary_text_b2 || articleData.summary || '',
+                summary_bullets: articleData.summary_bullets || [],
+                summary_bullets_b2: articleData.summary_bullets_b2 || articleData.summary_bullets || [],
+                details: articleData.details || [],
+                details_b2: articleData.details_b2 || articleData.details || [],
+                source: articleData.source || 'Today+',
+                url: articleData.url || '#',
+                urlToImage: articleData.image_url || articleData.urlToImage,
+                publishedAt: articleData.created_at || articleData.publishedAt,
+                timeline: articleData.timeline || [],
+                graph: articleData.graph_data || articleData.graph,
+                map: articleData.map_data || articleData.map,
+                five_ws: articleData.five_ws || null,
+                detailed_text: articleData.detailed_text,
+                detailed_bullets: articleData.detailed_bullets || [],
+                detailed_bullets_b2: articleData.detailed_bullets_b2 || [],
+                final_score: articleData.ai_final_score || articleData.final_score || 500,
+                isSharedArticle: true // Mark as shared article for priority handling
+              };
+              setSharedArticleData(processedArticle);
+            }
+          } else {
+            console.log('⚠️ Failed to fetch shared article, status:', response.status);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching shared article:', error);
+        }
+      };
+      
       if (articleId) {
         console.log('🔗 Shared article ID from URL:', articleId);
         // Store in sessionStorage for persistence across reloads
@@ -1321,6 +1368,9 @@ export default function Home() {
         sharedArticleHandledRef.current = false;
         setSharedArticleId(articleId);
         
+        // Fetch the shared article directly from API
+        fetchSharedArticle(articleId);
+        
         // DON'T clean up the URL yet - wait until we've navigated
       } else {
         // Check sessionStorage for a shared article ID (in case page reloaded)
@@ -1329,6 +1379,8 @@ export default function Home() {
           console.log('🔗 Shared article ID from sessionStorage:', storedId);
           sharedArticleIdRef.current = storedId;
           setSharedArticleId(storedId);
+          // Also fetch the article in case it's not in the loaded batch
+          fetchSharedArticle(storedId);
         }
       }
     }
@@ -1412,6 +1464,55 @@ export default function Home() {
     
     return () => clearInterval(interval);
   }, [sharedArticleId]);
+
+  // Handle when shared article data is fetched and ready
+  // This integrates the fetched article into stories and navigates to it
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!sharedArticleData || sharedArticleHandledRef.current) return;
+    if (stories.length <= 1) return; // Wait for stories to load
+    
+    console.log('🔗 Shared article data ready, integrating into stories:', sharedArticleData.title?.substring(0, 50));
+    
+    // Check if article already exists in stories
+    const existingIndex = stories.findIndex(s => 
+      s.type === 'news' && String(s.id) === String(sharedArticleData.id)
+    );
+    
+    if (existingIndex > 0) {
+      // Article already in stories, just navigate to it
+      console.log('✅ Shared article found in stories at index:', existingIndex);
+      sharedArticleHandledRef.current = true;
+      sessionStorage.removeItem('sharedArticleId');
+      sharedArticleIdRef.current = null;
+      setSharedArticleId(null);
+      setSharedArticleData(null);
+      window.history.replaceState({}, '', window.location.pathname);
+      setCurrentIndex(existingIndex);
+    } else if (existingIndex === -1) {
+      // Article not in stories, add it at position 1 (after opening story)
+      console.log('✅ Adding shared article to stories at index 1');
+      const newStories = [
+        stories[0], // Opening story stays first
+        sharedArticleData,
+        ...stories.slice(1)
+      ];
+      setStories(newStories);
+      storiesRef.current = newStories;
+      
+      // Mark as handled and navigate
+      sharedArticleHandledRef.current = true;
+      sessionStorage.removeItem('sharedArticleId');
+      sharedArticleIdRef.current = null;
+      setSharedArticleId(null);
+      setSharedArticleData(null);
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      // Navigate to index 1 (the shared article)
+      setCurrentIndex(1);
+      console.log('✅ Navigated to shared article at index 1');
+    }
+  }, [sharedArticleData, stories]);
 
   // Handle pending navigation - navigate after stories are fully loaded
   useEffect(() => {
@@ -5889,13 +5990,28 @@ export default function Home() {
                         const articleId = story.id;
                         if (!articleId) return;
                         
-                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        // Use current domain for share URL (works on localhost and production)
+                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://todayplus.news';
+                        const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
+                        // Try native share first (requires HTTPS)
                         if (navigator.share) {
-                          navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
+                          navigator.share({ title: shareTitle, url: shareUrl }).catch((err) => {
+                            console.log('Share failed:', err);
+                            // Fallback to prompt
+                            prompt('Copy this link to share:', shareUrl);
+                          });
                         } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied!')).catch(() => {});
+                          navigator.clipboard.writeText(shareUrl)
+                            .then(() => alert('Link copied!'))
+                            .catch(() => {
+                              // Fallback to prompt if clipboard fails
+                              prompt('Copy this link to share:', shareUrl);
+                            });
+                        } else {
+                          // Final fallback - show prompt dialog to copy manually
+                          prompt('Copy this link to share:', shareUrl);
                         }
                       }}
                       onTouchStart={(e) => {
@@ -5913,13 +6029,28 @@ export default function Home() {
                         const articleId = story.id;
                         if (!articleId) return;
                         
-                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        // Use current domain for share URL (works on localhost and production)
+                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://todayplus.news';
+                        const shareUrl = `${baseUrl}/?article=${articleId}`;
                         const shareTitle = story.title_news || story.title || 'News on Today+';
                         
+                        // Try native share first (requires HTTPS)
                         if (navigator.share) {
-                          navigator.share({ title: shareTitle, url: shareUrl }).catch(() => {});
+                          navigator.share({ title: shareTitle, url: shareUrl }).catch((err) => {
+                            console.log('Share failed:', err);
+                            // Fallback to prompt
+                            prompt('Copy this link to share:', shareUrl);
+                          });
                         } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied!')).catch(() => {});
+                          navigator.clipboard.writeText(shareUrl)
+                            .then(() => alert('Link copied!'))
+                            .catch(() => {
+                              // Fallback to prompt if clipboard fails
+                              prompt('Copy this link to share:', shareUrl);
+                            });
+                        } else {
+                          // Final fallback - show prompt dialog to copy manually
+                          prompt('Copy this link to share:', shareUrl);
                         }
                       }}
                       className="share-button"
