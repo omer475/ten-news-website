@@ -3172,6 +3172,15 @@ export default function Home() {
           -webkit-font-smoothing: antialiased;
         }
 
+        /* Share button - MUST be interactive on mobile */
+        .share-button {
+          touch-action: auto !important;
+          pointer-events: auto !important;
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
+        }
+
         /* Apple HIG - Base Styles - TikTok-style fixed viewport */
         html {
           background: ${darkMode ? '#000000' : '#f5f5f7'};
@@ -5847,6 +5856,7 @@ export default function Home() {
                     
                     {/* Share Button - Fixed position outside image container */}
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -5869,21 +5879,46 @@ export default function Home() {
                           }).catch(() => {});
                         }
                       }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const articleId = story.id;
+                        if (!articleId) return;
+                        
+                        const shareUrl = `https://todayplus.news/?article=${articleId}`;
+                        const shareTitle = story.title_news || story.title || 'News on Today+';
+                        
+                        // Use native share on mobile
+                        if (navigator.share) {
+                          navigator.share({
+                            title: shareTitle,
+                            url: shareUrl
+                          }).catch(() => {});
+                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            alert('Link copied!');
+                          }).catch(() => {});
+                        }
+                      }}
                       className="share-button"
                       style={{
                         position: 'fixed',
                         top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
                         right: '16px',
-                        width: '34px',
-                        height: '34px',
+                        width: '44px',
+                        height: '44px',
+                        minWidth: '44px',
+                        minHeight: '44px',
                         borderRadius: '12px',
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        zIndex: 10000,
+                        zIndex: 99999,
                         pointerEvents: 'auto',
+                        touchAction: 'auto',
                         backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
                         backdropFilter: 'blur(4px) saturate(150%)',
                         WebkitBackdropFilter: 'blur(4px) saturate(150%)',
@@ -5899,11 +5934,13 @@ export default function Home() {
                           0px 0.5px 2.5px 0px rgba(0, 0, 0, 0.1),
                           0px 3px 8px 0px rgba(0, 0, 0, 0.08)
                         `,
-                        transition: 'all 0.2s ease',
-                        WebkitTapHighlightColor: 'transparent',
-                        touchAction: 'manipulation',
+                        transition: 'none',
+                        WebkitTapHighlightColor: 'rgba(255,255,255,0.2)',
                         userSelect: 'none',
-                        WebkitUserSelect: 'none'
+                        WebkitUserSelect: 'none',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        outline: 'none'
                       }}
                     >
                       <svg 
@@ -5915,6 +5952,7 @@ export default function Home() {
                         strokeWidth="2.5" 
                         strokeLinecap="round" 
                         strokeLinejoin="round"
+                        style={{ pointerEvents: 'none' }}
                       >
                         <path d="M21 12L14 5V9C7 10 4 15 3 20C5.5 16.5 9 14.5 14 14.5V19L21 12Z"/>
                       </svg>
