@@ -5987,6 +5987,46 @@ export default function Home() {
                         e.preventDefault();
                         e.stopPropagation();
                         
+                        // Prevent double-firing on touch devices
+                        if (e.currentTarget.dataset.justTouched === 'true') {
+                          e.currentTarget.dataset.justTouched = 'false';
+                          return;
+                        }
+                        
+                        const articleId = story.id;
+                        if (!articleId) return;
+                        
+                        // Use current domain for share URL (works on localhost and production)
+                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://todayplus.news';
+                        const shareUrl = `${baseUrl}/?article=${articleId}`;
+                        const shareTitle = story.title_news || story.title || 'News on Today+';
+                        
+                        // Try native share first (requires HTTPS)
+                        if (navigator.share) {
+                          navigator.share({ title: shareTitle, url: shareUrl }).catch((err) => {
+                            // Don't show fallback if user just cancelled the share
+                            if (err.name === 'AbortError') return;
+                            console.log('Share failed:', err);
+                          });
+                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(shareUrl)
+                            .then(() => alert('Link copied!'))
+                            .catch(() => {
+                              // Fallback to prompt if clipboard fails (non-HTTPS)
+                              prompt('Copy this link to share:', shareUrl);
+                            });
+                        } else {
+                          // Final fallback - show prompt dialog to copy manually
+                          prompt('Copy this link to share:', shareUrl);
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Mark that we handled this via touch (to prevent onClick from also firing)
+                        e.currentTarget.dataset.justTouched = 'true';
+                        
                         const articleId = story.id;
                         if (!articleId) return;
                         
