@@ -1320,35 +1320,56 @@ export default function Home() {
             const articleData = await response.json();
             if (articleData && articleData.id) {
               console.log('✅ Fetched shared article:', articleData.title?.substring(0, 50));
-              // Process the article the same way as other articles
+              
+              // Parse five_ws if it's a string
+              let fiveWs = articleData.five_ws || null;
+              if (typeof fiveWs === 'string') {
+                try { fiveWs = JSON.parse(fiveWs); } catch (e) { fiveWs = null; }
+              }
+              
+              // Process the article the SAME way as regular articles
               const processedArticle = {
                 id: articleData.id,
                 type: 'news',
-                number: 1, // Will be shown first
+                number: articleData.rank || 1,
                 category: (articleData.category || 'WORLD NEWS').toUpperCase(),
                 emoji: articleData.emoji || '📰',
-                title: articleData.title_news || articleData.title || 'News Story',
-                title_news: articleData.title_news,
-                summary: articleData.summary_text || articleData.summary || '',
-                summary_b2: articleData.summary_text_b2 || articleData.summary || '',
-                summary_bullets: articleData.summary_bullets || [],
+                title: articleData.title || 'News Story',
+                
+                // Dual-language content fields (from Step 5 generation)
+                title_news: articleData.title_news || null,
+                content_news: articleData.content_news || null,
+                summary_bullets_news: articleData.summary_bullets_news || articleData.summary_bullets || null,
+                five_ws: fiveWs,
+                
+                // Legacy fields for backward compatibility
+                detailed_text: articleData.detailed_text || articleData.content_news || null,
+                summary_bullets: articleData.summary_bullets || articleData.summary_bullets_news || [],
                 summary_bullets_b2: articleData.summary_bullets_b2 || articleData.summary_bullets || [],
+                
                 details: articleData.details || [],
                 details_b2: articleData.details_b2 || articleData.details || [],
+                detailed_bullets: articleData.detailed_bullets || [],
+                detailed_bullets_b2: articleData.detailed_bullets_b2 || articleData.detailed_bullets || [],
+                
                 source: articleData.source || 'Today+',
                 url: articleData.url || '#',
-                urlToImage: articleData.image_url || articleData.urlToImage,
-                publishedAt: articleData.created_at || articleData.publishedAt,
+                urlToImage: (articleData.urlToImage || articleData.image_url || '').trim() || null,
+                blurColor: articleData.blurColor || null,
+                
+                map: articleData.map || articleData.map_data || null,
+                graph: articleData.graph || articleData.graph_data || null,
                 timeline: articleData.timeline || [],
-                graph: articleData.graph_data || articleData.graph,
-                map: articleData.map_data || articleData.map,
-                five_ws: articleData.five_ws || null,
-                detailed_text: articleData.detailed_text,
-                detailed_bullets: articleData.detailed_bullets || [],
-                detailed_bullets_b2: articleData.detailed_bullets_b2 || [],
-                final_score: articleData.ai_final_score || articleData.final_score || 500,
+                
+                // CRITICAL: Include components array
+                components: articleData.components || ['details'],
+                
+                publishedAt: articleData.publishedAt || articleData.published_at || articleData.created_at,
+                final_score: articleData.final_score || articleData.ai_final_score || 500,
                 isSharedArticle: true // Mark as shared article for priority handling
               };
+              
+              console.log('✅ Processed shared article with bullets:', processedArticle.summary_bullets?.length || 0);
               setSharedArticleData(processedArticle);
             }
           } else {

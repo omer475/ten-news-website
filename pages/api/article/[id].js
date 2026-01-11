@@ -102,6 +102,14 @@ function formatArticle(article) {
     return field;
   };
 
+  // Parse all bullet/content fields with fallbacks
+  const summaryBullets = parseJSON(article.summary_bullets) || parseJSON(article.summary_bullets_news) || [];
+  const summaryBulletsB2 = parseJSON(article.summary_bullets_b2) || summaryBullets;
+  const detailedBullets = parseJSON(article.detailed_bullets) || [];
+  const detailedBulletsB2 = parseJSON(article.detailed_bullets_b2) || detailedBullets;
+  const details = parseJSON(article.details) || [];
+  const detailsB2 = parseJSON(article.details_b2) || details;
+  
   return {
     id: article.id,
     title: article.title,
@@ -109,13 +117,16 @@ function formatArticle(article) {
     summary: article.summary || article.summary_text,
     summary_text: article.summary_text,
     summary_text_b2: article.summary_text_b2,
-    summary_bullets: parseJSON(article.summary_bullets) || [],
-    summary_bullets_b2: parseJSON(article.summary_bullets_b2) || [],
-    details: parseJSON(article.details) || [],
-    details_b2: parseJSON(article.details_b2) || [],
-    detailed_text: article.detailed_text || article.article || article.ai_detailed_text,
-    detailed_bullets: parseJSON(article.detailed_bullets) || [],
-    detailed_bullets_b2: parseJSON(article.detailed_bullets_b2) || [],
+    // Include all bullet point fields with proper fallbacks
+    summary_bullets: summaryBullets,
+    summary_bullets_news: parseJSON(article.summary_bullets_news) || summaryBullets,
+    summary_bullets_b2: summaryBulletsB2,
+    details: details,
+    details_b2: detailsB2,
+    detailed_text: article.detailed_text || article.content_news || article.article || article.ai_detailed_text,
+    content_news: article.content_news,
+    detailed_bullets: detailedBullets,
+    detailed_bullets_b2: detailedBulletsB2,
     url: article.url,
     urlToImage: article.image_url || article.urlToImage,
     image_url: article.image_url,
@@ -128,11 +139,12 @@ function formatArticle(article) {
     map: parseJSON(article.map) || parseJSON(article.map_data),
     map_data: parseJSON(article.map_data),
     five_ws: parseJSON(article.five_ws),
-    components: parseJSON(article.components),
+    components: parseJSON(article.components) || ['details'],
     citations: parseJSON(article.citations) || [],
     publishedAt: article.published_at || article.created_at,
     created_at: article.created_at,
     ai_final_score: article.ai_final_score,
-    final_score: article.ai_final_score || article.final_score
+    final_score: article.ai_final_score || article.final_score,
+    rank: article.rank || 1
   };
 }
