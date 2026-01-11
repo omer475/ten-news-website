@@ -1619,7 +1619,7 @@ export default function Home() {
         }
       };
       
-      console.log('🐛 Debug helpers updated with access to current stories');
+      // Debug helpers updated with access to current stories
     }
   }, [stories]);
 
@@ -3092,22 +3092,15 @@ export default function Home() {
     };
   }, [user, currentIndex, paywallThreshold]);
 
-  console.log('🏠 Current state - loading:', loading, 'stories:', stories.length);
-  
-  // Temporary debug - force loading to false if stories exist
+  // Force loading to false if stories exist (prevents stuck loading state)
   if (stories.length > 0 && loading) {
-    console.log('🔧 Debug: Forcing loading to false');
     setLoading(false);
   }
-  
-  // Temporary debug - show current state
-  console.log('🔧 Debug: Current state - loading:', loading, 'stories:', stories.length);
   
   // Emergency fallback - if loading takes too long, show something
   useEffect(() => {
     const timer = setTimeout(() => {
       if (loading && stories.length === 0) {
-        console.log('🔧 Emergency: Setting loading to false after timeout');
         setLoading(false);
       }
     }, 2000); // 2 second timeout
@@ -3115,21 +3108,12 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [loading, stories.length]);
   
-  // Force loading to false if we have stories but still loading
+  // Force loading to false if we have stories
   useEffect(() => {
     if (stories.length > 0 && loading) {
-      console.log('🔧 Force: Setting loading to false because stories exist');
       setLoading(false);
     }
   }, [stories.length, loading]);
-  
-  // Additional safety check - force render if we have data
-  useEffect(() => {
-    if (stories.length > 0) {
-      console.log('🔧 Safety: Stories exist, ensuring loading is false');
-      setLoading(false);
-    }
-  }, [stories.length]);
 
   // Auto-rotation for information boxes
   useEffect(() => {

@@ -14,7 +14,14 @@ export default function AuthCallback() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const supabase = createClient()
+    if (!supabase) {
+      setError('Authentication not configured');
+      return;
+    }
     
     // Check if this is a password reset (recovery) flow
     // Supabase can put type in query params OR in the hash fragment

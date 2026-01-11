@@ -12,7 +12,14 @@ export default function ResetPassword() {
   const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const supabase = createClient()
+    if (!supabase) {
+      setError('Authentication not configured');
+      return;
+    }
     
     // Check for session from hash tokens
     const setupSession = async () => {
