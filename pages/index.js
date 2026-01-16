@@ -8700,5 +8700,3 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
     </div>
   );
 }
-
-}
