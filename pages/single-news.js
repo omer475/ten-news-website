@@ -21,6 +21,14 @@ export default function SingleNewsPage() {
   const [shareModal, setShareModal] = useState(false);
   const [relatedArticles, setRelatedArticles] = useState([]);
 
+  // Simple session id for analytics (per tab load)
+  const [sessionId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    return `sess_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  });
+  const [activeSeconds, setActiveSeconds] = useState(0);
+  const [maxScroll, setMaxScroll] = useState(0);
+
   useEffect(() => {
     const loadArticle = async () => {
       try {
@@ -71,11 +79,72 @@ export default function SingleNewsPage() {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercent = (scrollTop / docHeight) * 100;
       setReadingProgress(scrollPercent);
+      setMaxScroll((prev) => Math.max(prev, scrollPercent));
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Track view + engaged time + exit
+  useEffect(() => {
+    if (!article?.id) return;
+
+    let tick = null;
+    setActiveSeconds(0);
+    setMaxScroll(0);
+
+    const send = async (payload) => {
+      try {
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        });
+      } catch (e) {
+        // best-effort
+      }
+    };
+
+    // View event
+    send({
+      event_type: 'article_view',
+      session_id: sessionId,
+      article_id: article.id,
+      cluster_id: article.cluster_id || null,
+      category: article.category || null,
+      source: article.source || null,
+      referrer: (typeof document !== 'undefined') ? document.referrer : null,
+      page: 'single-news',
+      metadata: { path: window?.location?.pathname || null }
+    });
+
+    // Engaged time ticker (only while tab visible)
+    tick = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      setActiveSeconds((s) => s + 1);
+    }, 1000);
+
+    return () => {
+      if (tick) clearInterval(tick);
+      // Exit event
+      send({
+        event_type: 'article_exit',
+        session_id: sessionId,
+        article_id: article.id,
+        cluster_id: article.cluster_id || null,
+        category: article.category || null,
+        source: article.source || null,
+        page: 'single-news',
+        metadata: {
+          active_seconds: activeSeconds,
+          max_scroll_percent: maxScroll
+        }
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article?.id]);
 
   const handleBack = () => {
     router.push('/');
@@ -83,24 +152,100 @@ export default function SingleNewsPage() {
 
   const handleReadMore = () => {
     if (article?.url && article.url !== '#') {
+      // Track outbound click
+      fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'source_click',
+          session_id: sessionId,
+          article_id: article?.id || null,
+          cluster_id: article?.cluster_id || null,
+          category: article?.category || null,
+          source: article?.source || null,
+          page: 'single-news',
+          metadata: { url: article.url }
+        }),
+        keepalive: true
+      }).catch(() => {});
       window.open(article.url, '_blank');
     }
   };
 
   const toggleTimeline = () => {
     setShowTimeline(!showTimeline);
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: 'component_click',
+        session_id: sessionId,
+        article_id: article?.id || null,
+        cluster_id: article?.cluster_id || null,
+        category: article?.category || null,
+        source: article?.source || null,
+        page: 'single-news',
+        metadata: { component: 'timeline', open: !showTimeline }
+      }),
+      keepalive: true
+    }).catch(() => {});
   };
 
   const toggleDetails = () => {
     setShowDetails(!showDetails);
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: 'component_click',
+        session_id: sessionId,
+        article_id: article?.id || null,
+        cluster_id: article?.cluster_id || null,
+        category: article?.category || null,
+        source: article?.source || null,
+        page: 'single-news',
+        metadata: { component: 'details', open: !showDetails }
+      }),
+      keepalive: true
+    }).catch(() => {});
   };
 
   const toggleGraph = () => {
     setShowGraph(!showGraph);
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: 'component_click',
+        session_id: sessionId,
+        article_id: article?.id || null,
+        cluster_id: article?.cluster_id || null,
+        category: article?.category || null,
+        source: article?.source || null,
+        page: 'single-news',
+        metadata: { component: 'graph', open: !showGraph }
+      }),
+      keepalive: true
+    }).catch(() => {});
   };
 
   const toggleMap = () => {
     setShowMap(!showMap);
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: 'component_click',
+        session_id: sessionId,
+        article_id: article?.id || null,
+        cluster_id: article?.cluster_id || null,
+        category: article?.category || null,
+        source: article?.source || null,
+        page: 'single-news',
+        metadata: { component: 'map', open: !showMap }
+      }),
+      keepalive: true
+    }).catch(() => {});
     if (!showMap && article?.map) {
       // Initialize map when showing
       setTimeout(() => {
