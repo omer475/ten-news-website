@@ -4,6 +4,8 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  console.log('[analytics] Supabase URL:', url?.substring(0, 30) + '...')
+  console.log('[analytics] Service key present:', !!serviceKey, 'length:', serviceKey?.length || 0)
   if (!url || !serviceKey) return null
   return createAdminClient(url, serviceKey, { auth: { persistSession: false } })
 }
