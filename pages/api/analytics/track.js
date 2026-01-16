@@ -36,15 +36,21 @@ export default async function handler(req, res) {
         ? authHeader.slice(7).trim()
         : null
 
+      console.log('[analytics] Bearer token present:', !!token, 'length:', token?.length || 0)
+
       if (token) {
         try {
           const { data, error } = await admin.auth.getUser(token)
+          console.log('[analytics] admin.auth.getUser result:', { hasUser: !!data?.user, error: error?.message || null })
           if (!error && data?.user) user = data.user
-        } catch (_) {}
+        } catch (e) {
+          console.log('[analytics] admin.auth.getUser exception:', e?.message)
+        }
       }
     }
 
     if (!user) {
+      console.log('[analytics] No user found, returning 401')
       return res.status(401).json({ error: 'Not authenticated' })
     }
 
