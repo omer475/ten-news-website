@@ -454,6 +454,11 @@ export default function Home() {
     const nextIndex = (currentIndex + 1) % availableTypes.length;
     const nextType = availableTypes[nextIndex];
 
+    // Track component switch
+    if (story?.type === 'news') {
+      trackEvent('component_click', { component: nextType, action: 'switch', from: currentType }, story);
+    }
+
     // Reset all states
     setShowTimeline(prev => ({ ...prev, [index]: false }));
     setShowDetails(prev => ({ ...prev, [index]: false }));
@@ -1189,6 +1194,59 @@ export default function Home() {
     if (typeof window === 'undefined') return null;
     return createClient();
   });
+
+  // Analytics session ID (per page load)
+  const [analyticsSessionId] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    return `sess_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  });
+
+  // Analytics tracking helper with auto-refresh
+  const trackEvent = async (eventType, metadata = {}, article = null) => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const raw = localStorage.getItem('tennews_session');
+      if (!raw) return; // Not logged in
+      
+      const session = JSON.parse(raw);
+      let token = session?.access_token;
+      if (!token) return;
+
+      // Check if token needs refresh (expires within 5 minutes)
+      const expiresAt = session.expires_at;
+      const now = Math.floor(Date.now() / 1000);
+      if (expiresAt && now >= expiresAt - 300 && session.refresh_token && supabase) {
+        const { data } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
+        if (data?.session) {
+          localStorage.setItem('tennews_session', JSON.stringify(data.session));
+          localStorage.setItem('tennews_user', JSON.stringify(data.session.user));
+          token = data.session.access_token;
+        }
+      }
+
+      await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          event_type: eventType,
+          session_id: analyticsSessionId,
+          article_id: article?.id || null,
+          cluster_id: article?.cluster_id || null,
+          category: article?.category || null,
+          source: article?.source || null,
+          page: 'index',
+          metadata
+        }),
+        keepalive: true
+      });
+    } catch (e) {
+      // best-effort, don't break the app
+    }
+  };
 
   // Listen for password recovery event
   useEffect(() => {
@@ -2407,6 +2465,8 @@ export default function Home() {
       const story = stories[index];
       if (story && story.type === 'news' && story.id && user) {
         markArticleAsRead(story.id);
+        // Track article view
+        trackEvent('article_view', { source: 'swipe' }, story);
       }
     }
   };
@@ -2416,10 +2476,16 @@ export default function Home() {
 
   // Timeline toggle function
   const toggleTimeline = (storyIndex) => {
+    const isOpening = !showTimeline[storyIndex];
     setShowTimeline(prev => ({
       ...prev,
       [storyIndex]: !prev[storyIndex]
     }));
+    // Track component interaction
+    const story = stories[storyIndex];
+    if (story?.type === 'news') {
+      trackEvent('component_click', { component: 'timeline', action: isOpening ? 'open' : 'close' }, story);
+    }
   };
 
   // Summary display mode toggle function - per story
@@ -6279,11 +6345,13 @@ export default function Home() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
+                                trackEvent('source_click', { url: story.url }, story);
                                 window.open(story.url, '_blank', 'noopener,noreferrer');
                               }}
                               onTouchEnd={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
+                                trackEvent('source_click', { url: story.url }, story);
                                 window.open(story.url, '_blank', 'noopener,noreferrer');
                               }}
                               style={{
