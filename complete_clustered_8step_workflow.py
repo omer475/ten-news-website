@@ -38,6 +38,7 @@ from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import ClaudeComponentWriter
 from step8_fact_verification import FactVerifier
+from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -48,17 +49,209 @@ warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 load_dotenv()
 
 # ============================================================================
+# CLUSTER STATUS TRACKING HELPERS
+# ============================================================================
+
+def get_supabase_client():
+    """Get Supabase client for status updates"""
+    url = os.getenv('NEXT_PUBLIC_SUPABASE_URL') or os.getenv('SUPABASE_URL')
+    key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+    return create_client(url, key)
+
+def update_cluster_status(cluster_id: int, status: str, failure_reason: str = None, 
+                          failure_details: str = None, increment_attempt: bool = True):
+    """
+    Update cluster publish_status and tracking fields.
+    
+    Args:
+        cluster_id: The cluster ID
+        status: 'pending', 'processing', 'published', 'failed', 'skipped'
+        failure_reason: 'no_content', 'no_image', 'synthesis_failed', 
+                       'verification_failed', 'duplicate', 'api_error'
+        failure_details: Detailed error message
+        increment_attempt: Whether to increment attempt_count
+    """
+    try:
+        supabase = get_supabase_client()
+        now = datetime.now().isoformat()
+        
+        # Build update data
+        update_data = {
+            'publish_status': status,
+            'last_attempt_at': now
+        }
+        
+        if failure_reason:
+            update_data['failure_reason'] = failure_reason
+        if failure_details:
+            update_data['failure_details'] = failure_details[:500]  # Limit length
+        
+        # Get current cluster data for history tracking
+        current = supabase.table('clusters').select('attempt_count, first_attempt_at, attempt_history').eq('id', cluster_id).execute()
+        
+        if current.data:
+            cluster_data = current.data[0]
+            current_attempt = cluster_data.get('attempt_count') or 0
+            
+            # Set first_attempt_at if this is the first attempt
+            if not cluster_data.get('first_attempt_at'):
+                update_data['first_attempt_at'] = now
+            
+            # Increment attempt count
+            if increment_attempt:
+                update_data['attempt_count'] = current_attempt + 1
+            
+            # Track if this is a recovery (previously failed, now published)
+            if status == 'published' and current_attempt > 0:
+                update_data['recovered'] = True
+                update_data['attempts_before_success'] = current_attempt + 1
+            
+            # Add to attempt history
+            history = cluster_data.get('attempt_history') or []
+            history_entry = {
+                'attempt': current_attempt + 1,
+                'at': now,
+                'status': status,
+                'reason': failure_reason
+            }
+            history.append(history_entry)
+            update_data['attempt_history'] = history
+        
+        # Update the cluster
+        supabase.table('clusters').update(update_data).eq('id', cluster_id).execute()
+        
+    except Exception as e:
+        print(f"   ⚠️ Could not update cluster status: {e}")
+
+def update_source_article_status(source_id: int, content_fetched: bool = None, 
+                                  fetch_failure_reason: str = None,
+                                  has_image: bool = None, image_quality_score: float = None):
+    """
+    Update source article tracking fields.
+    
+    Args:
+        source_id: The source article ID
+        content_fetched: Whether Bright Data successfully fetched content
+        fetch_failure_reason: 'blocked', 'timeout', 'paywall', 'not_found', 'parse_error'
+        has_image: Whether the source has a usable image
+        image_quality_score: Image quality score from selection
+    """
+    try:
+        supabase = get_supabase_client()
+        
+        update_data = {}
+        if content_fetched is not None:
+            update_data['content_fetched'] = content_fetched
+        if fetch_failure_reason:
+            update_data['fetch_failure_reason'] = fetch_failure_reason
+        if has_image is not None:
+            update_data['has_image'] = has_image
+        if image_quality_score is not None:
+            update_data['image_quality_score'] = image_quality_score
+        
+        if update_data:
+            supabase.table('source_articles').update(update_data).eq('id', source_id).execute()
+            
+    except Exception as e:
+        print(f"   ⚠️ Could not update source article status: {e}")
+
+def update_source_reliability(source_domain: str, success: bool, failure_reason: str = None):
+    """
+    Track source domain reliability for analytics.
+    
+    Args:
+        source_domain: The domain (e.g., 'bbc.com', 'reuters.com')
+        success: Whether the fetch was successful
+        failure_reason: Why it failed (if applicable)
+    """
+    try:
+        supabase = get_supabase_client()
+        now = datetime.now().isoformat()
+        
+        # Check if domain exists
+        existing = supabase.table('source_reliability').select('*').eq('source_domain', source_domain).execute()
+        
+        if existing.data:
+            # Update existing record
+            record = existing.data[0]
+            update_data = {
+                'total_attempts': (record.get('total_attempts') or 0) + 1,
+                'last_attempt_at': now
+            }
+            if success:
+                update_data['successful_fetches'] = (record.get('successful_fetches') or 0) + 1
+                update_data['last_success_at'] = now
+            else:
+                update_data['failed_fetches'] = (record.get('failed_fetches') or 0) + 1
+                if failure_reason:
+                    update_data['common_failure_reason'] = failure_reason
+            
+            supabase.table('source_reliability').update(update_data).eq('id', record['id']).execute()
+        else:
+            # Create new record
+            insert_data = {
+                'source_domain': source_domain,
+                'total_attempts': 1,
+                'successful_fetches': 1 if success else 0,
+                'failed_fetches': 0 if success else 1,
+                'first_seen_at': now,
+                'last_attempt_at': now,
+                'common_failure_reason': failure_reason if not success else None
+            }
+            if success:
+                insert_data['last_success_at'] = now
+            
+            supabase.table('source_reliability').insert(insert_data).execute()
+            
+    except Exception as e:
+        # Don't fail the pipeline for analytics errors
+        pass
+
+def extract_domain(url: str) -> str:
+    """Extract domain from URL for reliability tracking"""
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        domain = parsed.netloc.lower()
+        # Remove www. prefix
+        if domain.startswith('www.'):
+            domain = domain[4:]
+        return domain
+    except:
+        return 'unknown'
+
+# ============================================================================
 # IMPROVED IMAGE EXTRACTION (Step 0)
 # ============================================================================
 # Regex to extract src from <img> tags in HTML content
 IMG_TAG_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 
-def extract_image_url(entry) -> Optional[str]:
+# Sources that need special image handling
+# Guardian: Select highest width from RSS media:content
+# BBC/DW: Need Bright Data scraping for og:image (handled in Step 2)
+SOURCES_NEEDING_OG_IMAGE_SCRAPE = [
+    'feeds.bbci.co.uk',
+    'bbc.co.uk',
+    'bbc.com',
+    'rss.dw.com',
+    'dw.com',
+    'venturebeat.com',
+    'venturebeat',
+    'cbc.ca',           # CBC Canada - needs og:image scraping
+    'lemonde.fr',       # Le Monde - needs og:image scraping
+    'straitstimes.com', # The Straits Times - needs og:image scraping
+]
+
+def extract_image_url(entry, source_url: str = None) -> Optional[str]:
     """
     Extract the best image URL from an RSS feed entry.
     
+    Special handling:
+    - Guardian: Select width=700 from media:content (highest quality available)
+    - BBC/DW: Returns low-quality RSS image; will be replaced with og:image in Step 2
+    
     Priority order:
-    1. media:content - choose largest image by area (width * height)
+    1. media:content - choose largest image by WIDTH (for Guardian) or AREA
     2. media:thumbnail - first URL
     3. enclosures - only image/* types
     4. links - image/* types or rel="enclosure"
@@ -66,16 +259,23 @@ def extract_image_url(entry) -> Optional[str]:
     
     Args:
         entry: A feedparser entry object
+        source_url: The RSS feed URL (to detect source type)
         
     Returns:
         Image URL string or None if no image found
     """
     
-    # 1) media:content – choose the "best" candidate (largest image)
+    # Check if this is Guardian - they provide multiple sizes, select width=700
+    is_guardian = source_url and 'theguardian.com' in source_url
+    
+    # 1) media:content – choose the "best" candidate
+    # For Guardian: prioritize by width (select 700px version)
+    # For others: prioritize by area (width * height)
     media_content = getattr(entry, 'media_content', None)
     if media_content:
         best = None
-        best_area = 0
+        best_score = 0
+        
         for m in media_content:
             url = m.get('url')
             if not url:
@@ -91,11 +291,17 @@ def extract_image_url(entry) -> Optional[str]:
                 h = int(m.get('height') or 0)
             except (ValueError, TypeError):
                 w, h = 0, 0
-            area = w * h
+            
+            # For Guardian: score by width (prefer 700px)
+            # For others: score by area
+            if is_guardian:
+                score = w  # Just use width as score
+            else:
+                score = w * h
 
-            # Prefer larger images, or take first valid one if no dimensions
-            if area > best_area or (best is None and area == 0):
-                best_area = area
+            # Prefer higher scoring images, or take first valid one if no dimensions
+            if score > best_score or (best is None and score == 0):
+                best_score = score
                 best = url
 
         if best:
@@ -160,6 +366,13 @@ def extract_image_url(entry) -> Optional[str]:
 
     # 6) Nothing found
     return None
+
+
+def needs_og_image_scrape(source_url: str) -> bool:
+    """Check if this source needs og:image scraping from article page."""
+    if not source_url:
+        return False
+    return any(domain in source_url.lower() for domain in SOURCES_NEEDING_OG_IMAGE_SCRAPE)
 
 # Initialize clients
 def get_supabase_client():
@@ -237,7 +450,11 @@ def fetch_rss_articles(max_articles_per_source=10):
                     published_date = None
                 
                 # Extract image URL from RSS entry using improved extraction
-                image_url = extract_image_url(entry)
+                # Pass source URL for source-specific handling (e.g., Guardian width selection)
+                image_url = extract_image_url(entry, source_url=url)
+                
+                # Check if this source needs og:image scraping (BBC, DW)
+                needs_scrape = needs_og_image_scrape(url)
                 
                 source_articles.append({
                     'url': article_url,
@@ -245,7 +462,9 @@ def fetch_rss_articles(max_articles_per_source=10):
                     'description': entry.get('description', ''),
                     'source': source_name,
                     'published_date': published_date,
-                    'image_url': image_url
+                    'image_url': image_url,
+                    'needs_og_scrape': needs_scrape,  # Flag for BBC/DW og:image extraction
+                    'source_feed_url': url  # Original RSS feed URL
                 })
             
             return (source_name, source_articles)
@@ -406,6 +625,9 @@ def run_complete_pipeline():
             print(f"📰 PROCESSING CLUSTER {cluster_id}")
             print(f"{'='*80}")
             
+            # Mark cluster as processing
+            update_cluster_status(cluster_id, 'processing', increment_attempt=False)
+            
             # Get cluster metadata
             cluster_result = supabase.table('clusters')\
                 .select('*')\
@@ -430,10 +652,54 @@ def run_complete_pipeline():
             urls = [s['url'] for s in cluster_sources]
             full_articles = fetch_articles_parallel(urls, max_workers=5)
             
-            # Add full text back to sources
+            # Build URL mappings for text and og:image
             url_to_text = {a['url']: a.get('text', '') for a in full_articles if a.get('text')}
+            url_to_og_image = {a['url']: a.get('og_image') for a in full_articles if a.get('og_image')}
+            
+            # Add full text and fetch/upgrade images for ALL sources without images
             for source in cluster_sources:
                 source['full_text'] = url_to_text.get(source['url'], source.get('content', ''))
+                
+                # Check if source has no image or needs upgrade (fetch og:image from Bright Data)
+                current_image = source.get('image_url')
+                has_no_image = not current_image or not current_image.strip()
+                
+                # Sources that need og:image upgrade (low-quality RSS images)
+                source_url = source.get('url', '').lower()
+                source_name = source.get('source_name', source.get('source', '')).lower()
+                needs_upgrade = any(domain in source_url or domain in source_name 
+                                   for domain in ['bbc.co.uk', 'bbc.com', 'dw.com', 'deutsche welle', 'cbc.ca', 'lemonde.fr', 'venturebeat.com', 'venturebeat'])
+                
+                # Use og:image from scraped page if source has no image OR needs upgrade
+                if (has_no_image or needs_upgrade) and source['url'] in url_to_og_image:
+                    og_image = url_to_og_image[source['url']]
+                    if og_image:
+                        source['image_url'] = og_image
+                        if has_no_image:
+                            print(f"   📸 Fetched image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
+                        else:
+                            print(f"   📸 Upgraded image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
+            
+            # Track source article status for analytics
+            for source in cluster_sources:
+                source_id = source.get('id')
+                if source_id:
+                    content_ok = source.get('full_text') and len(source.get('full_text', '')) > 100
+                    image_ok = bool(source.get('image_url'))
+                    
+                    # Update source article tracking
+                    update_source_article_status(
+                        source_id,
+                        content_fetched=content_ok,
+                        fetch_failure_reason='blocked' if not content_ok else None,
+                        has_image=image_ok
+                    )
+                    
+                    # Track domain reliability
+                    domain = extract_domain(source.get('url', ''))
+                    if domain:
+                        update_source_reliability(domain, success=content_ok, 
+                            failure_reason='blocked' if not content_ok else None)
             
             success_count = len([s for s in cluster_sources if s.get('full_text') and len(s.get('full_text', '')) > 100])
             print(f"   ✅ Fetched full text: {success_count}/{len(cluster_sources)}")
@@ -444,6 +710,8 @@ def run_complete_pipeline():
                 print(f"   ❌ ELIMINATED: No article content fetched (blocked by site)")
                 print(f"      Reason: Cannot write accurate article without source content")
                 print(f"      Skipping cluster {cluster_id}")
+                update_cluster_status(cluster_id, 'failed', 'no_content', 
+                    f'All {len(cluster_sources)} sources blocked or failed to fetch')
                 continue
             
             # STEP 3: Smart Image Selection
@@ -460,7 +728,13 @@ def run_complete_pipeline():
             if selected_image:
                 print(f"   ✅ Selected: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
             else:
-                print(f"   ⚠️  No suitable image found")
+                # CRITICAL: No image found even after Bright Data fetch - eliminate this cluster
+                print(f"   ❌ ELIMINATED: No image found for this article")
+                print(f"      Reason: Bright Data could not fetch an image from the article page")
+                print(f"      Skipping cluster {cluster_id}")
+                update_cluster_status(cluster_id, 'failed', 'no_image',
+                    f'No usable image found in {len(cluster_sources)} sources')
+                continue
             
             print(f"\n✍️  STEP 4: MULTI-SOURCE SYNTHESIS")
             print(f"   Synthesizing article from {len(cluster_sources)} sources...")
@@ -469,17 +743,14 @@ def run_complete_pipeline():
             
             if not synthesized:
                 print(f"   ❌ Synthesis failed - skipping cluster")
+                update_cluster_status(cluster_id, 'failed', 'synthesis_failed',
+                    'Claude API failed to synthesize article from sources')
                 continue
             
-            # Add image data to synthesized article
-            if selected_image:
-                synthesized['image_url'] = selected_image['url']
-                synthesized['image_source'] = selected_image['source_name']
-                synthesized['image_score'] = selected_image['quality_score']
-            else:
-                synthesized['image_url'] = None
-                synthesized['image_source'] = None
-                synthesized['image_score'] = 0
+            # Add image data to synthesized article (always has image at this point - eliminated if no image)
+            synthesized['image_url'] = selected_image['url']
+            synthesized['image_source'] = selected_image['source_name']
+            synthesized['image_score'] = selected_image['quality_score']
             
             print(f"   ✅ Synthesized: {synthesized['title_news'][:60]}...")
             
@@ -550,7 +821,7 @@ def run_complete_pipeline():
                     context_data[component] = gemini_result
             
             # ==========================================
-            # STEP 7: CLAUDE COMPONENT GENERATION
+            # STEP 7: CLAUDE COMPONENT GENERATION (with retry)
             # ==========================================
             print(f"\n📊 STEP 7: CLAUDE COMPONENT GENERATION")
             print(f"   Generating content for: {', '.join(selected) if selected else 'none'}")
@@ -560,32 +831,64 @@ def run_complete_pipeline():
             map_locations = component_result.get('map_locations', []) if isinstance(component_result, dict) else []
             
             if selected and context_data:
-                try:
-                    article_for_components = {
-                        'title_news': synthesized['title_news'],
-                        'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])),
-                        'selected_components': selected,
-                        'context_data': context_data,
-                        'map_locations': map_locations  # Pass map locations to component generation
-                    }
-                    generation_result = component_writer.write_components(article_for_components)
-                    if generation_result:
-                        # Extract individual components from result
-                        components = {
-                            'timeline': generation_result.get('timeline'),
-                            'details': generation_result.get('details'),
-                            'graph': generation_result.get('graph'),
-                            'map': generation_result.get('map')
+                max_component_retries = 3
+                for comp_attempt in range(max_component_retries):
+                    try:
+                        article_for_components = {
+                            'title_news': synthesized['title_news'],
+                            'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])),
+                            'selected_components': selected,
+                            'context_data': context_data,
+                            'map_locations': map_locations  # Pass map locations to component generation
                         }
-                        # Remove None values
-                        components = {k: v for k, v in components.items() if v is not None}
-                        print(f"   ✅ Step 7 Complete: Generated [{', '.join(components.keys())}]")
-                    else:
-                        print(f"   ⚠️ Step 7 Failed: No components generated")
-                except Exception as comp_gen_error:
-                    print(f"   ⚠️ Step 7 Failed: {comp_gen_error}")
-                    print(f"   📋 Continuing without components")
-                    components = {}
+                        generation_result = component_writer.write_components(article_for_components)
+
+                        if generation_result:
+                            # Extract individual components from result
+                            components = {
+                                'timeline': generation_result.get('timeline'),
+                                'details': generation_result.get('details'),
+                                'graph': generation_result.get('graph'),
+                                'map': generation_result.get('map')
+                            }
+                            # Remove None values
+                            components = {k: v for k, v in components.items() if v is not None}
+
+                            # Check if all selected components were generated
+                            missing_components = [c for c in selected if c not in components]
+                            if missing_components and comp_attempt < max_component_retries - 1:
+                                print(
+                                    f"   ⚠️ Missing components: {missing_components} - retrying "
+                                    f"({comp_attempt + 2}/{max_component_retries})..."
+                                )
+                                import time
+                                time.sleep(2)  # Brief pause before retry
+                                continue
+
+                            print(f"   ✅ Step 7 Complete: Generated [{', '.join(components.keys())}]")
+                            break  # Success, exit retry loop
+
+                        # No result
+                        if comp_attempt < max_component_retries - 1:
+                            print(f"   ⚠️ No components generated - retrying ({comp_attempt + 2}/{max_component_retries})...")
+                            import time
+                            time.sleep(2)
+                            continue
+                        print(f"   ⚠️ Step 7 Failed: No components generated after {max_component_retries} attempts")
+                        components = {}
+
+                    except Exception as comp_gen_error:
+                        if comp_attempt < max_component_retries - 1:
+                            print(
+                                f"   ⚠️ Component error: {comp_gen_error} - retrying "
+                                f"({comp_attempt + 2}/{max_component_retries})..."
+                            )
+                            import time
+                            time.sleep(2)
+                            continue
+                        print(f"   ⚠️ Step 7 Failed: {comp_gen_error}")
+                        print(f"   📋 Continuing without components")
+                        components = {}
             else:
                 print(f"   ⏭️ Skipping - no components selected or no context data")
             
@@ -650,17 +953,14 @@ def run_complete_pipeline():
             if not verification_passed:
                 print(f"\n   ❌ ELIMINATED: Failed verification after {max_verification_attempts} attempts")
                 print(f"      Cluster {cluster_id} will not be published")
+                update_cluster_status(cluster_id, 'failed', 'verification_failed',
+                    f'Failed fact verification after {max_verification_attempts} attempts')
                 continue
             
-            # Re-add image data (in case of regeneration)
-            if selected_image:
-                synthesized['image_url'] = selected_image['url']
-                synthesized['image_source'] = selected_image['source_name']
-                synthesized['image_score'] = selected_image['quality_score']
-            else:
-                synthesized['image_url'] = None
-                synthesized['image_source'] = None
-                synthesized['image_score'] = 0
+            # Re-add image data (in case of regeneration) - always has image at this point
+            synthesized['image_url'] = selected_image['url']
+            synthesized['image_source'] = selected_image['source_name']
+            synthesized['image_score'] = selected_image['quality_score']
             
             # STEP 9: Publishing to Supabase
             print(f"\n💾 STEP 9: PUBLISHING TO SUPABASE")
@@ -696,37 +996,10 @@ def run_complete_pipeline():
                     t = re.sub(r'[^\w\s]', '', t.lower())  # Remove punctuation
                     return t.strip()
                 
-                # Extract main entities from title (capitalized words, proper nouns)
-                def extract_entities(t):
-                    if not t:
-                        return set()
-                    # Remove bold markers first
-                    t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
-                    # Find capitalized words (likely names/entities)
-                    entities = set()
-                    words = t.split()
-                    for word in words:
-                        # Clean the word
-                        clean_word = re.sub(r'[^\w]', '', word)
-                        # Check if it starts with uppercase and is substantial
-                        if clean_word and clean_word[0].isupper() and len(clean_word) >= 3:
-                            # Skip common non-entity words
-                            skip_words = {'The', 'This', 'That', 'These', 'Those', 'What', 'When', 'Where', 'Why', 'How', 'New', 'Breaking', 'Latest', 'Report', 'Says', 'After', 'Before', 'During', 'Between', 'Over', 'Under', 'Into', 'From', 'With', 'About'}
-                            if clean_word not in skip_words:
-                                entities.add(clean_word.lower())
-                    return entities
-                
                 clean_new_title = clean_title(title)
-                new_entities = extract_entities(title)
                 
-                # Track entity counts from recent articles
-                entity_counts = {}
-                for recent in (recent_articles.data or []):
-                    recent_title = recent.get('title_news', '')
-                    for entity in extract_entities(recent_title):
-                        entity_counts[entity] = entity_counts.get(entity, 0) + 1
-                
-                # CHECK 1: Title similarity (65% threshold - stricter)
+                # CHECK: Title similarity (65% threshold)
+                # Catches duplicates that slipped through clustering
                 for recent in (recent_articles.data or []):
                     recent_title = recent.get('title_news', '')
                     clean_recent_title = clean_title(recent_title)
@@ -734,23 +1007,12 @@ def run_complete_pipeline():
                     if clean_new_title and clean_recent_title:
                         similarity = SequenceMatcher(None, clean_new_title, clean_recent_title).ratio()
                         
-                        if similarity >= 0.65:  # 65% similar = likely same news (STRICTER)
+                        if similarity >= 0.65:  # 65% similar = likely same news
                             print(f"   ⏭️ DUPLICATE TITLE DETECTED (similarity: {similarity:.0%})")
                             print(f"      New: {title[:60]}...")
                             print(f"      Existing (ID {recent['id']}): {recent_title[:60]}...")
                             is_duplicate = True
                             skip_reason = "duplicate_title"
-                            break
-                
-                # CHECK 2: Entity saturation (max 2 articles per main entity per day)
-                MAX_ARTICLES_PER_ENTITY = 2
-                if not is_duplicate and new_entities:
-                    for entity in new_entities:
-                        if entity_counts.get(entity, 0) >= MAX_ARTICLES_PER_ENTITY:
-                            print(f"   ⏭️ ENTITY SATURATION: '{entity}' already in {entity_counts[entity]} articles today")
-                            print(f"      New title: {title[:60]}...")
-                            is_duplicate = True
-                            skip_reason = f"entity_saturation_{entity}"
                             break
                             
             except Exception as e:
@@ -758,21 +1020,35 @@ def run_complete_pipeline():
             
             if is_duplicate:
                 print(f"      Skipping cluster {cluster_id} (reason: {skip_reason})")
+                update_cluster_status(cluster_id, 'skipped', 'duplicate',
+                    f'Duplicate detected: {skip_reason}')
                 continue  # Skip this cluster, move to next
             
-            # Use the HIGHEST persona score from Step 1 (from any source in cluster)
-            source_scores = [s.get('score', 0) for s in cluster_sources if s.get('score')]
-            article_score = max(source_scores) if source_scores else 50
+            # STEP 10: Score the written article using AI with reference calibration
+            print(f"\n   🎯 STEP 10: SCORING ARTICLE")
+            bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
+            article_score = score_article_with_references(title, bullets, gemini_key, supabase)
+            print(f"   📊 Article score: {article_score}/1000")
             
-            print(f"   📊 Article score: {article_score}/100 (highest from {len(cluster_sources)} source(s))")
+            # Generate interest tags for personalization (4-8 keywords)
+            print(f"   🏷️ Generating interest tags...")
+            interest_tags = generate_interest_tags(title, bullets, gemini_key)
+            print(f"   🏷️ Tags: {interest_tags}")
             
             # Title already set above for duplicate checking
-            
-            # Get bullets (new format: summary_bullets, 80-100 chars)
-            bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
+            # Bullets already fetched above for scoring
             
             # Get 5 W's (new format: WHO/WHAT/WHEN/WHERE/WHY)
             five_ws = synthesized.get('five_ws', {})
+            
+            # Collect original source titles for clustering verification
+            source_titles = [
+                {
+                    'title': s.get('title', 'Unknown'),
+                    'source': s.get('source_name', s.get('source', 'Unknown'))
+                }
+                for s in cluster_sources
+            ]
             
             article_data = {
                 'cluster_id': cluster_id,
@@ -792,20 +1068,31 @@ def run_complete_pipeline():
                 'components_order': selected,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
-                'ai_final_score': article_score,  # Importance score for sorting (0-100)
+                'ai_final_score': article_score,  # Importance score for sorting (0-1000)
+                'interest_tags': interest_tags,  # 4-8 keywords for personalization
                 # Image data from Step 3
                 'image_url': synthesized.get('image_url'),
                 'image_source': synthesized.get('image_source'),
-                'image_score': synthesized.get('image_score')
+                'image_score': synthesized.get('image_score'),
+                # Original source titles for clustering verification
+                'source_titles': source_titles
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
             
             print(f"   ✅ Published article ID: {result.data[0]['id']}")
+            if len(source_titles) > 1:
+                print(f"   📚 MULTI-SOURCE CLUSTER ({len(source_titles)} articles):")
+                for st in source_titles:
+                    print(f"      • [{st['source']}] {st['title'][:70]}...")
             published_count += 1
+            
+            # Mark cluster as successfully published
+            update_cluster_status(cluster_id, 'published')
             
         except Exception as e:
             print(f"   ❌ Error processing cluster {cluster_id}: {e}")
+            update_cluster_status(cluster_id, 'failed', 'api_error', str(e)[:500])
             continue
     
     # Summary
@@ -813,7 +1100,7 @@ def run_complete_pipeline():
     print(f"✅ PIPELINE COMPLETE")
     print(f"{'='*80}")
     print(f"   Articles fetched: {len(articles)}")
-    print(f"   Approved by Gemini: {len(approved_articles)}")
+    print(f"   Approved (Step 1): {len(approved_articles)}")
     print(f"   Clusters processed: {len(clusters_to_process)}")
     print(f"   Articles published: {published_count}")
     print(f"{'='*80}\n")
@@ -825,7 +1112,7 @@ def run_complete_pipeline():
 
 def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
-    Synthesize one article from multiple sources using Gemini (temporarily switched from Claude)
+    Synthesize one article from multiple sources using Claude (better rate limits than Gemini)
     
     Args:
         sources: List of source articles
@@ -836,8 +1123,13 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import json
     import time
     
-    # Use Gemini API (temporarily instead of Claude)
-    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={gemini_key}"
+    # Use Claude API (better rate limits than Gemini)
+    claude_url = "https://api.anthropic.com/v1/messages"
+    claude_headers = {
+        "x-api-key": anthropic_key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -1171,43 +1463,47 @@ BULLETS:
 
 Return ONLY valid JSON, no markdown, no explanations."""
     
-    # Try up to 3 times
-    for attempt in range(3):
+    # Try up to 5 times with exponential backoff
+    for attempt in range(5):
         try:
-            # Build Gemini API request
+            # Build Claude API request
             request_data = {
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [{"text": prompt}]
-                    }
-                ],
-                "generationConfig": {
-                    "temperature": 0.3,
-                    "maxOutputTokens": 2048,
-                    "responseMimeType": "application/json"
-                }
+                "model": "claude-sonnet-4-20250514",
+                "max_tokens": 2048,
+                "temperature": 0.3,
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ]
             }
             
-            response = requests.post(gemini_url, json=request_data, timeout=60)
+            response = requests.post(claude_url, headers=claude_headers, json=request_data, timeout=60)
             
-            # Handle rate limiting
+            # Handle rate limiting with exponential backoff
             if response.status_code == 429:
-                wait_time = (attempt + 1) * 5
-                print(f"   ⚠️  Rate limited (attempt {attempt + 1}/3) - waiting {wait_time}s...")
+                wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s, 80s, 160s
+                print(f"   ⚠️  Rate limited (attempt {attempt + 1}/5) - waiting {wait_time}s...")
                 time.sleep(wait_time)
                 continue
             
             response.raise_for_status()
             response_json = response.json()
             
-            # Get response text from Gemini format
-            response_text = response_json['candidates'][0]['content']['parts'][0]['text']
+            # Check if response has expected structure
+            if 'content' not in response_json or not response_json['content']:
+                print(f"   ⚠️  No content in Claude response (attempt {attempt + 1}/5)")
+                print(f"      Response: {str(response_json)[:200]}")
+                if attempt < 4:
+                    time.sleep(5)
+                    continue
+                return None
+            
+            # Get response text from Claude format
+            response_text = response_json['content'][0].get('text', '')
             
             if not response_text:
-                print(f"   ⚠️  Empty response from Gemini (attempt {attempt + 1}/3)")
-                if attempt < 2:
-                    time.sleep(3)
+                print(f"   ⚠️  Empty response from Claude (attempt {attempt + 1}/5)")
+                if attempt < 4:
+                    time.sleep(5)
                     continue
                 return None
             
@@ -1226,34 +1522,34 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 return result
             else:
                 missing = [k for k in required if k not in result]
-                print(f"   ⚠️  Missing fields: {missing} (attempt {attempt + 1}/3)")
-                if attempt < 2:
+                print(f"   ⚠️  Missing fields: {missing} (attempt {attempt + 1}/5)")
+                if attempt < 4:
                     time.sleep(3)
                     continue
                 return None
             
         except json.JSONDecodeError as e:
-            print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/3): {str(e)[:100]}")
-            if attempt < 2:
+            print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/5): {str(e)[:100]}")
+            if attempt < 4:
                 time.sleep(3)
                 continue
             return None
             
         except requests.exceptions.RequestException as e:
             error_msg = str(e)
-            print(f"   ⚠️  API error (attempt {attempt + 1}/3): {error_msg[:100]}")
-            if attempt < 2:
+            print(f"   ⚠️  API error (attempt {attempt + 1}/5): {error_msg[:100]}")
+            if attempt < 4:
                 time.sleep(3)
             continue
             
         except Exception as e:
-            print(f"   ⚠️  Synthesis error (attempt {attempt + 1}/3): {str(e)[:100]}")
-            if attempt < 2:
+            print(f"   ⚠️  Synthesis error (attempt {attempt + 1}/5): {str(e)[:100]}")
+            if attempt < 4:
                 time.sleep(3)
                 continue
             return None
     
-    print(f"   ❌ Failed after 3 attempts")
+    print(f"   ❌ Failed after 5 attempts")
     return None
 
 
