@@ -1248,13 +1248,31 @@ export default function Home() {
     }
   };
 
-  // Listen for password recovery event
+  // Listen for auth state changes - update localStorage when session changes
   useEffect(() => {
     if (!supabase || typeof window === 'undefined') return;
     
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth event:', event);
-      if (event === 'PASSWORD_RECOVERY') {
+      
+      // Update localStorage whenever session changes (login, token refresh, etc.)
+      if (session) {
+        localStorage.setItem('tennews_session', JSON.stringify(session));
+        localStorage.setItem('tennews_user', JSON.stringify(session.user));
+        console.log('📦 Session saved to localStorage, expires:', new Date(session.expires_at * 1000).toISOString());
+      }
+      
+      if (event === 'SIGNED_IN') {
+        console.log('✅ User signed in');
+        setUser(session?.user || null);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('👋 User signed out');
+        localStorage.removeItem('tennews_session');
+        localStorage.removeItem('tennews_user');
+        setUser(null);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('🔄 Token refreshed');
+      } else if (event === 'PASSWORD_RECOVERY') {
         console.log('🔐 Password recovery detected - showing reset modal');
         setShowResetPassword(true);
       }
