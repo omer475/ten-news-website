@@ -4,8 +4,6 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
-  console.log('[analytics] Supabase URL:', url?.substring(0, 30) + '...')
-  console.log('[analytics] Service key present:', !!serviceKey, 'length:', serviceKey?.length || 0)
   if (!url || !serviceKey) return null
   return createAdminClient(url, serviceKey, { auth: { persistSession: false } })
 }
@@ -38,21 +36,15 @@ export default async function handler(req, res) {
         ? authHeader.slice(7).trim()
         : null
 
-      console.log('[analytics] Bearer token present:', !!token, 'length:', token?.length || 0)
-
       if (token) {
         try {
           const { data, error } = await admin.auth.getUser(token)
-          console.log('[analytics] admin.auth.getUser result:', { hasUser: !!data?.user, error: error?.message || null })
           if (!error && data?.user) user = data.user
-        } catch (e) {
-          console.log('[analytics] admin.auth.getUser exception:', e?.message)
-        }
+        } catch (_) {}
       }
     }
 
     if (!user) {
-      console.log('[analytics] No user found, returning 401')
       return res.status(401).json({ error: 'Not authenticated' })
     }
 
