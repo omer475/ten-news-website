@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import mapboxgl from 'mapbox-gl';
+import { createClient } from '../lib/supabase';
 
 export default function SingleNewsPage() {
   const router = useRouter();
@@ -94,26 +95,61 @@ export default function SingleNewsPage() {
     setActiveSeconds(0);
     setMaxScroll(0);
 
-    const getAccessToken = () => {
+    // Get access token, auto-refreshing if expired
+    const getAccessToken = async () => {
       try {
         if (typeof window === 'undefined') return null;
         const raw = localStorage.getItem('tennews_session');
         if (!raw) return null;
         const session = JSON.parse(raw);
-        return session?.access_token || null;
+        if (!session?.access_token) return null;
+
+        // Check if token is expired or expires within 5 minutes
+        const expiresAt = session.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        const bufferSeconds = 300; // 5 minute buffer
+
+        if (expiresAt && now >= expiresAt - bufferSeconds) {
+          // Token expired or about to expire, try to refresh
+          console.log('[analytics] Token expired/expiring, attempting refresh...');
+          const supabase = createClient();
+          if (supabase && session.refresh_token) {
+            const { data, error } = await supabase.auth.refreshSession({
+              refresh_token: session.refresh_token
+            });
+            if (data?.session && !error) {
+              // Save new session to localStorage
+              localStorage.setItem('tennews_session', JSON.stringify(data.session));
+              localStorage.setItem('tennews_user', JSON.stringify(data.session.user));
+              console.log('[analytics] Token refreshed successfully');
+              return data.session.access_token;
+            } else {
+              console.warn('[analytics] Token refresh failed:', error?.message);
+              return null;
+            }
+          }
+          return null; // Can't refresh without supabase or refresh_token
+        }
+
+        return session.access_token;
       } catch (e) {
+        console.warn('[analytics] getAccessToken error:', e);
         return null;
       }
     };
 
     const send = async (payload) => {
       try {
-        const token = getAccessToken();
+        const token = await getAccessToken();
+        if (!token) {
+          console.log('[analytics] No valid token, skipping event:', payload.event_type);
+          return;
+        }
         await fetch('/api/analytics/track', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify(payload),
           keepalive: true
@@ -166,32 +202,51 @@ export default function SingleNewsPage() {
     router.push('/');
   };
 
-  const handleReadMore = () => {
+  const handleReadMore = async () => {
     if (article?.url && article.url !== '#') {
-      // Track outbound click
-      let token = null;
+      // Track outbound click with auto-refreshed token
       try {
         const raw = localStorage.getItem('tennews_session');
-        token = raw ? (JSON.parse(raw)?.access_token || null) : null;
-      } catch (e) {}
-      fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          event_type: 'source_click',
-          session_id: sessionId,
-          article_id: article?.id || null,
-          cluster_id: article?.cluster_id || null,
-          category: article?.category || null,
-          source: article?.source || null,
-          page: 'single-news',
-          metadata: { url: article.url }
-        }),
-        keepalive: true
-      }).catch(() => {});
+        const session = raw ? JSON.parse(raw) : null;
+        let token = session?.access_token || null;
+
+        // Check if token needs refresh
+        const expiresAt = session?.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        if (expiresAt && now >= expiresAt - 300 && session?.refresh_token) {
+          const supabase = createClient();
+          if (supabase) {
+            const { data } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
+            if (data?.session) {
+              localStorage.setItem('tennews_session', JSON.stringify(data.session));
+              token = data.session.access_token;
+            }
+          }
+        }
+
+        if (token) {
+          fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              event_type: 'source_click',
+              session_id: sessionId,
+              article_id: article?.id || null,
+              cluster_id: article?.cluster_id || null,
+              category: article?.category || null,
+              source: article?.source || null,
+              page: 'single-news',
+              metadata: { url: article.url }
+            }),
+            keepalive: true
+          }).catch(() => {});
+        }
+      } catch (e) {
+        // best-effort
+      }
       window.open(article.url, '_blank');
     }
   };
