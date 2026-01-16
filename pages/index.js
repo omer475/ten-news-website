@@ -5,6 +5,14 @@ import NewFirstPage from '../components/NewFirstPage';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
 import { sortArticlesByScore } from '../utils/sortArticles';
+import { 
+  getUserInterests, 
+  updateInterests, 
+  rankArticles, 
+  getEngagementWeight,
+  decayOldInterests,
+  syncInterestsToSupabase
+} from '../utils/userInterests';
 
 // Dynamically import GraphChart to avoid SSR issues
 const GraphChart = dynamic(() => import('../components/GraphChart'), {
@@ -1206,9 +1214,17 @@ export default function Home() {
     return `sess_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   });
 
-  // Analytics tracking helper with auto-refresh
+  // Analytics tracking helper with auto-refresh + interest updates
   const trackEvent = async (eventType, metadata = {}, article = null) => {
     if (typeof window === 'undefined') return;
+    
+    // Update user interests based on engagement (for personalization)
+    if (article?.interest_tags && article.interest_tags.length > 0) {
+      const weight = getEngagementWeight(eventType, metadata);
+      if (weight > 0) {
+        updateInterests(article.interest_tags, weight);
+      }
+    }
     
     try {
       const raw = localStorage.getItem('tennews_session');
@@ -1301,6 +1317,45 @@ export default function Home() {
       }
     };
   }, [currentIndex, stories]);
+
+  // Initialize user interests on app load
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Apply decay to old interests (reduces weight of stale interests)
+    decayOldInterests();
+    
+    // Log current interests for debugging
+    const interests = getUserInterests();
+    if (Object.keys(interests).length > 0) {
+      console.log('🎯 User interests loaded:', Object.keys(interests).length, 'keywords');
+      console.log('   Top interests:', Object.entries(interests)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([k, v]) => `${k}:${v.toFixed(1)}`)
+        .join(', ')
+      );
+    }
+  }, []);
+
+  // Sync interests to Supabase periodically (every 60 seconds if logged in)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !user) return;
+    
+    const syncInterval = setInterval(() => {
+      const raw = localStorage.getItem('tennews_session');
+      if (raw) {
+        try {
+          const session = JSON.parse(raw);
+          if (session?.access_token) {
+            syncInterestsToSupabase(session.access_token);
+          }
+        } catch (e) {}
+      }
+    }, 60000); // Every 60 seconds
+    
+    return () => clearInterval(syncInterval);
+  }, [user]);
 
   // Listen for auth state changes - update localStorage when session changes
   useEffect(() => {
@@ -2168,6 +2223,14 @@ export default function Home() {
               
               console.log('📊 Sorting news articles by score...');
               let sortedNews = sortArticlesByScore(newsArticles);
+              
+              // Apply personalization ranking based on user interests
+              // This re-ranks articles, boosting ones that match user's interests
+              const userInterests = getUserInterests();
+              if (Object.keys(userInterests).length > 0) {
+                console.log('🎯 Applying personalization with', Object.keys(userInterests).length, 'interests');
+                sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
+              }
               
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID

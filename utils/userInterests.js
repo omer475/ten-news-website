@@ -1,0 +1,252 @@
+/**
+ * User Interests Manager
+ * Handles personalization by tracking user interests and ranking articles
+ * 
+ * Storage: localStorage for real-time + Supabase for persistence
+ */
+
+const INTERESTS_KEY = 'tennews_interests';
+const INTERESTS_SYNCED_KEY = 'tennews_interests_synced_at';
+const DECAY_DAYS = 30; // Interests decay after 30 days of inactivity
+
+/**
+ * Get user interests from localStorage
+ * @returns {Object} Map of keyword -> weight
+ */
+export function getUserInterests() {
+  if (typeof window === 'undefined') return {};
+  
+  try {
+    const raw = localStorage.getItem(INTERESTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.warn('[interests] Error reading interests:', e);
+    return {};
+  }
+}
+
+/**
+ * Save user interests to localStorage
+ * @param {Object} interests - Map of keyword -> weight
+ */
+export function saveUserInterests(interests) {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem(INTERESTS_KEY, JSON.stringify(interests));
+  } catch (e) {
+    console.warn('[interests] Error saving interests:', e);
+  }
+}
+
+/**
+ * Update user interests based on article engagement
+ * @param {Array<string>} tags - Article's interest_tags
+ * @param {number} engagementWeight - Weight multiplier (default 1.0)
+ *   - View only: 0.5
+ *   - 10+ seconds: 1.0
+ *   - 30+ seconds: 1.5
+ *   - Source click: 2.0
+ */
+export function updateInterests(tags, engagementWeight = 1.0) {
+  if (!tags || !Array.isArray(tags) || tags.length === 0) return;
+  
+  const interests = getUserInterests();
+  
+  for (const tag of tags) {
+    if (!tag || typeof tag !== 'string') continue;
+    
+    const normalizedTag = tag.toLowerCase().trim();
+    if (!normalizedTag) continue;
+    
+    // Increase weight (with diminishing returns for very high weights)
+    const currentWeight = interests[normalizedTag] || 0;
+    const addedWeight = engagementWeight * (1 / (1 + currentWeight * 0.1)); // Diminishing returns
+    interests[normalizedTag] = Math.min(100, currentWeight + addedWeight); // Cap at 100
+  }
+  
+  saveUserInterests(interests);
+  console.log('[interests] Updated interests:', Object.keys(interests).slice(0, 5));
+  
+  return interests;
+}
+
+/**
+ * Score an article based on user interests
+ * @param {Object} article - Article with interest_tags
+ * @param {Object} interests - User interests (optional, will fetch if not provided)
+ * @returns {number} Personalization score boost
+ */
+export function getArticlePersonalizationScore(article, interests = null) {
+  if (!article?.interest_tags || article.interest_tags.length === 0) return 0;
+  
+  interests = interests || getUserInterests();
+  if (Object.keys(interests).length === 0) return 0;
+  
+  let boost = 0;
+  for (const tag of article.interest_tags) {
+    const normalizedTag = (tag || '').toLowerCase().trim();
+    if (interests[normalizedTag]) {
+      boost += interests[normalizedTag];
+    }
+  }
+  
+  return boost;
+}
+
+/**
+ * Rank articles based on user interests + base score
+ * @param {Array<Object>} articles - Array of articles with interest_tags
+ * @param {number} personalizationWeight - How much to weight personalization (0-1)
+ * @returns {Array<Object>} Sorted articles
+ */
+export function rankArticles(articles, personalizationWeight = 0.7) {
+  if (!articles || articles.length === 0) return articles;
+  
+  const interests = getUserInterests();
+  const hasInterests = Object.keys(interests).length > 0;
+  
+  if (!hasInterests) {
+    // No personalization data, return original order (by ai_final_score)
+    return articles;
+  }
+  
+  // Score and sort
+  const scored = articles.map(article => {
+    const baseScore = article.final_score || article.ai_final_score || 500;
+    const personalizationBoost = getArticlePersonalizationScore(article, interests);
+    
+    // Combine scores: base score + personalization boost (weighted)
+    // Personalization boost is scaled to be comparable to base score
+    const combinedScore = baseScore + (personalizationBoost * 10 * personalizationWeight);
+    
+    return {
+      ...article,
+      _personalizedScore: combinedScore,
+      _personalizationBoost: personalizationBoost
+    };
+  });
+  
+  // Sort by combined score (descending)
+  scored.sort((a, b) => b._personalizedScore - a._personalizedScore);
+  
+  console.log('[interests] Ranked articles, top 3 boosts:', 
+    scored.slice(0, 3).map(a => ({ 
+      title: a.title?.substring(0, 30), 
+      boost: a._personalizationBoost?.toFixed(1) 
+    }))
+  );
+  
+  return scored;
+}
+
+/**
+ * Decay old interests (reduce weights for interests not updated recently)
+ * Call this periodically (e.g., on app load)
+ */
+export function decayOldInterests() {
+  const interests = getUserInterests();
+  if (Object.keys(interests).length === 0) return;
+  
+  // Apply 10% decay to all interests
+  let decayed = false;
+  for (const key of Object.keys(interests)) {
+    if (interests[key] > 0.1) {
+      interests[key] *= 0.95; // 5% decay
+      decayed = true;
+    } else {
+      delete interests[key]; // Remove negligible interests
+    }
+  }
+  
+  if (decayed) {
+    saveUserInterests(interests);
+    console.log('[interests] Applied decay, remaining:', Object.keys(interests).length);
+  }
+}
+
+/**
+ * Sync interests to Supabase for cross-device persistence
+ * @param {string} accessToken - Supabase access token
+ */
+export async function syncInterestsToSupabase(accessToken) {
+  if (!accessToken || typeof window === 'undefined') return;
+  
+  const interests = getUserInterests();
+  if (Object.keys(interests).length === 0) return;
+  
+  try {
+    const response = await fetch('/api/user/interests/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({ interests }),
+      keepalive: true
+    });
+    
+    if (response.ok) {
+      localStorage.setItem(INTERESTS_SYNCED_KEY, new Date().toISOString());
+      console.log('[interests] Synced to Supabase');
+    }
+  } catch (e) {
+    console.warn('[interests] Sync failed:', e);
+  }
+}
+
+/**
+ * Load interests from Supabase (for new device/session)
+ * @param {string} accessToken - Supabase access token
+ */
+export async function loadInterestsFromSupabase(accessToken) {
+  if (!accessToken || typeof window === 'undefined') return;
+  
+  try {
+    const response = await fetch('/api/user/interests', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.interests && Object.keys(data.interests).length > 0) {
+        // Merge with local (local takes precedence for recent interactions)
+        const local = getUserInterests();
+        const merged = { ...data.interests, ...local };
+        saveUserInterests(merged);
+        console.log('[interests] Loaded from Supabase, merged:', Object.keys(merged).length);
+      }
+    }
+  } catch (e) {
+    console.warn('[interests] Load from Supabase failed:', e);
+  }
+}
+
+/**
+ * Get engagement weight based on interaction type
+ * @param {string} eventType - The type of engagement event
+ * @param {Object} metadata - Event metadata
+ * @returns {number} Weight multiplier
+ */
+export function getEngagementWeight(eventType, metadata = {}) {
+  switch (eventType) {
+    case 'article_view':
+      return 0.3; // Just viewing
+    case 'article_engaged':
+      return 1.0; // 10+ seconds
+    case 'article_exit':
+      const seconds = metadata.total_active_seconds || 0;
+      const scroll = metadata.max_scroll_percent || 0;
+      if (seconds >= 30 && scroll >= 50) return 2.0; // Deep read
+      if (seconds >= 30 || scroll >= 50) return 1.5; // Good engagement
+      return 0.5; // Brief view
+    case 'source_click':
+      return 2.5; // High intent - clicked to read original
+    case 'component_click':
+      return 0.5; // Interacted with content
+    default:
+      return 0.5;
+  }
+}

@@ -322,7 +322,18 @@ export default async function handler(req, res) {
         // Support both 'components_order' (new) and 'components' (old)
         components: article.components_order || (article.components ? (typeof article.components === 'string' ? JSON.parse(article.components) : article.components) : null),
         details: article.details_section ? article.details_section.split('\n') : (article.details ? (typeof article.details === 'string' ? JSON.parse(article.details) : article.details) : []),
-        views: article.view_count || 0
+        views: article.view_count || 0,
+        // Interest tags for personalization (4-8 keywords)
+        interest_tags: (() => {
+          if (!article.interest_tags) return [];
+          try {
+            return typeof article.interest_tags === 'string'
+              ? JSON.parse(article.interest_tags)
+              : article.interest_tags;
+          } catch (e) {
+            return [];
+          }
+        })()
       };
     })
 
