@@ -18,15 +18,34 @@ export default async function handler(req, res) {
 
   try {
     const supabase = createAuthedClient({ req, res })
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Not authenticated' })
-    }
-
     const admin = getAdminSupabase()
     if (!admin) {
       return res.status(500).json({ error: 'Server analytics storage not configured (missing SUPABASE_SERVICE_KEY)' })
+    }
+
+    // Auth: prefer cookie-based session, but also allow Authorization: Bearer <access_token>
+    let user = null
+    try {
+      const { data, error } = await supabase.auth.getUser()
+      if (!error && data?.user) user = data.user
+    } catch (_) {}
+
+    if (!user) {
+      const authHeader = req.headers?.authorization || req.headers?.Authorization
+      const token = (typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer '))
+        ? authHeader.slice(7).trim()
+        : null
+
+      if (token) {
+        try {
+          const { data, error } = await admin.auth.getUser(token)
+          if (!error && data?.user) user = data.user
+        } catch (_) {}
+      }
+    }
+
+    if (!user) {
+      return res.status(401).json({ error: 'Not authenticated' })
     }
 
     const {

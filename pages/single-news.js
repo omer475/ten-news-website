@@ -94,11 +94,27 @@ export default function SingleNewsPage() {
     setActiveSeconds(0);
     setMaxScroll(0);
 
+    const getAccessToken = () => {
+      try {
+        if (typeof window === 'undefined') return null;
+        const raw = localStorage.getItem('tennews_session');
+        if (!raw) return null;
+        const session = JSON.parse(raw);
+        return session?.access_token || null;
+      } catch (e) {
+        return null;
+      }
+    };
+
     const send = async (payload) => {
       try {
+        const token = getAccessToken();
         await fetch('/api/analytics/track', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           body: JSON.stringify(payload),
           keepalive: true
         });
@@ -153,9 +169,17 @@ export default function SingleNewsPage() {
   const handleReadMore = () => {
     if (article?.url && article.url !== '#') {
       // Track outbound click
+      let token = null;
+      try {
+        const raw = localStorage.getItem('tennews_session');
+        token = raw ? (JSON.parse(raw)?.access_token || null) : null;
+      } catch (e) {}
       fetch('/api/analytics/track', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           event_type: 'source_click',
           session_id: sessionId,
@@ -174,9 +198,17 @@ export default function SingleNewsPage() {
 
   const toggleTimeline = () => {
     setShowTimeline(!showTimeline);
+    let token = null;
+    try {
+      const raw = localStorage.getItem('tennews_session');
+      token = raw ? (JSON.parse(raw)?.access_token || null) : null;
+    } catch (e) {}
     fetch('/api/analytics/track', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
         event_type: 'component_click',
         session_id: sessionId,
@@ -193,9 +225,17 @@ export default function SingleNewsPage() {
 
   const toggleDetails = () => {
     setShowDetails(!showDetails);
+    let token = null;
+    try {
+      const raw = localStorage.getItem('tennews_session');
+      token = raw ? (JSON.parse(raw)?.access_token || null) : null;
+    } catch (e) {}
     fetch('/api/analytics/track', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
         event_type: 'component_click',
         session_id: sessionId,
@@ -212,9 +252,17 @@ export default function SingleNewsPage() {
 
   const toggleGraph = () => {
     setShowGraph(!showGraph);
+    let token = null;
+    try {
+      const raw = localStorage.getItem('tennews_session');
+      token = raw ? (JSON.parse(raw)?.access_token || null) : null;
+    } catch (e) {}
     fetch('/api/analytics/track', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
         event_type: 'component_click',
         session_id: sessionId,
@@ -231,9 +279,17 @@ export default function SingleNewsPage() {
 
   const toggleMap = () => {
     setShowMap(!showMap);
+    let token = null;
+    try {
+      const raw = localStorage.getItem('tennews_session');
+      token = raw ? (JSON.parse(raw)?.access_token || null) : null;
+    } catch (e) {}
     fetch('/api/analytics/track', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({
         event_type: 'component_click',
         session_id: sessionId,
