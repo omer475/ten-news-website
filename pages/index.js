@@ -67,6 +67,11 @@ export default function Home() {
   const [autoRotationEnabled, setAutoRotationEnabled] = useState({}); // Track which articles have auto-rotation active
   const [progressBarKey, setProgressBarKey] = useState({}); // Track progress bar resets
   
+  // Engagement tracking state
+  const [articleViewStart, setArticleViewStart] = useState(null); // Timestamp when current article started
+  const [engagedSent, setEngagedSent] = useState({}); // Track which articles have had 'engaged' event sent
+  const [maxScrollPercent, setMaxScrollPercent] = useState(0); // Max scroll depth on current article
+  
   // Read article tracker (localStorage-based)
   const readTrackerRef = useRef(null);
   
@@ -1247,6 +1252,55 @@ export default function Home() {
       // best-effort, don't break the app
     }
   };
+
+  // Engagement tracking: timer for 10s engagement + exit tracking
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const currentStory = stories[currentIndex];
+    if (!currentStory || currentStory.type !== 'news' || !currentStory.id) return;
+    
+    // Reset state for new article
+    const startTime = Date.now();
+    setArticleViewStart(startTime);
+    setMaxScrollPercent(0);
+    
+    // Engagement timer (10 seconds)
+    let engagementTimer = null;
+    if (!engagedSent[currentStory.id]) {
+      engagementTimer = setTimeout(() => {
+        const activeSeconds = Math.round((Date.now() - startTime) / 1000);
+        trackEvent('article_engaged', { engaged_seconds: activeSeconds }, currentStory);
+        setEngagedSent(prev => ({ ...prev, [currentStory.id]: true }));
+      }, 10000);
+    }
+    
+    // Scroll tracking
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0) {
+        const scrollPercent = Math.round((scrollTop / docHeight) * 100);
+        setMaxScrollPercent(prev => Math.max(prev, scrollPercent));
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Cleanup: send exit event when leaving this article
+    return () => {
+      if (engagementTimer) clearTimeout(engagementTimer);
+      window.removeEventListener('scroll', handleScroll);
+      
+      // Send exit event
+      const totalSeconds = Math.round((Date.now() - startTime) / 1000);
+      if (totalSeconds > 0) {
+        trackEvent('article_exit', { 
+          total_active_seconds: totalSeconds,
+          max_scroll_percent: maxScrollPercent
+        }, currentStory);
+      }
+    };
+  }, [currentIndex, stories]);
 
   // Listen for auth state changes - update localStorage when session changes
   useEffect(() => {
@@ -2474,8 +2528,14 @@ export default function Home() {
     loadNewsData();
   }, []);
 
-  const goToStory = (index) => {
+  const goToStory = (index, navigationSource = 'direct') => {
     if (index >= 0 && index < stories.length) {
+      // Track exit from current article before navigating
+      const currentStory = stories[currentIndex];
+      if (currentStory && currentStory.type === 'news' && currentStory.id) {
+        // Exit event will be handled by engagement tracking
+      }
+      
       setCurrentIndex(index);
       setMenuOpen(false);
       
@@ -2483,14 +2543,31 @@ export default function Home() {
       const story = stories[index];
       if (story && story.type === 'news' && story.id && user) {
         markArticleAsRead(story.id);
-        // Track article view
-        trackEvent('article_view', { source: 'swipe' }, story);
+        // Track article view with feed position and navigation source
+        trackEvent('article_view', { 
+          feed_position: index,
+          referrer: typeof document !== 'undefined' ? document.referrer : null,
+          navigation_source: navigationSource
+        }, story);
       }
     }
   };
 
-  const nextStory = () => goToStory(currentIndex + 1);
-  const prevStory = () => goToStory(currentIndex - 1);
+  const nextStory = () => {
+    const story = stories[currentIndex + 1];
+    if (story?.type === 'news') {
+      trackEvent('next_article', { from_position: currentIndex, to_position: currentIndex + 1 }, story);
+    }
+    goToStory(currentIndex + 1, 'swipe_next');
+  };
+  
+  const prevStory = () => {
+    const story = stories[currentIndex - 1];
+    if (story?.type === 'news') {
+      trackEvent('prev_article', { from_position: currentIndex, to_position: currentIndex - 1 }, story);
+    }
+    goToStory(currentIndex - 1, 'swipe_prev');
+  };
 
   // Timeline toggle function
   const toggleTimeline = (storyIndex) => {
@@ -6363,13 +6440,13 @@ export default function Home() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                trackEvent('source_click', { url: story.url }, story);
+                                trackEvent('source_click', { url: story.url, source_name: story.source }, story);
                                 window.open(story.url, '_blank', 'noopener,noreferrer');
                               }}
                               onTouchEnd={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                trackEvent('source_click', { url: story.url }, story);
+                                trackEvent('source_click', { url: story.url, source_name: story.source }, story);
                                 window.open(story.url, '_blank', 'noopener,noreferrer');
                               }}
                               style={{
@@ -8622,4 +8699,6 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
       </div>
     </div>
   );
+}
+
 }
