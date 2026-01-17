@@ -1240,18 +1240,19 @@ export default function Home() {
         return;
       }
 
-      // Check if token needs refresh (expires within 5 minutes)
+      // Check if token is expired
       const expiresAt = session.expires_at;
       const now = Math.floor(Date.now() / 1000);
-      if (expiresAt && now >= expiresAt - 300 && session.refresh_token && supabase) {
-        console.log('[analytics] Token expiring soon, refreshing...');
-        const { data } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
-        if (data?.session) {
-          localStorage.setItem('tennews_session', JSON.stringify(data.session));
-          localStorage.setItem('tennews_user', JSON.stringify(data.session.user));
-          token = data.session.access_token;
-          console.log('[analytics] Token refreshed successfully');
-        }
+      
+      if (expiresAt && now >= expiresAt) {
+        // Token is EXPIRED - skip event rather than trigger logout
+        console.log('[analytics] Token expired, skipping event (will refresh on next interaction)');
+        return;
+      }
+      
+      // If expiring soon (within 2 minutes), let the main auth handler refresh it
+      if (expiresAt && now >= expiresAt - 120) {
+        console.log('[analytics] Token expiring soon, still valid, continuing...');
       }
 
       console.log('[analytics] Sending event:', eventType, article?.id ? `article:${article.id}` : '');
@@ -1392,10 +1393,24 @@ export default function Home() {
         console.log('✅ User signed in');
         setUser(session?.user || null);
       } else if (event === 'SIGNED_OUT') {
-        console.log('👋 User signed out');
-        localStorage.removeItem('tennews_session');
-        localStorage.removeItem('tennews_user');
-        setUser(null);
+        // Only clear session if it was an explicit logout (no session in storage or user clicked logout)
+        const storedSession = localStorage.getItem('tennews_session');
+        if (!storedSession || window.__userClickedLogout) {
+          console.log('👋 User signed out (explicit)');
+          localStorage.removeItem('tennews_session');
+          localStorage.removeItem('tennews_user');
+          setUser(null);
+          window.__userClickedLogout = false;
+        } else {
+          console.log('⚠️ Ignoring SIGNED_OUT event (possibly stale - session exists in localStorage)');
+          // Try to restore the session
+          try {
+            const parsed = JSON.parse(storedSession);
+            if (parsed?.user) {
+              setUser(parsed.user);
+            }
+          } catch (e) {}
+        }
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('🔄 Token refreshed');
       } else if (event === 'PASSWORD_RECOVERY') {
@@ -2821,6 +2836,11 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
+      // Mark this as an explicit user logout (not an automatic session expiry)
+      if (typeof window !== 'undefined') {
+        window.__userClickedLogout = true;
+      }
+      
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
       });
@@ -2830,11 +2850,14 @@ export default function Home() {
         // Clear stored session from localStorage
         localStorage.removeItem('tennews_user');
         localStorage.removeItem('tennews_session');
+        localStorage.removeItem('tennews_interests'); // Also clear personalization data
       } else {
         console.error('Logout failed');
+        if (typeof window !== 'undefined') window.__userClickedLogout = false;
       }
     } catch (error) {
       console.error('Logout error:', error);
+      if (typeof window !== 'undefined') window.__userClickedLogout = false;
     }
   };
 
