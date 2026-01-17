@@ -460,15 +460,15 @@ export default function Home() {
   };
 
   // Helper function to switch to next information type
-  const switchToNextInformationType = (story, index) => {
+  const switchToNextInformationType = (story, index, isAutoRotation = false) => {
     const availableTypes = getAvailableInformationTypes(story);
     const currentType = getCurrentInformationType(story, index);
     const currentIndex = availableTypes.indexOf(currentType);
     const nextIndex = (currentIndex + 1) % availableTypes.length;
     const nextType = availableTypes[nextIndex];
 
-    // Track component switch
-    if (story?.type === 'news') {
+    // Track component switch - only for manual clicks, not auto-rotation
+    if (story?.type === 'news' && !isAutoRotation) {
       trackEvent('component_click', { component: nextType, action: 'switch', from: currentType }, story);
     }
 
@@ -3430,7 +3430,7 @@ export default function Home() {
     // Set up interval to rotate every 4 seconds
     const intervalId = setInterval(() => {
       console.log(`🔄 Auto-rotating information box for article ${currentIndex}`);
-      switchToNextInformationType(currentStory, currentIndex);
+      switchToNextInformationType(currentStory, currentIndex, true); // true = isAutoRotation, skip analytics
       // Reset progress bar animation
       setProgressBarKey(prev => ({ ...prev, [currentIndex]: Date.now() }));
     }, 4000);
