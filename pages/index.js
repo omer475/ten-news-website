@@ -1228,25 +1228,35 @@ export default function Home() {
     
     try {
       const raw = localStorage.getItem('tennews_session');
-      if (!raw) return; // Not logged in
+      if (!raw) {
+        console.log('[analytics] No session in localStorage, skipping event:', eventType);
+        return; // Not logged in
+      }
       
       const session = JSON.parse(raw);
       let token = session?.access_token;
-      if (!token) return;
+      if (!token) {
+        console.log('[analytics] No access_token in session, skipping event:', eventType);
+        return;
+      }
 
       // Check if token needs refresh (expires within 5 minutes)
       const expiresAt = session.expires_at;
       const now = Math.floor(Date.now() / 1000);
       if (expiresAt && now >= expiresAt - 300 && session.refresh_token && supabase) {
+        console.log('[analytics] Token expiring soon, refreshing...');
         const { data } = await supabase.auth.refreshSession({ refresh_token: session.refresh_token });
         if (data?.session) {
           localStorage.setItem('tennews_session', JSON.stringify(data.session));
           localStorage.setItem('tennews_user', JSON.stringify(data.session.user));
           token = data.session.access_token;
+          console.log('[analytics] Token refreshed successfully');
         }
       }
 
-      await fetch('/api/analytics/track', {
+      console.log('[analytics] Sending event:', eventType, article?.id ? `article:${article.id}` : '');
+      
+      const response = await fetch('/api/analytics/track', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1264,8 +1274,15 @@ export default function Home() {
         }),
         keepalive: true
       });
+      
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.warn('[analytics] Event failed:', response.status, err);
+      } else {
+        console.log('[analytics] Event sent successfully:', eventType);
+      }
     } catch (e) {
-      // best-effort, don't break the app
+      console.warn('[analytics] Error sending event:', e.message);
     }
   };
 

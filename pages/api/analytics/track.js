@@ -20,14 +20,19 @@ export default async function handler(req, res) {
     const supabase = createAuthedClient({ req, res })
     const admin = getAdminSupabase()
     if (!admin) {
+      console.log('[analytics] No admin client - missing SUPABASE_SERVICE_KEY')
       return res.status(500).json({ error: 'Server analytics storage not configured (missing SUPABASE_SERVICE_KEY)' })
     }
 
     // Auth: prefer cookie-based session, but also allow Authorization: Bearer <access_token>
     let user = null
+    let authMethod = null
     try {
       const { data, error } = await supabase.auth.getUser()
-      if (!error && data?.user) user = data.user
+      if (!error && data?.user) {
+        user = data.user
+        authMethod = 'cookie'
+      }
     } catch (_) {}
 
     if (!user) {
@@ -36,17 +41,29 @@ export default async function handler(req, res) {
         ? authHeader.slice(7).trim()
         : null
 
+      console.log('[analytics] Trying bearer auth, token present:', !!token)
+      
       if (token) {
         try {
           const { data, error } = await admin.auth.getUser(token)
-          if (!error && data?.user) user = data.user
-        } catch (_) {}
+          if (!error && data?.user) {
+            user = data.user
+            authMethod = 'bearer'
+          } else if (error) {
+            console.log('[analytics] Bearer auth error:', error.message)
+          }
+        } catch (e) {
+          console.log('[analytics] Bearer auth exception:', e.message)
+        }
       }
     }
 
     if (!user) {
+      console.log('[analytics] No user found after auth attempts')
       return res.status(401).json({ error: 'Not authenticated' })
     }
+    
+    console.log('[analytics] Auth success via', authMethod, 'user:', user.id?.substring(0, 8))
 
     const {
       event_type,
@@ -77,15 +94,18 @@ export default async function handler(req, res) {
       metadata: (metadata && typeof metadata === 'object') ? metadata : {}
     }
 
+    console.log('[analytics] Inserting event:', event_type, 'article:', article_id)
+    
     const { error: insertError } = await admin
       .from('user_article_events')
       .insert(row)
 
     if (insertError) {
-      console.error('Analytics insert error:', insertError)
-      return res.status(500).json({ error: 'Failed to store event' })
+      console.error('[analytics] Insert error:', insertError.message, insertError.code, insertError.details)
+      return res.status(500).json({ error: 'Failed to store event', details: insertError.message })
     }
 
+    console.log('[analytics] Event stored successfully:', event_type)
     return res.status(200).json({ ok: true })
   } catch (e) {
     console.error('Analytics track error:', e)
