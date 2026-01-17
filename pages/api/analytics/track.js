@@ -81,6 +81,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'event_type is required' })
     }
 
+    // Extract view_seconds from metadata for article_exit events
+    let view_seconds = null
+    if (event_type === 'article_exit' && metadata?.total_active_seconds) {
+      view_seconds = parseInt(metadata.total_active_seconds, 10) || null
+    } else if (event_type === 'article_engaged' && metadata?.engaged_seconds) {
+      view_seconds = parseInt(metadata.engaged_seconds, 10) || null
+    }
+
     const row = {
       user_id: user.id,
       session_id,
@@ -91,6 +99,7 @@ export default async function handler(req, res) {
       source,
       referrer,
       page,
+      view_seconds,
       metadata: (metadata && typeof metadata === 'object') ? metadata : {}
     }
 
