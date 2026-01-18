@@ -1221,9 +1221,13 @@ export default function Home() {
     // Update user interests based on engagement (for personalization)
     if (article?.interest_tags && article.interest_tags.length > 0) {
       const weight = getEngagementWeight(eventType, metadata);
+      console.log('[interests] Article has tags:', article.interest_tags.length, 'weight:', weight);
       if (weight > 0) {
         updateInterests(article.interest_tags, weight);
+        console.log('[interests] Updated localStorage:', Object.keys(getUserInterests()).length, 'keywords');
       }
+    } else if (article) {
+      console.log('[interests] Article has NO interest_tags:', article.id);
     }
     
     try {
@@ -1583,7 +1587,8 @@ export default function Home() {
                 
                 publishedAt: articleData.publishedAt || articleData.published_at || articleData.created_at,
                 final_score: articleData.final_score || articleData.ai_final_score || 500,
-                isSharedArticle: true // Mark as shared article for priority handling
+                isSharedArticle: true, // Mark as shared article for priority handling
+                interest_tags: articleData.interest_tags || []  // For personalization
               };
               
               console.log('✅ Processed shared article with bullets:', processedArticle.summary_bullets?.length || 0);
@@ -1958,7 +1963,8 @@ export default function Home() {
               components: article.components || null,
               publishedAt: article.publishedAt || article.published_at || article.added_at,
               id: article.id || `article_${pageNum}_${index}`,
-              final_score: article.final_score
+              final_score: article.final_score,
+              interest_tags: article.interest_tags || []  // For personalization
             };
           });
           
@@ -2222,7 +2228,8 @@ export default function Home() {
                 })(),  // CRITICAL: Include components array with map support
                 publishedAt: article.publishedAt || article.published_at || article.added_at,
                 id: article.id || `article_${index}`,
-                final_score: article.final_score  // IMPORTANT: Include final_score for red border styling
+                final_score: article.final_score,  // IMPORTANT: Include final_score for red border styling
+                interest_tags: article.interest_tags || []  // For personalization
               };
                
                processedStories.push(storyData);
