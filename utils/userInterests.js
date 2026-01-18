@@ -226,27 +226,40 @@ export async function loadInterestsFromSupabase(accessToken) {
 
 /**
  * Get engagement weight based on interaction type
+ * ONLY count meaningful engagement (10+ seconds)
  * @param {string} eventType - The type of engagement event
  * @param {Object} metadata - Event metadata
- * @returns {number} Weight multiplier
+ * @returns {number} Weight multiplier (0 = don't count)
  */
 export function getEngagementWeight(eventType, metadata = {}) {
   switch (eventType) {
     case 'article_view':
-      return 0.3; // Just viewing
+      return 0; // DON'T count quick views - wait for engagement
+      
     case 'article_engaged':
-      return 1.0; // 10+ seconds
+      return 1.0; // 10+ seconds confirmed
+      
     case 'article_exit':
       const seconds = metadata.total_active_seconds || 0;
       const scroll = metadata.max_scroll_percent || 0;
-      if (seconds >= 30 && scroll >= 50) return 2.0; // Deep read
-      if (seconds >= 30 || scroll >= 50) return 1.5; // Good engagement
-      return 0.5; // Brief view
+      // ONLY count if 10+ seconds OR significant scroll
+      if (seconds < 10 && scroll < 30) return 0; // Ignore quick swipes
+      if (seconds >= 60) return 3.0; // Very deep read (1+ minute)
+      if (seconds >= 30) return 2.0; // Deep read (30+ seconds)
+      if (seconds >= 10) return 1.0; // Good engagement (10+ seconds)
+      if (scroll >= 50) return 1.0; // Read more than half
+      return 0; // Brief view - don't count
+      
     case 'source_click':
-      return 2.5; // High intent - clicked to read original
+      return 3.0; // High intent - clicked to read original article
+      
+    case 'article_shared':
+      return 5.0; // Highest weight - user found it worth sharing!
+      
     case 'component_click':
-      return 0.5; // Interacted with content
+      return 0; // Don't count component clicks alone
+      
     default:
-      return 0.5;
+      return 0;
   }
 }

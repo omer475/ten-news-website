@@ -6272,6 +6272,9 @@ export default function Home() {
                         const articleId = story.id;
                         if (!articleId) return;
                         
+                        // Track share event for personalization (HIGH weight)
+                        trackEvent('article_shared', { share_method: 'click' }, story);
+                        
                         // Use current domain for share URL (works on localhost and production)
                         const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://todayplus.news';
                         const shareUrl = `${baseUrl}/?article=${articleId}`;
@@ -6305,6 +6308,9 @@ export default function Home() {
                         
                         const articleId = story.id;
                         if (!articleId) return;
+                        
+                        // Track share event for personalization (HIGH weight)
+                        trackEvent('article_shared', { share_method: 'touch' }, story);
                         
                         // Use current domain for share URL (works on localhost and production)
                         const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://todayplus.news';
