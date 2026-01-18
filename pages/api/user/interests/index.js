@@ -34,26 +34,23 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid token' })
     }
 
-    // Fetch user interests
-    const { data: rows, error: fetchError } = await admin
+    // Fetch user interests (single row per user)
+    const { data: row, error: fetchError } = await admin
       .from('user_interests')
-      .select('keyword, weight')
+      .select('interests, updated_at')
       .eq('user_id', user.id)
-      .order('weight', { ascending: false })
-      .limit(200) // Max 200 interests
+      .single()
 
-    if (fetchError) {
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows found
       console.error('Interests fetch error:', fetchError)
       return res.status(500).json({ error: 'Failed to fetch interests' })
     }
 
-    // Convert to object format
-    const interests = {}
-    for (const row of (rows || [])) {
-      interests[row.keyword] = row.weight
-    }
-
-    return res.status(200).json({ interests })
+    // Return interests or empty object
+    return res.status(200).json({ 
+      interests: row?.interests || {},
+      updated_at: row?.updated_at || null
+    })
   } catch (e) {
     console.error('Interests fetch error:', e)
     return res.status(500).json({ error: 'Internal server error' })

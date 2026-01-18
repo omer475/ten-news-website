@@ -39,40 +39,39 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'interests object required' })
     }
 
-    // Upsert all interests
-    const rows = Object.entries(interests).map(([keyword, weight]) => ({
-      user_id: user.id,
-      keyword: keyword.toLowerCase().trim(),
-      weight: Math.min(100, Math.max(0, weight)), // Clamp between 0-100
-      updated_at: new Date().toISOString()
-    }))
-
-    if (rows.length === 0) {
-      return res.status(200).json({ ok: true, synced: 0 })
-    }
-
-    // Upsert in batches of 50
-    const batchSize = 50
-    let synced = 0
-    
-    for (let i = 0; i < rows.length; i += batchSize) {
-      const batch = rows.slice(i, i + batchSize)
-      
-      const { error: upsertError } = await admin
-        .from('user_interests')
-        .upsert(batch, { 
-          onConflict: 'user_id,keyword',
-          ignoreDuplicates: false
-        })
-
-      if (upsertError) {
-        console.error('Interests sync error:', upsertError)
-      } else {
-        synced += batch.length
+    // Clean and normalize the interests object
+    const cleanedInterests = {}
+    for (const [keyword, weight] of Object.entries(interests)) {
+      const cleanKey = keyword.toLowerCase().trim()
+      if (cleanKey && typeof weight === 'number') {
+        cleanedInterests[cleanKey] = Math.round(Math.min(100, Math.max(0, weight)) * 100) / 100 // 2 decimal places
       }
     }
 
-    return res.status(200).json({ ok: true, synced })
+    if (Object.keys(cleanedInterests).length === 0) {
+      return res.status(200).json({ ok: true, keywords: 0 })
+    }
+
+    // Upsert single row per user with entire interests JSONB
+    const { error: upsertError } = await admin
+      .from('user_interests')
+      .upsert({
+        user_id: user.id,
+        interests: cleanedInterests,
+        updated_at: new Date().toISOString()
+      }, { 
+        onConflict: 'user_id'
+      })
+
+    if (upsertError) {
+      console.error('Interests sync error:', upsertError)
+      return res.status(500).json({ error: 'Failed to sync interests' })
+    }
+
+    return res.status(200).json({ 
+      ok: true, 
+      keywords: Object.keys(cleanedInterests).length 
+    })
   } catch (e) {
     console.error('Interests sync error:', e)
     return res.status(500).json({ error: 'Internal server error' })
