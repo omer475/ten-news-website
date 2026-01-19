@@ -133,10 +133,12 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid token' })
     }
 
-    const { interests } = req.body || {}
+    const { interests, articles_read_count } = req.body || {}
     if (!interests || typeof interests !== 'object') {
       return res.status(400).json({ error: 'interests object required' })
     }
+    
+    const articlesReadCount = parseInt(articles_read_count, 10) || 0
 
     // Clean and normalize the interests object
     const cleanedInterests = {}
@@ -166,6 +168,7 @@ export default async function handler(req, res) {
         primary_category: computed.primary_category,
         interest_count: computed.interest_count,
         engagement_score: computed.engagement_score,
+        articles_read_count: articlesReadCount,
         updated_at: new Date().toISOString()
       }, { 
         onConflict: 'user_id'

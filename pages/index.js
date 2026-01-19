@@ -11,7 +11,8 @@ import {
   rankArticles, 
   getEngagementWeight,
   decayOldInterests,
-  syncInterestsToSupabase
+  syncInterestsToSupabase,
+  incrementArticlesRead
 } from '../utils/userInterests';
 
 // Dynamically import GraphChart to avoid SSR issues
@@ -1309,6 +1310,7 @@ export default function Home() {
       engagementTimer = setTimeout(() => {
         const activeSeconds = Math.round((Date.now() - startTime) / 1000);
         trackEvent('article_engaged', { engaged_seconds: activeSeconds }, currentStory);
+        incrementArticlesRead(); // Count this as an article read (10+ seconds)
         setEngagedSent(prev => ({ ...prev, [currentStory.id]: true }));
       }, 10000);
     }

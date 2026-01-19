@@ -20,6 +20,7 @@ CREATE TABLE user_interests (
   primary_category TEXT DEFAULT NULL,      -- Highest weighted category (TECH, POLITICS, etc.)
   interest_count INT DEFAULT 0,            -- Total number of keywords tracked
   engagement_score FLOAT DEFAULT 0,        -- Sum of all weights (overall engagement)
+  articles_read_count INT DEFAULT 0,       -- Total articles read (10+ seconds)
   
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),

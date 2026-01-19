@@ -7,7 +7,34 @@
 
 const INTERESTS_KEY = 'tennews_interests';
 const INTERESTS_SYNCED_KEY = 'tennews_interests_synced_at';
+const ARTICLES_READ_KEY = 'tennews_articles_read_count';
 const DECAY_DAYS = 30; // Interests decay after 30 days of inactivity
+
+/**
+ * Get articles read count from localStorage
+ * @returns {number} Total articles read with 10+ seconds engagement
+ */
+export function getArticlesReadCount() {
+  if (typeof window === 'undefined') return 0;
+  try {
+    return parseInt(localStorage.getItem(ARTICLES_READ_KEY) || '0', 10);
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Increment articles read count
+ */
+export function incrementArticlesRead() {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getArticlesReadCount();
+    localStorage.setItem(ARTICLES_READ_KEY, String(current + 1));
+  } catch (e) {
+    console.warn('[interests] Error incrementing articles read:', e);
+  }
+}
 
 /**
  * Get user interests from localStorage
@@ -173,7 +200,9 @@ export async function syncInterestsToSupabase(accessToken) {
   if (!accessToken || typeof window === 'undefined') return;
   
   const interests = getUserInterests();
-  if (Object.keys(interests).length === 0) return;
+  const articlesReadCount = getArticlesReadCount();
+  
+  if (Object.keys(interests).length === 0 && articlesReadCount === 0) return;
   
   try {
     const response = await fetch('/api/user/interests/sync', {
@@ -182,7 +211,10 @@ export async function syncInterestsToSupabase(accessToken) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`
       },
-      body: JSON.stringify({ interests }),
+      body: JSON.stringify({ 
+        interests,
+        articles_read_count: articlesReadCount
+      }),
       keepalive: true
     });
     
