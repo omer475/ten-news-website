@@ -1050,6 +1050,15 @@ def run_complete_pipeline():
                 for s in cluster_sources
             ]
             
+            # Only include components that were actually generated successfully
+            # This prevents showing "map" in components_order when map data is null
+            successful_components = [c for c in selected if components.get(c) is not None]
+            
+            if len(successful_components) < len(selected):
+                failed_components = [c for c in selected if c not in successful_components]
+                print(f"   ⚠️ Some components failed: {failed_components}")
+                print(f"   ✅ Publishing with: {successful_components}")
+            
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],  # Primary source URL
@@ -1065,7 +1074,7 @@ def run_complete_pipeline():
                 'details': components.get('details'),
                 'graph': components.get('graph'),
                 'map': components.get('map'),  # Map component with location data
-                'components_order': selected,
+                'components_order': successful_components,  # Only include successfully generated components
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
                 'ai_final_score': article_score,  # Importance score for sorting (0-1000)
