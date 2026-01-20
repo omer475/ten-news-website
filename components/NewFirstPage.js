@@ -524,7 +524,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           background: #fafafa;
           z-index: 1;
           overflow: hidden;
-          font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
         }
 
         .content-wrapper {
@@ -541,7 +541,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .greeting-section {
           text-align: center;
-          animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
           padding-top: 120px;
           opacity: 0;
           z-index: 2;
@@ -559,17 +559,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .greeting-hi {
-          font-size: 52px;
-          font-weight: 600;
-          letter-spacing: -0.035em;
-          color: #000000;
-          margin-bottom: 0;
-          line-height: 1;
-          font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-size: 28px;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+          color: #86868b;
+          margin-bottom: 8px;
+          line-height: 1.2;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
         }
 
         .greeting-name {
           font-weight: 600;
+          color: #1d1d1f;
         }
 
         .greeting-sub {
@@ -578,38 +579,36 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           align-items: center;
           gap: 0;
           margin: 0 auto;
-          margin-top: 16px;
-          animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+          margin-top: 0;
+          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
           opacity: 0;
         }
 
         .status-line {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
+          display: inline-block;
+          text-align: center;
         }
 
         .status-text {
-          font-size: 17px;
-          font-weight: 400;
-          letter-spacing: -0.01em;
-          color: #1f2937;
-          font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-size: 44px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: #1d1d1f;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          line-height: 1.15;
         }
 
         .status-time {
-          font-size: 17px;
-          font-weight: 400;
-          color: #6b7280;
-          font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          font-size: 44px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: #0071e3;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          line-height: 1.15;
         }
 
         .status-dot {
-          width: 4px;
-          height: 4px;
-          background: #9ca3af;
-          border-radius: 50%;
+          display: none;
         }
 
         .globe-section {
@@ -679,20 +678,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding-right: 24px;
           }
           .greeting-hi {
-            font-size: 44px;
-          }
-          .greeting-sub {
-            margin-top: 14px;
+            font-size: 24px;
+            margin-bottom: 6px;
           }
           .status-text {
-            font-size: 16px;
+            font-size: 36px;
           }
           .status-time {
-            font-size: 16px;
-          }
-          .status-dot {
-            width: 4px;
-            height: 4px;
+            font-size: 36px;
           }
           .globe-section {
             overflow: hidden;
@@ -715,23 +708,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         @media (max-width: 375px) {
           .greeting-hi {
-            font-size: 38px;
-          }
-          .greeting-sub {
-            margin-top: 12px;
-          }
-          .status-line {
-            gap: 8px;
+            font-size: 22px;
+            margin-bottom: 4px;
           }
           .status-text {
-            font-size: 15px;
+            font-size: 32px;
           }
           .status-time {
-            font-size: 15px;
-          }
-          .status-dot {
-            width: 3px;
-            height: 3px;
+            font-size: 32px;
           }
         }
       `}</style>
@@ -749,8 +733,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             <div className="greeting-sub">
               <div className="status-line">
                 <span className="status-text">{personalGreeting.subHighlight}</span>
-                <span className="status-dot"></span>
-                <span className="status-time">{personalGreeting.subRest}</span>
+                {personalGreeting.subRest && <span className="status-time"> {personalGreeting.subRest}</span>}
               </div>
             </div>
           </div>
