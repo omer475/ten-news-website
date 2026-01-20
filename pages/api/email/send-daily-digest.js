@@ -339,3 +339,4 @@ function generateDigestEmail(user, articles) {
     </html>
   `;
 }
+
