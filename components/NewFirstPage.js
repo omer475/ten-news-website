@@ -251,13 +251,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   const [personalGreeting] = useState(() => getPersonalizedGreeting());
 
-  // Color scale for globe - Minimal Modern Single-Tone
+  // Color scale for globe - Grayscale with blue accent for activity
   const getColor = (value) => {
-    // Elegant indigo scale - lighter = less activity, darker = more activity
+    // Grayscale to blue scale - gray = less activity, blue = more activity
     const colors = [
-      { pos: 0, r: 165, g: 180, b: 252 },    // Light indigo - Low activity
-      { pos: 0.5, r: 99, g: 102, b: 241 },   // Indigo - Medium activity  
-      { pos: 1, r: 67, g: 56, b: 202 }       // Deep indigo - High/Breaking
+      { pos: 0, r: 180, g: 185, b: 190 },    // Light gray - Low activity
+      { pos: 0.5, r: 130, g: 160, b: 200 },  // Gray-blue - Medium activity  
+      { pos: 1, r: 90, g: 130, b: 180 }      // Muted blue - High/Breaking
     ];
     
     let lower = colors[0], upper = colors[colors.length - 1];
@@ -305,7 +305,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   }, [initialStories]);
 
-  // Load 3D globe - MINIMAL MODERN DESIGN
+  // Load 3D globe - NEW DESIGN WITH FRONT AND BACK LAYERS
   useEffect(() => {
     if (!scriptsLoaded.d3 || !scriptsLoaded.topojson) return;
     if (typeof window === 'undefined') return;
@@ -336,43 +336,47 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('viewBox', `0 0 ${size} ${size}`)
           .style('overflow', 'visible');
         
-        const projection = d3.geoOrthographic()
+        // Front projection (normal view)
+        const projectionFront = d3.geoOrthographic()
           .scale(radius)
-          .center([0, 0])
           .translate([cx, cy])
           .clipAngle(90);
         
-        projectionRef.current = projection;
-        const path = d3.geoPath().projection(projection);
-        pathRef.current = path;
+        // Back projection (opposite side)
+        const projectionBack = d3.geoOrthographic()
+          .scale(radius)
+          .translate([cx, cy])
+          .clipAngle(90);
         
-        const defs = svg.append('defs');
-        
-        // ===== MINIMAL MODERN DESIGN =====
-        
-        // Clip path
-        defs.append('clipPath')
-          .attr('id', 'globe-clip')
-          .append('circle')
-          .attr('cx', cx)
-          .attr('cy', cy)
-          .attr('r', radius);
+        projectionRef.current = projectionFront;
+        const pathFront = d3.geoPath().projection(projectionFront);
+        const pathBack = d3.geoPath().projection(projectionBack);
+        pathRef.current = pathFront;
         
         // ===== RENDER LAYERS =====
         
-        // Layer 1: Ocean/Sea - light grey sphere
+        // Layer 1: Sphere outline
         svg.append('circle')
           .attr('cx', cx)
           .attr('cy', cy)
           .attr('r', radius)
-          .attr('fill', '#e8eaed')
-          .attr('class', 'globe-ocean');
+          .attr('fill', 'none')
+          .attr('stroke', '#e8e8e8')
+          .attr('stroke-width', 1)
+          .attr('class', 'sphere');
         
-        // Layer 2: Countries
-        const globe = svg.append('g')
-          .attr('class', 'globe-countries')
-          .attr('clip-path', 'url(#globe-clip)');
-        globeRef.current = globe;
+        // Layer 2: Back countries (mirrored horizontally)
+        const globeBack = svg.append('g')
+          .attr('class', 'globe-back')
+          .attr('transform', `translate(${size}, 0) scale(-1, 1)`);
+        
+        // Layer 3: Front countries
+        const globeFront = svg.append('g')
+          .attr('class', 'globe-countries');
+        globeRef.current = globeFront;
+        
+        // Store back reference for rotation updates
+        const globeBackRef = { current: globeBack };
         
         const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
         const topo = await res.json();
@@ -384,16 +388,38 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           features: countries.features.filter(f => !exclude.includes(+f.id))
         };
         
-        globe.selectAll('path')
+        // Render back countries (faded, behind)
+        globeBack.selectAll('path')
+          .data(filtered.features)
+          .enter()
+          .append('path')
+          .attr('class', 'country-back')
+          .attr('d', pathBack)
+          .attr('data-id', d => d.id);
+        
+        // Render front countries
+        globeFront.selectAll('path')
           .data(filtered.features)
           .enter()
           .append('path')
           .attr('class', 'country')
-          .attr('d', path)
+          .attr('d', pathFront)
           .attr('data-id', d => d.id);
         
         // Disable pointer events on SVG
         svg.style('pointer-events', 'none');
+        
+        // Update function for both projections
+        const updateGlobe = () => {
+          // Front: normal rotation
+          projectionFront.rotate([rotationRef.current.x, rotationRef.current.y]);
+          
+          // Back: 180 degrees opposite, negate Y because of horizontal mirror
+          projectionBack.rotate([rotationRef.current.x + 180, -rotationRef.current.y]);
+          
+          globeFront.selectAll('path').attr('d', pathFront);
+          globeBackRef.current.selectAll('path').attr('d', pathBack);
+        };
         
         // Auto rotation - smooth and elegant
         let animationId;
@@ -402,11 +428,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           if (!isActive) return;
           if (isRotatingRef.current && !isDraggingRef.current) {
             rotationRef.current.x += 0.15;
-            projection.rotate([rotationRef.current.x, rotationRef.current.y]);
-            globe.selectAll('path').attr('d', path);
+            updateGlobe();
           }
           animationId = requestAnimationFrame(rotate);
         };
+        
+        updateGlobe();
         rotate();
         
         setMapLoaded(true);
@@ -459,9 +486,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
       }
       
-      // Reset non-news countries to visible gray
+      // Reset non-news countries to match the new design
       if (!hasNews) {
-        el.style('fill', '#c9cdd3')
+        el.style('fill', '#e0e0e0')
           .classed('highlighted', false);
       }
     });
@@ -616,19 +643,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: block;
         }
 
-        .globe-container :global(.globe-ocean) {
-          transition: fill 0.3s ease;
+        .globe-container :global(.sphere) {
+          fill: none;
+          stroke: #e8e8e8;
+          stroke-width: 1;
+        }
+
+        .globe-container :global(.country-back) {
+          fill: #f0f0f0;
+          stroke: #e8e8e8;
+          stroke-width: 0.3;
+          opacity: 0.35;
         }
 
         .globe-container :global(.country) {
-          fill: #d1d5db;
-          stroke: #e5e7eb;
-          stroke-width: 0.4;
+          fill: #e0e0e0;
+          stroke: #ffffff;
+          stroke-width: 0.5;
           transition: fill 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .globe-container :global(.country.highlighted) {
-          stroke: #e5e7eb;
+          stroke: #ffffff;
           stroke-width: 0.5;
         }
 
