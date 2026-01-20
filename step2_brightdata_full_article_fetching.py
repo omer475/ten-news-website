@@ -86,6 +86,84 @@ class BrightDataArticleFetcher:
         except:
             return False
     
+    def extract_og_image(self, html: str, url: str) -> Optional[str]:
+        """
+        Extract the best quality image from article page HTML.
+        Used for sources like BBC/DW where RSS images are low quality.
+        
+        Priority order:
+        1. og:image meta tag
+        2. twitter:image meta tag  
+        3. og:image:secure_url meta tag
+        4. First large image in article body
+        
+        Args:
+            html: Full HTML content of the page
+            url: Article URL (for debugging)
+            
+        Returns:
+            Best image URL or None if not found
+        """
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Priority 1: og:image
+            og_image = soup.find('meta', property='og:image')
+            if og_image and og_image.get('content'):
+                img_url = og_image['content']
+                if img_url.startswith('//'):
+                    img_url = 'https:' + img_url
+                return img_url
+            
+            # Priority 2: twitter:image
+            twitter_image = soup.find('meta', attrs={'name': 'twitter:image'})
+            if twitter_image and twitter_image.get('content'):
+                img_url = twitter_image['content']
+                if img_url.startswith('//'):
+                    img_url = 'https:' + img_url
+                return img_url
+            
+            # Priority 3: og:image:secure_url
+            og_secure = soup.find('meta', property='og:image:secure_url')
+            if og_secure and og_secure.get('content'):
+                img_url = og_secure['content']
+                if img_url.startswith('//'):
+                    img_url = 'https:' + img_url
+                return img_url
+            
+            # Priority 4: First large image in article body
+            article = soup.find('article') or soup.find('main') or soup.find('div', class_=re.compile(r'article|content|story', re.I))
+            if article:
+                for img in article.find_all('img', limit=10):
+                    src = img.get('src') or img.get('data-src') or img.get('data-lazy-src')
+                    if src:
+                        # Skip logos, icons, and tracking pixels
+                        src_lower = src.lower()
+                        if any(skip in src_lower for skip in ['logo', 'icon', 'avatar', '1x1', 'pixel', 'tracking', 'ad-']):
+                            continue
+                        # Prefer images with width > 400 if specified
+                        width = img.get('width')
+                        if width:
+                            try:
+                                if int(width) < 300:
+                                    continue
+                            except:
+                                pass
+                        if src.startswith('//'):
+                            src = 'https:' + src
+                        elif src.startswith('/'):
+                            # Make absolute URL
+                            from urllib.parse import urlparse
+                            parsed = urlparse(url)
+                            src = f"{parsed.scheme}://{parsed.netloc}{src}"
+                        return src
+            
+            return None
+            
+        except Exception as e:
+            print(f"   ⚠️ Error extracting og:image: {e}")
+            return None
+    
     def extract_article_text(self, html: str, url: str) -> Dict:
         """
         Extract article text from HTML using BeautifulSoup.
@@ -155,11 +233,15 @@ class BrightDataArticleFetcher:
             if len(article_text) > max_chars:
                 article_text = article_text[:max_chars] + "\n\n[Content truncated...]"
             
+            # Extract og:image for high-quality image
+            og_image = self.extract_og_image(html, url)
+            
             return {
                 'url': url,
                 'title': title,
                 'text': article_text.strip(),
-                'published_time': ''
+                'published_time': '',
+                'og_image': og_image  # High-quality image from article page
             }
             
         except Exception as e:

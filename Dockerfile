@@ -31,6 +31,7 @@ COPY step5_gemini_component_selection.py .
 COPY step2_gemini_context_search.py .
 COPY step6_7_claude_component_generation.py .
 COPY step8_fact_verification.py .
+COPY step10_article_scoring.py .
 COPY article_deduplication.py .
 
 # Copy the Cloud Run entrypoint

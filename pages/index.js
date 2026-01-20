@@ -3657,6 +3657,36 @@ export default function Home() {
           --c-light: #fff;
           --c-dark: #000;
           --c-content: #224;
+          
+          /* Responsive Typography Scale - Default for iPhone 16 Pro (393px) */
+          --title-size: clamp(26px, 8vw, 48px);
+          --headline-size: clamp(32px, 10vw, 60px);
+          --summary-size: clamp(13px, 4vw, 17px);
+          --bullet-size: clamp(14px, 4.2vw, 17px);
+          --category-size: clamp(9px, 2.8vw, 12px);
+          --time-size: clamp(11px, 3.3vw, 14px);
+          --info-label-size: clamp(8px, 2.2vw, 10px);
+          --info-value-size: clamp(18px, 5.5vw, 26px);
+          --info-unit-size: clamp(10px, 2.8vw, 12px);
+          
+          /* Responsive Spacing */
+          --content-padding: clamp(12px, 5vw, 22px);
+          --title-margin: clamp(12px, 5vw, 22px);
+          --section-gap: clamp(6px, 2.5vw, 14px);
+          --bullet-spacing: clamp(10px, 3vw, 16px);
+          
+          /* Responsive Image/Header Area Height */
+          --image-height: 42vh;
+          --content-top-offset: 52px;
+          
+          /* Responsive element sizes */
+          --button-size: clamp(28px, 8vw, 36px);
+          --icon-size: clamp(12px, 3.5vw, 16px);
+          --logo-size: clamp(14px, 4.5vw, 20px);
+          --share-btn-size: clamp(28px, 8vw, 36px);
+          --lang-btn-size: clamp(30px, 9vw, 38px);
+          --lang-icon-size: clamp(13px, 4vw, 17px);
+          --gap-size: clamp(6px, 2vw, 10px);
           --glass-reflex-dark: 1;
           --glass-reflex-light: 1;
           --saturation: 150%;
@@ -3764,7 +3794,7 @@ export default function Home() {
           flex-direction: column;
           width: 100%;
           color: #000;
-          padding: 6px 20px 12px 20px;
+          padding: 6px var(--content-padding, 20px) 12px var(--content-padding, 20px);
           line-height: 1.4;
         }
 
@@ -3813,8 +3843,8 @@ export default function Home() {
           justify-content: space-between;
           padding-top: 0;
           padding-bottom: 0;
-          padding-left: 20px;
-          padding-right: 20px;
+          padding-left: var(--content-padding, 20px);
+          padding-right: var(--content-padding, 20px);
           border-bottom: 0.5px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
           transition: all 0.3s cubic-bezier(0.28, 0, 0.4, 1);
           touch-action: auto;
@@ -3823,7 +3853,7 @@ export default function Home() {
 
         /* Logo - Apple-inspired Typography */
         .logo {
-          font-size: 21px;
+          font-size: clamp(18px, 5vw, 21px);
           font-weight: 600;
           letter-spacing: -0.6px;
           cursor: pointer;
@@ -4008,7 +4038,7 @@ export default function Home() {
           text-align: center;
           max-width: 800px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: 0 var(--content-padding, 20px);
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -4016,27 +4046,27 @@ export default function Home() {
         }
 
         .date-header {
-          font-size: 12px;
+          font-size: clamp(10px, 3vw, 12px);
           font-weight: 600;
-          letter-spacing: 2px;
+          letter-spacing: clamp(1px, 0.5vw, 2px);
           color: #dc2626;
           text-transform: uppercase;
-          margin-bottom: 40px;
+          margin-bottom: clamp(24px, 6vw, 40px);
         }
 
         .main-headline {
-          font-size: 60px; /* ~15% larger */
+          font-size: var(--headline-size);
           font-weight: 900; /* extra bold */
           line-height: 1.12; /* compact */
           letter-spacing: -1px; /* tighter */
-          margin-bottom: 40px;
+          margin-bottom: clamp(24px, 6vw, 40px);
           color: ${darkMode ? '#ffffff' : '#0f172a'};
         }
 
         .subheadline {
-          font-size: 22px;
+          font-size: clamp(16px, 5vw, 22px);
           line-height: 1.4;
-          margin-bottom: 40px;
+          margin-bottom: clamp(24px, 6vw, 40px);
           text-align: center;
         }
 
@@ -4128,13 +4158,13 @@ export default function Home() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px;
+          padding: clamp(4px, 1.5vw, 6px) clamp(8px, 2.5vw, 12px);
           border-radius: 6px;
-          font-size: 11px;
+          font-size: var(--category-size);
           font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          margin-bottom: 10px;
+          margin-bottom: clamp(6px, 2vw, 10px);
           transition: all 0.2s ease;
           cursor: pointer;
         }
@@ -4149,19 +4179,19 @@ export default function Home() {
 
         .news-title {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-          font-size: 48px;
+          font-size: var(--title-size);
           font-weight: 900;
           line-height: 1.1;
           letter-spacing: -0.5px;
-          margin-bottom: 20px;
+          margin-bottom: var(--title-margin);
           color: ${darkMode ? '#ffffff' : '#000000'};
         }
 
         .news-summary {
-          font-size: 16px;
+          font-size: var(--summary-size);
           color: ${darkMode ? '#d1d5db' : '#4a4a4a'};
           line-height: 1.6;
-          margin-bottom: 16px;
+          margin-bottom: var(--section-gap);
           text-align: left;
           border-bottom: none;
           padding-bottom: 0;
@@ -4671,7 +4701,7 @@ export default function Home() {
           align-items: center;
           gap: 2px;
           width: auto;
-          height: 34px;
+          height: calc(var(--button-size, 36px) * 0.95);
           box-sizing: border-box;
           padding: 3px;
           margin: 0;
@@ -4715,8 +4745,8 @@ export default function Home() {
           justify-content: center;
           align-items: center;
           padding: 0;
-          width: 36px;
-          height: 28px;
+          width: var(--button-size, 36px);
+          height: calc(var(--button-size, 36px) * 0.78);
           box-sizing: border-box;
           border-radius: 9px;
           opacity: 1;
@@ -4751,8 +4781,8 @@ export default function Home() {
           left: 3px;
           top: 3px;
           display: block;
-          width: 36px;
-          height: 28px;
+          width: var(--button-size, 36px);
+          height: calc(var(--button-size, 36px) * 0.78);
           border-radius: 9px;
           background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
           z-index: -1;
@@ -4843,6 +4873,8 @@ export default function Home() {
           --c-dark: #000;
           --glass-reflex-dark: 1;
           --glass-reflex-light: 1;
+          width: var(--lang-btn-size, 36px);
+          height: calc(var(--lang-btn-size, 36px) * 0.9);
           --saturation: 150%;
 
           display: flex;
@@ -4876,8 +4908,8 @@ export default function Home() {
         }
 
         .language-icon-btn svg {
-          width: 16px;
-          height: 16px;
+          width: var(--lang-icon-size, 16px);
+          height: var(--lang-icon-size, 16px);
           opacity: 1;
         }
 
@@ -5246,8 +5278,8 @@ export default function Home() {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 2px;
-          width: 14px;
-          height: 14px;
+          width: var(--icon-size, 14px);
+          height: var(--icon-size, 14px);
           padding: 0.5px;
         }
 
@@ -5274,8 +5306,8 @@ export default function Home() {
           align-items: flex-start;
           justify-content: center;
           gap: 3px;
-          width: 14px;
-          height: 14px;
+          width: var(--icon-size, 14px);
+          height: var(--icon-size, 14px);
           position: relative;
         }
 
@@ -5401,18 +5433,6 @@ export default function Home() {
             left: 0;
           }
           
-          .news-title {
-            font-size: 30px;
-          }
-          
-          .main-headline {
-            font-size: 38px; /* ~12% larger */
-            font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 30px;
-            line-height: 1.12;
-          }
-          
           .date-header {
             font-size: 11px;
             letter-spacing: 2px;
@@ -5420,7 +5440,7 @@ export default function Home() {
           }
           
           .subheadline {
-            font-size: 18px;
+            font-size: clamp(15px, 4.5vw, 18px);
             margin-bottom: 30px;
           }
           
@@ -5435,7 +5455,7 @@ export default function Home() {
           }
           
           .opening-container {
-            padding: 0 20px;
+            padding: 0 var(--content-padding);
             min-height: calc(100vh - 120px);
           }
           
@@ -5461,7 +5481,144 @@ export default function Home() {
             height: 18px;
             background: linear-gradient(180deg, #1f2937, #000000);
           }
+        }
+        
+        /* iPhone Pro Max / Plus models (wider screens ~430px) */
+        @media (min-width: 414px) and (max-width: 480px) {
+          :root {
+            --title-size: 38px;
+            --headline-size: 48px;
+            --summary-size: 17px;
+            --bullet-size: 17px;
+            --category-size: 12px;
+            --time-size: 14px;
+            --info-label-size: 10px;
+            --info-value-size: 26px;
+            --info-unit-size: 12px;
+            --content-padding: 22px;
+            --title-margin: 22px;
+            --section-gap: 14px;
+            --bullet-spacing: 16px;
+            --button-size: 38px;
+            --icon-size: 16px;
+            --logo-size: 20px;
+            --share-btn-size: 38px;
+            --lang-btn-size: 40px;
+            --lang-icon-size: 18px;
+            --gap-size: 10px;
+          }
+        }
+        
+        /* Standard iPhone 16/17 models (~390px) */
+        @media (min-width: 380px) and (max-width: 413px) {
+          :root {
+            --title-size: 32px;
+            --headline-size: 42px;
+            --summary-size: 16px;
+            --bullet-size: 16px;
+            --category-size: 11px;
+            --time-size: 13px;
+            --info-label-size: 9px;
+            --info-value-size: 24px;
+            --info-unit-size: 11px;
+            --content-padding: 18px;
+            --title-margin: 18px;
+            --section-gap: 12px;
+            --bullet-spacing: 14px;
+            --button-size: 34px;
+            --icon-size: 15px;
+            --logo-size: 18px;
+            --share-btn-size: 34px;
+            --lang-btn-size: 36px;
+            --lang-icon-size: 16px;
+            --gap-size: 8px;
+          }
+        }
+        
+        /* iPhone SE / iPhone 16e / smaller models (~375px and below) */
+        @media (max-width: 379px) {
+          :root {
+            --title-size: 26px;
+            --headline-size: 34px;
+            --summary-size: 14px;
+            --bullet-size: 14px;
+            --category-size: 10px;
+            --time-size: 12px;
+            --info-label-size: 8px;
+            --info-value-size: 20px;
+            --info-unit-size: 10px;
+            --content-padding: 14px;
+            --title-margin: 14px;
+            --section-gap: 10px;
+            --bullet-spacing: 12px;
+            --button-size: 30px;
+            --icon-size: 13px;
+            --logo-size: 16px;
+            --share-btn-size: 30px;
+            --lang-btn-size: 32px;
+            --lang-icon-size: 14px;
+            --gap-size: 6px;
+          }
           
+          .news-category {
+            padding: 4px 8px;
+          }
+          
+          .header {
+            padding-left: 14px;
+            padding-right: 14px;
+          }
+          
+          .logo {
+            font-size: 17px;
+          }
+        }
+        
+        /* Extra small screens (very compact phones) */
+        @media (max-width: 340px) {
+          :root {
+            --title-size: 22px;
+            --headline-size: 28px;
+            --summary-size: 13px;
+            --bullet-size: 13px;
+            --category-size: 9px;
+            --time-size: 11px;
+            --info-label-size: 7px;
+            --info-value-size: 18px;
+            --info-unit-size: 9px;
+            --content-padding: 10px;
+            --title-margin: 10px;
+            --section-gap: 8px;
+            --bullet-spacing: 10px;
+            --button-size: 26px;
+            --icon-size: 11px;
+            --logo-size: 14px;
+            --share-btn-size: 26px;
+            --lang-btn-size: 28px;
+            --lang-icon-size: 12px;
+            --gap-size: 5px;
+          }
+          
+          .logo {
+            font-size: 16px;
+          }
+        }
+        
+        /* Height-based responsive adjustments for different phone heights */
+        /* Shorter phones (like iPhone SE) */
+        @media (max-height: 700px) {
+          :root {
+            --image-height: 36vh;
+            --content-top-offset: 40px;
+          }
+        }
+        
+        /* Taller phones (like iPhone Pro Max) */
+        @media (min-height: 900px) {
+          :root {
+            --image-height: 44vh;
+            --content-top-offset: 56px;
+          }
         }
       `}</style>
 
@@ -5787,7 +5944,7 @@ export default function Home() {
                       left: '0',
                       right: '0',
                       width: '100vw',
-                      height: 'calc(42vh + env(safe-area-inset-top, 0px))',
+                      height: 'calc(var(--image-height, 42vh) + env(safe-area-inset-top, 0px))',
                       margin: 0,
                       padding: 0,
                       background: (story.urlToImage && story.urlToImage.trim() !== '' && story.urlToImage !== 'null' && story.urlToImage !== 'undefined') ? 'transparent' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -6200,10 +6357,10 @@ export default function Home() {
                       {/* Graduated Blur Overlay - Ease-In Curve (55-100%) */}
                       <div style={{
                         position: 'fixed',
-                        top: 'calc(42vh * 0.55)',
+                        top: 'calc(var(--image-height, 42vh) * 0.55)',
                         left: '0',
                         width: '100%',
-                        height: 'calc(42vh * 0.45 + 74px)',
+                        height: 'calc(var(--image-height, 42vh) * 0.45 + 74px)',
                         backdropFilter: 'blur(50px)',
                         WebkitBackdropFilter: 'blur(50px)',
                         background: imageDominantColors[index]?.blurColor
@@ -6341,10 +6498,10 @@ export default function Home() {
                       className="share-button"
                       style={{
                         position: 'fixed',
-                        top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-                        right: '16px',
-                        width: '34px',
-                        height: '34px',
+                        top: 'calc(env(safe-area-inset-top, 0px) + var(--content-padding, 16px))',
+                        right: 'var(--content-padding, 16px)',
+                        width: 'var(--share-btn-size, 34px)',
+                        height: 'var(--share-btn-size, 34px)',
                         borderRadius: '12px',
                         border: 'none',
                         cursor: 'pointer',
@@ -6420,7 +6577,7 @@ export default function Home() {
                           left: '0',
                           right: '0',
                           width: '100vw',
-                          height: '42vh',
+                          height: 'var(--image-height, 42vh)',
                           margin: 0,
                           padding: 0,
                           background: gradient,
@@ -6434,7 +6591,7 @@ export default function Home() {
                           pointerEvents: 'none'
                         }}>
                           <div style={{
-                            fontSize: '64px',
+                            fontSize: 'clamp(48px, 15vw, 64px)',
                             filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
                           }}>
                             {emoji}
@@ -6456,7 +6613,7 @@ export default function Home() {
                     {/* Apple HIG - Content Container */}
                     <div style={{
                       position: 'fixed',
-                      top: 'calc(42vh + 20px)',
+                      top: 'calc(var(--image-height, 42vh) + 20px)',
                       left: '0',
                       right: '0',
                       bottom: '0',
@@ -6523,9 +6680,9 @@ export default function Home() {
                     {/* Content Area - Starts After Image */}
                     <div className="news-content" style={{
                       position: 'relative',
-                        paddingTop: 'calc(42vh + 52px)',
-                        paddingLeft: '20px',
-                        paddingRight: '20px',
+                        paddingTop: 'calc(var(--image-height, 42vh) + var(--content-top-offset, 52px))',
+                        paddingLeft: 'var(--content-padding, 20px)',
+                        paddingRight: 'var(--content-padding, 20px)',
                         zIndex: '2',
                         background: 'transparent',
                         width: '100%',
@@ -6549,7 +6706,7 @@ export default function Home() {
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '8px',
+                          gap: 'var(--gap-size, 8px)',
                           flex: '0 0 auto'
                         }}>
                           {/* Publisher Logo - Clickable to visit source */}
@@ -6578,8 +6735,8 @@ export default function Home() {
                                 src={getLogoUrl(story.source)}
                                 alt={story.source}
                                 style={{
-                                  width: '18px',
-                                  height: '18px',
+                                  width: 'var(--logo-size, 18px)',
+                                  height: 'var(--logo-size, 18px)',
                                   borderRadius: '4px',
                                   objectFit: 'contain',
                                   backgroundColor: 'transparent',
@@ -6601,7 +6758,7 @@ export default function Home() {
                           )}
                           {/* Time Display */}
                           <div style={{
-                            fontSize: '13px',
+                            fontSize: 'var(--time-size, 13px)',
                             fontWeight: '400',
                             color: darkMode ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.56)',
                             letterSpacing: '-0.08px',
@@ -6615,7 +6772,7 @@ export default function Home() {
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '8px',
+                          gap: 'var(--gap-size, 8px)',
                           flex: '0 0 auto'
                         }}>
                           {/* Language Icon Button with Working Switcher Dropdown */}
@@ -7062,7 +7219,7 @@ export default function Home() {
                                   {bullets.map((bullet, i) => (
                                     <li key={`${languageMode}-${i}`} style={{
                                       marginBottom: '0',
-                                      fontSize: '16px',
+                                      fontSize: 'var(--bullet-size, 15px)',
                                       lineHeight: '1.5',
                                       fontWeight: '400',
                                       letterSpacing: '-0.01em',
@@ -7070,7 +7227,7 @@ export default function Home() {
                                       animation: 'fadeSlideIn 0.4s ease',
                                       animationDelay: `${i * 0.08}s`,
                                       animationFillMode: 'both',
-                                      paddingLeft: '20px',
+                                      paddingLeft: 'var(--bullet-spacing, 16px)',
                                       position: 'relative',
                                       color: darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)',
                                       flex: '0 0 auto'
@@ -7847,7 +8004,7 @@ export default function Home() {
                                       }}>
                                         <div className="news-detail-label" style={{
                                           color: darkMode ? 'rgba(255,255,255,0.7)' : '#000000',
-                                          fontSize: '9px',
+                                          fontSize: 'var(--info-label-size, 9px)',
                                           fontWeight: '700',
                                           marginBottom: '3px',
                                           textAlign: 'center',
@@ -7858,7 +8015,7 @@ export default function Home() {
                                         }}>{cleanLabel}</div>
                                         <div className="news-detail-value details-value-animated" style={{ 
                                           color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
-                                          fontSize: '18px',
+                                          fontSize: 'var(--info-value-size, 18px)',
                                           fontWeight: '800',
                                           textAlign: 'center',
                                           textShadow: 'none',
@@ -7866,7 +8023,7 @@ export default function Home() {
                                         }}>{mainValue}</div>
                                         {subtitle && <div className="news-detail-subtitle" style={{ 
                                           color: darkMode ? 'rgba(255,255,255,0.6)' : '#333333',
-                                          fontSize: '9px',
+                                          fontSize: 'var(--info-unit-size, 9px)',
                                           marginTop: '2px',
                                           textAlign: 'center',
                                           textShadow: darkMode ? 'none' : '1px 1px 1px rgba(255, 255, 255, 0.5)',

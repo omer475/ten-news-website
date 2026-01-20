@@ -268,36 +268,6 @@ export default function MapboxMap({
       } catch (err) {
         console.log('⚠️ Could not add boundary layers:', err.message);
       }
-
-      // Add small center marker for reference
-      try {
-        map.addSource('center-point', {
-          'type': 'geojson',
-          'data': {
-            'type': 'Feature',
-            'geometry': {
-              'type': 'Point',
-              'coordinates': [center.lon || 0, center.lat || 0]
-            }
-          }
-        });
-
-        map.addLayer({
-          'id': 'center-point-marker',
-          'type': 'circle',
-          'source': 'center-point',
-          'paint': {
-            'circle-radius': 4,
-            'circle-color': highlightColor,
-            'circle-opacity': 0.8,
-            'circle-stroke-width': 1.5,
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-opacity': 1
-          }
-        });
-      } catch (err) {
-        console.log('⚠️ Could not add center point:', err.message);
-      }
     });
 
     // Handle resize

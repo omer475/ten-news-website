@@ -25,12 +25,13 @@ from datetime import datetime
 @dataclass
 class SynthesisConfig:
     """Configuration for multi-source synthesis"""
-    model: str = "gemini-2.0-flash-exp"  # Temporarily using Gemini instead of Claude
+    model: str = "claude-sonnet-4-20250514"  # Claude for better rate limits than Gemini
     max_tokens: int = 3000  # Enough for content + both bullet versions
     temperature: float = 0.3
     timeout: int = 90
-    retry_attempts: int = 3
+    retry_attempts: int = 5
     retry_delay: float = 2.0
+    use_claude: bool = True  # Use Claude instead of Gemini
 
 
 # ==========================================
@@ -251,6 +252,37 @@ GEOGRAPHIC ACCURACY:
   • Double-check country names before finalizing
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 CRITICAL: IDENTIFY THE ARTICLE'S UNIQUE ANGLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DO NOT just pick the most dramatic fact. Focus on what THIS article is actually about.
+
+BEFORE WRITING, ASK YOURSELF:
+  1. What is the SOURCE ARTICLE'S original title? → This tells you the ANGLE
+  2. Is this article about a NEW event, or REACTIONS to an old event?
+  3. What makes THIS article different from previous coverage?
+
+COMMON MISTAKE TO AVOID:
+  ✗ Source title: "Venezuelan Exiles in Chile Celebrate Maduro Capture"
+  ✗ WRONG output: "US Forces Capture Maduro in Venezuela Strike" (this is OLD news!)
+  ✓ CORRECT output: "Venezuelan Exiles in Chile Celebrate Maduro Capture"
+
+RULES FOR REACTION/FOLLOW-UP ARTICLES:
+  • If the source title mentions "reactions", "responds", "celebrates", "fears" → Write about the REACTIONS
+  • If a major event is mentioned as BACKGROUND context → Don't make it the headline
+  • If the event happened days/weeks ago → The article is about AFTERMATH, not the event itself
+  • The headline should match the SOURCE ARTICLE'S focus, not the most dramatic fact mentioned
+
+EXAMPLES:
+  Source: "Tech Workers React to Mass Layoffs at Google"
+  ✗ WRONG: "Google Cuts 12,000 Jobs" (that's old news)
+  ✓ CORRECT: "Tech Workers Share Fears After Google Layoffs"
+
+  Source: "Scientists Study Long-Term Effects of COVID"
+  ✗ WRONG: "COVID Pandemic Kills Millions" (that's background)
+  ✓ CORRECT: "Scientists Reveal Long COVID Affects 1 in 5 Patients"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 OUTPUT FORMAT (JSON)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -310,12 +342,15 @@ Content: {content}
     
     prompt = f"""You are writing a news article by synthesizing information from {len(sorted_sources)} sources about the same event.
 
-EVENT: {cluster.get('event_name', 'Unknown Event')}
-
 {sources_text}
 
+🎯 CRITICAL: Look at each SOURCE TITLE above. The title tells you what angle to write about.
+- If source title is about "reactions" or "celebrates" → Write about REACTIONS, not the original event
+- If source title mentions a specific angle → USE that angle for YOUR title
+- Do NOT just pick the most dramatic fact if it's background information
+
 INSTRUCTIONS:
-1. Write ONE comprehensive article that synthesizes information from ALL {len(sorted_sources)} sources above
+1. Write ONE comprehensive article that matches the ANGLE of the source article(s)
 2. Combine the most important facts from each source
 3. If sources disagree on facts (like casualty numbers), use the most recent source or say "at least X"
 4. DO NOT quote sources or say "according to" - write as if you're reporting firsthand
@@ -325,6 +360,7 @@ INSTRUCTIONS:
    - STANDARD: 60-80 characters each (shorter, scannable)
    - DETAILED: 90-120 characters each (more context)
 8. Title and content are the SAME - only bullets differ in length
+9. Your title should reflect the SOURCE ARTICLE'S focus, not background events mentioned
 
 OUTPUT FORMAT (JSON):
 {{
@@ -462,12 +498,13 @@ class MultiSourceSynthesizer:
         Initialize synthesizer with API key and config.
         
         Args:
-            api_key: Gemini API key (temporarily, was Anthropic)
+            api_key: Claude/Anthropic API key
             config: SynthesisConfig instance (uses defaults if None)
         """
         self.api_key = api_key
         self.config = config or SynthesisConfig()
-        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.model}:generateContent?key={api_key}"
+        # Use Claude API
+        self.api_url = "https://api.anthropic.com/v1/messages"
     
     def synthesize_cluster(self, cluster: Dict, full_articles: List[Dict], is_update: bool = False, current_article: Dict = None) -> Optional[Dict]:
         """
@@ -500,39 +537,42 @@ class MultiSourceSynthesizer:
         # Try up to retry_attempts times
         for attempt in range(self.config.retry_attempts):
             try:
-                # Build Gemini API request
+                # Build Claude API request
+                headers = {
+                    "x-api-key": self.api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json"
+                }
+                
                 request_data = {
-                    "contents": [
-                        {
-                            "role": "user",
-                            "parts": [{"text": SYSTEM_PROMPT + "\n\n" + prompt}]
-                        }
-                    ],
-                    "generationConfig": {
-                        "temperature": self.config.temperature,
-                        "maxOutputTokens": self.config.max_tokens,
-                        "responseMimeType": "application/json"
-                    }
+                    "model": self.config.model,
+                    "max_tokens": self.config.max_tokens,
+                    "temperature": self.config.temperature,
+                    "system": SYSTEM_PROMPT,
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ]
                 }
                 
                 response = requests.post(
                     self.api_url,
+                    headers=headers,
                     json=request_data,
                     timeout=self.config.timeout
                 )
                 
                 if response.status_code == 429:
-                    # Rate limited - wait and retry
-                    wait_time = (attempt + 1) * 3
-                    print(f"   ⚠️ Rate limited, waiting {wait_time}s...")
+                    # Rate limited - wait and retry with exponential backoff
+                    wait_time = (2 ** attempt) * 15  # 15s, 30s, 60s, 120s, 240s
+                    print(f"   ⚠️ Rate limited (attempt {attempt + 1}/{self.config.retry_attempts}), waiting {wait_time}s...")
                     time.sleep(wait_time)
                     continue
                 
                 response.raise_for_status()
                 response_json = response.json()
                 
-                # Extract response text from Gemini format
-                response_text = response_json['candidates'][0]['content']['parts'][0]['text']
+                # Extract response text from Claude format
+                response_text = response_json['content'][0]['text']
                 
                 # Remove markdown code blocks if present
                 response_text = response_text.replace('```json', '').replace('```', '').strip()

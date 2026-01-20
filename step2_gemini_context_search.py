@@ -22,7 +22,7 @@ def search_gemini_context(claude_title: str, claude_summary: str, full_text: str
         raise ValueError("GEMINI_API_KEY environment variable not set")
     
     # Use Gemini 2.0 Flash with Google Search grounding
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     
     # Use full_text if provided, otherwise use summary
     article_text = full_text if full_text else claude_summary

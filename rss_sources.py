@@ -441,18 +441,6 @@ RSS_FEEDS = [
         'tier': 'premium'
     },
     {
-        'name': 'The Times of India',
-        'url': 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The Hindu',
-        'url': 'https://www.thehindu.com/news/national/feeder/default.rss',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'The Sydney Morning Herald',
         'url': 'https://www.smh.com.au/rss/feed.xml',
         'category': 'news',

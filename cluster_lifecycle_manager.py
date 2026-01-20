@@ -26,7 +26,7 @@ class LifecycleConfig:
     """Configuration for cluster lifecycle management"""
     
     # Cluster closure rules
-    INACTIVITY_HOURS = 24  # Close after 24h without updates
+    INACTIVITY_HOURS = 36  # Close after 36h without updates
     MAX_LIFETIME_HOURS = 48  # Close after 48h regardless of activity
     
     # Merge detection
@@ -197,7 +197,7 @@ class ClusterLifecycleManager:
                     print(f"💤 {event_name}")
                     print(f"   Inactive: {inactive_hours:.1f}h (limit: {self.config.INACTIVITY_HOURS}h)")
                     
-                    if self.close_cluster(cluster_id, '24h_inactivity'):
+                    if self.close_cluster(cluster_id, '36h_inactivity'):
                         stats['closed_inactivity'] += 1
                         stats['total_closed'] += 1
                     continue
