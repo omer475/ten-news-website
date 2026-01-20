@@ -137,6 +137,13 @@ export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThre
   const interests = getUserInterests();
   const hasInterests = Object.keys(interests).length > 0;
   
+  // DEBUG: Log all article scores to diagnose the issue
+  console.log('[interests] 📊 ALL ARTICLE SCORES BEFORE RANKING:');
+  articles.slice(0, 10).forEach((a, i) => {
+    const score = a.final_score || a.ai_final_score || 0;
+    console.log(`  ${i+1}. Score: ${score} | "${a.title?.substring(0, 40)}..."`);
+  });
+  
   // Separate must-know articles from regular articles
   const mustKnowArticles = articles.filter(a => {
     const score = a.final_score || a.ai_final_score || 0;
@@ -148,7 +155,8 @@ export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThre
     return score < mustKnowThreshold;
   });
   
-  console.log(`[interests] ${mustKnowArticles.length} must-know articles (score >= ${mustKnowThreshold}), ${regularArticles.length} regular articles`);
+  console.log(`[interests] ✅ ${mustKnowArticles.length} MUST-KNOW (score >= ${mustKnowThreshold})`);
+  console.log(`[interests] 📰 ${regularArticles.length} REGULAR (score < ${mustKnowThreshold})`);
   
   // Must-know articles: Keep original score order (no personalization)
   mustKnowArticles.sort((a, b) => {
