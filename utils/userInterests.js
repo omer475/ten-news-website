@@ -123,48 +123,73 @@ export function getArticlePersonalizationScore(article, interests = null) {
 
 /**
  * Rank articles based on user interests + base score
+ * IMPORTANT: Must-know articles (score >= 900) stay at top in original order
+ * Personalization only re-ranks the lower-importance articles
+ * 
  * @param {Array<Object>} articles - Array of articles with interest_tags
  * @param {number} personalizationWeight - How much to weight personalization (0-1)
+ * @param {number} mustKnowThreshold - Score threshold for must-know articles (default 900)
  * @returns {Array<Object>} Sorted articles
  */
-export function rankArticles(articles, personalizationWeight = 0.7) {
+export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThreshold = 900) {
   if (!articles || articles.length === 0) return articles;
   
   const interests = getUserInterests();
   const hasInterests = Object.keys(interests).length > 0;
   
-  if (!hasInterests) {
-    // No personalization data, return original order (by ai_final_score)
-    return articles;
-  }
-  
-  // Score and sort
-  const scored = articles.map(article => {
-    const baseScore = article.final_score || article.ai_final_score || 500;
-    const personalizationBoost = getArticlePersonalizationScore(article, interests);
-    
-    // Combine scores: base score + personalization boost (weighted)
-    // Personalization boost is scaled to be comparable to base score
-    const combinedScore = baseScore + (personalizationBoost * 10 * personalizationWeight);
-    
-    return {
-      ...article,
-      _personalizedScore: combinedScore,
-      _personalizationBoost: personalizationBoost
-    };
+  // Separate must-know articles from regular articles
+  const mustKnowArticles = articles.filter(a => {
+    const score = a.final_score || a.ai_final_score || 0;
+    return score >= mustKnowThreshold;
   });
   
-  // Sort by combined score (descending)
-  scored.sort((a, b) => b._personalizedScore - a._personalizedScore);
+  const regularArticles = articles.filter(a => {
+    const score = a.final_score || a.ai_final_score || 0;
+    return score < mustKnowThreshold;
+  });
   
-  console.log('[interests] Ranked articles, top 3 boosts:', 
-    scored.slice(0, 3).map(a => ({ 
-      title: a.title?.substring(0, 30), 
-      boost: a._personalizationBoost?.toFixed(1) 
-    }))
-  );
+  console.log(`[interests] ${mustKnowArticles.length} must-know articles (score >= ${mustKnowThreshold}), ${regularArticles.length} regular articles`);
   
-  return scored;
+  // Must-know articles: Keep original score order (no personalization)
+  mustKnowArticles.sort((a, b) => {
+    const scoreA = a.final_score || a.ai_final_score || 0;
+    const scoreB = b.final_score || b.ai_final_score || 0;
+    return scoreB - scoreA;
+  });
+  
+  // Regular articles: Apply personalization if user has interests
+  let sortedRegular = regularArticles;
+  
+  if (hasInterests && regularArticles.length > 0) {
+    // Score and sort regular articles with personalization
+    const scored = regularArticles.map(article => {
+      const baseScore = article.final_score || article.ai_final_score || 500;
+      const personalizationBoost = getArticlePersonalizationScore(article, interests);
+      
+      // Combine scores: base score + personalization boost (weighted)
+      const combinedScore = baseScore + (personalizationBoost * 10 * personalizationWeight);
+      
+      return {
+        ...article,
+        _personalizedScore: combinedScore,
+        _personalizationBoost: personalizationBoost
+      };
+    });
+    
+    // Sort regular articles by combined score (descending)
+    scored.sort((a, b) => b._personalizedScore - a._personalizedScore);
+    sortedRegular = scored;
+    
+    console.log('[interests] Personalized regular articles, top 3 boosts:', 
+      scored.slice(0, 3).map(a => ({ 
+        title: a.title?.substring(0, 30), 
+        boost: a._personalizationBoost?.toFixed(1) 
+      }))
+    );
+  }
+  
+  // Combine: Must-know first, then personalized regular articles
+  return [...mustKnowArticles, ...sortedRegular];
 }
 
 /**
