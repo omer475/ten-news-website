@@ -3666,7 +3666,7 @@ export default function Home() {
           --category-size: clamp(9px, 2.8vw, 12px);
           --time-size: clamp(11px, 3.3vw, 14px);
           --info-label-size: clamp(8px, 2.2vw, 10px);
-          --info-value-size: clamp(18px, 5.5vw, 26px);
+          --info-value-size: clamp(16px, 4.5vw, 20px);
           --info-unit-size: clamp(10px, 2.8vw, 12px);
           
           /* Responsive Spacing */
@@ -5493,8 +5493,8 @@ export default function Home() {
             --category-size: 12px;
             --time-size: 14px;
             --info-label-size: 10px;
-            --info-value-size: 26px;
-            --info-unit-size: 12px;
+            --info-value-size: 20px;
+            --info-unit-size: 11px;
             --content-padding: 22px;
             --title-margin: 22px;
             --section-gap: 14px;
@@ -5519,8 +5519,8 @@ export default function Home() {
             --category-size: 11px;
             --time-size: 13px;
             --info-label-size: 9px;
-            --info-value-size: 24px;
-            --info-unit-size: 11px;
+            --info-value-size: 18px;
+            --info-unit-size: 10px;
             --content-padding: 18px;
             --title-margin: 18px;
             --section-gap: 12px;
