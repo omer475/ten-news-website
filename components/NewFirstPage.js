@@ -255,33 +255,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const swipeHints = [
     "Swipe up. The news won't read itself.",
     "Your doom scroll awaits. Swipe up.",
-    "Swipe up. Reality isn't going anywhere.",
     "Go on, swipe. We both know you're avoiding work.",
-    "Swipe up. Your screen time is already ruined.",
+    "Swipe up. Reality isn't going anywhere.",
     "The world's a mess. Swipe to see why.",
-    "Swipe up. Ignorance isn't as blissful as they say.",
-    "Your therapist called. They said swipe up.",
     "Swipe up. Those emails can wait.",
     "Spoiler: it's not great news. Swipe anyway.",
-    "Swipe up. Your anxiety was getting bored.",
-    "Swipe up, coward.",
     "The algorithm demands you swipe up.",
     "Swipe up. Pretend you're staying informed.",
-    "Your boss thinks you're working. Swipe up.",
-    "Swipe up. Touch grass later.",
     "Breaking: You haven't swiped yet.",
-    "Swipe up. Your attention span can handle it.",
-    "The news is free. Your sanity isn't. Swipe up.",
-    "Swipe up. It's not like you were sleeping anyway.",
-    "Plot twist: swiping up is optional. But do it.",
-    "Swipe up. Be the informed person at parties.",
-    "Your ex is doing fine. Now swipe up.",
-    "Swipe up. Procrastination looks good on you.",
-    "The globe spins. So should your thumb. Swipe up.",
-    "Swipe up. Main character energy awaits.",
+    "Swipe up. Touch grass later.",
+    "The globe spins. So should your thumb.",
     "Yes, it's still bad out there. Swipe to confirm.",
-    "Swipe up. Your phone battery won't last forever.",
-    "Swipe up. Democracy dies in darkness, apparently.",
     "One does not simply scroll past. Swipe up.",
     "Swipe up. We promise some of it is good news."
   ];
@@ -696,6 +680,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           stroke-width: 0.5;
         }
 
+        @keyframes subtleBounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+        }
+
         .swipe-hint {
           position: absolute;
           bottom: 40px;
@@ -708,7 +701,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           color: #86868b;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           text-align: center;
-          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2s ease-in-out 1.6s infinite;
           opacity: 0;
           padding: 0 20px;
         }
