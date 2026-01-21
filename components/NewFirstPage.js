@@ -575,30 +575,29 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           max-width: 340px;
         }
 
-        .status-text {
+        .greeting-hi {
           display: block;
           font-size: 40px;
           font-weight: 700;
           letter-spacing: -0.02em;
           color: #000000;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           line-height: 1.1;
-          margin-bottom: 24px;
-        }
-
-        .greeting-hi {
-          display: block;
-          font-size: 28px;
-          font-weight: 400;
-          letter-spacing: -0.01em;
-          color: #000000;
-          line-height: 1.35;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          margin-bottom: 0;
+          margin-bottom: 20px;
         }
 
         .greeting-name {
+          font-weight: 700;
+        }
+
+        .status-text {
+          display: block;
+          font-size: 26px;
           font-weight: 400;
+          letter-spacing: -0.01em;
+          color: #000000;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          line-height: 1.4;
         }
 
         .status-time {
@@ -678,12 +677,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .status-line {
             max-width: 300px;
           }
-          .status-text {
-            font-size: 34px;
-            margin-bottom: 20px;
-          }
           .greeting-hi {
-            font-size: 24px;
+            font-size: 34px;
+            margin-bottom: 16px;
+          }
+          .status-text {
+            font-size: 22px;
           }
           .globe-section {
             overflow: hidden;
@@ -708,12 +707,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .status-line {
             max-width: 280px;
           }
-          .status-text {
-            font-size: 30px;
-            margin-bottom: 18px;
-          }
           .greeting-hi {
-            font-size: 21px;
+            font-size: 30px;
+            margin-bottom: 14px;
+          }
+          .status-text {
+            font-size: 20px;
           }
         }
       `}</style>
@@ -726,10 +725,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           <div className="greeting-section">
             <div className="greeting-sub">
               <div className="status-line">
-                <span className="status-text">{personalGreeting.subHighlight} {personalGreeting.subRest}</span>
                 <span className="greeting-hi">
-                  {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}.
+                  {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
                 </span>
+                <span className="status-text">{personalGreeting.subHighlight} {personalGreeting.subRest}.</span>
               </div>
             </div>
           </div>
