@@ -355,22 +355,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         
         // ===== RENDER LAYERS =====
         
-        // Layer 1: Sphere outline
-        svg.append('circle')
-          .attr('cx', cx)
-          .attr('cy', cy)
-          .attr('r', radius)
-          .attr('fill', 'none')
-          .attr('stroke', '#e8e8e8')
-          .attr('stroke-width', 1)
-          .attr('class', 'sphere');
-        
-        // Layer 2: Back countries (mirrored horizontally)
+        // Layer 1: Back countries (mirrored horizontally)
         const globeBack = svg.append('g')
           .attr('class', 'globe-back')
           .attr('transform', `translate(${size}, 0) scale(-1, 1)`);
         
-        // Layer 3: Front countries
+        // Layer 2: Front countries
         const globeFront = svg.append('g')
           .attr('class', 'globe-countries');
         globeRef.current = globeFront;
@@ -402,12 +392,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .data(filtered.features)
           .enter()
           .append('path')
-          .attr('class', 'country')
+          .attr('class', 'country-front')
           .attr('d', pathFront)
           .attr('data-id', d => d.id);
-        
-        // Disable pointer events on SVG
-        svg.style('pointer-events', 'none');
         
         // Update function for both projections
         const updateGlobe = () => {
@@ -420,6 +407,27 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           globeFront.selectAll('path').attr('d', pathFront);
           globeBackRef.current.selectAll('path').attr('d', pathBack);
         };
+        
+        // Drag functionality
+        const sensitivity = 0.25;
+        const drag = d3.drag()
+          .on('start', () => {
+            isDraggingRef.current = true;
+            isRotatingRef.current = false;
+          })
+          .on('drag', (event) => {
+            rotationRef.current.x += event.dx * sensitivity;
+            rotationRef.current.y -= event.dy * sensitivity;
+            rotationRef.current.y = Math.max(-90, Math.min(90, rotationRef.current.y));
+            updateGlobe();
+          })
+          .on('end', () => {
+            isDraggingRef.current = false;
+            setTimeout(() => { isRotatingRef.current = true; }, 2000);
+          });
+        
+        svg.call(drag);
+        svg.style('cursor', 'grab');
         
         // Auto rotation - smooth and elegant
         let animationId;
@@ -468,7 +476,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const counts = Object.values(newsCountByCountry);
     const maxCount = Math.max(...counts, 1);
     
-    globeRef.current.selectAll('.country').each(function() {
+    globeRef.current.selectAll('.country-front').each(function() {
       const el = d3.select(this);
       const countryId = parseInt(el.attr('data-id'));
       let hasNews = false;
@@ -476,11 +484,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       for (const [name, count] of Object.entries(newsCountByCountry)) {
         if (countryNameToId[name.toLowerCase().trim()] === countryId) {
           const intensity = count / maxCount;
-          el.style('fill', getColor(intensity))
-            .classed('highlighted', intensity > 0.3);
-          
-          // Add subtle animation delay based on country position
-          el.style('transition-delay', `${Math.random() * 0.3}s`);
+          el.style('fill', getColor(intensity));
           hasNews = true;
           break;
         }
@@ -488,8 +492,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       
       // Reset non-news countries to match the new design
       if (!hasNews) {
-        el.style('fill', '#e0e0e0')
-          .classed('highlighted', false);
+        el.style('fill', '#e0e0e0');
       }
     });
   }, [mapLoaded, newsCountByCountry]);
@@ -630,19 +633,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           align-items: center;
           justify-content: center;
           touch-action: none;
-          pointer-events: none;
         }
 
         .globe-container :global(svg) {
           width: 100%;
           height: 100%;
           display: block;
+          cursor: grab;
         }
 
-        .globe-container :global(.sphere) {
-          fill: none;
-          stroke: #e8e8e8;
-          stroke-width: 1;
+        .globe-container :global(svg:active) {
+          cursor: grabbing;
         }
 
         .globe-container :global(.country-back) {
@@ -652,14 +653,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           opacity: 0.35;
         }
 
-        .globe-container :global(.country) {
+        .globe-container :global(.country-front) {
           fill: #e0e0e0;
-          stroke: #ffffff;
-          stroke-width: 0.5;
-          transition: fill 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .globe-container :global(.country.highlighted) {
           stroke: #ffffff;
           stroke-width: 0.5;
         }
@@ -699,7 +694,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             height: 160vw;
             margin-top: 0;
             touch-action: none;
-            pointer-events: none;
           }
         }
 
