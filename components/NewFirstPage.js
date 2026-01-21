@@ -558,21 +558,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           }
         }
 
-        .greeting-hi {
-          font-size: 28px;
-          font-weight: 500;
-          letter-spacing: -0.01em;
-          color: #86868b;
-          margin-bottom: 8px;
-          line-height: 1.2;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-        }
-
-        .greeting-name {
-          font-weight: 600;
-          color: #1d1d1f;
-        }
-
         .greeting-sub {
           display: flex;
           flex-direction: column;
@@ -580,31 +565,44 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           gap: 0;
           margin: 0 auto;
           margin-top: 0;
-          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s forwards;
+          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
           opacity: 0;
         }
 
         .status-line {
-          display: inline-block;
+          display: block;
           text-align: center;
+          max-width: 340px;
         }
 
         .status-text {
-          font-size: 44px;
+          display: block;
+          font-size: 40px;
           font-weight: 700;
-          letter-spacing: -0.03em;
-          color: #1d1d1f;
+          letter-spacing: -0.02em;
+          color: #000000;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          line-height: 1.15;
+          line-height: 1.1;
+          margin-bottom: 24px;
+        }
+
+        .greeting-hi {
+          display: block;
+          font-size: 28px;
+          font-weight: 400;
+          letter-spacing: -0.01em;
+          color: #000000;
+          line-height: 1.35;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          margin-bottom: 0;
+        }
+
+        .greeting-name {
+          font-weight: 400;
         }
 
         .status-time {
-          font-size: 44px;
-          font-weight: 700;
-          letter-spacing: -0.03em;
-          color: #0071e3;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          line-height: 1.15;
+          display: none;
         }
 
         .status-dot {
@@ -677,15 +675,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding-left: 24px;
             padding-right: 24px;
           }
-          .greeting-hi {
-            font-size: 24px;
-            margin-bottom: 6px;
+          .status-line {
+            max-width: 300px;
           }
           .status-text {
-            font-size: 36px;
+            font-size: 34px;
+            margin-bottom: 20px;
           }
-          .status-time {
-            font-size: 36px;
+          .greeting-hi {
+            font-size: 24px;
           }
           .globe-section {
             overflow: hidden;
@@ -707,15 +705,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         @media (max-width: 375px) {
-          .greeting-hi {
-            font-size: 22px;
-            margin-bottom: 4px;
+          .status-line {
+            max-width: 280px;
           }
           .status-text {
-            font-size: 32px;
+            font-size: 30px;
+            margin-bottom: 18px;
           }
-          .status-time {
-            font-size: 32px;
+          .greeting-hi {
+            font-size: 21px;
           }
         }
       `}</style>
@@ -726,14 +724,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       >
         <div className="content-wrapper">
           <div className="greeting-section">
-            <div className="greeting-hi">
-              {personalGreeting.greeting}
-              {personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
-            </div>
             <div className="greeting-sub">
               <div className="status-line">
-                <span className="status-text">{personalGreeting.subHighlight}</span>
-                {personalGreeting.subRest && <span className="status-time"> {personalGreeting.subRest}</span>}
+                <span className="status-text">{personalGreeting.subHighlight} {personalGreeting.subRest}</span>
+                <span className="greeting-hi">
+                  {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}.
+                </span>
               </div>
             </div>
           </div>
