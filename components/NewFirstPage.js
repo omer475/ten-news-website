@@ -429,26 +429,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           globeBackRef.current.selectAll('path').attr('d', pathBack);
         };
         
-        // Drag functionality
-        const sensitivity = 0.25;
-        const drag = d3.drag()
-          .on('start', () => {
-            isDraggingRef.current = true;
-            isRotatingRef.current = false;
-          })
-          .on('drag', (event) => {
-            rotationRef.current.x += event.dx * sensitivity;
-            rotationRef.current.y -= event.dy * sensitivity;
-            rotationRef.current.y = Math.max(-90, Math.min(90, rotationRef.current.y));
-            updateGlobe();
-          })
-          .on('end', () => {
-            isDraggingRef.current = false;
-            setTimeout(() => { isRotatingRef.current = true; }, 2000);
-          });
-        
-        svg.call(drag);
-        svg.style('cursor', 'grab');
+        // Disable pointer events - globe is view-only
+        svg.style('pointer-events', 'none');
         
         // Auto rotation - smooth and elegant
         let animationId;
@@ -660,11 +642,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           width: 100%;
           height: 100%;
           display: block;
-          cursor: grab;
-        }
-
-        .globe-container :global(svg:active) {
-          cursor: grabbing;
+          pointer-events: none;
         }
 
         .globe-container :global(.country-back) {
