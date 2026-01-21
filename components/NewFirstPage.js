@@ -251,6 +251,43 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   const [personalGreeting] = useState(() => getPersonalizedGreeting());
 
+  // Witty swipe hints - randomly selected each time
+  const swipeHints = [
+    "Swipe up. The news won't read itself.",
+    "Your doom scroll awaits. Swipe up.",
+    "Swipe up. Reality isn't going anywhere.",
+    "Go on, swipe. We both know you're avoiding work.",
+    "Swipe up. Your screen time is already ruined.",
+    "The world's a mess. Swipe to see why.",
+    "Swipe up. Ignorance isn't as blissful as they say.",
+    "Your therapist called. They said swipe up.",
+    "Swipe up. Those emails can wait.",
+    "Spoiler: it's not great news. Swipe anyway.",
+    "Swipe up. Your anxiety was getting bored.",
+    "Swipe up, coward.",
+    "The algorithm demands you swipe up.",
+    "Swipe up. Pretend you're staying informed.",
+    "Your boss thinks you're working. Swipe up.",
+    "Swipe up. Touch grass later.",
+    "Breaking: You haven't swiped yet.",
+    "Swipe up. Your attention span can handle it.",
+    "The news is free. Your sanity isn't. Swipe up.",
+    "Swipe up. It's not like you were sleeping anyway.",
+    "Plot twist: swiping up is optional. But do it.",
+    "Swipe up. Be the informed person at parties.",
+    "Your ex is doing fine. Now swipe up.",
+    "Swipe up. Procrastination looks good on you.",
+    "The globe spins. So should your thumb. Swipe up.",
+    "Swipe up. Main character energy awaits.",
+    "Yes, it's still bad out there. Swipe to confirm.",
+    "Swipe up. Your phone battery won't last forever.",
+    "Swipe up. Democracy dies in darkness, apparently.",
+    "One does not simply scroll past. Swipe up.",
+    "Swipe up. We promise some of it is good news."
+  ];
+  
+  const [swipeHint] = useState(() => swipeHints[Math.floor(Math.random() * swipeHints.length)]);
+
   // Color scale for globe - Grayscale with blue accent for activity
   const getColor = (value) => {
     // Grayscale to blue scale - gray = less activity, blue = more activity
@@ -662,8 +699,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .swipe-hint {
           position: absolute;
           bottom: 40px;
-          left: 50%;
-          transform: translateX(-50%);
+          left: 0;
+          right: 0;
+          width: 100%;
           font-size: 15px;
           font-weight: 500;
           letter-spacing: -0.01em;
@@ -672,6 +710,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           text-align: center;
           animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
           opacity: 0;
+          padding: 0 20px;
         }
 
         @media (max-width: 480px) {
@@ -748,7 +787,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
           <div className="globe-section">
             <div className="globe-container" ref={mapContainerRef}></div>
-            <div className="swipe-hint">Swipe up. The news won't read itself.</div>
+            <div className="swipe-hint">{swipeHint}</div>
           </div>
         </div>
       </div>
