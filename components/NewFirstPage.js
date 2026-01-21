@@ -376,6 +376,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         
         // ===== RENDER LAYERS =====
         
+        // Layer 0: Ocean circle (light blue tint)
+        svg.append('circle')
+          .attr('cx', cx)
+          .attr('cy', cy)
+          .attr('r', radius)
+          .attr('class', 'ocean');
+        
         // Layer 1: Back countries (mirrored horizontally)
         const globeBack = svg.append('g')
           .attr('class', 'globe-back')
@@ -643,6 +650,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           height: 100%;
           display: block;
           pointer-events: none;
+        }
+
+        .globe-container :global(.ocean) {
+          fill: rgba(220, 240, 255, 0.25);
         }
 
         .globe-container :global(.country-back) {
