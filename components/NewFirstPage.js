@@ -577,13 +577,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .greeting-hi {
           display: block;
-          font-size: 40px;
+          font-size: 34px;
           font-weight: 700;
           letter-spacing: -0.02em;
           color: #000000;
           line-height: 1.1;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
         }
 
         .greeting-name {
@@ -592,10 +592,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .status-text {
           display: block;
-          font-size: 26px;
+          font-size: 24px;
           font-weight: 400;
           letter-spacing: -0.01em;
-          color: #000000;
+          color: #6e6e73;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           line-height: 1.4;
         }
@@ -678,11 +678,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             max-width: 300px;
           }
           .greeting-hi {
-            font-size: 34px;
-            margin-bottom: 16px;
+            font-size: 30px;
+            margin-bottom: 14px;
           }
           .status-text {
-            font-size: 22px;
+            font-size: 20px;
           }
           .globe-section {
             overflow: hidden;
@@ -708,11 +708,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             max-width: 280px;
           }
           .greeting-hi {
-            font-size: 30px;
-            margin-bottom: 14px;
+            font-size: 26px;
+            margin-bottom: 12px;
           }
           .status-text {
-            font-size: 20px;
+            font-size: 18px;
           }
         }
       `}</style>
