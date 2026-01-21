@@ -204,37 +204,37 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const catLabel = categoryLabels[topCat] || topCat;
     const capCat = catLabel.charAt(0).toUpperCase() + catLabel.slice(1);
 
-    // Generate sub messages with highlight markers for styling
+    // Generate sub messages - short, punchy, fintech style
     let subMessages = [];
     if (analysis.hasBreaking) {
       subMessages = [
-        { highlight: `Major ${catLabel} developments`, rest: timePeriod },
-        { highlight: `Breaking ${catLabel} news`, rest: timePeriod },
-        { highlight: `Important ${catLabel} updates`, rest: timePeriod }
+        { highlight: `Breaking news in ${catLabel}`, rest: '' },
+        { highlight: `Major ${catLabel} alert`, rest: '' },
+        { highlight: `${capCat} is moving`, rest: '' }
       ];
     } else if (analysis.hasVeryHigh) {
       subMessages = [
-        { highlight: `${capCat} had significant updates`, rest: timePeriod },
-        { highlight: `Notable ${catLabel} developments`, rest: timePeriod },
-        { highlight: `${capCat} made headlines`, rest: timePeriod }
+        { highlight: `${capCat} headlines today`, rest: '' },
+        { highlight: `Big moves in ${catLabel}`, rest: '' },
+        { highlight: `${capCat} update`, rest: '' }
       ];
     } else if (analysis.highScoredCount >= 5) {
       subMessages = [
-        { highlight: `Active day for ${catLabel}`, rest: timePeriod },
-        { highlight: `Plenty happening`, rest: `in ${catLabel} ${timePeriod}` },
-        { highlight: `${capCat} has been busy`, rest: timePeriod }
+        { highlight: `${capCat} is active`, rest: '' },
+        { highlight: `Busy day for ${catLabel}`, rest: '' },
+        { highlight: `${capCat} in focus`, rest: '' }
       ];
     } else if (analysis.highScoredCount >= 1) {
       subMessages = [
-        { highlight: `Some ${catLabel} updates`, rest: timePeriod },
-        { highlight: `A few ${catLabel} stories`, rest: timePeriod },
-        { highlight: `${capCat} news`, rest: timePeriod }
+        { highlight: `${capCat} stories`, rest: '' },
+        { highlight: `Latest in ${catLabel}`, rest: '' },
+        { highlight: `${capCat} today`, rest: '' }
       ];
     } else {
       subMessages = [
-        { highlight: `Here's what's happening`, rest: timePeriod },
-        { highlight: `Your news update`, rest: timePeriod },
-        { highlight: `The latest`, rest: timePeriod }
+        { highlight: `Your daily briefing`, rest: '' },
+        { highlight: `Today's headlines`, rest: '' },
+        { highlight: `The world today`, rest: '' }
       ];
     }
 
@@ -590,27 +590,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .greeting-hi {
           display: block;
-          font-size: 34px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
+          font-size: 48px;
+          font-weight: 800;
+          letter-spacing: -0.03em;
           color: #000000;
-          line-height: 1.1;
+          line-height: 1.0;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          margin-bottom: 16px;
+          margin-bottom: 12px;
         }
 
         .greeting-name {
-          font-weight: 700;
+          font-weight: 800;
         }
 
         .status-text {
           display: block;
-          font-size: 24px;
-          font-weight: 400;
-          letter-spacing: -0.01em;
+          font-size: 18px;
+          font-weight: 500;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
           color: #6e6e73;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          line-height: 1.4;
+          line-height: 1.5;
         }
 
         .status-time {
@@ -709,11 +710,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             max-width: 300px;
           }
           .greeting-hi {
-            font-size: 30px;
-            margin-bottom: 14px;
+            font-size: 40px;
+            margin-bottom: 10px;
           }
           .status-text {
-            font-size: 20px;
+            font-size: 14px;
+            letter-spacing: 0.04em;
           }
           .globe-section {
             overflow: hidden;
@@ -742,11 +744,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             max-width: 280px;
           }
           .greeting-hi {
-            font-size: 26px;
-            margin-bottom: 12px;
+            font-size: 34px;
+            margin-bottom: 8px;
           }
           .status-text {
-            font-size: 18px;
+            font-size: 12px;
+            letter-spacing: 0.05em;
           }
         }
       `}</style>
@@ -762,7 +765,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                 <span className="greeting-hi">
                   {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
                 </span>
-                <span className="status-text">{personalGreeting.subHighlight} {personalGreeting.subRest}.</span>
+                <span className="status-text">{personalGreeting.subHighlight}{personalGreeting.subRest ? ` ${personalGreeting.subRest}` : ''}</span>
               </div>
             </div>
           </div>
