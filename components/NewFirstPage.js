@@ -537,6 +537,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     dotsLayer.selectAll('.news-dot').remove();
     
     // Add dots for each country with news
+    let dotIndex = 0;
     for (const [countryName, count] of Object.entries(newsCountByCountry)) {
       const coords = capitalCoordinates[countryName.toLowerCase().trim()];
       if (coords) {
@@ -544,6 +545,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         if (projected) {
           // Modern minimal dot - small and clean
           const dotSize = 3;
+          const animationDelay = (dotIndex * 0.4) % 2.5; // Stagger animation
           
           dotsLayer.append('circle')
             .attr('class', 'news-dot')
@@ -553,7 +555,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             .attr('data-lon', coords[0])
             .attr('data-lat', coords[1])
             .attr('fill', globeTheme.dot)
-            .attr('opacity', 0.95);
+            .style('animation-delay', `${animationDelay}s`);
+          
+          dotIndex++;
         }
       }
     }
@@ -730,8 +734,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           pointer-events: none;
         }
 
+        @keyframes dotPulse {
+          0%, 100% { opacity: 0.95; }
+          50% { opacity: 0.2; }
+        }
+
         .globe-container :global(.news-dot) {
-          transition: opacity 0.2s ease;
+          animation: dotPulse 2.5s ease-in-out infinite;
         }
 
         @keyframes subtleBounce {
