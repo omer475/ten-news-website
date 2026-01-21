@@ -599,15 +599,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .greeting-hi {
           display: block;
           font-size: 48px;
-          font-weight: 800;
-          letter-spacing: -0.03em;
+          font-weight: 600;
+          letter-spacing: -0.02em;
           color: #000000;
           line-height: 1.0;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
         }
 
         .greeting-name {
-          font-weight: 800;
+          font-weight: 600;
         }
 
         .status-text {

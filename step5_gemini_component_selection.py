@@ -74,77 +74,116 @@ FREQUENCY: ~70% of stories
 📅 TIMELINE
 ═══════════════════════════════════════════════════════════════
 
-Shows historical context for complex ongoing stories.
+Shows "What is this news about? How did we get here?"
 
-CRITICAL: Timeline is OVERUSED. Be very selective.
+CRITICAL: Timeline is SEVERELY OVERUSED. Be EXTREMELY selective.
 
-SELECT ONLY IF story genuinely requires history to understand:
-✓ Ongoing wars/conflicts (Ukraine, Gaza)
-✓ Multi-year investigations (Epstein case)
-✓ Complex political crises
-✓ Stories where "how did we get here" truly matters
+THE CORE QUESTION:
+> "Does the reader need background context to understand what this news is about?"
 
-DO NOT SELECT FOR:
-✗ Single announcements
-✗ Product/tech news
+Timeline should answer: "What is this story? How did it start? What happened before?"
+
+SELECT ONLY IF the reader would be LOST without context:
+✓ Ongoing wars/conflicts where understanding escalation matters (Ukraine, Gaza, Syria)
+✓ Multi-year investigations with complex history (Epstein case, Trump trials)
+✓ Long-running political crises that have evolved over time
+✓ Stories where today's news only makes sense with "how we got here"
+
+DO NOT SELECT FOR (99% of stories):
+✗ Single announcements (even major ones)
+✗ Product/tech news (iPhone launch, AI model release)
 ✗ Entertainment news
 ✗ Speeches or statements
-✗ Simple policy proposals
-✗ One-time incidents
-✗ Business deals
+✗ Policy proposals (unless part of long-running saga)
+✗ One-time incidents (plane crash, earthquake, fire)
+✗ Business deals (mergers, acquisitions, earnings)
 ✗ Sports news
+✗ Deaths (unless the person's history IS the story)
+✗ Elections (unless explaining a complex political situation)
+✗ Trade deals, tariffs, sanctions (unless ongoing trade war)
 
-ASK: "Would readers be confused without historical context?"
-- If NO → Don't select timeline
-- If YES → Select timeline
+ASK YOURSELF:
+1. "Would the reader ask 'Wait, what's the background here?'" → If NO, don't select
+2. "Is this a SINGLE EVENT or part of an ONGOING SAGA?" → Single event = NO timeline
+3. "Does understanding HOW we got here matter?" → If NO, don't select
 
-FREQUENCY: ~10% of stories (rare!)
+FREQUENCY: ~5% of stories (very rare!)
+
+DEFAULT: Do NOT select timeline. Only add if truly essential.
 
 ═══════════════════════════════════════════════════════════════
 🗺️ MAP
 ═══════════════════════════════════════════════════════════════
 
-Shows WHERE the news happened.
+Shows WHERE the news happened - SPECIFIC LOCATION ONLY.
 
-SELECT IF the story has a specific location users want to see:
+CRITICAL RULES:
+1. MUST be a SPECIFIC location (not just a country or city)
+2. MUST be ON EARTH (no Moon, Mars, space, asteroids, etc.)
+3. MUST be a place users would want to see on a map
 
-✓ INCIDENTS & ACCIDENTS:
-  - Plane crashes → Show crash site
-  - Attacks → Show attack location
-  - Shootings → Show where it happened
-  - Collapses → Show the structure
+THE CORE QUESTION:
+> "Is there a SPECIFIC place (building, facility, airport, bridge, etc.) that users would want to see?"
 
-✓ NATURAL DISASTERS:
-  - Earthquakes → Show epicenter
-  - Hurricanes → Show landfall
-  - Floods → Show affected area
+SELECT ONLY FOR SPECIFIC LOCATIONS:
 
-✓ DISPUTED TERRITORIES:
-  - South China Sea islands
-  - Contested regions
-  - Border disputes
+✓ INCIDENT SITES (specific places):
+  - "Vilnius International Airport" (plane crash site)
+  - "Francis Scott Key Bridge" (collapse location)
+  - "Crocus City Hall" (attack venue)
+  - The EXACT location of a rocket strike or drone attack
+  
+✓ SPECIFIC FACILITIES:
+  - "Yongbyon Nuclear Complex" (nuclear facility)
+  - "Natanz Enrichment Facility" (Iranian nuclear site)
+  - "Zaporizhzhia Nuclear Power Plant"
+  
+✓ DISASTER EPICENTERS:
+  - Specific earthquake epicenter location
+  - Specific building that collapsed
+  - Specific dam that failed
 
-✓ SECRETIVE FACILITIES:
-  - Nuclear complexes
-  - Military bases
+✓ DISPUTED/INTERESTING SPECIFIC PLACES:
+  - "Woody Island" in South China Sea
+  - Specific military base locations
 
-DO NOT SELECT IF only location available is:
+DO NOT SELECT - THESE ARE TOO VAGUE OR WELL-KNOWN:
 
-✗ Famous government buildings:
-  - Kremlin, Capitol, White House, 10 Downing Street
-  - Everyone knows where these are
+✗ JUST A COUNTRY:
+  - "Ukraine" - TOO VAGUE, everyone knows where Ukraine is
+  - "Russia" - TOO VAGUE
+  - "Israel" - TOO VAGUE
+  - "United States" - COMPLETELY USELESS
 
-✗ TV stations or corporate offices:
-  - Nobody cares where Channel 4 is located
+✗ JUST A CITY:
+  - "Kyiv" - TOO VAGUE (unless showing specific building IN Kyiv)
+  - "Moscow" - TOO VAGUE
+  - "Washington D.C." - TOO VAGUE
 
-✗ Generic city/country:
-  - "United States" or "Russia" alone is useless
+✗ FAMOUS GOVERNMENT BUILDINGS (everyone knows these):
+  - The Kremlin
+  - The White House
+  - Capitol Building
+  - 10 Downing Street
+  - Elysee Palace
 
-ASK: "Would users tap this map and think 'Oh, that's where it happened!'?"
-- If YES → Select map
-- If NO → Don't select map
+✗ CORPORATE OFFICES & TV STATIONS:
+  - Nobody cares where these are
 
-FREQUENCY: ~20% of stories
+✗ SPACE LOCATIONS (NOT ON EARTH):
+  - Moon
+  - Mars
+  - Asteroids
+  - Space stations
+  - Any location not on planet Earth
+
+ASK YOURSELF:
+1. "Is this a SPECIFIC location or just a country/city?" → If just country/city, NO map
+2. "Is this on planet Earth?" → If no, NO map
+3. "Would users think 'Oh, that's exactly where it happened!'?" → If no, NO map
+4. "Does everyone already know where this is?" (Kremlin, White House) → If yes, NO map
+
+FREQUENCY: ~15% of stories (less than before - be more selective)
 
 ═══════════════════════════════════════════════════════════════
 📊 GRAPH
@@ -185,48 +224,78 @@ MISTAKES TO AVOID:
 DECISION EXAMPLES
 ═══════════════════════════════════════════════════════════════
 
-"UPS Plane Crash Death Toll Climbs to 15"
-→ MAP: YES - Show crash site (users want to see where)
-→ TIMELINE: NO - Single incident, no complex history
+"UPS Plane Crash at Vilnius Airport Kills 5"
+→ MAP: YES - "Vilnius International Airport" is SPECIFIC location
+→ TIMELINE: NO - Single incident, readers don't need background
 → DETAILS: YES - If additional facts available
 → components: ["map", "details"]
 
 "Putin Announces New Nuclear Policy"
-→ MAP: NO - Kremlin is boring, everyone knows
-→ TIMELINE: NO - Single announcement
+→ MAP: NO - Kremlin is famous, everyone knows where it is
+→ TIMELINE: NO - Single announcement, not ongoing saga
 → DETAILS: YES
 → components: ["details"]
 
 "Epstein Files Released After Years of Secrecy"
 → MAP: NO - No specific incident location
-→ TIMELINE: YES - Complex multi-year case
+→ TIMELINE: YES - Reader needs to understand "what is this case about?"
 → DETAILS: YES
 → components: ["timeline", "details"]
 
 "Fed Raises Interest Rates to 5.5%"
-→ MAP: NO - No incident location
-→ TIMELINE: NO - Not needed for understanding
+→ MAP: NO - No specific location
+→ TIMELINE: NO - Single announcement, not complex history
 → GRAPH: YES - Real rate history from Fed
 → DETAILS: YES
 → components: ["graph", "details"]
 
 "Earthquake Kills 50 in Turkey"
-→ MAP: YES - Show epicenter (users want to see where)
-→ TIMELINE: NO - Single disaster
+→ MAP: YES - Show SPECIFIC epicenter location (e.g., "Gaziantep Province epicenter")
+→ TIMELINE: NO - Single disaster, no complex background needed
 → DETAILS: YES
 → components: ["map", "details"]
 
 "SNL Mocks Trump in Christmas Sketch"
 → MAP: NO - Nobody cares where TV studio is
-→ TIMELINE: NO - Entertainment news
+→ TIMELINE: NO - Entertainment news, no background needed
 → DETAILS: YES - If additional facts
 → components: ["details"]
 
-"Ukraine Drone Strikes Russian Oil Depot"
-→ MAP: YES - Show the depot location
-→ TIMELINE: MAYBE - If part of ongoing war context
+"Russia Strikes Ukrainian Power Plant with Missiles"
+→ MAP: YES - Show the SPECIFIC power plant location
+→ TIMELINE: NO - Single attack (unless user needs war background)
 → DETAILS: YES
-→ components: ["map", "details"] or ["map", "timeline", "details"]
+→ components: ["map", "details"]
+
+"Ukraine War Enters Third Year as Peace Talks Collapse"
+→ MAP: NO - Just "Ukraine" is too vague, no specific location
+→ TIMELINE: YES - Reader needs "how did we get here" context
+→ DETAILS: YES
+→ components: ["timeline", "details"]
+
+"NASA Artemis Mission Lands on Moon"
+→ MAP: NO - Moon is NOT on Earth, no map for space
+→ TIMELINE: NO - Single event
+→ DETAILS: YES
+→ components: ["details"]
+
+"SpaceX Starship Explodes Over Mars"
+→ MAP: NO - Mars is NOT on Earth, no map for space
+→ TIMELINE: NO - Single event
+→ DETAILS: YES
+→ components: ["details"]
+
+"Apple Announces iPhone 17"
+→ MAP: NO - Apple Park is well-known, boring
+→ TIMELINE: NO - Product launch, no history needed
+→ DETAILS: YES
+→ components: ["details"]
+
+"Trade War Between US and China Intensifies"
+→ MAP: NO - Just "US" and "China" are too vague
+→ TIMELINE: MAYBE - Only if reader needs trade war background
+→ DETAILS: YES
+→ components: ["details"] or ["timeline", "details"]
 
 ═══════════════════════════════════════════════════════════════
 EMOJI SELECTION
