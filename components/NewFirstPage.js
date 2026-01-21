@@ -132,24 +132,63 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     'economy': 'the economy', 'conflict': 'global affairs', 'general': 'current events'
   };
 
-  // Country name to ID mapping for globe
-  const countryNameToId = {
-    'united states': 840, 'usa': 840, 'us': 840, 'america': 840, 'canada': 124,
-    'mexico': 484, 'brazil': 76, 'argentina': 32, 'united kingdom': 826, 'uk': 826,
-    'france': 250, 'germany': 276, 'italy': 380, 'spain': 724, 'russia': 643,
-    'china': 156, 'japan': 392, 'south korea': 410, 'india': 356, 'australia': 36,
-    'israel': 376, 'iran': 364, 'ukraine': 804, 'turkey': 792, 'egypt': 818,
-    'south africa': 710, 'nigeria': 566, 'saudi arabia': 682, 'indonesia': 360,
-    'pakistan': 586, 'bangladesh': 50, 'vietnam': 704, 'thailand': 764, 'malaysia': 458,
-    'philippines': 608, 'poland': 616, 'netherlands': 528, 'belgium': 56, 'sweden': 752,
-    'norway': 578, 'denmark': 208, 'finland': 246, 'switzerland': 756, 'austria': 40,
-    'greece': 300, 'portugal': 620, 'ireland': 372, 'new zealand': 554, 'singapore': 702,
-    'chile': 152, 'colombia': 170, 'peru': 604, 'venezuela': 862, 'cuba': 192,
-    'afghanistan': 4, 'iraq': 368, 'syria': 760, 'lebanon': 422, 'jordan': 400,
-    'morocco': 504, 'algeria': 12, 'tunisia': 788, 'libya': 434, 'kenya': 404,
-    'ethiopia': 231, 'sudan': 729, 'myanmar': 104, 'nepal': 524, 'sri lanka': 144,
-    'georgia': 268, 'czech republic': 203, 'hungary': 348, 'romania': 642, 'bulgaria': 100
+  // Capital city coordinates [longitude, latitude] for news dots
+  const capitalCoordinates = {
+    'united states': [-77.0369, 38.9072], 'usa': [-77.0369, 38.9072], 'us': [-77.0369, 38.9072], 'america': [-77.0369, 38.9072],
+    'canada': [-75.6972, 45.4215], 'mexico': [-99.1332, 19.4326], 'brazil': [-47.9292, -15.7801],
+    'argentina': [-58.3816, -34.6037], 'united kingdom': [-0.1276, 51.5074], 'uk': [-0.1276, 51.5074],
+    'france': [2.3522, 48.8566], 'germany': [13.4050, 52.5200], 'italy': [12.4964, 41.9028],
+    'spain': [-3.7038, 40.4168], 'russia': [37.6173, 55.7558], 'china': [116.4074, 39.9042],
+    'japan': [139.6917, 35.6895], 'south korea': [126.9780, 37.5665], 'india': [77.2090, 28.6139],
+    'australia': [149.1300, -35.2809], 'israel': [35.2137, 31.7683], 'iran': [51.3890, 35.6892],
+    'ukraine': [30.5234, 50.4501], 'turkey': [32.8597, 39.9334], 'egypt': [31.2357, 30.0444],
+    'south africa': [28.0473, -25.7479], 'nigeria': [7.4951, 9.0579], 'saudi arabia': [46.6753, 24.7136],
+    'indonesia': [106.8456, -6.2088], 'pakistan': [73.0479, 33.6844], 'bangladesh': [90.4125, 23.8103],
+    'vietnam': [105.8342, 21.0278], 'thailand': [100.5018, 13.7563], 'malaysia': [101.6869, 3.1390],
+    'philippines': [120.9842, 14.5995], 'poland': [21.0122, 52.2297], 'netherlands': [4.9041, 52.3676],
+    'belgium': [4.3517, 50.8503], 'sweden': [18.0686, 59.3293], 'norway': [10.7522, 59.9139],
+    'denmark': [12.5683, 55.6761], 'finland': [24.9384, 60.1699], 'switzerland': [7.4474, 46.9480],
+    'austria': [16.3738, 48.2082], 'greece': [23.7275, 37.9838], 'portugal': [-9.1393, 38.7223],
+    'ireland': [-6.2603, 53.3498], 'new zealand': [174.7762, -41.2865], 'singapore': [103.8198, 1.3521],
+    'chile': [-70.6693, -33.4489], 'colombia': [-74.0721, 4.7110], 'peru': [-77.0428, -12.0464],
+    'venezuela': [-66.9036, 10.4806], 'cuba': [-82.3666, 23.1136], 'afghanistan': [69.1723, 34.5553],
+    'iraq': [44.3661, 33.3152], 'syria': [36.2765, 33.5138], 'lebanon': [35.5018, 33.8938],
+    'jordan': [35.9106, 31.9454], 'morocco': [-6.8498, 33.9716], 'algeria': [3.0588, 36.7538],
+    'tunisia': [10.1658, 36.8065], 'libya': [13.1913, 32.8872], 'kenya': [36.8219, -1.2921],
+    'ethiopia': [38.7578, 8.9806], 'sudan': [32.5599, 15.5007], 'myanmar': [96.1951, 16.8661],
+    'nepal': [85.3240, 27.7172], 'sri lanka': [79.8612, 6.9271], 'georgia': [44.7833, 41.7151],
+    'czech republic': [14.4378, 50.0755], 'hungary': [19.0402, 47.4979], 'romania': [26.1025, 44.4268],
+    'bulgaria': [23.3219, 42.6977], 'greenland': [-51.7214, 64.1836], 'taiwan': [121.5654, 25.0330],
+    'north korea': [125.7625, 39.0392], 'serbia': [20.4489, 44.7866], 'croatia': [15.9819, 45.8150],
+    'slovakia': [17.1077, 48.1486], 'slovenia': [14.5058, 46.0569], 'iceland': [-21.9426, 64.1466],
+    'luxembourg': [6.1319, 49.6116], 'malta': [14.5146, 35.8989], 'cyprus': [33.3823, 35.1856],
+    'estonia': [24.7536, 59.4370], 'latvia': [24.1052, 56.9496], 'lithuania': [25.2797, 54.6872],
+    'qatar': [51.5310, 25.2854], 'uae': [54.3773, 24.4539], 'united arab emirates': [54.3773, 24.4539],
+    'kuwait': [47.9774, 29.3759], 'bahrain': [50.5577, 26.2285], 'oman': [58.5922, 23.5880],
+    'yemen': [44.2075, 15.3694], 'palestine': [35.2332, 31.9522], 'gaza': [34.4668, 31.5018]
   };
+  
+  // 15 Globe color themes - randomly selected each visit
+  const globeColorThemes = [
+    { name: 'midnight', land: '#2a2a4a', back: '#1a1a2e', stroke: '#252540', ocean: 'rgba(30, 40, 70, 0.08)' },
+    { name: 'ocean', land: '#1e3a5f', back: '#0f2744', stroke: '#1a3050', ocean: 'rgba(20, 60, 100, 0.08)' },
+    { name: 'forest', land: '#2d4a3e', back: '#1a2e28', stroke: '#253830', ocean: 'rgba(30, 60, 50, 0.08)' },
+    { name: 'slate', land: '#3d4555', back: '#252a35', stroke: '#353a45', ocean: 'rgba(50, 55, 70, 0.08)' },
+    { name: 'wine', land: '#4a2a3a', back: '#2e1a24', stroke: '#3a2530', ocean: 'rgba(60, 30, 45, 0.08)' },
+    { name: 'charcoal', land: '#3a3a3a', back: '#222222', stroke: '#2a2a2a', ocean: 'rgba(40, 40, 40, 0.08)' },
+    { name: 'navy', land: '#1a2744', back: '#0f1a2e', stroke: '#152035', ocean: 'rgba(20, 30, 55, 0.08)' },
+    { name: 'plum', land: '#3a2a4a', back: '#241a2e', stroke: '#2a2040', ocean: 'rgba(45, 30, 60, 0.08)' },
+    { name: 'coffee', land: '#3d3028', back: '#261e1a', stroke: '#2e2520', ocean: 'rgba(50, 40, 35, 0.08)' },
+    { name: 'storm', land: '#2e3844', back: '#1c242e', stroke: '#252e38', ocean: 'rgba(35, 45, 55, 0.08)' },
+    { name: 'moss', land: '#3a4a3a', back: '#242e24', stroke: '#2e3a2e', ocean: 'rgba(45, 55, 45, 0.08)' },
+    { name: 'steel', land: '#404550', back: '#282c34', stroke: '#353840', ocean: 'rgba(50, 55, 65, 0.08)' },
+    { name: 'dusk', land: '#3a3548', back: '#24202e', stroke: '#2e2a38', ocean: 'rgba(45, 40, 55, 0.08)' },
+    { name: 'earth', land: '#443830', back: '#2a221c', stroke: '#352c25', ocean: 'rgba(55, 45, 40, 0.08)' },
+    { name: 'arctic', land: '#354555', back: '#202a38', stroke: '#2a3545', ocean: 'rgba(40, 55, 70, 0.08)' }
+  ];
+  
+  // Select random theme on mount
+  const [globeTheme] = useState(() => globeColorThemes[Math.floor(Math.random() * globeColorThemes.length)]);
 
   // Time-based theme colors for professional design
   const getTimeTheme = () => {
@@ -272,29 +311,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   
   const [swipeHint] = useState(() => swipeHints[Math.floor(Math.random() * swipeHints.length)]);
 
-  // Color scale for globe - Grayscale with blue accent for activity
-  const getColor = (value) => {
-    // Grayscale to blue scale - gray = less activity, blue = more activity
-    const colors = [
-      { pos: 0, r: 180, g: 185, b: 190 },    // Light gray - Low activity
-      { pos: 0.5, r: 130, g: 160, b: 200 },  // Gray-blue - Medium activity  
-      { pos: 1, r: 90, g: 130, b: 180 }      // Muted blue - High/Breaking
-    ];
-    
-    let lower = colors[0], upper = colors[colors.length - 1];
-    for (let i = 0; i < colors.length - 1; i++) {
-      if (value >= colors[i].pos && value <= colors[i + 1].pos) {
-        lower = colors[i]; upper = colors[i + 1]; break;
-      }
-    }
-    const range = upper.pos - lower.pos;
-    const factor = range === 0 ? 0 : (value - lower.pos) / range;
-    const r = Math.round(lower.r + (upper.r - lower.r) * factor);
-    const g = Math.round(lower.g + (upper.g - lower.g) * factor);
-    const b = Math.round(lower.b + (upper.b - lower.b) * factor);
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-
   // Fetch country counts from API
   const fetchCountryCounts = useCallback(async () => {
     try {
@@ -376,12 +392,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         
         // ===== RENDER LAYERS =====
         
-        // Layer 0: Ocean circle (light blue tint)
+        // Layer 0: Ocean circle with theme color
         svg.append('circle')
           .attr('cx', cx)
           .attr('cy', cy)
           .attr('r', radius)
-          .attr('class', 'ocean');
+          .attr('fill', globeTheme.ocean);
         
         // Layer 1: Back countries (mirrored horizontally)
         const globeBack = svg.append('g')
@@ -393,8 +409,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('class', 'globe-countries');
         globeRef.current = globeFront;
         
-        // Store back reference for rotation updates
+        // Layer 3: News dots
+        const dotsLayer = svg.append('g')
+          .attr('class', 'news-dots');
+        
+        // Store references for rotation updates
         const globeBackRef = { current: globeBack };
+        const dotsLayerRef = { current: dotsLayer };
         
         const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
         const topo = await res.json();
@@ -406,25 +427,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           features: countries.features.filter(f => !exclude.includes(+f.id))
         };
         
-        // Render back countries (faded, behind)
+        // Render back countries with theme colors
         globeBack.selectAll('path')
           .data(filtered.features)
           .enter()
           .append('path')
-          .attr('class', 'country-back')
           .attr('d', pathBack)
-          .attr('data-id', d => d.id);
+          .attr('fill', globeTheme.back)
+          .attr('stroke', globeTheme.stroke)
+          .attr('stroke-width', 0.3)
+          .attr('opacity', 0.15);
         
-        // Render front countries
+        // Render front countries with theme colors
         globeFront.selectAll('path')
           .data(filtered.features)
           .enter()
           .append('path')
-          .attr('class', 'country-front')
           .attr('d', pathFront)
-          .attr('data-id', d => d.id);
+          .attr('fill', globeTheme.land)
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', 0.5);
         
-        // Update function for both projections
+        // Update function for both projections and dots
         const updateGlobe = () => {
           // Front: normal rotation
           projectionFront.rotate([rotationRef.current.x, rotationRef.current.y]);
@@ -434,6 +458,26 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           
           globeFront.selectAll('path').attr('d', pathFront);
           globeBackRef.current.selectAll('path').attr('d', pathBack);
+          
+          // Update dots positions
+          dotsLayerRef.current.selectAll('.news-dot').each(function() {
+            const dot = d3.select(this);
+            const coords = [parseFloat(dot.attr('data-lon')), parseFloat(dot.attr('data-lat'))];
+            const projected = projectionFront(coords);
+            
+            // Check if point is on visible side of globe
+            const center = projectionFront.rotate();
+            const distance = d3.geoDistance(coords, [-center[0], -center[1]]);
+            const isVisible = distance < Math.PI / 2;
+            
+            if (projected && isVisible) {
+              dot.attr('cx', projected[0])
+                 .attr('cy', projected[1])
+                 .attr('opacity', 1);
+            } else {
+              dot.attr('opacity', 0);
+            }
+          });
         };
         
         // Disable pointer events - globe is view-only
@@ -476,35 +520,46 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
   }, [scriptsLoaded, isVisible]);
 
-  // Color globe countries with professional highlighting
+  // Add red dots on cities with news
   useEffect(() => {
-    if (!mapLoaded || Object.keys(newsCountByCountry).length === 0 || !globeRef.current) return;
+    if (!mapLoaded || Object.keys(newsCountByCountry).length === 0 || !projectionRef.current) return;
     
     const d3 = window.d3;
     if (!d3) return;
     
-    const counts = Object.values(newsCountByCountry);
-    const maxCount = Math.max(...counts, 1);
+    const container = mapContainerRef.current;
+    if (!container) return;
     
-    globeRef.current.selectAll('.country-front').each(function() {
-      const el = d3.select(this);
-      const countryId = parseInt(el.attr('data-id'));
-      let hasNews = false;
-      
-      for (const [name, count] of Object.entries(newsCountByCountry)) {
-        if (countryNameToId[name.toLowerCase().trim()] === countryId) {
-          const intensity = count / maxCount;
-          el.style('fill', getColor(intensity));
-          hasNews = true;
-          break;
+    const svg = d3.select(container).select('svg');
+    const dotsLayer = svg.select('.news-dots');
+    
+    // Clear existing dots
+    dotsLayer.selectAll('.news-dot').remove();
+    
+    // Add dots for each country with news
+    for (const [countryName, count] of Object.entries(newsCountByCountry)) {
+      const coords = capitalCoordinates[countryName.toLowerCase().trim()];
+      if (coords) {
+        const projected = projectionRef.current(coords);
+        if (projected) {
+          // Dot size based on news count (min 4, max 8)
+          const dotSize = Math.min(8, Math.max(4, 3 + count));
+          
+          dotsLayer.append('circle')
+            .attr('class', 'news-dot')
+            .attr('cx', projected[0])
+            .attr('cy', projected[1])
+            .attr('r', dotSize)
+            .attr('data-lon', coords[0])
+            .attr('data-lat', coords[1])
+            .attr('fill', '#ef4444')
+            .attr('stroke', '#ffffff')
+            .attr('stroke-width', 1.5)
+            .attr('opacity', 1)
+            .style('filter', 'drop-shadow(0 0 3px rgba(239, 68, 68, 0.6))');
         }
       }
-      
-      // Reset non-news countries to match the new design
-      if (!hasNews) {
-        el.style('fill', '#e0e0e0');
-      }
-    });
+    }
   }, [mapLoaded, newsCountByCountry]);
 
   // Click/tap handler for navigation - parent handles swipe
@@ -678,21 +733,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           pointer-events: none;
         }
 
-        .globe-container :global(.ocean) {
-          fill: rgba(220, 240, 255, 0.25);
-        }
-
-        .globe-container :global(.country-back) {
-          fill: #f0f0f0;
-          stroke: #e8e8e8;
-          stroke-width: 0.3;
-          opacity: 0.35;
-        }
-
-        .globe-container :global(.country-front) {
-          fill: #e0e0e0;
-          stroke: #ffffff;
-          stroke-width: 0.5;
+        .globe-container :global(.news-dot) {
+          transition: opacity 0.2s ease;
         }
 
         @keyframes subtleBounce {

@@ -27,8 +27,8 @@ class ComponentConfig:
     top_p: float = 0.95
     top_k: int = 40
     max_output_tokens: int = 256
-    min_components: int = 1  # Minimum components per article (allow single best)
-    max_components: int = 4  # Maximum components per article (all if relevant)
+    min_components: int = 1  # Minimum components per article (just details is fine for most)
+    max_components: int = 3  # Maximum components per article (reduced from 4 - be more selective)
     max_article_preview: int = 2000  # Max chars to send (save tokens)
     retry_attempts: int = 3
     retry_delay: float = 2.0
@@ -209,14 +209,17 @@ FREQUENCY: ~10% of stories
 TYPICAL SELECTIONS
 ═══════════════════════════════════════════════════════════════
 
-Most stories: ["details"]
-Incidents/disasters: ["map", "details"]
+Most stories (80%): ["details"] - Just details, nothing else
+Incidents with SPECIFIC location: ["map", "details"]
 Economic news with data: ["graph", "details"]
-Complex ongoing conflicts: ["timeline", "details"] or ["map", "timeline", "details"]
+Complex ongoing sagas (very rare, ~5%): ["timeline", "details"]
 
 MISTAKES TO AVOID:
-✗ Adding timeline to every story
-✗ Adding map with Kremlin/Capitol/White House
+✗ Adding timeline to every story (timeline is for ~5% of stories only!)
+✗ Adding map with just a country name ("Ukraine", "Russia", "Israel")
+✗ Adding map for space locations (Moon, Mars)
+✗ Adding map for famous buildings everyone knows (Kremlin, White House)
+✗ Adding timeline for single events (plane crash, earthquake, announcement)
 ✗ Adding graph with made-up data
 ✗ Adding details that duplicate bullets
 
@@ -593,8 +596,8 @@ class GeminiComponentSelector:
         # Simple keyword-based fallback
         title_lower = article_title.lower()
         
-        # Fallback for geographic stories (map re-enabled)
-        if any(word in title_lower for word in ['earthquake', 'hurricane', 'flood', 'strikes', 'war', 'conflict', 'border', 'country']):
+        # Fallback for incidents with specific locations (map only for specific places)
+        if any(word in title_lower for word in ['airport', 'bridge', 'plant', 'facility', 'base', 'building', 'crash site']):
             return {
                 'components': ['map', 'details'],
                 'emoji': '🌍',
@@ -604,7 +607,7 @@ class GeminiComponentSelector:
             }
         
         # Check for data/trend indicators
-        elif any(word in title_lower for word in ['rate', 'price', 'percent', 'increases', 'falls', 'stock', 'market', 'election']):
+        elif any(word in title_lower for word in ['rate', 'price', 'percent', 'increases', 'falls', 'stock', 'market']):
             return {
                 'components': ['graph', 'details'],
                 'emoji': '📈',
@@ -612,19 +615,19 @@ class GeminiComponentSelector:
                 'graph_data_needed': 'historical data'
             }
         
-        # Check for product/announcement
-        elif any(word in title_lower for word in ['announces', 'launches', 'reveals', 'iphone', 'product']):
+        # Check for ongoing sagas that need timeline (very selective)
+        elif any(phrase in title_lower for phrase in ['war enters', 'conflict continues', 'investigation reveals', 'files released', 'trial continues']):
             return {
-                'components': ['details', 'timeline'],
-                'emoji': '📱',
+                'components': ['timeline', 'details'],
+                'emoji': '📰',
                 'graph_type': None,
                 'graph_data_needed': None
             }
         
-        # Default fallback
+        # Default fallback - JUST DETAILS (most stories only need details)
         else:
             return {
-                'components': ['timeline', 'details'],
+                'components': ['details'],
                 'emoji': '📰',
                 'graph_type': None,
                 'graph_data_needed': None

@@ -81,30 +81,43 @@ BAD DETAILS (never do):
 📅 TIMELINE
 ═══════════════════════════════════════════════════════════════
 
+PURPOSE: Answer "What is this news about? How did we get here?"
+
+The timeline should help readers UNDERSTAND the story:
+- What is this news about?
+- How did this situation start?
+- What key events led to today's news?
+
 Generate 2-4 events with CLEAR, COMPLETE descriptions.
 
-EACH EVENT MUST BE:
-✓ 15-25 words long
-✓ A complete thought explaining WHAT happened AND WHY it matters
-✓ From recent past (usually last 1-5 years)
-✓ Directly relevant to this specific story
+EACH EVENT MUST:
+✓ Be 15-25 words long
+✓ Explain WHAT happened AND WHY it matters
+✓ Help the reader understand the CONTEXT of today's news
+✓ Be from recent past (usually last 1-5 years)
+✓ Be directly relevant to this specific story
+
+THE TIMELINE SHOULD TELL A STORY:
+- First event: "This is how it all started..."
+- Middle events: "This is what happened next..."
+- Last event: "This is the most recent development before today's news..."
 
 DATE FORMAT:
 - Use full month: "January 2024" not "Jan 2024"
 - Always include year
 
 ═══════════════════════════════════════════════════════════════
-BAD TIMELINE (too short, unclear):
+BAD TIMELINE (too short, doesn't explain anything):
 ═══════════════════════════════════════════════════════════════
 
 ✗ {"date": "Jul 2019", "event": "Epstein arrested"}
 ✗ {"date": "Feb 2022", "event": "Russia invades Ukraine"}  
 ✗ {"date": "Aug 2019", "event": "Epstein found dead"}
 
-These are useless! Reader learns almost nothing.
+These are useless! Reader learns almost nothing about WHAT the story is or HOW we got here.
 
 ═══════════════════════════════════════════════════════════════
-GOOD TIMELINE (clear, informative, complete):
+GOOD TIMELINE (tells the story, explains context):
 ═══════════════════════════════════════════════════════════════
 
 ✓ {
@@ -132,6 +145,9 @@ GOOD TIMELINE (clear, informative, complete):
     "event": "William Lai elected Taiwan's president with 40% of the vote despite Chinese pressure, securing unprecedented third consecutive term for DPP party"
   }
 
+After reading a good timeline, the reader should think:
+"Now I understand what this story is about and how we got to today's news."
+
 OUTPUT FORMAT:
 [
   {
@@ -152,12 +168,18 @@ OUTPUT FORMAT:
 🗺️ MAP
 ═══════════════════════════════════════════════════════════════
 
-Generate 1-2 locations showing WHERE THE NEWS HAPPENED.
+Generate 1-2 SPECIFIC locations showing WHERE THE NEWS HAPPENED.
 
-THE PURPOSE: Users want to see "Where did this actually happen?"
+CRITICAL RULES:
+1. MUST be a SPECIFIC location (building, facility, airport, etc.)
+2. MUST be ON PLANET EARTH (no Moon, Mars, space stations, asteroids)
+3. MUST NOT be just a country or city name
+4. MUST NOT be a famous building everyone knows (Kremlin, White House)
+
+THE PURPOSE: Users want to see "Where EXACTLY did this happen?"
 
 ═══════════════════════════════════════════════════════════════
-GOOD MAP LOCATIONS (users want to see these):
+GOOD MAP LOCATIONS (specific places on Earth):
 ═══════════════════════════════════════════════════════════════
 
 INCIDENT LOCATIONS:
@@ -188,14 +210,24 @@ INCIDENT LOCATIONS:
     "description": "Bridge that collapsed after being struck by container ship Dali"
   }
 
-DISASTER LOCATIONS:
+MILITARY STRIKE LOCATIONS:
 ✓ {
-    "name": "Gaziantep Province",
+    "name": "Zaporizhzhia Nuclear Power Plant",
+    "type": "infrastructure",
+    "city": "Enerhodar",
+    "country": "Ukraine",
+    "coordinates": {"lat": 47.5069, "lng": 34.5853},
+    "description": "Europe's largest nuclear plant targeted by Russian strikes"
+  }
+
+DISASTER EPICENTERS:
+✓ {
+    "name": "Gaziantep Province Epicenter",
     "type": "landmark",
     "city": "Gaziantep",
     "country": "Turkey",
     "coordinates": {"lat": 37.0662, "lng": 37.3833},
-    "description": "Region near epicenter of magnitude 7.8 earthquake that killed over 50,000"
+    "description": "Epicenter of magnitude 7.8 earthquake that killed over 50,000"
   }
 
 DISPUTED TERRITORIES:
@@ -219,47 +251,76 @@ MILITARY/SECRET FACILITIES:
   }
 
 ═══════════════════════════════════════════════════════════════
-BAD MAP LOCATIONS (never use these):
+BAD MAP LOCATIONS (NEVER use these):
 ═══════════════════════════════════════════════════════════════
 
-FAMOUS GOVERNMENT BUILDINGS:
+SPACE LOCATIONS (NOT ON EARTH - NEVER USE):
 ✗ {
-    "name": "The Kremlin",
-    "description": "Russian government headquarters"
+    "name": "Moon",
+    "description": "Landing site"
+  }
+  → NOT ON EARTH - DO NOT USE
+
+✗ {
+    "name": "Mars",
+    "description": "Rover location"
+  }
+  → NOT ON EARTH - DO NOT USE
+
+✗ {
+    "name": "International Space Station"
+  }
+  → NOT ON EARTH - DO NOT USE
+
+JUST A COUNTRY (TOO VAGUE):
+✗ {
+    "name": "Ukraine",
+    "description": "Where war is happening"
+  }
+  → TOO VAGUE - Need specific location like "Zaporizhzhia Power Plant"
+
+✗ {
+    "name": "Russia"
+  }
+  → TOO VAGUE
+
+✗ {
+    "name": "Israel"
+  }
+  → TOO VAGUE
+
+JUST A CITY (TOO VAGUE):
+✗ {
+    "name": "Kyiv"
+  }
+  → TOO VAGUE - Need specific building or site
+
+✗ {
+    "name": "Moscow"
+  }
+  → TOO VAGUE
+
+FAMOUS GOVERNMENT BUILDINGS (everyone knows these):
+✗ {
+    "name": "The Kremlin"
   }
   → EVERYONE KNOWS WHERE THIS IS
 
 ✗ {
-    "name": "Capitol Building",
-    "description": "Where US Congress meets"
+    "name": "The White House"
   }
   → EVERYONE KNOWS WHERE THIS IS
 
 ✗ {
-    "name": "The White House",
-    "description": "US presidential residence"
+    "name": "Capitol Building"
   }
   → EVERYONE KNOWS WHERE THIS IS
 
 TV STATIONS & OFFICES:
 ✗ {
-    "name": "Channel 4 Television Centre",
-    "description": "Where broadcast aired"
+    "name": "Channel 4 Television Centre"
   }
   → NOBODY CARES WHERE A TV STATION IS
-
-GENERIC LOCATIONS:
-✗ {
-    "name": "Lithuania",
-    "description": "Country where crash happened"
-  }
-  → TOO VAGUE - Show the specific airport/crash site!
-
-✗ {
-    "name": "United States",
-    "description": "Where policy announced"
-  }
-  → COMPLETELY USELESS
 
 OUTPUT FORMAT:
 [
@@ -345,16 +406,17 @@ CHECKLIST BEFORE SUBMITTING
   - All relevant to story?
 
 □ TIMELINE:
+  - Does it answer "What is this news about? How did we get here?"
   - Each event 15-25 words?
   - Each explains WHAT happened AND WHY it matters?
   - Recent events (1-5 years)?
-  - Directly relevant?
+  - Reader will understand the story after reading this?
 
 □ MAP:
-  - Shows WHERE something happened?
-  - NOT a famous government building?
-  - Users would want to see this location?
-  - Specific enough (not just country/city)?
+  - Is this a SPECIFIC location (not just country/city)?
+  - Is this ON PLANET EARTH (not Moon, Mars, space)?
+  - NOT a famous government building (Kremlin, White House)?
+  - Users would want to see this exact location?
 
 □ GRAPH:
   - All data from verified source?
@@ -598,20 +660,34 @@ class ClaudeComponentWriter:
                 vague_locations = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states', 
                                    'middle east', 'europe', 'asia', 'australia', 'sydney', 'moscow', 'gaza city',
                                    'baltimore', 'new york', 'london', 'paris', 'tokyo', 'beijing', 'california',
-                                   'new south wales', 'eastern europe', 'downtown', 'city center', 'suburbs']
+                                   'new south wales', 'eastern europe', 'downtown', 'city center', 'suburbs',
+                                   'kyiv', 'kiev', 'tehran', 'gaza', 'west bank', 'crimea']
+                # Space locations that are NOT on Earth
+                space_locations = ['moon', 'mars', 'jupiter', 'saturn', 'venus', 'mercury', 'neptune', 'uranus',
+                                   'pluto', 'asteroid', 'comet', 'space station', 'international space station',
+                                   'iss', 'lunar', 'orbit', 'outer space', 'milky way', 'galaxy', 'sun', 'solar']
+                # Famous buildings everyone knows
+                famous_buildings = ['kremlin', 'white house', 'capitol', 'capitol building', '10 downing street',
+                                    'downing street', 'elysee palace', 'buckingham palace', 'pentagon']
                 valid_types = ['venue', 'building', 'landmark', 'infrastructure', 'military', 'transport', 'street']
                 for i, loc in enumerate(result['map']):
                     if not isinstance(loc, dict):
                         errors.append(f"Map location {i+1} is not a dict")
                     elif 'name' not in loc or 'coordinates' not in loc:
                         errors.append(f"Map location {i+1} missing name or coordinates")
-                    elif loc.get('name', '').lower() in vague_locations:
-                        errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific venue/building/landmark)")
+                    else:
+                        loc_name_lower = loc.get('name', '').lower()
+                        if loc_name_lower in vague_locations:
+                            errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific venue/building/landmark)")
+                        elif any(space in loc_name_lower for space in space_locations):
+                            errors.append(f"Map location {i+1} is not on Earth: '{loc.get('name')}' (must be on planet Earth)")
+                        elif loc_name_lower in famous_buildings or any(fb in loc_name_lower for fb in famous_buildings):
+                            errors.append(f"Map location {i+1} is too well-known: '{loc.get('name')}' (everyone knows where this is)")
                     # Validate type field if present
-                    if 'type' in loc and loc['type'] not in valid_types:
+                    if isinstance(loc, dict) and 'type' in loc and loc['type'] not in valid_types:
                         errors.append(f"Map location {i+1} has invalid type: '{loc.get('type')}'")
                     # Validate coordinates format
-                    if 'coordinates' in loc and isinstance(loc['coordinates'], dict):
+                    if isinstance(loc, dict) and 'coordinates' in loc and isinstance(loc['coordinates'], dict):
                         if 'lat' not in loc['coordinates'] or 'lng' not in loc['coordinates']:
                             errors.append(f"Map location {i+1} coordinates missing lat or lng")
         
