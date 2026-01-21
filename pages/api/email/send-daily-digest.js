@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     // Filter users whose local time matches their preferred hour
     const eligibleUsers = (users || []).filter(user => {
       const timezone = user.email_timezone || 'UTC';
-      const preferredHour = user.preferred_email_hour ?? 7; // Default 7 AM
+      const preferredHour = user.preferred_email_hour ?? 10; // Default 10 AM
       
       try {
         // Get current hour in user's timezone
@@ -246,100 +246,185 @@ function getGreeting(timezone) {
 }
 
 /**
- * Generate beautiful HTML email for daily digest
+ * Generate premium text-only email for daily digest
+ * Inspired by top fintech design: clean, sophisticated, spacious
  */
 function generateDigestEmail(user, articles) {
-  const firstName = user.full_name?.split(' ')[0] || 'there';
-  const articlesReadMsg = user.articles_read_count > 0 
-    ? `You've read ${user.articles_read_count} articles so far!` 
-    : 'Start your informed day!';
+  const firstName = user.full_name?.split(' ')[0] || '';
   
+  // Format date elegantly
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  // Generate article list
   const articlesHtml = articles.map((article, index) => {
-    // Remove markdown **bold** syntax from title and summary
     const rawTitle = article.title_news || article.title || 'Untitled';
-    const title = rawTitle.replace(/\*\*/g, '');
-    const rawSummary = article.content_news?.substring(0, 150) || article.description?.substring(0, 150) || '';
-    const summary = rawSummary.replace(/\*\*/g, '');
+    // Remove ** markers, we'll style differently
+    const cleanTitle = rawTitle.replace(/\*\*/g, '');
     const category = article.category || 'World';
-    const emoji = article.emoji || '📰';
-    const url = article.url || '#';
+    
+    // Get a brief summary if available
+    const summary = article.summary_news || article.summary || '';
+    const truncatedSummary = summary.length > 120 ? summary.substring(0, 120) + '...' : summary;
     
     return `
-      <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: ${index < articles.length - 1 ? '1px solid #e5e7eb' : 'none'};">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-          <span style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">${index + 1}</span>
-          <span style="font-size: 18px;">${emoji}</span>
-          <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${category}</span>
-        </div>
-        
-        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 8px 0; line-height: 1.4;">
-          <a href="${url}" style="color: #0f172a; text-decoration: none;">${title}</a>
-        </h2>
-        
-        <p style="color: #64748b; line-height: 1.6; margin: 0 0 12px 0; font-size: 15px;">
-          ${summary}${summary.length >= 150 ? '...' : ''}
-        </p>
-        
-        <a href="${url}" style="color: #3b82f6; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 4px;">
-          Read more <span style="font-size: 12px;">→</span>
-        </a>
-      </div>
-    `;
+              <tr>
+                <td style="padding: 0 0 32px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="padding: 0;">
+                        
+                        <!-- Number -->
+                        <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: #7c3aed; letter-spacing: 1px;">
+                          ${String(index + 1).padStart(2, '0')}
+                        </p>
+                        
+                        <!-- Title -->
+                        <a href="https://todayplus.news" style="text-decoration: none;">
+                          <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600; color: #111827; line-height: 1.4; letter-spacing: -0.3px;">
+                            ${cleanTitle}
+                          </h2>
+                        </a>
+                        
+                        <!-- Summary -->
+                        ${truncatedSummary ? `
+                        <p style="margin: 0; font-size: 15px; font-weight: 400; color: #6b7280; line-height: 1.6;">
+                          ${truncatedSummary}
+                        </p>
+                        ` : ''}
+                        
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>`;
   }).join('');
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>Today+ Daily Brief</title>
+      <style>
+        @media only screen and (max-width: 600px) {
+          .container { padding: 32px 20px !important; }
+          .header { padding: 40px 20px !important; }
+        }
+      </style>
     </head>
-    <body style="margin: 0; padding: 0; background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;">
-      <div style="max-width: 600px; margin: 0 auto; background: white;">
-        
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 40px 30px; text-align: center;">
-          <h1 style="font-size: 32px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px;">
-            <span style="color: #3b82f6;">Today</span><span style="color: #fbbf24;">+</span>
-          </h1>
-          <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Daily Brief</p>
-          <p style="margin: 0; font-size: 20px; font-weight: 600;">Hey ${firstName}! 👋</p>
-          <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">${articlesReadMsg}</p>
-        </div>
-
-        <!-- Intro -->
-        <div style="padding: 24px 30px; background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
-          <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
-            Here are the <strong>${articles.length} most important stories</strong> you need to know today. Curated by AI, delivered just for you.
-          </p>
-        </div>
-
-        <!-- Articles -->
-        <div style="padding: 30px;">
-          ${articlesHtml}
-        </div>
-
-        <!-- CTA -->
-        <div style="padding: 0 30px 30px;">
-          <a href="https://todayplus.news" style="display: block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 12px; font-weight: 700; font-size: 16px;">
-            Read All Stories on Today+ →
-          </a>
-        </div>
-
-        <!-- Footer -->
-        <div style="background: #f8fafc; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
-          <p style="color: #64748b; margin: 0 0 8px 0; font-size: 13px; text-align: center;">
-            You're receiving this because you subscribed to Today+ Daily Brief
-          </p>
-          <p style="color: #94a3b8; margin: 0; font-size: 12px; text-align: center;">
-            <a href="https://todayplus.news/settings" style="color: #64748b;">Manage preferences</a> · 
-            <a href="https://todayplus.news/unsubscribe" style="color: #64748b;">Unsubscribe</a>
-          </p>
-        </div>
-        
-      </div>
+    <body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+      
+      <!-- Wrapper -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa;">
+        <tr>
+          <td align="center" style="padding: 40px 16px;">
+            
+            <!-- Card -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width: 520px; width: 100%; background-color: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              
+              <!-- Header -->
+              <tr>
+                <td class="header" style="padding: 48px 40px 40px 40px; border-bottom: 1px solid #f3f4f6;">
+                  
+                  <!-- Logo -->
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td>
+                        <h1 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 700; color: #111827; letter-spacing: -0.5px;">
+                          Today<span style="color: #7c3aed;">+</span>
+                        </h1>
+                        <p style="margin: 0; font-size: 13px; font-weight: 500; color: #9ca3af;">
+                          ${dateStr}
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  ${firstName ? `
+                  <!-- Greeting -->
+                  <p style="margin: 24px 0 0 0; font-size: 16px; font-weight: 400; color: #374151; line-height: 1.5;">
+                    Good ${getTimeGreeting()}, ${firstName}. Here's what matters today.
+                  </p>
+                  ` : `
+                  <p style="margin: 24px 0 0 0; font-size: 16px; font-weight: 400; color: #374151; line-height: 1.5;">
+                    Here's what matters today.
+                  </p>
+                  `}
+                  
+                </td>
+              </tr>
+              
+              <!-- Articles -->
+              <tr>
+                <td class="container" style="padding: 40px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    ${articlesHtml}
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- CTA -->
+              <tr>
+                <td style="padding: 0 40px 48px 40px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center">
+                        <a href="https://todayplus.news" style="display: inline-block; background-color: #111827; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 14px; font-weight: 500; letter-spacing: 0.2px;">
+                          Continue reading
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 24px 40px; background-color: #fafafa; border-top: 1px solid #f3f4f6; border-radius: 0 0 16px 16px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center">
+                        <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                          You're receiving this because you subscribed to Today+
+                        </p>
+                        <p style="margin: 8px 0 0 0; font-size: 12px;">
+                          <a href="https://todayplus.news/unsubscribe" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a>
+                          <span style="color: #d1d5db; padding: 0 8px;">·</span>
+                          <a href="https://todayplus.news" style="color: #6b7280; text-decoration: underline;">View online</a>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+            </table>
+            
+          </td>
+        </tr>
+      </table>
+      
     </body>
     </html>
   `;
+}
+
+/**
+ * Get time of day greeting word
+ */
+function getTimeGreeting() {
+  const hour = new Date().getUTCHours();
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 21) return 'evening';
+  return 'evening';
 }
 

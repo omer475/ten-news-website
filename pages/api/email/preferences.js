@@ -74,7 +74,7 @@ async function getPreferences(supabase, userId, res) {
       preferences: {
         frequency: data.email_frequency || 'daily',
         timezone: data.email_timezone || 'UTC',
-        preferredHour: data.preferred_email_hour ?? 7,
+        preferredHour: data.preferred_email_hour ?? 10,
         subscribed: data.newsletter_subscribed ?? true,
         categories: data.preferred_categories || [],
         personalizationEnabled: data.email_personalization_enabled ?? true,

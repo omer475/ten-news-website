@@ -8,7 +8,7 @@ import { sortArticlesByScore } from '../utils/sortArticles';
 import { 
   getUserInterests, 
   updateInterests, 
-  rankArticles, 
+  // rankArticles,  // DISABLED: Personalization ranking disabled - articles sorted by score only
   getEngagementWeight,
   decayOldInterests,
   syncInterestsToSupabase,
@@ -2265,13 +2265,14 @@ export default function Home() {
               console.log('📊 Sorting news articles by score...');
               let sortedNews = sortArticlesByScore(newsArticles);
               
-              // Apply personalization ranking based on user interests
-              // This re-ranks articles, boosting ones that match user's interests
-              const userInterests = getUserInterests();
-              if (Object.keys(userInterests).length > 0) {
-                console.log('🎯 Applying personalization with', Object.keys(userInterests).length, 'interests');
-                sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
-              }
+              // DISABLED: Personalization ranking - articles now sorted purely by score
+              // Interest data is still collected and synced to Supabase for future use
+              // To re-enable, uncomment the following:
+              // const userInterests = getUserInterests();
+              // if (Object.keys(userInterests).length > 0) {
+              //   console.log('🎯 Applying personalization with', Object.keys(userInterests).length, 'interests');
+              //   sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
+              // }
               
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
@@ -2758,12 +2759,15 @@ export default function Home() {
   const handleSignup = async (email, password, fullName) => {
     setAuthError('');
     try {
+      // Detect user's timezone automatically
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, fullName }),
+        body: JSON.stringify({ email, password, fullName, timezone }),
       });
 
       let data;
@@ -5966,7 +5970,7 @@ export default function Home() {
                                           String(rawUrl).trim().length >= 5; // At least 5 chars for a valid URL
                         
                         if (!hasImageUrl) {
-                          // Professional placeholder with category-based gradient
+                          // Clean gradient placeholder (no emoji/text)
                           const categoryGradients = {
                             'Tech': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             'Business': 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
@@ -5980,41 +5984,13 @@ export default function Home() {
                             'Crypto': 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)'
                           };
                           const gradient = categoryGradients[story.category] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                          const categoryEmojis = {
-                            'Tech': '💻', 'Business': '📊', 'Finance': '💰', 'Politics': '🏛️',
-                            'World': '🌍', 'Science': '🔬', 'Health': '🏥', 'Sports': '⚽',
-                            'Entertainment': '🎬', 'Crypto': '₿'
-                          };
-                          const emoji = categoryEmojis[story.category] || story.emoji || '📰';
                           
                           return (
                             <div style={{
                               width: '100%',
                               height: '100%',
-                              background: gradient,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexDirection: 'column',
-                              gap: '12px'
-                            }}>
-                              <div style={{
-                                fontSize: '64px',
-                                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
-                              }}>
-                                {emoji}
-                              </div>
-                              <div style={{
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                color: 'rgba(255,255,255,0.9)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '2px',
-                                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                              }}>
-                                {story.category || 'News'}
-                              </div>
-                            </div>
+                              background: gradient
+                            }} />
                           );
                         }
                         
@@ -6298,8 +6274,8 @@ export default function Home() {
                                     setTimeout(() => { imgElement.src = altProxyUrl; }, 400);
                                   }
                               } else {
-                                // All retries failed - show professional category-based fallback
-                                console.warn('⚠️ All retries failed, showing category fallback');
+                                // All retries failed - show clean gradient fallback (no emoji/text)
+                                console.warn('⚠️ All retries failed, showing gradient fallback');
                                 imgElement.style.display = 'none';
                                 if (parentElement && !parentElement.querySelector('.image-fallback')) {
                                       // Category-based gradients for visual appeal
@@ -6315,33 +6291,18 @@ export default function Home() {
                                         'Entertainment': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
                                         'Crypto': 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)'
                                       };
-                                      const categoryEmojis = {
-                                        'Tech': '💻', 'Business': '📊', 'Finance': '💰', 'Politics': '🏛️',
-                                        'World': '🌍', 'Science': '🔬', 'Health': '🏥', 'Sports': '⚽',
-                                        'Entertainment': '🎬', 'Crypto': '₿'
-                                      };
                                       const gradient = categoryGradients[story.category] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                                      const emoji = categoryEmojis[story.category] || story.emoji || '📰';
                                       
                                       parentElement.style.background = gradient;
                                       const fallback = document.createElement('div');
                                       fallback.className = 'image-fallback';
                                       fallback.style.cssText = `
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
-                                        justify-content: center;
-                                        gap: 12px;
                                         width: 100%;
                                         height: 100%;
                                         position: absolute;
                                         top: 0;
                                         left: 0;
                                         z-index: 1;
-                                      `;
-                                      fallback.innerHTML = `
-                                        <div style="font-size: 64px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));">${emoji}</div>
-                                        <div style="font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">${story.category || 'News'}</div>
                                       `;
                                       parentElement.appendChild(fallback);
                                     }

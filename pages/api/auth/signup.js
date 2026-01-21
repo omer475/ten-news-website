@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     }
 
     const body = req.body || {}
-    const { email, password, fullName } = body
+    const { email, password, fullName, timezone } = body
 
     console.log('📝 Request body:', { email, hasPassword: !!password, fullName })
 
@@ -125,9 +125,12 @@ export default async function handler(req, res) {
         id: data.user.id,
         email: email,
         full_name: fullName,
+        email_timezone: timezone || 'UTC',
+        newsletter_subscribed: true,
+        preferred_email_hour: 10,
         created_at: new Date().toISOString()
       }])
-      console.log('✅ Profile created')
+      console.log('✅ Profile created with timezone:', timezone || 'UTC')
     } catch (profileError) {
       console.error('⚠️ Profile error (non-fatal):', profileError.message)
     }
