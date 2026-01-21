@@ -168,23 +168,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     'yemen': [44.2075, 15.3694], 'palestine': [35.2332, 31.9522], 'gaza': [34.4668, 31.5018]
   };
   
-  // 15 Globe color themes - randomly selected each visit
+  // 15 Globe color themes - compelling colors with contrasting dot colors
   const globeColorThemes = [
-    { name: 'midnight', land: '#2a2a4a', back: '#1a1a2e', stroke: '#252540', ocean: 'rgba(30, 40, 70, 0.08)' },
-    { name: 'ocean', land: '#1e3a5f', back: '#0f2744', stroke: '#1a3050', ocean: 'rgba(20, 60, 100, 0.08)' },
-    { name: 'forest', land: '#2d4a3e', back: '#1a2e28', stroke: '#253830', ocean: 'rgba(30, 60, 50, 0.08)' },
-    { name: 'slate', land: '#3d4555', back: '#252a35', stroke: '#353a45', ocean: 'rgba(50, 55, 70, 0.08)' },
-    { name: 'wine', land: '#4a2a3a', back: '#2e1a24', stroke: '#3a2530', ocean: 'rgba(60, 30, 45, 0.08)' },
-    { name: 'charcoal', land: '#3a3a3a', back: '#222222', stroke: '#2a2a2a', ocean: 'rgba(40, 40, 40, 0.08)' },
-    { name: 'navy', land: '#1a2744', back: '#0f1a2e', stroke: '#152035', ocean: 'rgba(20, 30, 55, 0.08)' },
-    { name: 'plum', land: '#3a2a4a', back: '#241a2e', stroke: '#2a2040', ocean: 'rgba(45, 30, 60, 0.08)' },
-    { name: 'coffee', land: '#3d3028', back: '#261e1a', stroke: '#2e2520', ocean: 'rgba(50, 40, 35, 0.08)' },
-    { name: 'storm', land: '#2e3844', back: '#1c242e', stroke: '#252e38', ocean: 'rgba(35, 45, 55, 0.08)' },
-    { name: 'moss', land: '#3a4a3a', back: '#242e24', stroke: '#2e3a2e', ocean: 'rgba(45, 55, 45, 0.08)' },
-    { name: 'steel', land: '#404550', back: '#282c34', stroke: '#353840', ocean: 'rgba(50, 55, 65, 0.08)' },
-    { name: 'dusk', land: '#3a3548', back: '#24202e', stroke: '#2e2a38', ocean: 'rgba(45, 40, 55, 0.08)' },
-    { name: 'earth', land: '#443830', back: '#2a221c', stroke: '#352c25', ocean: 'rgba(55, 45, 40, 0.08)' },
-    { name: 'arctic', land: '#354555', back: '#202a38', stroke: '#2a3545', ocean: 'rgba(40, 55, 70, 0.08)' }
+    { name: 'indigo', land: '#4338ca', back: '#312e81', stroke: '#3730a3', ocean: 'rgba(67, 56, 202, 0.06)', dot: '#fbbf24' },
+    { name: 'emerald', land: '#059669', back: '#047857', stroke: '#10b981', ocean: 'rgba(5, 150, 105, 0.06)', dot: '#f472b6' },
+    { name: 'violet', land: '#7c3aed', back: '#6d28d9', stroke: '#8b5cf6', ocean: 'rgba(124, 58, 237, 0.06)', dot: '#34d399' },
+    { name: 'rose', land: '#e11d48', back: '#be123c', stroke: '#f43f5e', ocean: 'rgba(225, 29, 72, 0.06)', dot: '#2dd4bf' },
+    { name: 'amber', land: '#d97706', back: '#b45309', stroke: '#f59e0b', ocean: 'rgba(217, 119, 6, 0.06)', dot: '#818cf8' },
+    { name: 'cyan', land: '#0891b2', back: '#0e7490', stroke: '#06b6d4', ocean: 'rgba(8, 145, 178, 0.06)', dot: '#fb923c' },
+    { name: 'fuchsia', land: '#c026d3', back: '#a21caf', stroke: '#d946ef', ocean: 'rgba(192, 38, 211, 0.06)', dot: '#4ade80' },
+    { name: 'lime', land: '#65a30d', back: '#4d7c0f', stroke: '#84cc16', ocean: 'rgba(101, 163, 13, 0.06)', dot: '#f0abfc' },
+    { name: 'sky', land: '#0284c7', back: '#0369a1', stroke: '#0ea5e9', ocean: 'rgba(2, 132, 199, 0.06)', dot: '#fcd34d' },
+    { name: 'teal', land: '#0d9488', back: '#0f766e', stroke: '#14b8a6', ocean: 'rgba(13, 148, 136, 0.06)', dot: '#fb7185' },
+    { name: 'orange', land: '#ea580c', back: '#c2410c', stroke: '#f97316', ocean: 'rgba(234, 88, 12, 0.06)', dot: '#60a5fa' },
+    { name: 'blue', land: '#2563eb', back: '#1d4ed8', stroke: '#3b82f6', ocean: 'rgba(37, 99, 235, 0.06)', dot: '#fde047' },
+    { name: 'pink', land: '#db2777', back: '#be185d', stroke: '#ec4899', ocean: 'rgba(219, 39, 119, 0.06)', dot: '#a3e635' },
+    { name: 'purple', land: '#9333ea', back: '#7e22ce', stroke: '#a855f7', ocean: 'rgba(147, 51, 234, 0.06)', dot: '#22d3d1' },
+    { name: 'green', land: '#16a34a', back: '#15803d', stroke: '#22c55e', ocean: 'rgba(22, 163, 74, 0.06)', dot: '#e879f9' }
   ];
   
   // Select random theme on mount
@@ -435,8 +435,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('d', pathBack)
           .attr('fill', globeTheme.back)
           .attr('stroke', globeTheme.stroke)
-          .attr('stroke-width', 0.3)
-          .attr('opacity', 0.15);
+          .attr('stroke-width', 0.25)
+          .attr('opacity', 0.12);
         
         // Render front countries with theme colors
         globeFront.selectAll('path')
@@ -445,8 +445,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .append('path')
           .attr('d', pathFront)
           .attr('fill', globeTheme.land)
-          .attr('stroke', '#ffffff')
-          .attr('stroke-width', 0.5);
+          .attr('stroke', 'rgba(255,255,255,0.3)')
+          .attr('stroke-width', 0.4);
         
         // Update function for both projections and dots
         const updateGlobe = () => {
@@ -542,8 +542,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       if (coords) {
         const projected = projectionRef.current(coords);
         if (projected) {
-          // Dot size based on news count (min 4, max 8)
-          const dotSize = Math.min(8, Math.max(4, 3 + count));
+          // Modern minimal dot - small and clean
+          const dotSize = 3;
           
           dotsLayer.append('circle')
             .attr('class', 'news-dot')
@@ -552,11 +552,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             .attr('r', dotSize)
             .attr('data-lon', coords[0])
             .attr('data-lat', coords[1])
-            .attr('fill', '#ef4444')
-            .attr('stroke', '#ffffff')
-            .attr('stroke-width', 1.5)
-            .attr('opacity', 1)
-            .style('filter', 'drop-shadow(0 0 3px rgba(239, 68, 68, 0.6))');
+            .attr('fill', globeTheme.dot)
+            .attr('opacity', 0.95);
         }
       }
     }
