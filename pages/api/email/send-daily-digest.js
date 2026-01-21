@@ -147,7 +147,7 @@ export default async function handler(req, res) {
 
           // Send email via Resend
           const { data: emailData, error: emailError } = await resend.emails.send({
-            from: 'Ten News <onboarding@resend.dev>',
+            from: 'Today+ <info@todayplus.news>',
             to: user.email,
             subject: `${greeting} - Your Daily Brief for ${date}`,
             html: emailHtml,
@@ -255,8 +255,11 @@ function generateDigestEmail(user, articles) {
     : 'Start your informed day!';
   
   const articlesHtml = articles.map((article, index) => {
-    const title = article.title_news || article.title || 'Untitled';
-    const summary = article.content_news?.substring(0, 150) || article.description?.substring(0, 150) || '';
+    // Remove markdown **bold** syntax from title and summary
+    const rawTitle = article.title_news || article.title || 'Untitled';
+    const title = rawTitle.replace(/\*\*/g, '');
+    const rawSummary = article.content_news?.substring(0, 150) || article.description?.substring(0, 150) || '';
+    const summary = rawSummary.replace(/\*\*/g, '');
     const category = article.category || 'World';
     const emoji = article.emoji || '📰';
     const url = article.url || '#';
@@ -297,7 +300,7 @@ function generateDigestEmail(user, articles) {
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 40px 30px; text-align: center;">
           <h1 style="font-size: 32px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px;">
-            <span style="color: #3b82f6;">TEN</span> NEWS
+            <span style="color: #3b82f6;">Today</span><span style="color: #fbbf24;">+</span>
           </h1>
           <p style="margin: 0 0 16px 0; font-size: 14px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Daily Brief</p>
           <p style="margin: 0; font-size: 20px; font-weight: 600;">Hey ${firstName}! 👋</p>
@@ -318,19 +321,19 @@ function generateDigestEmail(user, articles) {
 
         <!-- CTA -->
         <div style="padding: 0 30px 30px;">
-          <a href="https://tennews.ai" style="display: block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 12px; font-weight: 700; font-size: 16px;">
-            Read All Stories on Ten News →
+          <a href="https://todayplus.news" style="display: block; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; text-decoration: none; text-align: center; padding: 16px 24px; border-radius: 12px; font-weight: 700; font-size: 16px;">
+            Read All Stories on Today+ →
           </a>
         </div>
 
         <!-- Footer -->
         <div style="background: #f8fafc; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
           <p style="color: #64748b; margin: 0 0 8px 0; font-size: 13px; text-align: center;">
-            You're receiving this because you subscribed to Ten News Daily Brief
+            You're receiving this because you subscribed to Today+ Daily Brief
           </p>
           <p style="color: #94a3b8; margin: 0; font-size: 12px; text-align: center;">
-            <a href="https://tennews.ai/settings" style="color: #64748b;">Manage preferences</a> · 
-            <a href="https://tennews.ai/unsubscribe" style="color: #64748b;">Unsubscribe</a>
+            <a href="https://todayplus.news/settings" style="color: #64748b;">Manage preferences</a> · 
+            <a href="https://todayplus.news/unsubscribe" style="color: #64748b;">Unsubscribe</a>
           </p>
         </div>
         

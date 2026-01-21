@@ -94,7 +94,7 @@ export default async function handler(req, res) {
         const subject = getReengagementSubject(daysInactive, user.full_name);
 
         const { data: emailData, error: emailError } = await resend.emails.send({
-          from: 'Ten News <onboarding@resend.dev>',
+          from: 'Today+ <info@todayplus.news>',
           to: user.email,
           subject: subject,
           html: emailHtml,
@@ -184,10 +184,12 @@ function generateReengagementEmail(user, articles, daysInactive) {
   }
 
   const articlesHtml = (articles || []).map((article, index) => {
-    const title = article.title_news || article.title || 'Untitled';
+    // Remove markdown **bold** syntax from title
+    const rawTitle = article.title_news || article.title || 'Untitled';
+    const title = rawTitle.replace(/\*\*/g, '');
     const category = article.category || 'World';
     const emoji = article.emoji || '📰';
-    const url = article.url || 'https://tennews.ai';
+    const url = article.url || 'https://todayplus.news';
     
     return `
       <div style="margin-bottom: 20px; padding: 20px; background: ${index === 0 ? 'linear-gradient(135deg, #f0f9ff, #e0f2fe)' : '#f8fafc'}; border-radius: 12px; border-left: 4px solid ${index === 0 ? '#3b82f6' : '#e5e7eb'};">
@@ -248,8 +250,8 @@ function generateReengagementEmail(user, articles, daysInactive) {
 
         <!-- CTA -->
         <div style="padding: 0 30px 40px;">
-          <a href="https://tennews.ai" style="display: block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; text-align: center; padding: 18px 24px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);">
-            📱 Open Ten News
+          <a href="https://todayplus.news" style="display: block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; text-align: center; padding: 18px 24px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);">
+            📱 Open Today+
           </a>
           <p style="text-align: center; margin: 16px 0 0 0; color: #94a3b8; font-size: 13px;">
             Get back to staying informed in 2 minutes a day
@@ -262,8 +264,8 @@ function generateReengagementEmail(user, articles, daysInactive) {
             We only send re-engagement emails occasionally when you haven't visited.
           </p>
           <p style="color: #94a3b8; margin: 0; font-size: 12px; text-align: center;">
-            <a href="https://tennews.ai/settings" style="color: #64748b;">Update preferences</a> · 
-            <a href="https://tennews.ai/unsubscribe" style="color: #64748b;">Unsubscribe</a>
+            <a href="https://todayplus.news/settings" style="color: #64748b;">Update preferences</a> · 
+            <a href="https://todayplus.news/unsubscribe" style="color: #64748b;">Unsubscribe</a>
           </p>
         </div>
         

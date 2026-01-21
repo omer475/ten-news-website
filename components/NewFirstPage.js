@@ -737,7 +737,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .swipe-hint {
           position: absolute;
-          bottom: 40px;
+          bottom: 25px;
           left: 0;
           right: 0;
           width: 100%;
@@ -790,7 +790,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             touch-action: none;
           }
           .swipe-hint {
-            bottom: 30px;
+            bottom: 15px;
             font-size: 14px;
           }
         }
