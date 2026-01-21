@@ -192,24 +192,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     'yemen': [44.2075, 15.3694], 'palestine': [35.2332, 31.9522], 'gaza': [34.4668, 31.5018]
   };
   
-  // 15 Globe color themes - compelling colors with contrasting dot colors
-  // Light land colors with much darker versions for highlighted countries
+  // 15 Globe color themes - light land colors with dark highlights
   const globeColorThemes = [
-    { name: 'blue', land: '#bfdbfe', back: '#93c5fd', stroke: '#60a5fa', ocean: 'rgba(191, 219, 254, 0.08)', highlight: '#1e40af' },
-    { name: 'indigo', land: '#c7d2fe', back: '#a5b4fc', stroke: '#818cf8', ocean: 'rgba(199, 210, 254, 0.08)', highlight: '#3730a3' },
-    { name: 'violet', land: '#ddd6fe', back: '#c4b5fd', stroke: '#a78bfa', ocean: 'rgba(221, 214, 254, 0.08)', highlight: '#5b21b6' },
-    { name: 'purple', land: '#e9d5ff', back: '#d8b4fe', stroke: '#c084fc', ocean: 'rgba(233, 213, 255, 0.08)', highlight: '#6b21a8' },
-    { name: 'fuchsia', land: '#f5d0fe', back: '#f0abfc', stroke: '#e879f9', ocean: 'rgba(245, 208, 254, 0.08)', highlight: '#86198f' },
-    { name: 'pink', land: '#fbcfe8', back: '#f9a8d4', stroke: '#f472b6', ocean: 'rgba(251, 207, 232, 0.08)', highlight: '#9d174d' },
-    { name: 'rose', land: '#fecdd3', back: '#fda4af', stroke: '#fb7185', ocean: 'rgba(254, 205, 211, 0.08)', highlight: '#9f1239' },
-    { name: 'emerald', land: '#a7f3d0', back: '#6ee7b7', stroke: '#34d399', ocean: 'rgba(167, 243, 208, 0.08)', highlight: '#065f46' },
-    { name: 'teal', land: '#99f6e4', back: '#5eead4', stroke: '#2dd4bf', ocean: 'rgba(153, 246, 228, 0.08)', highlight: '#115e59' },
-    { name: 'cyan', land: '#a5f3fc', back: '#67e8f9', stroke: '#22d3ee', ocean: 'rgba(165, 243, 252, 0.08)', highlight: '#155e75' },
-    { name: 'sky', land: '#bae6fd', back: '#7dd3fc', stroke: '#38bdf8', ocean: 'rgba(186, 230, 253, 0.08)', highlight: '#075985' },
-    { name: 'green', land: '#bbf7d0', back: '#86efac', stroke: '#4ade80', ocean: 'rgba(187, 247, 208, 0.08)', highlight: '#166534' },
-    { name: 'lime', land: '#d9f99d', back: '#bef264', stroke: '#a3e635', ocean: 'rgba(217, 249, 157, 0.08)', highlight: '#3f6212' },
-    { name: 'amber', land: '#fde68a', back: '#fcd34d', stroke: '#fbbf24', ocean: 'rgba(253, 230, 138, 0.08)', highlight: '#92400e' },
-    { name: 'orange', land: '#fed7aa', back: '#fdba74', stroke: '#fb923c', ocean: 'rgba(254, 215, 170, 0.08)', highlight: '#9a3412' }
+    { name: 'indigo', land: '#c7d2fe', back: 'rgba(199, 210, 254, 0.2)', stroke: 'rgba(199, 210, 254, 0.4)', ocean: 'rgba(199, 210, 254, 0.06)', highlight: '#3730a3' },
+    { name: 'emerald', land: '#a7f3d0', back: 'rgba(167, 243, 208, 0.2)', stroke: 'rgba(167, 243, 208, 0.4)', ocean: 'rgba(167, 243, 208, 0.06)', highlight: '#065f46' },
+    { name: 'violet', land: '#ddd6fe', back: 'rgba(221, 214, 254, 0.2)', stroke: 'rgba(221, 214, 254, 0.4)', ocean: 'rgba(221, 214, 254, 0.06)', highlight: '#5b21b6' },
+    { name: 'rose', land: '#fecdd3', back: 'rgba(254, 205, 211, 0.2)', stroke: 'rgba(254, 205, 211, 0.4)', ocean: 'rgba(254, 205, 211, 0.06)', highlight: '#9f1239' },
+    { name: 'amber', land: '#fde68a', back: 'rgba(253, 230, 138, 0.2)', stroke: 'rgba(253, 230, 138, 0.4)', ocean: 'rgba(253, 230, 138, 0.06)', highlight: '#92400e' },
+    { name: 'cyan', land: '#a5f3fc', back: 'rgba(165, 243, 252, 0.2)', stroke: 'rgba(165, 243, 252, 0.4)', ocean: 'rgba(165, 243, 252, 0.06)', highlight: '#155e75' },
+    { name: 'fuchsia', land: '#f5d0fe', back: 'rgba(245, 208, 254, 0.2)', stroke: 'rgba(245, 208, 254, 0.4)', ocean: 'rgba(245, 208, 254, 0.06)', highlight: '#86198f' },
+    { name: 'lime', land: '#d9f99d', back: 'rgba(217, 249, 157, 0.2)', stroke: 'rgba(217, 249, 157, 0.4)', ocean: 'rgba(217, 249, 157, 0.06)', highlight: '#3f6212' },
+    { name: 'sky', land: '#bae6fd', back: 'rgba(186, 230, 253, 0.2)', stroke: 'rgba(186, 230, 253, 0.4)', ocean: 'rgba(186, 230, 253, 0.06)', highlight: '#075985' },
+    { name: 'teal', land: '#99f6e4', back: 'rgba(153, 246, 228, 0.2)', stroke: 'rgba(153, 246, 228, 0.4)', ocean: 'rgba(153, 246, 228, 0.06)', highlight: '#134e4a' },
+    { name: 'orange', land: '#fed7aa', back: 'rgba(254, 215, 170, 0.2)', stroke: 'rgba(254, 215, 170, 0.4)', ocean: 'rgba(254, 215, 170, 0.06)', highlight: '#9a3412' },
+    { name: 'blue', land: '#bfdbfe', back: 'rgba(191, 219, 254, 0.2)', stroke: 'rgba(191, 219, 254, 0.4)', ocean: 'rgba(191, 219, 254, 0.06)', highlight: '#1e40af' },
+    { name: 'pink', land: '#fbcfe8', back: 'rgba(251, 207, 232, 0.2)', stroke: 'rgba(251, 207, 232, 0.4)', ocean: 'rgba(251, 207, 232, 0.06)', highlight: '#9d174d' },
+    { name: 'purple', land: '#e9d5ff', back: 'rgba(233, 213, 255, 0.2)', stroke: 'rgba(233, 213, 255, 0.4)', ocean: 'rgba(233, 213, 255, 0.06)', highlight: '#6b21a8' },
+    { name: 'green', land: '#bbf7d0', back: 'rgba(187, 247, 208, 0.2)', stroke: 'rgba(187, 247, 208, 0.4)', ocean: 'rgba(187, 247, 208, 0.06)', highlight: '#166534' }
   ];
   
   // Select random theme on mount
@@ -541,14 +540,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       
       for (const [name, count] of Object.entries(newsCountByCountry)) {
         if (countryNameToId[name.toLowerCase().trim()] === countryId) {
-          // Use darker highlight color for countries with news
+          // Use dark highlight color for countries with news
           el.attr('fill', globeTheme.highlight);
           hasNews = true;
           break;
         }
       }
       
-      // Keep default light land color for countries without news
+      // Keep default land color for countries without news
       if (!hasNews) {
         el.attr('fill', globeTheme.land);
       }
