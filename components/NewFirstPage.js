@@ -132,7 +132,31 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     'economy': 'the economy', 'conflict': 'global affairs', 'general': 'current events'
   };
 
-  // Capital city coordinates [longitude, latitude] for news dots
+  // Country name to ID mapping for globe
+  const countryNameToId = {
+    'united states': 840, 'usa': 840, 'us': 840, 'america': 840, 'canada': 124,
+    'mexico': 484, 'brazil': 76, 'argentina': 32, 'united kingdom': 826, 'uk': 826,
+    'france': 250, 'germany': 276, 'italy': 380, 'spain': 724, 'russia': 643,
+    'china': 156, 'japan': 392, 'south korea': 410, 'india': 356, 'australia': 36,
+    'israel': 376, 'iran': 364, 'ukraine': 804, 'turkey': 792, 'egypt': 818,
+    'south africa': 710, 'nigeria': 566, 'saudi arabia': 682, 'indonesia': 360,
+    'pakistan': 586, 'bangladesh': 50, 'vietnam': 704, 'thailand': 764, 'malaysia': 458,
+    'philippines': 608, 'poland': 616, 'netherlands': 528, 'belgium': 56, 'sweden': 752,
+    'norway': 578, 'denmark': 208, 'finland': 246, 'switzerland': 756, 'austria': 40,
+    'greece': 300, 'portugal': 620, 'ireland': 372, 'new zealand': 554, 'singapore': 702,
+    'chile': 152, 'colombia': 170, 'peru': 604, 'venezuela': 862, 'cuba': 192,
+    'afghanistan': 4, 'iraq': 368, 'syria': 760, 'lebanon': 422, 'jordan': 400,
+    'morocco': 504, 'algeria': 12, 'tunisia': 788, 'libya': 434, 'kenya': 404,
+    'ethiopia': 231, 'sudan': 729, 'myanmar': 104, 'nepal': 524, 'sri lanka': 144,
+    'georgia': 268, 'czech republic': 203, 'hungary': 348, 'romania': 642, 'bulgaria': 100,
+    'greenland': 304, 'taiwan': 158, 'north korea': 408, 'serbia': 688, 'croatia': 191,
+    'slovakia': 703, 'slovenia': 705, 'iceland': 352, 'luxembourg': 442, 'malta': 470,
+    'cyprus': 196, 'estonia': 233, 'latvia': 428, 'lithuania': 440, 'qatar': 634,
+    'uae': 784, 'united arab emirates': 784, 'kuwait': 414, 'bahrain': 48, 'oman': 512,
+    'yemen': 887, 'palestine': 275, 'gaza': 275
+  };
+
+  // Capital city coordinates [longitude, latitude] - keeping for potential future use
   const capitalCoordinates = {
     'united states': [-77.0369, 38.9072], 'usa': [-77.0369, 38.9072], 'us': [-77.0369, 38.9072], 'america': [-77.0369, 38.9072],
     'canada': [-75.6972, 45.4215], 'mexico': [-99.1332, 19.4326], 'brazil': [-47.9292, -15.7801],
@@ -409,13 +433,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .attr('class', 'globe-countries');
         globeRef.current = globeFront;
         
-        // Layer 3: News dots
-        const dotsLayer = svg.append('g')
-          .attr('class', 'news-dots');
-        
         // Store references for rotation updates
         const globeBackRef = { current: globeBack };
-        const dotsLayerRef = { current: dotsLayer };
         
         const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
         const topo = await res.json();
@@ -444,11 +463,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .enter()
           .append('path')
           .attr('d', pathFront)
+          .attr('data-id', d => d.id)
           .attr('fill', globeTheme.land)
           .attr('stroke', 'rgba(255,255,255,0.3)')
           .attr('stroke-width', 0.4);
         
-        // Update function for both projections and dots
+        // Update function for both projections
         const updateGlobe = () => {
           // Front: normal rotation
           projectionFront.rotate([rotationRef.current.x, rotationRef.current.y]);
@@ -458,26 +478,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           
           globeFront.selectAll('path').attr('d', pathFront);
           globeBackRef.current.selectAll('path').attr('d', pathBack);
-          
-          // Update dots positions
-          dotsLayerRef.current.selectAll('.news-dot').each(function() {
-            const dot = d3.select(this);
-            const coords = [parseFloat(dot.attr('data-lon')), parseFloat(dot.attr('data-lat'))];
-            const projected = projectionFront(coords);
-            
-            // Check if point is on visible side of globe
-            const center = projectionFront.rotate();
-            const distance = d3.geoDistance(coords, [-center[0], -center[1]]);
-            const isVisible = distance < Math.PI / 2;
-            
-            if (projected && isVisible) {
-              dot.attr('cx', projected[0])
-                 .attr('cy', projected[1])
-                 .attr('opacity', 1);
-            } else {
-              dot.attr('opacity', 0);
-            }
-          });
         };
         
         // Disable pointer events - globe is view-only
@@ -520,9 +520,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
   }, [scriptsLoaded, isVisible]);
 
-  // Add red dots on cities with news
+  // Color countries with news using contrasting color
   useEffect(() => {
-    if (!mapLoaded || Object.keys(newsCountByCountry).length === 0 || !projectionRef.current) return;
+    if (!mapLoaded || Object.keys(newsCountByCountry).length === 0 || !globeRef.current) return;
     
     const d3 = window.d3;
     if (!d3) return;
@@ -531,37 +531,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (!container) return;
     
     const svg = d3.select(container).select('svg');
-    const dotsLayer = svg.select('.news-dots');
     
-    // Clear existing dots
-    dotsLayer.selectAll('.news-dot').remove();
-    
-    // Add dots for each country with news
-    let dotIndex = 0;
-    for (const [countryName, count] of Object.entries(newsCountByCountry)) {
-      const coords = capitalCoordinates[countryName.toLowerCase().trim()];
-      if (coords) {
-        const projected = projectionRef.current(coords);
-        if (projected) {
-          // Modern minimal dot - small and clean
-          const dotSize = 3;
-          const animationDelay = (dotIndex * 0.4) % 2.5; // Stagger animation
-          
-          dotsLayer.append('circle')
-            .attr('class', 'news-dot')
-            .attr('cx', projected[0])
-            .attr('cy', projected[1])
-            .attr('r', dotSize)
-            .attr('data-lon', coords[0])
-            .attr('data-lat', coords[1])
-            .attr('fill', globeTheme.dot)
-            .style('animation-delay', `${animationDelay}s`);
-          
-          dotIndex++;
+    // Color countries with news
+    svg.selectAll('.globe-countries path').each(function() {
+      const el = d3.select(this);
+      const countryId = parseInt(el.attr('data-id'));
+      let hasNews = false;
+      
+      for (const [name, count] of Object.entries(newsCountByCountry)) {
+        if (countryNameToId[name.toLowerCase().trim()] === countryId) {
+          // Use contrasting dot color for countries with news
+          el.attr('fill', globeTheme.dot);
+          hasNews = true;
+          break;
         }
       }
-    }
-  }, [mapLoaded, newsCountByCountry]);
+      
+      // Keep default land color for countries without news
+      if (!hasNews) {
+        el.attr('fill', globeTheme.land);
+      }
+    });
+  }, [mapLoaded, newsCountByCountry, globeTheme]);
 
   // Click/tap handler for navigation - parent handles swipe
   const handleClick = (e) => {
@@ -734,14 +725,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           pointer-events: none;
         }
 
-        @keyframes dotPulse {
-          0%, 100% { opacity: 0.95; }
-          50% { opacity: 0.2; }
-        }
-
-        .globe-container :global(.news-dot) {
-          animation: dotPulse 2.5s ease-in-out infinite;
-        }
 
         @keyframes subtleBounce {
           0%, 100% {
