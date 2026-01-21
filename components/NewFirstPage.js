@@ -659,6 +659,21 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           stroke-width: 0.5;
         }
 
+        .swipe-hint {
+          position: absolute;
+          bottom: 40px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 15px;
+          font-weight: 500;
+          letter-spacing: -0.01em;
+          color: #86868b;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          text-align: center;
+          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+          opacity: 0;
+        }
+
         @media (max-width: 480px) {
           .content-wrapper {
             padding: 0;
@@ -695,6 +710,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-top: 0;
             touch-action: none;
           }
+          .swipe-hint {
+            bottom: 30px;
+            font-size: 14px;
+          }
         }
 
         @media (max-width: 375px) {
@@ -729,6 +748,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
           <div className="globe-section">
             <div className="globe-container" ref={mapContainerRef}></div>
+            <div className="swipe-hint">Swipe up. The news won't read itself.</div>
           </div>
         </div>
       </div>
