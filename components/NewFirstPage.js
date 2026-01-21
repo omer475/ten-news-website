@@ -518,7 +518,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         cleanup();
       }
     };
-  }, [scriptsLoaded, isVisible]);
+  }, [scriptsLoaded, isVisible, globeTheme]);
 
   // Color countries with news using contrasting color
   useEffect(() => {
