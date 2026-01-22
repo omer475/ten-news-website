@@ -49,6 +49,21 @@ export default function Home() {
   const [showMap, setShowMap] = useState({});
   const [showGraph, setShowGraph] = useState({});
   const [darkMode, setDarkMode] = useState(false);
+  
+  // 10 random colors for the + icon
+  const plusIconColors = [
+    '#ef4444', // Red
+    '#f97316', // Orange
+    '#eab308', // Yellow
+    '#22c55e', // Green
+    '#14b8a6', // Teal
+    '#0ea5e9', // Sky Blue
+    '#6366f1', // Indigo
+    '#8b5cf6', // Violet
+    '#ec4899', // Pink
+    '#f43f5e', // Rose
+  ];
+  const [plusColor] = useState(() => plusIconColors[Math.floor(Math.random() * plusIconColors.length)]);
   const [readArticles, setReadArticles] = useState(new Set());
   const [expandedTimeline, setExpandedTimeline] = useState({});
   const [expandedGraph, setExpandedGraph] = useState({});
@@ -5652,7 +5667,7 @@ export default function Home() {
         {currentIndex === 0 && (
           <div className="header">
             <div className="logo">
-              Today<span className="logo-ten">+</span>
+              Today<span className="logo-ten" style={{ color: plusColor }}>+</span>
             </div>
             
             <div style={{ flex: 1 }}></div>

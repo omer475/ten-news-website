@@ -1408,11 +1408,271 @@ RSS_FEEDS = [
         'category': 'consumer',
         'tier': 'premium'
     },
+    
+    # ========================================
+    # POLITICO
+    # ========================================
+    {
+        'name': 'Politico Congress',
+        'url': 'https://rss.politico.com/congress.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Politico Healthcare',
+        'url': 'https://rss.politico.com/healthcare.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Politico Defense',
+        'url': 'https://rss.politico.com/defense.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Politico Economy',
+        'url': 'https://rss.politico.com/economy.xml',
+        'category': 'business',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Politico Energy',
+        'url': 'https://rss.politico.com/energy.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Politico Politics News',
+        'url': 'https://rss.politico.com/politics-news.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Politico Picks',
+        'url': 'https://www.politico.com/rss/politicopicks.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    
+    # ========================================
+    # ABC NEWS (use largest image: width=1600, height=900)
+    # ========================================
+    {
+        'name': 'ABC News International',
+        'url': 'https://abcnews.go.com/abcnews/internationalheadlines',
+        'category': 'news',
+        'tier': 'premium',
+        'image_size': 'largest'  # Select width=1600, height=900
+    },
+    
+    # ========================================
+    # CBS NEWS (fetch images from website via BrightData)
+    # ========================================
+    {
+        'name': 'CBS News Main',
+        'url': 'https://www.cbsnews.com/latest/rss/main',
+        'category': 'news',
+        'tier': 'premium',
+        'fetch_image_from_website': True  # Use BrightData to get image from article page
+    },
+    {
+        'name': 'CBS News US',
+        'url': 'https://www.cbsnews.com/latest/rss/us',
+        'category': 'news',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Politics',
+        'url': 'https://www.cbsnews.com/latest/rss/politics',
+        'category': 'news',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News World',
+        'url': 'https://www.cbsnews.com/latest/rss/world',
+        'category': 'news',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Health',
+        'url': 'https://www.cbsnews.com/latest/rss/health',
+        'category': 'science',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News MoneyWatch',
+        'url': 'https://www.cbsnews.com/latest/rss/moneywatch',
+        'category': 'business',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Science',
+        'url': 'https://www.cbsnews.com/latest/rss/science',
+        'category': 'science',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Technology',
+        'url': 'https://www.cbsnews.com/latest/rss/technology',
+        'category': 'technology',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Entertainment',
+        'url': 'https://www.cbsnews.com/latest/rss/entertainment',
+        'category': 'consumer',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Space',
+        'url': 'https://www.cbsnews.com/latest/rss/space',
+        'category': 'science',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    {
+        'name': 'CBS News Investigates',
+        'url': 'https://www.cbsnews.com/latest/rss/evening-news/cbs-news-investigates',
+        'category': 'news',
+        'tier': 'premium',
+        'fetch_image_from_website': True
+    },
+    
+    # ========================================
+    # NBC NEWS
+    # ========================================
+    {
+        'name': 'NBC News',
+        'url': 'https://feeds.nbcnews.com/nbcnews/public/news',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    
+    # ========================================
+    # FOX NEWS
+    # ========================================
+    {
+        'name': 'Fox News Latest',
+        'url': 'https://moxie.foxnews.com/google-publisher/latest.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News World',
+        'url': 'https://moxie.foxnews.com/google-publisher/world.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News Politics',
+        'url': 'https://moxie.foxnews.com/google-publisher/politics.xml',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News Science',
+        'url': 'https://moxie.foxnews.com/google-publisher/science.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News Health',
+        'url': 'https://moxie.foxnews.com/google-publisher/health.xml',
+        'category': 'science',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News Sports',
+        'url': 'https://moxie.foxnews.com/google-publisher/sports.xml',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News Travel',
+        'url': 'https://moxie.foxnews.com/google-publisher/travel.xml',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Fox News Tech',
+        'url': 'https://moxie.foxnews.com/google-publisher/tech.xml',
+        'category': 'technology',
+        'tier': 'premium'
+    },
+    
+    # ========================================
+    # THE GUARDIAN (use largest image: width=700)
+    # ========================================
+    {
+        'name': 'The Guardian UK',
+        'url': 'https://www.theguardian.com/uk/rss',
+        'category': 'news',
+        'tier': 'premium',
+        'image_size': 'largest'  # Select width=700
+    },
+    {
+        'name': 'The Guardian UK Sport',
+        'url': 'https://www.theguardian.com/uk/sport/rss',
+        'category': 'consumer',
+        'tier': 'premium',
+        'image_size': 'largest'
+    },
+    {
+        'name': 'The Guardian World',
+        'url': 'https://www.theguardian.com/world/rss',
+        'category': 'news',
+        'tier': 'premium',
+        'image_size': 'largest'
+    },
+    {
+        'name': 'The Guardian Global Development',
+        'url': 'https://www.theguardian.com/global-development/rss',
+        'category': 'news',
+        'tier': 'premium',
+        'image_size': 'largest'
+    },
+    {
+        'name': 'The Guardian UK Culture',
+        'url': 'https://www.theguardian.com/uk/culture/rss',
+        'category': 'consumer',
+        'tier': 'premium',
+        'image_size': 'largest'
+    },
+    
+    # ========================================
+    # CBC (CANADA)
+    # ========================================
+    {
+        'name': 'CBC Top Stories',
+        'url': 'https://www.cbc.ca/webfeed/rss/rss-topstories',
+        'category': 'news',
+        'tier': 'premium'
+    },
+    {
+        'name': 'CBC World',
+        'url': 'https://www.cbc.ca/webfeed/rss/rss-world',
+        'category': 'news',
+        'tier': 'premium'
+    },
 ]
 
-# Total: ~251 Elite Premium RSS Feeds
-# Removed 49 low-quality/specialized sources
+# Total: ~287 Elite Premium RSS Feeds
+# Includes: Politico (7), ABC News (1), CBS News (11), NBC News (1), Fox News (8), The Guardian (5), CBC Canada (2)
 # Focused on: Elite news, authoritative business, serious science, consumer fascination
+#
+# SPECIAL IMAGE HANDLING NOTES:
+# - ABC News: Use largest image size (width=1600, height=900) - marked with image_size='largest'
+# - CBS News: Fetch images from website via BrightData - marked with fetch_image_from_website=True
+# - The Guardian: Use largest image size (width=700) - marked with image_size='largest'
 
 # Legacy compatibility - convert RSS_FEEDS to ALL_SOURCES tuple format
 ALL_SOURCES = [(feed['name'], feed['url']) for feed in RSS_FEEDS]
