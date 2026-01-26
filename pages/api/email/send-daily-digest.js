@@ -39,16 +39,11 @@ export default async function handler(req, res) {
   console.log('📧 Starting daily digest email job...');
 
   try {
-    // Get current hour to find users who should receive email now
-    const currentUtcHour = new Date().getUTCHours();
-    console.log(`⏰ Current UTC hour: ${currentUtcHour}`);
-
-    // Fetch users who are ready for their daily email at this hour
-    const { data: users, error: usersError } = await supabase
+    // Fetch ALL subscribed users - no timezone filtering, just send to everyone
+    const { data: eligibleUsers, error: usersError } = await supabase
       .from('profiles')
-      .select('id, email, full_name, email_timezone, preferred_email_hour, preferred_categories, email_personalization_enabled, articles_read_count')
+      .select('id, email, full_name, preferred_categories, email_personalization_enabled, articles_read_count')
       .eq('newsletter_subscribed', true)
-      .neq('email_frequency', 'never')
       .not('email', 'is', null);
 
     if (usersError) {
@@ -56,35 +51,11 @@ export default async function handler(req, res) {
       throw usersError;
     }
 
-    console.log(`📋 Found ${users?.length || 0} total subscribed users`);
+    console.log(`📋 Found ${eligibleUsers?.length || 0} subscribed users`);
 
-    // Filter users whose local time matches their preferred hour
-    const eligibleUsers = (users || []).filter(user => {
-      const timezone = user.email_timezone || 'UTC';
-      const preferredHour = user.preferred_email_hour ?? 10; // Default 10 AM
-      
-      try {
-        // Get current hour in user's timezone
-        const userLocalHour = parseInt(
-          new Date().toLocaleString('en-US', { 
-            hour: 'numeric', 
-            hour12: false, 
-            timeZone: timezone 
-          })
-        );
-        
-        return userLocalHour === preferredHour;
-      } catch (e) {
-        // If timezone is invalid, use UTC
-        return currentUtcHour === preferredHour;
-      }
-    });
-
-    console.log(`✅ ${eligibleUsers.length} users ready for email at their preferred time`);
-
-    if (eligibleUsers.length === 0) {
+    if (!eligibleUsers || eligibleUsers.length === 0) {
       return res.status(200).json({ 
-        message: 'No users ready for email at this hour',
+        message: 'No subscribed users found',
         processed: 0 
       });
     }
@@ -113,16 +84,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // Send emails in batches
-    const batchSize = 10;
+    // Send emails sequentially with delay to avoid Resend rate limits (2/sec max)
     let sentCount = 0;
     let failedCount = 0;
     const results = [];
 
-    for (let i = 0; i < eligibleUsers.length; i += batchSize) {
-      const batch = eligibleUsers.slice(i, i + batchSize);
+    for (const user of eligibleUsers) {
+      // Add delay between emails (600ms = ~1.6 emails/sec, safely under 2/sec limit)
+      if (results.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      }
       
-      const batchPromises = batch.map(async (user) => {
+      const result = await (async () => {
         try {
           // Personalize articles if enabled
           let userArticles = articles;
@@ -137,12 +110,11 @@ export default async function handler(req, res) {
 
           // Generate personalized email
           const emailHtml = generateDigestEmail(user, userArticles);
-          const greeting = getGreeting(user.email_timezone || 'UTC');
+          const greeting = getGreeting('UTC');
           const date = new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
             month: 'long', 
-            day: 'numeric',
-            timeZone: user.email_timezone || 'UTC'
+            day: 'numeric'
           });
 
           // Send email via Resend
@@ -164,7 +136,6 @@ export default async function handler(req, res) {
             status: 'sent',
             resend_id: emailData?.id,
             metadata: { 
-              timezone: user.email_timezone,
               personalized: user.email_personalization_enabled 
             }
           });
@@ -190,17 +161,13 @@ export default async function handler(req, res) {
           
           return { success: false, email: user.email, error: error.message };
         }
-      });
+      })();
 
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
-      
-      sentCount += batchResults.filter(r => r.success).length;
-      failedCount += batchResults.filter(r => !r.success).length;
-
-      // Small delay between batches to respect rate limits
-      if (i + batchSize < eligibleUsers.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      results.push(result);
+      if (result.success) {
+        sentCount++;
+      } else {
+        failedCount++;
       }
     }
 
