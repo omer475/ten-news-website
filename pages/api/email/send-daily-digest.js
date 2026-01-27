@@ -13,14 +13,56 @@ const supabase = createClient(
  * Daily Digest Email Sender
  * 
  * This endpoint sends personalized daily news digests to users.
- * It's designed to be called by a cron job (Vercel Cron, Supabase Edge Function, etc.)
+ * It's designed to be called by a cron job every hour.
  * 
  * Features:
- * - Time-optimized sending (sends at user's preferred hour in their timezone)
+ * - Time-optimized sending (sends at 10 AM in each user's timezone)
  * - Personalized content based on user interests
  * - Engagement tracking
  * - Batch processing to handle large subscriber lists
  */
+
+// Target hour for sending emails (10 AM in user's timezone)
+const TARGET_HOUR = 10;
+
+/**
+ * Get current hour in a specific timezone
+ */
+function getCurrentHourInTimezone(timezone) {
+  try {
+    const hour = parseInt(
+      new Date().toLocaleString('en-US', { 
+        hour: 'numeric', 
+        hour12: false, 
+        timeZone: timezone 
+      })
+    );
+    return hour;
+  } catch (e) {
+    // If timezone is invalid, return -1 to skip this user
+    return -1;
+  }
+}
+
+/**
+ * Check if user already received email today (in their timezone)
+ */
+function alreadySentToday(lastEmailSentAt, timezone) {
+  if (!lastEmailSentAt) return false;
+  
+  try {
+    const lastSent = new Date(lastEmailSentAt);
+    const now = new Date();
+    
+    // Get today's date in user's timezone
+    const todayInTz = now.toLocaleDateString('en-US', { timeZone: timezone });
+    const lastSentInTz = lastSent.toLocaleDateString('en-US', { timeZone: timezone });
+    
+    return todayInTz === lastSentInTz;
+  } catch (e) {
+    return false;
+  }
+}
 
 export default async function handler(req, res) {
   // Only allow POST with secret or cron header
@@ -36,13 +78,14 @@ export default async function handler(req, res) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  console.log('📧 Starting daily digest email job...');
+  const currentUtcHour = new Date().getUTCHours();
+  console.log(`📧 Starting daily digest email job... (UTC hour: ${currentUtcHour})`);
 
   try {
-    // Fetch ALL subscribed users - no timezone filtering, just send to everyone
-    const { data: eligibleUsers, error: usersError } = await supabase
+    // Fetch ALL subscribed users with their timezone preferences
+    const { data: allUsers, error: usersError } = await supabase
       .from('profiles')
-      .select('id, email, full_name, preferred_categories, email_personalization_enabled, articles_read_count')
+      .select('id, email, full_name, preferred_categories, email_personalization_enabled, articles_read_count, email_timezone, last_email_sent_at')
       .eq('newsletter_subscribed', true)
       .not('email', 'is', null);
 
@@ -51,12 +94,35 @@ export default async function handler(req, res) {
       throw usersError;
     }
 
-    console.log(`📋 Found ${eligibleUsers?.length || 0} subscribed users`);
+    console.log(`📋 Found ${allUsers?.length || 0} subscribed users total`);
+
+    // Filter users where it's currently 10 AM in their timezone
+    // and they haven't received an email today
+    const eligibleUsers = (allUsers || []).filter(user => {
+      const timezone = user.email_timezone || 'UTC';
+      const currentHourInUserTz = getCurrentHourInTimezone(timezone);
+      
+      // Check if it's the target hour (10 AM) in their timezone
+      if (currentHourInUserTz !== TARGET_HOUR) {
+        return false;
+      }
+      
+      // Check if we already sent them an email today
+      if (alreadySentToday(user.last_email_sent_at, timezone)) {
+        console.log(`⏭️ Skipping ${user.email} - already sent today`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    console.log(`🎯 ${eligibleUsers.length} users ready for email at this hour (${TARGET_HOUR}:00 in their timezone)`);
 
     if (!eligibleUsers || eligibleUsers.length === 0) {
       return res.status(200).json({ 
-        message: 'No subscribed users found',
-        processed: 0 
+        message: `No users ready for email at this hour (looking for ${TARGET_HOUR}:00 in user timezones)`,
+        processed: 0,
+        totalSubscribed: allUsers?.length || 0
       });
     }
 
@@ -108,13 +174,15 @@ export default async function handler(req, res) {
             });
           }
 
-          // Generate personalized email
-          const emailHtml = generateDigestEmail(user, userArticles);
-          const greeting = getGreeting('UTC');
+          // Generate personalized email using user's timezone
+          const userTimezone = user.email_timezone || 'UTC';
+          const emailHtml = generateDigestEmail(user, userArticles, userTimezone);
+          const greeting = getGreeting(userTimezone);
           const date = new Date().toLocaleDateString('en-US', { 
             weekday: 'long', 
             month: 'long', 
-            day: 'numeric'
+            day: 'numeric',
+            timeZone: userTimezone
           });
 
           // Send email via Resend
@@ -216,16 +284,17 @@ function getGreeting(timezone) {
  * Generate premium text-only email for daily digest
  * Inspired by top fintech design: clean, sophisticated, spacious
  */
-function generateDigestEmail(user, articles) {
+function generateDigestEmail(user, articles, timezone = 'UTC') {
   const firstName = user.full_name?.split(' ')[0] || '';
   
-  // Format date elegantly
+  // Format date elegantly in user's timezone
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { 
     weekday: 'long', 
     month: 'long', 
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
+    timeZone: timezone
   });
 
   // Generate article list
@@ -318,7 +387,7 @@ function generateDigestEmail(user, articles) {
                   ${firstName ? `
                   <!-- Greeting -->
                   <p style="margin: 24px 0 0 0; font-size: 16px; font-weight: 400; color: #374151; line-height: 1.5;">
-                    Good ${getTimeGreeting()}, ${firstName}. Here's what matters today.
+                    Good ${getTimeGreeting(timezone)}, ${firstName}. Here's what matters today.
                   </p>
                   ` : `
                   <p style="margin: 24px 0 0 0; font-size: 16px; font-weight: 400; color: #374151; line-height: 1.5;">
@@ -385,13 +454,23 @@ function generateDigestEmail(user, articles) {
 }
 
 /**
- * Get time of day greeting word
+ * Get time of day greeting word based on timezone
  */
-function getTimeGreeting() {
-  const hour = new Date().getUTCHours();
-  if (hour >= 5 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 17) return 'afternoon';
-  if (hour >= 17 && hour < 21) return 'evening';
-  return 'evening';
+function getTimeGreeting(timezone = 'UTC') {
+  try {
+    const hour = parseInt(
+      new Date().toLocaleString('en-US', { 
+        hour: 'numeric', 
+        hour12: false, 
+        timeZone: timezone 
+      })
+    );
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'evening';
+  } catch (e) {
+    return 'morning'; // Default to morning since we're sending at 10 AM
+  }
 }
 
