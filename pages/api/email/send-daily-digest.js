@@ -308,6 +308,11 @@ function generateDigestEmail(user, articles, timezone = 'UTC') {
     const summary = article.summary_news || article.summary || '';
     const truncatedSummary = summary.length > 120 ? summary.substring(0, 120) + '...' : summary;
     
+    // Build article-specific URL (same as share button)
+    const articleUrl = article.id 
+      ? `https://todayplus.news/?article=${article.id}`
+      : 'https://todayplus.news';
+    
     return `
               <tr>
                 <td style="padding: 0 0 32px 0;">
@@ -321,7 +326,7 @@ function generateDigestEmail(user, articles, timezone = 'UTC') {
                         </p>
                         
                         <!-- Title -->
-                        <a href="https://todayplus.news" style="text-decoration: none;">
+                        <a href="${articleUrl}" style="text-decoration: none;">
                           <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600; color: #111827; line-height: 1.4; letter-spacing: -0.3px;">
                             ${cleanTitle}
                           </h2>
