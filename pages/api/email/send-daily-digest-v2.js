@@ -53,33 +53,104 @@ export default async function handler(req, res) {
   console.log(`${'='.repeat(60)}\n`);
 
   try {
-    // Step 1: Get eligible users directly from Supabase function
-    // This function handles ALL the timezone logic in PostgreSQL
-    console.log('📝 Step 1: Getting eligible users from Supabase...');
+    // Step 1: Get ALL subscribed users, then filter by timezone in JavaScript
+    // This ensures the filtering works even if Supabase function has issues
+    console.log('📝 Step 1: Getting all subscribed users...');
     
-    const { data: eligibleUsers, error: eligibleError } = await supabase
-      .rpc('get_email_recipients_now');
+    const { data: allUsers, error: usersError } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, email_timezone, last_email_sent_at, preferred_categories, email_personalization_enabled')
+      .eq('newsletter_subscribed', true)
+      .not('email', 'is', null);
 
-    if (eligibleError) {
-      console.error('❌ Error getting eligible users:', eligibleError);
-      // Try fallback: direct query
-      console.log('📝 Trying fallback query...');
+    if (usersError) {
+      console.error('❌ Error fetching users:', usersError);
+      throw usersError;
     }
 
-    // Use the function result or empty array
-    const pendingEmails = eligibleUsers || [];
+    console.log(`📋 Found ${allUsers?.length || 0} total subscribed users`);
+
+    // Step 2: Filter users where it's 10 AM in their timezone AND not sent today
+    const eligibleUsers = [];
+    const skippedUsers = { wrongHour: 0, alreadySent: 0 };
+
+    for (const user of (allUsers || [])) {
+      const timezone = user.email_timezone || 'UTC';
+      
+      // Get current hour in user's timezone
+      let currentHour;
+      try {
+        const formatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: timezone,
+          hour: 'numeric',
+          hour12: false
+        });
+        const parts = formatter.formatToParts(new Date());
+        const hourPart = parts.find(p => p.type === 'hour');
+        currentHour = hourPart ? parseInt(hourPart.value, 10) : -1;
+        if (currentHour === 24) currentHour = 0;
+      } catch (e) {
+        console.log(`⚠️ Invalid timezone for ${user.email}: ${timezone}`);
+        currentHour = new Date().getUTCHours(); // Fallback to UTC
+      }
+
+      // CRITICAL CHECK 1: Is it exactly 10 AM in their timezone?
+      if (currentHour !== TARGET_HOUR) {
+        skippedUsers.wrongHour++;
+        continue;
+      }
+
+      // CRITICAL CHECK 2: Have they already received email today (in their timezone)?
+      if (user.last_email_sent_at) {
+        try {
+          const lastSent = new Date(user.last_email_sent_at);
+          const now = new Date();
+          
+          // Get today's date in user's timezone
+          const todayStr = now.toLocaleDateString('en-CA', { timeZone: timezone }); // YYYY-MM-DD format
+          const lastSentStr = lastSent.toLocaleDateString('en-CA', { timeZone: timezone });
+          
+          if (todayStr === lastSentStr) {
+            console.log(`   ⏭️ ${user.email}: Already sent today (${lastSentStr})`);
+            skippedUsers.alreadySent++;
+            continue;
+          }
+        } catch (e) {
+          console.log(`⚠️ Error checking last sent for ${user.email}:`, e.message);
+        }
+      }
+
+      // User is eligible!
+      console.log(`   ✅ ${user.email}: Eligible (timezone: ${timezone}, hour: ${currentHour})`);
+      eligibleUsers.push({
+        user_id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        timezone: timezone,
+        local_hour: currentHour,
+        preferred_categories: user.preferred_categories,
+        email_personalization_enabled: user.email_personalization_enabled
+      });
+    }
+
+    console.log(`\n📊 Filter Results:`);
+    console.log(`   - Wrong hour (not 10 AM): ${skippedUsers.wrongHour}`);
+    console.log(`   - Already sent today: ${skippedUsers.alreadySent}`);
+    console.log(`   - ELIGIBLE: ${eligibleUsers.length}`);
+
+    const pendingEmails = eligibleUsers;
 
     if (pendingEmails.length === 0) {
-      console.log('✅ No users eligible for email right now');
-      console.log('   (Either no one is at 10 AM local time, or all have been sent today)');
+      console.log('\n✅ No users eligible for email right now');
       return res.status(200).json({
         message: 'No users eligible - not 10 AM in any user timezone or already sent today',
         sent: 0,
+        skipped: skippedUsers,
         elapsed_ms: Date.now() - startTime
       });
     }
 
-    console.log(`📋 Found ${pendingEmails.length} users eligible for email (10 AM in their timezone)`);
+    console.log(`\n📋 Sending to ${pendingEmails.length} users...`);
 
     // Step 3: Fetch articles for the digest
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
