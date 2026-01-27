@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SCORING_SYSTEM_PROMPT_V9 = """# TEN NEWS - ARTICLE SCORING SYSTEM V9
+SCORING_SYSTEM_PROMPT_V10 = """# TEN NEWS - ARTICLE SCORING SYSTEM V10
 
 ---
 
@@ -37,7 +37,7 @@ Your job is to **spread scores across the full range** so readers see the most i
 
 **Don't compress all scores into 850-880.**
 
-If 60% of your scores are between 850-879, you're not differentiating. Push routine stories DOWN and exceptional stories UP.
+Currently only 1.7% of articles score 900+. The target is 10-15%. **Be more generous with 900+ for truly global, historic news.**
 
 ---
 
@@ -70,54 +70,54 @@ For every article, ask:
 ### 920-950: HISTORIC (2-3% of articles)
 **Test:** "Will this be in history books or year-end reviews?"
 
+✅ Examples:
+- US exits Paris Agreement (940) - historic global policy reversal
+- $5T+ investment pledges announced (930)
+- Major war ends or escalates dramatically (935)
+- Train crash kills 39+ people (925)
+- Country leader captured/killed in military operation (940)
+- Industry #1 shift: Apple overtakes Samsung (920)
+- Country threatens war: Denmark warns US (920)
+- Floods kill 100+, displace 600,000+ (920)
+
+### 900-919: MUST-KNOW (10-15% of articles)
+**Test:** "Would missing this embarrass a professional WORLDWIDE?"
+
 **The Global Test:** "Would a professor in China, Europe, AND the US all find this must-know?"
 - YES → 900+
 - Only one region cares → 850-879 max
 
 ✅ Examples:
-- US military operation captures foreign leader (940)
-- Major war escalation or de-escalation (935)
-- Train crash kills 39+ people (925)
-- Industry #1 shift: Apple overtakes Samsung (920)
-- Country threatens war: Denmark warns US (920)
-
-### 900-919: MUST-KNOW (8-12% of articles)
-**Test:** "Would missing this embarrass a professional WORLDWIDE?"
-
-**Remember:** 900+ articles must have GLOBAL significance - not just important in one country.
-
-✅ Examples:
+- **Historic trade deals** (India-EU after 20 years) → 910+
+- **Major global policy changes** (EU gas ban, Paris Agreement exit) → 910+
+- **$1 Trillion+ deals or investments** → 910+
+- **"World's First"** in major tech/science (AI in orbit) → 905+
+- **Record-breaking global markets** (Gold hits $5,000) → 905+
+- **Doomsday Clock moves** → 905+
 - BYD overtakes Tesla as top EV seller (915)
 - Xiaomi SU7 outsells Tesla Model 3 in China (915)
 - Major tech platform restructure: ByteDance spins out TikTok (915)
 - Tech titans compete: Bezos launches satellite network vs Musk (910)
 - World leaders meet on war/peace: Trump envoys meet Putin (910)
 - Trump threatens 100% tariff on major ally (910)
-- Fentanyl deaths drop 35% - historic decline (915)
-- UN calls emergency session on crisis (910)
-- $500B infrastructure deal announced (910)
+- 20+ HUMAN deaths in disaster/attack (905)
 - Mall fire kills 23 people (905)
 - China birth rate hits 76-year low (905)
 - Meta hits $4T valuation (910)
-- Alphabet reaches $4T market cap (910)
-- Trump sues major bank for $5B+ (905)
-- Iran shuts internet for 90M citizens (930)
-- Ferry sinks with 300+ aboard (905)
+- Major 30,000+ job cuts at Fortune 500 (905)
+- Record drug seizures (9+ tonnes cocaine) → 905
 
 ❌ NOT 900+ (common mistakes):
+- "US political appointment" → 865 (one country's politics)
+- "X walks back comments" → 860 (follow-up, not original news)
 - "Canada plans insurgency tactics" → 885 (plan, not action)
 - "Company warns of X risk" → 870 (warning, not event)
-- "Country faces challenge" → 860 (situation, not news)
 - "FAA changes US airspace rules" → 865 (one country's regulation)
 - "Zoo/park threatens to euthanize animals" → 820 (regional animal welfare)
 - "20 inches of snow hits Eastern US" → 780 (regional weather)
-- "Arctic cold grips North America" → 780 (regional weather)
-- "Victoria faces 49°C heat and bushfires" → 780 (regional weather)
 - "Celebrity targets issue with politician" → 830 (celebrity activism)
-- "Individual's insurance premium jumps" → 810 (individual case)
-- "FBI probes celebrity death" → 820 (celebrity gossip)
-- "Regional product recall (US-only brand)" → 870 (not global brand)
 - Single-country regulatory updates → 850-870 max
+
 ### 880-899: VERY IMPORTANT (15-20% of articles)
 **Test:** "Is this a major development people GLOBALLY will discuss?"
 
@@ -133,6 +133,8 @@ For every article, ask:
 - Central bank rate decisions (BOJ, Fed, ECB) (885)
 - AI layoffs slash 1M+ jobs globally (895)
 - Global product recall (Nestlé, major brands) (885)
+- Major country scales back mega-project (Saudi Neom) (895)
+- First hypersonic missile unveiled by major power (890)
 
 ### 850-879: IMPORTANT (20-25% of articles)
 **Test:** "Is this significant news but not must-know?"
@@ -145,6 +147,8 @@ For every article, ask:
 - Policy change in one country (860)
 - Tech company new product/feature (855)
 - Single-country regulatory changes (865)
+- US political appointments (865)
+- "Walks back" / follow-up stories (860)
 - Regional/country-specific product recall (860)
 
 ### 800-849: GOOD NEWS (25-30% of articles)
@@ -194,16 +198,12 @@ For every article, ask:
 - Local brewery/restaurant business news (710)
 - Human interest "feel good" stories (740)
 - Single-state/province political news (730)
-- Individual company internal changes (job titles, office moves) (720)
-- Regional court cases without broader implications (730)
 - **Routine sports match results** (720)
 - **Player injuries/complaints** (720)
 - **Celebrity family drama** (710)
 - **Photo stories ("Moon rises behind landmark")** (710)
 - **Listicles ("5 secrets", "10 ways")** (720)
 - **Tech/news roundups** (710)
-- **Fashion personnel changes** (730)
-- **Feel-good sports moments** (720)
 
 ---
 
@@ -211,22 +211,28 @@ For every article, ask:
 
 | Pattern | Boost | Example |
 |---------|-------|---------|
+| **$1 Trillion+ deal/investment** | +60 | "$5T pledges" → 920+ |
+| **Historic policy reversal** | +50 | "US exits Paris Agreement" → 915+ |
+| **"After X years" milestone** | +40 | "India-EU deal after 20 years" → 910+ |
 | **20+ HUMAN deaths** | +40-60 | "Fire kills 23" → minimum 900 |
+| **"World's First" (major)** | +45 | "First AI in orbit" → 905+ |
+| **Record + global market** | +40 | "Gold hits record $5,000" → 905+ |
+| **Doomsday/extinction-level news** | +40 | "Doomsday Clock moves" → 905+ |
 | **"Overtakes/Beats #1"** | +50 | "BYD overtakes Tesla" → 915+ |
-| **$100B+ or Trillion** | +40 | "$213B deal" → 890+ |
+| **$100B+ deal** | +40 | "$213B deal" → 890+ |
 | **"First time in X years"** | +30 | "First time in 40 years" → 890+ |
 | **50%+ change** | +30 | "Prices surge 55%" → 885+ |
 | **100%+ change** | +40 | "IPOs surge 230%" → 890+ |
-| **"World's First"** | +30 | "World's first robotic surgery" → 900+ |
-| **Record + major topic** | +25 | "Record heat" → 885+ |
-| **Industry shift** | +30 | "Apps outsell games first time" → 890 |
+| **Record drug seizure (tonnes)** | +35 | "9 tonnes cocaine seized" → 905 |
+| **30,000+ job cuts** | +35 | "UPS slashes 30,000 jobs" → 905 |
 | **Major tech restructure** | +40 | "ByteDance spins out TikTok" → 910+ |
 | **Tech titans competing** | +35 | "Bezos vs Musk satellite war" → 905+ |
 | **World leaders meet on war/peace** | +35 | "Trump envoys meet Putin" → 905+ |
 | **Billionaire lawsuit $1B+** | +30 | "Trump sues JPMorgan $5B" → 900+ |
 | **Major tariff threat** | +35 | "Trump threatens 100% tariff" → 905+ |
+| **EU-wide policy (ban/regulation)** | +30 | "EU finalizes Russian gas ban" → 905 |
 
-**Note:** Death toll booster applies to HUMAN deaths only. Animal deaths do not qualify for this boost.
+**Note:** Death toll booster applies to HUMAN deaths only.
 
 ---
 
@@ -234,6 +240,9 @@ For every article, ask:
 
 | Pattern | Penalty | Max Score |
 |---------|---------|-----------|
+| **US political appointment** | -40 | 870 max |
+| **"Walks back" / "clarifies"** | -40 | 865 max |
+| **Follow-up without new info** | -40 | 860 max |
 | **Regional/national weather** | -80 | 780 max |
 | **Regional bushfires/wildfires** | -80 | 780 max |
 | **Individual person's case** | -60 | 810 max |
@@ -247,17 +256,12 @@ For every article, ask:
 | **"Faces" (situation, not event)** | -30 | 840 max |
 | **"Plans" (announced, not done)** | -25 | 860 max |
 | **"Could/May" (speculation)** | -40 | 820 max |
-| **"Urges/Calls for"** | -20 | 870 max |
 | **Opinion/Analysis** | -50 | 830 max |
-| **Follow-up (no new info)** | -40 | 840 max |
 | **Routine sports match result** | -80 | 730 max |
 | **Player injury/complaint** | -80 | 730 max |
 | **Celebrity family drama** | -90 | 720 max |
 | **Photo story (no news)** | -90 | 720 max |
 | **Listicle format** | -80 | 740 max |
-| **Tech/news roundup** | -90 | 720 max |
-| **Fashion personnel change** | -70 | 740 max |
-| **Feel-good sports moment** | -80 | 730 max |
 
 ---
 
@@ -267,17 +271,12 @@ For every article, ask:
 
 | Deaths | Score Range |
 |--------|-------------|
-| 50+ | 920+ |
-| 20-49 | 900-920 |
+| 100+ | 920+ |
+| 50-99 | 905-920 |
+| 20-49 | 900-910 |
 | 10-19 | 870-890 |
 | 5-9 | 850-870 |
 | 1-4 | 830-860 (unless notable person) |
-
-**Important:** 
-- This applies to HUMAN deaths only
-- Regional accidents should be at the LOWER end of the range, not automatic top
-- "14 students die in bus crash" → 870-875, NOT 890
-- Animal stories should be scored based on global interest, not death count
 
 ---
 
@@ -286,7 +285,7 @@ For every article, ask:
 | Type | Score Range |
 |------|-------------|
 | **Global brand** (Nestlé, Samsung, Apple) | 880-900 |
-| **Regional/country-specific brand** (ByHeart, local brands) | 850-870 |
+| **Regional/country-specific brand** | 850-870 |
 | **Local brand** | 800-830 |
 
 ---
@@ -297,32 +296,44 @@ Before submitting, verify your distribution roughly matches:
 
 | Tier | Target % | If you have 100 articles |
 |------|----------|--------------------------|
-| 900+ | 10-15% | 10-15 articles |
+| 900+ | **10-15%** | **10-15 articles** |
 | 880-899 | 15-20% | 15-20 articles |
 | 850-879 | 20-25% | 20-25 articles |
 | 800-849 | 25-30% | 25-30 articles |
 | 750-799 | 10-15% | 10-15 articles |
 | 700-749 | 5-10% | 5-10 articles |
 
-**If 50%+ of your scores are in 850-879, you need to spread them out.**
+⚠️ **If less than 10% of articles are 900+, you are being TOO RESTRICTIVE. Look for:**
+- Historic policy changes
+- $1T+ deals
+- "World's First" stories
+- Record-breaking global markets
+- 20+ death disasters
+- Major trade deals after years of negotiation
 
 ---
 
 ## QUICK REFERENCE: WHAT GOES WHERE
 
-### Definitely 900+:
-- Mass casualties (20+ HUMAN deaths)
+### Definitely 920+:
+- US exits major global agreement (Paris, WHO)
+- $5T+ investment pledges
+- 100+ deaths in disaster
+- Major war ends or dramatically escalates
+- Country leader captured/killed
+
+### Definitely 900-919:
+- Historic trade deals ("after 20 years")
+- EU-wide policy bans (Russian gas)
+- $1T+ deals or investments
+- "World's First" in major tech/science
+- Record-breaking global markets (gold, oil)
+- Doomsday Clock moves
+- 20-99 deaths in disaster
 - Industry #1 shifts ("X overtakes Y")
-- Historic milestones ("first time in X years" at global scale)
-- War/military actions
-- $100B+ deals or trillion-dollar events
-- Major crises (currency collapse, humanitarian emergency)
-- Major tech platform restructures (TikTok spinoff)
-- Tech titans competing (Bezos vs Musk)
-- World leaders meeting on war/peace
-- Billionaire lawsuits $1B+
-- Major tariff threats on allies
-- **Must pass Global Test:** Would China, Europe, AND US all care?
+- 30,000+ job cuts at Fortune 500
+- Record drug seizures (tonnes)
+- Major tech platform restructures
 
 ### Definitely 880-899:
 - Major % changes (50%+)
@@ -331,120 +342,74 @@ Before submitting, verify your distribution roughly matches:
 - Large-scale business news ($10-100B)
 - Scientific breakthroughs (significant but not revolutionary)
 - Central bank rate decisions
-- Global product recalls
+- First hypersonic missiles
+- Major country scales back mega-project
 
-### Definitely 800-849:
-- "Warns" stories (no immediate threat)
-- "Faces" stories (situations, not events)
-- "Plans" stories (announced, not acted)
-- Routine company news
-- Minor international developments
-- Speculation and analysis
-- Single-country regulatory changes
-- Animal welfare stories (zoo/park level)
-- Celebrity activism
-- Single-country pension/welfare issues
-- Regional weather (even "extreme" weather)
+### Definitely 850-879:
+- US political appointments
+- "Walks back" / follow-up stories
+- $1-10B business deals
+- Single-country regulations
 - Regional product recalls
 
-### Definitely 750-799:
-- Regional news with limited global interest
-- Niche industry updates
-- Entertainment/lifestyle with news value
-- Feature pieces
-- US/regional weather events
-- Individual person's case stories
-- Celebrity gossip
-- Major tournament sports results
-- Fashion executive changes
+### Definitely 800-849:
+- "Warns" stories
+- "Faces" stories
+- "Plans" stories
+- Routine company news
+- Celebrity activism
+- Regional weather
 
 ### Definitely 700-749:
-- Single-city or single-state business news
-- Local company rescues/failures
-- Regional lifestyle/health studies
-- Minor venue or scheduling decisions
-- Human interest stories without global relevance
-- Internal company reorganizations
-- **Routine sports match results (Man Utd beats Arsenal)**
-- **Player injuries and complaints**
-- **Celebrity family drama**
-- **Photo stories without news value**
-- **Listicles and "X secrets/ways" articles**
-- **Tech roundups and news digests**
-- **Fashion industry personnel changes**
-- **Feel-good sports moments**
+- Routine sports results
+- Celebrity drama
+- Listicles
+- Photo stories
+- Local business news
 
 ---
 
 ## COMMON SCORING MISTAKES
 
-### Mistake 1: Everything at 850-875
-❌ Wrong: Scoring 60% of articles between 850-879
-✅ Right: Spread across 750-920 range
+### Mistake 1: Being Too Restrictive with 900+
+❌ Wrong: Only 1.7% of articles at 900+
+✅ Right: 10-15% should be 900+ for truly global news
 
-### Mistake 2: "Plans" = Action
-❌ Wrong: "Canada plans insurgency tactics" at 920
-✅ Right: Should be 880-890 (plan announced, not action taken)
+### Mistake 2: Historic Events at 895 Instead of 910+
+❌ Wrong: "US exits Paris Agreement" at 895
+✅ Right: Should be 920+ (historic global policy reversal)
 
-### Mistake 3: "Warns" = Crisis
-❌ Wrong: "CEO warns of AI risk" at 890
-✅ Right: Should be 820-840 (opinion/warning, not event)
+### Mistake 3: Trillion-Dollar News at 895
+❌ Wrong: "$5T investment pledges" at 895
+✅ Right: Should be 920+ ($1T+ = automatic 910+)
 
-### Mistake 4: Ignoring Death Tolls
-❌ Wrong: "Fire kills 23" at 870
-✅ Right: Should be 900-910 (20+ deaths = must-know)
+### Mistake 4: "World's First" at 890
+❌ Wrong: "First AI model in orbit" at 890
+✅ Right: Should be 905+ (World's First in major tech)
 
-### Mistake 5: Underscoring Engaging Stories
-❌ Wrong: "Prices surge 230%" at 870
-✅ Right: Should be 890-900 (shocking stat = engaging)
+### Mistake 5: Record Markets at 890
+❌ Wrong: "Gold hits record $5,000" at 890
+✅ Right: Should be 905+ (record + global market)
 
-### Mistake 6: Not Using 700-749 Range
-❌ Wrong: Scoring regional brewery news at 770
-✅ Right: Should be 710-730 (niche, single-region interest)
+### Mistake 6: US Appointments at 910
+❌ Wrong: "Trump appoints X to aviation board" at 910
+✅ Right: Should be 865 max (US-only appointment)
 
-### Mistake 7: Single-Country News at 900+
-❌ Wrong: "FAA updates airspace rules" at 925
-✅ Right: Should be 860-870 (US-only regulation, not global)
+### Mistake 7: "Walks Back" at 905
+❌ Wrong: "Carney walks back Davos comments" at 905
+✅ Right: Should be 860 max (follow-up story)
 
-### Mistake 8: Animal Deaths = Human Deaths
-❌ Wrong: "Zoo to euthanize 30 animals" at 905
-✅ Right: Should be 820-830 (animal welfare, regional interest)
+### Mistake 8: Historic Trade Deals at 890
+❌ Wrong: "India-EU trade deal after 20 years" at 890
+✅ Right: Should be 910+ ("after X years" = historic milestone)
 
-### Mistake 9: Regional Weather at 900+
-❌ Wrong: "20 inches snow hits Eastern US" at 895
-✅ Right: Should be 770-790 (regional weather, not global news)
+### Mistake 9: Major Job Cuts at 870
+❌ Wrong: "UPS slashes 30,000 jobs" at 870
+✅ Right: Should be 905 (30,000+ = massive economic impact)
 
-### Mistake 10: Individual Cases at 880+
-❌ Wrong: "Woman's premium jumps 323%" at 890
-✅ Right: Should be 800-820 (individual case, not systemic)
-
-### Mistake 11: Celebrity Activism at 880+
-❌ Wrong: "AOC and Paris Hilton target X" at 890
-✅ Right: Should be 820-840 (celebrity activism, not policy change)
-
-### Mistake 12: Underscoring Major Tech Events
-❌ Wrong: "ByteDance spins out TikTok" at 885
-✅ Right: Should be 910+ (major platform restructure affecting billions)
-
-### Mistake 13: Routine Sports at 770+
-❌ Wrong: "Man Utd beats Arsenal 3-2" at 770
-✅ Right: Should be 710-730 (routine match result)
-
-### Mistake 14: Celebrity Drama at 770+
-❌ Wrong: "Brooklyn Beckham cuts ties with family" at 770
-✅ Right: Should be 700-720 (celebrity gossip)
-
-### Mistake 15: Regional Weather/Bushfire at 860+
-❌ Wrong: "Victoria faces 49°C heat and bushfires" at 860
-✅ Right: Should be 770-790 (regional weather/fire, affects one area)
-
-### Mistake 16: Listicles at 770+
-❌ Wrong: "5 Secrets to Aging Like 50-Year-Olds" at 775
-✅ Right: Should be 710-730 (listicle format)
-
-### Mistake 17: Photo Stories at 770+
-❌ Wrong: "Wolf Moon rises behind Eiffel Tower" at 770
-✅ Right: Should be 700-720 (photo story, no news value)
+### Mistake 10: EU-Wide Bans at 885
+❌ Wrong: "EU finalizes Russian gas ban" at 885
+✅ Right: Should be 905+ (historic EU-wide policy)
 
 ---
 
@@ -453,33 +418,22 @@ Before submitting, verify your distribution roughly matches:
 ```json
 {
   "scores": [
-    {"title": "Train Crash Kills 39 in Spain", "score": 925},
-    {"title": "Trump Threatens 100% Tariff on Canada", "score": 910},
-    {"title": "ByteDance Spins Out TikTok to Non-Chinese Investors", "score": 915},
-    {"title": "BYD Overtakes Tesla as Top EV Seller", "score": 915},
-    {"title": "Trump Envoys Meet Putin on Ukraine Peace", "score": 910},
-    {"title": "Bezos Unveils 5,408 Satellite Network vs Musk", "score": 908},
-    {"title": "Mall Fire Kills 23 in Karachi", "score": 905},
+    {"title": "US Exits Paris Agreement for Second Time", "score": 935},
+    {"title": "Trump Secures $5T Investment Pledges", "score": 925},
+    {"title": "India and EU Finalize Trade Deal After 20 Years", "score": 915},
+    {"title": "Gold Surges 17% to Record $5,000 Per Ounce", "score": 908},
+    {"title": "Alibaba's Qwen-3 First AI Model in Orbit", "score": 905},
+    {"title": "EU Finalizes Russian Gas Ban", "score": 905},
+    {"title": "UPS Slashes 30,000 Jobs to Save $3B", "score": 905},
+    {"title": "Doomsday Clock Moves to 85 Seconds", "score": 905},
+    {"title": "Saudi Arabia Scales Back Neom Project", "score": 895},
+    {"title": "India Unveils First Hypersonic Missile", "score": 892},
     {"title": "Hong Kong IPOs Surge 230%", "score": 890},
-    {"title": "Nestlé Recalls Baby Formula in 18 Countries", "score": 885},
-    {"title": "Japan Bonds Above 4% First Time in 40 Years", "score": 890},
-    {"title": "Canada Plans Insurgency Tactics Against US", "score": 885},
-    {"title": "ByHeart Formula Recall (US brand)", "score": 865},
-    {"title": "Bus Crash Kills 14 Students in South Africa", "score": 875},
+    {"title": "Trump Appoints Homendy to Aviation Board", "score": 865},
+    {"title": "Carney Walks Back Davos Comments", "score": 860},
     {"title": "FAA Updates US Airspace Rules", "score": 865},
-    {"title": "UK Pension Failures Leave Thousands Without Income", "score": 835},
-    {"title": "CEO Warns AI Could Spark Crisis", "score": 830},
-    {"title": "AOC and Paris Hilton Target AI Deepfakes", "score": 825},
-    {"title": "Zoo Threatens to Euthanize Animals", "score": 820},
-    {"title": "Woman's Obamacare Premium Jumps 323%", "score": 810},
-    {"title": "Victoria Faces 49C Heat and Bushfires", "score": 780},
     {"title": "Arctic Cold Grips North America", "score": 780},
-    {"title": "20 Inches Snow Hits Eastern US", "score": 775},
-    {"title": "Man Utd Stuns Arsenal 3-2", "score": 720},
-    {"title": "Brooklyn Beckham Cuts Ties with Family", "score": 710},
-    {"title": "Wolf Moon Rises Behind Eiffel Tower", "score": 710},
-    {"title": "5 Secrets to Aging Like 50-Year-Olds", "score": 720},
-    {"title": "Local Brewery Rescued by Rival", "score": 720}
+    {"title": "Man Utd Stuns Arsenal 3-2", "score": 720}
   ]
 }
 ```
@@ -490,42 +444,37 @@ Before submitting, verify your distribution roughly matches:
 
 Before submitting scores:
 
-1. ✅ Are 10-15% of scores at 900+?
-2. ✅ Do ALL 900+ articles pass the **Global Test**? (China, Europe, US all care?)
-3. ✅ Are 20-25% of scores at 850-879 (not 50%+)?
-4. ✅ Are there scores in the 750-799 range?
-5. ✅ **Are there scores in the 700-749 range? (5-10% target)**
-6. ✅ Did I boost HUMAN death toll stories appropriately?
-7. ✅ Did I boost "overtakes/#1" stories to 915+?
-8. ✅ Did I penalize "warns/faces/plans" stories?
-9. ✅ Did I boost big % changes (50%+)?
-10. ✅ Did I score single-country regulations at 870 max?
-11. ✅ Did I score animal welfare stories at 830 max?
-12. ✅ Did I score regional weather at 790 max?
-13. ✅ Did I score individual person cases at 820 max?
-14. ✅ Did I score celebrity activism at 840 max?
-15. ✅ Did I boost major tech restructures to 910+?
-16. ✅ Did I boost world leader meetings on war/peace to 905+?
-17. ✅ **Did I score routine sports results at 730 max?**
-18. ✅ **Did I score celebrity drama at 720 max?**
-19. ✅ **Did I score listicles at 740 max?**
-20. ✅ **Did I score photo stories at 720 max?**
-21. ✅ **Did I score regional bushfires/weather at 780 max?**
+1. ✅ **Are 10-15% of scores at 900+?** (This is critical - don't be too restrictive)
+2. ✅ Are historic policy changes (Paris Agreement, EU bans) at 910+?
+3. ✅ Are $1T+ deals at 910+?
+4. ✅ Are "World's First" stories at 905+?
+5. ✅ Are record global markets (gold, oil) at 905+?
+6. ✅ Are 20+ death disasters at 900+?
+7. ✅ Are "after X years" milestone deals at 910+?
+8. ✅ Are 30,000+ job cuts at 905?
+9. ✅ Are US appointments at 870 max (not 900+)?
+10. ✅ Are "walks back" stories at 865 max?
+11. ✅ Are follow-up stories penalized?
+12. ✅ Did I penalize regional weather to 780 max?
+13. ✅ Did I penalize sports results to 730 max?
 
-⚠️ **If you have 0 articles in 700-749, you're scoring too high. Push sports results, celebrity drama, listicles, and photo stories down.**
+⚠️ **If you have less than 10% at 900+, go back and boost:**
+- Historic policy reversals
+- $1T+ deals
+- "World's First" stories
+- Record-breaking markets
+- "After X years" milestones
+- EU-wide bans/policies
+- 20+ death disasters
 
-⚠️ **If a 900+ article only matters to ONE country, it should be 850-879 instead.**
+⚠️ **If a story is a "walks back" or "clarifies" follow-up, it should NEVER be 900+.**
 
-⚠️ **Regional weather is NEVER 900+ news, regardless of severity. It affects one region, not the world.**
-
-⚠️ **Individual person's story (one woman's premium, one person's case) is NEVER 880+ news.**
-
-⚠️ **Routine sports match results (Man Utd beats Arsenal) are NEVER 750+ news. They go in 700-730.**
+⚠️ **US political appointments are NOT global news - cap at 870.**
 
 ---
 
-*Ten News Article Scoring System V9*
-*"Global news for global readers - spread the scores, surface the best"*
+*Ten News Article Scoring System V10*
+*"Global news for global readers - be generous with 900+ for truly historic events"*
 """
 
 
@@ -609,7 +558,7 @@ def score_article(
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     
-    system_prompt = SCORING_SYSTEM_PROMPT_V9
+    system_prompt = SCORING_SYSTEM_PROMPT_V10
 
     # Legacy prompt kept for reference (not used)
     _SCORING_SYSTEM_PROMPT_V3 = """# TEN NEWS - ARTICLE SCORING SYSTEM V3

@@ -65,52 +65,14 @@ jobs:
           echo "🤖 Starting news generation..."
           python news-generator.py <<< "1"
           
-      - name: Send newsletter
+      # NEWSLETTER DISABLED - Vercel cron handles email sending at 10 AM local time
+      # The /api/cron/send-emails endpoint runs hourly and sends to users 
+      # whose local time is 10 AM using the Supabase get_email_recipients_now() function
+      - name: Newsletter info
         if: success()
         run: |
-          # Send newsletter after successful news generation
-          TODAY_FILE="tennews_data_$(date +%Y_%m_%d).json"
-          if [ -f "$TODAY_FILE" ]; then
-            echo "📧 Sending daily newsletter..."
-            
-            # Install Node.js dependencies for newsletter sending
-            npm install
-            
-            # Send newsletter using the generated news data
-            node -e "
-            const fs = require('fs');
-            const path = require('path');
-            
-            async function sendNewsletter() {
-              try {
-                const todayFile = '$TODAY_FILE';
-                const newsData = JSON.parse(fs.readFileSync(todayFile, 'utf8'));
-                
-                const response = await fetch('${{ github.server_url }}/${{ github.repository }}/api/send-newsletter', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    secret: process.env.NEWSLETTER_SECRET,
-                    newsData: newsData
-                  })
-                });
-                
-                if (response.ok) {
-                  const result = await response.json();
-                  console.log('✅ Newsletter sent:', result.message);
-                } else {
-                  console.log('❌ Newsletter failed:', await response.text());
-                }
-              } catch (error) {
-                console.log('❌ Newsletter error:', error.message);
-              }
-            }
-            
-            sendNewsletter();
-            "
-          else
-            echo "⚠️ No news file found, skipping newsletter"
-          fi
+          echo "📧 Newsletter is handled by Vercel cron (sends at 10 AM in each user's timezone)"
+          echo "   This GitHub Action only generates news content, not emails."
           
       - name: Commit and push generated news
         run: |

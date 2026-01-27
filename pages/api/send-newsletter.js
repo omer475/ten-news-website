@@ -1,15 +1,31 @@
+/**
+ * DEPRECATED: This legacy endpoint is disabled.
+ * Use /api/email/send-daily-digest-v2 instead.
+ */
+
+export default async function handler(req, res) {
+  console.log('⚠️ OLD send-newsletter endpoint called - this is disabled');
+  
+  return res.status(410).json({ 
+    error: 'This endpoint is deprecated',
+    message: 'Use /api/email/send-daily-digest-v2 instead'
+  });
+}
+
+/*
+DISABLED LEGACY CODE - DO NOT USE
+
 import { Resend } from 'resend';
 import fs from 'fs';
 import path from 'path';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend_DISABLED = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req, res) {
+function handler_DISABLED(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Security: Only allow requests with the correct secret
   const { secret, newsData } = req.body;
   if (secret !== process.env.NEWSLETTER_SECRET) {
     return res.status(401).json({ message: 'Unauthorized' });
