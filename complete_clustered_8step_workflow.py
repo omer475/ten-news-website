@@ -39,6 +39,7 @@ from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import ClaudeComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
+from step6_world_event_detection import detect_world_events
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -219,6 +220,134 @@ def extract_domain(url: str) -> str:
         return domain
     except:
         return 'unknown'
+
+# ============================================================================
+# PRE-SYNTHESIS CLUSTER VALIDATION (Step 3.5)
+# ============================================================================
+
+def validate_cluster_sources(sources: List[Dict], cluster_name: str = "") -> List[Dict]:
+    """
+    Validate that all sources in a cluster are about the SAME event before synthesis.
+    
+    This prevents the issue where unrelated articles get clustered together due to:
+    - Loose embedding matches
+    - Keyword similarity (e.g., "trump" in "trump card")
+    - Same category but different stories
+    
+    Args:
+        sources: List of source articles in the cluster
+        cluster_name: Name of the cluster for logging
+        
+    Returns:
+        List of validated sources (outliers removed)
+    """
+    import google.generativeai as genai
+    
+    # Skip validation for single-source clusters
+    if len(sources) <= 1:
+        return sources
+    
+    # Skip validation for 2-source clusters (assume embedding match is correct)
+    if len(sources) == 2:
+        return sources
+    
+    print(f"   🔍 VALIDATING {len(sources)} sources for cluster: {cluster_name[:50]}...")
+    
+    try:
+        # Configure Gemini
+        gemini_key = os.getenv('GEMINI_API_KEY')
+        if not gemini_key:
+            print(f"      ⚠️ No Gemini key - skipping validation")
+            return sources
+        
+        genai.configure(api_key=gemini_key)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Build source list for AI
+        sources_text = ""
+        for i, source in enumerate(sources):
+            title = source.get('title', 'Unknown')
+            source_name = source.get('source_name', 'Unknown')
+            sources_text += f"{i+1}. [{source_name}] {title}\n"
+        
+        prompt = f"""You are validating a news cluster. Check if ALL these articles are about the SAME SPECIFIC EVENT.
+
+CLUSTER NAME: {cluster_name}
+
+ARTICLES IN CLUSTER:
+{sources_text}
+
+TASK: Identify any articles that are about a DIFFERENT event/topic than the majority.
+
+SAME EVENT examples (should be KEPT):
+- "Mall fire kills 50" and "Mall fire death toll rises" = SAME (keep both)
+- "Trump threatens tariffs" and "Europe reacts to Trump tariffs" = SAME (keep both)
+
+DIFFERENT EVENT examples (should be REMOVED):
+- "Trump threatens tariffs" mixed with "India's trump card in manufacturing" = DIFFERENT (word match error)
+- "Apple iPhone launch" mixed with "Apple faces antitrust lawsuit" = DIFFERENT (same company, different stories)
+- "Research paper about tumor cells" mixed with "Breaking news about hospital fire" = DIFFERENT (scientific journal mixed with news)
+
+Respond with ONLY the numbers of articles to REMOVE (outliers that don't belong).
+If ALL articles belong together, respond with: NONE
+
+Format: REMOVE: 3, 5, 7
+Or: NONE
+
+Your response:"""
+
+        response = model.generate_content(prompt)
+        result_text = response.text.strip().upper()
+        
+        # Parse response
+        if "NONE" in result_text or "ALL" in result_text or not result_text:
+            print(f"      ✅ All {len(sources)} sources validated - same event")
+            return sources
+        
+        # Extract article numbers to remove
+        import re
+        numbers_match = re.findall(r'\d+', result_text)
+        to_remove = set()
+        
+        for num_str in numbers_match:
+            try:
+                idx = int(num_str) - 1  # Convert to 0-indexed
+                if 0 <= idx < len(sources):
+                    to_remove.add(idx)
+            except ValueError:
+                continue
+        
+        if not to_remove:
+            print(f"      ✅ All {len(sources)} sources validated - same event")
+            return sources
+        
+        # Remove outliers
+        validated_sources = []
+        removed_sources = []
+        
+        for i, source in enumerate(sources):
+            if i in to_remove:
+                removed_sources.append(source)
+            else:
+                validated_sources.append(source)
+        
+        # Log what was removed
+        print(f"      ⚠️ REMOVED {len(removed_sources)} unrelated sources:")
+        for source in removed_sources:
+            print(f"         ❌ [{source.get('source_name', 'Unknown')}] {source.get('title', 'Unknown')[:60]}...")
+        
+        print(f"      ✅ Keeping {len(validated_sources)} validated sources")
+        
+        # Safety: Never remove all sources
+        if not validated_sources:
+            print(f"      ⚠️ Validation removed all sources - keeping original")
+            return sources
+        
+        return validated_sources
+        
+    except Exception as e:
+        print(f"      ⚠️ Validation error: {e} - keeping all sources")
+        return sources
 
 # ============================================================================
 # IMPROVED IMAGE EXTRACTION (Step 0)
@@ -737,6 +866,21 @@ def run_complete_pipeline():
                 continue
             
             print(f"\n✍️  STEP 4: MULTI-SOURCE SYNTHESIS")
+            
+            # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
+            if len(cluster_sources) > 2:
+                cluster_sources = validate_cluster_sources(
+                    cluster_sources, 
+                    cluster.get('event_name', f'Cluster {cluster_id}')
+                )
+                
+                # If validation removed all sources, skip
+                if not cluster_sources:
+                    print(f"   ❌ No valid sources after validation - skipping cluster")
+                    update_cluster_status(cluster_id, 'failed', 'validation_failed',
+                        'All sources were unrelated after validation')
+                    continue
+            
             print(f"   Synthesizing article from {len(cluster_sources)} sources...")
             
             synthesized = synthesize_multisource_article(cluster_sources, cluster_id)
@@ -1089,7 +1233,8 @@ def run_complete_pipeline():
             
             result = supabase.table('published_articles').insert(article_data).execute()
             
-            print(f"   ✅ Published article ID: {result.data[0]['id']}")
+            published_article_id = result.data[0]['id']
+            print(f"   ✅ Published article ID: {published_article_id}")
             if len(source_titles) > 1:
                 print(f"   📚 MULTI-SOURCE CLUSTER ({len(source_titles)} articles):")
                 for st in source_titles:
@@ -1098,6 +1243,29 @@ def run_complete_pipeline():
             
             # Mark cluster as successfully published
             update_cluster_status(cluster_id, 'published')
+            
+            # STEP 10: WORLD EVENT DETECTION
+            # Check if this article relates to a major ongoing world event
+            try:
+                title = synthesized.get('title', synthesized.get('title_news', ''))
+                content = synthesized.get('bullets', '')
+                
+                # Detect world events for this article
+                # Note: Don't pass timeline - event page has its own timeline
+                detect_world_events([{
+                    'id': published_article_id,
+                    'title': title,
+                    'content': content,
+                    'bullets': content,
+                    'image_url': synthesized.get('image_url'),
+                    'components': {
+                        'graph': components.get('graph'),
+                        'map': components.get('map'),
+                        'info_box': components.get('info_box')
+                    }
+                }])
+            except Exception as we_error:
+                print(f"   ⚠️ World event detection skipped: {we_error}")
             
         except Exception as e:
             print(f"   ❌ Error processing cluster {cluster_id}: {e}")
@@ -1470,6 +1638,13 @@ BULLETS:
   □ 1-2 highlights per field
   □ No repetition across fields
 
+CRITICAL RULES:
+1. ALWAYS output valid JSON - never explanations or commentary
+2. If sources cover different topics, focus on the MAJORITY topic
+3. If sources are completely unrelated, pick the MOST newsworthy one
+4. NEVER say "Looking at the sources" or explain your reasoning
+5. Output starts with {{ and ends with }} - nothing else
+
 Return ONLY valid JSON, no markdown, no explanations."""
     
     # Try up to 5 times with exponential backoff
@@ -1519,6 +1694,24 @@ Return ONLY valid JSON, no markdown, no explanations."""
             # Clean response (remove markdown if present)
             response_text = response_text.replace('```json', '').replace('```', '').strip()
             
+            # Debug: Check if response is empty after cleaning
+            if not response_text:
+                print(f"   ⚠️  Response empty after cleaning (attempt {attempt + 1}/5)")
+                print(f"      Original length: {len(response_json['content'][0].get('text', ''))}")
+                if attempt < 4:
+                    time.sleep(5)
+                    continue
+                return None
+            
+            # Check if Claude returned commentary instead of JSON
+            if response_text.startswith('Looking') or response_text.startswith('I ') or not response_text.startswith('{'):
+                print(f"   ⚠️  Claude returned text instead of JSON (attempt {attempt + 1}/5)")
+                print(f"      Preview: {response_text[:100]}...")
+                if attempt < 4:
+                    time.sleep(3)
+                    continue
+                return None
+            
             # Parse JSON
             result = json.loads(response_text)
             
@@ -1539,6 +1732,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
             
         except json.JSONDecodeError as e:
             print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/5): {str(e)[:100]}")
+            print(f"      Response preview: {response_text[:200] if response_text else 'EMPTY'}...")
             if attempt < 4:
                 time.sleep(3)
                 continue

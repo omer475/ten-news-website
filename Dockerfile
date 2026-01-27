@@ -30,6 +30,7 @@ COPY step4_multi_source_synthesis.py .
 COPY step5_gemini_component_selection.py .
 COPY step2_gemini_context_search.py .
 COPY step6_7_claude_component_generation.py .
+COPY step6_world_event_detection.py .
 COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
 COPY article_deduplication.py .

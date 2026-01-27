@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker, isVisible = true }) {
+  const router = useRouter();
+  
   // Calculate time window for map
   const getInitialTimeWindow = () => {
     if (typeof window === 'undefined') return 24;
@@ -22,6 +25,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const mapTimeWindow = mapTimeWindowRef.current;
 
   const mapContainerRef = useRef(null);
+  const eventsScrollRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState(() => {
     // Check if scripts are already loaded on mount
@@ -335,6 +339,125 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   
   const [swipeHint] = useState(() => swipeHints[Math.floor(Math.random() * swipeHints.length)]);
 
+
+  // State for extracted blur colors from event images
+  const [eventColors, setEventColors] = useState({});
+
+  // Extract dominant color from image (same approach as news pages)
+  const extractColorFromImage = (imgElement, eventId) => {
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const size = 50;
+      canvas.width = size;
+      canvas.height = size;
+      ctx.drawImage(imgElement, 0, 0, size, size);
+      
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const pixels = imageData.data;
+      
+      // Collect colorful pixels
+      const colorCounts = {};
+      for (let i = 0; i < pixels.length; i += 4) {
+        const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+        
+        // Convert to HSL
+        const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255;
+        const l = (max + min) / 2;
+        const s = max === min ? 0 : (l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min));
+        
+        // Only consider colorful pixels
+        if (s * 100 > 15 && l * 100 > 10 && l * 100 < 90) {
+          const key = `${Math.round(r/25)*25},${Math.round(g/25)*25},${Math.round(b/25)*25}`;
+          colorCounts[key] = (colorCounts[key] || 0) + 1;
+        }
+      }
+      
+      // Find most common color
+      let maxCount = 0;
+      let dominantColor = null;
+      for (const [key, count] of Object.entries(colorCounts)) {
+        if (count > maxCount) {
+          maxCount = count;
+          dominantColor = key;
+        }
+      }
+      
+      if (dominantColor) {
+        const [r, g, b] = dominantColor.split(',').map(Number);
+        // Create darker blur color
+        const darkR = Math.round(r * 0.4);
+        const darkG = Math.round(g * 0.4);
+        const darkB = Math.round(b * 0.4);
+        const blurColor = `#${darkR.toString(16).padStart(2,'0')}${darkG.toString(16).padStart(2,'0')}${darkB.toString(16).padStart(2,'0')}`;
+        
+        setEventColors(prev => ({ ...prev, [eventId]: blurColor }));
+      }
+    } catch (e) {
+      console.log('Color extraction failed for event', eventId);
+    }
+  };
+
+  // State for world events - initialize from cache for instant display
+  const [worldEvents, setWorldEvents] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('tennews_world_events');
+        if (cached) {
+          const { events, timestamp } = JSON.parse(cached);
+          // Use cache if less than 5 minutes old
+          if (Date.now() - timestamp < 5 * 60 * 1000 && events.length > 0) {
+            return events;
+          }
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [eventsLoading, setEventsLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('tennews_world_events');
+        if (cached) {
+          const { events, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000 && events.length > 0) {
+            return false; // Already have cached data
+          }
+        }
+      } catch (e) {}
+    }
+    return true;
+  });
+
+  // Fetch world events from API (runs in background, updates cache)
+  useEffect(() => {
+    const fetchWorldEvents = async () => {
+      try {
+        const lastVisit = localStorage.getItem('tennews_last_visit') || Date.now() - 24 * 60 * 60 * 1000;
+        const response = await fetch(`/api/world-events?since=${lastVisit}&limit=8`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.events && data.events.length > 0) {
+            setWorldEvents(data.events);
+            // Cache for instant loading next time
+            localStorage.setItem('tennews_world_events', JSON.stringify({
+              events: data.events,
+              timestamp: Date.now()
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch world events:', error);
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    fetchWorldEvents();
+  }, []);
+
+
   // Fetch country counts from API
   const fetchCountryCounts = useCallback(async () => {
     try {
@@ -559,6 +682,100 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (onContinue) onContinue();
   };
 
+  // Smooth drag-to-scroll with momentum
+  const dragState = useRef({
+    isDown: false,
+    startX: 0,
+    scrollLeft: 0,
+    velX: 0,
+    lastX: 0,
+    lastTime: 0,
+    momentumId: null
+  });
+
+  const handleMouseDown = (e) => {
+    const el = eventsScrollRef.current;
+    if (!el) return;
+    
+    // Cancel any ongoing momentum
+    if (dragState.current.momentumId) {
+      cancelAnimationFrame(dragState.current.momentumId);
+    }
+    
+    dragState.current.isDown = true;
+    dragState.current.startX = e.pageX;
+    dragState.current.scrollLeft = el.scrollLeft;
+    dragState.current.lastX = e.pageX;
+    dragState.current.lastTime = Date.now();
+    dragState.current.velX = 0;
+    el.style.cursor = 'grabbing';
+  };
+
+  const handleMouseMove = (e) => {
+    if (!dragState.current.isDown) return;
+    e.preventDefault();
+    
+    const el = eventsScrollRef.current;
+    if (!el) return;
+    
+    const x = e.pageX;
+    const now = Date.now();
+    const dt = now - dragState.current.lastTime;
+    
+    if (dt > 0) {
+      dragState.current.velX = (x - dragState.current.lastX) / dt;
+    }
+    
+    dragState.current.lastX = x;
+    dragState.current.lastTime = now;
+    
+    const walk = x - dragState.current.startX;
+    el.scrollLeft = dragState.current.scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    if (!dragState.current.isDown) return;
+    dragState.current.isDown = false;
+    
+    const el = eventsScrollRef.current;
+    if (!el) return;
+    el.style.cursor = 'grab';
+    
+    // Apply momentum
+    let velocity = dragState.current.velX * 150;
+    const friction = 0.95;
+    
+    const momentum = () => {
+      if (Math.abs(velocity) > 0.5) {
+        el.scrollLeft -= velocity;
+        velocity *= friction;
+        dragState.current.momentumId = requestAnimationFrame(momentum);
+      }
+    };
+    
+    if (Math.abs(velocity) > 1) {
+      dragState.current.momentumId = requestAnimationFrame(momentum);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (dragState.current.isDown) {
+      handleMouseUp();
+    }
+  };
+
+  // Smooth wheel scrolling
+  const handleEventsWheel = useCallback((e) => {
+    const el = eventsScrollRef.current;
+    if (!el) return;
+    
+    e.preventDefault();
+    el.scrollBy({
+      left: e.deltaY * 2,
+      behavior: 'smooth'
+    });
+  }, []);
+
   return (
     <>
       <Script 
@@ -583,7 +800,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           flex-direction: column;
           background: #fafafa;
           z-index: 1;
-          overflow: hidden;
+          overflow-x: visible;
+          overflow-y: hidden;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
         }
 
@@ -596,7 +814,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           padding: 0 24px;
           position: relative;
           z-index: 1;
-          overflow: hidden;
+          overflow-x: visible;
+          overflow-y: visible;
         }
 
         .greeting-section {
@@ -605,6 +824,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           padding-top: 100px;
           opacity: 0;
           z-index: 2;
+          width: 100%;
         }
 
         @keyframes fadeUp {
@@ -623,76 +843,183 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           50% { opacity: 0.5; }
         }
 
-        .greeting-sub {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0;
-          margin: 0 auto;
-          margin-top: 0;
-          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-          opacity: 0;
-        }
-
-        .status-line {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          max-width: 320px;
-          gap: 20px;
-        }
-
         .greeting-hi {
           display: block;
-          font-size: 48px;
+          font-size: 34px;
           font-weight: 600;
-          letter-spacing: -0.02em;
-          color: #000000;
-          line-height: 1.0;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+          letter-spacing: -0.5px;
+          color: #1d1d1f;
+          line-height: 1.2;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          text-align: center;
+          margin-bottom: 24px;
         }
 
         .greeting-name {
-          font-weight: 600;
+          font-weight: 700;
         }
 
-        .status-text {
+        /* Ongoing Events Section */
+        .events-section {
+          width: 100vw;
+          margin-left: -24px;
+          margin-top: 32px;
+          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
+          opacity: 0;
+          position: relative;
+          z-index: 10;
+          touch-action: pan-x pan-y;
+        }
+
+        .events-header {
+          font-size: 11px;
+          font-weight: 600;
+          color: #999;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+          padding-left: 20px;
+          text-align: left;
+        }
+
+        .events-scroll {
+          display: flex;
+          gap: 14px;
+          overflow-x: scroll;
+          overflow-y: hidden;
+          padding: 8px 20px 16px 20px;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+          cursor: grab;
+          user-select: none;
+          scroll-behavior: smooth;
+        }
+        
+        .events-scroll:active {
+          cursor: grabbing;
+          scroll-behavior: auto;
+        }
+
+        .events-scroll::-webkit-scrollbar {
+          display: none;
+        }
+
+        .events-scroll::after {
+          content: '';
+          flex-shrink: 0;
+          width: 12px;
+        }
+
+        .event-card {
+          flex-shrink: 0;
+          width: 280px;
+          height: 130px;
+          border-radius: 16px;
+          cursor: pointer;
+          transition: transform 0.15s ease;
+          position: relative;
+          overflow: hidden;
+          scroll-snap-align: start;
+        }
+
+        .event-card:active {
+          transform: scale(0.98);
+        }
+
+        .event-skeleton {
+          background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+          cursor: default;
+        }
+
+        .skeleton-shimmer {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            transparent 100%
+          );
+          animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        .event-image {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .event-blur {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 55%;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          mask-image: linear-gradient(to bottom, 
+            rgba(0,0,0,0) 0%, 
+            rgba(0,0,0,0.3) 30%, 
+            rgba(0,0,0,0.7) 60%, 
+            rgba(0,0,0,1) 100%
+          );
+          -webkit-mask-image: linear-gradient(to bottom, 
+            rgba(0,0,0,0) 0%, 
+            rgba(0,0,0,0.3) 30%, 
+            rgba(0,0,0,0.7) 60%, 
+            rgba(0,0,0,1) 100%
+          );
+        }
+
+        .event-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          top: 0;
+          padding: 10px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 6px;
+        }
+
+        .event-name {
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
+          line-height: 1.15;
+          text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .event-badge {
+          min-width: 18px;
+          height: 18px;
+          padding: 0 5px;
+          background: #FF3B30;
+          border-radius: 9px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #fff;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          font-size: 15px;
-          font-weight: 500;
-          letter-spacing: 0.02em;
-          text-transform: uppercase;
-          color: #1d1d1f;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-          line-height: 1.4;
-          background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%);
-          padding: 10px 20px;
-          border-radius: 100px;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          flex-shrink: 0;
         }
 
-        .status-text::before {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background: #34c759;
-          border-radius: 50%;
-          animation: pulse 2s ease-in-out infinite;
-          box-shadow: 0 0 8px rgba(52, 199, 89, 0.6);
-        }
-
-        .status-time {
-          display: none;
-        }
-
-        .status-dot {
-          display: none;
-        }
 
         .globe-section {
           flex: 1;
@@ -710,8 +1037,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           position: relative;
           width: 100%;
           height: 100%;
-          max-width: 420px;
-          max-height: 420px;
+          max-width: 300px;
+          max-height: 300px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -755,23 +1082,48 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         @media (max-width: 480px) {
           .content-wrapper {
             padding: 0;
-            overflow: hidden;
           }
           .greeting-section {
-            padding-top: 90px;
-            padding-left: 24px;
-            padding-right: 24px;
-          }
-          .status-line {
-            max-width: 300px;
-            gap: 16px;
+            padding-top: 85px;
+            padding-left: 16px;
+            padding-right: 16px;
+            width: 100%;
+            margin: 0;
           }
           .greeting-hi {
-            font-size: 42px;
+            font-size: 28px;
+            margin-bottom: 16px;
           }
-          .status-text {
-            font-size: 13px;
-            padding: 8px 16px;
+          .events-section {
+            margin-top: 24px;
+            margin-left: -16px;
+            width: 100vw;
+          }
+          .events-header {
+            font-size: 10px;
+            margin-bottom: 6px;
+            padding-left: 16px;
+          }
+          .events-scroll {
+            padding: 4px 16px 12px 16px;
+            gap: 12px;
+          }
+          .event-card {
+            width: 240px;
+            height: 110px;
+            border-radius: 14px;
+          }
+          .event-overlay {
+            padding: 8px;
+          }
+          .event-name {
+            font-size: 12px;
+          }
+          .event-badge {
+            min-width: 16px;
+            height: 16px;
+            font-size: 10px;
+            padding: 0 4px;
           }
           .globe-section {
             overflow: hidden;
@@ -784,8 +1136,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .globe-container {
             max-width: none;
             max-height: none;
-            width: 160vw;
-            height: 160vw;
+            width: 120vw;
+            height: 120vw;
             margin-top: 0;
             touch-action: none;
           }
@@ -796,16 +1148,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         @media (max-width: 375px) {
-          .status-line {
-            max-width: 280px;
-            gap: 14px;
-          }
           .greeting-hi {
-            font-size: 36px;
+            font-size: 26px;
           }
-          .status-text {
+          .event-card {
+            width: 220px;
+            height: 100px;
+            border-radius: 12px;
+          }
+          .event-overlay {
+            padding: 8px;
+          }
+          .event-name {
             font-size: 12px;
-            padding: 8px 14px;
+          }
+          .event-badge {
+            min-width: 14px;
+            height: 14px;
+            font-size: 9px;
           }
         }
       `}</style>
@@ -816,15 +1176,85 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       >
         <div className="content-wrapper">
           <div className="greeting-section">
-            <div className="greeting-sub">
-              <div className="status-line">
-                <span className="greeting-hi">
-                  {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
-                </span>
-                <span className="status-text">{personalGreeting.subHighlight} {personalGreeting.subRest}.</span>
+            <span className="greeting-hi">
+              {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
+            </span>
+          </div>
+            
+          {/* Ongoing Events Section - show skeletons while loading, then real events */}
+          {(eventsLoading || worldEvents.length > 0) && (
+            <div 
+              className="events-section"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="events-header">World Events</div>
+              <div 
+                className="events-scroll"
+                ref={eventsScrollRef}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                onWheel={handleEventsWheel}
+              >
+                {eventsLoading && worldEvents.length === 0 ? (
+                  // Show skeleton placeholders while loading
+                  <>
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={`skeleton-${i}`} className="event-card event-skeleton">
+                        <div className="skeleton-shimmer" />
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  // Show actual events
+                  worldEvents.map((event) => {
+                    const blurColor = eventColors[event.id] || event.blur_color || '#1a365d';
+                    return (
+                      <div 
+                        key={event.id} 
+                        className="event-card"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/event/${event.slug || event.id}`);
+                        }}
+                      >
+                        {event.image_url && (
+                          <img 
+                            className="event-image" 
+                            src={event.image_url} 
+                            alt={event.name}
+                            crossOrigin="anonymous"
+                            onLoad={(e) => extractColorFromImage(e.target, event.id)}
+                          />
+                        )}
+                        <div 
+                          className="event-blur" 
+                          style={{ background: blurColor }}
+                        />
+                        <div 
+                          className="event-overlay"
+                          style={{ 
+                            background: `linear-gradient(to bottom, 
+                              ${blurColor}00 0%,
+                              ${blurColor}40 30%,
+                              ${blurColor}90 60%,
+                              ${blurColor}dd 80%,
+                              ${blurColor}ff 100%)`
+                          }}
+                        >
+                          <span className="event-name">{event.name}</span>
+                          {event.newUpdates > 0 && (
+                            <span className="event-badge">{event.newUpdates}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           <div className="globe-section">
             <div className="globe-container" ref={mapContainerRef}></div>

@@ -53,39 +53,33 @@ export default async function handler(req, res) {
   console.log(`${'='.repeat(60)}\n`);
 
   try {
-    // Step 1: Queue eligible users (this runs timezone logic in PostgreSQL)
-    console.log('📝 Step 1: Queuing eligible users...');
-    const { data: queueResult, error: queueError } = await supabase
-      .rpc('queue_daily_emails', { target_hour: TARGET_HOUR });
+    // Step 1: Get eligible users directly from Supabase function
+    // This function handles ALL the timezone logic in PostgreSQL
+    console.log('📝 Step 1: Getting eligible users from Supabase...');
+    
+    const { data: eligibleUsers, error: eligibleError } = await supabase
+      .rpc('get_email_recipients_now');
 
-    if (queueError) {
-      console.error('❌ Error queuing emails:', queueError);
-      // Continue anyway - there might be pending emails from previous run
-    } else {
-      console.log(`✅ Queued ${queueResult || 0} new users for email`);
+    if (eligibleError) {
+      console.error('❌ Error getting eligible users:', eligibleError);
+      // Try fallback: direct query
+      console.log('📝 Trying fallback query...');
     }
 
-    // Step 2: Get pending emails from queue
-    console.log(`\n📤 Step 2: Processing pending queue (batch size: ${BATCH_SIZE})...`);
-    const { data: pendingEmails, error: pendingError } = await supabase
-      .rpc('get_pending_emails', { batch_size: BATCH_SIZE });
+    // Use the function result or empty array
+    const pendingEmails = eligibleUsers || [];
 
-    if (pendingError) {
-      console.error('❌ Error getting pending emails:', pendingError);
-      throw pendingError;
-    }
-
-    if (!pendingEmails || pendingEmails.length === 0) {
-      console.log('✅ No pending emails to process');
+    if (pendingEmails.length === 0) {
+      console.log('✅ No users eligible for email right now');
+      console.log('   (Either no one is at 10 AM local time, or all have been sent today)');
       return res.status(200).json({
-        message: 'No pending emails',
-        queued: queueResult || 0,
+        message: 'No users eligible - not 10 AM in any user timezone or already sent today',
         sent: 0,
         elapsed_ms: Date.now() - startTime
       });
     }
 
-    console.log(`📋 Found ${pendingEmails.length} pending emails to send`);
+    console.log(`📋 Found ${pendingEmails.length} users eligible for email (10 AM in their timezone)`);
 
     // Step 3: Fetch articles for the digest
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -118,27 +112,27 @@ export default async function handler(req, res) {
     let sentCount = 0;
     let failedCount = 0;
 
-    for (const emailRecord of pendingEmails) {
+    for (const user of pendingEmails) {
       // Check if we're running out of time (leave 10 seconds buffer)
       if (Date.now() - startTime > 50000) {
-        console.log('⏱️ Running low on time, stopping batch. Will continue next run.');
+        console.log('⏱️ Running low on time, stopping batch.');
         break;
       }
 
       try {
         // Personalize articles
         let userArticles = articles;
-        if (emailRecord.email_personalization_enabled && emailRecord.preferred_categories?.length > 0) {
+        if (user.email_personalization_enabled && user.preferred_categories?.length > 0) {
           userArticles = [...articles].sort((a, b) => {
-            const aMatch = emailRecord.preferred_categories.includes(a.category) ? 1 : 0;
-            const bMatch = emailRecord.preferred_categories.includes(b.category) ? 1 : 0;
+            const aMatch = user.preferred_categories.includes(a.category) ? 1 : 0;
+            const bMatch = user.preferred_categories.includes(b.category) ? 1 : 0;
             return bMatch - aMatch;
           });
         }
 
         // Generate email
-        const timezone = emailRecord.timezone || 'UTC';
-        const emailHtml = generateDigestEmail(emailRecord, userArticles, timezone);
+        const timezone = user.timezone || 'UTC';
+        const emailHtml = generateDigestEmail(user, userArticles, timezone);
         const greeting = getGreeting(timezone);
         const date = new Date().toLocaleDateString('en-US', { 
           weekday: 'long', 
@@ -150,55 +144,60 @@ export default async function handler(req, res) {
         // Send via Resend
         const { data: emailData, error: emailError } = await resend.emails.send({
           from: 'Today+ <info@todayplus.news>',
-          to: emailRecord.email,
+          to: user.email,
           subject: `${greeting} - Your Daily Brief for ${date}`,
           html: emailHtml,
         });
 
         if (emailError) throw emailError;
 
-        // Mark as sent in queue and log
-        await Promise.all([
-          supabase.rpc('mark_email_sent', { 
-            queue_id_param: emailRecord.queue_id, 
-            user_id_param: emailRecord.user_id 
-          }),
-          supabase.from('email_logs').insert({
-            user_id: emailRecord.user_id,
-            email_type: 'daily_digest',
-            subject: `${greeting} - Your Daily Brief for ${date}`,
-            articles_included: userArticles.length,
-            status: 'sent',
-            resend_id: emailData?.id,
-            metadata: { 
-              timezone,
-              queue_id: emailRecord.queue_id,
-              version: 'v2'
-            }
-          })
-        ]);
+        // CRITICAL: Update last_email_sent_at IMMEDIATELY after sending
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ last_email_sent_at: new Date().toISOString() })
+          .eq('id', user.user_id);
 
-        console.log(`✅ Sent to ${emailRecord.email}`);
+        if (updateError) {
+          console.error(`⚠️ Failed to update last_email_sent_at for ${user.email}:`, updateError.message);
+        }
+
+        // Log the email
+        await supabase.from('email_logs').insert({
+          user_id: user.user_id,
+          email_type: 'daily_digest',
+          subject: `${greeting} - Your Daily Brief for ${date}`,
+          articles_included: userArticles.length,
+          status: 'sent',
+          resend_id: emailData?.id,
+          metadata: { 
+            timezone,
+            local_hour: user.local_hour,
+            version: 'v2-fixed'
+          }
+        });
+
+        console.log(`✅ Sent to ${user.email} (timezone: ${timezone}, local hour: ${user.local_hour})`);
         sentCount++;
 
         // Small delay between emails (Resend rate limit)
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 600));
 
       } catch (error) {
-        console.error(`❌ Failed for ${emailRecord.email}:`, error.message);
-        await supabase.rpc('mark_email_failed', { 
-          queue_id_param: emailRecord.queue_id, 
-          error_msg: error.message 
+        console.error(`❌ Failed for ${user.email}:`, error.message);
+        
+        // Log failure
+        await supabase.from('email_logs').insert({
+          user_id: user.user_id,
+          email_type: 'daily_digest',
+          status: 'failed',
+          metadata: { error: error.message, version: 'v2-fixed' }
         });
+        
         failedCount++;
       }
     }
 
-    // Check if there are more pending
-    const { count: remainingCount } = await supabase
-      .from('email_send_queue')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
+    const remainingCount = 0; // No queue in this version
 
     const elapsed = Date.now() - startTime;
     console.log(`\n📧 Batch complete: ${sentCount} sent, ${failedCount} failed`);

@@ -252,7 +252,7 @@ def ai_check_cluster_match(new_article_title: str, existing_clusters: List[Dict]
         for i, cluster in enumerate(clusters_for_matching):
             clusters_text += f"{i+1}. [ID:{cluster['id']}] {cluster['event_name']}\n"
         
-        prompt = f"""You are clustering news articles. Add to existing cluster ONLY if it's the SAME SPECIFIC EVENT.
+        prompt = f"""You are clustering news articles. DEFAULT TO ADDING to existing cluster unless it's a COMPLETELY DIFFERENT story.
 
 EXISTING CLUSTERS:
 {clusters_text}
@@ -260,36 +260,38 @@ EXISTING CLUSTERS:
 NEW ARTICLE: {new_article_title}
 
 ════════════════════════════════════════════════════════════════════════════════
-RULE: Same SPECIFIC EVENT = Same cluster. Different events = Different clusters.
+RULE: SAME ONGOING STORY = Add to cluster. COMPLETELY DIFFERENT STORY = New cluster.
 ════════════════════════════════════════════════════════════════════════════════
 
-✅ ADD_TO_CLUSTER - SAME specific event, just different source/angle:
-• "Japan PM drums with SK President" → "Japan-SK summit drums session" ✅ SAME EVENT
-• "Starlink free internet for Iran" → "Musk activates Starlink in Iran" ✅ SAME EVENT
-• "2025 third hottest year" → "Earth records hottest 3 years" ✅ SAME CLIMATE REPORT
-• "Trump 25% tariff on Iran partners" → "Trump threatens Iran tariffs" ✅ SAME POLICY
-• "Iran protester executed" → "Iran executions during protests" ✅ SAME CRISIS
+✅ ADD_TO_CLUSTER - Same ongoing story, updates, developments, reactions:
+• "Mall fire kills 50" → "Mall fire death toll rises to 60" ✅ SAME STORY (minor update)
+• "Trump threatens Greenland" → "Europe reacts to Trump Greenland threat" ✅ SAME STORY
+• "Trump threatens Greenland" → "Trump backs off Greenland threats" ✅ SAME STORY (development)
+• "Maduro arrested in Venezuela" → "Venezuelans consider returning after Maduro" ✅ SAME STORY
+• "Train crash kills 5" → "Train crash investigation begins" ✅ SAME STORY
+• "Cave art discovered" → "Scientists analyze ancient cave art" ✅ SAME STORY
+• "Earthquake strikes Turkey" → "Turkey earthquake rescue efforts continue" ✅ SAME STORY
+• "Company announces layoffs" → "Workers react to layoff announcement" ✅ SAME STORY
 
-❌ NEW_CLUSTER - Different events, even if same country/topic:
-• "Iran economic crisis" vs "Iran protest deaths" → DIFFERENT aspects, NEW CLUSTER
-• "Ukraine drone strike" vs "UPS plane crash Kentucky" → COMPLETELY DIFFERENT
-• "MIT smart pill" vs "Smart home without WiFi" → COMPLETELY DIFFERENT
-• "Trump Detroit speech" vs "Trump Davos trip" → DIFFERENT events
-• "Venezuela oil prices" vs "Anthropic AI launch" → COMPLETELY DIFFERENT
-
-CRITICAL TEST: Would a news editor combine these into ONE article?
-- YES → ADD_TO_CLUSTER (same event, merge the coverage)
-- NO → NEW_CLUSTER (different stories, keep separate)
+❌ NEW_CLUSTER - ONLY for COMPLETELY UNRELATED stories:
+• "Turkey earthquake" vs "Turkey election results" → DIFFERENT stories
+• "Apple iPhone launch" vs "Apple faces antitrust lawsuit" → DIFFERENT stories  
+• "Ukraine drone attack" vs "Kentucky plane crash" → DIFFERENT stories
+• "Climate summit in Paris" vs "Paris fashion week" → DIFFERENT stories
 
 ════════════════════════════════════════════════════════════════════════════════
-⚠️ DO NOT cluster articles just because they mention the same country/company!
-   "Iran protests" and "Iran economy" are DIFFERENT stories!
-   "Apple new product" and "Apple lawsuit" are DIFFERENT stories!
+⚠️ IMPORTANT: Minor updates are NOT new clusters!
+   - Death toll changes (50→52, 60→65) = ADD TO CLUSTER
+   - Reactions to an event = ADD TO CLUSTER
+   - Follow-up investigations = ADD TO CLUSTER
+   - Only create NEW_CLUSTER if topics are COMPLETELY UNRELATED
 ════════════════════════════════════════════════════════════════════════════════
+
+WHEN IN DOUBT: ADD_TO_CLUSTER (readers prefer consolidated coverage)
 
 RESPONSE FORMAT (one line only):
-→ ADD_TO_CLUSTER | CLUSTER_ID: [number] | REASON: same event - [brief]
-→ NEW_CLUSTER_DIFFERENT_TOPIC | REASON: different event - [brief]
+→ ADD_TO_CLUSTER | CLUSTER_ID: [number] | REASON: same story - [brief]
+→ NEW_CLUSTER_DIFFERENT_TOPIC | REASON: completely different - [brief]
 
 YOUR RESPONSE:"""
 
@@ -316,10 +318,12 @@ YOUR RESPONSE:"""
                         'reason': reason if reason else "AI matched to cluster"
                     }
         
-        # SMART CHECK: If AI says "NEW_CLUSTER" but reason says it's the SAME EVENT,
-        # override and add to top cluster anyway (AI is contradicting itself)
-        # Only override for STRONG contradiction phrases, not just "related"
-        same_event_phrases = ['SAME EVENT', 'SAME STORY', 'SAME NEWS', 'IDENTICAL', 'SAME INCIDENT', 'SAME SPECIFIC']
+        # SMART CHECK: If AI says "NEW_CLUSTER" but reason mentions the same topic,
+        # override and add to top cluster anyway (AI is being too strict)
+        # Be aggressive about consolidating related stories
+        same_event_phrases = ['SAME EVENT', 'SAME STORY', 'SAME NEWS', 'IDENTICAL', 'SAME INCIDENT', 
+                              'SAME SPECIFIC', 'SAME TOPIC', 'RELATED', 'UPDATE', 'FOLLOW-UP', 
+                              'DEVELOPMENT', 'CONTINUES', 'ONGOING', 'REACTION', 'RESPONSE']
         if any(phrase in reason for phrase in same_event_phrases):
             print(f"      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)")
             print(f"         Reason: {reason}")
@@ -358,6 +362,106 @@ YOUR RESPONSE:"""
             'cluster_id': None,
             'reason': f'Error in check: {str(e)}'
         }
+
+
+def validate_cluster_assignment(new_article_title: str, cluster_sources: List[Dict], cluster_name: str) -> Dict:
+    """
+    POST-CLUSTERING VALIDATION: After adding an article to a cluster, verify it actually belongs.
+    
+    This catches cases where embedding/AI matching made a mistake.
+    
+    Args:
+        new_article_title: Title of the newly added article
+        cluster_sources: Existing sources in the cluster (BEFORE adding the new one)
+        cluster_name: Name of the cluster for context
+        
+    Returns:
+        Dict with:
+        - 'valid': True if article belongs, False if it doesn't
+        - 'reason': Explanation
+    """
+    try:
+        # Skip validation for first article in cluster (nothing to compare against)
+        if not cluster_sources or len(cluster_sources) == 0:
+            return {'valid': True, 'reason': 'First article in cluster - no validation needed'}
+        
+        # Configure Gemini
+        genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Build list of existing sources in cluster
+        existing_titles = "\n".join([
+            f"  • {s.get('title', 'Unknown')}" 
+            for s in cluster_sources[:5]  # Limit to top 5 for prompt size
+        ])
+        
+        prompt = f"""You are validating a news clustering decision. An article was just added to a cluster - verify it belongs.
+
+CLUSTER: {cluster_name}
+
+EXISTING ARTICLES IN CLUSTER:
+{existing_titles}
+
+NEW ARTICLE BEING ADDED:
+  • {new_article_title}
+
+QUESTION: Does the new article belong in this cluster? Are they about the SAME SPECIFIC EVENT/STORY?
+
+SAME EVENT (belongs together):
+- Same news event from different sources (e.g., "Fire kills 50" and "Fire death toll rises to 52")
+- Updates/reactions to the same story (e.g., "Trump threatens tariffs" and "EU responds to tariff threat")
+
+DIFFERENT EVENT (does NOT belong):
+- Different stories that share keywords (e.g., "Trump policy" vs "playing the trump card")
+- Same topic but different events (e.g., "Ukraine drone attack Jan 15" vs "Ukraine drone attack Jan 20")
+- Same company different news (e.g., "Apple iPhone launch" vs "Apple faces lawsuit")
+
+RESPOND WITH ONLY ONE WORD:
+- VALID (if the new article belongs with the existing articles)
+- INVALID (if the new article is about a DIFFERENT story)
+
+Your response:"""
+
+        response = model.generate_content(prompt)
+        result_text = response.text.strip().upper()
+        
+        if 'INVALID' in result_text:
+            return {
+                'valid': False,
+                'reason': 'AI determined article is about a different event'
+            }
+        
+        return {
+            'valid': True,
+            'reason': 'AI confirmed article belongs in cluster'
+        }
+        
+    except Exception as e:
+        print(f"      ⚠️ Validation error: {e}")
+        # On error, assume valid (don't block clustering)
+        return {'valid': True, 'reason': f'Validation error - assuming valid: {str(e)}'}
+
+
+def remove_from_cluster(supabase_client, source_article_id: int) -> bool:
+    """
+    Remove an article from its current cluster (set cluster_id to NULL).
+    
+    Args:
+        supabase_client: Supabase client
+        source_article_id: ID of the source article
+        
+    Returns:
+        True if successful
+    """
+    try:
+        supabase_client.table('source_articles').update({
+            'cluster_id': None
+        }).eq('id', source_article_id).execute()
+        return True
+    except Exception as e:
+        print(f"      ⚠️ Error removing from cluster: {e}")
+        return False
+
 
 # ==========================================
 # GEMINI CLIENT FOR EMBEDDINGS
@@ -514,12 +618,12 @@ class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
     # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.75  # Cosine similarity threshold - VERY AGGRESSIVE to catch all duplicates
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.82  # Cosine similarity threshold - BALANCED for accuracy
     # 0.90+ = Almost identical titles
-    # 0.85-0.90 = Same event, different wording
-    # 0.75-0.85 = Same event OR same topic, significantly different wording (MATCH THESE)
-    # 0.70-0.78 = Related topics, might be different events
-    # <0.70 = Definitely different events
+    # 0.85-0.90 = Same event, different wording (HIGH CONFIDENCE)
+    # 0.82-0.85 = Same event, different wording (GOOD CONFIDENCE) 
+    # 0.75-0.82 = Related topics, might be different events (TOO RISKY - causes bad clustering)
+    # <0.75 = Definitely different events
     
     # FALLBACK: String-based matching (if embeddings fail)
     TITLE_SIMILARITY_THRESHOLD = 0.80  # 80% title similarity = same event (INCREASED)
@@ -528,12 +632,12 @@ class ClusteringConfig:
     ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
     
     # Time windows
-    MAX_CLUSTER_AGE_HOURS = 72  # Only match with clusters created in last 72h (3 days)
+    MAX_CLUSTER_AGE_HOURS = 336  # Only match with clusters updated in last 336h (14 days)
     MAX_ARTICLE_AGE_HOURS = 48  # Only process articles from last 48h
     
     # Cluster lifecycle
-    CLUSTER_INACTIVITY_HOURS = 72  # Close cluster after 72h without updates (3 days)
-    CLUSTER_MAX_LIFETIME_HOURS = 168  # Close cluster after 168h regardless (7 days)
+    CLUSTER_INACTIVITY_HOURS = 168  # Close cluster after 168h without updates (7 days)
+    CLUSTER_MAX_LIFETIME_HOURS = 336  # Close cluster after 336h regardless (14 days)
     
     # PARALLEL PROCESSING SETTINGS
     PARALLEL_WORKERS = 3  # Number of parallel threads (reduced from 5 to prevent Supabase connection issues)
@@ -1628,131 +1732,208 @@ class EventClusteringEngine:
                             if matched:
                                 break
             
-            if matched and matched_cluster:
-                # EMBEDDING MATCHED (>= 0.75) - Add directly to cluster (embedding is reliable)
+            # ================================================================
+            # POST-CLUSTERING VALIDATION LOOP
+            # Try to find a valid cluster, with up to 3 rejections before creating new
+            # ================================================================
+            rejected_cluster_ids = set()  # Track clusters that rejected this article
+            MAX_REJECTION_ATTEMPTS = 3
+            successfully_added = False
+            
+            while len(rejected_cluster_ids) < MAX_REJECTION_ATTEMPTS and not successfully_added:
+                # Find best matching cluster (excluding rejected ones)
+                matched = False
+                matched_cluster = None
+                best_similarity = 0.0
+                
+                # Check existing clusters (excluding rejected ones)
+                for cluster in active_clusters[:original_cluster_count]:
+                    if cluster['id'] in rejected_cluster_ids:
+                        continue  # Skip clusters that already rejected this article
+                    
+                    cluster_id = cluster['id']
+                    cluster_emb = cluster_embeddings.get(cluster_id)
+                    
+                    if not check_time_proximity(article, cluster):
+                        continue
+                    
+                    if article_emb is not None and cluster_emb is not None:
+                        similarity = cosine_similarity(article_emb, cluster_emb)
+                        if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD and similarity > best_similarity:
+                            best_similarity = similarity
+                            matched_cluster = cluster
+                            matched = True
+                
+                # Also check new clusters from this batch (excluding rejected)
+                if not matched and new_batch_clusters:
+                    for new_cluster_id, new_cluster_title, new_cluster_emb in new_batch_clusters:
+                        if new_cluster_id in rejected_cluster_ids:
+                            continue
+                        if article_emb is not None and new_cluster_emb is not None:
+                            similarity = cosine_similarity(article_emb, new_cluster_emb)
+                            if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD:
+                                for cluster in active_clusters[original_cluster_count:]:
+                                    if cluster['id'] == new_cluster_id:
+                                        matched_cluster = cluster
+                                        matched = True
+                                        best_similarity = similarity
+                                        break
+                                if matched:
+                                    break
+                
+                # If no embedding match, try AI matching (excluding rejected clusters)
+                if not matched:
+                    available_clusters = [c for c in active_clusters if c['id'] not in rejected_cluster_ids]
+                    if available_clusters:
+                        ai_result = ai_check_cluster_match(
+                            new_article_title=full_title,
+                            existing_clusters=available_clusters
+                        )
+                        if ai_result['action'] == 'add_to_cluster' and ai_result['cluster_id']:
+                            for c in active_clusters:
+                                if c['id'] == ai_result['cluster_id']:
+                                    matched_cluster = c
+                                    matched = True
+                                    break
+                
+                # No cluster found at all - break to create new
+                if not matched or not matched_cluster:
+                    break
+                
+                # Found a potential match - now VALIDATE before adding
                 sim_display = f" (similarity: {best_similarity:.3f})" if best_similarity > 0 else ""
-                print(f"\n   ✅ EMBEDDING MATCH [{i+1}/{len(articles)}]{sim_display}")
+                print(f"\n   🔍 VALIDATING CLUSTER MATCH [{i+1}/{len(articles)}]{sim_display}")
                 print(f"      📰 Article: {full_title}")
-                print(f"      📁 Adding to cluster: {matched_cluster['event_name']}")
+                print(f"      📁 Checking cluster: {matched_cluster['event_name']}")
                 
-                # Add directly to cluster - embedding match is reliable
-                if self.add_to_cluster(matched_cluster['id'], source_id):
-                    print(f"      ✅ Added to existing cluster: {matched_cluster['id']}")
-                with stats_lock:
-                    stats['matched_to_existing'] += 1
-                    if matched_cluster['id'] not in stats['cluster_ids']:
-                        stats['cluster_ids'].append(matched_cluster['id'])
-            else:
-                # NO EMBEDDING MATCH - Use AI to check if it belongs to any cluster
-                print(f"\n   🧠 AI CLUSTER CHECK [{i+1}/{len(articles)}]")
-                print(f"      📰 Article: {full_title}")
-                print(f"      No embedding match found - asking AI to verify...")
+                # Get existing sources in the cluster for validation
+                cluster_sources_for_validation = cluster_sources_cache.get(matched_cluster['id'], [])
                 
-                # AI checks all active clusters to see if article belongs somewhere
-                ai_result = ai_check_cluster_match(
+                # Validate the assignment
+                validation_result = validate_cluster_assignment(
                     new_article_title=full_title,
-                    existing_clusters=active_clusters
+                    cluster_sources=cluster_sources_for_validation,
+                    cluster_name=matched_cluster.get('event_name', '')
                 )
                 
-                if ai_result['action'] == 'add_to_cluster' and ai_result['cluster_id']:
-                    # AI found a matching cluster that embedding missed
-                    if self.add_to_cluster(ai_result['cluster_id'], source_id):
-                        # Find cluster name for logging
-                        cluster_name = "Unknown"
-                        for c in active_clusters:
-                            if c['id'] == ai_result['cluster_id']:
-                                cluster_name = c['event_name']
-                                break
-                        print(f"      ✅ AI added to cluster: {ai_result['cluster_id']} ({cluster_name})")
-                    with stats_lock:
-                        stats['matched_to_existing'] += 1
-                        if ai_result['cluster_id'] not in stats['cluster_ids']:
-                            stats['cluster_ids'].append(ai_result['cluster_id'])
-                    continue
-                
-                # AI says create new cluster (either major update or different topic)
-                # BEFORE creating, check if similar article is already PUBLISHED
-                skip_article = False
-                try:
-                    from difflib import SequenceMatcher
-                    import re
-                    
-                    cutoff_time = (datetime.utcnow() - timedelta(hours=24)).isoformat()
-                    recent_published = self.supabase.table('published_articles')\
-                        .select('id, title_news')\
-                        .gte('published_at', cutoff_time)\
-                        .execute()
-                    
-                    def clean_title(t):
-                        if not t:
-                            return ''
-                        t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
-                        t = re.sub(r'[^\w\s]', '', t.lower())
-                        return t.strip()
-                    
-                    clean_new_title = clean_title(full_title)
-                    
-                    for pub in (recent_published.data or []):
-                        pub_title = pub.get('title_news', '')
-                        clean_pub_title = clean_title(pub_title)
+                if validation_result['valid']:
+                    # VALID - Add to cluster
+                    if self.add_to_cluster(matched_cluster['id'], source_id):
+                        print(f"      ✅ VALIDATED & ADDED to cluster: {matched_cluster['id']}")
+                        successfully_added = True
+                        with stats_lock:
+                            stats['matched_to_existing'] += 1
+                            if matched_cluster['id'] not in stats['cluster_ids']:
+                                stats['cluster_ids'].append(matched_cluster['id'])
                         
-                        if clean_new_title and clean_pub_title:
-                            similarity = SequenceMatcher(None, clean_new_title, clean_pub_title).ratio()
-                            
-                            if similarity >= 0.65:  # 65% = likely same story
-                                print(f"      ⏭️ SKIPPING - Similar to published article (similarity: {similarity:.0%})")
-                                print(f"         Published (ID {pub['id']}): {pub_title[:60]}...")
-                                skip_article = True
-                                break
-                except Exception as e:
-                    print(f"      ⚠️ Published article check error: {e}")
-                
-                if skip_article:
-                    with stats_lock:
-                        stats['failed'] += 1
-                    continue
-                
-                # Create new cluster (AI decided it's a major update or different topic)
-                # Pass embedding for database caching
-                cluster_id = self.create_cluster(article, source_id, embedding=article_emb)
-                if cluster_id:
-                    event_name = self._generate_event_name(article.get('title', ''))
-                    if ai_result['action'] == 'new_cluster_major_update':
-                        print(f"      ✨ NEW CLUSTER (MAJOR UPDATE): {cluster_id}")
-                    else:
-                        print(f"      ✨ NEW CLUSTER (DIFFERENT TOPIC): {cluster_id}")
-                    print(f"         📁 Cluster name: {event_name}")
-                    with stats_lock:
-                        stats['new_clusters_created'] += 1
-                        stats['cluster_ids'].append(cluster_id)
-                    
-                    # Add to active clusters and caches for subsequent matching
-                    new_cluster = {
-                        'id': cluster_id,
-                        'event_name': event_name,
-                        'main_title': article.get('title', ''),
-                        'created_at': datetime.utcnow().isoformat(),
-                        'last_updated_at': datetime.utcnow().isoformat(),
-                        'source_count': 1,
-                        'importance_score': article.get('score', 0),
-                        'status': 'active'
-                    }
-                    active_clusters.append(new_cluster)
-                    cluster_sources_cache[cluster_id] = [{
-                        'title': article.get('title', ''),
-                        'score': article.get('score', 0)
-                    }]
-                    cluster_titles_cache.append((cluster_id, article.get('title', '')))
-                    cluster_embeddings[cluster_id] = article_emb  # Store embedding for new cluster
-                    
-                    # Track this new cluster for embedding matching with subsequent articles
-                    new_batch_clusters.append((cluster_id, article.get('title', ''), article_emb))
+                        # Update cache with new source
+                        if matched_cluster['id'] not in cluster_sources_cache:
+                            cluster_sources_cache[matched_cluster['id']] = []
+                        cluster_sources_cache[matched_cluster['id']].append({
+                            'title': full_title,
+                            'score': article.get('score', 0)
+                        })
                 else:
-                    print(f"\n   ❌ FAILED [{i+1}/{len(articles)}]")
-                    print(f"      📰 Article: {full_title}")
-                    print(f"      ⚠️  Could not create cluster")
-                    with stats_lock:
-                        stats['failed'] += 1
+                    # INVALID - Reject this cluster and try another
+                    rejected_cluster_ids.add(matched_cluster['id'])
+                    print(f"      ❌ REJECTED by cluster (attempt {len(rejected_cluster_ids)}/{MAX_REJECTION_ATTEMPTS})")
+                    print(f"         Reason: {validation_result['reason']}")
+                    print(f"         Trying to find another cluster...")
+            
+            # If we successfully added, continue to next article
+            if successfully_added:
+                continue
+            
+            # No valid cluster found (either no match or rejected 3+ times)
+            if rejected_cluster_ids:
+                print(f"\n   ⚠️ ARTICLE REJECTED BY {len(rejected_cluster_ids)} CLUSTERS [{i+1}/{len(articles)}]")
+                print(f"      📰 Article: {full_title}")
+                print(f"      Creating new cluster (no valid match found)")
+            else:
+                print(f"\n   🆕 NO MATCHING CLUSTER [{i+1}/{len(articles)}]")
+                print(f"      📰 Article: {full_title}")
+            
+            # Check if similar to published article before creating new cluster
+            skip_article = False
+            try:
+                from difflib import SequenceMatcher
+                import re
+                
+                cutoff_time = (datetime.utcnow() - timedelta(hours=24)).isoformat()
+                recent_published = self.supabase.table('published_articles')\
+                    .select('id, title_news')\
+                    .gte('published_at', cutoff_time)\
+                    .execute()
+                
+                def clean_title(t):
+                    if not t:
+                        return ''
+                    t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
+                    t = re.sub(r'[^\w\s]', '', t.lower())
+                    return t.strip()
+                
+                clean_new_title = clean_title(full_title)
+                
+                for pub in (recent_published.data or []):
+                    pub_title = pub.get('title_news', '')
+                    clean_pub_title = clean_title(pub_title)
+                    
+                    if clean_new_title and clean_pub_title:
+                        similarity = SequenceMatcher(None, clean_new_title, clean_pub_title).ratio()
+                        
+                        if similarity >= 0.65:  # 65% = likely same story
+                            print(f"      ⏭️ SKIPPING - Similar to published article (similarity: {similarity:.0%})")
+                            print(f"         Published (ID {pub['id']}): {pub_title[:60]}...")
+                            skip_article = True
+                            break
+            except Exception as e:
+                print(f"      ⚠️ Published article check error: {e}")
+            
+            if skip_article:
+                with stats_lock:
+                    stats['failed'] += 1
+                continue
+            
+            # Create new cluster (article was rejected by existing clusters or no match found)
+            cluster_id = self.create_cluster(article, source_id, embedding=article_emb)
+            if cluster_id:
+                event_name = self._generate_event_name(article.get('title', ''))
+                if rejected_cluster_ids:
+                    print(f"      ✨ NEW CLUSTER (REJECTED BY {len(rejected_cluster_ids)} CLUSTERS): {cluster_id}")
+                else:
+                    print(f"      ✨ NEW CLUSTER (NO MATCH FOUND): {cluster_id}")
+                print(f"         📁 Cluster name: {event_name}")
+                with stats_lock:
+                    stats['new_clusters_created'] += 1
+                    stats['cluster_ids'].append(cluster_id)
+                
+                # Add to active clusters and caches for subsequent matching
+                new_cluster = {
+                    'id': cluster_id,
+                    'event_name': event_name,
+                    'main_title': article.get('title', ''),
+                    'created_at': datetime.utcnow().isoformat(),
+                    'last_updated_at': datetime.utcnow().isoformat(),
+                    'source_count': 1,
+                    'importance_score': article.get('score', 0),
+                    'status': 'active'
+                }
+                active_clusters.append(new_cluster)
+                cluster_sources_cache[cluster_id] = [{
+                    'title': article.get('title', ''),
+                    'score': article.get('score', 0)
+                }]
+                cluster_titles_cache.append((cluster_id, article.get('title', '')))
+                cluster_embeddings[cluster_id] = article_emb  # Store embedding for new cluster
+                
+                # Track this new cluster for embedding matching with subsequent articles
+                new_batch_clusters.append((cluster_id, article.get('title', ''), article_emb))
+            else:
+                print(f"\n   ❌ FAILED [{i+1}/{len(articles)}]")
+                print(f"      📰 Article: {full_title}")
+                print(f"      ⚠️  Could not create cluster")
+                with stats_lock:
+                    stats['failed'] += 1
         
         # Print summary
         print(f"\n{'='*60}")
