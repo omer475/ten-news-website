@@ -913,23 +913,43 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .event-card {
+          --c-glass: #f5f5f7;
+          --c-light: #ffffff;
+          --c-dark: #000000;
+          --saturation: 1.8;
+          --glass-reflex-light: 100%;
+          --glass-reflex-dark: 100%;
+          
           flex-shrink: 0;
-          width: 280px;
-          height: 130px;
-          border-radius: 16px;
+          width: 160px;
+          height: 180px;
+          border-radius: 20px;
           cursor: pointer;
-          transition: transform 0.15s ease;
+          transition: all 0.2s ease;
           position: relative;
           overflow: hidden;
           scroll-snap-align: start;
+          
+          /* Liquid Glass Effect */
+          background-color: color-mix(in srgb, var(--c-glass) 65%, transparent);
+          backdrop-filter: blur(12px) saturate(var(--saturation));
+          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
+          box-shadow: 
+            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
+            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
+            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
+            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
+            0px 0.3px 0.3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
+            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
+            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
         }
 
         .event-card:active {
-          transform: scale(0.98);
+          transform: scale(0.97);
         }
 
         .event-skeleton {
-          background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+          background: linear-gradient(135deg, rgba(245,245,247,0.8) 0%, rgba(255,255,255,0.9) 50%, rgba(245,245,247,0.8) 100%);
           cursor: default;
         }
 
@@ -942,7 +962,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0.6) 50%,
             transparent 100%
           );
           animation: shimmer 1.5s infinite;
@@ -955,33 +975,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-image {
           position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
+          top: 12px;
+          left: 12px;
+          width: calc(100% - 24px);
+          height: 90px;
           object-fit: cover;
+          border-radius: 12px;
+          background: #fff;
         }
 
         .event-blur {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 55%;
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          mask-image: linear-gradient(to bottom, 
-            rgba(0,0,0,0) 0%, 
-            rgba(0,0,0,0.3) 30%, 
-            rgba(0,0,0,0.7) 60%, 
-            rgba(0,0,0,1) 100%
-          );
-          -webkit-mask-image: linear-gradient(to bottom, 
-            rgba(0,0,0,0) 0%, 
-            rgba(0,0,0,0.3) 30%, 
-            rgba(0,0,0,0.7) 60%, 
-            rgba(0,0,0,1) 100%
-          );
+          display: none;
         }
 
         .event-overlay {
@@ -989,28 +993,31 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           bottom: 0;
           left: 0;
           right: 0;
-          top: 0;
-          padding: 10px;
+          padding: 12px;
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 6px;
+          gap: 8px;
         }
 
         .event-name {
-          font-size: 13px;
-          font-weight: 700;
-          color: #ffffff;
-          line-height: 1.15;
-          text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          font-size: 12px;
+          font-weight: 600;
+          color: #1d1d1f;
+          line-height: 1.25;
+          letter-spacing: -0.2px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .event-badge {
-          min-width: 18px;
-          height: 18px;
-          padding: 0 5px;
-          background: #FF3B30;
-          border-radius: 9px;
+          min-width: 20px;
+          height: 20px;
+          padding: 0 6px;
+          background: linear-gradient(135deg, #FF3B30 0%, #FF6B5B 100%);
+          border-radius: 10px;
           font-size: 11px;
           font-weight: 600;
           color: #fff;
@@ -1018,6 +1025,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
         }
 
 
@@ -1109,15 +1117,22 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             gap: 12px;
           }
           .event-card {
-            width: 240px;
-            height: 110px;
-            border-radius: 14px;
+            width: 145px;
+            height: 165px;
+            border-radius: 18px;
+          }
+          .event-image {
+            top: 10px;
+            left: 10px;
+            width: calc(100% - 20px);
+            height: 80px;
+            border-radius: 10px;
           }
           .event-overlay {
-            padding: 8px;
+            padding: 10px;
           }
           .event-name {
-            font-size: 12px;
+            font-size: 11px;
           }
           .event-badge {
             min-width: 16px;
@@ -1152,15 +1167,27 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             font-size: 26px;
           }
           .event-card {
-            width: 220px;
-            height: 100px;
-            border-radius: 12px;
+            width: 130px;
+            height: 155px;
+            border-radius: 16px;
+          }
+          .event-image {
+            top: 8px;
+            left: 8px;
+            width: calc(100% - 16px);
+            height: 75px;
+            border-radius: 8px;
           }
           .event-overlay {
             padding: 8px;
           }
           .event-name {
-            font-size: 12px;
+            font-size: 10px;
+          }
+          .event-badge {
+            min-width: 18px;
+            height: 18px;
+            font-size: 10px;
           }
           .event-badge {
             min-width: 14px;
@@ -1228,21 +1255,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                             onLoad={(e) => extractColorFromImage(e.target, event.id)}
                           />
                         )}
-                        <div 
-                          className="event-blur" 
-                          style={{ background: blurColor }}
-                        />
-                        <div 
-                          className="event-overlay"
-                          style={{ 
-                            background: `linear-gradient(to bottom, 
-                              ${blurColor}00 0%,
-                              ${blurColor}40 30%,
-                              ${blurColor}90 60%,
-                              ${blurColor}dd 80%,
-                              ${blurColor}ff 100%)`
-                          }}
-                        >
+                        <div className="event-overlay">
                           <span className="event-name">{event.name}</span>
                           {event.newUpdates > 0 && (
                             <span className="event-badge">{event.newUpdates}</span>
