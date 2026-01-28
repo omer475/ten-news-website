@@ -1,36 +1,28 @@
-/**
- * DEPRECATED: This endpoint is disabled.
- * Use /api/email/send-daily-digest-v2 instead.
- * 
- * This endpoint was causing duplicate emails because it wasn't
- * properly using the Supabase timezone function.
- */
-
-export default async function handler(req, res) {
-  console.log('⚠️ OLD send-daily-digest endpoint called - redirecting to v2');
-  
-  // Return error - this endpoint is disabled
-  return res.status(410).json({ 
-    error: 'This endpoint is deprecated',
-    message: 'Use /api/email/send-daily-digest-v2 instead',
-    redirectTo: '/api/email/send-daily-digest-v2'
-  });
-}
-
-/*
-DISABLED OLD CODE BELOW - DO NOT USE
-=======================================
-
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
-const resend_DISABLED = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const supabase_DISABLED = createClient(
+// Initialize Supabase with service role for admin operations
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+/**
+ * Daily Digest Email Sender
+ * 
+ * This endpoint sends personalized daily news digests to users.
+ * It's designed to be called by a cron job every hour.
+ * 
+ * Features:
+ * - Time-optimized sending (sends at 10 AM in each user's timezone)
+ * - Personalized content based on user interests
+ * - Engagement tracking
+ * - Batch processing to handle large subscriber lists
+ */
+
+// Target hour for sending emails (10 AM in user's timezone)
 const TARGET_HOUR = 10;
 
 /**
