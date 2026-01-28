@@ -10,12 +10,7 @@
     "enabled": true,
     "autoAlias": true
   },
-  "crons": [
-    {
-      "path": "/api/cron/send-emails",
-      "schedule": "0 * * * *"
-    }
-  ],
+  "crons": [],
   "functions": {
     "pages/api/**/*.js": {
       "maxDuration": 60
