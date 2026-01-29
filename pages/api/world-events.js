@@ -29,7 +29,8 @@ export default async function handler(req, res) {
         importance,
         status,
         last_article_at,
-        created_at
+        created_at,
+        background
       `)
       .eq('status', 'ongoing')
       .order('last_article_at', { ascending: false })

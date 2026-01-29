@@ -26,6 +26,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   const mapContainerRef = useRef(null);
   const eventsScrollRef = useRef(null);
+  const eventsAutoScrollRef = useRef(true);
+  const eventsScrollAnimationRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState(() => {
     // Check if scripts are already loaded on mount
@@ -457,6 +459,88 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     fetchWorldEvents();
   }, []);
 
+  // Auto-scroll events - snap to each card, stay 4 seconds, then smooth scroll to next
+  useEffect(() => {
+    const el = eventsScrollRef.current;
+    if (!el || worldEvents.length === 0) return;
+
+    let currentIndex = 0;
+    const cardCount = worldEvents.length;
+    
+    const scrollToCard = (index) => {
+      if (!eventsAutoScrollRef.current || !el) return;
+      
+      // Calculate card width including gap
+      const cardWidth = el.firstElementChild?.offsetWidth || 300;
+      const gap = 16; // matches CSS gap
+      const scrollPosition = index * (cardWidth + gap);
+      
+      // Smooth scroll to the target position
+      el.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+    };
+
+    const advanceToNext = () => {
+      if (!eventsAutoScrollRef.current) return;
+      
+      currentIndex++;
+      
+      // When reaching the duplicated set, reset to start seamlessly
+      if (currentIndex >= cardCount) {
+        // Jump instantly to start (same visual position due to duplication)
+        el.scrollLeft = 0;
+        currentIndex = 0;
+        // Then scroll to first card after a tiny delay
+        setTimeout(() => {
+          if (eventsAutoScrollRef.current) {
+            scrollToCard(1);
+            currentIndex = 1;
+          }
+        }, 50);
+      } else {
+        scrollToCard(currentIndex);
+      }
+    };
+
+    // Start auto-scroll after initial delay
+    const initialTimeout = setTimeout(() => {
+      // Set up interval to advance every 4 seconds
+      eventsScrollAnimationRef.current = setInterval(advanceToNext, 4000);
+    }, 2000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      if (eventsScrollAnimationRef.current) {
+        clearInterval(eventsScrollAnimationRef.current);
+      }
+    };
+  }, [worldEvents]);
+
+  // Handle infinite scroll loop for manual scrolling
+  const handleEventsScroll = useCallback(() => {
+    const el = eventsScrollRef.current;
+    if (!el || worldEvents.length === 0) return;
+    
+    const halfWidth = el.scrollWidth / 2;
+    
+    // When scrolling past halfway, jump back seamlessly
+    if (el.scrollLeft >= halfWidth) {
+      el.scrollLeft = el.scrollLeft - halfWidth;
+    } else if (el.scrollLeft <= 0) {
+      el.scrollLeft = halfWidth + el.scrollLeft;
+    }
+  }, [worldEvents]);
+
+  // Stop auto-scroll when user interacts
+  const stopAutoScroll = useCallback(() => {
+    eventsAutoScrollRef.current = false;
+    if (eventsScrollAnimationRef.current) {
+      clearInterval(eventsScrollAnimationRef.current);
+      eventsScrollAnimationRef.current = null;
+    }
+  }, []);
 
   // Fetch country counts from API
   const fetchCountryCounts = useCallback(async () => {
@@ -694,6 +778,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   });
 
   const handleMouseDown = (e) => {
+    stopAutoScroll();
     const el = eventsScrollRef.current;
     if (!el) return;
     
@@ -766,6 +851,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   // Smooth wheel scrolling
   const handleEventsWheel = useCallback((e) => {
+    stopAutoScroll();
     const el = eventsScrollRef.current;
     if (!el) return;
     
@@ -774,7 +860,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       left: e.deltaY * 2,
       behavior: 'smooth'
     });
-  }, []);
+  }, [stopAutoScroll]);
 
   return (
     <>
@@ -810,7 +896,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-start;
+          justify-content: center;
           padding: 0 24px;
           position: relative;
           z-index: 1;
@@ -819,9 +905,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .greeting-section {
-          text-align: center;
+          text-align: left;
           animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-          padding-top: 100px;
+          padding-top: 0;
           opacity: 0;
           z-index: 2;
           width: 100%;
@@ -851,7 +937,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           color: #1d1d1f;
           line-height: 1.2;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-          text-align: center;
+          text-align: left;
           margin-bottom: 24px;
         }
 
@@ -859,111 +945,94 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-weight: 700;
         }
 
+        .greeting-subtitle {
+          color: #86868b;
+          font-weight: 500;
+        }
+
         /* Ongoing Events Section */
         .events-section {
           width: 100vw;
           margin-left: -24px;
           margin-top: 32px;
-          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
+          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s forwards;
           opacity: 0;
           position: relative;
           z-index: 10;
-          touch-action: pan-x pan-y;
         }
 
         .events-header {
-          font-size: 11px;
+          font-size: 13px;
           font-weight: 600;
-          color: #999;
+          color: #86868b;
           text-transform: uppercase;
-          letter-spacing: 0.8px;
-          margin-bottom: 8px;
-          padding-left: 20px;
+          letter-spacing: 0.5px;
+          margin-bottom: 12px;
+          padding-left: 24px;
           text-align: left;
         }
 
         .events-scroll {
           display: flex;
-          gap: 14px;
-          overflow-x: scroll;
-          overflow-y: hidden;
-          padding: 8px 20px 16px 20px;
+          gap: 16px;
+          overflow-x: auto;
+          padding: 4px 24px 20px 24px;
           scrollbar-width: none;
           -ms-overflow-style: none;
           -webkit-overflow-scrolling: touch;
-          overscroll-behavior-x: contain;
-          cursor: grab;
-          user-select: none;
-          scroll-behavior: smooth;
-        }
-        
-        .events-scroll:active {
-          cursor: grabbing;
-          scroll-behavior: auto;
+          scroll-snap-type: x mandatory;
+          touch-action: pan-x;
         }
 
         .events-scroll::-webkit-scrollbar {
           display: none;
         }
 
-        .events-scroll::after {
-          content: '';
-          flex-shrink: 0;
-          width: 12px;
-        }
-
         .event-card {
-          --c-glass: #f5f5f7;
-          --c-light: #ffffff;
-          --c-dark: #000000;
-          --saturation: 1.8;
-          --glass-reflex-light: 100%;
-          --glass-reflex-dark: 100%;
-          
           flex-shrink: 0;
-          width: 160px;
-          height: 180px;
-          border-radius: 20px;
+          width: calc(100vw - 60px);
           cursor: pointer;
           transition: all 0.2s ease;
-          position: relative;
-          overflow: hidden;
-          scroll-snap-align: start;
-          
-          /* Liquid Glass Effect */
-          background-color: color-mix(in srgb, var(--c-glass) 65%, transparent);
-          backdrop-filter: blur(12px) saturate(var(--saturation));
-          -webkit-backdrop-filter: blur(12px) saturate(var(--saturation));
-          box-shadow: 
-            inset 0 0 0 0.5px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 10%), transparent),
-            inset 0.9px 1.5px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 90%), transparent), 
-            inset -1px -1px 0px -1px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 80%), transparent), 
-            inset -1.5px -4px 0.5px -3px color-mix(in srgb, var(--c-light) calc(var(--glass-reflex-light) * 60%), transparent), 
-            0px 0.3px 0.3px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent), 
-            0px 0.5px 2.5px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent), 
-            0px 3px 8px 0px color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+          scroll-snap-align: center;
         }
 
         .event-card:active {
-          transform: scale(0.97);
+          transform: scale(0.98);
+        }
+
+        .event-image-wrapper {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
         }
 
         .event-skeleton {
-          background: linear-gradient(135deg, rgba(245,245,247,0.8) 0%, rgba(255,255,255,0.9) 50%, rgba(245,245,247,0.8) 100%);
+          flex-shrink: 0;
+          width: calc(100vw - 60px);
+          aspect-ratio: 1 / 1;
+          border-radius: 24px;
+          background: #e8e8e8;
           cursor: default;
+          scroll-snap-align: center;
+        }
+
+        .event-skeleton .skeleton-shimmer {
+          width: 100%;
+          height: 100%;
+          border-radius: 24px;
         }
 
         .skeleton-shimmer {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
+          width: 100%;
+          height: 100%;
           background: linear-gradient(
             90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.6) 50%,
-            transparent 100%
+            #e8e8e8 0%,
+            #f5f5f5 50%,
+            #e8e8e8 100%
           );
           animation: shimmer 1.5s infinite;
         }
@@ -975,90 +1044,173 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-image {
           position: absolute;
-          top: 12px;
-          left: 12px;
-          width: calc(100% - 24px);
-          height: 90px;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 150%;
           object-fit: cover;
-          border-radius: 12px;
-          background: #fff;
+          object-position: top center;
+          opacity: 0.5;
         }
 
         .event-blur {
           display: none;
         }
 
+        /* Liquid glass overlay - gradient blur from top to bottom */
         .event-overlay {
           position: absolute;
           bottom: 0;
           left: 0;
           right: 0;
-          padding: 12px;
+          top: 35%;
           display: flex;
           align-items: flex-end;
-          justify-content: space-between;
+          justify-content: center;
+          padding: 20px;
+          border-radius: 0 0 24px 24px;
+          overflow: hidden;
+        }
+
+        /* Background gradient layer */
+        .event-overlay::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.2) 20%,
+            rgba(255, 255, 255, 0.5) 45%,
+            rgba(255, 255, 255, 0.8) 70%,
+            rgba(255, 255, 255, 1) 100%
+          );
+          z-index: 0;
+        }
+
+        /* Blur layer with gradient mask */
+        .event-overlay::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          -webkit-mask: linear-gradient(to bottom, transparent 0%, black 50%);
+          mask: linear-gradient(to bottom, transparent 0%, black 50%);
+          z-index: 1;
+        }
+
+        .event-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           gap: 8px;
+          width: 100%;
+          position: relative;
+          z-index: 2;
         }
 
         .event-name {
-          font-size: 12px;
-          font-weight: 600;
-          color: #1d1d1f;
-          line-height: 1.25;
-          letter-spacing: -0.2px;
+          font-size: 24px;
+          font-weight: 700;
+          color: #000;
+          line-height: 1.2;
+          letter-spacing: -0.5px;
+          text-align: center;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
 
-        .event-badge {
-          min-width: 20px;
-          height: 20px;
-          padding: 0 6px;
-          background: linear-gradient(135deg, #FF3B30 0%, #FF6B5B 100%);
-          border-radius: 10px;
+        .event-tagline {
+          font-size: 13px;
+          font-weight: 400;
+          color: #333;
+          line-height: 1.4;
+          text-align: center;
+          margin: 0;
+          max-width: 95%;
+        }
+
+        .event-meta {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
           font-size: 11px;
           font-weight: 600;
-          color: #fff;
+          color: #555;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          margin-top: 4px;
+        }
+
+        .event-updates {
           display: flex;
           align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+          gap: 5px;
         }
 
+        .update-dot {
+          width: 6px;
+          height: 6px;
+          background: #ff3b30;
+          border-radius: 50%;
+          animation: pulse 1.5s ease-in-out infinite;
+        }
 
-        .globe-section {
-          flex: 1;
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .event-read-time {
           display: flex;
           align-items: center;
-          justify-content: center;
-          min-height: 0;
-          position: relative;
-          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
-          opacity: 0;
-          width: 100%;
+          gap: 4px;
         }
 
-        .globe-container {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          max-width: 300px;
-          max-height: 300px;
+        .event-read-time::before {
+          content: '•';
+          opacity: 0.5;
+        }
+
+        .event-time {
           display: flex;
           align-items: center;
-          justify-content: center;
-          touch-action: none;
+          gap: 4px;
         }
 
-        .globe-container :global(svg) {
-          width: 100%;
-          height: 100%;
-          display: block;
-          pointer-events: none;
+        .event-time::before {
+          content: '•';
+          opacity: 0.5;
         }
+
+        .event-new-badge {
+          background: #ff3b30;
+          color: white;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 3px 6px;
+          border-radius: 4px;
+          letter-spacing: 0.5px;
+        }
+
+        .event-badge {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          min-width: 8px;
+          height: 8px;
+          padding: 0;
+          background: #FF3B30;
+          border-radius: 50%;
+          font-size: 0;
+          box-shadow: 0 1px 3px rgba(255,59,48,0.4);
+        }
+
+
 
 
         @keyframes subtleBounce {
@@ -1071,20 +1223,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .swipe-hint {
-          position: absolute;
-          bottom: 25px;
-          left: 0;
-          right: 0;
-          width: 100%;
+          text-align: center;
           font-size: 15px;
           font-weight: 500;
           letter-spacing: -0.01em;
           color: #86868b;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          text-align: center;
+          margin-top: 24px;
+          padding: 0 20px 40px 20px;
           animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2s ease-in-out 1.6s infinite;
           opacity: 0;
-          padding: 0 20px;
         }
 
         @media (max-width: 480px) {
@@ -1092,7 +1240,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding: 0;
           }
           .greeting-section {
-            padding-top: 85px;
+            padding-top: 0;
             padding-left: 16px;
             padding-right: 16px;
             width: 100%;
@@ -1100,61 +1248,55 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           }
           .greeting-hi {
             font-size: 28px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
           }
           .events-section {
             margin-top: 24px;
             margin-left: -16px;
-            width: 100vw;
           }
           .events-header {
-            font-size: 10px;
-            margin-bottom: 6px;
+            font-size: 12px;
             padding-left: 16px;
+            margin-bottom: 10px;
           }
           .events-scroll {
-            padding: 4px 16px 12px 16px;
-            gap: 12px;
+            gap: 8px;
+            padding: 4px 16px 8px 16px;
           }
           .event-card {
-            width: 145px;
-            height: 165px;
-            border-radius: 18px;
+            width: calc(100vw - 48px);
           }
-          .event-image {
-            top: 10px;
-            left: 10px;
-            width: calc(100% - 20px);
-            height: 80px;
-            border-radius: 10px;
+          .event-image-wrapper {
+            border-radius: 20px;
           }
           .event-overlay {
-            padding: 10px;
+            padding: 16px;
+            border-radius: 0 0 20px 20px;
+          }
+          .event-overlay::before,
+          .event-overlay::after {
+            border-radius: 0 0 20px 20px;
           }
           .event-name {
-            font-size: 11px;
+            font-size: 22px;
           }
-          .event-badge {
-            min-width: 16px;
-            height: 16px;
+          .event-tagline {
+            font-size: 12px;
+          }
+          .event-meta {
             font-size: 10px;
-            padding: 0 4px;
+            gap: 10px;
           }
-          .globe-section {
-            overflow: hidden;
-            width: 100vw;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+          .event-skeleton {
+            width: calc(100vw - 48px);
+            border-radius: 20px;
           }
-          .globe-container {
-            max-width: none;
-            max-height: none;
-            width: 120vw;
-            height: 120vw;
-            margin-top: 0;
-            touch-action: none;
+          .event-skeleton .skeleton-shimmer {
+            border-radius: 20px;
+          }
+          .events-scroll {
+            padding: 4px 16px 16px 16px;
+            gap: 12px;
           }
           .swipe-hint {
             bottom: 15px;
@@ -1166,28 +1308,55 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .greeting-hi {
             font-size: 26px;
           }
-          .event-card {
-            width: 130px;
-            height: 155px;
-            border-radius: 16px;
+          .events-section {
+            margin-top: 20px;
           }
-          .event-image {
-            top: 8px;
-            left: 8px;
-            width: calc(100% - 16px);
-            height: 75px;
-            border-radius: 8px;
+          .events-header {
+            font-size: 11px;
+            margin-bottom: 8px;
+          }
+          .events-scroll {
+            gap: 6px;
+          }
+          .event-card {
+            width: calc(100vw - 40px);
+          }
+          .event-image-wrapper {
+            border-radius: 18px;
           }
           .event-overlay {
-            padding: 8px;
+            padding: 14px;
+            border-radius: 0 0 18px 18px;
+          }
+          .event-overlay::before,
+          .event-overlay::after {
+            border-radius: 0 0 18px 18px;
           }
           .event-name {
-            font-size: 10px;
+            font-size: 20px;
+          }
+          .event-tagline {
+            font-size: 11px;
+          }
+          .event-meta {
+            font-size: 9px;
+            gap: 8px;
+          }
+          .event-content {
+            gap: 6px;
+          }
+          .event-skeleton {
+            width: calc(100vw - 40px);
+            border-radius: 18px;
+          }
+          .event-skeleton .skeleton-shimmer {
+            border-radius: 18px;
           }
           .event-badge {
-            min-width: 18px;
-            height: 18px;
-            font-size: 10px;
+            min-width: 16px;
+            height: 16px;
+            font-size: 9px;
+            border-radius: 8px;
           }
           .event-badge {
             min-width: 14px;
@@ -1204,7 +1373,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         <div className="content-wrapper">
           <div className="greeting-section">
             <span className="greeting-hi">
-              {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}
+              {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}, <span className="greeting-subtitle">{personalGreeting.subHighlight} {personalGreeting.subRest}</span>
             </span>
           </div>
             
@@ -1223,6 +1392,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 onWheel={handleEventsWheel}
+                onTouchStart={stopAutoScroll}
+                onScroll={handleEventsScroll}
               >
                 {eventsLoading && worldEvents.length === 0 ? (
                   // Show skeleton placeholders while loading
@@ -1234,32 +1405,70 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                     ))}
                   </>
                 ) : (
-                  // Show actual events
-                  worldEvents.map((event) => {
-                    const blurColor = eventColors[event.id] || event.blur_color || '#1a365d';
+                  // Show actual events (duplicated for infinite scroll)
+                  [...worldEvents, ...worldEvents].map((event, index) => {
                     return (
                       <div 
-                        key={event.id} 
+                        key={`${event.id}-${index}`} 
                         className="event-card"
                         onClick={(e) => {
                           e.stopPropagation();
                           router.push(`/event/${event.slug || event.id}`);
                         }}
                       >
-                        {event.image_url && (
-                          <img 
-                            className="event-image" 
-                            src={event.image_url} 
-                            alt={event.name}
-                            crossOrigin="anonymous"
-                            onLoad={(e) => extractColorFromImage(e.target, event.id)}
-                          />
-                        )}
-                        <div className="event-overlay">
-                          <span className="event-name">{event.name}</span>
-                          {event.newUpdates > 0 && (
-                            <span className="event-badge">{event.newUpdates}</span>
+                        <div className="event-image-wrapper">
+                          {event.image_url && (
+                            <img 
+                              className="event-image" 
+                              src={event.image_url} 
+                              alt={event.name}
+                              crossOrigin="anonymous"
+                            />
                           )}
+                          <div className="event-overlay">
+                            <div className="event-content">
+                              <span className="event-name">{event.name}</span>
+                              {event.background && (
+                                <p className="event-tagline">
+                                  {event.background.split('.')[0].slice(0, 60)}{event.background.split('.')[0].length > 60 ? '...' : ''}
+                                </p>
+                              )}
+                              <div className="event-meta">
+                                {(() => {
+                                  // Check for new articles since last visit to this event
+                                  const lastVisitKey = `tennews_event_visit_${event.id}`;
+                                  const lastVisit = typeof window !== 'undefined' ? localStorage.getItem(lastVisitKey) : null;
+                                  const hasNewSinceVisit = lastVisit && event.last_article_at && 
+                                    new Date(event.last_article_at) > new Date(parseInt(lastVisit));
+                                  
+                                  return hasNewSinceVisit ? (
+                                    <span className="event-new-badge">NEW</span>
+                                  ) : null;
+                                })()}
+                                {event.newUpdates > 0 && (
+                                  <span className="event-updates">
+                                    <span className="update-dot"></span>
+                                    {event.newUpdates} update{event.newUpdates !== 1 ? 's' : ''}
+                                  </span>
+                                )}
+                                <span className="event-read-time">
+                                  {Math.max(1, Math.ceil((event.newUpdates || 1) * 1.5))} min read
+                                </span>
+                                {event.last_article_at && (
+                                  <span className="event-time">
+                                    {(() => {
+                                      const diff = Date.now() - new Date(event.last_article_at).getTime();
+                                      const hours = Math.floor(diff / (1000 * 60 * 60));
+                                      const days = Math.floor(hours / 24);
+                                      if (days > 0) return `${days}d ago`;
+                                      if (hours > 0) return `${hours}h ago`;
+                                      return 'Just now';
+                                    })()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1269,10 +1478,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             </div>
           )}
 
-          <div className="globe-section">
-            <div className="globe-container" ref={mapContainerRef}></div>
-            <div className="swipe-hint">{swipeHint}</div>
-          </div>
+          <div className="swipe-hint">{swipeHint}</div>
         </div>
       </div>
     </>

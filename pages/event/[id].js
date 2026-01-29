@@ -169,6 +169,7 @@ export default function EventPage() {
             
             setEvent({
               id: apiEvent.slug || apiEvent.id,
+              dbId: apiEvent.id, // Store the actual database UUID for visit tracking
               name: apiEvent.name,
               status: apiEvent.status === 'ongoing' ? 'Active' : 'Resolved',
               oneLiner: apiEvent.topic_prompt || '',
@@ -206,6 +207,13 @@ export default function EventPage() {
 
     fetchEvent();
   }, [id]);
+
+  // Save visit timestamp when event page is viewed (for "NEW" badge on first page)
+  useEffect(() => {
+    if (event && event.dbId) {
+      localStorage.setItem(`tennews_event_visit_${event.dbId}`, Date.now().toString());
+    }
+  }, [event]);
 
   // Handle image load and extract dominant color
   const handleImageLoad = async (e) => {
