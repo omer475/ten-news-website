@@ -862,6 +862,53 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
+  // Touch event handlers for mobile
+  const handleTouchStart = (e) => {
+    stopAutoScroll();
+    const touch = e.touches[0];
+    dragState.current.isDown = true;
+    dragState.current.startX = touch.pageX;
+    dragState.current.startY = touch.pageY;
+    dragState.current.lastX = touch.pageX;
+    dragState.current.lastTime = Date.now();
+    dragState.current.velX = 0;
+    dragState.current.hasMoved = false;
+    
+    const el = eventsScrollRef.current;
+    if (el) {
+      dragState.current.scrollLeft = el.scrollLeft;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!dragState.current.isDown) return;
+    
+    const touch = e.touches[0];
+    const x = touch.pageX;
+    const y = touch.pageY;
+    const now = Date.now();
+    const dt = now - dragState.current.lastTime;
+    
+    // Check if user has moved more than threshold (10px horizontally)
+    const moveDistanceX = Math.abs(x - dragState.current.startX);
+    const moveDistanceY = Math.abs(y - dragState.current.startY);
+    
+    if (moveDistanceX > 10) {
+      dragState.current.hasMoved = true;
+    }
+    
+    if (dt > 0) {
+      dragState.current.velX = (x - dragState.current.lastX) / dt;
+    }
+    
+    dragState.current.lastX = x;
+    dragState.current.lastTime = now;
+  };
+
+  const handleTouchEnd = () => {
+    dragState.current.isDown = false;
+  };
+
   // Smooth wheel scrolling
   const handleEventsWheel = useCallback((e) => {
     stopAutoScroll();
@@ -1409,7 +1456,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 onWheel={handleEventsWheel}
-                onTouchStart={stopAutoScroll}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
                 onScroll={handleEventsScroll}
               >
                 {eventsLoading && worldEvents.length === 0 ? (
@@ -1436,6 +1485,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                             return;
                           }
                           // Allow normal link behavior for navigation
+                        }}
+                        onTouchEnd={(e) => {
+                          // On mobile, if user didn't swipe, navigate
+                          if (!dragState.current.hasMoved) {
+                            // Small delay to ensure touch state is finalized
+                            setTimeout(() => {
+                              if (!dragState.current.hasMoved) {
+                                router.push(`/event/${event.slug || event.id}`);
+                              }
+                            }, 50);
+                          }
                         }}
                       >
                         <div className="event-image-wrapper">
