@@ -774,7 +774,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     velX: 0,
     lastX: 0,
     lastTime: 0,
-    momentumId: null
+    momentumId: null,
+    hasMoved: false,  // Track if user actually dragged
+    startY: 0
   });
 
   const handleMouseDown = (e) => {
@@ -789,16 +791,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     
     dragState.current.isDown = true;
     dragState.current.startX = e.pageX;
+    dragState.current.startY = e.pageY;
     dragState.current.scrollLeft = el.scrollLeft;
     dragState.current.lastX = e.pageX;
     dragState.current.lastTime = Date.now();
     dragState.current.velX = 0;
+    dragState.current.hasMoved = false;  // Reset hasMoved
     el.style.cursor = 'grabbing';
   };
 
   const handleMouseMove = (e) => {
     if (!dragState.current.isDown) return;
-    e.preventDefault();
     
     const el = eventsScrollRef.current;
     if (!el) return;
@@ -806,6 +809,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const x = e.pageX;
     const now = Date.now();
     const dt = now - dragState.current.lastTime;
+    
+    // Check if user has moved more than threshold (10px)
+    const moveDistance = Math.abs(x - dragState.current.startX);
+    if (moveDistance > 10) {
+      dragState.current.hasMoved = true;
+      e.preventDefault();
+    }
     
     if (dt > 0) {
       dragState.current.velX = (x - dragState.current.lastX) / dt;
@@ -825,6 +835,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     const el = eventsScrollRef.current;
     if (!el) return;
     el.style.cursor = 'grab';
+    
+    // Only apply momentum if user actually dragged
+    if (!dragState.current.hasMoved) return;
     
     // Apply momentum
     let velocity = dragState.current.velX * 150;
@@ -1417,9 +1430,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                         href={`/event/${event.slug || event.id}`}
                         className="event-card"
                         onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          router.push(`/event/${event.slug || event.id}`);
+                          // Don't navigate if user was dragging
+                          if (dragState.current.hasMoved) {
+                            e.preventDefault();
+                            return;
+                          }
+                          // Allow normal link behavior for navigation
                         }}
                       >
                         <div className="event-image-wrapper">
