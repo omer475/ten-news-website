@@ -290,10 +290,11 @@ export default function EventPage() {
           height: auto !important;
           min-height: 100% !important;
           overflow-x: hidden !important;
-          overflow-y: visible !important;
+          overflow-y: auto !important;
           position: relative !important;
           -webkit-overflow-scrolling: touch;
           overscroll-behavior-y: auto;
+          touch-action: pan-y !important;
         }
 
         #__next {
@@ -318,6 +319,8 @@ export default function EventPage() {
           background: #fff;
           overflow: visible;
           position: relative;
+          touch-action: pan-y;
+          -webkit-overflow-scrolling: touch;
         }
 
         /* Back button - floating on image */
