@@ -994,6 +994,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           cursor: pointer;
           transition: all 0.2s ease;
           scroll-snap-align: center;
+          text-decoration: none;
+          display: block;
+          color: inherit;
+          -webkit-tap-highlight-color: transparent;
         }
 
         .event-card:active {
@@ -1408,10 +1412,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                   // Show actual events (duplicated for infinite scroll)
                   [...worldEvents, ...worldEvents].map((event, index) => {
                     return (
-                      <div 
+                      <a 
                         key={`${event.id}-${index}`} 
+                        href={`/event/${event.slug || event.id}`}
                         className="event-card"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           router.push(`/event/${event.slug || event.id}`);
                         }}
@@ -1470,7 +1476,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </a>
                     );
                   })
                 )}

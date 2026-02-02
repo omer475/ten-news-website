@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import NewFirstPage from '../components/NewFirstPage';
+import TodayPlusLoader from '../components/TodayPlusLoader';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
 import { sortArticlesByScore } from '../utils/sortArticles';
@@ -21,11 +22,6 @@ const GraphChart = dynamic(() => import('../components/GraphChart'), {
   loading: () => <div style={{ padding: '10px' }}>Loading chart...</div>
   });
 
-// Dynamically import StreakPage to avoid SSR issues
-const StreakPage = dynamic(() => import('../components/StreakPage'), {
-    ssr: false,
-  loading: () => null
-  });
 
 // Dynamically import MapboxMap to avoid SSR issues
 const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
@@ -113,15 +109,8 @@ export default function Home() {
   // Safe area color state - for dynamic notch/home indicator colors
   const [safeAreaColor, setSafeAreaColor] = useState('#ffffff');
 
-  // Streak feature state
-  const [viewedImportantArticles, setViewedImportantArticles] = useState(new Set());
-  const [streakData, setStreakData] = useState({ count: 0, lastDate: null });
-  const [streakPageInserted, setStreakPageInserted] = useState(false);
-
-  // Calculate paywall threshold - 2 articles after the streak page
-  // If no streak page exists yet, use a high number (no paywall until streak page appears)
-  const streakPageIndex = stories.findIndex(s => s.type === 'streak');
-  const paywallThreshold = streakPageIndex !== -1 ? streakPageIndex + 3 : 999; // streak + 1 (streak page itself) + 2 articles
+  // Paywall threshold - after important articles
+  const paywallThreshold = 999; // No paywall for now
 
   // Update safe area color when current article changes
   useEffect(() => {
@@ -165,116 +154,6 @@ export default function Home() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Streak feature - Load streak data from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedStreak = localStorage.getItem('tennews_streak');
-      if (storedStreak) {
-        const parsed = JSON.parse(storedStreak);
-        const today = new Date().toDateString();
-        const lastDate = parsed.lastDate;
-        
-        if (lastDate) {
-          const lastDateObj = new Date(lastDate);
-          const todayObj = new Date(today);
-          const diffTime = todayObj - lastDateObj;
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          
-          if (diffDays === 0) {
-            // Same day - keep current streak
-            setStreakData(parsed);
-            console.log('🔥 Streak loaded (same day):', parsed.count);
-          } else if (diffDays === 1) {
-            // Yesterday - streak continues but not yet incremented today
-            setStreakData({ count: parsed.count, lastDate: lastDate });
-            console.log('🔥 Streak continues from yesterday:', parsed.count);
-          } else {
-            // Missed a day - reset streak
-            setStreakData({ count: 0, lastDate: null });
-            console.log('💔 Streak reset - missed', diffDays, 'days');
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error loading streak data:', e);
-    }
-  }, []);
-
-  // Streak feature - Track when user views important articles and insert streak page
-  useEffect(() => {
-    // Get all important articles from stories
-    const importantArticles = stories.filter(s => 
-      s.type === 'news' && (s.final_score >= 900 || s.isImportant)
-    );
-    
-    if (importantArticles.length === 0 || streakPageInserted) return;
-    
-    // Check if all important articles have been viewed
-    const allImportantViewed = importantArticles.every(article => 
-      viewedImportantArticles.has(article.id)
-    );
-    
-    if (allImportantViewed && importantArticles.length > 0) {
-      console.log('🎉 All important articles viewed! Inserting streak page...');
-      
-      // Calculate new streak
-      const today = new Date().toDateString();
-      let newStreakCount = streakData.count;
-      
-      if (streakData.lastDate !== today) {
-        // First completion today - increment streak
-        newStreakCount = streakData.count + 1;
-        const newStreakData = { count: newStreakCount, lastDate: today };
-        setStreakData(newStreakData);
-        localStorage.setItem('tennews_streak', JSON.stringify(newStreakData));
-        console.log('🔥 Streak incremented to:', newStreakCount);
-      }
-      
-      // Find the index of the last important article
-      const lastImportantIndex = stories.reduce((lastIdx, story, idx) => {
-        if (story.type === 'news' && (story.final_score >= 900 || story.isImportant)) {
-          return idx;
-        }
-        return lastIdx;
-      }, -1);
-      
-      if (lastImportantIndex !== -1) {
-        // Insert streak page after the last important article
-        const streakPage = {
-          type: 'streak',
-          id: 'streak-page',
-          streakCount: newStreakCount
-        };
-        
-        setStories(prev => {
-          // Check if streak page already exists
-          if (prev.some(s => s.type === 'streak')) return prev;
-          
-          const newStories = [...prev];
-          newStories.splice(lastImportantIndex + 1, 0, streakPage);
-          return newStories;
-        });
-        
-        setStreakPageInserted(true);
-      }
-    }
-  }, [viewedImportantArticles, stories, streakPageInserted, streakData]);
-
-  // Track viewed important articles when currentIndex changes
-  useEffect(() => {
-    const currentStory = stories[currentIndex];
-    if (currentStory && currentStory.type === 'news' && currentStory.id) {
-      const isImportant = currentStory.final_score >= 900 || currentStory.isImportant;
-      if (isImportant) {
-        setViewedImportantArticles(prev => {
-          const newSet = new Set(prev);
-          newSet.add(currentStory.id);
-          return newSet;
-        });
-        console.log('👁️ Viewed important article:', currentStory.id);
-      }
-    }
-  }, [currentIndex, stories]);
 
   // Auto-refresh when user returns to the page after leaving Safari/Chrome
   // This ensures users always see fresh news when they come back
@@ -3470,12 +3349,7 @@ export default function Home() {
   }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
   
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Loading latest news...</div>
-      </div>
-    );
+    return <TodayPlusLoader />;
   }
 
   const currentTime = new Date().toLocaleTimeString('en-US', {
@@ -5673,39 +5547,6 @@ export default function Home() {
             <div style={{ flex: 1 }}></div>
             
             <div className="header-right">
-              {/* Streak Indicator - Swept flame design */}
-              {streakData.count > 0 && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  marginRight: '16px'
-                }}>
-                  <svg 
-                    width="20" 
-                    height="20" 
-                    viewBox="0 0 64 64" 
-                    fill="none"
-                  >
-                    <path 
-                      d="M24 12C24 12 18 22 20 32C21 38 16 40 12 38C12 46 18 56 30 58C44 60 54 52 52 40C50 30 42 28 42 22C42 16 36 6 32 8C32 14 28 18 26 16C24 14 24 12 24 12Z" 
-                      stroke="#F97316"
-                      strokeWidth="5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                  </svg>
-                  <span style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#F97316',
-                    letterSpacing: '-0.3px'
-                  }}>
-                    {streakData.count}
-                  </span>
-                </div>
-              )}
               <span className="time">{currentTime}</span>
               {user ? (
                 <>
@@ -5763,7 +5604,7 @@ export default function Home() {
               willChange: 'transform'
             }}
           >
-            {/* Paywall for stories after streak page + 2 articles */}
+            {/* Paywall for stories after threshold */}
             {index >= paywallThreshold && !user && (
               <div 
                 className="paywall-overlay"
@@ -5946,11 +5787,6 @@ export default function Home() {
                     </button>
                   )}
                 </div>
-              ) : story.type === 'streak' ? (
-                // Streak Page - Shows after all important articles are viewed
-                <StreakPage 
-                  streakCount={story.streakCount || streakData.count || 1}
-                />
               ) : story.type === 'news' ? (
                 <div className="news-grid" style={{ overflow: 'visible', padding: 0, margin: 0 }}>
                   
