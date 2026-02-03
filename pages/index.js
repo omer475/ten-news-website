@@ -9018,48 +9018,38 @@ export async function getServerSideProps({ req, res }) {
   res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
   
   try {
-    // Determine base URL based on environment
-    // Use request host for SSR to work correctly in both dev and prod
-    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-    const host = req?.headers?.host || 'localhost:3000';
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
-    
-    // Cache-busting with timestamp AND random value
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(7);
-    const cacheBuster = `t=${timestamp}&r=${random}`;
-    
-    // Create Supabase client for direct DB queries (faster than API round-trip)
+    // Create Supabase client for direct DB queries (eliminates API round-trip latency)
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
     
-    // Fetch news via API (needed for complex formatting) and world events directly from DB
-    const [newsResponse, eventsResult] = await Promise.all([
-      fetch(`${baseUrl}/api/news?page=1&pageSize=30&${cacheBuster}`, {
-        headers: { 
-          'Cache-Control': 'no-cache, no-store',
-          'Pragma': 'no-cache'
-        },
-        cache: 'no-store'
-      }).catch(() => null),
-      // Direct DB query for world events - much faster than API round-trip
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    // Fetch BOTH news and world events directly from DB (no API round-trip!)
+    const [newsResult, eventsResult] = await Promise.all([
+      // Direct DB query for news articles
+      supabase
+        .from('published_articles')
+        .select('id, title, title_news, url, source, description, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
+        .gte('created_at', twentyFourHoursAgo)
+        .order('ai_final_score', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(30)
+        .then(({ data, error }) => ({ articles: data || [], error }))
+        .catch(() => ({ articles: [], error: 'fetch failed' })),
+      // Direct DB query for world events
       supabase
         .from('world_events')
         .select('id, name, slug, image_url, blur_color, importance, status, last_article_at, created_at, background')
         .eq('status', 'ongoing')
         .order('last_article_at', { ascending: false })
         .limit(8)
-        .then(async ({ data: events, error }) => {
+        .then(({ data: events, error }) => {
           if (error || !events || events.length === 0) {
             return { events: [], error };
           }
-          // Add newUpdates count (simplified - just set to 0 for SSR, will be updated client-side)
-          return { 
-            events: events.map(e => ({ ...e, newUpdates: 0 })),
-            error: null 
-          };
+          return { events: events.map(e => ({ ...e, newUpdates: 0 })), error: null };
         })
         .catch(() => ({ events: [], error: 'fetch failed' }))
     ]);
@@ -9067,83 +9057,106 @@ export async function getServerSideProps({ req, res }) {
     let initialNews = null;
     let initialWorldEvents = null;
 
-    if (newsResponse?.ok) {
-      const newsData = await newsResponse.json();
-      if (newsData.articles && newsData.articles.length > 0) {
+    // Helper to parse JSON safely
+    const safeJsonParse = (value, fallback = null) => {
+      if (!value) return fallback;
+      if (typeof value !== 'string') return value;
+      try { return JSON.parse(value); } catch { return fallback; }
+    };
+
+    // Process direct DB result for news
+    if (newsResult?.articles && newsResult.articles.length > 0) {
+      // Filter out test articles
+      const now = Date.now();
+      const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+      const filteredArticles = newsResult.articles.filter(a => {
+        const url = a?.url || '';
+        const title = a?.title_news || a?.title || '';
+        if (/test/i.test(url) || /test/i.test(title)) return false;
+        const articleDate = a.created_at || a.added_at;
+        if (!articleDate) return false;
+        return (now - new Date(articleDate).getTime()) < twentyFourHoursMs;
+      });
+
+      if (filteredArticles.length > 0) {
         // Create opening story
         const openingStory = {
           type: 'opening',
           date: new Date().toLocaleDateString('en-US', {
             weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
           }).toUpperCase(),
-          headline: newsData.dailyGreeting || "Today's Essential Global News"
+          headline: "Today's Essential Global News"
         };
+
+        // Format articles directly (simplified version of formatArticle)
+        const newsArticles = filteredArticles.map(article => ({
+          id: article.id,
+          title: article.title_news || article.title,
+          url: article.url,
+          source: article.source || 'Today+',
+          description: article.description,
+          urlToImage: article.image_url,
+          category: article.category,
+          emoji: article.emoji || '📰',
+          final_score: article.ai_final_score || 0,
+          summary_bullets: safeJsonParse(article.summary_bullets, []),
+          summary_bullets_news: safeJsonParse(article.summary_bullets_news, []),
+          summary_bullets_detailed: safeJsonParse(article.summary_bullets_detailed, []),
+          five_ws: safeJsonParse(article.five_ws, null),
+          timeline: safeJsonParse(article.timeline, null),
+          graph: safeJsonParse(article.graph, null),
+          map: safeJsonParse(article.map, null),
+          components: article.components_order || safeJsonParse(article.components, null),
+          details: article.details_section ? article.details_section.split('\n') : safeJsonParse(article.details, []),
+          interest_tags: safeJsonParse(article.interest_tags, []),
+          publishedAt: article.published_date || article.published_at || article.created_at
+        }));
         
-        // Format articles as stories - filter out articles without id and sanitize data
-        // IMPORTANT: Apply same defaults as client-side loadNewsData to ensure information boxes show
-        const newsStories = newsData.articles
-          .filter(article => article && article.id) // Only include articles with valid id
-          .map((article, index) => {
-            // Default details if none provided
-            const defaultDetails = [
-              'Impact Score: High significance',
-              'Read Time: 3-4 min',
-              'Source Credibility: Verified'
-            ];
-            
-            // Default timeline if none provided
-            const defaultTimeline = [
-              { date: 'Recently', event: 'Initial reports emerge' },
-              { date: 'Yesterday', event: 'Key developments unfold' },
-              { date: 'Today', event: 'Latest updates breaking' }
-            ];
-            
-            // Ensure components array exists with at least 'details'
-            let components = article.components;
-            if (!components || !Array.isArray(components) || components.length === 0) {
-              components = ['details'];
-              // Add timeline if it exists
-              if (article.timeline && (Array.isArray(article.timeline) ? article.timeline.length > 0 : true)) {
-                components.push('timeline');
-              }
-              // Add map if it exists
-              if (article.map) {
-                components.push('map');
-              }
-              // Add graph if it exists
-              if (article.graph) {
-                components.push('graph');
-              }
-            }
-            
-            return {
-              type: 'news',
-              rank: index + 1,
-              id: article.id,
-              title: article.title || null,
-              detailed_text: article.detailed_text || null,
-              summary_bullets: article.summary_bullets || [],
-              summary_bullets_news: article.summary_bullets_news || [],
-              summary_bullets_detailed: article.summary_bullets_detailed || [],
-              five_ws: article.five_ws || null,
-              url: article.url || null,
-              urlToImage: article.urlToImage || null,
-              source: article.source || null,
-              category: article.category || null,
-              emoji: article.emoji || '📰',
-              details: (article.details && article.details.length > 0) ? article.details : defaultDetails,
-              timeline: article.timeline || defaultTimeline,
-              graph: article.graph || null,
-              map: article.map || null,
-              components: components,
-              final_score: article.final_score || 0,
-              interest_tags: article.interest_tags || []
-            };
-          });
+        // Format articles as stories with defaults for information boxes
+        const defaultDetails = ['Impact Score: High significance', 'Read Time: 3-4 min', 'Source Credibility: Verified'];
+        const defaultTimeline = [
+          { date: 'Recently', event: 'Initial reports emerge' },
+          { date: 'Yesterday', event: 'Key developments unfold' },
+          { date: 'Today', event: 'Latest updates breaking' }
+        ];
+        
+        const newsStories = newsArticles.map((article, index) => {
+          // Ensure components array exists
+          let components = article.components;
+          if (!components || !Array.isArray(components) || components.length === 0) {
+            components = ['details'];
+            if (article.timeline) components.push('timeline');
+            if (article.map) components.push('map');
+            if (article.graph) components.push('graph');
+          }
+          
+          return {
+            type: 'news',
+            rank: index + 1,
+            id: article.id,
+            title: article.title || null,
+            summary_bullets: article.summary_bullets || [],
+            summary_bullets_news: article.summary_bullets_news || [],
+            summary_bullets_detailed: article.summary_bullets_detailed || [],
+            five_ws: article.five_ws || null,
+            url: article.url || null,
+            urlToImage: article.urlToImage || null,
+            source: article.source || null,
+            category: article.category || null,
+            emoji: article.emoji || '📰',
+            details: (article.details && article.details.length > 0) ? article.details : defaultDetails,
+            timeline: article.timeline || defaultTimeline,
+            graph: article.graph || null,
+            map: article.map || null,
+            components: components,
+            final_score: article.final_score || 0,
+            interest_tags: article.interest_tags || []
+          };
+        });
         
         initialNews = {
           stories: [openingStory, ...newsStories],
-          pagination: newsData.pagination || null
+          pagination: null
         };
       }
     }

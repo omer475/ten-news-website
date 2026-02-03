@@ -113,14 +113,18 @@ const formatArticle = (article) => {
 };
 
 export default async function handler(req, res) {
-  // Enable CORS and caching
+  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  // No caching - always return fresh data
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  
+  // AGGRESSIVE no-caching - prevent all forms of caching
+  res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  res.setHeader('Expires', '-1');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -211,14 +215,14 @@ export default async function handler(req, res) {
       const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      // Single query with count - much faster than two separate queries
-      const { data: articles, error, count: totalCount } = await supabase
+      // Fast query without count (count: 'exact' is slow on large tables)
+      const { data: articles, error } = await supabase
         .from('published_articles')
-        .select('*', { count: 'exact' })
+        .select('id, title, title_news, url, source, description, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
         .gte('created_at', twentyFourHoursAgo)
         .order('ai_final_score', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .range(offset, offset + pageSize - 1);
+        .limit(pageSize + 10);
 
       if (!error && articles) {
         // Fast filter without logging
@@ -239,8 +243,8 @@ export default async function handler(req, res) {
           return (now - articleTime) < twentyFourHoursMs;
         });
 
-        const formattedArticles = filteredArticles.map(formatArticle);
-        const hasMore = offset + formattedArticles.length < (totalCount || 0);
+        const formattedArticles = filteredArticles.slice(0, pageSize).map(formatArticle);
+        const hasMore = filteredArticles.length > pageSize;
 
         return res.status(200).json({
           status: 'ok',
@@ -249,7 +253,7 @@ export default async function handler(req, res) {
           pagination: {
             page,
             pageSize,
-            total: totalCount || formattedArticles.length,
+            total: formattedArticles.length,
             hasMore
           },
           generatedAt: new Date().toISOString(),
