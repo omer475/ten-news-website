@@ -9079,7 +9079,8 @@ export async function getServerSideProps({ req, res }) {
               map: article.map || null,
               components,
               final_score: article.final_score || 0,
-              interest_tags: article.interest_tags || []
+              interest_tags: article.interest_tags || [],
+              publishedAt: article.publishedAt || article.published_at || article.created_at
             };
           });
         
