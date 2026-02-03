@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import NewFirstPage from '../components/NewFirstPage';
 import TodayPlusLoader from '../components/TodayPlusLoader';
 import dynamic from 'next/dynamic';
@@ -9028,22 +9029,39 @@ export async function getServerSideProps({ req, res }) {
     const random = Math.random().toString(36).substring(7);
     const cacheBuster = `t=${timestamp}&r=${random}`;
     
-    // Fetch news and world events in parallel with aggressive cache-busting
-    const [newsResponse, eventsResponse] = await Promise.all([
+    // Create Supabase client for direct DB queries (faster than API round-trip)
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+    
+    // Fetch news via API (needed for complex formatting) and world events directly from DB
+    const [newsResponse, eventsResult] = await Promise.all([
       fetch(`${baseUrl}/api/news?page=1&pageSize=30&${cacheBuster}`, {
         headers: { 
           'Cache-Control': 'no-cache, no-store',
           'Pragma': 'no-cache'
         },
-        cache: 'no-store'  // Node.js fetch cache option
-      }).catch(() => null),
-      fetch(`${baseUrl}/api/world-events?limit=8&${cacheBuster}`, {
-        headers: { 
-          'Cache-Control': 'no-cache, no-store',
-          'Pragma': 'no-cache'
-        },
         cache: 'no-store'
-      }).catch(() => null)
+      }).catch(() => null),
+      // Direct DB query for world events - much faster than API round-trip
+      supabase
+        .from('world_events')
+        .select('id, name, slug, image_url, blur_color, importance, status, last_article_at, created_at, background')
+        .eq('status', 'ongoing')
+        .order('last_article_at', { ascending: false })
+        .limit(8)
+        .then(async ({ data: events, error }) => {
+          if (error || !events || events.length === 0) {
+            return { events: [], error };
+          }
+          // Add newUpdates count (simplified - just set to 0 for SSR, will be updated client-side)
+          return { 
+            events: events.map(e => ({ ...e, newUpdates: 0 })),
+            error: null 
+          };
+        })
+        .catch(() => ({ events: [], error: 'fetch failed' }))
     ]);
 
     let initialNews = null;
@@ -9130,11 +9148,9 @@ export async function getServerSideProps({ req, res }) {
       }
     }
 
-    if (eventsResponse?.ok) {
-      const eventsData = await eventsResponse.json();
-      if (eventsData.events && eventsData.events.length > 0) {
-        initialWorldEvents = eventsData.events;
-      }
+    // Process direct DB result for world events
+    if (eventsResult?.events && eventsResult.events.length > 0) {
+      initialWorldEvents = eventsResult.events;
     }
 
     return {

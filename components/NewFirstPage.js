@@ -422,6 +422,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   // State for world events - use SSR data if available, otherwise empty
   const [worldEvents, setWorldEvents] = useState(initialWorldEvents || []);
   const [eventsLoading, setEventsLoading] = useState(!initialWorldEvents || initialWorldEvents.length === 0);
+  const [currentEventIndex, setCurrentEventIndex] = useState(0);
 
   // Fetch world events from API only if SSR data is not available
   useEffect(() => {
@@ -432,18 +433,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       return;
     }
     
-    // Try localStorage cache first
-    try {
-      const cached = localStorage.getItem('tennews_world_events');
-      if (cached) {
-        const { events, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 5 * 60 * 1000 && events && events.length > 0) {
-          setWorldEvents(events);
-          setEventsLoading(false);
-          return;
-        }
-      }
-    } catch (e) {}
+    // Skip localStorage cache - always fetch fresh data for consistency
+    // (Previously cached for 5 minutes, but caused stale event issues)
     
     // Fetch from API
     const fetchWorldEvents = async () => {
@@ -455,11 +446,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           const data = await response.json();
           if (data.events && data.events.length > 0) {
             setWorldEvents(data.events);
-            // Cache for instant loading next time
-            localStorage.setItem('tennews_world_events', JSON.stringify({
-              events: data.events,
-              timestamp: Date.now()
-            }));
+            // Don't cache - always show fresh events
           }
         }
       } catch (error) {
@@ -485,7 +472,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       
       // Calculate card width including gap
       const cardWidth = el.firstElementChild?.offsetWidth || 300;
-      const gap = 16; // matches CSS gap
+      // Gap values must match CSS: 16px default, 12px for <=480px, 10px for <=375px
+      const gap = window.innerWidth <= 375 ? 10 : window.innerWidth <= 480 ? 12 : 16;
       const scrollPosition = index * (cardWidth + gap);
       
       // Smooth scroll to the target position
@@ -500,13 +488,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       
       currentIndex++;
       
-      // When reaching the end of duplicated set, loop back seamlessly
-      if (currentIndex >= cardCount * 2) {
-        // We're at the end of the duplicated array, jump back to first half
-        const cardWidth = el.firstElementChild?.offsetWidth || 300;
-        const gap = 16;
-        el.scrollLeft = el.scrollLeft - (cardCount * (cardWidth + gap));
-        currentIndex = cardCount;
+      // Loop back to start when reaching the end
+      if (currentIndex >= cardCount) {
+        currentIndex = 0;
       }
       
       scrollToCard(currentIndex);
@@ -528,46 +512,34 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   // Track if user has interacted with scroll
   const userScrolledRef = useRef(false);
-  const lastScrollLeftRef = useRef(0);
   
-  // Handle infinite scroll loop for manual scrolling
+  // Handle scroll for pagination dots update
   const handleEventsScroll = useCallback(() => {
     const el = eventsScrollRef.current;
     if (!el || worldEvents.length === 0) return;
     
-    const scrollLeft = el.scrollLeft;
-    const halfWidth = el.scrollWidth / 2;
-    const buffer = 20;
+    // Mark that user has scrolled (stops auto-scroll)
+    userScrolledRef.current = true;
     
-    // Track scroll direction
-    const scrollingRight = scrollLeft > lastScrollLeftRef.current;
-    const scrollingLeft = scrollLeft < lastScrollLeftRef.current;
-    lastScrollLeftRef.current = scrollLeft;
-    
-    // Mark that user has scrolled
-    if (!userScrolledRef.current && (scrollingRight || scrollingLeft)) {
-      userScrolledRef.current = true;
-    }
-    
-    // Only apply infinite loop if user has scrolled
-    if (!userScrolledRef.current) return;
-    
-    // When scrolling past halfway (right end), jump back to first half
-    if (scrollingRight && scrollLeft >= halfWidth - buffer) {
-      el.scrollLeft = scrollLeft - halfWidth;
-      lastScrollLeftRef.current = el.scrollLeft;
-    }
-    // When scrolling before start (left end), jump to second half
-    else if (scrollingLeft && scrollLeft <= buffer) {
-      el.scrollLeft = scrollLeft + halfWidth;
-      lastScrollLeftRef.current = el.scrollLeft;
+    // Calculate current card index for pagination dots
+    const cardEl = el.querySelector('.event-card');
+    if (cardEl) {
+      const cardWidth = cardEl.offsetWidth;
+      // Gap values must match CSS: 16px default, 12px for <=480px, 10px for <=375px
+      const gap = window.innerWidth <= 375 ? 10 : window.innerWidth <= 480 ? 12 : 16;
+      const cardWithGap = cardWidth + gap;
+      const scrollLeft = el.scrollLeft;
+      const newIndex = Math.round(scrollLeft / cardWithGap);
+      // Clamp to valid range
+      const clampedIndex = Math.max(0, Math.min(newIndex, worldEvents.length - 1));
+      setCurrentEventIndex(clampedIndex);
     }
   }, [worldEvents]);
 
   // Stop auto-scroll when user interacts
   const stopAutoScroll = useCallback(() => {
     eventsAutoScrollRef.current = false;
-    userScrolledRef.current = true; // Enable manual infinite scroll
+    userScrolledRef.current = true;
     if (eventsScrollAnimationRef.current) {
       clearInterval(eventsScrollAnimationRef.current);
       eventsScrollAnimationRef.current = null;
@@ -894,35 +866,40 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  // Touch event handlers for mobile - use touch position to detect swipe
+  // Touch event handlers for mobile - simple touch tracking for click prevention
+  // We let the browser handle native scrolling with CSS scroll-snap
   const handleTouchStart = (e) => {
     stopAutoScroll();
-    dragState.current.hasMoved = false;
     
-    // Record touch start position
-    if (e.touches && e.touches[0]) {
-      dragState.current.touchStartX = e.touches[0].clientX;
-      dragState.current.touchStartY = e.touches[0].clientY;
-    }
+    const touch = e.touches[0];
+    if (!touch) return;
+    
+    // Record touch start for click prevention
+    dragState.current.hasMoved = false;
+    dragState.current.touchStartX = touch.clientX;
+    dragState.current.touchStartY = touch.clientY;
   };
 
   const handleTouchMove = (e) => {
-    // Check if touch position changed significantly (means user is swiping)
-    if (e.touches && e.touches[0] && dragState.current.touchStartX !== undefined) {
-      const deltaX = Math.abs(e.touches[0].clientX - dragState.current.touchStartX);
-      const deltaY = Math.abs(e.touches[0].clientY - dragState.current.touchStartY);
-      // Only mark as moved if horizontal movement is significant
-      if (deltaX > 10 || deltaY > 10) {
-        dragState.current.hasMoved = true;
-      }
+    const touch = e.touches[0];
+    if (!touch || dragState.current.touchStartX === undefined) return;
+    
+    // Check if user has moved significantly (for click prevention)
+    const deltaX = Math.abs(touch.clientX - dragState.current.touchStartX);
+    const deltaY = Math.abs(touch.clientY - dragState.current.touchStartY);
+    
+    // If moved more than 10px in any direction, mark as moved
+    if (deltaX > 10 || deltaY > 10) {
+      dragState.current.hasMoved = true;
     }
   };
 
   const handleTouchEnd = () => {
-    // Reset touch start position
-    dragState.current.touchStartX = undefined;
-    dragState.current.touchStartY = undefined;
-    // hasMoved stays as-is until next touchStart
+    // Reset touch start position after a small delay to ensure click handler sees hasMoved
+    setTimeout(() => {
+      dragState.current.touchStartX = undefined;
+      dragState.current.touchStartY = undefined;
+    }, 100);
   };
 
   // Smooth wheel scrolling
@@ -942,12 +919,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     <>
       <Script 
         src="https://cdn.jsdelivr.net/npm/d3@7" 
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onLoad={() => setScriptsLoaded(prev => ({ ...prev, d3: true }))}
       />
       <Script 
         src="https://cdn.jsdelivr.net/npm/topojson-client@3" 
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onLoad={() => setScriptsLoaded(prev => ({ ...prev, topojson: true }))}
       />
       
@@ -1051,14 +1028,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .events-scroll {
           display: flex;
           gap: 16px;
-          overflow-x: scroll;
+          overflow-x: auto;
           overflow-y: hidden;
-          padding: 4px 24px 20px 24px;
+          padding: 4px 0 20px 24px;
+          scroll-padding-left: 24px;
           scrollbar-width: none;
           -ms-overflow-style: none;
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
-          touch-action: pan-x pan-y;
           overscroll-behavior-x: contain;
         }
 
@@ -1066,17 +1043,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: none;
         }
 
+        /* Spacer for end padding */
+        .events-scroll::after {
+          content: '';
+          flex-shrink: 0;
+          width: 24px;
+        }
+
         .event-card {
           flex-shrink: 0;
-          width: calc(100vw - 60px);
+          width: calc(100vw - 64px);
           cursor: pointer;
           transition: transform 0.2s ease;
-          scroll-snap-align: center;
+          scroll-snap-align: start;
+          scroll-snap-stop: always;
           text-decoration: none;
           display: block;
           color: inherit;
           -webkit-tap-highlight-color: transparent;
-          touch-action: manipulation;
           user-select: none;
           -webkit-user-select: none;
           -webkit-touch-callout: none;
@@ -1084,6 +1068,37 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-card:active {
           transform: scale(0.98);
+        }
+
+        /* Pagination dots */
+        .events-pagination {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 0 0 0;
+        }
+
+        .pagination-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.15);
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        .pagination-dot:hover {
+          background: rgba(0, 0, 0, 0.3);
+        }
+
+        .pagination-dot.active {
+          width: 24px;
+          border-radius: 4px;
+          background: rgba(0, 0, 0, 0.7);
         }
 
         .event-image-wrapper {
@@ -1096,7 +1111,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-skeleton {
           flex-shrink: 0;
-          width: calc(100vw - 60px);
+          width: calc(100vw - 64px);
           aspect-ratio: 1 / 1;
           border-radius: 24px;
           background: #e8e8e8;
@@ -1344,11 +1359,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-bottom: 10px;
           }
           .events-scroll {
-            gap: 8px;
-            padding: 4px 16px 8px 16px;
+            gap: 12px;
+            padding: 4px 0 16px 16px;
+            scroll-padding-left: 16px;
+          }
+          .events-scroll::after {
+            width: 16px;
           }
           .event-card {
-            width: calc(100vw - 48px);
+            width: calc(100vw - 44px);
           }
           .event-image-wrapper {
             border-radius: 20px;
@@ -1372,15 +1391,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             gap: 10px;
           }
           .event-skeleton {
-            width: calc(100vw - 48px);
+            width: calc(100vw - 44px);
             border-radius: 20px;
           }
           .event-skeleton .skeleton-shimmer {
             border-radius: 20px;
           }
-          .events-scroll {
-            padding: 4px 16px 16px 16px;
-            gap: 12px;
+          .events-pagination {
+            gap: 6px;
+            padding: 10px 0 0 0;
+          }
+          .pagination-dot {
+            width: 6px;
+            height: 6px;
+          }
+          .pagination-dot.active {
+            width: 20px;
+            border-radius: 3px;
           }
           .swipe-hint {
             bottom: 15px;
@@ -1400,10 +1427,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-bottom: 8px;
           }
           .events-scroll {
-            gap: 6px;
+            gap: 10px;
+            padding: 4px 0 16px 16px;
+            scroll-padding-left: 16px;
+          }
+          .events-scroll::after {
+            width: 16px;
           }
           .event-card {
-            width: calc(100vw - 40px);
+            width: calc(100vw - 42px);
           }
           .event-image-wrapper {
             border-radius: 18px;
@@ -1430,7 +1462,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             gap: 6px;
           }
           .event-skeleton {
-            width: calc(100vw - 40px);
+            width: calc(100vw - 42px);
             border-radius: 18px;
           }
           .event-skeleton .skeleton-shimmer {
@@ -1446,6 +1478,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             min-width: 14px;
             height: 14px;
             font-size: 9px;
+          }
+          .events-pagination {
+            gap: 5px;
+            padding: 8px 0 0 0;
+          }
+          .pagination-dot {
+            width: 5px;
+            height: 5px;
+          }
+          .pagination-dot.active {
+            width: 18px;
+            border-radius: 2.5px;
           }
         }
       `}</style>
@@ -1491,8 +1535,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                     ))}
                   </>
                 ) : (
-                  // Show actual events (duplicated for infinite scroll)
-                  [...worldEvents, ...worldEvents].map((event, index) => {
+                  // Show actual events (no duplication - use scroll-snap for smooth swiping)
+                  worldEvents.map((event, index) => {
                     return (
                       <a 
                         key={`${event.id}-${index}`} 
@@ -1517,6 +1561,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                               src={event.image_url} 
                               alt={event.name}
                               crossOrigin="anonymous"
+                              loading="eager"
+                              fetchPriority="high"
+                              decoding="async"
                             />
                           )}
                           <div className="event-overlay">
@@ -1570,6 +1617,32 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                   })
                 )}
               </div>
+              
+              {/* Pagination dots */}
+              {!eventsLoading && worldEvents.length > 1 && (
+                <div className="events-pagination">
+                  {worldEvents.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`pagination-dot ${currentEventIndex === index ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const el = eventsScrollRef.current;
+                        if (!el) return;
+                        const cardEl = el.querySelector('.event-card');
+                        if (!cardEl) return;
+                        const cardWidth = cardEl.offsetWidth;
+                        // Gap values must match CSS: 16px default, 12px for <=480px, 10px for <=375px
+                        const gap = window.innerWidth <= 375 ? 10 : window.innerWidth <= 480 ? 12 : 16;
+                        const targetScroll = index * (cardWidth + gap);
+                        el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+                        stopAutoScroll();
+                      }}
+                      aria-label={`Go to event ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
