@@ -8797,7 +8797,12 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
 }
 
 // Server-Side Rendering - pre-fetch news data for instant loading
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, res }) {
+  // Disable caching for SSR page - always return fresh data
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
   try {
     // Determine base URL based on environment
     // Use request host for SSR to work correctly in both dev and prod

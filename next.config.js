@@ -8,7 +8,7 @@ const nextConfig = {
   // Vercel-optimized settings
   compress: true,
   poweredByHeader: false,
-  generateEtags: true,
+  generateEtags: false,
   trailingSlash: false,
   // Ensure proper static optimization (removed 'standalone' for Vercel JSON serving)
   // output: 'standalone',
