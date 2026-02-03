@@ -9062,31 +9062,66 @@ export async function getServerSideProps({ req, res }) {
         };
         
         // Format articles as stories - filter out articles without id and sanitize data
+        // IMPORTANT: Apply same defaults as client-side loadNewsData to ensure information boxes show
         const newsStories = newsData.articles
           .filter(article => article && article.id) // Only include articles with valid id
-          .map((article, index) => ({
-            type: 'news',
-            rank: index + 1,
-            id: article.id,
-            title: article.title || null,
-            detailed_text: article.detailed_text || null,
-            summary_bullets: article.summary_bullets || [],
-            summary_bullets_news: article.summary_bullets_news || [],
-            summary_bullets_detailed: article.summary_bullets_detailed || [],
-            five_ws: article.five_ws || null,
-            url: article.url || null,
-            urlToImage: article.urlToImage || null,
-            source: article.source || null,
-            category: article.category || null,
-            emoji: article.emoji || '📰',
-            details: article.details || [],
-            timeline: article.timeline || null,
-            graph: article.graph || null,
-            map: article.map || null,
-            components: article.components || null,
-            final_score: article.final_score || 0,
-            interest_tags: article.interest_tags || []
-          }));
+          .map((article, index) => {
+            // Default details if none provided
+            const defaultDetails = [
+              'Impact Score: High significance',
+              'Read Time: 3-4 min',
+              'Source Credibility: Verified'
+            ];
+            
+            // Default timeline if none provided
+            const defaultTimeline = [
+              { date: 'Recently', event: 'Initial reports emerge' },
+              { date: 'Yesterday', event: 'Key developments unfold' },
+              { date: 'Today', event: 'Latest updates breaking' }
+            ];
+            
+            // Ensure components array exists with at least 'details'
+            let components = article.components;
+            if (!components || !Array.isArray(components) || components.length === 0) {
+              components = ['details'];
+              // Add timeline if it exists
+              if (article.timeline && (Array.isArray(article.timeline) ? article.timeline.length > 0 : true)) {
+                components.push('timeline');
+              }
+              // Add map if it exists
+              if (article.map) {
+                components.push('map');
+              }
+              // Add graph if it exists
+              if (article.graph) {
+                components.push('graph');
+              }
+            }
+            
+            return {
+              type: 'news',
+              rank: index + 1,
+              id: article.id,
+              title: article.title || null,
+              detailed_text: article.detailed_text || null,
+              summary_bullets: article.summary_bullets || [],
+              summary_bullets_news: article.summary_bullets_news || [],
+              summary_bullets_detailed: article.summary_bullets_detailed || [],
+              five_ws: article.five_ws || null,
+              url: article.url || null,
+              urlToImage: article.urlToImage || null,
+              source: article.source || null,
+              category: article.category || null,
+              emoji: article.emoji || '📰',
+              details: (article.details && article.details.length > 0) ? article.details : defaultDetails,
+              timeline: article.timeline || defaultTimeline,
+              graph: article.graph || null,
+              map: article.map || null,
+              components: components,
+              final_score: article.final_score || 0,
+              interest_tags: article.interest_tags || []
+            };
+          });
         
         initialNews = {
           stories: [openingStory, ...newsStories],
