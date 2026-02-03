@@ -1012,7 +1012,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           opacity: 0;
           position: relative;
           z-index: 10;
-          touch-action: pan-x pan-y;
         }
 
         .events-header {
@@ -1029,7 +1028,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .events-scroll {
           display: flex;
           gap: 16px;
-          overflow-x: auto;
+          overflow-x: scroll;
           overflow-y: hidden;
           padding: 4px 0 20px 24px;
           scroll-padding-left: 24px;
@@ -1038,8 +1037,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
           overscroll-behavior-x: contain;
-          touch-action: pan-x;
-          cursor: grab;
         }
 
         .events-scroll::-webkit-scrollbar {
@@ -1067,7 +1064,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           user-select: none;
           -webkit-user-select: none;
           -webkit-touch-callout: none;
-          touch-action: pan-x;
         }
 
         .event-card:active {
@@ -1524,7 +1520,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
                 onScroll={handleEventsScroll}
-                onTouchStart={() => stopAutoScroll()}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
               >
                 {eventsLoading && worldEvents.length === 0 ? (
                   // Show skeleton placeholders while loading
@@ -1544,6 +1542,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                         href={`/event/${event.slug || event.id}`}
                         className="event-card"
                         draggable="false"
+                        onClick={(e) => {
+                          // Don't navigate if user was swiping
+                          if (dragState.current.hasMoved) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            dragState.current.hasMoved = false;
+                            return;
+                          }
+                        }}
                       >
                         <div className="event-image-wrapper">
                           {event.image_url && (
