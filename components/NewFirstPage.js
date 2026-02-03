@@ -960,7 +960,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .greeting-section {
           text-align: left;
           animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-          padding-top: 0;
+          padding-top: 40px;
           opacity: 0;
           z-index: 2;
           width: 100%;
@@ -1007,7 +1007,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .events-section {
           width: 100vw;
           margin-left: -24px;
-          margin-top: 32px;
+          margin-top: 48px;
           animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s forwards;
           opacity: 0;
           position: relative;
@@ -1298,7 +1298,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           letter-spacing: -0.01em;
           color: #86868b;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          margin-top: 24px;
+          margin-top: 36px;
           padding: 0 20px 40px 20px;
           animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2s ease-in-out 1.6s infinite;
           opacity: 0;
@@ -1309,7 +1309,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding: 0;
           }
           .greeting-section {
-            padding-top: 0;
+            padding-top: 32px;
             padding-left: 16px;
             padding-right: 16px;
             width: 100%;
@@ -1320,7 +1320,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-bottom: 12px;
           }
           .events-section {
-            margin-top: 24px;
+            margin-top: 40px;
             margin-left: -16px;
           }
           .events-header {
@@ -1378,7 +1378,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             font-size: 26px;
           }
           .events-section {
-            margin-top: 20px;
+            margin-top: 36px;
           }
           .events-header {
             font-size: 11px;
