@@ -3224,6 +3224,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
       }
 
+      // Don't capture touch on events section - let native horizontal scroll work
+      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
+        return;
+      }
+
       // Prevent default to stop any scrolling
       e.preventDefault();
 
@@ -3269,6 +3274,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
             e.target.closest('.graph-container')) {
           return;
         }
+      }
+
+      // Don't handle touch on events section - let native horizontal scroll work
+      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
+        return;
       }
 
       // Calculate velocity from history (average of recent samples)
@@ -3367,6 +3377,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
             e.target.closest('.graph-container')) {
           return;
         }
+      }
+
+      // Don't block touch on events section - let native horizontal scroll work
+      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
+        return;
       }
 
       // Prevent default scroll behavior
