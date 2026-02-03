@@ -960,7 +960,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .greeting-section {
           text-align: left;
           animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-          padding-top: 60px;
+          padding-top: 80px;
           opacity: 0;
           z-index: 2;
           width: 100%;
@@ -1298,7 +1298,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           letter-spacing: -0.01em;
           color: #86868b;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          margin-top: 80px;
+          margin-top: 120px;
           padding: 0 20px 40px 20px;
           animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2s ease-in-out 1.6s infinite;
           opacity: 0;
@@ -1309,7 +1309,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding: 0;
           }
           .greeting-section {
-            padding-top: 50px;
+            padding-top: 70px;
             padding-left: 16px;
             padding-right: 16px;
             width: 100%;
@@ -1368,7 +1368,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             border-radius: 20px;
           }
           .swipe-hint {
-            margin-top: 70px;
+            margin-top: 100px;
             font-size: 14px;
           }
         }
