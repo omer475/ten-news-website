@@ -538,11 +538,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (!el || worldEvents.length === 0) return;
     
     const halfWidth = el.scrollWidth / 2;
+    const buffer = 50; // Small buffer to prevent edge flickering
     
-    // When scrolling past halfway, jump back seamlessly
-    if (el.scrollLeft >= halfWidth) {
+    // When scrolling past halfway (right end), jump back to start seamlessly
+    if (el.scrollLeft >= halfWidth - buffer) {
       el.scrollLeft = el.scrollLeft - halfWidth;
-    } else if (el.scrollLeft <= 0) {
+    }
+    // When scrolling before start (left end), jump to second half
+    else if (el.scrollLeft < buffer) {
       el.scrollLeft = halfWidth + el.scrollLeft;
     }
   }, [worldEvents]);
@@ -1070,7 +1073,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           aspect-ratio: 1 / 1;
           border-radius: 24px;
           overflow: hidden;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
         }
 
         .event-skeleton {
@@ -1271,7 +1273,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           background: #FF3B30;
           border-radius: 50%;
           font-size: 0;
-          box-shadow: 0 1px 3px rgba(255,59,48,0.4);
         }
 
 
