@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     // Test 2: Get latest 5 articles (EXACT same query as news API)
     const { data: latest, error: latestError } = await supabase
       .from('published_articles')
-      .select('id, title_news, url, source, description, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
+      .select('id, title_news, url, source, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
       .gte('created_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
