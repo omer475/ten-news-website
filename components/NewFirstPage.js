@@ -876,13 +876,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  // Touch event handlers for mobile - simplified for better swipe detection
+  // Touch event handlers for mobile - use scroll position to detect swipe
   const handleTouchStart = (e) => {
     stopAutoScroll();
-    const touch = e.touches[0];
-    dragState.current.isDown = true;
-    dragState.current.startX = touch.pageX;
-    dragState.current.startY = touch.pageY;
     dragState.current.hasMoved = false;
     
     const el = eventsScrollRef.current;
@@ -891,24 +887,20 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  const handleTouchMove = (e) => {
-    if (!dragState.current.isDown) return;
-    
-    const touch = e.touches[0];
-    const moveDistanceX = Math.abs(touch.pageX - dragState.current.startX);
-    
-    // Mark as moved if user swiped more than 5px (lower threshold for mobile)
-    if (moveDistanceX > 5) {
+  const handleTouchMove = () => {
+    // Check if scroll position changed (means user is swiping)
+    const el = eventsScrollRef.current;
+    if (el && Math.abs(el.scrollLeft - dragState.current.scrollLeft) > 3) {
       dragState.current.hasMoved = true;
     }
-    // Native scroll handles the actual scrolling
   };
 
   const handleTouchEnd = () => {
-    // Keep isDown true briefly so click handlers can check hasMoved
-    setTimeout(() => {
-      dragState.current.isDown = false;
-    }, 100);
+    // Check scroll position one more time
+    const el = eventsScrollRef.current;
+    if (el && Math.abs(el.scrollLeft - dragState.current.scrollLeft) > 3) {
+      dragState.current.hasMoved = true;
+    }
   };
 
   // Smooth wheel scrolling
@@ -1037,13 +1029,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         .events-scroll {
           display: flex;
           gap: 16px;
-          overflow-x: auto;
+          overflow-x: scroll;
+          overflow-y: hidden;
           padding: 4px 24px 20px 24px;
           scrollbar-width: none;
           -ms-overflow-style: none;
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
-          touch-action: pan-x;
+          touch-action: pan-x pan-y;
+          overscroll-behavior-x: contain;
         }
 
         .events-scroll::-webkit-scrollbar {
@@ -1060,9 +1054,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: block;
           color: inherit;
           -webkit-tap-highlight-color: transparent;
-          touch-action: pan-x;
+          touch-action: manipulation;
           user-select: none;
           -webkit-user-select: none;
+          -webkit-touch-callout: none;
         }
 
         .event-card:active {
@@ -1484,21 +1479,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                         href={`/event/${event.slug || event.id}`}
                         className="event-card"
                         onClick={(e) => {
-                          // Don't navigate if user was dragging
+                          // Don't navigate if user was swiping
                           if (dragState.current.hasMoved) {
                             e.preventDefault();
+                            e.stopPropagation();
+                            // Reset for next interaction
+                            dragState.current.hasMoved = false;
                             return;
                           }
                           // Allow normal link behavior for navigation
-                        }}
-                        onTouchEnd={(e) => {
-                          // Only navigate if it was a tap, not a swipe
-                          // Check hasMoved after a small delay to ensure touchMove has run
-                          const wasMoved = dragState.current.hasMoved;
-                          if (!wasMoved) {
-                            e.preventDefault();
-                            router.push(`/event/${event.slug || event.id}`);
-                          }
                         }}
                       >
                         <div className="event-image-wrapper">
