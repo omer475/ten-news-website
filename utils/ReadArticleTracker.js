@@ -75,16 +75,19 @@ class ReadArticleTracker {
   
   /**
    * Mark an article as read
-   * @param {string} articleId - Unique article identifier
+   * @param {string|number} articleId - Unique article identifier
    */
   markAsRead(articleId) {
     if (!this.storageAvailable || !articleId) return;
     
+    // Convert to string for consistent storage
+    const idStr = String(articleId);
+    
     try {
       const readArticles = this.getReadArticles();
-      readArticles[articleId] = Date.now();
+      readArticles[idStr] = Date.now();
       localStorage.setItem(this.storageKey, JSON.stringify(readArticles));
-      console.log('✅ Article marked as read:', articleId);
+      console.log('✅ Article marked as read:', idStr);
     } catch (error) {
       if (error.name === 'QuotaExceededError') {
         console.error('localStorage quota exceeded - clearing old entries');
@@ -92,7 +95,7 @@ class ReadArticleTracker {
         // Try again after clearing
         try {
           const readArticles = this.getReadArticles();
-          readArticles[articleId] = Date.now();
+          readArticles[idStr] = Date.now();
           localStorage.setItem(this.storageKey, JSON.stringify(readArticles));
         } catch (retryError) {
           console.error('Failed to mark article as read after clearing:', retryError);
@@ -147,14 +150,17 @@ class ReadArticleTracker {
   
   /**
    * Check if a specific article has been read
-   * @param {string} articleId - Article identifier
+   * @param {string|number} articleId - Article identifier
    * @returns {boolean}
    */
   hasBeenRead(articleId) {
     if (!this.storageAvailable || !articleId) return false;
     
     const readArticles = this.getReadArticles();
-    return articleId in readArticles;
+    // Convert to string for consistent comparison (localStorage keys are always strings)
+    const idStr = String(articleId);
+    const isRead = idStr in readArticles;
+    return isRead;
   }
   
   /**

@@ -910,10 +910,44 @@ export default function Home({ initialNews, initialWorldEvents }) {
       console.error(`❌ Color extraction FAILED for article ${storyIndex}:`, error);
       console.error(`   Error type: ${error.name}`);
       console.error(`   Error message: ${error.message}`);
-      console.error(`   Using fallback blue-gray color #3A4A5E`);
       
-      // Fallback colors
-      const fallbackBlurHsl = [210, 30, 35]; // Blue-gray #3A4A5E
+      // IMPROVED: Use category-based fallback colors for better variety
+      const story = stories[storyIndex];
+      const category = story?.category?.replace(/\s+/g, '') || 'World';
+      
+      // Category-to-hue mapping for meaningful colors
+      const categoryHues = {
+        'World': 220,        // Blue - global affairs
+        'Politics': 0,       // Red - political content
+        'Business': 150,     // Green - business/finance
+        'Technology': 270,   // Purple - tech
+        'Science': 180,      // Cyan - scientific
+        'Health': 330,       // Pink - health/medical
+        'Sports': 25,        // Orange - sports
+        'Entertainment': 50, // Yellow-Orange - entertainment
+        'Lifestyle': 40,     // Amber - lifestyle
+        'Finance': 140,      // Teal-Green - markets
+        'Environment': 160,  // Sea Green - environment
+        'Breaking News': 350 // Red-Pink - breaking
+      };
+      
+      const baseHue = categoryHues[category] || 220; // Default to blue
+      
+      // Add slight variation using story ID
+      const idHash = (story?.id || '').toString().split('').reduce((acc, char) => 
+        char.charCodeAt(0) + ((acc << 5) - acc), 0);
+      const hueVariation = (Math.abs(idHash) % 21) - 10; // -10 to +10
+      const hue = (baseHue + hueVariation + 360) % 360;
+      
+      console.log(`   Using category-based fallback color for '${category}' (hue: ${hue})`);
+      
+      // Fallback colors - category-based with vibrant saturation
+      const fallbackBlurHsl = [hue, 55, 35]; // More saturated than before
+      const [r, g, b] = hslToRgb(...fallbackBlurHsl);
+      const blurColor = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      
+      const highlightHsl = createTitleHighlightColor(fallbackBlurHsl);
+      const linkHsl = createBulletTextColor(fallbackBlurHsl, highlightHsl);
       const fallbackInfoBoxHsl = createInfoBoxColor(fallbackBlurHsl);
       const [fiR, fiG, fiB] = hslToRgb(...fallbackInfoBoxHsl);
       const fallbackInfoBoxColor = `rgb(${fiR}, ${fiG}, ${fiB})`;
@@ -921,9 +955,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
       setImageDominantColors(prev => ({
         ...prev,
         [storyIndex]: {
-          blurColor: '#3A4A5E',
-          highlight: '#A8C4E0',
-          link: '#5A6F8E',
+          blurColor: blurColor,
+          highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
+          link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
           infoBox: fallbackInfoBoxColor
         }
       }));
@@ -1101,6 +1135,61 @@ export default function Home({ initialNews, initialWorldEvents }) {
       setShowGraph(newShowGraph);
     }
   }, [stories]); 
+
+  // PRE-GENERATE category-based colors for all articles
+  // This ensures blur colors always appear even if images fail to load
+  useEffect(() => {
+    if (stories.length === 0) return;
+    
+    // Category-to-hue mapping for meaningful colors
+    const categoryHues = {
+      'World': 220, 'Politics': 0, 'Business': 150, 'Technology': 270,
+      'Science': 180, 'Health': 330, 'Sports': 25, 'Entertainment': 50,
+      'Lifestyle': 40, 'Finance': 140, 'Environment': 160, 'Breaking News': 350
+    };
+    
+    const newColors = { ...imageDominantColors };
+    let hasNewColors = false;
+    
+    stories.forEach((story, index) => {
+      // Skip if already has colors or not a news story
+      if (imageDominantColors[index] || story.type !== 'news') return;
+      
+      // Generate category-based color
+      const category = story.category?.replace(/\s+/g, '') || 'World';
+      const baseHue = categoryHues[category] || 220;
+      
+      // Add variation using story ID
+      const idHash = (story.id || '').toString().split('').reduce((acc, char) => 
+        char.charCodeAt(0) + ((acc << 5) - acc), 0);
+      const hueVariation = (Math.abs(idHash) % 21) - 10;
+      const hue = (baseHue + hueVariation + 360) % 360;
+      const saturation = 55 + (Math.abs(idHash % 25));
+      const lightness = 30 + (Math.abs((idHash >> 8) % 15));
+      
+      const [r, g, b] = hslToRgb(hue, saturation, lightness);
+      const blurColor = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      
+      const blurHsl = [hue, saturation, lightness];
+      const highlightHsl = createTitleHighlightColor(blurHsl);
+      const linkHsl = createBulletTextColor(blurHsl, highlightHsl);
+      const infoBoxHsl = createInfoBoxColor(blurHsl);
+      const [iR, iG, iB] = hslToRgb(...infoBoxHsl);
+      
+      newColors[index] = {
+        blurColor: blurColor,
+        highlight: `hsl(${highlightHsl[0]}, ${highlightHsl[1]}%, ${highlightHsl[2]}%)`,
+        link: `hsl(${linkHsl[0]}, ${linkHsl[1]}%, ${linkHsl[2]}%)`,
+        infoBox: `rgb(${iR}, ${iG}, ${iB})`
+      };
+      hasNewColors = true;
+    });
+    
+    if (hasNewColors) {
+      console.log('🎨 Pre-generated category-based colors for', Object.keys(newColors).length, 'articles');
+      setImageDominantColors(newColors);
+    }
+  }, [stories]); // Re-run when stories change
 
   // Authentication state
   const [user, setUser] = useState(null);
@@ -1431,12 +1520,88 @@ export default function Home({ initialNews, initialWorldEvents }) {
   }, []);
 
   // Initialize ReadArticleTracker
+  const [isTrackerReady, setIsTrackerReady] = useState(false);
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       readTrackerRef.current = new ReadArticleTracker();
-      console.log('✅ ReadArticleTracker initialized');
+      setIsTrackerReady(true);
+      
+      // Log all read articles immediately
+      const readArticles = readTrackerRef.current.getReadArticles();
+      console.log('✅ ReadArticleTracker initialized with', Object.keys(readArticles).length, 'read articles:', Object.keys(readArticles));
     }
   }, []);
+
+  // CRITICAL FIX: Filter out read articles from SSR data after hydration
+  // SSR can't access localStorage, so we must filter client-side after ReadArticleTracker is ready
+  const [hasFilteredSSRArticles, setHasFilteredSSRArticles] = useState(false);
+  
+  useEffect(() => {
+    console.log('🔍🔍🔍 SSR FILTER EFFECT RUNNING 🔍🔍🔍');
+    console.log('🔍 State: isTrackerReady=', isTrackerReady, 'hasFiltered=', hasFilteredSSRArticles, 'stories.length=', stories.length);
+    
+    // Only run once after readTracker is initialized and we have stories from SSR
+    if (!isTrackerReady) {
+      console.log('🔍 SKIP: Tracker not ready');
+      return;
+    }
+    if (!readTrackerRef.current) {
+      console.log('🔍 SKIP: readTrackerRef.current is null');
+      return;
+    }
+    if (hasFilteredSSRArticles) {
+      console.log('🔍 SKIP: Already filtered (hasFilteredSSRArticles=true)');
+      return;
+    }
+    if (stories.length <= 1) {
+      console.log('🔍 SKIP: Not enough stories (length=', stories.length, ')');
+      return;
+    }
+    
+    console.log('🔍 PROCEEDING WITH FILTER...');
+    
+    // Get current read articles for debugging
+    const readArticles = readTrackerRef.current.getReadArticles();
+    const readIds = Object.keys(readArticles);
+    console.log('🔍 Read articles in localStorage:', readIds);
+    
+    // Filter out read articles from the SSR-loaded stories
+    const openingStory = stories.find(s => s.type === 'opening');
+    const newsStories = stories.filter(s => s.type === 'news');
+    const otherStories = stories.filter(s => s.type !== 'news' && s.type !== 'opening');
+    
+    console.log('🔍 News stories to filter:', newsStories.length);
+    console.log('🔍 News story IDs:', newsStories.map(s => s.id));
+    
+    const unreadNewsStories = newsStories.filter(story => {
+      if (!story.id) {
+        console.log('🔍 Keeping story with no ID');
+        return true;
+      }
+      const articleIdStr = String(story.id);
+      const isRead = readTrackerRef.current.hasBeenRead(articleIdStr);
+      console.log('🔍 Checking article', articleIdStr, '- isRead:', isRead);
+      if (isRead) {
+        console.log('🔍 >>> FILTERING OUT:', articleIdStr, story.title?.substring(0, 30));
+      }
+      return !isRead;
+    });
+    
+    const filteredCount = newsStories.length - unreadNewsStories.length;
+    console.log(`🔍 FILTER COMPLETE: ${filteredCount} removed, ${unreadNewsStories.length} remaining`);
+    
+    // ALWAYS update stories and mark as filtered
+    const newStories = openingStory 
+      ? [openingStory, ...unreadNewsStories, ...otherStories]
+      : [...unreadNewsStories, ...otherStories];
+    
+    console.log('🔍 Setting new stories array with', newStories.length, 'items');
+    setStories(newStories);
+    storiesRef.current = newStories;
+    setHasFilteredSSRArticles(true);
+    console.log('🔍🔍🔍 SSR FILTER COMPLETE 🔍🔍🔍');
+  }, [isTrackerReady, stories, hasFilteredSSRArticles]);
 
   // Keep storiesRef updated with latest stories value
   useEffect(() => {
@@ -2156,21 +2321,30 @@ export default function Home({ initialNews, initialWorldEvents }) {
              });
             
             // Filter out read articles using ReadArticleTracker
+            console.log('📰 loadNewsData: Starting filter, readTrackerRef.current exists:', !!readTrackerRef.current);
             let unreadStories = processedStories;
             if (readTrackerRef.current) {
+              const readArticleIds = Object.keys(readTrackerRef.current.getReadArticles());
+              console.log('📰 loadNewsData: Read article IDs from localStorage:', readArticleIds);
+              console.log('📰 loadNewsData: Incoming story IDs:', processedStories.filter(s => s.type === 'news').map(s => String(s.id)));
+              
               unreadStories = processedStories.filter((story, index) => {
                 // Always keep opening story
                 if (index === 0) return true;
                 // Keep non-news stories
                 if (story.type !== 'news') return true;
                 // Filter out read articles
-                return !readTrackerRef.current.hasBeenRead(story.id);
+                const isRead = readTrackerRef.current.hasBeenRead(story.id);
+                if (isRead) {
+                  console.log('📰 loadNewsData: Filtering out read article:', String(story.id));
+                }
+                return !isRead;
               });
               
               const filteredCount = processedStories.length - unreadStories.length;
-              if (filteredCount > 0) {
-                console.log(`🔍 Filtered out ${filteredCount} read articles`);
-              }
+              console.log(`📰 loadNewsData: Filtered ${filteredCount} read articles, ${unreadStories.length} remaining`);
+            } else {
+              console.log('📰 loadNewsData: NO readTrackerRef.current - SKIP FILTER');
             }
             
             // Sort articles by score (highest first), with date tie-breaking
@@ -2304,16 +2478,28 @@ export default function Home({ initialNews, initialWorldEvents }) {
             
             // For background refresh, only update if there are new articles
             if (isBackgroundRefresh) {
-              const currentIds = new Set(stories.filter(s => s.id).map(s => s.id));
-              const newArticles = finalStories.filter(s => s.id && !currentIds.has(s.id));
+              // CRITICAL: Use storiesRef.current to get the LATEST filtered stories
+              // (not the stale closure value of 'stories')
+              const currentStories = storiesRef.current || [];
+              const currentIds = new Set(currentStories.filter(s => s.id).map(s => String(s.id)));
+              const newArticles = finalStories.filter(s => s.id && !currentIds.has(String(s.id)));
+              
+              console.log('🔄 Background refresh comparison:', {
+                currentStoriesCount: currentStories.length,
+                finalStoriesCount: finalStories.length,
+                newArticlesCount: newArticles.length
+              });
+              
               if (newArticles.length > 0) {
                 console.log(`🆕 Background refresh found ${newArticles.length} new articles - updating`);
                 setStories(finalStories);
+                storiesRef.current = finalStories;
               } else {
-                console.log('✅ Background refresh - no new articles, keeping current data');
+                console.log('✅ Background refresh - no new articles, keeping current filtered data');
               }
             } else {
               setStories(finalStories);
+              storiesRef.current = finalStories;
             }
             
             // Track pagination info
@@ -6044,26 +6230,50 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                   });
                                 };
                                 
-                                // Strategy 4: Simplified color from image analysis (no canvas)
+                                // Strategy 4: Category-based color with URL hash variation
+                                // This generates VIBRANT, MEANINGFUL colors based on article category
                                 const trySimplifiedExtraction = () => {
                                   return new Promise((resolve) => {
-                                    console.log(`  → Strategy 4: Simplified extraction from visible pixels`);
+                                    console.log(`  → Strategy 4: Category-based color generation`);
                                     
-                                    // Use a very simple heuristic based on the image source
-                                    // This is a fallback that generates reasonable colors
-                                    const hash = imageUrl.split('').reduce((acc, char) => {
+                                    // Category-to-hue mapping for meaningful colors
+                                    const categoryHues = {
+                                      'World': 220,        // Blue - global affairs
+                                      'Politics': 0,       // Red - political content
+                                      'Business': 150,     // Green - business/finance
+                                      'Technology': 270,   // Purple - tech
+                                      'Science': 180,      // Cyan - scientific
+                                      'Health': 330,       // Pink - health/medical
+                                      'Sports': 25,        // Orange - sports
+                                      'Entertainment': 50, // Yellow-Orange - entertainment
+                                      'Lifestyle': 40,     // Amber - lifestyle
+                                      'Finance': 140,      // Teal-Green - markets
+                                      'Environment': 160,  // Sea Green - environment
+                                      'Breaking News': 350 // Red-Pink - breaking
+                                    };
+                                    
+                                    // Get base hue from category, or use URL hash for variety
+                                    const category = story.category?.replace(/\s+/g, '') || 'World';
+                                    let baseHue = categoryHues[category] || categoryHues['World'];
+                                    
+                                    // Add slight variation using URL/ID hash to prevent identical colors for same category
+                                    const hashSource = `${story.id || ''}${imageUrl}`;
+                                    const hash = hashSource.split('').reduce((acc, char) => {
                                       return char.charCodeAt(0) + ((acc << 5) - acc);
                                     }, 0);
                                     
-                                    // Generate colors that vary but aren't too extreme
-                                    const hue = Math.abs(hash % 360);
-                                    const saturation = 40 + (Math.abs(hash % 30)); // 40-70%
-                                    const lightness = 25 + (Math.abs((hash >> 8) % 15)); // 25-40%
+                                    // Add ±20 hue variation based on hash
+                                    const hueVariation = (Math.abs(hash) % 41) - 20; // -20 to +20
+                                    const hue = (baseHue + hueVariation + 360) % 360;
+                                    
+                                    // Generate MORE VIBRANT colors (higher saturation)
+                                    const saturation = 55 + (Math.abs(hash % 25)); // 55-80% (was 40-70%)
+                                    const lightness = 30 + (Math.abs((hash >> 8) % 15)); // 30-45% (slightly lighter)
                                     
                                     const [r, g, b] = hslToRgb(hue, saturation, lightness);
                                     const blurColor = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
                                     
-                                    console.log(`  ✓ Strategy 4: Generated color ${blurColor} from URL hash`);
+                                    console.log(`  ✓ Strategy 4: Generated color ${blurColor} for category '${category}'`);
                                     
                                     // Use the same VIBRANT color generation functions
                                     const blurHsl = [hue, saturation, lightness];
@@ -8798,10 +9008,13 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
 
 // Server-Side Rendering - pre-fetch news data for instant loading
 export async function getServerSideProps({ req, res }) {
-  // Disable caching for SSR page - always return fresh data
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  // AGGRESSIVE no-caching - prevent all forms of caching
+  res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  res.setHeader('Expires', '-1');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
   
   try {
     // Determine base URL based on environment
@@ -8810,14 +9023,26 @@ export async function getServerSideProps({ req, res }) {
     const host = req?.headers?.host || 'localhost:3000';
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
     
-    // Fetch news and world events in parallel with cache-busting
+    // Cache-busting with timestamp AND random value
     const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(7);
+    const cacheBuster = `t=${timestamp}&r=${random}`;
+    
+    // Fetch news and world events in parallel with aggressive cache-busting
     const [newsResponse, eventsResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/news?page=1&pageSize=30&t=${timestamp}`, {
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      fetch(`${baseUrl}/api/news?page=1&pageSize=30&${cacheBuster}`, {
+        headers: { 
+          'Cache-Control': 'no-cache, no-store',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'  // Node.js fetch cache option
       }).catch(() => null),
-      fetch(`${baseUrl}/api/world-events?limit=8&t=${timestamp}`, {
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      fetch(`${baseUrl}/api/world-events?limit=8&${cacheBuster}`, {
+        headers: { 
+          'Cache-Control': 'no-cache, no-store',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
       }).catch(() => null)
     ]);
 

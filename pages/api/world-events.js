@@ -1,5 +1,6 @@
 // API endpoint to fetch world events for the first page
 // Returns active events sorted by update count, recency, importance
+// OPTIMIZED: Single query approach with minimal data transfer
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -9,6 +10,10 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
+  // Short caching for better performance (30s cache, 60s stale-while-revalidate)
+  // This balances freshness with performance for the first page load
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+  
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -17,21 +22,10 @@ export default async function handler(req, res) {
     const { since, limit = 8 } = req.query;
     const sinceDate = since ? new Date(parseInt(since)) : new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Fetch active world events - just the basic data, fast query
+    // Fetch active world events - optimized: only essential fields
     const { data: events, error } = await supabase
       .from('world_events')
-      .select(`
-        id,
-        name,
-        slug,
-        image_url,
-        blur_color,
-        importance,
-        status,
-        last_article_at,
-        created_at,
-        background
-      `)
+      .select('id, name, slug, image_url, blur_color, importance, status, last_article_at, created_at, background')
       .eq('status', 'ongoing')
       .order('last_article_at', { ascending: false })
       .limit(parseInt(limit));
@@ -45,7 +39,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ events: [], total: 0 });
     }
 
-    // Get all article counts in a SINGLE query instead of N queries
+    // OPTIMIZATION: Get article counts in a single batch query
+    // Only fetch event_id column to minimize data transfer
     const eventIds = events.map(e => e.id);
     const { data: articleCounts, error: countError } = await supabase
       .from('article_world_events')
@@ -53,15 +48,15 @@ export default async function handler(req, res) {
       .in('event_id', eventIds)
       .gte('tagged_at', sinceDate.toISOString());
 
-    // Count articles per event
+    // Count articles per event efficiently
     const countMap = {};
     if (!countError && articleCounts) {
-      articleCounts.forEach(row => {
+      for (const row of articleCounts) {
         countMap[row.event_id] = (countMap[row.event_id] || 0) + 1;
-      });
+      }
     }
 
-    // Add counts to events
+    // Add counts to events and return
     const eventsWithCounts = events.map(event => ({
       ...event,
       newUpdates: countMap[event.id] || 0
@@ -69,22 +64,12 @@ export default async function handler(req, res) {
 
     // Sort by: update count (desc) → last_article_at (desc) → importance (desc)
     eventsWithCounts.sort((a, b) => {
-      // First by update count
-      if (b.newUpdates !== a.newUpdates) {
-        return b.newUpdates - a.newUpdates;
-      }
-      // Then by recency
+      if (b.newUpdates !== a.newUpdates) return b.newUpdates - a.newUpdates;
       const aTime = new Date(a.last_article_at || a.created_at).getTime();
       const bTime = new Date(b.last_article_at || b.created_at).getTime();
-      if (bTime !== aTime) {
-        return bTime - aTime;
-      }
-      // Finally by importance
+      if (bTime !== aTime) return bTime - aTime;
       return (b.importance || 5) - (a.importance || 5);
     });
-
-    // Add caching headers for faster subsequent loads
-    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
     
     return res.status(200).json({
       events: eventsWithCounts,
