@@ -3203,6 +3203,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
           e.target.closest('.language-switcher__option')) {
         return;
       }
+      
+      // Don't capture touch on events scroll (allow native horizontal scrolling)
+      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
+        return;
+      }
 
       // Don't capture touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
@@ -3346,6 +3351,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
       if (e.target.closest('.language-icon-btn') ||
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
+      // Don't block touch on events scroll (allow native horizontal scrolling)
+      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
         return;
       }
 
