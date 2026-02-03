@@ -1037,6 +1037,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
           overscroll-behavior-x: contain;
+          touch-action: pan-x;
         }
 
         .events-scroll::-webkit-scrollbar {
@@ -1068,37 +1069,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-card:active {
           transform: scale(0.98);
-        }
-
-        /* Pagination dots */
-        .events-pagination {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 8px;
-          padding: 12px 0 0 0;
-        }
-
-        .pagination-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.15);
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        .pagination-dot:hover {
-          background: rgba(0, 0, 0, 0.3);
-        }
-
-        .pagination-dot.active {
-          width: 24px;
-          border-radius: 4px;
-          background: rgba(0, 0, 0, 0.7);
         }
 
         .event-image-wrapper {
@@ -1397,18 +1367,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           .event-skeleton .skeleton-shimmer {
             border-radius: 20px;
           }
-          .events-pagination {
-            gap: 6px;
-            padding: 10px 0 0 0;
-          }
-          .pagination-dot {
-            width: 6px;
-            height: 6px;
-          }
-          .pagination-dot.active {
-            width: 20px;
-            border-radius: 3px;
-          }
           .swipe-hint {
             bottom: 15px;
             font-size: 14px;
@@ -1478,18 +1436,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             min-width: 14px;
             height: 14px;
             font-size: 9px;
-          }
-          .events-pagination {
-            gap: 5px;
-            padding: 8px 0 0 0;
-          }
-          .pagination-dot {
-            width: 5px;
-            height: 5px;
-          }
-          .pagination-dot.active {
-            width: 18px;
-            border-radius: 2.5px;
           }
         }
       `}</style>
@@ -1615,32 +1561,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                   })
                 )}
               </div>
-              
-              {/* Pagination dots */}
-              {!eventsLoading && worldEvents.length > 1 && (
-                <div className="events-pagination">
-                  {worldEvents.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`pagination-dot ${currentEventIndex === index ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const el = eventsScrollRef.current;
-                        if (!el) return;
-                        const cardEl = el.querySelector('.event-card');
-                        if (!cardEl) return;
-                        const cardWidth = cardEl.offsetWidth;
-                        // Gap values must match CSS: 16px default, 12px for <=480px, 10px for <=375px
-                        const gap = window.innerWidth <= 375 ? 10 : window.innerWidth <= 480 ? 12 : 16;
-                        const targetScroll = index * (cardWidth + gap);
-                        el.scrollTo({ left: targetScroll, behavior: 'smooth' });
-                        stopAutoScroll();
-                      }}
-                      aria-label={`Go to event ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
