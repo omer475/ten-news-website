@@ -501,21 +501,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
       
       currentIndex++;
       
-      // When reaching the duplicated set, reset to start seamlessly
-      if (currentIndex >= cardCount) {
-        // Jump instantly to start (same visual position due to duplication)
-        el.scrollLeft = 0;
-        currentIndex = 0;
-        // Then scroll to first card after a tiny delay
-        setTimeout(() => {
-          if (eventsAutoScrollRef.current) {
-            scrollToCard(1);
-            currentIndex = 1;
-          }
-        }, 50);
-      } else {
-        scrollToCard(currentIndex);
+      // When reaching the end of duplicated set, loop back seamlessly
+      if (currentIndex >= cardCount * 2) {
+        // We're at the end of the duplicated array, jump back to first half
+        const cardWidth = el.firstElementChild?.offsetWidth || 300;
+        const gap = 16;
+        el.scrollLeft = el.scrollLeft - (cardCount * (cardWidth + gap));
+        currentIndex = cardCount;
       }
+      
+      scrollToCard(currentIndex);
     };
 
     // Start auto-scroll after initial delay
@@ -532,27 +527,48 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
   }, [worldEvents]);
 
+  // Track if user has interacted with scroll
+  const userScrolledRef = useRef(false);
+  const lastScrollLeftRef = useRef(0);
+  
   // Handle infinite scroll loop for manual scrolling
   const handleEventsScroll = useCallback(() => {
     const el = eventsScrollRef.current;
     if (!el || worldEvents.length === 0) return;
     
+    const scrollLeft = el.scrollLeft;
     const halfWidth = el.scrollWidth / 2;
-    const buffer = 50; // Small buffer to prevent edge flickering
+    const buffer = 20;
     
-    // When scrolling past halfway (right end), jump back to start seamlessly
-    if (el.scrollLeft >= halfWidth - buffer) {
-      el.scrollLeft = el.scrollLeft - halfWidth;
+    // Track scroll direction
+    const scrollingRight = scrollLeft > lastScrollLeftRef.current;
+    const scrollingLeft = scrollLeft < lastScrollLeftRef.current;
+    lastScrollLeftRef.current = scrollLeft;
+    
+    // Mark that user has scrolled
+    if (!userScrolledRef.current && (scrollingRight || scrollingLeft)) {
+      userScrolledRef.current = true;
+    }
+    
+    // Only apply infinite loop if user has scrolled
+    if (!userScrolledRef.current) return;
+    
+    // When scrolling past halfway (right end), jump back to first half
+    if (scrollingRight && scrollLeft >= halfWidth - buffer) {
+      el.scrollLeft = scrollLeft - halfWidth;
+      lastScrollLeftRef.current = el.scrollLeft;
     }
     // When scrolling before start (left end), jump to second half
-    else if (el.scrollLeft < buffer) {
-      el.scrollLeft = halfWidth + el.scrollLeft;
+    else if (scrollingLeft && scrollLeft <= buffer) {
+      el.scrollLeft = scrollLeft + halfWidth;
+      lastScrollLeftRef.current = el.scrollLeft;
     }
   }, [worldEvents]);
 
   // Stop auto-scroll when user interacts
   const stopAutoScroll = useCallback(() => {
     eventsAutoScrollRef.current = false;
+    userScrolledRef.current = true; // Enable manual infinite scroll
     if (eventsScrollAnimationRef.current) {
       clearInterval(eventsScrollAnimationRef.current);
       eventsScrollAnimationRef.current = null;
