@@ -9009,99 +9009,39 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
 
 // Server-Side Rendering with CDN caching for fast page loads
 export async function getServerSideProps({ req, res }) {
-  // Enable CDN caching: serve stale content while revalidating in background
-  // s-maxage=30: Cache on CDN for 30 seconds
-  // stale-while-revalidate=60: Serve stale content for 60s while fetching fresh data
+  // Enable CDN caching for faster subsequent loads
   res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
   
   try {
-    // Create Supabase client for direct DB queries
-    const supabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    // Determine base URL for API calls
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    const host = req?.headers?.host || 'localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
     
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
-    // Fetch news and events in parallel with minimal columns for speed
-    const [newsResult, eventsResult] = await Promise.all([
-      // Simplified news query - only essential fields
-      supabase
-        .from('published_articles')
-        .select('id, title_news, title, url, source, image_url, category, emoji, ai_final_score, summary_bullets_news, five_ws, timeline, graph, map, components_order, details_section, interest_tags, created_at, published_date')
-        .gte('created_at', twentyFourHoursAgo)
-        .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .limit(30)
-        .then(({ data, error }) => ({ articles: data || [], error }))
-        .catch(() => ({ articles: [], error: 'fetch failed' })),
-      // World events query
-      supabase
-        .from('world_events')
-        .select('id, name, slug, image_url, importance, last_article_at, background')
-        .eq('status', 'ongoing')
-        .order('last_article_at', { ascending: false })
-        .limit(8)
-        .then(({ data: events, error }) => {
-          if (error || !events) return { events: [], error };
-          return { events: events.map(e => ({ ...e, newUpdates: 0 })), error: null };
-        })
-        .catch(() => ({ events: [], error: 'fetch failed' }))
+    // Fetch news and world events via API (reliable approach)
+    const [newsResponse, eventsResponse] = await Promise.all([
+      fetch(`${baseUrl}/api/news?page=1&pageSize=30`, {
+        headers: { 'Cache-Control': 'no-cache' }
+      }).catch(() => null),
+      fetch(`${baseUrl}/api/world-events?limit=8`, {
+        headers: { 'Cache-Control': 'no-cache' }
+      }).catch(() => null)
     ]);
 
     let initialNews = null;
     let initialWorldEvents = null;
 
-    // Helper to parse JSON safely
-    const safeJsonParse = (value, fallback = null) => {
-      if (!value) return fallback;
-      if (typeof value !== 'string') return value;
-      try { return JSON.parse(value); } catch { return fallback; }
-    };
-
-    // Process direct DB result for news
-    if (newsResult?.articles && newsResult.articles.length > 0) {
-      // Filter out test articles
-      const now = Date.now();
-      const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-      const filteredArticles = newsResult.articles.filter(a => {
-        const url = a?.url || '';
-        const title = a?.title_news || a?.title || '';
-        if (/test/i.test(url) || /test/i.test(title)) return false;
-        const articleDate = a.created_at || a.added_at;
-        if (!articleDate) return false;
-        return (now - new Date(articleDate).getTime()) < twentyFourHoursMs;
-      });
-
-      if (filteredArticles.length > 0) {
+    if (newsResponse?.ok) {
+      const newsData = await newsResponse.json();
+      if (newsData.articles && newsData.articles.length > 0) {
         // Create opening story
         const openingStory = {
           type: 'opening',
           date: new Date().toLocaleDateString('en-US', {
             weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
           }).toUpperCase(),
-          headline: "Today's Essential Global News"
+          headline: newsData.dailyGreeting || "Today's Essential Global News"
         };
-
-        // Format articles with essential fields only (speed optimization)
-        const newsArticles = filteredArticles.map(article => ({
-          id: article.id,
-          title: article.title_news || article.title,
-          url: article.url,
-          source: article.source || 'Today+',
-          urlToImage: article.image_url,
-          category: article.category,
-          emoji: article.emoji || '📰',
-          final_score: article.ai_final_score || 0,
-          summary_bullets_news: safeJsonParse(article.summary_bullets_news, []),
-          five_ws: safeJsonParse(article.five_ws, null),
-          timeline: safeJsonParse(article.timeline, null),
-          graph: safeJsonParse(article.graph, null),
-          map: safeJsonParse(article.map, null),
-          components: article.components_order ? safeJsonParse(article.components_order, ['details']) : ['details'],
-          details: article.details_section ? article.details_section.split('\n') : [],
-          interest_tags: safeJsonParse(article.interest_tags, []),
-          publishedAt: article.published_date || article.created_at
-        }));
         
         // Format articles as stories with defaults for information boxes
         const defaultDetails = ['Impact Score: High significance', 'Read Time: 3-4 min', 'Source Credibility: Verified'];
@@ -9111,48 +9051,55 @@ export async function getServerSideProps({ req, res }) {
           { date: 'Today', event: 'Latest updates breaking' }
         ];
         
-        const newsStories = newsArticles.map((article, index) => {
-          // Build components array
-          let components = article.components;
-          if (!Array.isArray(components) || components.length === 0) {
-            components = ['details'];
-            if (article.timeline) components.push('timeline');
-            if (article.map) components.push('map');
-            if (article.graph) components.push('graph');
-          }
-          
-          return {
-            type: 'news',
-            rank: index + 1,
-            id: article.id,
-            title: article.title,
-            summary_bullets_news: article.summary_bullets_news || [],
-            five_ws: article.five_ws,
-            url: article.url,
-            urlToImage: article.urlToImage,
-            source: article.source,
-            category: article.category,
-            emoji: article.emoji || '📰',
-            details: article.details?.length > 0 ? article.details : defaultDetails,
-            timeline: article.timeline || defaultTimeline,
-            graph: article.graph,
-            map: article.map,
-            components,
-            final_score: article.final_score || 0,
-            interest_tags: article.interest_tags || []
-          };
-        });
+        const newsStories = newsData.articles
+          .filter(article => article && article.id)
+          .map((article, index) => {
+            // Build components array
+            let components = article.components;
+            if (!components || !Array.isArray(components) || components.length === 0) {
+              components = ['details'];
+              if (article.timeline) components.push('timeline');
+              if (article.map) components.push('map');
+              if (article.graph) components.push('graph');
+            }
+            
+            return {
+              type: 'news',
+              rank: index + 1,
+              id: article.id,
+              title: article.title || article.title_news,
+              summary_bullets: article.summary_bullets || [],
+              summary_bullets_news: article.summary_bullets_news || [],
+              summary_bullets_detailed: article.summary_bullets_detailed || [],
+              five_ws: article.five_ws || null,
+              url: article.url,
+              urlToImage: article.urlToImage,
+              source: article.source,
+              category: article.category,
+              emoji: article.emoji || '📰',
+              details: (article.details && article.details.length > 0) ? article.details : defaultDetails,
+              timeline: article.timeline || defaultTimeline,
+              graph: article.graph || null,
+              map: article.map || null,
+              components,
+              final_score: article.final_score || 0,
+              interest_tags: article.interest_tags || []
+            };
+          });
         
         initialNews = {
           stories: [openingStory, ...newsStories],
-          pagination: null
+          pagination: newsData.pagination || null
         };
       }
     }
 
-    // Process direct DB result for world events
-    if (eventsResult?.events && eventsResult.events.length > 0) {
-      initialWorldEvents = eventsResult.events;
+    // Process world events response
+    if (eventsResponse?.ok) {
+      const eventsData = await eventsResponse.json();
+      if (eventsData.events && eventsData.events.length > 0) {
+        initialWorldEvents = eventsData.events;
+      }
     }
 
     return {
