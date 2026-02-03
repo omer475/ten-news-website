@@ -83,6 +83,9 @@ export default async function handler(req, res) {
       return (b.importance || 5) - (a.importance || 5);
     });
 
+    // Add caching headers for faster subsequent loads
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+    
     return res.status(200).json({
       events: eventsWithCounts,
       total: eventsWithCounts.length

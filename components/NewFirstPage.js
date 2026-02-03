@@ -29,17 +29,22 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const eventsAutoScrollRef = useRef(true);
   const eventsScrollAnimationRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [scriptsLoaded, setScriptsLoaded] = useState(() => {
-    // Check if scripts are already loaded on mount
-    if (typeof window !== 'undefined') {
-      return { 
-        d3: !!window.d3, 
-        topojson: !!window.topojson 
-      };
-    }
-    return { d3: false, topojson: false };
-  });
+  // Initialize as false on server, check on client in useEffect
+  const [scriptsLoaded, setScriptsLoaded] = useState({ d3: false, topojson: false });
   const [newsCountByCountry, setNewsCountByCountry] = useState({});
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Track when component is mounted (client-side)
+  useEffect(() => {
+    setIsMounted(true);
+    // Check if scripts are already loaded
+    if (typeof window !== 'undefined') {
+      setScriptsLoaded({
+        d3: !!window.d3,
+        topojson: !!window.topojson
+      });
+    }
+  }, []);
   
   // Globe rotation state
   const rotationRef = useRef({ x: 0, y: -20 });
@@ -318,7 +323,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
   };
 
-  const [personalGreeting] = useState(() => getPersonalizedGreeting());
+  // Default greeting for SSR - will be updated on client
+  const defaultGreeting = {
+    greeting: 'Good morning',
+    subHighlight: 'Stay informed',
+    subRest: 'with today\'s headlines',
+    theme: { primary: '#f97316', secondary: '#fbbf24', accent: '#ea580c', bg: 'from-orange-50 to-amber-50' }
+  };
+  const [personalGreeting, setPersonalGreeting] = useState(defaultGreeting);
 
   // Witty swipe hints - randomly selected each time
   const swipeHints = [
@@ -339,7 +351,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     "Swipe up. We promise some of it is good news."
   ];
   
-  const [swipeHint] = useState(() => swipeHints[Math.floor(Math.random() * swipeHints.length)]);
+  // Default swipe hint for SSR
+  const [swipeHint, setSwipeHint] = useState(swipeHints[0]);
+  
+  // Update greeting and swipe hint on client side only
+  useEffect(() => {
+    setPersonalGreeting(getPersonalizedGreeting());
+    setSwipeHint(swipeHints[Math.floor(Math.random() * swipeHints.length)]);
+  }, []);
 
 
   // State for extracted blur colors from event images
@@ -400,53 +419,33 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  // State for world events - use SSR data first, then cache, then fetch
-  const [worldEvents, setWorldEvents] = useState(() => {
-    // Use SSR data if available
-    if (initialWorldEvents && initialWorldEvents.length > 0) {
-      return initialWorldEvents;
-    }
-    // Fall back to localStorage cache
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('tennews_world_events');
-        if (cached) {
-          const { events, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 5 * 60 * 1000 && events.length > 0) {
-            return events;
-          }
-        }
-      } catch (e) {}
-    }
-    return [];
-  });
-  const [eventsLoading, setEventsLoading] = useState(() => {
-    // Not loading if we have SSR data
-    if (initialWorldEvents && initialWorldEvents.length > 0) {
-      return false;
-    }
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('tennews_world_events');
-        if (cached) {
-          const { events, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 5 * 60 * 1000 && events.length > 0) {
-            return false;
-          }
-        }
-      } catch (e) {}
-    }
-    return true;
-  });
+  // State for world events - use SSR data if available, otherwise empty
+  const [worldEvents, setWorldEvents] = useState(initialWorldEvents || []);
+  const [eventsLoading, setEventsLoading] = useState(!initialWorldEvents || initialWorldEvents.length === 0);
 
-  // Fetch world events from API (runs in background, updates cache)
+  // Fetch world events from API only if SSR data is not available
   useEffect(() => {
-    // Skip if we already have SSR data
-    if (initialWorldEvents && initialWorldEvents.length > 0 && worldEvents.length > 0) {
+    // Skip if we have SSR data
+    if (initialWorldEvents && initialWorldEvents.length > 0) {
+      setWorldEvents(initialWorldEvents);
       setEventsLoading(false);
       return;
     }
     
+    // Try localStorage cache first
+    try {
+      const cached = localStorage.getItem('tennews_world_events');
+      if (cached) {
+        const { events, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000 && events && events.length > 0) {
+          setWorldEvents(events);
+          setEventsLoading(false);
+          return;
+        }
+      }
+    } catch (e) {}
+    
+    // Fetch from API
     const fetchWorldEvents = async () => {
       try {
         const lastVisit = localStorage.getItem('tennews_last_visit') || Date.now() - 24 * 60 * 60 * 1000;
@@ -471,7 +470,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     };
 
     fetchWorldEvents();
-  }, []);
+  }, [initialWorldEvents]);
 
   // Auto-scroll events - snap to each card, stay 4 seconds, then smooth scroll to next
   useEffect(() => {
@@ -895,31 +894,35 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  // Touch event handlers for mobile - use scroll position to detect swipe
+  // Touch event handlers for mobile - use touch position to detect swipe
   const handleTouchStart = (e) => {
     stopAutoScroll();
     dragState.current.hasMoved = false;
     
-    const el = eventsScrollRef.current;
-    if (el) {
-      dragState.current.scrollLeft = el.scrollLeft;
+    // Record touch start position
+    if (e.touches && e.touches[0]) {
+      dragState.current.touchStartX = e.touches[0].clientX;
+      dragState.current.touchStartY = e.touches[0].clientY;
     }
   };
 
-  const handleTouchMove = () => {
-    // Check if scroll position changed (means user is swiping)
-    const el = eventsScrollRef.current;
-    if (el && Math.abs(el.scrollLeft - dragState.current.scrollLeft) > 3) {
-      dragState.current.hasMoved = true;
+  const handleTouchMove = (e) => {
+    // Check if touch position changed significantly (means user is swiping)
+    if (e.touches && e.touches[0] && dragState.current.touchStartX !== undefined) {
+      const deltaX = Math.abs(e.touches[0].clientX - dragState.current.touchStartX);
+      const deltaY = Math.abs(e.touches[0].clientY - dragState.current.touchStartY);
+      // Only mark as moved if horizontal movement is significant
+      if (deltaX > 10 || deltaY > 10) {
+        dragState.current.hasMoved = true;
+      }
     }
   };
 
   const handleTouchEnd = () => {
-    // Check scroll position one more time
-    const el = eventsScrollRef.current;
-    if (el && Math.abs(el.scrollLeft - dragState.current.scrollLeft) > 3) {
-      dragState.current.hasMoved = true;
-    }
+    // Reset touch start position
+    dragState.current.touchStartX = undefined;
+    dragState.current.touchStartY = undefined;
+    // hasMoved stays as-is until next touchStart
   };
 
   // Smooth wheel scrolling
@@ -1525,10 +1528,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                                 </p>
                               )}
                               <div className="event-meta">
-                                {(() => {
+                                {/* Only show dynamic badges after mount to avoid hydration mismatch */}
+                                {isMounted && (() => {
                                   // Check for new articles since last visit to this event
                                   const lastVisitKey = `tennews_event_visit_${event.id}`;
-                                  const lastVisit = typeof window !== 'undefined' ? localStorage.getItem(lastVisitKey) : null;
+                                  const lastVisit = localStorage.getItem(lastVisitKey);
                                   const hasNewSinceVisit = lastVisit && event.last_article_at && 
                                     new Date(event.last_article_at) > new Date(parseInt(lastVisit));
                                   
@@ -1545,7 +1549,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                                 <span className="event-read-time">
                                   {Math.max(1, Math.ceil((event.newUpdates || 1) * 1.5))} min read
                                 </span>
-                                {event.last_article_at && (
+                                {isMounted && event.last_article_at && (
                                   <span className="event-time">
                                     {(() => {
                                       const diff = Date.now() - new Date(event.last_article_at).getTime();

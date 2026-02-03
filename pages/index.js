@@ -46,6 +46,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showMap, setShowMap] = useState({});
   const [showGraph, setShowGraph] = useState({});
   const [darkMode, setDarkMode] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
+  const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
   
   // 10 random colors for the + icon
   const plusIconColors = [
@@ -153,6 +155,30 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Set time values on client side only to avoid hydration mismatch
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }));
+      
+      const hour = now.getHours();
+      if (hour >= 5 && hour < 12) {
+        setTimeOfDay('morning');
+      } else if (hour >= 12 && hour < 18) {
+        setTimeOfDay('afternoon');
+      } else {
+        setTimeOfDay('evening');
+      }
+    };
+    
+    updateTime(); // Set immediately on mount
+    const interval = setInterval(updateTime, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-refresh when user returns to the page after leaving Safari/Chrome
   // This ensures users always see fresh news when they come back
@@ -1951,13 +1977,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
   }, [currentIndex, stories.length, hasMoreArticles, loadingMore, currentPage]);
 
   useEffect(() => {
-    // Skip fetching if we already have SSR data
-    if (stories.length > 0 && !loading) {
-      console.log('📦 Using SSR data, skipping client fetch');
-      return;
-    }
+    // If we have SSR data, still do a background refresh for freshness
+    const hasSSRData = stories.length > 0 && !loading;
     
-    const loadNewsData = async () => {
+    const loadNewsData = async (isBackgroundRefresh = false) => {
+      if (isBackgroundRefresh) {
+        console.log('🔄 Background refresh - checking for new articles...');
+      }
       try {
         const response = await fetch(`/api/news?page=1&pageSize=30&t=${Date.now()}`);
         
@@ -2276,7 +2302,19 @@ export default function Home({ initialNews, initialWorldEvents }) {
             
             console.log('📰 Setting stories:', finalStories.length);
             
-            setStories(finalStories);
+            // For background refresh, only update if there are new articles
+            if (isBackgroundRefresh) {
+              const currentIds = new Set(stories.filter(s => s.id).map(s => s.id));
+              const newArticles = finalStories.filter(s => s.id && !currentIds.has(s.id));
+              if (newArticles.length > 0) {
+                console.log(`🆕 Background refresh found ${newArticles.length} new articles - updating`);
+                setStories(finalStories);
+              } else {
+                console.log('✅ Background refresh - no new articles, keeping current data');
+              }
+            } else {
+              setStories(finalStories);
+            }
             
             // Track pagination info
             if (newsData.pagination) {
@@ -2522,7 +2560,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
       }
     };
     
-    loadNewsData();
+    if (hasSSRData) {
+      // Already have SSR data - do background refresh after 2 seconds
+      // This ensures fresh content while showing cached data immediately
+      const timer = setTimeout(() => {
+        loadNewsData(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      // No SSR data - load immediately
+      loadNewsData(false);
+    }
   }, []);
 
   const goToStory = (index, navigationSource = 'direct') => {
@@ -3350,19 +3398,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return <TodayPlusLoader />;
   }
 
-  const currentTime = new Date().toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-
-  // Time-of-day helper
-  const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return 'morning';
-    if (hour >= 12 && hour < 18) return 'afternoon';
-    return 'evening';
-  };
+  // Time-of-day helper - uses state to avoid hydration mismatch
+  const getTimeOfDay = () => timeOfDay;
 
   // Greeting gradient by time
   const getGreetingGradient = () => {
@@ -3388,12 +3425,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
     return 'linear-gradient(135deg, #f59e0b 0%, #f87171 100%)';
   };
 
-  // Function to get greeting text based on time
+  // Function to get greeting text based on time - uses timeOfDay state
   const getGreetingText = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) {
+    if (timeOfDay === 'morning') {
       return 'Goood morning';
-    } else if (hour >= 12 && hour < 18) {
+    } else if (timeOfDay === 'afternoon') {
       return 'Goood evening';
     } else {
       return 'Goood night';
@@ -3459,7 +3495,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
       </Head>
       
-      <style>{`
+      <style jsx global>{`
         * {
           margin: 0;
           padding: 0;
@@ -8761,17 +8797,22 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
 }
 
 // Server-Side Rendering - pre-fetch news data for instant loading
-export async function getServerSideProps() {
+export async function getServerSideProps({ req }) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tennews.ai';
+    // Determine base URL based on environment
+    // Use request host for SSR to work correctly in both dev and prod
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
+    const host = req?.headers?.host || 'localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
     
-    // Fetch news and world events in parallel
+    // Fetch news and world events in parallel with cache-busting
+    const timestamp = Date.now();
     const [newsResponse, eventsResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/news?page=1&pageSize=30`, {
-        headers: { 'Cache-Control': 'no-cache' }
+      fetch(`${baseUrl}/api/news?page=1&pageSize=30&t=${timestamp}`, {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       }).catch(() => null),
-      fetch(`${baseUrl}/api/world-events?limit=8`, {
-        headers: { 'Cache-Control': 'no-cache' }
+      fetch(`${baseUrl}/api/world-events?limit=8&t=${timestamp}`, {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
       }).catch(() => null)
     ]);
 
@@ -8790,34 +8831,36 @@ export async function getServerSideProps() {
           headline: newsData.dailyGreeting || "Today's Essential Global News"
         };
         
-        // Format articles as stories
-        const newsStories = newsData.articles.map((article, index) => ({
-          type: 'news',
-          rank: index + 1,
-          id: article.id,
-          title: article.title,
-          detailed_text: article.detailed_text,
-          summary_bullets: article.summary_bullets || [],
-          summary_bullets_news: article.summary_bullets_news || [],
-          summary_bullets_detailed: article.summary_bullets_detailed || [],
-          five_ws: article.five_ws,
-          url: article.url,
-          urlToImage: article.urlToImage,
-          source: article.source,
-          category: article.category,
-          emoji: article.emoji || '📰',
-          details: article.details || [],
-          timeline: article.timeline,
-          graph: article.graph,
-          map: article.map,
-          components: article.components,
-          final_score: article.final_score || 0,
-          interest_tags: article.interest_tags || []
-        }));
+        // Format articles as stories - filter out articles without id and sanitize data
+        const newsStories = newsData.articles
+          .filter(article => article && article.id) // Only include articles with valid id
+          .map((article, index) => ({
+            type: 'news',
+            rank: index + 1,
+            id: article.id,
+            title: article.title || null,
+            detailed_text: article.detailed_text || null,
+            summary_bullets: article.summary_bullets || [],
+            summary_bullets_news: article.summary_bullets_news || [],
+            summary_bullets_detailed: article.summary_bullets_detailed || [],
+            five_ws: article.five_ws || null,
+            url: article.url || null,
+            urlToImage: article.urlToImage || null,
+            source: article.source || null,
+            category: article.category || null,
+            emoji: article.emoji || '📰',
+            details: article.details || [],
+            timeline: article.timeline || null,
+            graph: article.graph || null,
+            map: article.map || null,
+            components: article.components || null,
+            final_score: article.final_score || 0,
+            interest_tags: article.interest_tags || []
+          }));
         
         initialNews = {
           stories: [openingStory, ...newsStories],
-          pagination: newsData.pagination
+          pagination: newsData.pagination || null
         };
       }
     }

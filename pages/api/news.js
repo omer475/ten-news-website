@@ -117,8 +117,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  // Cache for 30 seconds to reduce repeated calls
-  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+  // Short cache - 10 seconds to ensure relatively fresh data
+  res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=30');
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });

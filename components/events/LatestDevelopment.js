@@ -5,12 +5,13 @@
  * Highlighted section at the top of the event page.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 /**
  * Format relative time (e.g., "2 hours ago")
  */
 function getRelativeTime(dateString) {
+  if (!dateString) return '';
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now - date;
@@ -26,12 +27,22 @@ function getRelativeTime(dateString) {
 }
 
 export default function LatestDevelopment({ latest, accentColor }) {
+  // Use state for time display to avoid hydration mismatch
+  const [displayTime, setDisplayTime] = useState('');
+  
+  useEffect(() => {
+    if (latest?.published_at) {
+      setDisplayTime(getRelativeTime(latest.published_at));
+    } else if (latest?.time) {
+      setDisplayTime(latest.time);
+    }
+  }, [latest]);
+  
   if (!latest) {
     return null;
   }
   
-  const { title, summary, published_at, time, components } = latest;
-  const displayTime = published_at ? getRelativeTime(published_at) : time;
+  const { title, summary, components } = latest;
   
   // Get details from components (3 details from original article)
   const details = components?.details || components?.info_boxes || [];
@@ -75,78 +86,18 @@ export default function LatestDevelopment({ latest, accentColor }) {
         .latest-label {
           display: flex;
           align-items: center;
-          gap: 8px;
-        }
-
-        .pulse-dot {
-          position: relative;
-          width: 8px;
-          height: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .pulse-dot-inner {
-          position: relative;
-          display: block;
-          border-radius: 50%;
-          width: 8px;
-          height: 8px;
-          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-          box-shadow: 
-            0 0 0 0 rgba(239, 68, 68, 0.4),
-            0 0 6px 1px rgba(239, 68, 68, 0.3),
-            inset 0 1px 1px rgba(255, 255, 255, 0.3);
-          animation: glow 2s ease-in-out infinite;
-        }
-
-        .pulse-dot-ring {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          border: 1.5px solid rgba(239, 68, 68, 0.6);
-          animation: ripple 2s ease-out infinite;
-        }
-
-        @keyframes glow {
-          0%, 100% {
-            box-shadow: 
-              0 0 0 0 rgba(239, 68, 68, 0.4),
-              0 0 6px 1px rgba(239, 68, 68, 0.3),
-              inset 0 1px 1px rgba(255, 255, 255, 0.3);
-          }
-          50% {
-            box-shadow: 
-              0 0 0 3px rgba(239, 68, 68, 0.1),
-              0 0 10px 2px rgba(239, 68, 68, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.3);
-          }
-        }
-
-        @keyframes ripple {
-          0% {
-            width: 8px;
-            height: 8px;
-            opacity: 0.6;
-          }
-          100% {
-            width: 20px;
-            height: 20px;
-            opacity: 0;
-          }
         }
 
         .latest-label-text {
-          font-size: 12px;
+          display: inline-block;
+          font-size: 10px;
           font-weight: 600;
-          color: #1d1d1f;
+          color: #ffffff;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          background: #ef4444;
+          padding: 4px 10px;
+          border-radius: 20px;
         }
 
         .latest-time {
@@ -264,10 +215,6 @@ export default function LatestDevelopment({ latest, accentColor }) {
         <div className="latest-card">
           <div className="latest-header">
             <div className="latest-label">
-              <span className="pulse-dot">
-                <span className="pulse-dot-ring"></span>
-                <span className="pulse-dot-inner"></span>
-              </span>
               <span className="latest-label-text">Latest Development</span>
             </div>
             
