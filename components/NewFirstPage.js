@@ -1012,6 +1012,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           opacity: 0;
           position: relative;
           z-index: 10;
+          touch-action: pan-x pan-y;
         }
 
         .events-header {
@@ -1037,6 +1038,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           -webkit-overflow-scrolling: touch;
           scroll-snap-type: x mandatory;
           overscroll-behavior-x: contain;
+          touch-action: pan-x;
+          cursor: grab;
         }
 
         .events-scroll::-webkit-scrollbar {
@@ -1064,6 +1067,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           user-select: none;
           -webkit-user-select: none;
           -webkit-touch-callout: none;
+          touch-action: pan-x;
         }
 
         .event-card:active {
@@ -1519,11 +1523,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
-                onWheel={handleEventsWheel}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
                 onScroll={handleEventsScroll}
+                onTouchStart={() => stopAutoScroll()}
               >
                 {eventsLoading && worldEvents.length === 0 ? (
                   // Show skeleton placeholders while loading
@@ -1542,17 +1543,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                         key={`${event.id}-${index}`} 
                         href={`/event/${event.slug || event.id}`}
                         className="event-card"
-                        onClick={(e) => {
-                          // Don't navigate if user was swiping
-                          if (dragState.current.hasMoved) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // Reset for next interaction
-                            dragState.current.hasMoved = false;
-                            return;
-                          }
-                          // Allow normal link behavior for navigation
-                        }}
+                        draggable="false"
                       >
                         <div className="event-image-wrapper">
                           {event.image_url && (
