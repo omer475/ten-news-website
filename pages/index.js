@@ -118,8 +118,6 @@ export default function Home() {
     const isImportant = currentStory?.final_score >= 900 || currentStory?.isImportant || false;
     const newColor = '#ffffff'; // Always white - important news only has red accent lines
     
-    console.log(`🎨 Safe Area Update: index=${currentIndex}, title="${currentStory?.title?.substring(0, 30) || 'Opening'}...", score=${currentStory?.final_score || 'N/A'}, isImportant=${isImportant}, color=${newColor}`);
-    
     // Update state
     setSafeAreaColor(newColor);
     
@@ -312,9 +310,8 @@ export default function Home() {
   const getAvailableInformationTypes = (story) => {
     // If components array exists, use it to determine order
     if (story.components && Array.isArray(story.components) && story.components.length > 0) {
-      console.log(`📊 Story "${story.title?.substring(0, 30)}..." has components array:`, story.components);
       // Filter to only include components that actually have data
-      const filtered = story.components.filter(type => {
+      return story.components.filter(type => {
         switch (type) {
           case 'details':
             return story.details && story.details.length > 0;
@@ -328,11 +325,8 @@ export default function Home() {
         return false;
         }
       });
-      console.log(`✅ Filtered components for this story:`, filtered);
-      return filtered;
     }
     
-    console.log(`⚠️  Story "${story.title?.substring(0, 30)}..." has NO components array, using fallback`);
     // Fallback: check which components exist (old behavior)
     const types = [];
     if (story.details && story.details.length > 0) types.push('details');
@@ -6916,17 +6910,6 @@ export default function Home() {
                                 const hasFiveWsData = fiveWs && typeof fiveWs === 'object' && Object.keys(fiveWs).length > 0;
                                 const showFiveWs = mode === 'b2' && hasFiveWsData;
                                 
-                                console.log(`🔹 SUMMARY [${index}]:`, { 
-                                  mode, 
-                                  showFiveWs, 
-                                  has_five_ws: !!fiveWs, 
-                                  has_five_ws_data: hasFiveWsData,
-                                  five_ws_keys: fiveWs ? Object.keys(fiveWs) : [],
-                                  five_ws_raw: fiveWs,
-                                  story_five_ws: story.five_ws,
-                                  bullets_count: bullets.length 
-                                });
-                                
                                 // Render 5 W's format
                                 if (showFiveWs) {
                                   const wsLabels = [
@@ -7076,23 +7059,7 @@ export default function Home() {
                       {/* Fixed Position Toggle and Content Area - Lower Position */}
                     {/* Always show information box if there are any available components, regardless of image presence */}
                     {/* MOVED OUTSIDE news-content to fix stacking context issue */}
-                    {(() => {
-                        const componentCount = getAvailableComponentsCount(story);
-                        // Debug logging
-                        if (componentCount === 0) {
-                          console.log(`⚠️ Story ${index} (${story.title?.substring(0, 50)}) has NO components:`, {
-                            hasDetails: !!(story.details && story.details.length > 0),
-                            hasTimeline: !!(story.timeline && story.timeline.length > 0),
-                            hasMap: !!story.map,
-                            hasGraph: !!story.graph,
-                            urlToImage: story.urlToImage
-                          });
-                        } else {
-                          // Log when components exist to help debug visibility issues
-                          console.log(`✅ Story ${index} (${story.title?.substring(0, 30)}) has ${componentCount} component(s), image: ${!!story.urlToImage}`);
-                        }
-                        return componentCount > 0;
-                      })() && (
+                    {getAvailableComponentsCount(story) > 0 && (
                       <div style={{
                         position: 'fixed',
                         bottom: '5px',

@@ -50,65 +50,28 @@ export default async function handler(req, res) {
       throw error
     }
 
-    console.log(`\n🔍 RAW SUPABASE QUERY RESULT: ${articles?.length || 0} articles fetched`)
-
     // Filter out test records AND articles older than 24 hours
     const now = Date.now();
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
     
-    let testFilteredCount = 0;
-    let dateFilteredCount = 0;
-    let noDateCount = 0;
-    
     const filteredArticles = (articles || []).filter(a => {
       // Filter out test articles
       const url = a?.url || ''
-      const title = a?.title_news || a?.title || ''  // Check title_news first (new schema)
+      const title = a?.title_news || a?.title || ''
       const source = a?.source || ''
       const isNotTest = url && !/test/i.test(url) && !/test/i.test(title) && !/test/i.test(source);
       
-      if (!isNotTest) {
-        testFilteredCount++;
-        return false;
-      }
+      if (!isNotTest) return false;
       
-      // Filter by when article was added to database (not when originally published)
-      // This shows all articles added in last 24h, even if news is older
+      // Filter by when article was added to database
       const articleDate = a.created_at || a.added_at || a.published_date || a.published_at;
-      
-      if (!articleDate) {
-        noDateCount++;
-        console.warn('⚠️ Article missing ALL date fields, excluding:', title);
-        return false;
-      }
+      if (!articleDate) return false;
       
       const articleTime = new Date(articleDate).getTime();
-      if (isNaN(articleTime)) {
-        console.warn('⚠️ Invalid article date, excluding:', title);
-        return false;
-      }
+      if (isNaN(articleTime)) return false;
       
-      const ageMs = now - articleTime;
-      const isRecent = ageMs < twentyFourHoursMs;
-      
-      if (!isRecent) {
-        dateFilteredCount++;
-        const hoursOld = (ageMs / (1000 * 60 * 60)).toFixed(1);
-        const daysOld = (hoursOld / 24).toFixed(1);
-        console.log(`🗑️ Filtering out old news (${hoursOld}h / ${daysOld}d old):`, title);
-      }
-      
-      return isRecent;
+      return (now - articleTime) < twentyFourHoursMs;
     })
-
-    console.log(`\n📊 DETAILED FILTER STATS:`)
-    console.log(`  ✅ Fetched from Supabase: ${articles?.length || 0} articles`)
-    console.log(`  🧪 Filtered as test articles: ${testFilteredCount}`)
-    console.log(`  📅 Filtered (added > 24h ago): ${dateFilteredCount}`)
-    console.log(`  ⏰ Missing ALL date fields: ${noDateCount}`)
-    console.log(`  ✅ Final count: ${filteredArticles.length} articles`)
-    console.log(`  🔍 Expected: ~136 articles added in last 24 hours`)
-    console.log(`  ❓ Missing articles: ${136 - filteredArticles.length}\n`)
 
     // Format for frontend
     const formattedArticles = filteredArticles.map(article => {
@@ -234,29 +197,21 @@ export default async function handler(req, res) {
           summaryBulletsDetailed = typeof article.summary_bullets_detailed === 'string'
             ? JSON.parse(article.summary_bullets_detailed)
             : article.summary_bullets_detailed;
-          console.log(`✅ Article ${article.id} has detailed bullets:`, summaryBulletsDetailed?.length || 0, 'items');
         } catch (e) {
-          console.error('Error parsing summary_bullets_detailed:', e);
+          // Silent fail - use empty array
         }
-      } else {
-        console.log(`⚠️ Article ${article.id} has NO detailed bullets in database`);
       }
 
-       // Parse five_ws (5 W's format) if it exists
+      // Parse five_ws (5 W's format) if it exists
       let fiveWs = null;
-      console.log(`📋 Article ${article.id} raw five_ws:`, typeof article.five_ws, article.five_ws);
       if (article.five_ws) {
         try {
           fiveWs = typeof article.five_ws === 'string'
             ? JSON.parse(article.five_ws)
             : article.five_ws;
-          console.log(`✅ Article ${article.id} has 5W's data:`, JSON.stringify(fiveWs));
         } catch (e) {
-          console.error('Error parsing five_ws:', e);
           fiveWs = null;
         }
-      } else {
-        console.log(`⚠️ Article ${article.id} has NO five_ws in database`);
       }
 
       return {
