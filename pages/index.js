@@ -2475,33 +2475,24 @@ export default function Home({ initialNews, initialWorldEvents }) {
               finalStories = [unreadStories[0], allCaughtUpStory];
             }
             
-            console.log('📰 Setting stories:', finalStories.length);
+            console.log('📰 Setting stories:', finalStories.length, '(v2)');
             
-            // For background refresh, update stories if there are changes
+            // For background refresh, ALWAYS update stories if count differs
+            // This ensures "all-read" page gets added
             if (isBackgroundRefresh) {
               const currentStories = storiesRef.current || [];
+              const shouldUpdate = finalStories.length !== currentStories.length;
               
-              console.log('🔄 Background refresh comparison:', {
-                currentStoriesCount: currentStories.length,
-                finalStoriesCount: finalStories.length
+              console.log('🔄 v2 Background refresh:', {
+                current: currentStories.length,
+                final: finalStories.length,
+                willUpdate: shouldUpdate
               });
               
-              // Always update if story count changed (e.g., adding "all-read" page)
-              // or if there are new articles
-              if (finalStories.length !== currentStories.length) {
-                console.log(`🆕 Background refresh - story count changed, updating`);
+              if (shouldUpdate) {
+                console.log('🆕 v2 Updating stories!');
                 setStories(finalStories);
                 storiesRef.current = finalStories;
-              } else {
-                const currentIds = new Set(currentStories.filter(s => s.id).map(s => String(s.id)));
-                const newArticles = finalStories.filter(s => s.id && !currentIds.has(String(s.id)));
-                if (newArticles.length > 0) {
-                  console.log(`🆕 Background refresh found ${newArticles.length} new articles - updating`);
-                  setStories(finalStories);
-                  storiesRef.current = finalStories;
-                } else {
-                  console.log('✅ Background refresh - no changes, keeping current data');
-                }
               }
             } else {
               setStories(finalStories);
