@@ -29,10 +29,11 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
   loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(245,245,245,0.95)', borderRadius: '8px' }} />
   });
 
-export default function Home() {
-  const [stories, setStories] = useState([]);
+export default function Home({ initialNews, initialWorldEvents }) {
+  // Use initial data from SSR if available, otherwise start empty
+  const [stories, setStories] = useState(initialNews?.stories || []);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialNews?.stories?.length);
   
   // TikTok-style smooth swipe states
   const [dragOffset, setDragOffset] = useState(0);  // Current drag position (px)
@@ -1950,12 +1951,15 @@ export default function Home() {
   }, [currentIndex, stories.length, hasMoreArticles, loadingMore, currentPage]);
 
   useEffect(() => {
-    console.log('🔄 useEffect starting...');
+    // Skip fetching if we already have SSR data
+    if (stories.length > 0 && !loading) {
+      console.log('📦 Using SSR data, skipping client fetch');
+      return;
+    }
+    
     const loadNewsData = async () => {
       try {
-        console.log('📡 About to fetch API (page 1)...');
         const response = await fetch(`/api/news?page=1&pageSize=30&t=${Date.now()}`);
-        console.log('📡 Response status:', response.status);
         
         if (response.ok) {
           const newsData = await response.json();
@@ -5641,6 +5645,7 @@ export default function Home() {
                   stories={stories}
                   readTracker={readTrackerRef.current}
                   isVisible={currentIndex === 0}
+                  initialWorldEvents={initialWorldEvents}
                 />
               ) : story.type === 'all-read' ? (
                 // Minimal "All Caught Up" page - White background, clean design
@@ -8753,4 +8758,90 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
       </div>
     </div>
   );
+}
+
+// Server-Side Rendering - pre-fetch news data for instant loading
+export async function getServerSideProps() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tennews.ai';
+    
+    // Fetch news and world events in parallel
+    const [newsResponse, eventsResponse] = await Promise.all([
+      fetch(`${baseUrl}/api/news?page=1&pageSize=30`, {
+        headers: { 'Cache-Control': 'no-cache' }
+      }).catch(() => null),
+      fetch(`${baseUrl}/api/world-events?limit=8`, {
+        headers: { 'Cache-Control': 'no-cache' }
+      }).catch(() => null)
+    ]);
+
+    let initialNews = null;
+    let initialWorldEvents = null;
+
+    if (newsResponse?.ok) {
+      const newsData = await newsResponse.json();
+      if (newsData.articles && newsData.articles.length > 0) {
+        // Create opening story
+        const openingStory = {
+          type: 'opening',
+          date: new Date().toLocaleDateString('en-US', {
+            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+          }).toUpperCase(),
+          headline: newsData.dailyGreeting || "Today's Essential Global News"
+        };
+        
+        // Format articles as stories
+        const newsStories = newsData.articles.map((article, index) => ({
+          type: 'news',
+          rank: index + 1,
+          id: article.id,
+          title: article.title,
+          detailed_text: article.detailed_text,
+          summary_bullets: article.summary_bullets || [],
+          summary_bullets_news: article.summary_bullets_news || [],
+          summary_bullets_detailed: article.summary_bullets_detailed || [],
+          five_ws: article.five_ws,
+          url: article.url,
+          urlToImage: article.urlToImage,
+          source: article.source,
+          category: article.category,
+          emoji: article.emoji || '📰',
+          details: article.details || [],
+          timeline: article.timeline,
+          graph: article.graph,
+          map: article.map,
+          components: article.components,
+          final_score: article.final_score || 0,
+          interest_tags: article.interest_tags || []
+        }));
+        
+        initialNews = {
+          stories: [openingStory, ...newsStories],
+          pagination: newsData.pagination
+        };
+      }
+    }
+
+    if (eventsResponse?.ok) {
+      const eventsData = await eventsResponse.json();
+      if (eventsData.events && eventsData.events.length > 0) {
+        initialWorldEvents = eventsData.events;
+      }
+    }
+
+    return {
+      props: {
+        initialNews: initialNews || null,
+        initialWorldEvents: initialWorldEvents || null
+      }
+    };
+  } catch (error) {
+    console.error('SSR fetch error:', error);
+    return {
+      props: {
+        initialNews: null,
+        initialWorldEvents: null
+      }
+    };
+  }
 }

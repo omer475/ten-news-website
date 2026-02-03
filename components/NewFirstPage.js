@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker, isVisible = true }) {
+export default function NewFirstPage({ onContinue, user, userProfile, stories: initialStories, readTracker, isVisible = true, initialWorldEvents }) {
   const router = useRouter();
   
   // Calculate time window for map
@@ -400,14 +400,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  // State for world events - initialize from cache for instant display
+  // State for world events - use SSR data first, then cache, then fetch
   const [worldEvents, setWorldEvents] = useState(() => {
+    // Use SSR data if available
+    if (initialWorldEvents && initialWorldEvents.length > 0) {
+      return initialWorldEvents;
+    }
+    // Fall back to localStorage cache
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('tennews_world_events');
         if (cached) {
           const { events, timestamp } = JSON.parse(cached);
-          // Use cache if less than 5 minutes old
           if (Date.now() - timestamp < 5 * 60 * 1000 && events.length > 0) {
             return events;
           }
@@ -417,13 +421,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     return [];
   });
   const [eventsLoading, setEventsLoading] = useState(() => {
+    // Not loading if we have SSR data
+    if (initialWorldEvents && initialWorldEvents.length > 0) {
+      return false;
+    }
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('tennews_world_events');
         if (cached) {
           const { events, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < 5 * 60 * 1000 && events.length > 0) {
-            return false; // Already have cached data
+            return false;
           }
         }
       } catch (e) {}
@@ -433,6 +441,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   // Fetch world events from API (runs in background, updates cache)
   useEffect(() => {
+    // Skip if we already have SSR data
+    if (initialWorldEvents && initialWorldEvents.length > 0 && worldEvents.length > 0) {
+      setEventsLoading(false);
+      return;
+    }
+    
     const fetchWorldEvents = async () => {
       try {
         const lastVisit = localStorage.getItem('tennews_last_visit') || Date.now() - 24 * 60 * 60 * 1000;
