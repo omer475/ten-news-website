@@ -1077,6 +1077,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           aspect-ratio: 1 / 1;
           border-radius: 24px;
           overflow: hidden;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
 
         .event-skeleton {
