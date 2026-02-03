@@ -9007,18 +9007,15 @@ function ResetPasswordModal({ supabase, onSuccess, onCancel }) {
   );
 }
 
-// Server-Side Rendering - pre-fetch news data for instant loading
+// Server-Side Rendering with CDN caching for fast page loads
 export async function getServerSideProps({ req, res }) {
-  // AGGRESSIVE no-caching - prevent all forms of caching
-  res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '-1');
-  res.setHeader('Surrogate-Control', 'no-store');
-  res.setHeader('CDN-Cache-Control', 'no-store');
-  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+  // Enable CDN caching: serve stale content while revalidating in background
+  // s-maxage=30: Cache on CDN for 30 seconds
+  // stale-while-revalidate=60: Serve stale content for 60s while fetching fresh data
+  res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
   
   try {
-    // Create Supabase client for direct DB queries (eliminates API round-trip latency)
+    // Create Supabase client for direct DB queries
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -9026,29 +9023,26 @@ export async function getServerSideProps({ req, res }) {
     
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    // Fetch BOTH news and world events directly from DB (no API round-trip!)
+    // Fetch news and events in parallel with minimal columns for speed
     const [newsResult, eventsResult] = await Promise.all([
-      // Direct DB query for news articles
+      // Simplified news query - only essential fields
       supabase
         .from('published_articles')
-        .select('id, title, title_news, url, source, description, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
+        .select('id, title_news, title, url, source, image_url, category, emoji, ai_final_score, summary_bullets_news, five_ws, timeline, graph, map, components_order, details_section, interest_tags, created_at, published_date')
         .gte('created_at', twentyFourHoursAgo)
         .order('ai_final_score', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
         .limit(30)
         .then(({ data, error }) => ({ articles: data || [], error }))
         .catch(() => ({ articles: [], error: 'fetch failed' })),
-      // Direct DB query for world events
+      // World events query
       supabase
         .from('world_events')
-        .select('id, name, slug, image_url, blur_color, importance, status, last_article_at, created_at, background')
+        .select('id, name, slug, image_url, importance, last_article_at, background')
         .eq('status', 'ongoing')
         .order('last_article_at', { ascending: false })
         .limit(8)
         .then(({ data: events, error }) => {
-          if (error || !events || events.length === 0) {
-            return { events: [], error };
-          }
+          if (error || !events) return { events: [], error };
           return { events: events.map(e => ({ ...e, newUpdates: 0 })), error: null };
         })
         .catch(() => ({ events: [], error: 'fetch failed' }))
@@ -9088,28 +9082,25 @@ export async function getServerSideProps({ req, res }) {
           headline: "Today's Essential Global News"
         };
 
-        // Format articles directly (simplified version of formatArticle)
+        // Format articles with essential fields only (speed optimization)
         const newsArticles = filteredArticles.map(article => ({
           id: article.id,
           title: article.title_news || article.title,
           url: article.url,
           source: article.source || 'Today+',
-          description: article.description,
           urlToImage: article.image_url,
           category: article.category,
           emoji: article.emoji || '📰',
           final_score: article.ai_final_score || 0,
-          summary_bullets: safeJsonParse(article.summary_bullets, []),
           summary_bullets_news: safeJsonParse(article.summary_bullets_news, []),
-          summary_bullets_detailed: safeJsonParse(article.summary_bullets_detailed, []),
           five_ws: safeJsonParse(article.five_ws, null),
           timeline: safeJsonParse(article.timeline, null),
           graph: safeJsonParse(article.graph, null),
           map: safeJsonParse(article.map, null),
-          components: article.components_order || safeJsonParse(article.components, null),
-          details: article.details_section ? article.details_section.split('\n') : safeJsonParse(article.details, []),
+          components: article.components_order ? safeJsonParse(article.components_order, ['details']) : ['details'],
+          details: article.details_section ? article.details_section.split('\n') : [],
           interest_tags: safeJsonParse(article.interest_tags, []),
-          publishedAt: article.published_date || article.published_at || article.created_at
+          publishedAt: article.published_date || article.created_at
         }));
         
         // Format articles as stories with defaults for information boxes
@@ -9121,9 +9112,9 @@ export async function getServerSideProps({ req, res }) {
         ];
         
         const newsStories = newsArticles.map((article, index) => {
-          // Ensure components array exists
+          // Build components array
           let components = article.components;
-          if (!components || !Array.isArray(components) || components.length === 0) {
+          if (!Array.isArray(components) || components.length === 0) {
             components = ['details'];
             if (article.timeline) components.push('timeline');
             if (article.map) components.push('map');
@@ -9134,21 +9125,19 @@ export async function getServerSideProps({ req, res }) {
             type: 'news',
             rank: index + 1,
             id: article.id,
-            title: article.title || null,
-            summary_bullets: article.summary_bullets || [],
+            title: article.title,
             summary_bullets_news: article.summary_bullets_news || [],
-            summary_bullets_detailed: article.summary_bullets_detailed || [],
-            five_ws: article.five_ws || null,
-            url: article.url || null,
-            urlToImage: article.urlToImage || null,
-            source: article.source || null,
-            category: article.category || null,
+            five_ws: article.five_ws,
+            url: article.url,
+            urlToImage: article.urlToImage,
+            source: article.source,
+            category: article.category,
             emoji: article.emoji || '📰',
-            details: (article.details && article.details.length > 0) ? article.details : defaultDetails,
+            details: article.details?.length > 0 ? article.details : defaultDetails,
             timeline: article.timeline || defaultTimeline,
-            graph: article.graph || null,
-            map: article.map || null,
-            components: components,
+            graph: article.graph,
+            map: article.map,
+            components,
             final_score: article.final_score || 0,
             interest_tags: article.interest_tags || []
           };
