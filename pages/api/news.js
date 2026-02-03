@@ -215,7 +215,9 @@ export default async function handler(req, res) {
       const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      // Fast query without count (count: 'exact' is slow on large tables)
+      // Query published articles from last 24 hours
+      console.log('📊 Querying published_articles, since:', twentyFourHoursAgo);
+      
       const { data: articles, error } = await supabase
         .from('published_articles')
         .select('id, title, title_news, url, source, description, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
@@ -224,7 +226,12 @@ export default async function handler(req, res) {
         .order('created_at', { ascending: false })
         .limit(pageSize + 10);
 
-      if (!error && articles) {
+      console.log('📊 Query result:', { 
+        error: error?.message || 'none', 
+        articlesCount: articles?.length || 0 
+      });
+
+      if (!error && articles && articles.length > 0) {
         // Fast filter without logging
         const now = Date.now();
         const twentyFourHoursMs = 24 * 60 * 60 * 1000;
@@ -270,6 +277,47 @@ export default async function handler(req, res) {
     }
   } catch (fetchError) {
     console.log(`⚠️ Direct Supabase query failed: ${fetchError.message}`);
+  }
+
+  // FALLBACK 0.5: Try without 24h filter (get most recent articles)
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
+      console.log('📊 FALLBACK: Querying without time filter...');
+      
+      const { data: articles, error } = await supabase
+        .from('published_articles')
+        .select('id, title, title_news, url, source, description, content_news, created_at, added_at, published_date, published_at, num_sources, cluster_id, version_number, image_url, author, category, emoji, ai_final_score, summary_bullets_news, summary_bullets_detailed, summary_bullets, five_ws, timeline, graph, map, components_order, components, details_section, details, view_count, interest_tags')
+        .order('created_at', { ascending: false })
+        .limit(pageSize);
+
+      console.log('📊 FALLBACK result:', { 
+        error: error?.message || 'none', 
+        articlesCount: articles?.length || 0,
+        latestArticleDate: articles?.[0]?.created_at || 'none'
+      });
+
+      if (!error && articles && articles.length > 0) {
+        const formattedArticles = articles.map(formatArticle);
+
+        return res.status(200).json({
+          status: 'ok',
+          totalResults: formattedArticles.length,
+          articles: formattedArticles,
+          pagination: { page, pageSize, total: formattedArticles.length, hasMore: false },
+          generatedAt: new Date().toISOString(),
+          dailyGreeting: "Recent News (no fresh articles in 24h)",
+          displayTimestamp: new Date().toLocaleString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          })
+        });
+      }
+    }
+  } catch (fallbackError) {
+    console.log(`⚠️ Fallback query failed: ${fallbackError.message}`);
   }
 
   // FALLBACK 1: Try test example news (for development/testing only)
