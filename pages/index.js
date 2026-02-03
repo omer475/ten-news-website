@@ -2062,21 +2062,35 @@ export default function Home({ initialNews, initialWorldEvents }) {
           // Check if this is the last page OR we've hit memory cap
           const isLastPage = !newsData.pagination?.hasMore;
           
-          // Insert new stories with memory cap
+          // Insert new stories with memory cap and deduplication
           setStories(prev => {
             // Remove existing "all caught up" page if present
             const withoutAllRead = prev.filter(s => s.type !== 'all-read');
             
+            // Get existing article IDs to prevent duplicates
+            const existingIds = new Set(
+              withoutAllRead
+                .filter(s => s.type === 'news' && s.id)
+                .map(s => String(s.id))
+            );
+            
+            // Filter out duplicates from new stories
+            const dedupedNewStories = unreadNewStories.filter(story => 
+              !existingIds.has(String(story.id))
+            );
+            
+            console.log(`📦 Dedup: ${unreadNewStories.length} new → ${dedupedNewStories.length} unique (${existingIds.size} existing)`);
+            
             // Count current news articles
             const currentNewsCount = withoutAllRead.filter(s => s.type === 'news').length;
-            const newNewsCount = unreadNewStories.length;
+            const newNewsCount = dedupedNewStories.length;
             const totalAfterAdd = currentNewsCount + newNewsCount;
             
             // Check if we've hit memory cap (150 articles)
             const hitMemoryCap = totalAfterAdd >= MAX_ARTICLES_IN_MEMORY;
             
-            // Add new stories
-            let updated = [...withoutAllRead, ...unreadNewStories];
+            // Add new stories (deduplicated)
+            let updated = [...withoutAllRead, ...dedupedNewStories];
             
             // If over cap, keep only the most recent MAX_ARTICLES_IN_MEMORY news articles
             if (hitMemoryCap) {

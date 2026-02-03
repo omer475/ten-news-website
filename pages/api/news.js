@@ -215,16 +215,16 @@ export default async function handler(req, res) {
       const supabase = createSupabaseClient(supabaseUrl, supabaseKey);
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      // Query published articles from last 24 hours
-      console.log('📊 Querying published_articles, since:', twentyFourHoursAgo);
+      // Query published articles from last 24 hours with proper pagination
+      console.log('📊 Querying published_articles, since:', twentyFourHoursAgo, 'page:', page, 'offset:', offset);
       
-      const { data: articles, error } = await supabase
+      const { data: articles, error, count } = await supabase
         .from('published_articles')
-        .select('*')
+        .select('*', { count: 'exact' })
         .gte('created_at', twentyFourHoursAgo)
         .order('ai_final_score', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .limit(pageSize + 10);
+        .range(offset, offset + pageSize + 9);
 
       console.log('📊 Query result:', { 
         error: error?.message || 'none', 
@@ -251,16 +251,19 @@ export default async function handler(req, res) {
         });
 
         const formattedArticles = filteredArticles.slice(0, pageSize).map(formatArticle);
-        const hasMore = filteredArticles.length > pageSize;
+        const totalCount = count || formattedArticles.length;
+        const hasMore = (offset + pageSize) < totalCount;
+
+        console.log('📊 Pagination:', { page, offset, pageSize, totalCount, hasMore, returnedCount: formattedArticles.length });
 
         return res.status(200).json({
           status: 'ok',
-          totalResults: formattedArticles.length,
+          totalResults: totalCount,
           articles: formattedArticles,
           pagination: {
             page,
             pageSize,
-            total: formattedArticles.length,
+            total: totalCount,
             hasMore
           },
           generatedAt: new Date().toISOString(),
