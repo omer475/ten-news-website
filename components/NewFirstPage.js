@@ -876,16 +876,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     }
   };
 
-  // Touch event handlers for mobile
+  // Touch event handlers for mobile - simplified for better swipe detection
   const handleTouchStart = (e) => {
     stopAutoScroll();
     const touch = e.touches[0];
     dragState.current.isDown = true;
     dragState.current.startX = touch.pageX;
     dragState.current.startY = touch.pageY;
-    dragState.current.lastX = touch.pageX;
-    dragState.current.lastTime = Date.now();
-    dragState.current.velX = 0;
     dragState.current.hasMoved = false;
     
     const el = eventsScrollRef.current;
@@ -898,29 +895,20 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (!dragState.current.isDown) return;
     
     const touch = e.touches[0];
-    const x = touch.pageX;
-    const y = touch.pageY;
-    const now = Date.now();
-    const dt = now - dragState.current.lastTime;
+    const moveDistanceX = Math.abs(touch.pageX - dragState.current.startX);
     
-    // Check if user has moved more than threshold (10px horizontally)
-    const moveDistanceX = Math.abs(x - dragState.current.startX);
-    const moveDistanceY = Math.abs(y - dragState.current.startY);
-    
-    if (moveDistanceX > 10) {
+    // Mark as moved if user swiped more than 5px (lower threshold for mobile)
+    if (moveDistanceX > 5) {
       dragState.current.hasMoved = true;
     }
-    
-    if (dt > 0) {
-      dragState.current.velX = (x - dragState.current.lastX) / dt;
-    }
-    
-    dragState.current.lastX = x;
-    dragState.current.lastTime = now;
+    // Native scroll handles the actual scrolling
   };
 
   const handleTouchEnd = () => {
-    dragState.current.isDown = false;
+    // Keep isDown true briefly so click handlers can check hasMoved
+    setTimeout(() => {
+      dragState.current.isDown = false;
+    }, 100);
   };
 
   // Smooth wheel scrolling
@@ -1066,12 +1054,15 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           flex-shrink: 0;
           width: calc(100vw - 60px);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: transform 0.2s ease;
           scroll-snap-align: center;
           text-decoration: none;
           display: block;
           color: inherit;
           -webkit-tap-highlight-color: transparent;
+          touch-action: pan-x;
+          user-select: none;
+          -webkit-user-select: none;
         }
 
         .event-card:active {
@@ -1501,14 +1492,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                           // Allow normal link behavior for navigation
                         }}
                         onTouchEnd={(e) => {
-                          // On mobile, if user didn't swipe, navigate
-                          if (!dragState.current.hasMoved) {
-                            // Small delay to ensure touch state is finalized
-                            setTimeout(() => {
-                              if (!dragState.current.hasMoved) {
-                                router.push(`/event/${event.slug || event.id}`);
-                              }
-                            }, 50);
+                          // Only navigate if it was a tap, not a swipe
+                          // Check hasMoved after a small delay to ensure touchMove has run
+                          const wasMoved = dragState.current.hasMoved;
+                          if (!wasMoved) {
+                            e.preventDefault();
+                            router.push(`/event/${event.slug || event.id}`);
                           }
                         }}
                       >
