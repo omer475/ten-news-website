@@ -2477,26 +2477,31 @@ export default function Home({ initialNews, initialWorldEvents }) {
             
             console.log('📰 Setting stories:', finalStories.length);
             
-            // For background refresh, only update if there are new articles
+            // For background refresh, update stories if there are changes
             if (isBackgroundRefresh) {
-              // CRITICAL: Use storiesRef.current to get the LATEST filtered stories
-              // (not the stale closure value of 'stories')
               const currentStories = storiesRef.current || [];
-              const currentIds = new Set(currentStories.filter(s => s.id).map(s => String(s.id)));
-              const newArticles = finalStories.filter(s => s.id && !currentIds.has(String(s.id)));
               
               console.log('🔄 Background refresh comparison:', {
                 currentStoriesCount: currentStories.length,
-                finalStoriesCount: finalStories.length,
-                newArticlesCount: newArticles.length
+                finalStoriesCount: finalStories.length
               });
               
-              if (newArticles.length > 0) {
-                console.log(`🆕 Background refresh found ${newArticles.length} new articles - updating`);
+              // Always update if story count changed (e.g., adding "all-read" page)
+              // or if there are new articles
+              if (finalStories.length !== currentStories.length) {
+                console.log(`🆕 Background refresh - story count changed, updating`);
                 setStories(finalStories);
                 storiesRef.current = finalStories;
               } else {
-                console.log('✅ Background refresh - no new articles, keeping current filtered data');
+                const currentIds = new Set(currentStories.filter(s => s.id).map(s => String(s.id)));
+                const newArticles = finalStories.filter(s => s.id && !currentIds.has(String(s.id)));
+                if (newArticles.length > 0) {
+                  console.log(`🆕 Background refresh found ${newArticles.length} new articles - updating`);
+                  setStories(finalStories);
+                  storiesRef.current = finalStories;
+                } else {
+                  console.log('✅ Background refresh - no changes, keeping current data');
+                }
               }
             } else {
               setStories(finalStories);
@@ -3204,11 +3209,6 @@ export default function Home({ initialNews, initialWorldEvents }) {
         return;
       }
       
-      // Don't capture touch on events scroll (allow native horizontal scrolling)
-      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
-        return;
-      }
-
       // Don't capture touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
@@ -3354,11 +3354,6 @@ export default function Home({ initialNews, initialWorldEvents }) {
         return;
       }
       
-      // Don't block touch on events scroll (allow native horizontal scrolling)
-      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
-        return;
-      }
-
       // Don't block touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
@@ -9111,18 +9106,38 @@ export async function getServerSideProps({ req, res }) {
         initialWorldEvents = eventsData.events;
       }
     }
+    
+    // Always return at least opening story so the page renders
+    if (!initialNews) {
+      const openingStory = {
+        type: 'opening',
+        date: new Date().toLocaleDateString('en-US', {
+          weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+        }).toUpperCase(),
+        headline: "Today's Essential Global News"
+      };
+      initialNews = { stories: [openingStory], pagination: null };
+    }
 
     return {
       props: {
-        initialNews: initialNews || null,
+        initialNews,
         initialWorldEvents: initialWorldEvents || null
       }
     };
   } catch (error) {
     console.error('SSR fetch error:', error);
+    // Even on error, return opening story
+    const openingStory = {
+      type: 'opening',
+      date: new Date().toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+      }).toUpperCase(),
+      headline: "Today's Essential Global News"
+    };
     return {
       props: {
-        initialNews: null,
+        initialNews: { stories: [openingStory], pagination: null },
         initialWorldEvents: null
       }
     };
