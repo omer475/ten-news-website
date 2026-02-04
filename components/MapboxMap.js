@@ -104,13 +104,25 @@ export default function MapboxMap({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
+    // Validate coordinates - must be valid numbers within range
+    const lat = parseFloat(center.lat);
+    const lon = parseFloat(center.lon);
+    
+    // Check if coordinates are valid
+    const isValidLat = !isNaN(lat) && lat >= -90 && lat <= 90;
+    const isValidLon = !isNaN(lon) && lon >= -180 && lon <= 180;
+    
+    // Use default coordinates if invalid (center of world map)
+    const safeLat = isValidLat ? lat : 40.7128; // Default to NYC
+    const safeLon = isValidLon ? lon : -74.0060;
+    
     // Initialize map
     const initialZoom = expanded ? 8 : 11;
     
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [center.lon || 0, center.lat || 0],
+      center: [safeLon, safeLat],
       zoom: initialZoom,
       interactive: true,
       attributionControl: false,
@@ -214,7 +226,7 @@ export default function MapboxMap({
         }
       } else {
         // Fallback: create a rectangular area around the point
-        areaGeometry = createBoundingBoxPolygon(center.lat, center.lon, 3);
+        areaGeometry = createBoundingBoxPolygon(safeLat, safeLon, 3);
         console.log('📦 Using fallback bounding box');
       }
       
