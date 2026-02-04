@@ -937,11 +937,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           height: 100%;
           display: flex;
           flex-direction: column;
-          background: #fafafa;
+          background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
           z-index: 1;
           overflow-x: visible;
           overflow-y: hidden;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         .content-wrapper {
@@ -969,7 +971,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         @keyframes fadeUp {
           0% { 
             opacity: 0; 
-            transform: translateY(20px);
+            transform: translateY(24px);
           }
           100% { 
             opacity: 1; 
@@ -984,23 +986,30 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .greeting-hi {
           display: block;
-          font-size: 34px;
-          font-weight: 600;
-          letter-spacing: -0.5px;
-          color: #1d1d1f;
-          line-height: 1.2;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          font-size: 42px;
+          font-weight: 700;
+          letter-spacing: -1.5px;
+          color: #000000;
+          line-height: 1.1;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
           text-align: left;
-          margin-bottom: 24px;
+          margin-bottom: 16px;
         }
 
         .greeting-name {
           font-weight: 700;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .greeting-subtitle {
-          color: #86868b;
-          font-weight: 500;
+          color: #6e6e73;
+          font-weight: 400;
+          font-size: 17px;
+          letter-spacing: -0.2px;
+          line-height: 1.5;
         }
 
         /* Ongoing Events Section */
@@ -1015,12 +1024,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .events-header {
-          font-size: 13px;
+          font-size: 11px;
           font-weight: 600;
           color: #86868b;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 12px;
+          letter-spacing: 1.2px;
+          margin-bottom: 16px;
           padding-left: 24px;
           text-align: left;
         }
@@ -1053,9 +1062,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-card {
           flex-shrink: 0;
-          width: calc(100vw - 64px);
+          width: calc(100vw - 56px);
           cursor: pointer;
-          transition: transform 0.2s ease;
+          transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease;
           scroll-snap-align: start;
           scroll-snap-stop: always;
           text-decoration: none;
@@ -1068,16 +1077,19 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .event-card:active {
-          transform: scale(0.98);
+          transform: scale(0.97);
         }
 
         .event-image-wrapper {
           position: relative;
           width: 100%;
-          aspect-ratio: 1 / 1;
-          border-radius: 24px;
+          aspect-ratio: 4 / 5;
+          border-radius: 28px;
           overflow: hidden;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+          box-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.04),
+            0 8px 16px rgba(0, 0, 0, 0.08),
+            0 16px 32px rgba(0, 0, 0, 0.06);
         }
 
         .event-skeleton {
@@ -1134,12 +1146,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           bottom: 0;
           left: 0;
           right: 0;
-          top: 35%;
+          top: 40%;
           display: flex;
           align-items: flex-end;
           justify-content: center;
-          padding: 20px;
-          border-radius: 0 0 24px 24px;
+          padding: 24px 20px;
+          border-radius: 0 0 28px 28px;
           overflow: hidden;
         }
 
@@ -1151,10 +1163,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           background: linear-gradient(
             to bottom,
             rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.2) 20%,
-            rgba(255, 255, 255, 0.5) 45%,
-            rgba(255, 255, 255, 0.8) 70%,
-            rgba(255, 255, 255, 1) 100%
+            rgba(255, 255, 255, 0.15) 15%,
+            rgba(255, 255, 255, 0.6) 40%,
+            rgba(255, 255, 255, 0.92) 70%,
+            rgba(255, 255, 255, 0.98) 100%
           );
           z-index: 0;
         }
@@ -1164,10 +1176,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           content: '';
           position: absolute;
           inset: 0;
-          backdrop-filter: blur(20px) saturate(180%);
-          -webkit-backdrop-filter: blur(20px) saturate(180%);
-          -webkit-mask: linear-gradient(to bottom, transparent 0%, black 50%);
-          mask: linear-gradient(to bottom, transparent 0%, black 50%);
+          backdrop-filter: blur(24px) saturate(200%);
+          -webkit-backdrop-filter: blur(24px) saturate(200%);
+          -webkit-mask: linear-gradient(to bottom, transparent 0%, black 45%);
+          mask: linear-gradient(to bottom, transparent 0%, black 45%);
           z-index: 1;
         }
 
@@ -1175,18 +1187,18 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           width: 100%;
           position: relative;
           z-index: 2;
         }
 
         .event-name {
-          font-size: 24px;
+          font-size: 22px;
           font-weight: 700;
           color: #000;
-          line-height: 1.2;
-          letter-spacing: -0.5px;
+          line-height: 1.25;
+          letter-spacing: -0.6px;
           text-align: center;
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -1195,26 +1207,27 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .event-tagline {
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 400;
-          color: #333;
-          line-height: 1.4;
+          color: #48484a;
+          line-height: 1.45;
           text-align: center;
           margin: 0;
-          max-width: 95%;
+          max-width: 90%;
+          letter-spacing: -0.1px;
         }
 
         .event-meta {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 12px;
+          gap: 10px;
           font-size: 11px;
-          font-weight: 600;
-          color: #555;
+          font-weight: 500;
+          color: #8e8e93;
           text-transform: uppercase;
-          letter-spacing: 0.3px;
-          margin-top: 4px;
+          letter-spacing: 0.5px;
+          margin-top: 6px;
         }
 
         .event-updates {
@@ -1286,22 +1299,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         @keyframes subtleBounce {
           0%, 100% {
             transform: translateY(0);
+            opacity: 1;
           }
           50% {
-            transform: translateY(-6px);
+            transform: translateY(-8px);
+            opacity: 0.85;
           }
         }
 
         .swipe-hint {
           text-align: center;
-          font-size: 15px;
+          font-size: 14px;
           font-weight: 500;
-          letter-spacing: -0.01em;
-          color: #86868b;
-          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-          margin-top: 40px;
+          letter-spacing: 0.3px;
+          color: #8e8e93;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+          margin-top: 32px;
           padding: 0 20px 40px 20px;
-          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2s ease-in-out 1.6s infinite;
+          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2.5s ease-in-out 1.8s infinite;
           opacity: 0;
         }
 
@@ -1310,24 +1325,89 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding: 0;
           }
           .greeting-section {
-            padding-top: 90px;
-            padding-left: 16px;
-            padding-right: 16px;
+            padding-top: 80px;
+            padding-left: 20px;
+            padding-right: 20px;
             width: 100%;
             margin: 0;
           }
           .greeting-hi {
-            font-size: 28px;
+            font-size: 36px;
+            letter-spacing: -1.2px;
             margin-bottom: 12px;
           }
+          .greeting-subtitle {
+            font-size: 15px;
+          }
           .events-section {
-            margin-top: 48px;
-            margin-left: -16px;
+            margin-top: 40px;
+            margin-left: -20px;
           }
           .events-header {
-            font-size: 12px;
-            padding-left: 16px;
-            margin-bottom: 10px;
+            font-size: 10px;
+            padding-left: 20px;
+            margin-bottom: 14px;
+            letter-spacing: 1px;
+          }
+          .events-scroll {
+            gap: 14px;
+            padding: 4px 0 16px 20px;
+            scroll-padding-left: 20px;
+          }
+          .events-scroll::after {
+            width: 20px;
+          }
+          .event-card {
+            width: calc(100vw - 48px);
+          }
+          .event-image-wrapper {
+            border-radius: 24px;
+          }
+          .event-overlay {
+            padding: 20px 16px;
+            border-radius: 0 0 24px 24px;
+          }
+          .event-overlay::before,
+          .event-overlay::after {
+            border-radius: 0 0 24px 24px;
+          }
+          .event-name {
+            font-size: 20px;
+          }
+          .event-tagline {
+            font-size: 13px;
+          }
+          .event-meta {
+            font-size: 10px;
+            gap: 8px;
+          }
+          .event-skeleton {
+            width: calc(100vw - 48px);
+            border-radius: 24px;
+          }
+          .event-skeleton .skeleton-shimmer {
+            border-radius: 24px;
+          }
+          .swipe-hint {
+            margin-top: 28px;
+            font-size: 13px;
+          }
+        }
+
+        @media (max-width: 375px) {
+          .greeting-hi {
+            font-size: 32px;
+            letter-spacing: -1px;
+          }
+          .greeting-subtitle {
+            font-size: 14px;
+          }
+          .events-section {
+            margin-top: 36px;
+          }
+          .events-header {
+            font-size: 10px;
+            margin-bottom: 12px;
           }
           .events-scroll {
             gap: 12px;
@@ -1338,70 +1418,14 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             width: 16px;
           }
           .event-card {
-            width: calc(100vw - 44px);
+            width: calc(100vw - 40px);
           }
           .event-image-wrapper {
-            border-radius: 20px;
+            border-radius: 22px;
           }
           .event-overlay {
-            padding: 16px;
-            border-radius: 0 0 20px 20px;
-          }
-          .event-overlay::before,
-          .event-overlay::after {
-            border-radius: 0 0 20px 20px;
-          }
-          .event-name {
-            font-size: 22px;
-          }
-          .event-tagline {
-            font-size: 12px;
-          }
-          .event-meta {
-            font-size: 10px;
-            gap: 10px;
-          }
-          .event-skeleton {
-            width: calc(100vw - 44px);
-            border-radius: 20px;
-          }
-          .event-skeleton .skeleton-shimmer {
-            border-radius: 20px;
-          }
-          .swipe-hint {
-            margin-top: 32px;
-            font-size: 14px;
-          }
-        }
-
-        @media (max-width: 375px) {
-          .greeting-hi {
-            font-size: 26px;
-          }
-          .events-section {
-            margin-top: 36px;
-          }
-          .events-header {
-            font-size: 11px;
-            margin-bottom: 8px;
-          }
-          .events-scroll {
-            gap: 10px;
-            padding: 4px 0 16px 16px;
-            scroll-padding-left: 16px;
-          }
-          .events-scroll::after {
-            width: 16px;
-          }
-          .event-card {
-            width: calc(100vw - 42px);
-          }
-          .event-image-wrapper {
-            border-radius: 18px;
-          }
-          .event-overlay {
-            padding: 14px;
-            border-radius: 0 0 18px 18px;
+            padding: 18px 14px;
+            border-radius: 0 0 22px 22px;
           }
           .event-overlay::before,
           .event-overlay::after {
