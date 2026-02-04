@@ -6663,26 +6663,32 @@ export default function Home({ initialNews, initialWorldEvents }) {
                           top: 'calc(env(safe-area-inset-top, 0px) + var(--content-padding, 16px))',
                           right: 'calc(var(--content-padding, 16px) + var(--share-btn-size, 34px) + 10px)',
                           height: 'var(--share-btn-size, 34px)',
-                          paddingLeft: '12px',
-                          paddingRight: '12px',
+                          paddingLeft: '14px',
+                          paddingRight: '14px',
                           borderRadius: '12px',
                           border: 'none',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          gap: '6px',
                           zIndex: 99999,
                           pointerEvents: 'auto',
                           touchAction: 'auto',
                           textDecoration: 'none',
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                          backdropFilter: 'blur(20px) saturate(180%)',
-                          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                          backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
+                          backdropFilter: 'blur(4px) saturate(150%)',
+                          WebkitBackdropFilter: 'blur(4px) saturate(150%)',
                           boxShadow: `
-                            inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
-                            inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.5),
-                            0px 2px 8px 0px rgba(0, 0, 0, 0.15)
+                            inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+                            inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.9),
+                            inset -1px -1px 0px -1px rgba(255, 255, 255, 0.8),
+                            inset -1.5px -4px 0.5px -3px rgba(255, 255, 255, 0.6),
+                            inset -0.15px -0.5px 2px 0px rgba(0, 0, 0, 0.12),
+                            inset -0.75px 1.25px 0px -1px rgba(0, 0, 0, 0.2),
+                            inset 0px 1.5px 2px -1px rgba(0, 0, 0, 0.2),
+                            inset 1px -3.25px 0.5px -2px rgba(0, 0, 0, 0.1),
+                            0px 0.5px 2.5px 0px rgba(0, 0, 0, 0.1),
+                            0px 3px 8px 0px rgba(0, 0, 0, 0.08)
                           `,
                           transition: 'all 0.2s ease',
                           WebkitTapHighlightColor: 'transparent',
@@ -6691,32 +6697,13 @@ export default function Home({ initialNews, initialWorldEvents }) {
                           fontWeight: '600',
                           letterSpacing: '0.2px',
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
-                          maxWidth: '140px',
+                          maxWidth: '160px',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
                         }}
                       >
-                        <svg 
-                          width="12" 
-                          height="12" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2.5"
-                          style={{ flexShrink: 0 }}
-                        >
-                          <circle cx="12" cy="12" r="10"/>
-                          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-                          <path d="M2 12h20"/>
-                        </svg>
-                        <span style={{ 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {story.world_event.name}
-                        </span>
+                        {story.world_event.name}
                       </a>
                     )}
                     
