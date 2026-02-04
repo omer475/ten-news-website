@@ -354,11 +354,45 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   // Default swipe hint for SSR
   const [swipeHint, setSwipeHint] = useState(swipeHints[0]);
   
+  // Typing effect state
+  const [typedText, setTypedText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const fullSubtitleRef = useRef('');
+  
   // Update greeting and swipe hint on client side only
   useEffect(() => {
-    setPersonalGreeting(getPersonalizedGreeting());
+    const greeting = getPersonalizedGreeting();
+    setPersonalGreeting(greeting);
     setSwipeHint(swipeHints[Math.floor(Math.random() * swipeHints.length)]);
+    
+    // Set full subtitle for typing effect
+    fullSubtitleRef.current = `${greeting.subHighlight} ${greeting.subRest}`;
   }, []);
+  
+  // Typing effect animation
+  useEffect(() => {
+    if (!fullSubtitleRef.current || isTypingComplete) return;
+    
+    const fullText = fullSubtitleRef.current;
+    let currentIndex = 0;
+    
+    // Start typing after a small delay
+    const startDelay = setTimeout(() => {
+      const typingInterval = setInterval(() => {
+        if (currentIndex <= fullText.length) {
+          setTypedText(fullText.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsTypingComplete(true);
+        }
+      }, 35); // Speed of typing (35ms per character)
+      
+      return () => clearInterval(typingInterval);
+    }, 600); // Delay before starting to type
+    
+    return () => clearTimeout(startDelay);
+  }, [personalGreeting, isTypingComplete]);
 
 
   // State for extracted blur colors from event images
@@ -966,6 +1000,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           opacity: 0;
           z-index: 2;
           width: 100%;
+          min-height: 140px;
         }
 
         @keyframes fadeUp {
@@ -1005,11 +1040,31 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         }
 
         .greeting-subtitle {
+          display: block;
           color: #6e6e73;
           font-weight: 400;
           font-size: 17px;
           letter-spacing: -0.2px;
           line-height: 1.5;
+          min-height: 52px;
+          margin-top: 8px;
+        }
+
+        .typing-cursor {
+          display: inline-block;
+          color: #667eea;
+          font-weight: 300;
+          animation: blink 1s step-end infinite;
+          margin-left: 1px;
+        }
+
+        .typing-cursor.hidden {
+          opacity: 0;
+        }
+
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
         }
 
         /* Ongoing Events Section */
@@ -1472,7 +1527,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
         <div className="content-wrapper">
           <div className="greeting-section">
             <span className="greeting-hi">
-              {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}, <span className="greeting-subtitle">{personalGreeting.subHighlight} {personalGreeting.subRest}</span>
+              {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}.
+            </span>
+            <span className="greeting-subtitle">
+              {typedText}<span className={`typing-cursor ${isTypingComplete ? 'hidden' : ''}`}>|</span>
             </span>
           </div>
             
