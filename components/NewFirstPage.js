@@ -1190,7 +1190,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           height: 150%;
           object-fit: cover;
           object-position: top center;
-          opacity: 0.5;
+          opacity: 0.8;
         }
 
         .event-blur {
@@ -1590,10 +1590,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                         }}
                       >
                         <div className="event-image-wrapper">
+                          {/* Event boxes should use the AI-generated event cover image */}
                           {event.image_url && (
-                            <img 
-                              className="event-image" 
-                              src={event.image_url} 
+                            <img
+                              className="event-image"
+                              src={event.image_url}
                               alt={event.name}
                               crossOrigin="anonymous"
                               loading="eager"
