@@ -230,7 +230,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
         e.target.closest('.language-icon-btn') ||
         e.target.closest('.language-dropdown-box') ||
         e.target.closest('.language-switcher__option') ||
-        e.target.closest('.share-button')) {
+        e.target.closest('.share-button') ||
+        e.target.closest('.event-link-button')) {
       return;
     }
     // Don't handle swipe when touching expanded information boxes
@@ -253,7 +254,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
         e.target.closest('.language-icon-btn') ||
         e.target.closest('.language-dropdown-box') ||
         e.target.closest('.language-switcher__option') ||
-        e.target.closest('.share-button')) {
+        e.target.closest('.share-button') ||
+        e.target.closest('.event-link-button')) {
       return;
     }
     // Don't handle swipe when touching expanded information boxes
@@ -275,7 +277,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
         e.target.closest('.language-icon-btn') ||
         e.target.closest('.language-dropdown-box') ||
         e.target.closest('.language-switcher__option') ||
-        e.target.closest('.share-button')) {
+        e.target.closest('.share-button') ||
+        e.target.closest('.event-link-button')) {
       return;
     }
     // Don't handle swipe when touching expanded information boxes
@@ -2047,7 +2050,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
               publishedAt: article.publishedAt || article.published_at || article.added_at,
               id: article.id || `article_${pageNum}_${index}`,
               final_score: article.final_score,
-              interest_tags: article.interest_tags || []  // For personalization
+              interest_tags: article.interest_tags || [],  // For personalization
+              world_event: article.world_event || null  // Event link if part of a world event
             };
           });
           
@@ -2329,7 +2333,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 publishedAt: article.publishedAt || article.published_at || article.added_at,
                 id: article.id || `article_${index}`,
                 final_score: article.final_score,  // IMPORTANT: Include final_score for red border styling
-                interest_tags: article.interest_tags || []  // For personalization
+                interest_tags: article.interest_tags || [],  // For personalization
+                world_event: article.world_event || null  // Event link if part of a world event
               };
                
                processedStories.push(storyData);
@@ -3722,6 +3727,20 @@ export default function Home({ initialNews, initialWorldEvents }) {
           -webkit-touch-callout: none !important;
           -webkit-user-select: none !important;
           user-select: none !important;
+        }
+
+        /* Event link button - MUST be interactive on mobile */
+        .event-link-button {
+          touch-action: auto !important;
+          pointer-events: auto !important;
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
+        }
+
+        .event-link-button:active {
+          transform: scale(0.96);
+          opacity: 0.9;
         }
 
         /* Apple HIG - Base Styles - TikTok-style fixed viewport */
@@ -6631,6 +6650,76 @@ export default function Home({ initialNews, initialWorldEvents }) {
                       </svg>
                     </button>
                     
+                    {/* Event link button - only shows if article is part of a world event */}
+                    {story.world_event && (
+                      <a
+                        href={`/event/${story.world_event.slug || story.world_event.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        className="event-link-button"
+                        style={{
+                          position: 'fixed',
+                          top: 'calc(env(safe-area-inset-top, 0px) + var(--content-padding, 16px))',
+                          right: 'calc(var(--content-padding, 16px) + var(--share-btn-size, 34px) + 10px)',
+                          height: 'var(--share-btn-size, 34px)',
+                          paddingLeft: '12px',
+                          paddingRight: '12px',
+                          borderRadius: '12px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          zIndex: 99999,
+                          pointerEvents: 'auto',
+                          touchAction: 'auto',
+                          textDecoration: 'none',
+                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                          backdropFilter: 'blur(20px) saturate(180%)',
+                          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                          boxShadow: `
+                            inset 0 0 0 0.5px rgba(255, 255, 255, 0.2),
+                            inset 0.9px 1.5px 0px -1px rgba(255, 255, 255, 0.5),
+                            0px 2px 8px 0px rgba(0, 0, 0, 0.15)
+                          `,
+                          transition: 'all 0.2s ease',
+                          WebkitTapHighlightColor: 'transparent',
+                          color: '#ffffff',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          letterSpacing: '0.2px',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+                          maxWidth: '140px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <svg 
+                          width="12" 
+                          height="12" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2.5"
+                          style={{ flexShrink: 0 }}
+                        >
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                          <path d="M2 12h20"/>
+                        </svg>
+                        <span style={{ 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {story.world_event.name}
+                        </span>
+                      </a>
+                    )}
+                    
                     {/* Professional category-based fallback when no image */}
                     {(!story.urlToImage || story.urlToImage.trim() === '' || story.urlToImage === 'null' || story.urlToImage === 'undefined') && (() => {
                       const categoryGradients = {
@@ -9109,7 +9198,8 @@ export async function getServerSideProps({ req, res }) {
               components,
               final_score: article.final_score || 0,
               interest_tags: article.interest_tags || [],
-              publishedAt: article.publishedAt || article.published_at || article.created_at
+              publishedAt: article.publishedAt || article.published_at || article.created_at,
+              world_event: article.world_event || null
             };
           });
         

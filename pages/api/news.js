@@ -250,7 +250,53 @@ export default async function handler(req, res) {
           return (now - articleTime) < twentyFourHoursMs;
         });
 
-        const formattedArticles = filteredArticles.slice(0, pageSize).map(formatArticle);
+        // Fetch event associations for articles
+        const articleIds = filteredArticles.slice(0, pageSize).map(a => a.id);
+        let eventMap = {};
+        
+        try {
+          // Get article-event associations
+          const { data: articleEvents } = await supabase
+            .from('article_world_events')
+            .select('article_id, event_id')
+            .in('article_id', articleIds);
+          
+          if (articleEvents && articleEvents.length > 0) {
+            // Get unique event IDs
+            const eventIds = [...new Set(articleEvents.map(ae => ae.event_id))];
+            
+            // Fetch event details
+            const { data: events } = await supabase
+              .from('world_events')
+              .select('id, name, slug')
+              .in('id', eventIds);
+            
+            if (events) {
+              // Create event lookup
+              const eventLookup = {};
+              events.forEach(e => { eventLookup[e.id] = e; });
+              
+              // Map articles to their events
+              articleEvents.forEach(ae => {
+                if (eventLookup[ae.event_id]) {
+                  eventMap[ae.article_id] = eventLookup[ae.event_id];
+                }
+              });
+            }
+          }
+        } catch (eventError) {
+          console.log('⚠️ Event fetch failed (non-critical):', eventError.message);
+        }
+
+        const formattedArticles = filteredArticles.slice(0, pageSize).map(article => {
+          const formatted = formatArticle(article);
+          // Add event info if available
+          if (eventMap[article.id]) {
+            formatted.world_event = eventMap[article.id];
+          }
+          return formatted;
+        });
+        
         const totalCount = count || formattedArticles.length;
         const hasMore = (offset + pageSize) < totalCount;
 
