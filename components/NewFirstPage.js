@@ -369,16 +369,17 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     fullSubtitleRef.current = `${greeting.subHighlight} ${greeting.subRest}`;
   }, []);
   
-  // Typing effect animation
+  // Typing effect animation - only runs on client after mount
   useEffect(() => {
-    if (!fullSubtitleRef.current || isTypingComplete) return;
+    if (!isMounted || !fullSubtitleRef.current || isTypingComplete) return;
     
     const fullText = fullSubtitleRef.current;
     let currentIndex = 0;
+    let typingInterval;
     
     // Start typing after a small delay
     const startDelay = setTimeout(() => {
-      const typingInterval = setInterval(() => {
+      typingInterval = setInterval(() => {
         if (currentIndex <= fullText.length) {
           setTypedText(fullText.slice(0, currentIndex));
           currentIndex++;
@@ -387,12 +388,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           setIsTypingComplete(true);
         }
       }, 35); // Speed of typing (35ms per character)
-      
-      return () => clearInterval(typingInterval);
     }, 600); // Delay before starting to type
     
-    return () => clearTimeout(startDelay);
-  }, [personalGreeting, isTypingComplete]);
+    return () => {
+      clearTimeout(startDelay);
+      if (typingInterval) clearInterval(typingInterval);
+    };
+  }, [isMounted, personalGreeting, isTypingComplete]);
 
 
   // State for extracted blur colors from event images
@@ -1530,7 +1532,13 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
               {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}.
             </span>
             <span className="greeting-subtitle">
-              {typedText}<span className={`typing-cursor ${isTypingComplete ? 'hidden' : ''}`}>|</span>
+              {isMounted ? (
+                <>
+                  {typedText}<span className={`typing-cursor ${isTypingComplete ? 'hidden' : ''}`}>|</span>
+                </>
+              ) : (
+                <span style={{ opacity: 0 }}>{personalGreeting.subHighlight} {personalGreeting.subRest}</span>
+              )}
             </span>
           </div>
             
