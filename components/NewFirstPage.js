@@ -1142,9 +1142,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           border-radius: 28px;
           overflow: hidden;
           box-shadow: 
-            0 2px 4px rgba(0, 0, 0, 0.04),
-            0 8px 16px rgba(0, 0, 0, 0.08),
-            0 16px 32px rgba(0, 0, 0, 0.06);
+            0 0 0 1px rgba(0, 0, 0, 0.03),
+            0 2px 8px rgba(0, 0, 0, 0.04),
+            0 4px 20px rgba(0, 0, 0, 0.06);
         }
 
         .event-skeleton {
