@@ -22,10 +22,15 @@ export default async function handler(req, res) {
     const { since, limit = 8 } = req.query;
     const sinceDate = since ? new Date(parseInt(since)) : new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Fetch active world events - optimized: only essential fields
+    // Fetch active world events.
+    // - image_url: event page hero image (wide)
+    // - cover_image_url: event box/card cover image (4:5)
+    // Note: cover_image_url may not exist if migration not run - that's ok
     const { data: events, error } = await supabase
       .from('world_events')
-      .select('id, name, slug, image_url, blur_color, importance, status, last_article_at, created_at, background')
+      .select(`
+        id, name, slug, image_url, cover_image_url, blur_color, importance, status, last_article_at, created_at, background
+      `)
       .eq('status', 'ongoing')
       .order('last_article_at', { ascending: false })
       .limit(parseInt(limit));
@@ -56,11 +61,24 @@ export default async function handler(req, res) {
       }
     }
 
-    // Add counts to events and return
-    const eventsWithCounts = events.map(event => ({
-      ...event,
-      newUpdates: countMap[event.id] || 0
-    }));
+    // Add counts to events
+    const eventsWithCounts = events.map(event => {
+      return {
+        id: event.id,
+        name: event.name,
+        slug: event.slug,
+        // Image priority: cover_image_url (4:5) > image_url (hero) > null
+        image_url: event.cover_image_url || event.image_url || null,
+        cover_image_url: event.cover_image_url || null,
+        blur_color: event.blur_color,
+        importance: event.importance,
+        status: event.status,
+        last_article_at: event.last_article_at,
+        created_at: event.created_at,
+        background: event.background,
+        newUpdates: countMap[event.id] || 0
+      };
+    });
 
     // Sort by: update count (desc) → last_article_at (desc) → importance (desc)
     eventsWithCounts.sort((a, b) => {
