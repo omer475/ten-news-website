@@ -3191,13 +3191,20 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
   useEffect(() => {
     let startY = 0;
+    let startX = 0;
     let isTransitioning = false;
+    let swipeDirection = null; // 'vertical', 'horizontal', or null (undetermined)
+    let isOnEventsSection = false;
     
     // Velocity tracking - using array for smooth averaging
     let velocityHistory = [];
     const VELOCITY_SAMPLES = 5;
 
     const handleTouchStart = (e) => {
+      // Reset swipe tracking
+      swipeDirection = null;
+      isOnEventsSection = false;
+      
       // Don't capture touch if it's on auth modal (but allow paywall - need to swipe back)
       if (e.target.closest('.auth-modal-overlay') || e.target.closest('.auth-modal')) {
         return;
@@ -3229,20 +3236,23 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
       }
 
-      // Don't capture touch on events section - let native horizontal scroll work
-      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
-        return;
+      // Check if touch is on events section - we'll determine direction later
+      isOnEventsSection = !!(e.target.closest('.events-scroll') || e.target.closest('.events-section'));
+      
+      // For events section, don't prevent default yet - wait to determine direction
+      if (!isOnEventsSection) {
+        e.preventDefault();
       }
-
-      // Prevent default to stop any scrolling
-      e.preventDefault();
 
       if (!isTransitioning) {
         const touch = e.touches[0];
         startY = touch.clientY;
+        startX = touch.clientX;
         velocityHistory = [{ y: touch.clientY, t: Date.now() }];
-        setIsDragging(true);
-        setDragOffset(0);
+        if (!isOnEventsSection) {
+          setIsDragging(true);
+          setDragOffset(0);
+        }
       }
     };
 
@@ -3281,8 +3291,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
       }
 
-      // Don't handle touch on events section - let native horizontal scroll work
-      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
+      // If on events section with horizontal swipe, let native scroll handle it
+      if (isOnEventsSection && swipeDirection === 'horizontal') {
+        swipeDirection = null;
+        isOnEventsSection = false;
         return;
       }
 
@@ -3349,6 +3361,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
         // Snap back smoothly
         setTransitionDuration(0.35);
       }
+      
+      // Reset tracking state
+      swipeDirection = null;
+      isOnEventsSection = false;
     };
 
     // Card follows finger 1:1 during drag
@@ -3384,17 +3400,37 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
       }
 
-      // Don't block touch on events section - let native horizontal scroll work
-      if (e.target.closest('.events-scroll') || e.target.closest('.events-section')) {
+      const touch = e.touches[0];
+      const currentY = touch.clientY;
+      const currentX = touch.clientX;
+      const deltaY = Math.abs(currentY - startY);
+      const deltaX = Math.abs(currentX - startX);
+      
+      // Determine swipe direction if not yet determined (after 10px movement)
+      if (swipeDirection === null && (deltaX > 10 || deltaY > 10)) {
+        swipeDirection = deltaY > deltaX ? 'vertical' : 'horizontal';
+        
+        // If on events section with vertical swipe, start tracking for page navigation
+        if (isOnEventsSection && swipeDirection === 'vertical') {
+          setIsDragging(true);
+          setDragOffset(0);
+        }
+      }
+      
+      // If on events section with horizontal swipe, let native scroll handle it
+      if (isOnEventsSection && swipeDirection === 'horizontal') {
+        return;
+      }
+      
+      // If on events section but direction not determined yet, don't prevent default
+      if (isOnEventsSection && swipeDirection === null) {
         return;
       }
 
-      // Prevent default scroll behavior
+      // Prevent default scroll behavior for vertical swipe navigation
       e.preventDefault();
 
       if (startY && !isTransitioning) {
-        const touch = e.touches[0];
-        const currentY = touch.clientY;
         const now = Date.now();
         
         // Track velocity history
