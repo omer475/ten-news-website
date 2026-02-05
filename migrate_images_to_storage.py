@@ -68,9 +68,9 @@ def migrate_event_images():
     
     ensure_bucket_exists()
     
-    # Fetch all events with image_url
-    print("\n📊 Fetching events from database...")
-    result = supabase.table('world_events').select('id, slug, name, image_url').execute()
+    # First, fetch just IDs and basic info (without the huge image_url)
+    print("\n📊 Fetching event list from database...")
+    result = supabase.table('world_events').select('id, slug, name').execute()
     
     events = result.data
     print(f"   Found {len(events)} events")
@@ -83,9 +83,17 @@ def migrate_event_images():
         event_id = event['id']
         slug = event['slug'] or f"event-{uuid.uuid4().hex[:8]}"
         name = event['name']
-        image_url = event.get('image_url')
         
         print(f"\n📦 Processing: {name[:40]}...")
+        
+        # Fetch just the image_url for this event (one at a time to avoid timeout)
+        try:
+            img_result = supabase.table('world_events').select('image_url').eq('id', event_id).single().execute()
+            image_url = img_result.data.get('image_url') if img_result.data else None
+        except Exception as e:
+            print(f"   ⚠️ Could not fetch image: {e}")
+            skipped += 1
+            continue
         
         # Skip if no image
         if not image_url:
