@@ -271,10 +271,54 @@ def extract_blur_color_from_base64(base64_data: str) -> str:
     return '#1a365d'
 
 
-def get_event_image(topic_prompt: str) -> tuple:
+def upload_image_to_storage(base64_data: str, filename: str, mime_type: str = 'image/png') -> Optional[str]:
+    """
+    Upload a base64 image to Supabase Storage and return the public URL.
+    Returns None on failure.
+    """
+    if not supabase:
+        print("  ❌ Supabase not configured for storage upload")
+        return None
+    
+    try:
+        import base64
+        
+        # Decode base64 to binary
+        image_bytes = base64.b64decode(base64_data)
+        
+        # Determine file extension from mime type
+        ext = 'png' if 'png' in mime_type else 'jpg' if 'jpeg' in mime_type or 'jpg' in mime_type else 'png'
+        storage_path = f"event-images/{filename}.{ext}"
+        
+        # Upload to Supabase Storage (bucket: 'images')
+        # First, try to create the bucket if it doesn't exist
+        try:
+            supabase.storage.create_bucket('images', {'public': True})
+        except:
+            pass  # Bucket likely already exists
+        
+        # Upload the file
+        result = supabase.storage.from_('images').upload(
+            storage_path,
+            image_bytes,
+            {'content-type': mime_type, 'upsert': 'true'}
+        )
+        
+        # Get public URL
+        public_url = supabase.storage.from_('images').get_public_url(storage_path)
+        
+        print(f"  ✅ Image uploaded to storage: {storage_path}")
+        return public_url
+        
+    except Exception as e:
+        print(f"  ❌ Storage upload error: {e}")
+        return None
+
+
+def get_event_image(topic_prompt: str, event_slug: str = None) -> tuple:
     """
     Generate an AI image for world event using Gemini 2.5 Flash Image.
-    Returns tuple of (image_url, blur_color) or (None, None) on failure.
+    Uploads to Supabase Storage and returns (public_url, blur_color) or (None, None) on failure.
     """
     api_key = os.environ.get('GEMINI_API_KEY')
     
@@ -355,11 +399,21 @@ OUTPUT:
                 # Extract blur color from the generated image
                 blur_color = extract_blur_color_from_base64(base64_data)
                 
-                # Return as data URL
-                image_url = f'data:{mime_type};base64,{base64_data}'
+                # Generate unique filename using slug or timestamp
+                import uuid
+                filename = event_slug if event_slug else f"event-{uuid.uuid4().hex[:12]}"
                 
-                print(f"  ✅ AI image generated for: {topic_prompt[:30]}...")
-                return image_url, blur_color
+                # Upload to Supabase Storage instead of storing base64
+                image_url = upload_image_to_storage(base64_data, filename, mime_type)
+                
+                if image_url:
+                    print(f"  ✅ AI image generated and uploaded for: {topic_prompt[:30]}...")
+                    return image_url, blur_color
+                else:
+                    # Fallback to base64 if storage upload fails
+                    print(f"  ⚠️ Storage upload failed, falling back to base64")
+                    image_url = f'data:{mime_type};base64,{base64_data}'
+                    return image_url, blur_color
         
         print(f"  ❌ No image in Gemini response")
         return None, None
@@ -376,8 +430,8 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
         return None
     
     try:
-        # Generate AI image for event
-        image_url, blur_color = get_event_image(event_data['topic_prompt'])
+        # Generate AI image for event (uploads to Supabase Storage)
+        image_url, blur_color = get_event_image(event_data['topic_prompt'], event_data.get('slug'))
         
         if image_url is None:
             print("  ⚠️ No image generated, event will have no image")
