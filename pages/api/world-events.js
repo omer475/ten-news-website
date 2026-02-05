@@ -41,9 +41,9 @@ export default async function handler(req, res) {
       .order('last_article_at', { ascending: false })
       .limit(parseInt(limit));
 
-    // Add timeout of 8 seconds to prevent Vercel function timeout
+    // Add timeout of 25 seconds to prevent Vercel function timeout (Vercel limit is 30s)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timeout')), 8000)
+      setTimeout(() => reject(new Error('Database query timeout')), 25000)
     );
 
     const { data: events, error } = await Promise.race([eventsPromise, timeoutPromise]);
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
         .gte('tagged_at', sinceDate.toISOString());
 
       const countTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Count query timeout')), 5000)
+        setTimeout(() => reject(new Error('Count query timeout')), 15000)
       );
 
       const { data: articleCounts, error: countError } = await Promise.race([countPromise, countTimeout]);
