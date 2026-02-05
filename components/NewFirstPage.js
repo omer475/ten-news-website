@@ -462,8 +462,11 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
   // Fetch world events from API only if SSR data is not available
   useEffect(() => {
+    console.log('🌍 World events useEffect - SSR data:', initialWorldEvents?.length || 0, 'events');
+    
     // Skip if we have SSR data
     if (initialWorldEvents && initialWorldEvents.length > 0) {
+      console.log('🌍 Using SSR world events data');
       setWorldEvents(initialWorldEvents);
       setEventsLoading(false);
       return;
@@ -474,19 +477,28 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     
     // Fetch from API
     const fetchWorldEvents = async () => {
+      console.log('🌍 Fetching world events from API...');
       try {
         const lastVisit = localStorage.getItem('tennews_last_visit') || Date.now() - 24 * 60 * 60 * 1000;
         const response = await fetch(`/api/world-events?since=${lastVisit}&limit=8`);
         
+        console.log('🌍 World events response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('🌍 World events data:', { count: data.events?.length, error: data.error });
+          
           if (data.events && data.events.length > 0) {
+            console.log('🌍 Setting', data.events.length, 'world events');
             setWorldEvents(data.events);
-            // Don't cache - always show fresh events
+          } else {
+            console.log('🌍 No world events in response');
           }
+        } else {
+          console.log('🌍 World events fetch failed:', response.status);
         }
       } catch (error) {
-        console.error('Failed to fetch world events:', error);
+        console.error('🌍 Failed to fetch world events:', error);
       } finally {
         setEventsLoading(false);
       }
