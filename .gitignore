@@ -56,3 +56,5 @@ ten_news.db
 *.db
 .vercel
 .env*.local
+public/_backup_sample_data/
+public/test_example_news.json.disabled

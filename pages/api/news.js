@@ -118,13 +118,9 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
-  // AGGRESSIVE no-caching - prevent all forms of caching
-  res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '-1');
-  res.setHeader('Surrogate-Control', 'no-store');
-  res.setHeader('CDN-Cache-Control', 'no-store');
-  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+  // Enable caching to reduce database load (2 min cache, 5 min stale-while-revalidate)
+  // This significantly reduces Disk IO usage while keeping content relatively fresh
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -378,8 +374,8 @@ export default async function handler(req, res) {
       
       // Apply pagination if articles exist
       if (testData.articles && Array.isArray(testData.articles)) {
-        const paginatedArticles = testData.articles.slice(startIndex, endIndex);
-        const hasMore = endIndex < testData.articles.length;
+        const paginatedArticles = testData.articles.slice(offset, offset + pageSize);
+        const hasMore = (offset + pageSize) < testData.articles.length;
         
         return res.status(200).json({
           ...testData,
@@ -413,8 +409,8 @@ export default async function handler(req, res) {
       
       // Apply pagination if articles exist
       if (newsData.articles && Array.isArray(newsData.articles)) {
-        const paginatedArticles = newsData.articles.slice(startIndex, endIndex);
-        const hasMore = endIndex < newsData.articles.length;
+        const paginatedArticles = newsData.articles.slice(offset, offset + pageSize);
+        const hasMore = (offset + pageSize) < newsData.articles.length;
         
         return res.status(200).json({
           ...newsData,
@@ -451,8 +447,8 @@ export default async function handler(req, res) {
       
       // Apply pagination if articles exist
       if (newsData.articles && Array.isArray(newsData.articles)) {
-        const paginatedArticles = newsData.articles.slice(startIndex, endIndex);
-        const hasMore = endIndex < newsData.articles.length;
+        const paginatedArticles = newsData.articles.slice(offset, offset + pageSize);
+        const hasMore = (offset + pageSize) < newsData.articles.length;
         
         return res.status(200).json({
           ...newsData,

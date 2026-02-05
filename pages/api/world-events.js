@@ -1,32 +1,38 @@
 // API endpoint to fetch world events for the first page
 // Returns active events sorted by update count, recency, importance
-// OPTIMIZED: Single query approach with minimal data transfer
+// OPTIMIZED: Single query approach with minimal data transfer and timeout handling
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+// Create Supabase client - use anon key as fallback if service key not available
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export default async function handler(req, res) {
-  // Short caching for better performance (30s cache, 60s stale-while-revalidate)
-  // This balances freshness with performance for the first page load
-  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+  // AGGRESSIVE caching to reduce database load (5 min cache, 10 min stale-while-revalidate)
+  // This significantly reduces Disk IO usage
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Check for Supabase configuration
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase configuration');
+    return res.status(500).json({ error: 'Database configuration error', events: [], total: 0 });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   try {
     const { since, limit = 8 } = req.query;
     const sinceDate = since ? new Date(parseInt(since)) : new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Fetch active world events.
-    // - image_url: event page hero image (wide)
-    // - cover_image_url: event box/card cover image (4:5)
-    // Note: cover_image_url may not exist if migration not run - that's ok
-    const { data: events, error } = await supabase
+    console.log('📍 Fetching world events, limit:', limit);
+
+    // Fetch active world events with timeout protection
+    const eventsPromise = supabase
       .from('world_events')
       .select(`
         id, name, slug, image_url, cover_image_url, blur_color, importance, status, last_article_at, created_at, background
@@ -35,50 +41,68 @@ export default async function handler(req, res) {
       .order('last_article_at', { ascending: false })
       .limit(parseInt(limit));
 
+    // Add timeout of 8 seconds to prevent Vercel function timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database query timeout')), 8000)
+    );
+
+    const { data: events, error } = await Promise.race([eventsPromise, timeoutPromise]);
+
     if (error) {
       console.error('Error fetching world events:', error);
-      return res.status(500).json({ error: 'Failed to fetch events' });
+      return res.status(500).json({ error: 'Failed to fetch events', events: [], total: 0 });
     }
 
     if (!events || events.length === 0) {
+      console.log('📍 No ongoing events found');
       return res.status(200).json({ events: [], total: 0 });
     }
 
-    // OPTIMIZATION: Get article counts in a single batch query
-    // Only fetch event_id column to minimize data transfer
-    const eventIds = events.map(e => e.id);
-    const { data: articleCounts, error: countError } = await supabase
-      .from('article_world_events')
-      .select('event_id')
-      .in('event_id', eventIds)
-      .gte('tagged_at', sinceDate.toISOString());
+    console.log('📍 Found', events.length, 'events');
 
-    // Count articles per event efficiently
-    const countMap = {};
-    if (!countError && articleCounts) {
-      for (const row of articleCounts) {
-        countMap[row.event_id] = (countMap[row.event_id] || 0) + 1;
+    // OPTIMIZATION: Get article counts in a single batch query with timeout
+    const eventIds = events.map(e => e.id);
+    let countMap = {};
+    
+    try {
+      const countPromise = supabase
+        .from('article_world_events')
+        .select('event_id')
+        .in('event_id', eventIds)
+        .gte('tagged_at', sinceDate.toISOString());
+
+      const countTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Count query timeout')), 5000)
+      );
+
+      const { data: articleCounts, error: countError } = await Promise.race([countPromise, countTimeout]);
+
+      if (!countError && articleCounts) {
+        for (const row of articleCounts) {
+          countMap[row.event_id] = (countMap[row.event_id] || 0) + 1;
+        }
       }
+    } catch (countErr) {
+      console.log('⚠️ Article count query failed (non-critical):', countErr.message);
+      // Continue without counts - not critical
     }
 
     // Add counts to events
-    const eventsWithCounts = events.map(event => {
-      return {
-        id: event.id,
-        name: event.name,
-        slug: event.slug,
-        // Image priority: cover_image_url (4:5) > image_url (hero) > null
-        image_url: event.cover_image_url || event.image_url || null,
-        cover_image_url: event.cover_image_url || null,
-        blur_color: event.blur_color,
-        importance: event.importance,
-        status: event.status,
-        last_article_at: event.last_article_at,
-        created_at: event.created_at,
-        background: event.background,
-        newUpdates: countMap[event.id] || 0
-      };
-    });
+    const eventsWithCounts = events.map(event => ({
+      id: event.id,
+      name: event.name,
+      slug: event.slug,
+      // Image priority: cover_image_url (4:5) > image_url (hero) > null
+      image_url: event.cover_image_url || event.image_url || null,
+      cover_image_url: event.cover_image_url || null,
+      blur_color: event.blur_color,
+      importance: event.importance,
+      status: event.status,
+      last_article_at: event.last_article_at,
+      created_at: event.created_at,
+      background: event.background,
+      newUpdates: countMap[event.id] || 0
+    }));
 
     // Sort by: update count (desc) → last_article_at (desc) → importance (desc)
     eventsWithCounts.sort((a, b) => {
@@ -89,6 +113,8 @@ export default async function handler(req, res) {
       return (b.importance || 5) - (a.importance || 5);
     });
     
+    console.log('📍 Returning', eventsWithCounts.length, 'events');
+    
     return res.status(200).json({
       events: eventsWithCounts,
       total: eventsWithCounts.length
@@ -96,6 +122,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error in world-events API:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    // Return empty events array instead of error to prevent UI breaking
+    return res.status(200).json({ 
+      error: error.message || 'Internal server error',
+      events: [], 
+      total: 0 
+    });
   }
 }

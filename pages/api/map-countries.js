@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 export default async function handler(req, res) {
+  // Cache for 10 minutes to reduce database load - country data doesn't change frequently
+  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1200')
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
