@@ -28,6 +28,7 @@ export default async function handler(req, res) {
     let event, error;
     
     // First try with all columns (including new ones)
+    // OPTIMIZATION: Don't fetch image_url - it contains multi-MB base64 data
     const fullQuery = await supabase
       .from('world_events')
       .select(`
@@ -35,7 +36,6 @@ export default async function handler(req, res) {
         name,
         slug,
         topic_prompt,
-        image_url,
         blur_color,
         background,
         key_facts,
@@ -66,6 +66,7 @@ export default async function handler(req, res) {
     
     if (fullQuery.error && fullQuery.error.code === 'PGRST204') {
       // Column doesn't exist, try with base schema only
+      // OPTIMIZATION: Don't fetch image_url - it contains multi-MB base64 data
       const baseQuery = await supabase
         .from('world_events')
         .select(`
@@ -73,7 +74,6 @@ export default async function handler(req, res) {
           name,
           slug,
           topic_prompt,
-          image_url,
           blur_color,
           background,
           key_facts,

@@ -32,10 +32,12 @@ export default async function handler(req, res) {
     console.log('📍 Fetching world events, limit:', limit);
 
     // Fetch active world events with timeout protection
+    // OPTIMIZATION: Don't fetch image_url/cover_image_url - they contain multi-MB base64 data
+    // Images will be null until migration to Supabase Storage is complete
     const eventsPromise = supabase
       .from('world_events')
       .select(`
-        id, name, slug, image_url, cover_image_url, blur_color, importance, status, last_article_at, created_at, background
+        id, name, slug, blur_color, importance, status, last_article_at, created_at, background
       `)
       .eq('status', 'ongoing')
       .order('last_article_at', { ascending: false })
@@ -88,26 +90,14 @@ export default async function handler(req, res) {
     }
 
     // Add counts to events
-    const eventsWithCounts = events.map(event => {
-      // CRITICAL: Skip base64 images - they're 2-3MB each and cause 30MB+ responses
-      // Only return proper URLs (from Supabase Storage or CDN)
-      let imageUrl = event.cover_image_url || event.image_url || null;
-      if (imageUrl && imageUrl.startsWith('data:')) {
-        imageUrl = null; // Don't send multi-MB base64 strings to client
-      }
-      
-      let coverUrl = event.cover_image_url || null;
-      if (coverUrl && coverUrl.startsWith('data:')) {
-        coverUrl = null;
-      }
-      
-      return {
+    // Note: image_url and cover_image_url are not fetched to avoid multi-MB base64 transfer
+    const eventsWithCounts = events.map(event => ({
       id: event.id,
       name: event.name,
       slug: event.slug,
-      // Image priority: cover_image_url (4:5) > image_url (hero) > null
-      image_url: imageUrl,
-      cover_image_url: coverUrl,
+      // Images temporarily null until Supabase Storage migration is complete
+      image_url: null,
+      cover_image_url: null,
       blur_color: event.blur_color,
       importance: event.importance,
       status: event.status,
@@ -115,8 +105,7 @@ export default async function handler(req, res) {
       created_at: event.created_at,
       background: event.background,
       newUpdates: countMap[event.id] || 0
-    };
-    });
+    }));
 
     // Sort by: update count (desc) → last_article_at (desc) → importance (desc)
     eventsWithCounts.sort((a, b) => {
