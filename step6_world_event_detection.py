@@ -293,15 +293,24 @@ def upload_image_to_storage(base64_data: str, filename: str, mime_type: str = 'i
         # Upload to Supabase Storage (bucket: 'images')
         # First, try to create the bucket if it doesn't exist
         try:
-            supabase.storage.create_bucket('images', {'public': True})
+            supabase.storage.create_bucket(
+                id='images',
+                options={'public': True}
+            )
         except:
             pass  # Bucket likely already exists
         
+        # Remove existing file first (for upsert behavior)
+        try:
+            supabase.storage.from_('images').remove([storage_path])
+        except:
+            pass
+        
         # Upload the file
         result = supabase.storage.from_('images').upload(
-            storage_path,
-            image_bytes,
-            {'content-type': mime_type, 'upsert': 'true'}
+            path=storage_path,
+            file=image_bytes,
+            file_options={"content-type": mime_type}
         )
         
         # Get public URL

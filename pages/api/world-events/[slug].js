@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     let event, error;
     
     // First try with all columns (including new ones)
-    // OPTIMIZATION: Don't fetch image_url - it contains multi-MB base64 data
+    // Images are now stored as URLs in Supabase Storage (not base64), safe to fetch
     const fullQuery = await supabase
       .from('world_events')
       .select(`
@@ -36,6 +36,8 @@ export default async function handler(req, res) {
         name,
         slug,
         topic_prompt,
+        image_url,
+        cover_image_url,
         blur_color,
         background,
         key_facts,
@@ -66,7 +68,6 @@ export default async function handler(req, res) {
     
     if (fullQuery.error && fullQuery.error.code === 'PGRST204') {
       // Column doesn't exist, try with base schema only
-      // OPTIMIZATION: Don't fetch image_url - it contains multi-MB base64 data
       const baseQuery = await supabase
         .from('world_events')
         .select(`
@@ -74,6 +75,8 @@ export default async function handler(req, res) {
           name,
           slug,
           topic_prompt,
+          image_url,
+          cover_image_url,
           blur_color,
           background,
           key_facts,
@@ -238,8 +241,8 @@ export default async function handler(req, res) {
           } : {})
     } : null;
 
-    // CRITICAL: Skip base64 images - they're 2-3MB each and cause slow responses
-    const safeImageUrl = (url) => (url && url.startsWith('data:')) ? null : url;
+    // Safety: filter out any remaining base64 images (should all be URLs now after migration)
+    const safeImageUrl = (url) => (url && url.startsWith('data:')) ? null : (url || null);
     
     return res.status(200).json({
       event: {
@@ -247,7 +250,8 @@ export default async function handler(req, res) {
         name: event.name,
         slug: event.slug,
         topicPrompt: event.topic_prompt,
-        imageUrl: safeImageUrl(event.image_url),
+        imageUrl: safeImageUrl(event.cover_image_url) || safeImageUrl(event.image_url),
+        coverImageUrl: safeImageUrl(event.cover_image_url),
         blurColor: event.blur_color,
         background: event.background,
         keyFacts: event.key_facts || [],

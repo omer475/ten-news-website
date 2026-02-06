@@ -32,12 +32,11 @@ export default async function handler(req, res) {
     console.log('📍 Fetching world events, limit:', limit);
 
     // Fetch active world events with timeout protection
-    // OPTIMIZATION: Don't fetch image_url/cover_image_url - they contain multi-MB base64 data
-    // Images will be null until migration to Supabase Storage is complete
+    // Images are now stored as URLs in Supabase Storage (not base64), safe to fetch
     const eventsPromise = supabase
       .from('world_events')
       .select(`
-        id, name, slug, blur_color, importance, status, last_article_at, created_at, background
+        id, name, slug, image_url, cover_image_url, blur_color, importance, status, last_article_at, created_at, background
       `)
       .eq('status', 'ongoing')
       .order('last_article_at', { ascending: false })
@@ -90,14 +89,15 @@ export default async function handler(req, res) {
     }
 
     // Add counts to events
-    // Note: image_url and cover_image_url are not fetched to avoid multi-MB base64 transfer
+    // Safety: filter out any remaining base64 images (should all be URLs now after migration)
+    const safeImageUrl = (url) => (url && url.startsWith('data:')) ? null : (url || null);
+    
     const eventsWithCounts = events.map(event => ({
       id: event.id,
       name: event.name,
       slug: event.slug,
-      // Images temporarily null until Supabase Storage migration is complete
-      image_url: null,
-      cover_image_url: null,
+      image_url: safeImageUrl(event.cover_image_url) || safeImageUrl(event.image_url),
+      cover_image_url: safeImageUrl(event.cover_image_url),
       blur_color: event.blur_color,
       importance: event.importance,
       status: event.status,

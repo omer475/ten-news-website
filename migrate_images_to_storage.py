@@ -26,7 +26,10 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 def ensure_bucket_exists():
     """Ensure the images bucket exists and is public"""
     try:
-        supabase.storage.create_bucket('images', {'public': True})
+        supabase.storage.create_bucket(
+            id='images',
+            options={'public': True, 'allowed_mime_types': ['image/png', 'image/jpeg', 'image/webp'], 'file_size_limit': 10485760}
+        )
         print("✅ Created 'images' bucket")
     except Exception as e:
         if 'already exists' in str(e).lower() or 'duplicate' in str(e).lower():
@@ -43,11 +46,17 @@ def upload_base64_to_storage(base64_data: str, filename: str) -> str:
         
         storage_path = f"event-images/{filename}.png"
         
+        # Try to remove existing file first (for upsert behavior)
+        try:
+            supabase.storage.from_('images').remove([storage_path])
+        except:
+            pass
+        
         # Upload to storage
         supabase.storage.from_('images').upload(
-            storage_path,
-            image_bytes,
-            {'content-type': 'image/png', 'upsert': 'true'}
+            path=storage_path,
+            file=image_bytes,
+            file_options={"content-type": "image/png"}
         )
         
         # Get public URL
