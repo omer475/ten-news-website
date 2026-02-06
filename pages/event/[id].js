@@ -1902,7 +1902,8 @@ export default function EventPage() {
               status: apiEvent.status === 'ongoing' ? 'Active' : 'Resolved',
               oneLiner: apiEvent.topicPrompt || apiEvent.topic_prompt || '',
               accentColor: apiEvent.blurColor || apiEvent.blur_color || '#0057B7',
-              heroImage: apiEvent.imageUrl || apiEvent.image_url,
+              heroImage: apiEvent.imageUrl || apiEvent.image_url || 
+                (apiEvent.liveUpdates && apiEvent.liveUpdates.length > 0 ? apiEvent.liveUpdates[0].image : null),
               latestDevelopment: latestDev,
               timeline: apiEvent.timeline?.map(t => ({
                 id: t.id,
@@ -2046,6 +2047,9 @@ export default function EventPage() {
           transition: all 0.2s;
           padding: 0;
           filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
+          pointer-events: auto;
         }
 
         .back-btn:hover { opacity: 0.8; }
@@ -2175,16 +2179,29 @@ export default function EventPage() {
       <div className="page">
         {/* Hero Section */}
         <div className="hero-image-container">
-          <button className="back-btn" onClick={() => {
-            if (window.history.length > 1) router.back();
-            else router.push('/');
+          <button className="back-btn" onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (window.history.length > 1 && document.referrer) {
+              window.history.back();
+            } else {
+              window.location.href = '/';
+            }
+          }} onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (window.history.length > 1 && document.referrer) {
+              window.history.back();
+            } else {
+              window.location.href = '/';
+            }
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
           
-          {event.heroImage && (
+          {event.heroImage ? (
             <img 
               className="hero-image" 
               src={event.heroImage} 
@@ -2192,6 +2209,17 @@ export default function EventPage() {
               crossOrigin="anonymous"
               onLoad={handleImageLoad}
             />
+          ) : (
+            <div className="hero-image-placeholder" style={{
+              width: '100%',
+              height: '100%',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              background: event.accentColor 
+                ? `linear-gradient(160deg, ${event.accentColor}, ${event.accentColor}99, ${event.accentColor}44, #1d1d1f)`
+                : 'linear-gradient(160deg, #667eea, #764ba2, #1d1d1f)'
+            }} />
           )}
           <div className="hero-liquid-glass" />
           <div className="hero-title-overlay">

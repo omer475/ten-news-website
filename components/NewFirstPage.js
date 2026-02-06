@@ -1611,7 +1611,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                       >
                         <div className="event-image-wrapper">
                           {/* Event boxes should use the AI-generated event cover image */}
-                          {event.image_url && (
+                          {event.image_url ? (
                             <img
                               className="event-image"
                               src={event.image_url}
@@ -1621,6 +1621,31 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                               fetchPriority="high"
                               decoding="async"
                             />
+                          ) : (
+                            <div className="event-image-placeholder" style={{
+                              width: '100%',
+                              height: '100%',
+                              background: event.blur_color 
+                                ? `linear-gradient(145deg, ${event.blur_color}, ${event.blur_color}88, ${event.blur_color}44)`
+                                : 'linear-gradient(145deg, #667eea, #764ba2)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              borderRadius: 'inherit'
+                            }}>
+                              <span style={{
+                                fontSize: '28px',
+                                fontWeight: '800',
+                                color: 'rgba(255,255,255,0.7)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '2px',
+                                textAlign: 'center',
+                                padding: '16px'
+                              }}>{event.name?.charAt(0) || 'E'}</span>
+                            </div>
                           )}
                           <div className="event-overlay">
                             <div className="event-content">

@@ -244,14 +244,24 @@ export default async function handler(req, res) {
     // Safety: filter out any remaining base64 images (should all be URLs now after migration)
     const safeImageUrl = (url) => (url && url.startsWith('data:')) ? null : (url || null);
     
+    // For event page hero: prefer image_url (thumbnail), then article image, then cover
+    // Event boxes use cover_image_url, so event page should use a different image
+    const firstArticleImage = (liveUpdates && liveUpdates.length > 0) 
+      ? safeImageUrl(liveUpdates[0].image) 
+      : null;
+    const heroImage = safeImageUrl(event.image_url) 
+      || firstArticleImage 
+      || safeImageUrl(event.cover_image_url);
+    
     return res.status(200).json({
       event: {
         id: event.id,
         name: event.name,
         slug: event.slug,
         topicPrompt: event.topic_prompt,
-        imageUrl: safeImageUrl(event.cover_image_url) || safeImageUrl(event.image_url),
+        imageUrl: heroImage,
         coverImageUrl: safeImageUrl(event.cover_image_url),
+        thumbnailUrl: safeImageUrl(event.image_url),
         blurColor: event.blur_color,
         background: event.background,
         keyFacts: event.key_facts || [],

@@ -3226,6 +3226,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
         return;
       }
       
+      // Don't capture touch if it's on the event link button (needs to navigate)
+      if (e.target.closest('.event-link-button')) {
+        return;
+      }
+      
       // Don't capture touch on expanded information boxes
       const isAnyExpanded = expandedMap[currentIndex] || expandedTimeline[currentIndex] || expandedGraph[currentIndex];
       if (isAnyExpanded) {
@@ -3278,6 +3283,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
       if (e.target.closest('.language-icon-btn') ||
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
+        return;
+      }
+
+      // Don't handle touch if it's on the event link button
+      if (e.target.closest('.event-link-button')) {
         return;
       }
 
@@ -3387,6 +3397,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
       if (e.target.closest('.language-icon-btn') ||
           e.target.closest('.language-dropdown-box') ||
           e.target.closest('.language-switcher__option')) {
+        return;
+      }
+      
+      // Don't block touch if it's on the event link button
+      if (e.target.closest('.event-link-button')) {
         return;
       }
       
@@ -4527,7 +4542,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
+          background: ${darkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.3)'};
           display: flex;
           align-items: center;
           justify-content: center;
@@ -4536,13 +4551,21 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
 
         .auth-modal {
-          background: ${darkMode ? '#1f2937' : '#ffffff'};
-          border-radius: 16px;
+          background: color-mix(in srgb, ${darkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.75)'} 90%, transparent);
+          backdrop-filter: blur(12px) saturate(140%);
+          -webkit-backdrop-filter: blur(12px) saturate(140%);
+          border-radius: 24px;
           width: 90%;
           max-width: 360px;
           max-height: 90vh;
           overflow-y: auto;
           pointer-events: auto;
+          box-shadow:
+            inset 0 0 0 0.5px ${darkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)'},
+            inset 0 1px 0 0 ${darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)'},
+            0 8px 40px rgba(0, 0, 0, 0.15),
+            0 2px 12px rgba(0, 0, 0, 0.08);
+          border: 1px solid ${darkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.4)'};
         }
 
         .auth-modal * {
@@ -4553,22 +4576,22 @@ export default function Home({ initialNews, initialWorldEvents }) {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 24px 24px 0;
+          padding: 28px 24px 0;
           margin-bottom: 20px;
         }
 
         .auth-modal-header h2 {
-          font-size: 22px;
-          font-weight: 600;
+          font-size: 24px;
+          font-weight: 700;
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
           margin: 0;
-          letter-spacing: -0.3px;
+          letter-spacing: -0.4px;
         }
 
         .auth-close {
-          background: none;
+          background: ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'};
           border: none;
-          font-size: 24px;
+          font-size: 20px;
           color: ${darkMode ? '#94a3b8' : '#86868b'};
           cursor: pointer;
           padding: 0;
@@ -4581,10 +4604,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
           transition: all 0.2s;
           pointer-events: auto !important;
           touch-action: auto !important;
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
         }
 
         .auth-close:hover {
-          background: ${darkMode ? '#374151' : '#f5f5f7'};
+          background: ${darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'};
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
         }
 
@@ -4595,12 +4620,15 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
 
         .auth-error {
-          background: #fef2f2;
+          background: rgba(220, 38, 38, 0.1);
           color: #dc2626;
           padding: 12px 16px;
-          border-radius: 8px;
+          border-radius: 12px;
           font-size: 14px;
           margin-bottom: 16px;
+          border: 1px solid rgba(220, 38, 38, 0.15);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
         }
 
         .auth-form {
@@ -4631,19 +4659,21 @@ export default function Home({ initialNews, initialWorldEvents }) {
         }
 
         .auth-field input {
-          padding: 12px 14px;
-          border: 1px solid ${darkMode ? '#374151' : '#d2d2d7'};
-          border-radius: 8px;
+          padding: 14px 16px;
+          border: 1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
+          border-radius: 12px;
           font-size: 16px;
-          background: ${darkMode ? '#111827' : '#ffffff'};
+          background: ${darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.6)'};
           color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          transition: border-color 0.2s;
+          transition: all 0.2s;
           pointer-events: auto !important;
           touch-action: auto !important;
           -webkit-user-select: text !important;
           user-select: text !important;
           -webkit-appearance: none;
           appearance: none;
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
         }
 
         .auth-field input:focus {
@@ -4666,13 +4696,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
           background: #007AFF;
           color: white;
           border: none;
-          border-radius: 980px;
+          border-radius: 14px;
           font-size: 16px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
           margin-top: 8px;
           pointer-events: auto !important;
+          letter-spacing: -0.2px;
         }
 
         .auth-submit:hover:not(:disabled) {
@@ -4691,7 +4722,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         .auth-modal-footer {
           margin-top: 20px;
           padding-top: 16px;
-          border-top: 1px solid ${darkMode ? '#374151' : '#e5e5e5'};
+          border-top: 1px solid ${darkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'};
           text-align: center;
         }
 
@@ -5896,7 +5927,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 </>
               ) : (
                 <>
-                  <button className="subscribe-btn" onClick={() => setAuthModal('choose')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('choose'); }}>Sign up</button>
+                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('signup'); }}>Sign up</button>
                 </>
               )}
             </div>
@@ -6731,7 +6762,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
                       <a
                         href={`/event/${story.world_event.slug || story.world_event.id}`}
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
+                          window.location.href = `/event/${story.world_event.slug || story.world_event.id}`;
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.location.href = `/event/${story.world_event.slug || story.world_event.id}`;
                         }}
                         className="event-link-button"
                         style={{
@@ -8532,69 +8570,37 @@ export default function Home({ initialNews, initialWorldEvents }) {
             onTouchEnd={(e) => e.stopPropagation()}
             style={{ touchAction: 'auto', pointerEvents: 'auto' }}
           >
-            {authModal === 'choose' ? (
-              <>
-                <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                  <h2>Welcome to Today+</h2>
-                  <button 
-                    className="auth-close" 
-                    onClick={() => setAuthModal(null)} 
-                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
-                    style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-                  >×</button>
-                </div>
-                <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <button 
-                      className="auth-choice-btn primary"
-                      onClick={() => setAuthModal('signup')}
-                      onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('signup'); }}
-                    >
-                      Sign up
-                    </button>
-                    <button 
-                      className="auth-choice-btn secondary"
-                      onClick={() => setAuthModal('login')}
-                      onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); }}
-                    >
-                      Log in
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                  <h2>{authModal === 'login' ? 'Log in to Today+' : 'Create Your Account'}</h2>
-                  <button 
-                    className="auth-close" 
-                    onClick={() => setAuthModal(null)} 
-                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
-                    style={{ touchAction: 'auto', pointerEvents: 'auto' }}
-                  >×</button>
-                </div>
+            <>
+              <div className="auth-modal-header" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+                <h2>{authModal === 'login' ? 'Log in' : 'Sign up'}</h2>
+                <button 
+                  className="auth-close" 
+                  onClick={() => setAuthModal(null)} 
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal(null); }}
+                  style={{ touchAction: 'auto', pointerEvents: 'auto' }}
+                >×</button>
+              </div>
 
-                <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
-                  {authError && (
-                    <div className="auth-error">{authError}</div>
-                  )}
+              <div className="auth-modal-body" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
+                {authError && (
+                  <div className="auth-error">{authError}</div>
+                )}
 
+                {authModal === 'login' ? (
+                  <LoginForm onSubmit={handleLogin} onForgotPassword={handleForgotPassword} formData={formData} setFormData={setFormData} />
+                ) : (
+                  <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
+                )}
+
+                <div className="auth-modal-footer">
                   {authModal === 'login' ? (
-                    <LoginForm onSubmit={handleLogin} onForgotPassword={handleForgotPassword} formData={formData} setFormData={setFormData} />
+                    <p>Don't have an account? <button className="auth-switch" onClick={() => {setAuthModal('signup'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('signup'); setAuthError(''); }}>Sign up</button></p>
                   ) : (
-                    <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
+                    <p>Already have an account? <button className="auth-switch" onClick={() => {setAuthModal('login'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); setAuthError(''); }}>Log in</button></p>
                   )}
-
-                  <div className="auth-modal-footer">
-                    {authModal === 'login' ? (
-                      <p>Don't have an account? <button className="auth-switch" onClick={() => {setAuthModal('signup'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('signup'); setAuthError(''); }}>Sign up</button></p>
-                    ) : (
-                      <p>Already have an account? <button className="auth-switch" onClick={() => {setAuthModal('login'); setAuthError('');}} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); setAuthError(''); }}>Log in</button></p>
-                    )}
-                  </div>
                 </div>
-              </>
-            )}
+              </div>
+            </>
           </div>
         </div>
       )}
