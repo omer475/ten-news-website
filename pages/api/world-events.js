@@ -17,13 +17,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // TEMPORARY: Return empty to let database recover from IO exhaustion
-  // Remove this block after running TRUNCATE on world_events tables
-  const MAINTENANCE_MODE = true;
-  if (MAINTENANCE_MODE) {
-    return res.status(200).json({ events: [], total: 0, maintenance: true });
-  }
-
   // Check for Supabase configuration
   if (!supabaseUrl || !supabaseKey) {
     console.error('Missing Supabase configuration');
