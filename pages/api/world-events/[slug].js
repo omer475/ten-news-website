@@ -238,13 +238,16 @@ export default async function handler(req, res) {
           } : {})
     } : null;
 
+    // CRITICAL: Skip base64 images - they're 2-3MB each and cause slow responses
+    const safeImageUrl = (url) => (url && url.startsWith('data:')) ? null : url;
+    
     return res.status(200).json({
       event: {
         id: event.id,
         name: event.name,
         slug: event.slug,
         topicPrompt: event.topic_prompt,
-        imageUrl: event.image_url,
+        imageUrl: safeImageUrl(event.image_url),
         blurColor: event.blur_color,
         background: event.background,
         keyFacts: event.key_facts || [],

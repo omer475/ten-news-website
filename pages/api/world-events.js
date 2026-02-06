@@ -88,13 +88,26 @@ export default async function handler(req, res) {
     }
 
     // Add counts to events
-    const eventsWithCounts = events.map(event => ({
+    const eventsWithCounts = events.map(event => {
+      // CRITICAL: Skip base64 images - they're 2-3MB each and cause 30MB+ responses
+      // Only return proper URLs (from Supabase Storage or CDN)
+      let imageUrl = event.cover_image_url || event.image_url || null;
+      if (imageUrl && imageUrl.startsWith('data:')) {
+        imageUrl = null; // Don't send multi-MB base64 strings to client
+      }
+      
+      let coverUrl = event.cover_image_url || null;
+      if (coverUrl && coverUrl.startsWith('data:')) {
+        coverUrl = null;
+      }
+      
+      return {
       id: event.id,
       name: event.name,
       slug: event.slug,
       // Image priority: cover_image_url (4:5) > image_url (hero) > null
-      image_url: event.cover_image_url || event.image_url || null,
-      cover_image_url: event.cover_image_url || null,
+      image_url: imageUrl,
+      cover_image_url: coverUrl,
       blur_color: event.blur_color,
       importance: event.importance,
       status: event.status,
@@ -102,7 +115,8 @@ export default async function handler(req, res) {
       created_at: event.created_at,
       background: event.background,
       newUpdates: countMap[event.id] || 0
-    }));
+    };
+    });
 
     // Sort by: update count (desc) → last_article_at (desc) → importance (desc)
     eventsWithCounts.sort((a, b) => {
