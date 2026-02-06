@@ -985,13 +985,16 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           height: 100%;
           display: flex;
           flex-direction: column;
-          background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+          background: #ffffff;
           z-index: 1;
           overflow-x: visible;
           overflow-y: hidden;
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+          border: none;
+          box-shadow: none;
+          outline: none;
         }
 
         .content-wrapper {
@@ -1005,6 +1008,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           z-index: 1;
           overflow-x: visible;
           overflow-y: visible;
+          border: none;
+          box-shadow: none;
+          outline: none;
         }
 
         .greeting-section {
@@ -1055,21 +1061,22 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .greeting-subtitle {
           display: block;
-          color: #6e6e73;
-          font-weight: 400;
-          font-size: 17px;
-          letter-spacing: -0.2px;
+          font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+          color: #48484a;
+          font-weight: 500;
+          font-size: 19px;
+          letter-spacing: -0.3px;
           line-height: 1.5;
-          min-height: 52px;
-          margin-top: 8px;
+          min-height: 58px;
+          margin-top: 10px;
         }
 
         .typing-cursor {
           display: inline-block;
-          color: #667eea;
-          font-weight: 300;
+          color: #48484a;
+          font-weight: 400;
           animation: blink 1s step-end infinite;
-          margin-left: 1px;
+          margin-left: 2px;
         }
 
         .typing-cursor.hidden {
@@ -1156,7 +1163,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           border-radius: 28px;
           overflow: hidden;
           box-shadow: 
-            0 0 0 1px rgba(0, 0, 0, 0.03),
             0 2px 8px rgba(0, 0, 0, 0.04),
             0 4px 20px rgba(0, 0, 0, 0.06);
         }
@@ -1406,7 +1412,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             margin-bottom: 12px;
           }
           .greeting-subtitle {
-            font-size: 15px;
+            font-size: 17px;
+            min-height: 52px;
           }
           .events-section {
             margin-top: 40px;
@@ -1469,7 +1476,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             letter-spacing: -1px;
           }
           .greeting-subtitle {
-            font-size: 14px;
+            font-size: 16px;
+            min-height: 48px;
           }
           .events-section {
             margin-top: 36px;
