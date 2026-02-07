@@ -4536,15 +4536,6 @@ export default function Home({ initialNews, initialWorldEvents }) {
           margin-right: 12px;
         }
 
-        .header-greeting {
-          font-size: 13px;
-          font-weight: 500;
-          color: ${darkMode ? '#ffffff' : '#1d1d1f'};
-          margin-right: 12px;
-          letter-spacing: -0.2px;
-          white-space: nowrap;
-        }
-
         .auth-modal-overlay {
           position: fixed;
           top: 0;
@@ -5931,14 +5922,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
             <div className="header-right">
               <span className="time">{currentTime}</span>
               {user ? (
-                <>
-                  <span className="header-greeting">{timeOfDay === 'morning' ? 'Good morning' : timeOfDay === 'afternoon' ? 'Good afternoon' : 'Good evening'}{(() => { const name = userProfile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0]; return name ? `, ${name}` : ''; })()}</span>
-                  <button className="auth-btn" onClick={handleLogout} onTouchEnd={(e) => { e.preventDefault(); handleLogout(); }}>Log out</button>
-                </>
+                <button className="auth-btn" onClick={handleLogout} onTouchEnd={(e) => { e.preventDefault(); handleLogout(); }}>Log out</button>
               ) : (
-                <>
-                  <button className="subscribe-btn" onClick={() => setAuthModal('signup')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('signup'); }}>Sign up</button>
-                </>
+                <button className="subscribe-btn" onClick={() => setAuthModal('signup')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('signup'); }}>Sign up</button>
               )}
             </div>
           </div>
