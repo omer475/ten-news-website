@@ -1,8 +1,15 @@
 /**
- * SIMPLE EMAIL CRON - Sends at 10 AM local time for each user
+ * DAILY EMAIL CRON - Sends once per day at 10 AM local time for each user
  * 
- * This endpoint is called by Vercel Cron every hour.
- * It only sends to users whose local time is EXACTLY 10 AM.
+ * Called by Vercel Cron every hour. For each run it:
+ * 1. Gets all subscribed users
+ * 2. Checks if it's 10 AM in their timezone (using Intl.DateTimeFormat - reliable)
+ * 3. Checks if email was already sent in the last 20 hours (bulletproof dedup)
+ * 4. Sends email and VERIFIES the database update succeeded before continuing
+ * 
+ * The 20-hour window guarantee: since we only send at 10 AM and the cron runs
+ * hourly, the next eligible window is always ~24h later. 20h prevents any
+ * possibility of double-sending even if timezone logic has edge cases.
  */
 
 import { Resend } from 'resend';
@@ -19,8 +26,29 @@ export const config = {
   maxDuration: 60,
 };
 
-// Target hour: 10 AM
 const TARGET_HOUR = 10;
+const MIN_HOURS_BETWEEN_EMAILS = 20; // Prevents any double-send within a day
+
+/**
+ * Get the current hour in a given timezone using Intl.DateTimeFormat
+ * This is the most reliable cross-platform method (works on Vercel, Node, etc.)
+ */
+function getHourInTimezone(date, timezone) {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(date);
+    const hourPart = parts.find(p => p.type === 'hour');
+    let hour = hourPart ? parseInt(hourPart.value, 10) : -1;
+    if (hour === 24) hour = 0; // Midnight edge case
+    return hour;
+  } catch (e) {
+    return -1; // Invalid timezone - will be skipped
+  }
+}
 
 export default async function handler(req, res) {
   // Verify authorization
@@ -30,10 +58,12 @@ export default async function handler(req, res) {
   }
 
   const now = new Date();
+  const nowMs = now.getTime();
   console.log('\n========================================');
-  console.log('📧 EMAIL CRON STARTED');
-  console.log(`⏰ UTC Time: ${now.toISOString()}`);
-  console.log(`🎯 Target: Send to users at 10 AM local time`);
+  console.log('EMAIL CRON STARTED');
+  console.log(`UTC Time: ${now.toISOString()}`);
+  console.log(`Target: Users where local time = 10 AM`);
+  console.log(`Dedup: Skip if last email < ${MIN_HOURS_BETWEEN_EMAILS}h ago`);
   console.log('========================================\n');
 
   try {
@@ -46,70 +76,61 @@ export default async function handler(req, res) {
 
     if (fetchError) throw fetchError;
 
-    console.log(`📋 Total subscribed users: ${allUsers?.length || 0}`);
+    console.log(`Total subscribed users: ${allUsers?.length || 0}`);
 
-    // Step 2: Filter to users at 10 AM AND not sent today
+    // Step 2: Filter users - must be 10 AM locally AND not sent in last 20 hours
     const eligibleUsers = [];
+    const skipReasons = { wrongHour: 0, recentlySent: 0, badTimezone: 0 };
     
     for (const user of (allUsers || [])) {
       const tz = user.email_timezone || 'UTC';
       
-      // Get current hour in user's timezone
-      let userHour;
-      try {
-        userHour = parseInt(now.toLocaleString('en-US', { 
-          timeZone: tz, 
-          hour: 'numeric', 
-          hour12: false 
-        }));
-      } catch (e) {
-        userHour = now.getUTCHours();
-      }
-
-      // CHECK 1: Is it 10 AM for this user?
-      if (userHour !== TARGET_HOUR) {
-        console.log(`⏭️ ${user.email}: Skip (${tz} = ${userHour}:00, not 10 AM)`);
+      // CHECK 1: Get current hour in user's timezone
+      const userHour = getHourInTimezone(now, tz);
+      
+      if (userHour === -1) {
+        console.log(`SKIP ${user.email}: invalid timezone "${tz}"`);
+        skipReasons.badTimezone++;
         continue;
       }
 
-      // CHECK 2: Already sent today?
+      if (userHour !== TARGET_HOUR) {
+        skipReasons.wrongHour++;
+        continue;
+      }
+
+      // CHECK 2: Was email sent less than 20 hours ago? (bulletproof dedup)
       if (user.last_email_sent_at) {
-        const lastSent = new Date(user.last_email_sent_at);
-        let todayLocal, lastSentLocal;
-        try {
-          todayLocal = now.toLocaleDateString('en-CA', { timeZone: tz });
-          lastSentLocal = lastSent.toLocaleDateString('en-CA', { timeZone: tz });
-        } catch (e) {
-          todayLocal = now.toISOString().split('T')[0];
-          lastSentLocal = lastSent.toISOString().split('T')[0];
-        }
-        
-        if (todayLocal === lastSentLocal) {
-          console.log(`⏭️ ${user.email}: Skip (already sent today: ${lastSentLocal})`);
+        const hoursSinceLastEmail = (nowMs - new Date(user.last_email_sent_at).getTime()) / (1000 * 60 * 60);
+        if (hoursSinceLastEmail < MIN_HOURS_BETWEEN_EMAILS) {
+          console.log(`SKIP ${user.email}: sent ${hoursSinceLastEmail.toFixed(1)}h ago (need ${MIN_HOURS_BETWEEN_EMAILS}h)`);
+          skipReasons.recentlySent++;
           continue;
         }
       }
 
-      // This user is eligible!
-      console.log(`✅ ${user.email}: ELIGIBLE (${tz} = 10 AM)`);
+      console.log(`ELIGIBLE ${user.email} (${tz} = ${userHour}:00)`);
       eligibleUsers.push(user);
     }
 
-    console.log(`\n🎯 Eligible users: ${eligibleUsers.length}`);
+    console.log(`\nFilter results: ${eligibleUsers.length} eligible`);
+    console.log(`  Wrong hour: ${skipReasons.wrongHour}, Recently sent: ${skipReasons.recentlySent}, Bad TZ: ${skipReasons.badTimezone}`);
 
     if (eligibleUsers.length === 0) {
       return res.status(200).json({
-        message: 'No users at 10 AM local time right now',
+        message: 'No users eligible right now',
         checked: allUsers?.length || 0,
-        sent: 0
+        eligible: 0,
+        sent: 0,
+        skipReasons
       });
     }
 
-    // Step 3: Get articles
+    // Step 3: Get articles from last 24 hours
     const { data: articles } = await supabase
       .from('published_articles')
       .select('*')
-      .gte('created_at', new Date(Date.now() - 24*60*60*1000).toISOString())
+      .gte('created_at', new Date(nowMs - 24 * 60 * 60 * 1000).toISOString())
       .order('ai_final_score', { ascending: false })
       .limit(10);
 
@@ -117,67 +138,99 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No articles available', sent: 0 });
     }
 
-    // Step 4: Send emails
-    let sent = 0, failed = 0;
+    console.log(`Found ${articles.length} articles for digest`);
+
+    // Step 4: Send emails one by one with verified dedup
+    let sent = 0, failed = 0, skippedDedup = 0;
 
     for (const user of eligibleUsers) {
       try {
+        // CRITICAL: Re-check last_email_sent_at right before sending (prevents race conditions)
+        const { data: freshUser } = await supabase
+          .from('profiles')
+          .select('last_email_sent_at')
+          .eq('id', user.id)
+          .single();
+
+        if (freshUser?.last_email_sent_at) {
+          const hoursSince = (nowMs - new Date(freshUser.last_email_sent_at).getTime()) / (1000 * 60 * 60);
+          if (hoursSince < MIN_HOURS_BETWEEN_EMAILS) {
+            console.log(`DEDUP CATCH ${user.email}: sent ${hoursSince.toFixed(1)}h ago (race condition prevented)`);
+            skippedDedup++;
+            continue;
+          }
+        }
+
+        // CRITICAL: Update last_email_sent_at BEFORE sending (acts as a lock)
+        const { error: lockError } = await supabase
+          .from('profiles')
+          .update({ last_email_sent_at: now.toISOString() })
+          .eq('id', user.id);
+
+        if (lockError) {
+          console.error(`LOCK FAILED ${user.email}: ${lockError.message}`);
+          failed++;
+          continue;
+        }
+
         const tz = user.email_timezone || 'UTC';
         const dateStr = now.toLocaleDateString('en-US', {
           weekday: 'long', month: 'long', day: 'numeric', timeZone: tz
         });
 
-        // Simple email HTML
         const html = generateEmailHTML(user, articles, dateStr);
 
-        // Send email
-        const { error: sendError } = await resend.emails.send({
+        // Send email via Resend
+        const { data: emailData, error: sendError } = await resend.emails.send({
           from: 'Today+ <info@todayplus.news>',
           to: user.email,
-          subject: `☀️ Good Morning - Your Daily Brief for ${dateStr}`,
+          subject: `Your Daily Brief for ${dateStr}`,
           html: html
         });
 
-        if (sendError) throw sendError;
-
-        // Update last_email_sent_at
-        await supabase
-          .from('profiles')
-          .update({ last_email_sent_at: now.toISOString() })
-          .eq('id', user.id);
+        if (sendError) {
+          // Rollback the lock if send failed
+          await supabase
+            .from('profiles')
+            .update({ last_email_sent_at: user.last_email_sent_at || null })
+            .eq('id', user.id);
+          throw sendError;
+        }
 
         // Log success
         await supabase.from('email_logs').insert({
           user_id: user.id,
           email_type: 'daily_digest',
           status: 'sent',
-          metadata: { timezone: tz, hour: 10 }
+          resend_id: emailData?.id,
+          metadata: { timezone: tz, hour: TARGET_HOUR }
         });
 
-        console.log(`📧 Sent to ${user.email}`);
+        console.log(`SENT ${user.email}`);
         sent++;
         
-        // Rate limit
+        // Rate limit (Resend allows 10/sec on free, but be conservative)
         await new Promise(r => setTimeout(r, 500));
 
       } catch (err) {
-        console.error(`❌ Failed ${user.email}: ${err.message}`);
+        console.error(`FAILED ${user.email}: ${err.message}`);
         failed++;
       }
     }
 
-    console.log(`\n✅ Done: ${sent} sent, ${failed} failed`);
+    console.log(`\nDone: ${sent} sent, ${failed} failed, ${skippedDedup} dedup catches`);
 
     return res.status(200).json({
       message: 'Email cron completed',
       checked: allUsers?.length || 0,
       eligible: eligibleUsers.length,
       sent,
-      failed
+      failed,
+      skippedDedup
     });
 
   } catch (error) {
-    console.error('❌ Cron error:', error);
+    console.error('Cron error:', error);
     return res.status(500).json({ error: error.message });
   }
 }

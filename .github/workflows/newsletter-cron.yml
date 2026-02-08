@@ -1,0 +1,32 @@
+name: Newsletter - Send Daily Digest
+on:
+  schedule:
+    # Run every hour at minute 0 - the endpoint checks which users are at 10 AM local time
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  send-newsletter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger newsletter email cron
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Triggering newsletter cron at $(date -u '+%Y-%m-%d %H:%M UTC')"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "https://todayplus.news/api/cron/send-emails")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          
+          echo "Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Newsletter cron failed with status $HTTP_CODE"
+            exit 1
+          fi
