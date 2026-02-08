@@ -6802,7 +6802,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                           `,
                           transition: 'all 0.2s ease',
                           WebkitTapHighlightColor: 'transparent',
-                          color: '#000000',
+                          color: '#ffffff',
                           fontSize: '12px',
                           fontWeight: '600',
                           letterSpacing: '0.2px',
