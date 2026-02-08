@@ -3757,7 +3757,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
         {/* Dynamic theme-color - updated via useEffect for better iOS support */}
         <meta name="theme-color" content={safeAreaColor} />
         <meta name="apple-mobile-web-app-status-bar-style" content={isCurrentArticleImportant ? 'black' : 'default'} />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />

@@ -44,6 +44,7 @@ export default async function handler(req, res) {
         status,
         importance,
         created_at,
+        last_article_at,
         started_at,
         ends_at,
         day_counter_type,
@@ -83,6 +84,7 @@ export default async function handler(req, res) {
           status,
           importance,
           created_at,
+          last_article_at,
           timeline:world_event_timeline(
             id,
             date,
@@ -274,6 +276,7 @@ export default async function handler(req, res) {
         // Smart event components (perspectives, what_to_watch, geographic_impact, historical_comparison)
         components: smartComponents,
         createdAt: event.created_at,
+        lastArticleAt: event.last_article_at,
         // Latest development with article components (graph, details, info_boxes)
         latestDevelopment: finalLatestDev,
         timeline: event.timeline ? event.timeline.map(t => ({

@@ -1920,7 +1920,8 @@ export default function EventPage() {
               day_counter_type: apiEvent.dayCounterType || apiEvent.day_counter_type || null,
               show_day_counter: apiEvent.showDayCounter || apiEvent.show_day_counter || false,
               dayCounter: apiEvent.dayCounter || null,
-              components: apiEvent.components || components || null
+              components: apiEvent.components || components || null,
+              lastArticleAt: apiEvent.lastArticleAt || null
             });
             if (apiEvent.blur_color && !colorExtractedRef.current) {
               setBlurColor(apiEvent.blur_color);
@@ -1940,6 +1941,19 @@ export default function EventPage() {
   useEffect(() => {
     if (event && event.dbId) {
       localStorage.setItem(`tennews_event_visit_${event.dbId}`, Date.now().toString());
+      // Also mark in the read-events tracker used by homepage filtering
+      // This ensures visiting the event page hides it from homepage until a new development
+      try {
+        const readEvents = JSON.parse(localStorage.getItem('tennews_read_events') || '{}');
+        // Use last_article_at (same key the homepage uses for comparison)
+        const timestamp = event.lastArticleAt || new Date().toISOString();
+        readEvents[event.dbId] = timestamp;
+        localStorage.setItem('tennews_read_events', JSON.stringify(readEvents));
+        console.log('📖 Event marked as read:', { id: event.dbId, name: event.name, lastArticleAt: timestamp });
+        console.log('📖 All read events:', readEvents);
+      } catch (e) {
+        console.error('📖 Failed to mark event as read:', e);
+      }
     }
   }, [event]);
 

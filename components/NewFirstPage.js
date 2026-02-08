@@ -460,6 +460,56 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const [eventsLoading, setEventsLoading] = useState(!initialWorldEvents || initialWorldEvents.length === 0);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
 
+  // Read events tracking: hide events the user already read (until new development)
+  // localStorage key: tennews_read_events = { eventId: "last_article_at timestamp" }
+  const getReadEvents = () => {
+    try {
+      const data = JSON.parse(localStorage.getItem('tennews_read_events') || '{}');
+      // Clean up entries older than 30 days to prevent unbounded growth
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      let cleaned = false;
+      for (const [key, val] of Object.entries(data)) {
+        if (val < thirtyDaysAgo) { delete data[key]; cleaned = true; }
+      }
+      if (cleaned) localStorage.setItem('tennews_read_events', JSON.stringify(data));
+      return data;
+    } catch { return {}; }
+  };
+
+  const markEventAsRead = (eventId, lastArticleAt) => {
+    try {
+      const read = getReadEvents();
+      const timestamp = lastArticleAt || new Date().toISOString();
+      read[eventId] = timestamp;
+      localStorage.setItem('tennews_read_events', JSON.stringify(read));
+      console.log('📖 Event card clicked - marked as read:', { eventId, lastArticleAt: timestamp });
+    } catch (e) {
+      console.error('📖 Failed to mark event as read:', e);
+    }
+  };
+
+  const filterReadEvents = (events) => {
+    const read = getReadEvents();
+    console.log('📖 Read events from localStorage:', read);
+    const filtered = events.filter(event => {
+      const readTimestamp = read[event.id];
+      if (!readTimestamp) return true; // Never read - show it
+      // Show again if last_article_at changed (new development since user read it)
+      const hasNewUpdate = event.last_article_at && event.last_article_at !== readTimestamp;
+      if (!hasNewUpdate) {
+        console.log(`📖 Hiding read event: "${event.name}" (read: ${readTimestamp}, current: ${event.last_article_at})`);
+      } else {
+        console.log(`📖 Showing event with new update: "${event.name}" (read: ${readTimestamp}, current: ${event.last_article_at})`);
+      }
+      return hasNewUpdate;
+    });
+    // If all events were filtered out, show all (don't leave section empty)
+    if (filtered.length === 0 && events.length > 0) {
+      console.log('📖 All events read - showing all to avoid empty section');
+    }
+    return filtered.length > 0 ? filtered : events;
+  };
+
   // Fetch world events from API only if SSR data is not available
   useEffect(() => {
     console.log('🌍 World events useEffect - SSR data:', initialWorldEvents?.length || 0, 'events');
@@ -467,7 +517,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     // Skip if we have SSR data
     if (initialWorldEvents && initialWorldEvents.length > 0) {
       console.log('🌍 Using SSR world events data');
-      setWorldEvents(initialWorldEvents);
+      const filtered = filterReadEvents(initialWorldEvents);
+      console.log('🌍 After read filter:', filtered.length, 'of', initialWorldEvents.length, 'events');
+      setWorldEvents(filtered);
       setEventsLoading(false);
       return;
     }
@@ -489,8 +541,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           console.log('🌍 World events data:', { count: data.events?.length, error: data.error });
           
           if (data.events && data.events.length > 0) {
-            console.log('🌍 Setting', data.events.length, 'world events');
-            setWorldEvents(data.events);
+            const filtered = filterReadEvents(data.events);
+            console.log('🌍 Setting', filtered.length, 'of', data.events.length, 'world events (after read filter)');
+            setWorldEvents(filtered);
           } else {
             console.log('🌍 No world events in response');
           }
@@ -1604,6 +1657,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                             dragState.current.hasMoved = false;
                             return;
                           }
+                          // Mark event as read so it hides until a new development
+                          markEventAsRead(event.id, event.last_article_at);
                         }}
                       >
                         <div className="event-image-wrapper">
