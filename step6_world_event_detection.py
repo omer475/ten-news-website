@@ -12,10 +12,11 @@ import json
 import os
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 from supabase import create_client, Client
+from event_components import generate_event_components, refresh_all_event_components
 
 # ==========================================
 # CONFIGURATION
@@ -324,53 +325,11 @@ def upload_image_to_storage(base64_data: str, filename: str, mime_type: str = 'i
         return None
 
 
-def get_event_image(topic_prompt: str, event_slug: str = None) -> tuple:
+def _generate_gemini_image(api_key: str, prompt: str, aspect_ratio: str, timeout: int = 90) -> tuple:
     """
-    Generate an AI image for world event using Gemini 2.5 Flash Image.
-    Uploads to Supabase Storage and returns (public_url, blur_color) or (None, None) on failure.
+    Internal helper: Call Gemini image API and return (base64_data, mime_type) or (None, None).
     """
-    api_key = os.environ.get('GEMINI_API_KEY')
-    
-    if not api_key:
-        print("  ❌ GEMINI_API_KEY not set, image generation skipped")
-        return None, None
-    
-    # Prompt for Gemini image generation
-    prompt = f"""Create a newspaper-cover-style editorial illustration about {topic_prompt}.
-
-The image should feel like a lead illustration or cover visual from TIME magazine, The Independent, The New York Times, or The Economist: intelligent, concept-driven, visually clever, and engaging rather than literal.
-
-STYLE:
-– detailed, expressive editorial illustration
-– recognisable public figures allowed if relevant
-– slightly exaggerated features allowed for wit and character
-– not photorealistic, not cartoonish
-– sophisticated, modern newspaper illustration aesthetic
-
-BACKGROUND (CRITICAL):
-– background must be pure white (#ffffff)
-– no colour tint, no grey, no off-white
-– no gradients, no texture, no patterns
-– no shadows or lighting effects on the background
-
-LAYOUT:
-– illustration positioned entirely in the top two-thirds of the image
-– bottom one-third must remain completely empty
-– bottom one-third contains only pure white background
-– no objects, details, fade, or visual elements in the bottom section
-
-COMPOSITION:
-– strong, balanced composition in the upper area
-– clear separation between illustration and background
-– cover-ready framing suitable for a newspaper or magazine front page
-
-OUTPUT:
-– high resolution
-– newspaper-cover quality finish
-– no text, no headlines, no captions"""
-
     try:
-        # Call Gemini 2.5 Flash Image model using generateContent
         response = requests.post(
             'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent',
             headers={
@@ -378,58 +337,130 @@ OUTPUT:
                 'x-goog-api-key': api_key
             },
             json={
-                'contents': [{
-                    'parts': [{'text': prompt}]
-                }],
+                'contents': [{'parts': [{'text': prompt}]}],
                 'generationConfig': {
                     'responseModalities': ['IMAGE'],
-                    'imageConfig': {
-                        'aspectRatio': '21:9'
-                    }
+                    'imageConfig': {'aspectRatio': aspect_ratio}
                 }
             },
-            timeout=60
+            timeout=timeout
         )
         
         if response.status_code != 200:
-            print(f"  ❌ Gemini API error: {response.status_code} - {response.text[:200]}")
+            print(f"    ❌ Gemini API error ({aspect_ratio}): {response.status_code} - {response.text[:300]}")
             return None, None
         
         data = response.json()
-        
-        # Extract image from response
         parts = data.get('candidates', [{}])[0].get('content', {}).get('parts', [])
         
         for part in parts:
             if 'inlineData' in part:
-                base64_data = part['inlineData']['data']
-                mime_type = part['inlineData'].get('mimeType', 'image/png')
-                
-                # Extract blur color from the generated image
-                blur_color = extract_blur_color_from_base64(base64_data)
-                
-                # Generate unique filename using slug or timestamp
-                import uuid
-                filename = event_slug if event_slug else f"event-{uuid.uuid4().hex[:12]}"
-                
-                # Upload to Supabase Storage instead of storing base64
-                image_url = upload_image_to_storage(base64_data, filename, mime_type)
-                
-                if image_url:
-                    print(f"  ✅ AI image generated and uploaded for: {topic_prompt[:30]}...")
-                    return image_url, blur_color
-                else:
-                    # Fallback to base64 if storage upload fails
-                    print(f"  ⚠️ Storage upload failed, falling back to base64")
-                    image_url = f'data:{mime_type};base64,{base64_data}'
-                    return image_url, blur_color
+                return part['inlineData']['data'], part['inlineData'].get('mimeType', 'image/png')
         
-        print(f"  ❌ No image in Gemini response")
+        print(f"    ❌ No image in Gemini response ({aspect_ratio})")
         return None, None
         
     except Exception as e:
-        print(f"  ❌ Image generation error: {e}")
+        print(f"    ❌ Gemini image error ({aspect_ratio}): {e}")
         return None, None
+
+
+def get_event_images(topic_prompt: str, event_slug: str = None) -> dict:
+    """
+    Generate BOTH images for a world event:
+      - hero image (21:9) for the event detail page
+      - cover image (4:5) for the event box card on the homepage
+    
+    Uploads both to Supabase Storage.
+    Returns dict with: image_url, cover_image_url, blur_color (any can be None)
+    """
+    api_key = os.environ.get('GEMINI_API_KEY')
+    result = {'image_url': None, 'cover_image_url': None, 'blur_color': None}
+    
+    if not api_key:
+        print("  ❌ GEMINI_API_KEY not set, image generation skipped")
+        return result
+    
+    import uuid
+    base_filename = event_slug if event_slug else f"event-{uuid.uuid4().hex[:12]}"
+    
+    # ── HERO IMAGE (21:9) for event detail page ──
+    hero_prompt = f"""Create a newspaper-cover-style editorial illustration about {topic_prompt}.
+
+The image should feel like a lead illustration from TIME magazine, The Economist, or The New York Times: intelligent, concept-driven, visually clever.
+
+STYLE:
+– detailed, expressive editorial illustration
+– recognisable public figures allowed if relevant
+– slightly exaggerated features for wit and character
+– not photorealistic, not cartoonish
+– sophisticated, modern newspaper illustration aesthetic
+
+BACKGROUND: pure white (#ffffff), no gradients, no texture
+LAYOUT: illustration in the top two-thirds, bottom third is pure white
+COMPOSITION: strong balanced composition, cover-ready framing
+OUTPUT: high resolution, no text, no headlines, no captions"""
+
+    print(f"  🎨 Generating hero image (21:9)...")
+    hero_b64, hero_mime = _generate_gemini_image(api_key, hero_prompt, '21:9')
+    
+    if hero_b64:
+        result['blur_color'] = extract_blur_color_from_base64(hero_b64)
+        hero_url = upload_image_to_storage(hero_b64, f"{base_filename}-hero", hero_mime)
+        if hero_url:
+            result['image_url'] = hero_url
+            print(f"  ✅ Hero image uploaded: {base_filename}-hero")
+        else:
+            print(f"  ⚠️ Hero storage upload failed")
+    
+    # ── COVER IMAGE (4:5) for event box card on homepage ──
+    cover_prompt = f"""Create a single FULL-BLEED editorial newspaper illustration in a classic engraved / woodcut illustration style with fine linework, cross-hatching, and stippling.
+
+CRITICAL - FULL COVERAGE REQUIREMENT:
+- The illustration MUST fill 100% of the canvas - every single pixel
+- NO empty space on ANY side (left, right, top, bottom)
+- NO margins, NO padding, NO borders, NO blank areas
+- The subject and background must extend ALL THE WAY to every edge
+
+EVENT TO ILLUSTRATE: {topic_prompt}
+
+COLOR RULE:
+Use bold, saturated, high-contrast colors. Avoid sepia, beige, parchment, pastel, or muted tones.
+Flat colors + engraving shading only. No gradients.
+
+EVENT LOGIC:
+- If the event is about a specific person, include that person as the main subject
+- If NOT about a person, use a dominant symbolic object or structure instead
+
+COMPOSITION:
+- One dominant central subject (person or symbolic object)
+- Background scene MUST extend to ALL edges
+- Subject should be large enough to dominate the frame
+- Straight-on editorial perspective
+- No frames, borders, overlays, or graphic effects
+
+FORBIDDEN:
+Photography, photorealism, 3D rendering, gradients, pastel colors, sepia tones, paper textures, frames, borders, margins, empty space, text, logos, captions, watermarks.
+
+OUTPUT: One single full-bleed image with NO empty space anywhere."""
+
+    print(f"  🎨 Generating cover image (4:5)...")
+    cover_b64, cover_mime = _generate_gemini_image(api_key, cover_prompt, '4:5')
+    
+    if cover_b64:
+        if not result['blur_color']:
+            result['blur_color'] = extract_blur_color_from_base64(cover_b64)
+        cover_url = upload_image_to_storage(cover_b64, f"{base_filename}-cover", cover_mime)
+        if cover_url:
+            result['cover_image_url'] = cover_url
+            print(f"  ✅ Cover image uploaded: {base_filename}-cover")
+        else:
+            print(f"  ⚠️ Cover storage upload failed")
+    
+    if not result['image_url'] and not result['cover_image_url']:
+        print(f"  ❌ No images generated for event")
+    
+    return result
 
 
 def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
@@ -439,11 +470,11 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
         return None
     
     try:
-        # Generate AI image for event (uploads to Supabase Storage)
-        image_url, blur_color = get_event_image(event_data['topic_prompt'], event_data.get('slug'))
+        # Generate BOTH AI images for event (hero + cover, uploaded to Supabase Storage)
+        images = get_event_images(event_data['topic_prompt'], event_data.get('slug'))
         
-        if image_url is None:
-            print("  ⚠️ No image generated, event will have no image")
+        if not images['image_url'] and not images['cover_image_url']:
+            print("  ⚠️ No images generated, event will have no image")
         
         # Parse started_at date if provided
         started_at = None
@@ -454,7 +485,7 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
             except Exception as e:
                 print(f"  ⚠️ Could not parse start date: {e}")
         
-        # Insert event (note: created_by_article_id removed as it expects UUID but we have integer IDs)
+        # Insert event with BOTH image URLs
         insert_data = {
             'name': event_data['name'],
             'slug': event_data['slug'],
@@ -462,8 +493,9 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
             'background': event_data.get('background', ''),
             'key_facts': event_data.get('key_facts', []),
             'importance': event_data.get('importance', 5),
-            'image_url': image_url,
-            'blur_color': blur_color,
+            'image_url': images['image_url'],
+            'cover_image_url': images['cover_image_url'],
+            'blur_color': images['blur_color'],
             'status': 'ongoing',
             'last_article_at': datetime.utcnow().isoformat(),
             'show_day_counter': event_data.get('show_day_counter', False)
@@ -485,8 +517,7 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
                     'event_id': event['id'],
                     'date': datetime.utcnow().date().isoformat(),
                     'headline': event_data['timeline_entry']['headline'],
-                    'summary': event_data['timeline_entry'].get('summary', ''),
-                    'significance': 'high'
+                    'summary': event_data['timeline_entry'].get('summary', '')
                 }).execute()
             
             # Create initial latest development entry
@@ -498,13 +529,28 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
                 'event_id': event['id'],
                 'title': event_data.get('timeline_entry', {}).get('headline', event_data['name']),
                 'summary': initial_summary,
-                'image_url': image_url,
+                'image_url': images['image_url'],
                 'published_at': datetime.utcnow().isoformat()
             }).execute()
             print(f"  ✅ Created initial latest development")
             
             # Search historical articles and add to timeline
             search_historical_articles_for_event(event, event_data)
+            
+            # Generate smart components (perspectives, what_to_watch, etc.)
+            try:
+                components = generate_event_components(
+                    event_data['name'],
+                    event_data.get('topic_prompt', ''),
+                    event_data.get('background', '')
+                )
+                if components:
+                    supabase.table('world_events').update({
+                        'components': components
+                    }).eq('id', event['id']).execute()
+                    print(f"  ✅ Generated event components")
+            except Exception as comp_err:
+                print(f"  ⚠️ Component generation failed (non-critical): {comp_err}")
             
             return event
     except Exception as e:
@@ -654,7 +700,6 @@ Respond with valid JSON only."""
                             'date': date_obj.date().isoformat(),
                             'headline': article['title'][:200],
                             'summary': article.get('one_liner', '')[:500] if article.get('one_liner') else '',
-                            'significance': 'medium',
                             'source_article_id': article_id
                         }).execute()
                         tagged_count += 1
@@ -713,8 +758,7 @@ def update_latest_development(event_id: str, event_name: str, article: Dict, art
                 'event_id': event_id,
                 'date': datetime.utcnow().date().isoformat(),
                 'headline': data['timeline_entry']['headline'],
-                'summary': data['timeline_entry'].get('summary', ''),
-                'significance': data['timeline_entry'].get('significance', 'medium')
+                'summary': data['timeline_entry'].get('summary', '')
             }).execute()
         
         print(f"  ✅ Updated latest development for {event_name}")
@@ -834,7 +878,250 @@ def detect_world_events(articles: List[Dict]) -> List[Dict]:
     print(f"  Articles tagged: {articles_tagged}")
     print("="*60)
     
+    # ── AUTO-ARCHIVE: Mark stale events as 'ended' so they don't clog the homepage ──
+    try:
+        archive_stale_events(max_days_inactive=7)
+    except Exception as e:
+        print(f"  ⚠️ Stale event archiving error (non-critical): {e}")
+    
+    # ── AUTO-BACKFILL: Generate images for events that don't have them ──
+    try:
+        backfill_missing_event_images(max_per_run=3)
+    except Exception as e:
+        print(f"  ⚠️ Image backfill error (non-critical): {e}")
+    
+    # ── AUTO-REFRESH: Refresh components for events missing them or with stale what_to_watch ──
+    try:
+        refresh_stale_event_components(max_per_run=3)
+    except Exception as e:
+        print(f"  ⚠️ Component refresh error (non-critical): {e}")
+    
     return processed
+
+
+def refresh_stale_event_components(max_per_run: int = 3):
+    """
+    Refresh components for ongoing events that either:
+    1. Have no components at all (components is NULL or empty)
+    2. Haven't been refreshed in 7+ days (stale what_to_watch dates)
+    Processes a few per run to avoid timeouts.
+    """
+    if not supabase:
+        return
+    
+    try:
+        # Find ongoing events
+        result = supabase.table('world_events').select(
+            'id, name, topic_prompt, background, components'
+        ).eq('status', 'ongoing').order('last_article_at', desc=True).execute()
+        
+        if not result.data:
+            return
+        
+        needs_refresh = []
+        now = datetime.utcnow()
+        
+        for event in result.data:
+            components = event.get('components') or {}
+            metadata = components.get('components_metadata', {})
+            generated_at = metadata.get('generated_at')
+            
+            # Needs refresh if: no components, or generated 7+ days ago
+            if not components or not metadata:
+                needs_refresh.append((event, 'missing'))
+            elif generated_at:
+                try:
+                    gen_date = datetime.fromisoformat(generated_at.replace('Z', '+00:00').replace('+00:00', ''))
+                    days_old = (now - gen_date).days
+                    if days_old >= 7:
+                        needs_refresh.append((event, f'{days_old}d old'))
+                except:
+                    needs_refresh.append((event, 'bad date'))
+            else:
+                needs_refresh.append((event, 'no timestamp'))
+        
+        if not needs_refresh:
+            print(f"  ✅ All event components are fresh")
+            return
+        
+        print(f"\n🧩 COMPONENT REFRESH: {len(needs_refresh)} events need refresh (processing {min(max_per_run, len(needs_refresh))})")
+        
+        refreshed = 0
+        for event, reason in needs_refresh[:max_per_run]:
+            try:
+                print(f"  🔄 Refreshing: {event['name']} ({reason})")
+                components = generate_event_components(
+                    event['name'],
+                    event.get('topic_prompt', ''),
+                    event.get('background', '')
+                )
+                if components:
+                    supabase.table('world_events').update({
+                        'components': components
+                    }).eq('id', event['id']).execute()
+                    refreshed += 1
+                    print(f"  ✅ Refreshed components for {event['name']}")
+            except Exception as e:
+                print(f"  ❌ Failed to refresh {event['name']}: {e}")
+            
+            time.sleep(1)
+        
+        print(f"  ✅ Refreshed {refreshed}/{min(max_per_run, len(needs_refresh))} events")
+        if len(needs_refresh) > max_per_run:
+            print(f"     ({len(needs_refresh) - max_per_run} remaining, will process in next run)")
+    
+    except Exception as e:
+        print(f"  ❌ Component refresh error: {e}")
+
+
+def archive_stale_events(max_days_inactive: int = 7):
+    """
+    Automatically archive (mark as 'ended') events that haven't received
+    new articles in max_days_inactive days. This keeps the homepage event
+    boxes fresh and focused on active stories.
+    """
+    if not supabase:
+        return
+    
+    try:
+        cutoff = (datetime.utcnow() - timedelta(days=max_days_inactive)).isoformat()
+        
+        # Find ongoing events whose last_article_at is older than the cutoff
+        result = supabase.table('world_events').select(
+            'id, name, slug, last_article_at'
+        ).eq('status', 'ongoing').lt('last_article_at', cutoff).execute()
+        
+        if not result.data:
+            print(f"  ✅ No stale events to archive (all updated within {max_days_inactive} days)")
+            return
+        
+        stale_events = result.data
+        print(f"\n📦 AUTO-ARCHIVE: Found {len(stale_events)} stale events (no articles in {max_days_inactive}+ days)")
+        
+        archived = 0
+        for event in stale_events:
+            try:
+                supabase.table('world_events').update({
+                    'status': 'ended'
+                }).eq('id', event['id']).execute()
+                
+                last_at = event.get('last_article_at', 'unknown')
+                print(f"  📦 Archived: {event['name']} (last article: {last_at[:10]})")
+                archived += 1
+            except Exception as e:
+                print(f"  ❌ Failed to archive {event['name']}: {e}")
+        
+        print(f"  ✅ Archived {archived}/{len(stale_events)} stale events")
+        
+    except Exception as e:
+        print(f"  ❌ Stale event check error: {e}")
+
+
+def backfill_missing_event_images(max_per_run: int = 3):
+    """
+    Check ongoing events for missing images and generate them.
+    Runs automatically at the end of each world event detection cycle.
+    Processes up to max_per_run events per cycle to avoid timeout.
+    """
+    if not supabase:
+        return
+    
+    try:
+        # Find ongoing events missing BOTH image_url and cover_image_url
+        result = supabase.table('world_events').select(
+            'id, name, slug, topic_prompt, image_url, cover_image_url'
+        ).eq('status', 'ongoing').order('last_article_at', desc=True).execute()
+        
+        if not result.data:
+            return
+        
+        # Find events that need images
+        needs_images = []
+        for event in result.data:
+            has_hero = event.get('image_url') and not str(event['image_url']).startswith('data:')
+            has_cover = event.get('cover_image_url') and not str(event['cover_image_url']).startswith('data:')
+            
+            if not has_hero or not has_cover:
+                needs_images.append({
+                    'event': event,
+                    'needs_hero': not has_hero,
+                    'needs_cover': not has_cover
+                })
+        
+        if not needs_images:
+            print(f"\n  ✅ All {len(result.data)} events have images")
+            return
+        
+        print(f"\n  🖼️ IMAGE BACKFILL: {len(needs_images)} events need images (processing up to {max_per_run})")
+        
+        api_key = os.environ.get('GEMINI_API_KEY')
+        if not api_key:
+            print(f"    ❌ GEMINI_API_KEY not set, skipping backfill")
+            return
+        
+        import uuid
+        generated = 0
+        
+        for item in needs_images[:max_per_run]:
+            event = item['event']
+            topic = event.get('topic_prompt') or event.get('name', '')
+            slug = event.get('slug') or f"event-{uuid.uuid4().hex[:12]}"
+            
+            print(f"    [{generated+1}/{min(max_per_run, len(needs_images))}] {event['name']}")
+            
+            update_data = {}
+            
+            # Generate hero if missing
+            if item['needs_hero']:
+                hero_prompt = f"""Create a newspaper-cover-style editorial illustration about {topic}.
+STYLE: detailed editorial illustration, not photorealistic, not cartoonish, sophisticated newspaper aesthetic.
+BACKGROUND: pure white (#ffffff), no gradients.
+LAYOUT: illustration in top two-thirds, bottom third pure white.
+OUTPUT: high resolution, no text, no captions."""
+                
+                print(f"      🎨 Generating hero (21:9)...")
+                b64, mime = _generate_gemini_image(api_key, hero_prompt, '21:9')
+                if b64:
+                    url = upload_image_to_storage(b64, f"{slug}-hero", mime)
+                    if url:
+                        update_data['image_url'] = url
+                        if not event.get('blur_color') or event['blur_color'] == '#1a365d':
+                            update_data['blur_color'] = extract_blur_color_from_base64(b64)
+                        print(f"      ✅ Hero uploaded")
+            
+            # Generate cover if missing
+            if item['needs_cover']:
+                cover_prompt = f"""Create a single FULL-BLEED editorial newspaper illustration in a classic engraved / woodcut style about {topic}.
+The illustration MUST fill 100% of the canvas. NO empty space on ANY side.
+Use bold, saturated colors. Flat colors + engraving shading. No gradients.
+One dominant central subject. Background extends to ALL edges.
+FORBIDDEN: photography, photorealism, 3D, gradients, pastels, text, logos, frames, borders, empty space."""
+                
+                print(f"      🎨 Generating cover (4:5)...")
+                b64, mime = _generate_gemini_image(api_key, cover_prompt, '4:5')
+                if b64:
+                    url = upload_image_to_storage(b64, f"{slug}-cover", mime)
+                    if url:
+                        update_data['cover_image_url'] = url
+                        print(f"      ✅ Cover uploaded")
+            
+            # Update event in database
+            if update_data:
+                try:
+                    supabase.table('world_events').update(update_data).eq('id', event['id']).execute()
+                    generated += 1
+                    print(f"      ✅ Event updated with {len(update_data)} new image(s)")
+                except Exception as e:
+                    print(f"      ❌ DB update error: {e}")
+            
+            time.sleep(1)  # Rate limiting between events
+        
+        print(f"  ✅ Backfill complete: {generated}/{min(max_per_run, len(needs_images))} events updated")
+        if len(needs_images) > max_per_run:
+            print(f"     ({len(needs_images) - max_per_run} remaining, will process in next run)")
+    
+    except Exception as e:
+        print(f"  ❌ Backfill error: {e}")
 
 
 # ==========================================

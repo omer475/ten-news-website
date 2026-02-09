@@ -301,14 +301,33 @@ YOUR RESPONSE:"""
         
         # Parse response
         if "ADD_TO_CLUSTER" in result_text and "CLUSTER_ID:" in result_text:
-            # Extract cluster ID - use the prioritized list that AI saw
-            match = re.search(r'CLUSTER_ID:\s*(\d+)', result_text)
+            # Extract cluster ID from AI response
+            # AI may return either:
+            #   - A list index (1-50): CLUSTER_ID: [12] or CLUSTER_ID: 12
+            #   - An actual database ID: CLUSTER_ID: [26673] or CLUSTER_ID: 26673
+            match = re.search(r'CLUSTER_ID:\s*\[?(\d+)\]?', result_text)
             if match:
-                cluster_index = int(match.group(1)) - 1  # Convert to 0-indexed
-                # IMPORTANT: Use clusters_for_matching (the prioritized list sent to AI)
-                if 0 <= cluster_index < len(clusters_for_matching):
-                    cluster_id = clusters_for_matching[cluster_index]['id']
-                    cluster_name = clusters_for_matching[cluster_index].get('event_name', 'Unknown')
+                raw_id = int(match.group(1))
+                
+                # Build a map of database IDs to cluster objects for quick lookup
+                db_id_to_cluster = {c['id']: c for c in clusters_for_matching}
+                
+                matched_cluster_obj = None
+                
+                # FIRST: Check if raw_id is an actual database ID (matches a cluster directly)
+                if raw_id in db_id_to_cluster:
+                    matched_cluster_obj = db_id_to_cluster[raw_id]
+                    print(f"      📎 Matched by database ID: {raw_id}")
+                
+                # SECOND: Check if raw_id is a list index (1-based, as shown to AI)
+                elif 1 <= raw_id <= len(clusters_for_matching):
+                    cluster_index = raw_id - 1  # Convert to 0-indexed
+                    matched_cluster_obj = clusters_for_matching[cluster_index]
+                    print(f"      📎 Matched by list index: {raw_id} → DB ID {matched_cluster_obj['id']}")
+                
+                if matched_cluster_obj:
+                    cluster_id = matched_cluster_obj['id']
+                    cluster_name = matched_cluster_obj.get('event_name', 'Unknown')
                     print(f"      🧠 AI Cluster Check: ADD TO EXISTING CLUSTER #{cluster_id}")
                     print(f"         Cluster: {cluster_name}")
                     print(f"         Reason: {reason}")
@@ -317,17 +336,43 @@ YOUR RESPONSE:"""
                         'cluster_id': cluster_id,
                         'reason': reason if reason else "AI matched to cluster"
                     }
+                else:
+                    print(f"      ⚠️ AI returned CLUSTER_ID {raw_id} but no matching cluster found (list has {len(clusters_for_matching)} clusters)")
+                    print(f"         Available DB IDs: {list(db_id_to_cluster.keys())[:10]}...")
         
-        # SMART CHECK: If AI says "NEW_CLUSTER" but reason mentions the same topic,
-        # override and add to top cluster anyway (AI is being too strict)
-        # Be aggressive about consolidating related stories
-        same_event_phrases = ['SAME EVENT', 'SAME STORY', 'SAME NEWS', 'IDENTICAL', 'SAME INCIDENT', 
-                              'SAME SPECIFIC', 'SAME TOPIC', 'RELATED', 'UPDATE', 'FOLLOW-UP', 
-                              'DEVELOPMENT', 'CONTINUES', 'ONGOING', 'REACTION', 'RESPONSE']
-        if any(phrase in reason for phrase in same_event_phrases):
+        # SMART CHECK: If AI says "NEW_CLUSTER" but reason CLEARLY says it's the same story,
+        # override and add to top cluster. Only trigger on unambiguous contradictions.
+        # 
+        # GOOD overrides (AI contradicts itself):
+        #   "SAME STORY - LINDSEY VONN SKIING" + NEW_CLUSTER → override, it IS the same story
+        #   "SAME EVENT - TRUMP TARIFFS" + NEW_CLUSTER → override
+        #
+        # BAD overrides (words used in negative context - DO NOT trigger):
+        #   "NOT RELATED TO EXISTING CLUSTERS" → "RELATED" appears but meaning is opposite
+        #   "IS A NEW DEVELOPMENT" → "DEVELOPMENT" appears but means it's different
+        #   "COMPLETELY DIFFERENT - RACIST VIDEO IS A NEW DEVELOPMENT NOT RELATED" → multiple false triggers
+        #
+        # Solution: Only match phrases that EXPLICITLY say "same" - not generic words
+        same_event_phrases = ['SAME EVENT', 'SAME STORY', 'SAME NEWS', 'IDENTICAL', 
+                              'SAME INCIDENT', 'SAME SPECIFIC', 'SAME TOPIC']
+        
+        # Check that the phrase appears positively (not after "NOT" or "DIFFERENT")
+        override = False
+        matched_phrase = None
+        for phrase in same_event_phrases:
+            if phrase in reason:
+                # Make sure it's not negated: check if "NOT" or "DIFFERENT" appears right before it
+                phrase_idx = reason.index(phrase)
+                preceding = reason[max(0, phrase_idx - 20):phrase_idx].strip()
+                if not any(neg in preceding for neg in ['NOT', 'DIFFERENT', 'UNRELATED', 'NO ']):
+                    override = True
+                    matched_phrase = phrase
+                    break
+        
+        if override:
             print(f"      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)")
             print(f"         Reason: {reason}")
-            print(f"      ⚠️ OVERRIDE: AI said 'same event' but chose new cluster - adding to top match!")
+            print(f"      ⚠️ OVERRIDE: AI said '{matched_phrase}' but chose new cluster - adding to top match!")
             top_cluster_id = clusters_for_matching[0]['id']
             top_cluster_name = clusters_for_matching[0].get('event_name', 'Unknown')
             return {
@@ -482,7 +527,7 @@ def get_gemini_api_key():
 def get_embedding(text: str) -> List[float]:
     """
     Get Gemini embedding for a text string.
-    Uses text-embedding-004 model.
+    Uses gemini-embedding-001 model (replacement for deprecated text-embedding-004).
     
     Args:
         text: Text to embed (article title)
@@ -496,10 +541,10 @@ def get_embedding(text: str) -> List[float]:
         clean_text = re.sub(r'&#\d+;|&\w+;', '', text)
         clean_text = clean_text.strip()[:500]  # Limit length
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
         
         payload = {
-            "model": "models/text-embedding-004",
+            "model": "models/gemini-embedding-001",
             "content": {
                 "parts": [{"text": clean_text}]
             }
@@ -526,7 +571,7 @@ def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
         List of embeddings (same order as input)
     """
     api_key = get_gemini_api_key()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
     
     def get_single_embedding(idx_text):
         idx, text = idx_text
@@ -537,7 +582,7 @@ def get_embeddings_batch(texts: List[str]) -> List[Optional[List[float]]]:
                 clean_text = clean_text.strip()[:500]
                 
                 payload = {
-                    "model": "models/text-embedding-004",
+                    "model": "models/gemini-embedding-001",
                     "content": {
                         "parts": [{"text": clean_text}]
                     }
@@ -1380,7 +1425,6 @@ class EventClusteringEngine:
         except Exception as e:
             print(f"❌ Error batch fetching cluster sources: {e}")
             return {}
-            return []
     
     def create_cluster(self, article: Dict, source_article_id: int, embedding: List[float] = None) -> Optional[int]:
         """
@@ -1407,8 +1451,19 @@ class EventClusteringEngine:
                 'importance_score': article.get('score', 0)
             }
             
+            result = None
+            
+            # Check if embedding is provided (handle numpy arrays and lists)
+            has_embedding = embedding is not None and (
+                (isinstance(embedding, list) and len(embedding) > 0) or
+                (hasattr(embedding, '__len__') and len(embedding) > 0)
+            )
+            
             # Try with embedding first, fall back without if column doesn't exist
-            if embedding:
+            if has_embedding:
+                # Convert numpy array to list if needed
+                if hasattr(embedding, 'tolist'):
+                    embedding = embedding.tolist()
                 cluster_data['embedding'] = embedding
                 try:
                     result = self.supabase.table('clusters').insert(cluster_data).execute()
@@ -1419,11 +1474,15 @@ class EventClusteringEngine:
                         del cluster_data['embedding']
                         result = self.supabase.table('clusters').insert(cluster_data).execute()
                     else:
-                        raise embed_err
+                        # Try without embedding as fallback
+                        print(f"   ⚠️ Embedding insert failed ({str(embed_err)[:80]}), trying without embedding")
+                        if 'embedding' in cluster_data:
+                            del cluster_data['embedding']
+                        result = self.supabase.table('clusters').insert(cluster_data).execute()
             else:
                 result = self.supabase.table('clusters').insert(cluster_data).execute()
             
-            if result.data:
+            if result and result.data:
                 cluster_id = result.data[0]['id']
                 
                 # Assign article to cluster
@@ -1602,7 +1661,7 @@ class EventClusteringEngine:
             article['_idx'] = i  # Track original index
         
         # PHASE 2: Generate embeddings for all articles and clusters
-        print(f"🧠 Phase 2: Generating embeddings (Gemini text-embedding-004)...")
+        print(f"🧠 Phase 2: Generating embeddings (Gemini gemini-embedding-001)...")
         
         # Filter articles that were saved successfully
         valid_articles = [(i, articles[i]) for i in article_source_ids.keys()]
@@ -1629,20 +1688,34 @@ class EventClusteringEngine:
                 print(f"   ✓ Embedded {batch_end}/{len(valid_articles)} articles")
         
         # Use CACHED embeddings from database, only generate for clusters without them
+        # NOTE: gemini-embedding-001 produces 3072-dim vectors. Old text-embedding-004 produced 768-dim.
+        # Discard any cached embeddings with wrong dimensions.
+        EXPECTED_EMBEDDING_DIM = 3072  # gemini-embedding-001 output dimension
+        
         print(f"   📁 Loading cached cluster embeddings...")
         cluster_embeddings = {}
         clusters_needing_embedding = []
+        stale_cache_count = 0
         
         # First, load cached embeddings from active_clusters
         for cluster_id, title in cluster_titles_cache:
             # Find this cluster in active_clusters to check for cached embedding
             cluster_data = next((c for c in active_clusters if c['id'] == cluster_id), None)
             if cluster_data and cluster_data.get('embedding'):
-                # Use cached embedding
-                cluster_embeddings[cluster_id] = cluster_data['embedding']
+                cached_emb = cluster_data['embedding']
+                # Check dimension matches current model
+                if isinstance(cached_emb, list) and len(cached_emb) == EXPECTED_EMBEDDING_DIM:
+                    cluster_embeddings[cluster_id] = cached_emb
+                else:
+                    # Stale embedding from old model - regenerate
+                    clusters_needing_embedding.append((cluster_id, title))
+                    stale_cache_count += 1
             else:
                 # Need to generate embedding for this cluster
                 clusters_needing_embedding.append((cluster_id, title))
+        
+        if stale_cache_count > 0:
+            print(f"   ⚠️ Found {stale_cache_count} stale embeddings (wrong dimension) - regenerating")
         
         cached_count = len(cluster_embeddings)
         need_gen_count = len(clusters_needing_embedding)

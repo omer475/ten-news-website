@@ -260,7 +260,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [safeAreaColor, setSafeAreaColor] = useState('#ffffff');
 
   // Paywall threshold - after important articles
-  const paywallThreshold = 999; // No paywall for now
+  const paywallThreshold = 6; // Sign-in gate after 5 news articles
 
   // Update safe area color when current article changes
   useEffect(() => {
@@ -4334,11 +4334,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(255, 255, 255, 0.95);
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           justify-content: center;
-          padding-top: 15vh;
           z-index: 1000;
           pointer-events: auto !important;
           touch-action: auto !important;
@@ -4346,14 +4347,15 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
         .paywall-modal {
           background: #ffffff;
-          border-radius: 16px;
-          padding: 32px;
+          border-radius: 20px;
+          padding: 36px 28px;
           max-width: 360px;
-          width: 90%;
+          width: 88%;
           pointer-events: auto !important;
           touch-action: auto !important;
           position: relative;
           z-index: 1001;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
         
         .paywall-modal * {

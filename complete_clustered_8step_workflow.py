@@ -32,7 +32,8 @@ from rss_sources import ALL_SOURCES
 from step1_gemini_news_scoring_filtering import score_news_articles_step1
 from step1_5_event_clustering import EventClusteringEngine
 from step2_brightdata_full_article_fetching import BrightDataArticleFetcher, fetch_articles_parallel
-from step3_image_selection import select_best_image_for_cluster
+from step3_image_selection import select_best_image_for_cluster, ImageSelector
+from image_quality_checker import ImageQualityChecker, check_and_select_best_image
 from step4_multi_source_synthesis import MultiSourceSynthesizer
 from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
@@ -813,7 +814,7 @@ def run_complete_pipeline():
             for source in cluster_sources:
                 source_id = source.get('id')
                 if source_id:
-                    content_ok = source.get('full_text') and len(source.get('full_text', '')) > 100
+                    content_ok = bool(source.get('full_text') and len(source.get('full_text', '')) > 100)
                     image_ok = bool(source.get('image_url'))
                     
                     # Update source article tracking
@@ -852,18 +853,69 @@ def run_complete_pipeline():
                 img_url = src.get('image_url')
                 print(f"   🔍 DEBUG Source {i}: image_url = {img_url[:50] if img_url else 'NONE'}...")
             
-            selected_image = select_best_image_for_cluster(cluster_sources, cluster.get('event_name', ''))
+            # First: Rule-based selection to get all valid candidates ranked
+            selector = ImageSelector(debug=True)
+            all_candidates = []
+            for source in cluster_sources:
+                image_url = source.get('image_url') or source.get('urlToImage')
+                if not image_url:
+                    continue
+                all_candidates.append({
+                    'url': image_url,
+                    'source_name': source.get('source_name', source.get('source', 'Unknown')),
+                    'source_url': source.get('url', ''),
+                    'article_score': source.get('score', 50),
+                    'width': source.get('image_width', 0),
+                    'height': source.get('image_height', 0)
+                })
             
-            if selected_image:
-                print(f"   ✅ Selected: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
-            else:
-                # CRITICAL: No image found even after Bright Data fetch - eliminate this cluster
+            # Filter and score all candidates
+            valid_candidates = []
+            for candidate in all_candidates:
+                if selector._is_valid_image(candidate):
+                    candidate['quality_score'] = selector._calculate_image_score(candidate)
+                    valid_candidates.append(candidate)
+            
+            if not valid_candidates:
                 print(f"   ❌ ELIMINATED: No image found for this article")
-                print(f"      Reason: Bright Data could not fetch an image from the article page")
+                print(f"      Reason: No valid images in {len(cluster_sources)} sources")
                 print(f"      Skipping cluster {cluster_id}")
                 update_cluster_status(cluster_id, 'failed', 'no_image',
                     f'No usable image found in {len(cluster_sources)} sources')
                 continue
+            
+            valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
+            
+            # STEP 3.1: AI Image Quality Check (Gemini 2.0 Flash)
+            print(f"\n🔍 STEP 3.1: AI IMAGE QUALITY CHECK")
+            print(f"   Checking {min(3, len(valid_candidates))} top candidates with Gemini...")
+            
+            selected_image = None
+            try:
+                ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
+                if ai_approved:
+                    selected_image = {
+                        'url': ai_approved['url'],
+                        'source_name': ai_approved['source_name'],
+                        'quality_score': ai_approved['quality_score']
+                    }
+                    print(f"   ✅ AI-approved image from {selected_image['source_name']}")
+                else:
+                    print(f"   ⚠️  No images passed AI quality check")
+            except Exception as e:
+                print(f"   ⚠️  AI quality check failed: {str(e)[:80]}")
+                print(f"   ↩️  Falling back to rule-based selection")
+            
+            # Fallback: use rule-based best if AI check failed or rejected all
+            if not selected_image:
+                selected_image = {
+                    'url': valid_candidates[0]['url'],
+                    'source_name': valid_candidates[0]['source_name'],
+                    'quality_score': valid_candidates[0]['quality_score']
+                }
+                print(f"   ↩️  Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+            
+            print(f"   ✅ Final selection: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
             
             print(f"\n✍️  STEP 4: MULTI-SOURCE SYNTHESIS")
             

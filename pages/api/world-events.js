@@ -89,31 +89,35 @@ export default async function handler(req, res) {
     }
 
     // Add counts to events
-    // Safety: filter out any remaining base64 images (should all be URLs now after migration)
-    const safeImageUrl = (url) => (url && url.startsWith('data:')) ? null : (url || null);
+    // Safety: filter out base64 images (must be storage URLs for fast loading)
+    const safeImageUrl = (url) => (url && typeof url === 'string' && !url.startsWith('data:')) ? url : null;
     
-    const eventsWithCounts = events.map(event => ({
-      id: event.id,
-      name: event.name,
-      slug: event.slug,
-      image_url: safeImageUrl(event.cover_image_url) || safeImageUrl(event.image_url),
-      cover_image_url: safeImageUrl(event.cover_image_url),
-      blur_color: event.blur_color,
-      importance: event.importance,
-      status: event.status,
-      last_article_at: event.last_article_at,
-      created_at: event.created_at,
-      background: event.background,
-      newUpdates: countMap[event.id] || 0
-    }));
+    const eventsWithCounts = events.map(event => {
+      // For event box cards: prefer cover_image_url (4:5), fallback to image_url (hero)
+      const coverUrl = safeImageUrl(event.cover_image_url);
+      const heroUrl = safeImageUrl(event.image_url);
+      
+      return {
+        id: event.id,
+        name: event.name,
+        slug: event.slug,
+        // image_url is what the frontend uses for the event card - prefer cover, fallback to hero
+        image_url: coverUrl || heroUrl,
+        blur_color: event.blur_color,
+        importance: event.importance,
+        status: event.status,
+        last_article_at: event.last_article_at,
+        created_at: event.created_at,
+        background: event.background,
+        newUpdates: countMap[event.id] || 0
+      };
+    });
 
-    // Sort by: update count (desc) → last_article_at (desc) → importance (desc)
+    // Sort by most recently updated first (latest article wins)
     eventsWithCounts.sort((a, b) => {
-      if (b.newUpdates !== a.newUpdates) return b.newUpdates - a.newUpdates;
       const aTime = new Date(a.last_article_at || a.created_at).getTime();
       const bTime = new Date(b.last_article_at || b.created_at).getTime();
-      if (bTime !== aTime) return bTime - aTime;
-      return (b.importance || 5) - (a.importance || 5);
+      return bTime - aTime;
     });
     
     console.log('📍 Returning', eventsWithCounts.length, 'events');

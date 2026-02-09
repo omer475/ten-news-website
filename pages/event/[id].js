@@ -257,7 +257,21 @@ function LatestSection({ latest, accentColor }) {
     }
   }, [latest]);
   
-  if (!latest || (!latest.title && !latest.summary)) return null;
+  // Latest Development is mandatory - show placeholder if missing
+  if (!latest || (!latest.title && !latest.summary)) {
+    return (
+      <section ref={ref} className="full-section">
+        <div style={{ padding: '36px 28px', maxWidth: '680px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <span style={{ background: `${accentColor || '#0057B7'}18`, color: accentColor || '#0057B7', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px' }}>LATEST</span>
+          </div>
+          <p style={{ fontSize: '15px', color: '#86868b', lineHeight: 1.7 }}>
+            Latest development will be updated as the story progresses.
+          </p>
+        </div>
+      </section>
+    );
+  }
   
   const details = latest.components?.details || latest.components?.info_boxes || [];
   
@@ -428,32 +442,71 @@ function LatestSection({ latest, accentColor }) {
 // TIMELINE SECTION
 // ============================================
 
-function TimelineSection({ entries, accentColor }) {
+function TimelineSection({ entries, liveUpdates, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
   const [showHistorical, setShowHistorical] = useState(false);
   
-  if (!entries || entries.length === 0) return null;
-  
-  // Split into recent (within 7 days) and historical (older than 7 days)
+  // Build "This Week" from liveUpdates (all articles linked to event from last 7 days)
+  // Build "Historical" from world_event_timeline entries older than 7 days
   const { recentEntries, historicalEntries } = useMemo(() => {
-    const recent = [];
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    // "This Week" = all linked articles from the last 7 days (from liveUpdates)
+    const recent = (liveUpdates || [])
+      .filter(update => {
+        const pubDate = new Date(update.publishedAt);
+        return pubDate >= sevenDaysAgo;
+      })
+      .map(update => ({
+        id: update.id,
+        date: update.publishedAt,
+        headline: update.title,
+        category: update.category,
+        image: update.image,
+        isArticle: true
+      }));
+    
+    // "Historical" = timeline entries older than 7 days + any old articles
     const historical = [];
     
-    entries.forEach(entry => {
-      if (isRecent(entry.date)) {
-        recent.push(entry);
-      } else {
-        historical.push(entry);
-      }
-    });
+    // Add timeline entries (from world_event_timeline table)
+    if (entries && entries.length > 0) {
+      entries.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        if (entryDate < sevenDaysAgo) {
+          historical.push(entry);
+        }
+      });
+    }
     
-    // Sort both arrays (newest first for recent, oldest first for historical)
+    // Sort: newest first for recent, oldest first for historical
     recent.sort((a, b) => new Date(b.date) - new Date(a.date));
     historical.sort((a, b) => new Date(a.date) - new Date(b.date));
     
     return { recentEntries: recent, historicalEntries: historical };
-  }, [entries]);
+  }, [entries, liveUpdates]);
+  
+  const totalEntries = recentEntries.length + historicalEntries.length;
+  
+  // Always render timeline (it's mandatory)
+  if (totalEntries === 0 && (!entries || entries.length === 0)) {
+    // Truly no data at all - show minimal placeholder
+    return (
+      <section ref={ref} className="full-section">
+        <div className="section-inner">
+          <SectionHead 
+            title="Timeline" 
+            subtitle="Developing"
+            accentColor={accentColor}
+          />
+          <div style={{ padding: '20px 0', color: '#86868b', fontSize: '14px', textAlign: 'center' }}>
+            Timeline will be updated as the story develops.
+          </div>
+        </div>
+      </section>
+    );
+  }
   
   const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
   const headerY = remap(p, 0.14, 0.26, 18, 0);
@@ -464,7 +517,7 @@ function TimelineSection({ entries, accentColor }) {
       <div className="section-inner">
         <SectionHead 
           title="Timeline" 
-          subtitle={`${entries.length} events`}
+          subtitle={`${totalEntries} events`}
           accentColor={accentColor}
           style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
         />
@@ -1783,7 +1836,19 @@ function BackgroundSection({ text, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
   
-  if (!text) return null;
+  // Background is mandatory - show placeholder if missing
+  if (!text) {
+    return (
+      <section ref={ref} className="full-section">
+        <div style={{ padding: '36px 28px', maxWidth: '680px', margin: '0 auto' }}>
+          <SectionHead title="Background" subtitle="Context" accentColor={accentColor} />
+          <p style={{ fontSize: '15px', color: '#86868b', lineHeight: 1.7, marginTop: '12px' }}>
+            Background information will be updated as more details emerge.
+          </p>
+        </div>
+      </section>
+    );
+  }
   
   const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
   const headerY = remap(p, 0.14, 0.26, 16, 0);
@@ -2272,14 +2337,19 @@ export default function EventPage() {
           </div>
         )}
 
-        {/* Scroll-Animated Sections */}
+        {/* Scroll-Animated Sections - Mandatory sections first, then optional */}
+        {/* MANDATORY: Latest Development */}
         <LatestSection latest={event.latestDevelopment} accentColor={event.accentColor} />
+        {/* MANDATORY: Background */}
+        <BackgroundSection text={event.background} accentColor={event.accentColor} />
+        {/* MANDATORY: Timeline (This Week from live articles + Historical) */}
+        <TimelineSection entries={event.timeline} liveUpdates={event.liveUpdates} accentColor={event.accentColor} />
+        {/* OPTIONAL: Based on event relevance */}
         <WatchSection items={event.components?.what_to_watch} accentColor={event.accentColor} />
-        <TimelineSection entries={event.timeline} accentColor={event.accentColor} />
         <PerspectivesSection perspectives={event.components?.perspectives} accentColor={event.accentColor} />
         <HistoricalSection data={event.components?.historical_comparison} accentColor={event.accentColor} />
+        {/* ALL ARTICLES: Full list of linked articles */}
         <LiveUpdatesSection updates={event.liveUpdates} totalArticles={event.totalArticles} accentColor={event.accentColor} />
-        <BackgroundSection text={event.background} accentColor={event.accentColor} />
         <Footer />
       </div>
     </>

@@ -148,13 +148,13 @@ export default async function handler(req, res) {
       .select('*', { count: 'exact', head: true })
       .eq('event_id', event.id);
 
-    // Fetch linked articles for live updates feed (most recent 20)
+    // Fetch ALL linked articles (not limited - we need them for "This Week" timeline)
     const { data: linkedArticleIds } = await supabase
       .from('article_world_events')
       .select('article_id, tagged_at')
       .eq('event_id', event.id)
       .order('tagged_at', { ascending: false })
-      .limit(20);
+      .limit(100);
 
     // Fetch actual article details including components for the latest article
     let liveUpdates = [];
@@ -202,6 +202,23 @@ export default async function handler(req, res) {
           };
         }
       }
+    }
+    
+    // FALLBACK: If latestDev is missing but we have articles, build it from the latest article
+    if (!latestDev && liveUpdates.length > 0) {
+      const newestArticle = liveUpdates[0];
+      latestDev = {
+        title: newestArticle.title,
+        summary: newestArticle.summary || 'Latest update on this developing story.',
+        image: newestArticle.image,
+        time: newestArticle.time,
+        components: latestArticleComponents ? {
+          graph: latestArticleComponents.graph,
+          details: latestArticleComponents.details,
+          map: latestArticleComponents.map,
+          info_boxes: latestArticleComponents.infoBoxes
+        } : {}
+      };
     }
 
     // Smart event components (perspectives, what_to_watch, etc.) from world_events.components
