@@ -108,7 +108,9 @@ const formatArticle = (article) => {
     components: article.components_order || safeJsonParse(article.components, null),
     details: article.details_section ? article.details_section.split('\n') : safeJsonParse(article.details, []),
     views: article.view_count || 0,
-    interest_tags: safeJsonParse(article.interest_tags, [])
+    interest_tags: safeJsonParse(article.interest_tags, []),
+    countries: safeJsonParse(article.countries, []),
+    topics: safeJsonParse(article.topics, [])
   };
 };
 

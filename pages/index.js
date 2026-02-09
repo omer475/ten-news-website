@@ -8,10 +8,11 @@ import TodayPlusLoader from '../components/TodayPlusLoader';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
 import { sortArticlesByScore } from '../utils/sortArticles';
+import { calculateFinalScore } from '../lib/personalization';
 import { 
   getUserInterests, 
   updateInterests, 
-  // rankArticles,  // DISABLED: Personalization ranking disabled - articles sorted by score only
+  rankArticles,
   getEngagementWeight,
   decayOldInterests,
   syncInterestsToSupabase,
@@ -1846,7 +1847,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 publishedAt: articleData.publishedAt || articleData.published_at || articleData.created_at,
                 final_score: articleData.final_score || articleData.ai_final_score || 500,
                 isSharedArticle: true, // Mark as shared article for priority handling
-                interest_tags: articleData.interest_tags || []  // For personalization
+                interest_tags: articleData.interest_tags || [],  // For personalization
+                countries: articleData.countries || [],  // For country/topic personalization
+                topics: articleData.topics || []  // For country/topic personalization
               };
               
               console.log('✅ Processed shared article with bullets:', processedArticle.summary_bullets?.length || 0);
@@ -2223,6 +2226,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
               id: article.id || `article_${pageNum}_${index}`,
               final_score: article.final_score,
               interest_tags: article.interest_tags || [],  // For personalization
+              countries: article.countries || [],  // For country/topic personalization
+              topics: article.topics || [],  // For country/topic personalization
               world_event: article.world_event || null  // Event link if part of a world event
             };
           });
@@ -2518,6 +2523,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 id: article.id || `article_${index}`,
                 final_score: article.final_score,  // IMPORTANT: Include final_score for red border styling
                 interest_tags: article.interest_tags || [],  // For personalization
+                countries: article.countries || [],  // For country/topic personalization
+                topics: article.topics || [],  // For country/topic personalization
                 world_event: article.world_event || null  // Event link if part of a world event
               };
                
@@ -2558,17 +2565,74 @@ export default function Home({ initialNews, initialWorldEvents }) {
               const openingStory = unreadStories[0]; // First story (opening page)
               let newsArticles = unreadStories.slice(1); // All news articles
               
+              // ====== STEP 1: PREFERENCE-BASED PERSONALIZATION (country/topic boosts) ======
+              try {
+                const prefsRaw = typeof window !== 'undefined' ? localStorage.getItem('todayplus_preferences') : null;
+                if (prefsRaw) {
+                  const prefs = JSON.parse(prefsRaw);
+                  if (prefs.onboarding_completed && prefs.home_country) {
+                    const userPrefs = {
+                      home_country: prefs.home_country,
+                      followed_countries: prefs.followed_countries || [],
+                      followed_topics: prefs.followed_topics || [],
+                    };
+                    console.log('🎯 [Personalization] Applying preference boosts:', {
+                      home: userPrefs.home_country,
+                      countries: userPrefs.followed_countries,
+                      topics: userPrefs.followed_topics,
+                    });
+                    
+                    let boostedCount = 0;
+                    newsArticles = newsArticles.map(article => {
+                      const articleCountries = article.countries || [];
+                      const articleTopics = article.topics || [];
+                      
+                      // Skip if article has no country/topic data
+                      if (articleCountries.length === 0 && articleTopics.length === 0) {
+                        return article;
+                      }
+                      
+                      const scored = calculateFinalScore(
+                        { ...article, base_score: article.final_score, countries: articleCountries, topics: articleTopics },
+                        userPrefs
+                      );
+                      
+                      const boost = scored.final_score - article.final_score;
+                      if (boost > 0) {
+                        boostedCount++;
+                        console.log(`  📈 +${boost} boost for "${article.title?.substring(0, 50)}..." [${scored.match_reasons.join(', ')}]`);
+                      }
+                      
+                      return {
+                        ...article,
+                        final_score: scored.final_score,
+                        match_reasons: scored.match_reasons,
+                      };
+                    });
+                    
+                    console.log(`🎯 [Personalization] Preference boost: ${boostedCount}/${newsArticles.length} articles boosted`);
+                  } else {
+                    console.log('📰 [Personalization] Onboarding not completed - skipping preference boosts');
+                  }
+                } else {
+                  console.log('📰 [Personalization] No preferences found - skipping preference boosts');
+                }
+              } catch (e) {
+                console.warn('⚠️ Error applying preference personalization:', e);
+              }
+              
+              // ====== STEP 2: SORT BY (boosted) SCORE ======
               console.log('📊 Sorting news articles by score...');
               let sortedNews = sortArticlesByScore(newsArticles);
               
-              // DISABLED: Personalization ranking - articles now sorted purely by score
-              // Interest data is still collected and synced to Supabase for future use
-              // To re-enable, uncomment the following:
-              // const userInterests = getUserInterests();
-              // if (Object.keys(userInterests).length > 0) {
-              //   console.log('🎯 Applying personalization with', Object.keys(userInterests).length, 'interests');
-              //   sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
-              // }
+              // ====== STEP 3: INTEREST-BASED PERSONALIZATION (reading behavior boosts) ======
+              const userInterests = getUserInterests();
+              if (Object.keys(userInterests).length > 0) {
+                console.log('🎯 [Personalization] Applying interest-based ranking with', Object.keys(userInterests).length, 'tracked interests');
+                sortedNews = rankArticles(sortedNews, 0.7); // 70% personalization weight
+              } else {
+                console.log('📰 [Personalization] No reading interests yet - using preference + base score ranking');
+              }
               
               // Handle shared article - prioritize it to appear first
               // Check ref, state, and sessionStorage for the shared article ID
