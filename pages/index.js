@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { createClient } from '../lib/supabase';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
@@ -177,6 +178,31 @@ function MustKnowCompletePage({ isVisible }) {
 }
 
 export default function Home({ initialNews, initialWorldEvents }) {
+  const router = useRouter();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Check if user has completed onboarding - redirect if not
+  useEffect(() => {
+    // Skip check during SSR
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const prefs = localStorage.getItem('todayplus_preferences');
+      if (prefs) {
+        const parsed = JSON.parse(prefs);
+        if (parsed.onboarding_completed) {
+          setOnboardingChecked(true);
+          return;
+        }
+      }
+      // No preferences or onboarding not completed - redirect to onboarding
+      router.replace('/onboarding');
+    } catch (e) {
+      // If localStorage fails, let them through
+      setOnboardingChecked(true);
+    }
+  }, [router]);
+
   // Use initial data from SSR if available, otherwise start empty
   const [stories, setStories] = useState(initialNews?.stories || []);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -3838,6 +3864,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
     };
   }, [currentIndex, showDetailedArticle, stories, autoRotationEnabled, progressBarKey, showTimeline, showDetails, showMap, showGraph, expandedTimeline, expandedGraph]);
   
+  // Show loader while checking onboarding status (prevents flash of content)
+  if (!onboardingChecked) {
+    return <TodayPlusLoader />;
+  }
+
   if (loading) {
     return <TodayPlusLoader />;
   }
@@ -7075,7 +7106,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                       boxShadow: '0 -1px 0 0 rgba(0, 0, 0, 0.04)'
                     }}></div>
                     
-                    {/* Must Know badge for important articles - liquid glass style on top left */}
+                    {/* Must Know badge + Event Box + Share Button - all aligned on same horizontal line */}
                     {isImportantArticle && (
                         <div style={{
                           position: 'fixed',
@@ -7084,9 +7115,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
                         height: 'var(--share-btn-size, 34px)',
                         display: 'flex',
                         alignItems: 'center',
+                        justifyContent: 'center',
                         gap: '6px',
                         padding: '0 12px 0 8px',
                         borderRadius: '12px',
+                        border: 'none',
                           zIndex: 99999,
                           pointerEvents: 'none',
                         backgroundColor: 'color-mix(in srgb, rgba(255, 255, 255, 0.6) 12%, transparent)',
