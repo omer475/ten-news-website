@@ -7174,7 +7174,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                     {isImportantArticle && (
                         <div style={{
                           position: 'fixed',
-                        top: 'calc(env(safe-area-inset-top, 0px) + var(--content-padding, 16px))',
+                        top: 'calc(env(safe-area-inset-top, 0px) + var(--content-padding, 16px) + 1px)',
                         left: 'var(--content-padding, 16px)',
                         height: 'var(--share-btn-size, 34px)',
                         display: 'flex',
