@@ -31,7 +31,7 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
   });
 
 // "You're all caught up" page shown after Must Know articles
-function MustKnowCompletePage({ isVisible, darkMode }) {
+function MustKnowCompletePage({ isVisible }) {
   const [typed, setTyped] = useState("");
   const [showCursor, setShowCursor] = useState(true);
   const [phase, setPhase] = useState(0);
@@ -39,8 +39,13 @@ function MustKnowCompletePage({ isVisible, darkMode }) {
   const headline = "You're all caught up";
 
   useEffect(() => {
-    // Only animate when becoming visible and hasn't animated yet
-    if (!isVisible) return;
+    if (!isVisible) {
+      hasAnimated.current = false;
+      setTyped("");
+      setShowCursor(true);
+      setPhase(0);
+      return;
+    }
     if (hasAnimated.current) return;
     hasAnimated.current = true;
 
@@ -62,100 +67,109 @@ function MustKnowCompletePage({ isVisible, darkMode }) {
     return () => clearTimeout(delay);
   }, [isVisible]);
 
-  // Reset animation when navigated away and back
-  useEffect(() => {
-    if (!isVisible) {
-      // Allow re-animation next time
-      hasAnimated.current = false;
-      setTyped("");
-      setShowCursor(true);
-      setPhase(0);
-    }
-  }, [isVisible]);
-
-  const bg = darkMode ? '#000000' : '#fdfdfd';
-  const textColor = darkMode ? '#f5f5f7' : '#1d1d1f';
-  const subColor = darkMode ? '#86868b' : '#9ca3af';
-  const subEmColor = darkMode ? '#a1a1a6' : '#6b7280';
-  const pillBg = darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)';
-  const arrowColor = darkMode ? '#666' : '#b0b0b0';
-
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      minHeight: '100vh', padding: '60px 30px', textAlign: 'center',
-      background: bg, fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-      WebkitFontSmoothing: 'antialiased', overflow: 'hidden', position: 'relative'
-    }}>
+    <div className="cr">
       <style>{`
-@keyframes mkc-blink{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes mkc-bob{0%,100%{transform:translateY(0);opacity:0.35}45%{transform:translateY(-4px);opacity:0.7}55%{transform:translateY(-4px);opacity:0.7}}
+.cr{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#fdfdfd;
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+}
+
+/* ===== SWOOSH TICK ===== */
+.cr-swoosh{
+  margin-bottom:24px;opacity:0;transform:scale(0.7);
+  transition:opacity 0.3s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.cr-swoosh.on{opacity:1;transform:scale(1)}
+.cr-swoosh-svg{width:44px;height:34px}
+.cr-swoosh-path{
+  stroke-dasharray:72;stroke-dashoffset:72;
+  transition:stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s;
+}
+.cr-swoosh-path.draw{stroke-dashoffset:0}
+
+/* ===== TEXT ===== */
+.cr-text{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:0 36px;
+}
+.cr-h{
+  font-size:clamp(30px,7.5vw,42px);font-weight:800;color:#1d1d1f;
+  letter-spacing:-1.2px;line-height:1.1;margin-bottom:16px;
+  min-height:1.1em;
+}
+.cr-cursor{
+  display:inline-block;width:2.5px;height:0.85em;
+  background:#1d1d1f;margin-left:2px;vertical-align:text-bottom;
+  animation:blink 0.6s step-end infinite;
+}
+.cr-cursor.hide{opacity:0;animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.cr-sub{
+  font-size:15px;color:#9ca3af;line-height:1.6;font-weight:400;max-width:250px;
+  opacity:0;transform:translateY(10px);
+  transition:opacity 0.6s ease,transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+.cr-sub.on{opacity:1;transform:none}
+.cr-sub em{font-style:normal;color:#6b7280;font-weight:500}
+
+/* ===== SWIPE ===== */
+.cr-swipe{
+  position:absolute;bottom:40px;left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;
+  opacity:0;transition:opacity 0.8s ease;
+}
+.cr-swipe.on{opacity:1}
+.cr-swipe-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:50px;
+  background:rgba(0,0,0,0.025);
+}
+.cr-swipe-arrow{
+  display:flex;
+  animation:bob 2s cubic-bezier(0.37,0,0.63,1) infinite;
+}
+@keyframes bob{
+  0%,100%{transform:translateY(0);opacity:0.35}
+  45%{transform:translateY(-4px);opacity:0.7}
+  55%{transform:translateY(-4px);opacity:0.7}
+}
+.cr-swipe-label{font-size:12px;color:#b0b0b0;font-weight:500;letter-spacing:0.2px}
       `}</style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 36px' }}>
+      <div className="cr-text">
         {/* Swoosh tick */}
-        <div style={{
-          marginBottom: '24px',
-          opacity: phase >= 1 ? 1 : 0,
-          transform: phase >= 1 ? 'scale(1)' : 'scale(0.7)',
-          transition: 'opacity 0.3s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)'
-        }}>
-          <svg viewBox="0 0 52 40" fill="none" style={{ width: '44px', height: '34px' }}>
+        <div className={`cr-swoosh ${phase >= 1 ? "on" : ""}`}>
+          <svg viewBox="0 0 52 40" fill="none" className="cr-swoosh-svg">
             <path
+              className={`cr-swoosh-path ${phase >= 1 ? "draw" : ""}`}
               d="M4 22L18 34L48 6"
-              stroke={textColor}
+              stroke="#1d1d1f"
               strokeWidth="4.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{
-                strokeDasharray: 72,
-                strokeDashoffset: phase >= 1 ? 0 : 72,
-                transition: 'stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s'
-              }}
             />
           </svg>
         </div>
-
-        {/* Headline with typewriter */}
-        <h1 style={{
-          fontSize: 'clamp(30px, 7.5vw, 42px)', fontWeight: 800, color: textColor,
-          letterSpacing: '-1.2px', lineHeight: 1.1, marginBottom: '16px', minHeight: '1.1em'
-        }}>
+        <h1 className="cr-h">
           {typed}
-          <span style={{
-            display: 'inline-block', width: '2.5px', height: '0.85em',
-            background: textColor, marginLeft: '2px', verticalAlign: 'text-bottom',
-            animation: showCursor ? 'mkc-blink 0.6s step-end infinite' : 'none',
-            opacity: showCursor ? 1 : 0
-          }} />
+          <span className={`cr-cursor ${!showCursor ? "hide" : ""}`} />
         </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          fontSize: '15px', color: subColor, lineHeight: 1.6, fontWeight: 400, maxWidth: '250px',
-          opacity: phase >= 2 ? 1 : 0, transform: phase >= 2 ? 'none' : 'translateY(10px)',
-          transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)'
-        }}>
-          Swipe up to discover more<br />stories from <em style={{ fontStyle: 'normal', color: subEmColor, fontWeight: 500 }}>around the world</em>
+        <p className={`cr-sub ${phase >= 2 ? "on" : ""}`}>
+          Swipe up to discover more<br />stories from <em>around the world</em>
         </p>
       </div>
 
-      {/* Swipe indicator */}
-      <div style={{
-        position: 'absolute', bottom: '40px', left: 0, right: 0,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        opacity: phase >= 3 ? 1 : 0, transition: 'opacity 0.8s ease'
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          padding: '8px 16px', borderRadius: '50px', background: pillBg
-        }}>
-          <span style={{ display: 'flex', animation: 'mkc-bob 2s cubic-bezier(0.37,0,0.63,1) infinite' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={arrowColor} strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>
-            </svg>
+      <div className={`cr-swipe ${phase >= 3 ? "on" : ""}`}>
+        <div className="cr-swipe-pill">
+          <span className="cr-swipe-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="2.5" strokeLinecap="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
           </span>
-          <span style={{ fontSize: '12px', color: arrowColor, fontWeight: 500, letterSpacing: '0.2px' }}>Swipe up</span>
+          <span className="cr-swipe-label">Swipe up</span>
         </div>
       </div>
     </div>
@@ -6181,7 +6195,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 />
               ) : story.type === 'must-know-complete' ? (
                 // "You're all caught up" completion page after Must Know articles
-                <MustKnowCompletePage isVisible={index === currentIndex} darkMode={darkMode} />
+                <MustKnowCompletePage isVisible={index === currentIndex} />
               ) : story.type === 'all-read' ? (
                 // Minimal "All Caught Up" page - White background, clean design
                 <div style={{
