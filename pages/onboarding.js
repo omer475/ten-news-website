@@ -318,34 +318,42 @@ export default function OnboardingPage() {
     0px 3px 8px 0px rgba(0,0,0,0.06)}
 
 /* Welcome */
-.wl{display:flex;flex-direction:column;height:100%;background:#fff;position:relative;overflow:hidden;padding:0 28px}
+.wl{display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;padding:0 28px;
+  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,87,183,0.025) 0%,transparent 50%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(0,87,183,0.015) 0%,transparent 50%),#fff}
 .wl-top{flex:1;display:flex;align-items:center;justify-content:center}
-.wl-center{text-align:center}
-.wl-line{font-size:clamp(28px,7vw,38px);font-weight:800;color:#1d1d1f;letter-spacing:-1px;line-height:1.15;margin-bottom:6px;min-height:1.15em}
-.wl-line .wl-brand{font-weight:800;color:#1d1d1f;letter-spacing:-1.5px}
-.wl-line .wl-brand span{color:#0057B7}
-.wl-line2{font-size:clamp(28px,7vw,38px);font-weight:800;color:#9ca3af;letter-spacing:-1px;line-height:1.15;margin-bottom:0;min-height:1.15em}
-.wl-cur{display:inline-block;width:2px;height:0.82em;background:#48484a;margin-left:2px;vertical-align:text-bottom;animation:bl 0.55s step-end infinite}
-.wl-cur.hide{opacity:0;animation:none}
-.wl-bottom{padding:0 0 calc(32px + env(safe-area-inset-bottom,0px))}
-.wl-tagline{font-size:14px;color:#b0b0b0;line-height:1.55;text-align:center;margin-bottom:20px;opacity:0;transform:translateY(8px);transition:opacity 0.6s ease,transform 0.6s cubic-bezier(0.22,1,0.36,1)}
+.wl-center{text-align:left;width:100%;max-width:360px;margin-top:-6vh}
+.wl-pre{font-size:clamp(32px,8vw,44px);font-weight:800;color:#1d1d1f;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em}
+.wl-line{font-size:clamp(32px,8vw,44px);font-weight:800;color:#1d1d1f;letter-spacing:-1.2px;line-height:1.08;margin-bottom:2px;min-height:1.08em;white-space:nowrap}
+.wl-plus{color:#0057B7}
+.wl-line2{font-size:clamp(32px,8vw,44px);font-weight:800;color:#c4c4c6;letter-spacing:-1.2px;line-height:1.08;margin-bottom:0;min-height:1.08em}
+.wl-cur{display:inline-block;width:2.5px;height:0.78em;background:#48484a;margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:bl 0.55s step-end infinite}
+.wl-cur.hide{opacity:0;animation:none;transition:opacity 0.25s ease}
+.wl-bottom{flex:0 0 auto;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px));width:100%;max-width:360px;align-self:center}
+.wl-tagline{font-size:14px;color:#9ca3af;line-height:1.6;text-align:center;margin-bottom:16px;letter-spacing:-0.1px;opacity:0;transform:translateY(10px);transition:opacity 0.65s ease,transform 0.65s cubic-bezier(0.22,1,0.36,1)}
 .wl-tagline.on{opacity:1;transform:none}
-.wl-btn{width:100%;padding:18px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;opacity:0;transform:translateY(8px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.22,1,0.36,1);
-  background:rgba(255,255,255,0.72);color:#000;
-  backdrop-filter:blur(12px) saturate(180%);-webkit-backdrop-filter:blur(12px) saturate(180%);
+.wl-btn{width:100%;padding:18px;border-radius:16px;border:none;font-family:inherit;font-size:17px;font-weight:700;letter-spacing:-0.3px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  opacity:0;transform:translateY(12px) scale(0.97);transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1),transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  background:rgba(255,255,255,0.78);color:#1d1d1f;
+  backdrop-filter:blur(16px) saturate(200%);-webkit-backdrop-filter:blur(16px) saturate(200%);
   box-shadow:
-    inset 0 0 0 0.5px rgba(255,255,255,0.5),
-    inset 0.9px 1.5px 0px -1px rgba(255,255,255,0.9),
-    inset -1px -1px 0px -1px rgba(255,255,255,0.8),
-    inset -1.5px -4px 0.5px -3px rgba(255,255,255,0.6),
-    inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.08),
-    inset -0.75px 1.25px 0px -1px rgba(0,0,0,0.1),
-    inset 0px 1.5px 2px -1px rgba(0,0,0,0.1),
-    inset 1px -3.25px 0.5px -2px rgba(0,0,0,0.06),
-    0px 0.5px 2.5px 0px rgba(0,0,0,0.08),
-    0px 3px 8px 0px rgba(0,0,0,0.06)}
+    inset 0 0 0 0.5px rgba(255,255,255,0.6),
+    inset 0 1.5px 0 0 rgba(255,255,255,0.85),
+    inset 0 -1px 2px 0 rgba(0,0,0,0.04),
+    inset 1px 0 0 0 rgba(255,255,255,0.3),
+    inset -1px 0 0 0 rgba(255,255,255,0.3),
+    0 1px 3px 0 rgba(0,0,0,0.06),
+    0 4px 12px 0 rgba(0,0,0,0.04),
+    0 8px 28px -4px rgba(0,0,0,0.05)}
 .wl-btn.on{opacity:1;transform:none}
-.wl-btn:active{transform:scale(0.98)}
+.wl-btn:active{transform:scale(0.975);transition:transform 0.1s ease;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255,255,255,0.4),
+    inset 0 1px 0 0 rgba(255,255,255,0.6),
+    inset 0 -0.5px 1px 0 rgba(0,0,0,0.05),
+    0 1px 2px 0 rgba(0,0,0,0.08),
+    0 2px 6px 0 rgba(0,0,0,0.04)}
+@media(max-height:680px){.wl-center{margin-top:-3vh}.wl-pre,.wl-line,.wl-line2{font-size:clamp(28px,7vw,36px)}}
+@media(min-width:768px){.wl{padding:0 48px}.wl-center,.wl-bottom{max-width:420px}}
 
 /* Complete */
 .cp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;flex:1;background:#fff}
@@ -511,48 +519,79 @@ function GlassTile({ selected, disabled, onClick, children, glassShadow, selecte
 // SCREENS
 // ============================================
 function WelcomeScreen({ onStart, dir }) {
-  const [typed, setTyped] = useState("");
-  const [phase, setPhase] = useState(0);
-  // 0=typing full line, 1=done typing+show line2, 2=cursor hidden, 3=tagline, 4=btn
+  const [preText, setPreText] = useState("");
+  const [brandText, setBrandText] = useState("");
+  const [line2Text, setLine2Text] = useState("");
   const [showCursor, setShowCursor] = useState(true);
-  const [line2, setLine2] = useState("");
+  const [cursorLine, setCursorLine] = useState(0); // 0=pre, 1=brand, 2=line2
+  const [phase, setPhase] = useState(0);
 
   useEffect(() => {
+    const pre = "Welcome to";
+    const brandFull = "TodayPlus";
+    const brandBack = "Today";
+    const brandFinal = "Today+";
+    const line2 = "News, reimagined.";
     let cancelled = false;
-    const fullText = "Welcome to Today+.";
-    const text2 = "News, reimagined.";
-    let i = 0, i2 = 0;
 
-    const t1 = setTimeout(() => {
-      const iv = setInterval(() => {
+    const wait = (ms) => new Promise(r => { const t = setTimeout(r, ms); if (cancelled) clearTimeout(t); });
+
+    (async () => {
+      await wait(400);
+
+      // Phase 1: Type "Welcome to"
+      setCursorLine(0);
+      for (let i = 1; i <= pre.length; i++) {
         if (cancelled) return;
-        i++;
-        setTyped(fullText.slice(0, i));
-        if (i >= fullText.length) {
-          clearInterval(iv);
-          setTimeout(() => {
-            if (cancelled) return;
-            setPhase(1);
-            setTimeout(() => {
-              if (cancelled) return;
-              const iv2 = setInterval(() => {
-                if (cancelled) return;
-                i2++;
-                setLine2(text2.slice(0, i2));
-                if (i2 >= text2.length) {
-                  clearInterval(iv2);
-                  setTimeout(() => { if (!cancelled) { setShowCursor(false); setPhase(2); } }, 350);
-                  setTimeout(() => { if (!cancelled) setPhase(3); }, 900);
-                  setTimeout(() => { if (!cancelled) setPhase(4); }, 1400);
-                }
-              }, 35);
-            }, 400);
-          }, 300);
-        }
-      }, 45);
-    }, 500);
+        setPreText(pre.slice(0, i));
+        await wait(50);
+      }
 
-    return () => { cancelled = true; clearTimeout(t1); };
+      await wait(150);
+
+      // Phase 2: Type "TodayPlus" on brand line
+      setCursorLine(1);
+      for (let i = 1; i <= brandFull.length; i++) {
+        if (cancelled) return;
+        setBrandText(brandFull.slice(0, i));
+        await wait(55);
+      }
+
+      // Pause before backspacing
+      await wait(500);
+
+      // Phase 3: Backspace "Plus"
+      for (let i = brandFull.length - 1; i >= brandBack.length; i--) {
+        if (cancelled) return;
+        setBrandText(brandFull.slice(0, i));
+        await wait(70);
+      }
+
+      // Phase 4: Type "+"
+      await wait(180);
+      if (cancelled) return;
+      setBrandText(brandFinal);
+
+      // Pause, then type line 2
+      await wait(400);
+
+      // Phase 5: Type "News, reimagined."
+      setCursorLine(2);
+      for (let j = 1; j <= line2.length; j++) {
+        if (cancelled) return;
+        setLine2Text(line2.slice(0, j));
+        await wait(45);
+      }
+
+      // Done
+      await wait(350);
+      if (cancelled) return;
+      setShowCursor(false);
+      setTimeout(() => setPhase(1), 100);
+      setTimeout(() => setPhase(2), 400);
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -560,31 +599,36 @@ function WelcomeScreen({ onStart, dir }) {
       <div className="wl">
         <div className="wl-top">
           <div className="wl-center">
-            <p className="wl-line">
+            {/* Line 1: "Welcome to" */}
+            <div className="wl-pre">
+              {preText}
+              {showCursor && cursorLine === 0 && <span className="wl-cur" />}
+            </div>
+            {/* Line 2: "TodayPlus" → "Today+" — never wraps */}
+            <div className="wl-line">
               {(() => {
-                const pre = "Welcome to ";
-                if (typed.length <= pre.length) return typed;
-                const rest = typed.slice(pre.length);
-                const brandFull = "Today+";
-                const brandPart = rest.slice(0, Math.min(rest.length, brandFull.length));
-                const after = rest.length > brandFull.length ? rest.slice(brandFull.length) : "";
-                const hasPlus = brandPart.endsWith("+");
-                const todayPart = hasPlus ? brandPart.slice(0, -1) : brandPart;
-                return <>{pre}<span className="wl-brand">{todayPart}{hasPlus && <span>+</span>}</span>{after}</>;
+                if (!brandText) return null;
+                if (brandText.endsWith("+")) {
+                  const name = brandText.slice(0, -1);
+                  return <>{name}<span className="wl-plus">+</span></>;
+                }
+                return brandText;
               })()}
-              {phase < 1 && <span className={`wl-cur ${!showCursor ? "hide" : ""}`} />}
-            </p>
-            <p className="wl-line2">
-              {phase >= 1 && line2}
-              {phase >= 1 && phase < 2 && <span className={`wl-cur ${!showCursor ? "hide" : ""}`} />}
-            </p>
+              {showCursor && cursorLine === 1 && <span className="wl-cur" />}
+            </div>
+            {/* Line 3: "News, reimagined." */}
+            <div className="wl-line2">
+              {line2Text}
+              {showCursor && cursorLine === 2 && <span className="wl-cur" />}
+              {!showCursor && line2Text && <span className="wl-cur hide" />}
+            </div>
           </div>
         </div>
         <div className="wl-bottom">
-          <p className={`wl-tagline ${phase >= 3 ? "on" : ""}`}>
-            We bet you haven&apos;t seen a news platform like this.
+          <p className={`wl-tagline ${phase >= 1 ? "on" : ""}`}>
+            Your daily briefing, powered by AI. Set up takes under a minute.
           </p>
-          <button className={`wl-btn ${phase >= 4 ? "on" : ""}`} onClick={onStart}>
+          <button className={`wl-btn ${phase >= 2 ? "on" : ""}`} onClick={onStart}>
             Get Started
           </button>
         </div>
