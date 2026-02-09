@@ -30,6 +30,138 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
   loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(245,245,245,0.95)', borderRadius: '8px' }} />
   });
 
+// "You're all caught up" page shown after Must Know articles
+function MustKnowCompletePage({ isVisible, darkMode }) {
+  const [typed, setTyped] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+  const [phase, setPhase] = useState(0);
+  const hasAnimated = useRef(false);
+  const headline = "You're all caught up";
+
+  useEffect(() => {
+    // Only animate when becoming visible and hasn't animated yet
+    if (!isVisible) return;
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
+
+    let i = 0;
+    const delay = setTimeout(() => {
+      const interval = setInterval(() => {
+        i++;
+        setTyped(headline.slice(0, i));
+        if (i >= headline.length) {
+          clearInterval(interval);
+          setTimeout(() => setShowCursor(false), 500);
+          setTimeout(() => setPhase(1), 400);
+          setTimeout(() => setPhase(2), 1100);
+          setTimeout(() => setPhase(3), 1800);
+        }
+      }, 55);
+      return () => clearInterval(interval);
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [isVisible]);
+
+  // Reset animation when navigated away and back
+  useEffect(() => {
+    if (!isVisible) {
+      // Allow re-animation next time
+      hasAnimated.current = false;
+      setTyped("");
+      setShowCursor(true);
+      setPhase(0);
+    }
+  }, [isVisible]);
+
+  const bg = darkMode ? '#000000' : '#fdfdfd';
+  const textColor = darkMode ? '#f5f5f7' : '#1d1d1f';
+  const subColor = darkMode ? '#86868b' : '#9ca3af';
+  const subEmColor = darkMode ? '#a1a1a6' : '#6b7280';
+  const pillBg = darkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)';
+  const arrowColor = darkMode ? '#666' : '#b0b0b0';
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', padding: '60px 30px', textAlign: 'center',
+      background: bg, fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+      WebkitFontSmoothing: 'antialiased', overflow: 'hidden', position: 'relative'
+    }}>
+      <style>{`
+@keyframes mkc-blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes mkc-bob{0%,100%{transform:translateY(0);opacity:0.35}45%{transform:translateY(-4px);opacity:0.7}55%{transform:translateY(-4px);opacity:0.7}}
+      `}</style>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 36px' }}>
+        {/* Swoosh tick */}
+        <div style={{
+          marginBottom: '24px',
+          opacity: phase >= 1 ? 1 : 0,
+          transform: phase >= 1 ? 'scale(1)' : 'scale(0.7)',
+          transition: 'opacity 0.3s ease, transform 0.5s cubic-bezier(0.22,1,0.36,1)'
+        }}>
+          <svg viewBox="0 0 52 40" fill="none" style={{ width: '44px', height: '34px' }}>
+            <path
+              d="M4 22L18 34L48 6"
+              stroke={textColor}
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                strokeDasharray: 72,
+                strokeDashoffset: phase >= 1 ? 0 : 72,
+                transition: 'stroke-dashoffset 0.45s cubic-bezier(0.12,0,0.39,0) 0.05s'
+              }}
+            />
+          </svg>
+        </div>
+
+        {/* Headline with typewriter */}
+        <h1 style={{
+          fontSize: 'clamp(30px, 7.5vw, 42px)', fontWeight: 800, color: textColor,
+          letterSpacing: '-1.2px', lineHeight: 1.1, marginBottom: '16px', minHeight: '1.1em'
+        }}>
+          {typed}
+          <span style={{
+            display: 'inline-block', width: '2.5px', height: '0.85em',
+            background: textColor, marginLeft: '2px', verticalAlign: 'text-bottom',
+            animation: showCursor ? 'mkc-blink 0.6s step-end infinite' : 'none',
+            opacity: showCursor ? 1 : 0
+          }} />
+        </h1>
+
+        {/* Subtitle */}
+        <p style={{
+          fontSize: '15px', color: subColor, lineHeight: 1.6, fontWeight: 400, maxWidth: '250px',
+          opacity: phase >= 2 ? 1 : 0, transform: phase >= 2 ? 'none' : 'translateY(10px)',
+          transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1)'
+        }}>
+          Swipe up to discover more<br />stories from <em style={{ fontStyle: 'normal', color: subEmColor, fontWeight: 500 }}>around the world</em>
+        </p>
+      </div>
+
+      {/* Swipe indicator */}
+      <div style={{
+        position: 'absolute', bottom: '40px', left: 0, right: 0,
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        opacity: phase >= 3 ? 1 : 0, transition: 'opacity 0.8s ease'
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          padding: '8px 16px', borderRadius: '50px', background: pillBg
+        }}>
+          <span style={{ display: 'flex', animation: 'mkc-bob 2s cubic-bezier(0.37,0,0.63,1) infinite' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={arrowColor} strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>
+            </svg>
+          </span>
+          <span style={{ fontSize: '12px', color: arrowColor, fontWeight: 500, letterSpacing: '0.2px' }}>Swipe up</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home({ initialNews, initialWorldEvents }) {
   // Use initial data from SSR if available, otherwise start empty
   const [stories, setStories] = useState(initialNews?.stories || []);
@@ -2068,7 +2200,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
           
           // Insert new stories with memory cap and deduplication
           setStories(prev => {
-            // Remove existing "all caught up" page if present
+            // Remove existing "all caught up" page if present (keep must-know-complete)
             const withoutAllRead = prev.filter(s => s.type !== 'all-read');
             
             // Get existing article IDs to prevent duplicates
@@ -2099,7 +2231,19 @@ export default function Home({ initialNews, initialWorldEvents }) {
             // If over cap, keep only the most recent MAX_ARTICLES_IN_MEMORY news articles
             if (hitMemoryCap) {
               const openingStory = updated.find(s => s.type === 'opening');
+              const mustKnowComplete = updated.find(s => s.type === 'must-know-complete');
               const newsStories = updated.filter(s => s.type === 'news').slice(0, MAX_ARTICLES_IN_MEMORY);
+              
+              // Reinsert must-know-complete at the right position
+              if (mustKnowComplete) {
+                const lastImportantIdx = newsStories.reduce((lastIdx, article, idx) => {
+                  return (article.final_score >= 900 || article.isImportant) ? idx : lastIdx;
+                }, -1);
+                if (lastImportantIdx >= 0 && lastImportantIdx < newsStories.length - 1) {
+                  newsStories.splice(lastImportantIdx + 1, 0, mustKnowComplete);
+                }
+              }
+              
               updated = openingStory ? [openingStory, ...newsStories] : newsStories;
               console.log(`⚠️ Memory cap reached: keeping ${MAX_ARTICLES_IN_MEMORY} articles`);
             }
@@ -2450,6 +2594,24 @@ export default function Home({ initialNews, initialWorldEvents }) {
               if (importantArticles.length > 0) {
                 console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (score >= 900):`, 
                   importantArticles.map(a => `${a.title?.substring(0, 30)}... (${a.final_score})`));
+              }
+              
+              // Insert "Must Know Complete" page after the last important article
+              // so users see a divider between must-know and regular news
+              if (importantArticles.length > 0 && sortedNews.length > importantArticles.length) {
+                const lastImportantIdx = sortedNews.reduce((lastIdx, article, idx) => {
+                  return (article.final_score >= 900 || article.isImportant) ? idx : lastIdx;
+                }, -1);
+                
+                if (lastImportantIdx >= 0 && lastImportantIdx < sortedNews.length - 1) {
+                  const mustKnowCompletePage = {
+                    type: 'must-know-complete',
+                    title: "You're all caught up",
+                    message: "Swipe up to discover more stories"
+                  };
+                  sortedNews.splice(lastImportantIdx + 1, 0, mustKnowCompletePage);
+                  console.log(`✅ Inserted "Must Know Complete" page after index ${lastImportantIdx}`);
+                }
               }
               
               // Only add "all caught up" page if there are NO more articles to load
@@ -6017,6 +6179,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
                   isVisible={currentIndex === 0}
                   initialWorldEvents={initialWorldEvents}
                 />
+              ) : story.type === 'must-know-complete' ? (
+                // "You're all caught up" completion page after Must Know articles
+                <MustKnowCompletePage isVisible={index === currentIndex} darkMode={darkMode} />
               ) : story.type === 'all-read' ? (
                 // Minimal "All Caught Up" page - White background, clean design
                 <div style={{
