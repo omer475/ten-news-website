@@ -67,13 +67,42 @@ export default async function handler(req, res) {
   console.log('========================================\n');
 
   try {
-    // Step 1: Get ALL subscribed users
+    // DEBUG: Check connection and env vars
+    const hasServiceKey = !!(process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const keyPrefix = (process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').substring(0, 10);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET';
+    
+    // DEBUG: Try a simple count first
+    const { count: totalCount, error: countError } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+
+    console.log(`DEBUG: hasServiceKey=${hasServiceKey}, keyPrefix=${keyPrefix}..., url=${supabaseUrl}`);
+    console.log(`DEBUG: total profiles count=${totalCount}, countError=${countError?.message || 'none'}`);
+
+    // Step 1: Get ALL users with email
     const { data: allUsers, error: fetchError } = await supabase
       .from('profiles')
       .select('id, email, full_name, email_timezone, last_email_sent_at, preferred_categories, email_personalization_enabled')
       .not('email', 'is', null);
 
     if (fetchError) throw fetchError;
+
+    // DEBUG: Include diagnostic info in response if no users found
+    if (!allUsers || allUsers.length === 0) {
+      return res.status(200).json({
+        message: 'No users found in profiles table',
+        debug: {
+          hasServiceKey,
+          keyPrefix: keyPrefix + '...',
+          supabaseUrl,
+          totalProfilesCount: totalCount,
+          countError: countError?.message || null,
+          fetchError: fetchError?.message || null,
+          usersReturned: allUsers?.length || 0
+        }
+      });
+    }
 
     console.log(`Total subscribed users: ${allUsers?.length || 0}`);
 
