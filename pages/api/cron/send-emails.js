@@ -1,15 +1,8 @@
 /**
- * DAILY EMAIL CRON - Sends once per day at 10 AM local time for each user
+ * DAILY EMAIL CRON - Sends daily digest to all users with an account
  * 
- * Called by Vercel Cron every hour. For each run it:
- * 1. Gets all subscribed users
- * 2. Checks if it's 10 AM in their timezone (using Intl.DateTimeFormat - reliable)
- * 3. Checks if email was already sent in the last 20 hours (bulletproof dedup)
- * 4. Sends email and VERIFIES the database update succeeded before continuing
- * 
- * The 20-hour window guarantee: since we only send at 10 AM and the cron runs
- * hourly, the next eligible window is always ~24h later. 20h prevents any
- * possibility of double-sending even if timezone logic has edge cases.
+ * Runs once per day (Vercel Hobby plan limitation).
+ * Sends to ALL users who have an email and haven't received an email in the last 20 hours.
  */
 
 import { Resend } from 'resend';
@@ -26,29 +19,7 @@ export const config = {
   maxDuration: 60,
 };
 
-const TARGET_HOUR = 16; // TEMP: Testing at 16:50 — change back to 10 after test
-const MIN_HOURS_BETWEEN_EMAILS = 20; // Prevents any double-send within a day
-
-/**
- * Get the current hour in a given timezone using Intl.DateTimeFormat
- * This is the most reliable cross-platform method (works on Vercel, Node, etc.)
- */
-function getHourInTimezone(date, timezone) {
-  try {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      hour: 'numeric',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(date);
-    const hourPart = parts.find(p => p.type === 'hour');
-    let hour = hourPart ? parseInt(hourPart.value, 10) : -1;
-    if (hour === 24) hour = 0; // Midnight edge case
-    return hour;
-  } catch (e) {
-    return -1; // Invalid timezone - will be skipped
-  }
-}
+const MIN_HOURS_BETWEEN_EMAILS = 20;
 
 export default async function handler(req, res) {
   // Verify authorization
@@ -62,25 +33,11 @@ export default async function handler(req, res) {
   console.log('\n========================================');
   console.log('EMAIL CRON STARTED');
   console.log(`UTC Time: ${now.toISOString()}`);
-  console.log(`Target: Users where local time = 10 AM`);
   console.log(`Dedup: Skip if last email < ${MIN_HOURS_BETWEEN_EMAILS}h ago`);
   console.log('========================================\n');
 
   try {
-    // DEBUG: Check connection and env vars
-    const hasServiceKey = !!(process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const keyPrefix = (process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '').substring(0, 10);
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET';
-    
-    // DEBUG: Try a simple count first
-    const { count: totalCount, error: countError } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
-
-    console.log(`DEBUG: hasServiceKey=${hasServiceKey}, keyPrefix=${keyPrefix}..., url=${supabaseUrl}`);
-    console.log(`DEBUG: total profiles count=${totalCount}, countError=${countError?.message || 'none'}`);
-
-    // Step 1: Get ALL users with email
+    // Step 1: Get ALL users with an email address
     const { data: allUsers, error: fetchError } = await supabase
       .from('profiles')
       .select('id, email, full_name, email_timezone, last_email_sent_at, preferred_categories, email_personalization_enabled')
@@ -88,69 +45,45 @@ export default async function handler(req, res) {
 
     if (fetchError) throw fetchError;
 
-    // DEBUG: Include diagnostic info in response if no users found
+    console.log(`Total users with email: ${allUsers?.length || 0}`);
+
     if (!allUsers || allUsers.length === 0) {
       return res.status(200).json({
         message: 'No users found in profiles table',
         debug: {
-          hasServiceKey,
-          keyPrefix: keyPrefix + '...',
-          supabaseUrl,
-          totalProfilesCount: totalCount,
-          countError: countError?.message || null,
-          fetchError: fetchError?.message || null,
-          usersReturned: allUsers?.length || 0
+          hasServiceKey: !!(process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET',
         }
       });
     }
 
-    console.log(`Total subscribed users: ${allUsers?.length || 0}`);
-
-    // Step 2: Filter users - must be 10 AM locally AND not sent in last 20 hours
+    // Step 2: Filter out users who already received email in the last 20 hours
     const eligibleUsers = [];
-    const skipReasons = { wrongHour: 0, recentlySent: 0, badTimezone: 0 };
-    
-    for (const user of (allUsers || [])) {
-      const tz = user.email_timezone || 'UTC';
-      
-      // CHECK 1: Get current hour in user's timezone
-      const userHour = getHourInTimezone(now, tz);
-      
-      if (userHour === -1) {
-        console.log(`SKIP ${user.email}: invalid timezone "${tz}"`);
-        skipReasons.badTimezone++;
-        continue;
-      }
+    let skippedRecentlySent = 0;
 
-      if (userHour !== TARGET_HOUR) {
-        skipReasons.wrongHour++;
-        continue;
-      }
-
-      // CHECK 2: Was email sent less than 20 hours ago? (bulletproof dedup)
+    for (const user of allUsers) {
       if (user.last_email_sent_at) {
         const hoursSinceLastEmail = (nowMs - new Date(user.last_email_sent_at).getTime()) / (1000 * 60 * 60);
         if (hoursSinceLastEmail < MIN_HOURS_BETWEEN_EMAILS) {
-          console.log(`SKIP ${user.email}: sent ${hoursSinceLastEmail.toFixed(1)}h ago (need ${MIN_HOURS_BETWEEN_EMAILS}h)`);
-          skipReasons.recentlySent++;
+          console.log(`SKIP ${user.email}: sent ${hoursSinceLastEmail.toFixed(1)}h ago`);
+          skippedRecentlySent++;
           continue;
         }
       }
 
-      console.log(`ELIGIBLE ${user.email} (${tz} = ${userHour}:00)`);
+      console.log(`ELIGIBLE ${user.email}`);
       eligibleUsers.push(user);
     }
 
-    console.log(`\nFilter results: ${eligibleUsers.length} eligible`);
-    console.log(`  Wrong hour: ${skipReasons.wrongHour}, Recently sent: ${skipReasons.recentlySent}, Bad TZ: ${skipReasons.badTimezone}`);
+    console.log(`\nFilter results: ${eligibleUsers.length} eligible, ${skippedRecentlySent} recently sent`);
 
     if (eligibleUsers.length === 0) {
       return res.status(200).json({
-        message: 'No users eligible right now',
-        checked: allUsers?.length || 0,
+        message: 'No users eligible (all recently sent)',
+        checked: allUsers.length,
         eligible: 0,
         sent: 0,
-        skipReasons
+        skippedRecentlySent
       });
     }
 
@@ -163,17 +96,17 @@ export default async function handler(req, res) {
       .limit(10);
 
     if (!articles?.length) {
-      return res.status(200).json({ message: 'No articles available', sent: 0 });
+      return res.status(200).json({ message: 'No articles available in last 24h', sent: 0 });
     }
 
     console.log(`Found ${articles.length} articles for digest`);
 
-    // Step 4: Send emails one by one with verified dedup
+    // Step 4: Send emails
     let sent = 0, failed = 0, skippedDedup = 0;
 
     for (const user of eligibleUsers) {
       try {
-        // CRITICAL: Re-check last_email_sent_at right before sending (prevents race conditions)
+        // Re-check last_email_sent_at right before sending (prevents race conditions)
         const { data: freshUser } = await supabase
           .from('profiles')
           .select('last_email_sent_at')
@@ -183,13 +116,12 @@ export default async function handler(req, res) {
         if (freshUser?.last_email_sent_at) {
           const hoursSince = (nowMs - new Date(freshUser.last_email_sent_at).getTime()) / (1000 * 60 * 60);
           if (hoursSince < MIN_HOURS_BETWEEN_EMAILS) {
-            console.log(`DEDUP CATCH ${user.email}: sent ${hoursSince.toFixed(1)}h ago (race condition prevented)`);
             skippedDedup++;
             continue;
           }
         }
 
-        // CRITICAL: Update last_email_sent_at BEFORE sending (acts as a lock)
+        // Update last_email_sent_at BEFORE sending (acts as a lock)
         const { error: lockError } = await supabase
           .from('profiles')
           .update({ last_email_sent_at: now.toISOString() })
@@ -231,13 +163,13 @@ export default async function handler(req, res) {
           email_type: 'daily_digest',
           status: 'sent',
           resend_id: emailData?.id,
-          metadata: { timezone: tz, hour: TARGET_HOUR }
+          metadata: { timezone: tz }
         });
 
         console.log(`SENT ${user.email}`);
         sent++;
-        
-        // Rate limit (Resend allows 10/sec on free, but be conservative)
+
+        // Rate limit
         await new Promise(r => setTimeout(r, 500));
 
       } catch (err) {
@@ -250,7 +182,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       message: 'Email cron completed',
-      checked: allUsers?.length || 0,
+      checked: allUsers.length,
       eligible: eligibleUsers.length,
       sent,
       failed,
