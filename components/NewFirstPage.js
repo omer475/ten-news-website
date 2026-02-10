@@ -354,10 +354,19 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   // Default swipe hint for SSR
   const [swipeHint, setSwipeHint] = useState(swipeHints[0]);
   
-  // Typing effect state
+  // Sequential animation state
+  const [greetingTyped, setGreetingTyped] = useState('');
+  const [greetingDone, setGreetingDone] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [showEventsHeader, setShowEventsHeader] = useState(false);
+  const [showEventCards, setShowEventCards] = useState(false);
+  const [visibleCardCount, setVisibleCardCount] = useState(0);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [showSettingsIcon, setShowSettingsIcon] = useState(false);
   const fullSubtitleRef = useRef('');
+  const fullGreetingRef = useRef('');
+  const animationStarted = useRef(false);
   
   // Update greeting and swipe hint on client side only
   useEffect(() => {
@@ -367,34 +376,80 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     
     // Set full subtitle for typing effect
     fullSubtitleRef.current = `${greeting.subHighlight} ${greeting.subRest}`;
+    // Set full greeting for typing effect (e.g. "Good evening.")
+    const greetingText = greeting.name 
+      ? `${greeting.greeting}, ${greeting.name}.`
+      : `${greeting.greeting}.`;
+    fullGreetingRef.current = greetingText;
   }, []);
   
-  // Typing effect animation - only runs on client after mount
+  // Sequential animation: greeting types → subtitle types → events reveal
+  // Only runs ONCE after mount when refs are ready
   useEffect(() => {
-    if (!isMounted || !fullSubtitleRef.current || isTypingComplete) return;
+    if (!isMounted) return;
+    if (animationStarted.current) return;
+    if (!fullGreetingRef.current) return;
+    animationStarted.current = true;
     
-    const fullText = fullSubtitleRef.current;
-    let currentIndex = 0;
-    let typingInterval;
+    let cancelled = false;
+    const wait = (ms) => new Promise((resolve) => {
+      const t = setTimeout(resolve, ms);
+      // Store for potential cleanup
+      if (cancelled) clearTimeout(t);
+    });
     
-    // Start typing after a small delay
-    const startDelay = setTimeout(() => {
-      typingInterval = setInterval(() => {
-        if (currentIndex <= fullText.length) {
-          setTypedText(fullText.slice(0, currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setIsTypingComplete(true);
-        }
-      }, 35); // Speed of typing (35ms per character)
-    }, 600); // Delay before starting to type
+    (async () => {
+      // Phase 1: Wait a moment, then type the greeting
+      await wait(400);
+      
+      const greetingFull = fullGreetingRef.current;
+      for (let i = 1; i <= greetingFull.length; i++) {
+        if (cancelled) return;
+        setGreetingTyped(greetingFull.slice(0, i));
+        await wait(45);
+      }
+      if (cancelled) return;
+      setGreetingDone(true);
+      setShowSettingsIcon(true);
+      
+      // Phase 2: Small pause, then type the subtitle
+      await wait(400);
+      
+      const subtitleFull = fullSubtitleRef.current;
+      for (let i = 1; i <= subtitleFull.length; i++) {
+        if (cancelled) return;
+        setTypedText(subtitleFull.slice(0, i));
+        await wait(30);
+      }
+      if (cancelled) return;
+      setIsTypingComplete(true);
+      
+      // Phase 3: Reveal "World Events" header with smooth blur-in
+      await wait(400);
+      if (cancelled) return;
+      setShowEventsHeader(true);
+      
+      // Phase 4: Stagger event cards one by one
+      await wait(350);
+      if (cancelled) return;
+      setShowEventCards(true);
+      
+      // Reveal cards one at a time with staggered delay
+      const totalCards = worldEvents.length || 8;
+      for (let i = 1; i <= totalCards; i++) {
+        if (cancelled) return;
+        await wait(120);
+        setVisibleCardCount(i);
+      }
+      
+      // Phase 5: Show swipe hint
+      await wait(400);
+      if (cancelled) return;
+      setShowSwipeHint(true);
+    })();
     
-    return () => {
-      clearTimeout(startDelay);
-      if (typingInterval) clearInterval(typingInterval);
-    };
-  }, [isMounted, personalGreeting, isTypingComplete]);
+    return () => { cancelled = true; };
+  }, [isMounted, personalGreeting]);
 
 
   // State for extracted blur colors from event images
@@ -1068,12 +1123,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .greeting-section {
           text-align: left;
-          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
           padding-top: 100px;
-          opacity: 0;
+          opacity: 1;
           z-index: 2;
           width: 100%;
           min-height: 140px;
+          animation: greetingFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes greetingFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: none;
+          }
         }
 
         @keyframes fadeUp {
@@ -1143,10 +1209,10 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           width: 100vw;
           margin-left: -24px;
           margin-top: 56px;
-          animation: fadeUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s forwards;
-          opacity: 0;
+          opacity: 1;
           position: relative;
           z-index: 10;
+          will-change: transform;
         }
 
         .events-header {
@@ -1154,10 +1220,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-weight: 600;
           color: #86868b;
           text-transform: uppercase;
-          letter-spacing: 1.2px;
+          letter-spacing: 4px;
           margin-bottom: 16px;
           padding-left: 24px;
           text-align: left;
+          opacity: 0;
+          transform: translateY(16px);
+          filter: blur(6px);
+          transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), 
+                      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                      filter 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                      letter-spacing 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .events-header.visible {
+          opacity: 1;
+          transform: none;
+          filter: blur(0px);
+          letter-spacing: 1.2px;
         }
 
         .events-scroll {
@@ -1190,7 +1270,6 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           flex-shrink: 0;
           width: calc(100vw - 56px);
           cursor: pointer;
-          transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease;
           scroll-snap-align: start;
           scroll-snap-stop: always;
           text-decoration: none;
@@ -1200,10 +1279,23 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           user-select: none;
           -webkit-user-select: none;
           -webkit-touch-callout: none;
+          opacity: 0;
+          transform: translateY(40px) scale(0.95);
+          filter: blur(4px);
+          transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                      filter 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .event-card:active {
+        .event-card.card-visible {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0px);
+        }
+
+        .event-card.card-visible:active {
           transform: scale(0.97);
+          transition: transform 0.15s ease;
         }
 
         .event-image-wrapper {
@@ -1441,8 +1533,19 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
           margin-top: 32px;
           padding: 0 20px 40px 20px;
-          animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, subtleBounce 2.5s ease-in-out 1.8s infinite;
           opacity: 0;
+          transform: translateY(14px);
+          filter: blur(4px);
+          transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), 
+                      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+                      filter 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .swipe-hint.visible {
+          opacity: 1;
+          transform: none;
+          filter: blur(0px);
+          animation: subtleBounce 2.5s ease-in-out 1.2s infinite;
         }
 
         @media (max-width: 480px) {
@@ -1473,6 +1576,8 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             font-size: 10px;
             padding-left: 20px;
             margin-bottom: 14px;
+          }
+          .events-header.visible {
             letter-spacing: 1px;
           }
           .events-scroll {
@@ -1600,14 +1705,24 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           <div className="greeting-section">
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%'}}>
               <span className="greeting-hi">
-                {personalGreeting.greeting}{personalGreeting.name && <span className="greeting-name">, {personalGreeting.name}</span>}.
+                {isMounted ? (
+                  <>
+                    {greetingTyped}<span className={`typing-cursor ${greetingDone ? 'hidden' : ''}`}>|</span>
+                  </>
+                ) : (
+                  <span style={{ opacity: 0 }}>{personalGreeting.greeting}.</span>
+                )}
               </span>
-              <a href="/settings" style={{padding:'8px',borderRadius:'8px',display:'flex',alignItems:'center',textDecoration:'none'}} onClick={(e) => {e.stopPropagation(); router.push('/settings');}}>
+              <a href="/settings" style={{
+                padding:'8px',borderRadius:'8px',display:'flex',alignItems:'center',textDecoration:'none',
+                opacity: showSettingsIcon ? 1 : 0,
+                transition: 'opacity 0.4s ease'
+              }} onClick={(e) => {e.stopPropagation(); router.push('/settings');}}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               </a>
             </div>
             <span className="greeting-subtitle">
-              {isMounted ? (
+              {isMounted && greetingDone ? (
                 <>
                   {typedText}<span className={`typing-cursor ${isTypingComplete ? 'hidden' : ''}`}>|</span>
                 </>
@@ -1623,7 +1738,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
               className="events-section"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="events-header">World Events</div>
+              <div className={`events-header ${showEventsHeader ? 'visible' : ''}`}>World Events</div>
               <div 
                 className="events-scroll"
                 ref={eventsScrollRef}
@@ -1640,7 +1755,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                   // Show skeleton placeholders while loading
                   <>
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={`skeleton-${i}`} className="event-card event-skeleton">
+                      <div key={`skeleton-${i}`} className={`event-card event-skeleton ${i <= visibleCardCount ? 'card-visible' : ''}`}>
                         <div className="skeleton-shimmer" />
                       </div>
                     ))}
@@ -1652,7 +1767,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
                       <a 
                         key={`${event.id}-${index}`} 
                         href={`/event/${event.slug || event.id}`}
-                        className="event-card"
+                        className={`event-card ${index < visibleCardCount ? 'card-visible' : ''}`}
                         draggable="false"
                         onClick={(e) => {
                           // Don't navigate if user was swiping
@@ -1758,7 +1873,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             </div>
           )}
 
-          <div className="swipe-hint">{swipeHint}</div>
+          <div className={`swipe-hint ${showSwipeHint ? 'visible' : ''}`}>{swipeHint}</div>
         </div>
       </div>
     </>
