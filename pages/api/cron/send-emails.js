@@ -71,7 +71,6 @@ export default async function handler(req, res) {
     const { data: allUsers, error: fetchError } = await supabase
       .from('profiles')
       .select('id, email, full_name, email_timezone, last_email_sent_at, preferred_categories, email_personalization_enabled')
-      .eq('newsletter_subscribed', true)
       .not('email', 'is', null);
 
     if (fetchError) throw fetchError;
