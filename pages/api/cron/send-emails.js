@@ -26,7 +26,7 @@ export const config = {
   maxDuration: 60,
 };
 
-const TARGET_HOUR = 10;
+const TARGET_HOUR = 16; // TEMP: Testing at 16:50 — change back to 10 after test
 const MIN_HOURS_BETWEEN_EMAILS = 20; // Prevents any double-send within a day
 
 /**
