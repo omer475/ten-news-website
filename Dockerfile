@@ -35,6 +35,7 @@ COPY step6_world_event_detection.py .
 COPY event_components.py .
 COPY step8_fact_verification.py .
 COPY step10_article_scoring.py .
+COPY step11_article_tagging.py .
 COPY article_deduplication.py .
 
 # Copy the Cloud Run entrypoint

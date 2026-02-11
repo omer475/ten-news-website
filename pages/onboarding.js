@@ -8,43 +8,44 @@ const COUNTRY_GROUPS = [
   { continent: "Americas", countries: [
     { code: "usa", flag: "\u{1F1FA}\u{1F1F8}", name: "United States" },
     { code: "canada", flag: "\u{1F1E8}\u{1F1E6}", name: "Canada" },
-    { code: "mexico", flag: "\u{1F1F2}\u{1F1FD}", name: "Mexico" },
     { code: "brazil", flag: "\u{1F1E7}\u{1F1F7}", name: "Brazil" },
   ]},
   { continent: "Europe", countries: [
     { code: "uk", flag: "\u{1F1EC}\u{1F1E7}", name: "United Kingdom" },
     { code: "germany", flag: "\u{1F1E9}\u{1F1EA}", name: "Germany" },
     { code: "france", flag: "\u{1F1EB}\u{1F1F7}", name: "France" },
-    { code: "italy", flag: "\u{1F1EE}\u{1F1F9}", name: "Italy" },
     { code: "spain", flag: "\u{1F1EA}\u{1F1F8}", name: "Spain" },
+    { code: "italy", flag: "\u{1F1EE}\u{1F1F9}", name: "Italy" },
     { code: "ukraine", flag: "\u{1F1FA}\u{1F1E6}", name: "Ukraine" },
     { code: "russia", flag: "\u{1F1F7}\u{1F1FA}", name: "Russia" },
     { code: "turkiye", flag: "\u{1F1F9}\u{1F1F7}", name: "T\u00FCrkiye" },
+    { code: "ireland", flag: "\u{1F1EE}\u{1F1EA}", name: "Ireland" },
   ]},
   { continent: "Asia & Pacific", countries: [
     { code: "china", flag: "\u{1F1E8}\u{1F1F3}", name: "China" },
+    { code: "india", flag: "\u{1F1EE}\u{1F1F3}", name: "India" },
     { code: "japan", flag: "\u{1F1EF}\u{1F1F5}", name: "Japan" },
     { code: "south_korea", flag: "\u{1F1F0}\u{1F1F7}", name: "South Korea" },
-    { code: "india", flag: "\u{1F1EE}\u{1F1F3}", name: "India" },
-    { code: "taiwan", flag: "\u{1F1F9}\u{1F1FC}", name: "Taiwan" },
+    { code: "pakistan", flag: "\u{1F1F5}\u{1F1F0}", name: "Pakistan" },
+    { code: "singapore", flag: "\u{1F1F8}\u{1F1EC}", name: "Singapore" },
     { code: "australia", flag: "\u{1F1E6}\u{1F1FA}", name: "Australia" },
   ]},
-  { continent: "Middle East", countries: [
+  { continent: "Middle East & Africa", countries: [
     { code: "israel", flag: "\u{1F1EE}\u{1F1F1}", name: "Israel" },
-    { code: "saudi_arabia", flag: "\u{1F1F8}\u{1F1E6}", name: "Saudi Arabia" },
-    { code: "iran", flag: "\u{1F1EE}\u{1F1F7}", name: "Iran" },
-    { code: "uae", flag: "\u{1F1E6}\u{1F1EA}", name: "UAE" },
+    { code: "nigeria", flag: "\u{1F1F3}\u{1F1EC}", name: "Nigeria" },
+    { code: "south_africa", flag: "\u{1F1FF}\u{1F1E6}", name: "South Africa" },
   ]},
 ];
 const ALL_COUNTRIES = COUNTRY_GROUPS.flatMap(g => g.countries);
 
 // Map ISO 3166-1 alpha-2 codes (from IP geolocation) to our internal codes
 const ISO_TO_CODE = {
-  US: "usa", CA: "canada", MX: "mexico", BR: "brazil",
-  GB: "uk", DE: "germany", FR: "france", IT: "italy", ES: "spain",
-  UA: "ukraine", RU: "russia", TR: "turkiye",
-  CN: "china", JP: "japan", KR: "south_korea", IN: "india", TW: "taiwan", AU: "australia",
-  IL: "israel", SA: "saudi_arabia", IR: "iran", AE: "uae",
+  US: "usa", CA: "canada", BR: "brazil",
+  GB: "uk", DE: "germany", FR: "france", ES: "spain", IT: "italy",
+  UA: "ukraine", RU: "russia", TR: "turkiye", IE: "ireland",
+  CN: "china", IN: "india", JP: "japan", KR: "south_korea",
+  PK: "pakistan", SG: "singapore", AU: "australia",
+  IL: "israel", NG: "nigeria", ZA: "south_africa",
 };
 
 const TOPIC_CATEGORIES = [
@@ -185,11 +186,25 @@ export default function OnboardingPage() {
       created_at: new Date().toISOString(),
     };
 
+    // Check if user is already logged in (auth user)
+    let authUserId = null;
     try {
+      const storedUser = localStorage.getItem('tennews_user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        authUserId = userData?.id || null;
+      }
+    } catch (e) {}
+
+    try {
+      const body = { ...preferences };
+      if (authUserId) {
+        body.auth_user_id = authUserId;
+      }
       const response = await fetch('/api/user/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(preferences),
+        body: JSON.stringify(body),
       });
       if (response.ok) {
         const data = await response.json();
@@ -275,8 +290,9 @@ export default function OnboardingPage() {
 .ft{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:0 20px;pointer-events:none;background:transparent}
 .ft::before{display:none}
 .ft-in{max-width:440px;margin:0 auto;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));pointer-events:auto}
-.sl{display:none}
-.sl.met{display:none}
+.sl{display:block;text-align:center;font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;letter-spacing:-0.1px;transition:color 0.2s ease}
+.sl.met{color:#1d1d1f}
+.sl.max{color:#ff3b30}
 .br{display:flex;gap:10px}
 .bt{flex:1;padding:16px;border-radius:14px;border:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s cubic-bezier(0.22,1,0.36,1);letter-spacing:-0.2px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .bt:active{transform:scale(0.97)}
@@ -417,7 +433,7 @@ export default function OnboardingPage() {
 
       {screen===2 && <TSScreen key="s2" dir={dir} step={2} title="Any other countries you care about?" desc="Stay closer to the places that matter to you" onBack={()=>go(1)}
         footer={<div className="ft"><div className="ft-in">
-          <div className="sl">{followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected"}</div>
+          <div className={`sl ${followCountries.length>=5?"max":followCountries.length>0?"met":""}`}>{followCountries.length>=5?`Maximum reached (5 of 5)`:followCountries.length>0?`${followCountries.length} of 5 selected`:"None selected"}</div>
           <div className="br"><button className="bt s" onClick={()=>go(3)}>Skip</button><button className="bt p" onClick={()=>go(3)}>Continue</button></div>
         </div></div>}>
         {COUNTRY_GROUPS.map(g=><div key={g.continent}><div className="con">{g.continent}</div><div className="gr">
@@ -432,9 +448,9 @@ export default function OnboardingPage() {
         </div></div>)}
       </TSScreen>}
 
-      {screen===3 && <TSScreen key="s3" dir={dir} step={3} title="What interests you?" desc="Select at least 3 topics" onBack={()=>go(2)}
+      {screen===3 && <TSScreen key="s3" dir={dir} step={3} title="What interests you?" desc="Select 3 to 10 topics" onBack={()=>go(2)}
         footer={<div className="ft"><div className="ft-in">
-          <div className={`sl ${selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:`${selectedTopics.length} of 10 selected`}</div>
+          <div className={`sl ${selectedTopics.length>=10?"max":selectedTopics.length>=3?"met":""}`}>{selectedTopics.length<3?`Select ${3-selectedTopics.length} more`:selectedTopics.length>=10?`Maximum reached (10 of 10)`:`${selectedTopics.length} of 10 selected`}</div>
           <div className="br"><button className="bt p" disabled={selectedTopics.length<3 || saving} onClick={handleComplete}>{saving ? 'Setting up...' : 'Continue'}</button></div>
         </div></div>}>
         {TOPIC_CATEGORIES.map(cat=><div key={cat.name} className="cat"><div className="cat-t">{cat.name}</div><div className="gr">

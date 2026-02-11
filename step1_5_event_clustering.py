@@ -37,17 +37,38 @@ WEAK_KEYWORDS = {
     # Countries (matching on country alone is too weak)
     'usa', 'china', 'india', 'russia', 'japan', 'germany', 'france', 'italy',
     'spain', 'portugal', 'brazil', 'mexico', 'canada', 'australia', 'korea',
-    'ukraine', 'israel', 'iran', 'turkey', 'poland', 'netherlands', 'sweden',
+    'ukraine', 'israel', 'iran', 'turkey', 'turkiye', 'poland', 'netherlands', 'sweden',
     'norway', 'denmark', 'finland', 'austria', 'switzerland', 'belgium',
     'greece', 'egypt', 'saudi', 'emirates', 'qatar', 'pakistan', 'indonesia',
     'vietnam', 'thailand', 'malaysia', 'singapore', 'philippines', 'taiwan',
     'hong', 'kong', 'africa', 'europe', 'asia', 'america', 'americas',
+    'british', 'american', 'chinese', 'russian', 'indian', 'japanese',
+    'french', 'german', 'italian', 'spanish', 'korean', 'irish', 'nigerian',
+    # Cities (too generic on their own)
+    'london', 'paris', 'berlin', 'tokyo', 'beijing', 'moscow', 'delhi',
+    'washington', 'brussels', 'rome', 'madrid', 'seoul', 'sydney', 'dublin',
     # Generic terms
     'government', 'president', 'minister', 'official', 'report', 'reports',
     'company', 'market', 'economy', 'economic', 'business', 'industry',
     'million', 'billion', 'trillion', 'percent', 'year', 'years', 'month',
     'week', 'today', 'world', 'global', 'international', 'national', 'local',
-    'major', 'breaking', 'update', 'latest', 'recent', 'former', 'current'
+    'major', 'breaking', 'update', 'latest', 'recent', 'former', 'current',
+    # Broad topic words that appear in many unrelated stories
+    'drone', 'drones', 'attack', 'attacks', 'military', 'army', 'navy',
+    'police', 'court', 'law', 'election', 'elections', 'vote', 'voter',
+    'football', 'soccer', 'match', 'game', 'league', 'premier', 'champions',
+    'cup', 'team', 'player', 'coach', 'win', 'loss', 'draw', 'score',
+    'trade', 'tariff', 'tariffs', 'tax', 'taxes', 'deal', 'talks',
+    'war', 'conflict', 'peace', 'crisis', 'threat', 'sanctions',
+    'school', 'university', 'education', 'students', 'teacher',
+    'hospital', 'health', 'medical', 'vaccine', 'virus', 'disease',
+    'climate', 'weather', 'energy', 'oil', 'gas', 'nuclear',
+    'technology', 'tech', 'digital', 'cyber', 'data', 'internet',
+    'defence', 'defense', 'security', 'border', 'immigration',
+    'stocks', 'shares', 'investment', 'investors', 'bank', 'banks',
+    'killed', 'dead', 'death', 'deaths', 'injured', 'victims',
+    'summit', 'conference', 'meeting', 'agreement', 'partnership',
+    'arrested', 'charged', 'convicted', 'sentenced', 'prison', 'jail',
 }
 
 
@@ -226,16 +247,15 @@ def ai_check_cluster_match(new_article_title: str, existing_clusters: List[Dict]
             article_keywords
         )
         
-        # AUTO-ADD DISABLED: Let AI decide all cases with improved prompt
-        # Previously caused wrong clustering (e.g., unrelated articles with same country)
-        # Only auto-add if EXTREMELY high confidence (4+ strong keywords - very rare)
-        if strong_matches >= 4:
-            print(f"      📊 Keyword match: {total_matches} total, {strong_matches} strong → AUTO-ADDING (high confidence)")
+        # AUTO-ADD: Only auto-add if EXTREMELY high confidence (6+ strong keywords - very rare)
+        # Previously set to 4 which was too aggressive - caused unrelated articles to cluster
+        if strong_matches >= 6:
+            print(f"      📊 Keyword match: {total_matches} total, {strong_matches} strong → AUTO-ADDING (very high confidence)")
             print(f"         Cluster: {top_cluster.get('event_name', 'Unknown')}")
             return {
                 'action': 'add_to_cluster',
                 'cluster_id': top_cluster['id'],
-                'reason': f'Auto-matched: {strong_matches} strong keywords (high confidence)'
+                'reason': f'Auto-matched: {strong_matches} strong keywords (very high confidence)'
             }
         
         # Log keyword matching for debugging - AI will decide
@@ -247,12 +267,14 @@ def ai_check_cluster_match(new_article_title: str, existing_clusters: List[Dict]
         model = genai.GenerativeModel('gemini-2.0-flash')
         
         # Build the list of existing clusters (top 50 - prioritized by keyword relevance)
+        # Include source count so AI can see mega-clusters
         clusters_text = ""
         clusters_for_matching = prioritized_clusters[:50]
         for i, cluster in enumerate(clusters_for_matching):
-            clusters_text += f"{i+1}. [ID:{cluster['id']}] {cluster['event_name']}\n"
+            source_count = cluster.get('source_count', 0)
+            clusters_text += f"{i+1}. [ID:{cluster['id']}] {cluster['event_name']} ({source_count} sources)\n"
         
-        prompt = f"""You are clustering news articles. DEFAULT TO ADDING to existing cluster unless it's a COMPLETELY DIFFERENT story.
+        prompt = f"""You are clustering news articles. Only add to an existing cluster if the article is about the EXACT SAME specific event or story.
 
 EXISTING CLUSTERS:
 {clusters_text}
@@ -260,38 +282,40 @@ EXISTING CLUSTERS:
 NEW ARTICLE: {new_article_title}
 
 ════════════════════════════════════════════════════════════════════════════════
-RULE: SAME ONGOING STORY = Add to cluster. COMPLETELY DIFFERENT STORY = New cluster.
+CRITICAL RULE: Articles must be about the SAME SPECIFIC EVENT to cluster together.
+Sharing a country, topic, person, or keyword is NOT enough.
 ════════════════════════════════════════════════════════════════════════════════
 
-✅ ADD_TO_CLUSTER - Same ongoing story, updates, developments, reactions:
-• "Mall fire kills 50" → "Mall fire death toll rises to 60" ✅ SAME STORY (minor update)
-• "Trump threatens Greenland" → "Europe reacts to Trump Greenland threat" ✅ SAME STORY
-• "Trump threatens Greenland" → "Trump backs off Greenland threats" ✅ SAME STORY (development)
-• "Maduro arrested in Venezuela" → "Venezuelans consider returning after Maduro" ✅ SAME STORY
-• "Train crash kills 5" → "Train crash investigation begins" ✅ SAME STORY
-• "Cave art discovered" → "Scientists analyze ancient cave art" ✅ SAME STORY
-• "Earthquake strikes Turkey" → "Turkey earthquake rescue efforts continue" ✅ SAME STORY
-• "Company announces layoffs" → "Workers react to layoff announcement" ✅ SAME STORY
+✅ ADD_TO_CLUSTER - SAME specific event reported by different sources:
+• "Mall fire in Lagos kills 50" → "Lagos mall fire death toll rises to 60" ✅ (same fire)
+• "Trump threatens Greenland purchase" → "Denmark reacts to Trump Greenland threat" ✅ (same threat)
+• "Train crash in Berlin kills 5" → "Berlin train crash investigation begins" ✅ (same crash)
 
-❌ NEW_CLUSTER - ONLY for COMPLETELY UNRELATED stories:
-• "Turkey earthquake" vs "Turkey election results" → DIFFERENT stories
-• "Apple iPhone launch" vs "Apple faces antitrust lawsuit" → DIFFERENT stories  
-• "Ukraine drone attack" vs "Kentucky plane crash" → DIFFERENT stories
-• "Climate summit in Paris" vs "Paris fashion week" → DIFFERENT stories
+❌ NEW_CLUSTER - DIFFERENT events, even if they share keywords/topics/people/countries:
+• "India signs AI defence deal with Japan" vs "India-Japan student talent exchange" ❌ (both India+Japan but different events)
+• "Spain opens drone pilot school" vs "US political drone debate" ❌ (both mention drones but unrelated)
+• "Trump threatens Greenland" vs "Trump signs infrastructure bill" ❌ (same person, different events)
+• "Ukraine drone attack on Moscow" vs "Ukraine peace talks in Geneva" ❌ (same country, different stories)
+• "Liverpool beats Chelsea 2-1" vs "Premier League transfer window opens" ❌ (both football but different stories)
+• "Earthquake in Turkey kills 50" vs "Turkey election results announced" ❌ (same country, different events)
+• "Apple launches new iPhone" vs "Apple faces EU antitrust fine" ❌ (same company, different events)
+• "Jasmine Paolini wins tennis final" vs "Jasmine Harrison sets rowing record" ❌ (same first name, different people!)
+• "Fire at Delhi hospital" vs "Fire at Mumbai factory" ❌ (same type of event but different locations!)
+• "Russia attacks Kyiv" vs "Russia attacks Odesa" ❌ (different specific attacks, even if same conflict)
 
 ════════════════════════════════════════════════════════════════════════════════
-⚠️ IMPORTANT: Minor updates are NOT new clusters!
-   - Death toll changes (50→52, 60→65) = ADD TO CLUSTER
-   - Reactions to an event = ADD TO CLUSTER
-   - Follow-up investigations = ADD TO CLUSTER
-   - Only create NEW_CLUSTER if topics are COMPLETELY UNRELATED
+⚠️ KEY CHECKS before adding to a cluster:
+   1. Is it the EXACT SAME incident/announcement/event? (not just same topic)
+   2. Would a reader consider these the same news story? (not just related)
+   3. Do they share specific details (same location, same date, same people doing the same thing)?
+   If ANY answer is NO → create a NEW_CLUSTER
 ════════════════════════════════════════════════════════════════════════════════
 
-WHEN IN DOUBT: ADD_TO_CLUSTER (readers prefer consolidated coverage)
+WHEN IN DOUBT: NEW_CLUSTER (it's better to have separate coverage than to merge unrelated stories)
 
 RESPONSE FORMAT (one line only):
-→ ADD_TO_CLUSTER | CLUSTER_ID: [number] | REASON: same story - [brief]
-→ NEW_CLUSTER_DIFFERENT_TOPIC | REASON: completely different - [brief]
+→ ADD_TO_CLUSTER | CLUSTER_ID: [full ID number as shown] | REASON: same event - [brief]
+→ NEW_CLUSTER_DIFFERENT_TOPIC | REASON: different - [brief]
 
 YOUR RESPONSE:"""
 
@@ -325,6 +349,18 @@ YOUR RESPONSE:"""
                     matched_cluster_obj = clusters_for_matching[cluster_index]
                     print(f"      📎 Matched by list index: {raw_id} → DB ID {matched_cluster_obj['id']}")
                 
+                # THIRD: Handle truncated IDs - AI sometimes returns partial database IDs
+                # e.g., returns "2606" instead of "26067", or "2607" instead of "26073"
+                else:
+                    raw_id_str = str(raw_id)
+                    prefix_matches = [c for c in clusters_for_matching if str(c['id']).startswith(raw_id_str)]
+                    if len(prefix_matches) == 1:
+                        # Unique prefix match - safe to use
+                        matched_cluster_obj = prefix_matches[0]
+                        print(f"      📎 Matched by truncated ID prefix: {raw_id} → DB ID {matched_cluster_obj['id']}")
+                    elif len(prefix_matches) > 1:
+                        print(f"      ⚠️ Truncated ID {raw_id} matches multiple clusters: {[c['id'] for c in prefix_matches][:5]} - skipping")
+                
                 if matched_cluster_obj:
                     cluster_id = matched_cluster_obj['id']
                     cluster_name = matched_cluster_obj.get('event_name', 'Unknown')
@@ -340,46 +376,11 @@ YOUR RESPONSE:"""
                     print(f"      ⚠️ AI returned CLUSTER_ID {raw_id} but no matching cluster found (list has {len(clusters_for_matching)} clusters)")
                     print(f"         Available DB IDs: {list(db_id_to_cluster.keys())[:10]}...")
         
-        # SMART CHECK: If AI says "NEW_CLUSTER" but reason CLEARLY says it's the same story,
-        # override and add to top cluster. Only trigger on unambiguous contradictions.
-        # 
-        # GOOD overrides (AI contradicts itself):
-        #   "SAME STORY - LINDSEY VONN SKIING" + NEW_CLUSTER → override, it IS the same story
-        #   "SAME EVENT - TRUMP TARIFFS" + NEW_CLUSTER → override
-        #
-        # BAD overrides (words used in negative context - DO NOT trigger):
-        #   "NOT RELATED TO EXISTING CLUSTERS" → "RELATED" appears but meaning is opposite
-        #   "IS A NEW DEVELOPMENT" → "DEVELOPMENT" appears but means it's different
-        #   "COMPLETELY DIFFERENT - RACIST VIDEO IS A NEW DEVELOPMENT NOT RELATED" → multiple false triggers
-        #
-        # Solution: Only match phrases that EXPLICITLY say "same" - not generic words
-        same_event_phrases = ['SAME EVENT', 'SAME STORY', 'SAME NEWS', 'IDENTICAL', 
-                              'SAME INCIDENT', 'SAME SPECIFIC', 'SAME TOPIC']
-        
-        # Check that the phrase appears positively (not after "NOT" or "DIFFERENT")
-        override = False
-        matched_phrase = None
-        for phrase in same_event_phrases:
-            if phrase in reason:
-                # Make sure it's not negated: check if "NOT" or "DIFFERENT" appears right before it
-                phrase_idx = reason.index(phrase)
-                preceding = reason[max(0, phrase_idx - 20):phrase_idx].strip()
-                if not any(neg in preceding for neg in ['NOT', 'DIFFERENT', 'UNRELATED', 'NO ']):
-                    override = True
-                    matched_phrase = phrase
-                    break
-        
-        if override:
-            print(f"      🧠 AI Cluster Check: NEW CLUSTER (DIFFERENT TOPIC)")
-            print(f"         Reason: {reason}")
-            print(f"      ⚠️ OVERRIDE: AI said '{matched_phrase}' but chose new cluster - adding to top match!")
-            top_cluster_id = clusters_for_matching[0]['id']
-            top_cluster_name = clusters_for_matching[0].get('event_name', 'Unknown')
-            return {
-                'action': 'add_to_cluster',
-                'cluster_id': top_cluster_id,
-                'reason': f'Override: AI contradicted itself - {reason}'
-            }
+        # OVERRIDE REMOVED: The previous override logic was too fragile and caused bad merges.
+        # It would detect phrases like "SAME TOPIC" in the AI reason text and force a merge,
+        # even when the AI correctly chose NEW_CLUSTER. The phrase detection couldn't reliably
+        # distinguish positive vs negative context ("not the same topic" vs "same topic").
+        # Now we trust the AI's decision without overriding it.
         
         if "NEW_CLUSTER_MAJOR_UPDATE" in result_text:
             print(f"      🧠 AI Cluster Check: NEW CLUSTER (MAJOR UPDATE)")
@@ -440,7 +441,7 @@ def validate_cluster_assignment(new_article_title: str, cluster_sources: List[Di
             for s in cluster_sources[:5]  # Limit to top 5 for prompt size
         ])
         
-        prompt = f"""You are validating a news clustering decision. An article was just added to a cluster - verify it belongs.
+        prompt = f"""You are validating a news clustering decision. Verify the new article is about the EXACT SAME event.
 
 CLUSTER: {cluster_name}
 
@@ -450,20 +451,26 @@ EXISTING ARTICLES IN CLUSTER:
 NEW ARTICLE BEING ADDED:
   • {new_article_title}
 
-QUESTION: Does the new article belong in this cluster? Are they about the SAME SPECIFIC EVENT/STORY?
+QUESTION: Is the new article about the EXACT SAME specific event/incident as the existing articles?
 
-SAME EVENT (belongs together):
-- Same news event from different sources (e.g., "Fire kills 50" and "Fire death toll rises to 52")
-- Updates/reactions to the same story (e.g., "Trump threatens tariffs" and "EU responds to tariff threat")
+VALID (same specific event):
+- Same news event from different sources ("Fire kills 50" and "Fire death toll rises to 52")
+- Direct updates/reactions to the same event ("Trump threatens tariffs" and "EU responds to tariff threat")
 
-DIFFERENT EVENT (does NOT belong):
-- Different stories that share keywords (e.g., "Trump policy" vs "playing the trump card")
-- Same topic but different events (e.g., "Ukraine drone attack Jan 15" vs "Ukraine drone attack Jan 20")
-- Same company different news (e.g., "Apple iPhone launch" vs "Apple faces lawsuit")
+INVALID (different event - even if related):
+- Same country but different stories ("India AI deal" vs "India student exchange program")
+- Same person but different events ("Trump threatens Greenland" vs "Trump signs tax bill")
+- Same topic but different incidents ("Ukraine drone attack Monday" vs "Ukraine drone attack Friday")
+- Same company but different news ("Apple iPhone launch" vs "Apple faces lawsuit")
+- Same first name but different people ("Jasmine Paolini tennis" vs "Jasmine Harrison rowing")
+- Same broad category but different events ("Liverpool vs Chelsea match" vs "Premier League transfers")
+- Related themes but separate stories ("Spain drone school" vs "US drone policy debate")
+
+Be STRICT: If there's any doubt whether they are the EXACT SAME event, respond INVALID.
 
 RESPOND WITH ONLY ONE WORD:
-- VALID (if the new article belongs with the existing articles)
-- INVALID (if the new article is about a DIFFERENT story)
+- VALID (exact same event, just different coverage)
+- INVALID (different event, even if somewhat related)
 
 Your response:"""
 
@@ -877,30 +884,32 @@ def check_title_similarity_ai(new_title: str, cluster_titles: List[Tuple[int, st
     # Build the prompt with numbered clusters
     cluster_list = "\n".join([f"{i+1}. {title}" for i, (_, title) in enumerate(cluster_titles)])
     
-    prompt = f"""Match news articles about the SAME story (even if worded differently).
+    prompt = f"""Match news articles about the EXACT SAME specific event/incident.
 
-SAME STORY (match YES):
+SAME EVENT (match YES):
 - Same news event reported by different sources (BBC vs CNN vs Reuters)
 - Same announcement/incident with different headlines
-- Example: "Trump Wins Election" = "Donald Trump Declared President-Elect" = "Republicans Celebrate Trump Victory"
+- Example: "Trump Wins Election" = "Donald Trump Declared President-Elect"
 
-DIFFERENT STORY (match NO):
-- Completely different events or topics
-- Different dates/incidents (yesterday's event vs today's)
+DIFFERENT EVENT (match NO):
+- Different events even if same topic/person/country
+- Different dates/incidents
+- Same person doing different things (e.g., "Trump tariffs" vs "Trump Greenland")
+- Same country different stories (e.g., "India AI deal" vs "India student program")
 
 NEW ARTICLE: "{new_title}"
 
 CLUSTERS:
 {cluster_list}
 
-Reply ONLY: 1:YES, 2:NO, 3:YES (etc.) - be GENEROUS with YES if it's the same news story.
+Reply ONLY: 1:YES, 2:NO, 3:YES (etc.) - be STRICT, only YES for the exact same event.
 Nothing else."""
 
     try:
         client = get_anthropic_client()
         
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=200,
             temperature=0,  # Deterministic matching
             messages=[
@@ -971,16 +980,18 @@ def check_batch_articles_similarity_ai(articles_with_titles: List[Tuple[int, str
     articles_list = "\n".join([f"A{i+1}. {title}" for i, (_, title) in enumerate(articles_with_titles)])
     cluster_list = "\n".join([f"C{i+1}. {title}" for i, (_, title) in enumerate(cluster_titles)])
     
-    prompt = f"""Match news articles to clusters covering the SAME story (even if worded differently).
+    prompt = f"""Match news articles to clusters covering the EXACT SAME specific event/incident.
 
-SAME STORY (should match):
+SAME EVENT (should match):
 - Same news event from different sources (BBC, CNN, Reuters covering same thing)
 - Same announcement with different headlines
 - Example: "Biden Signs Climate Bill" matches "President Signs Landmark Climate Legislation"
 
 DIFFERENT (no match):
-- Completely unrelated topics
-- Different incidents/dates
+- Different events even if they share topic/person/country
+- Different incidents/dates/locations
+- Same person doing different things
+- Same country but different stories
 
 NEW ARTICLES:
 {articles_list}
@@ -988,7 +999,7 @@ NEW ARTICLES:
 EXISTING CLUSTERS:
 {cluster_list}
 
-For each article, which cluster covers the SAME news story? Be GENEROUS - if it's about the same event, match it!
+For each article, which cluster covers the EXACT SAME specific event? Be STRICT - only match if it's truly the same incident.
 Format: A1:C3, A2:NONE, A3:C1
 Reply ONLY the matches."""
 
@@ -996,7 +1007,7 @@ Reply ONLY the matches."""
         client = get_anthropic_client()
         
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=500,
             temperature=0,  # Deterministic matching
             messages=[
@@ -1775,7 +1786,15 @@ class EventClusteringEngine:
                 if article_emb is not None and cluster_emb is not None:
                     similarity = cosine_similarity(article_emb, cluster_emb)
                     
-                    if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD and similarity > best_similarity:
+                    # MEGA-CLUSTER PROTECTION: Require higher similarity for large clusters
+                    cluster_source_count = cluster.get('source_count', 0)
+                    effective_threshold = self.config.EMBEDDING_SIMILARITY_THRESHOLD
+                    if cluster_source_count >= 10:
+                        effective_threshold = min(0.92, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.05)
+                    elif cluster_source_count >= 6:
+                        effective_threshold = min(0.88, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.03)
+                    
+                    if similarity >= effective_threshold and similarity > best_similarity:
                         best_similarity = similarity
                         matched_cluster = cluster
                         matched = True
@@ -1832,7 +1851,17 @@ class EventClusteringEngine:
                     
                     if article_emb is not None and cluster_emb is not None:
                         similarity = cosine_similarity(article_emb, cluster_emb)
-                        if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD and similarity > best_similarity:
+                        
+                        # MEGA-CLUSTER PROTECTION: Require higher similarity for large clusters
+                        # This prevents broad clusters from absorbing loosely related articles
+                        cluster_source_count = cluster.get('source_count', 0)
+                        effective_threshold = self.config.EMBEDDING_SIMILARITY_THRESHOLD
+                        if cluster_source_count >= 10:
+                            effective_threshold = min(0.92, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.05)
+                        elif cluster_source_count >= 6:
+                            effective_threshold = min(0.88, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.03)
+                        
+                        if similarity >= effective_threshold and similarity > best_similarity:
                             best_similarity = similarity
                             matched_cluster = cluster
                             matched = True
@@ -1854,9 +1883,14 @@ class EventClusteringEngine:
                                 if matched:
                                     break
                 
-                # If no embedding match, try AI matching (excluding rejected clusters)
+                # If no embedding match, try AI matching (excluding rejected + mega-clusters)
                 if not matched:
-                    available_clusters = [c for c in active_clusters if c['id'] not in rejected_cluster_ids]
+                    MAX_CLUSTER_SIZE_FOR_AI = 15  # Don't let AI add to very large clusters
+                    available_clusters = [
+                        c for c in active_clusters 
+                        if c['id'] not in rejected_cluster_ids 
+                        and c.get('source_count', 0) < MAX_CLUSTER_SIZE_FOR_AI
+                    ]
                     if available_clusters:
                         ai_result = ai_check_cluster_match(
                             new_article_title=full_title,

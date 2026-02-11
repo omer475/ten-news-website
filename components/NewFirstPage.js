@@ -515,6 +515,91 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
   const [eventsLoading, setEventsLoading] = useState(!initialWorldEvents || initialWorldEvents.length === 0);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
 
+  // Personalize world events order for horizontal swipe layout
+  // Position 1 (leftmost) = most relevant to this user
+  // As user swipes right, events become less personally relevant
+  // Important global events still appear but may be at position 2-3 if user has strong preferences
+  const personalizeEvents = (events) => {
+    if (!events || events.length === 0) return events;
+    
+    let userPrefs = null;
+    try {
+      const prefs = localStorage.getItem('todayplus_preferences');
+      if (prefs) {
+        const parsed = JSON.parse(prefs);
+        if (parsed.onboarding_completed) userPrefs = parsed;
+      }
+    } catch (e) {}
+    
+    // If no user prefs, return events sorted by recency (default)
+    if (!userPrefs) return events;
+    
+    const homeCountry = userPrefs.home_country;
+    const followedCountries = userPrefs.followed_countries || [];
+    const followedTopics = userPrefs.followed_topics || [];
+    
+    // Score each event for personalization
+    // Personalization weight is intentionally stronger than importance
+    // so that the user's first card is always the most relevant to THEM
+    const scored = events.map(event => {
+      let personalBoost = 0;
+      const eventCountries = event.countries || [];
+      const eventTopics = event.topics || [];
+      
+      // Home country match - strongest signal (+150)
+      if (homeCountry && eventCountries.includes(homeCountry)) {
+        personalBoost += 150;
+      }
+      
+      // Followed country match (+75 each, max 2 counted)
+      let countryMatches = 0;
+      followedCountries.forEach(c => {
+        if (eventCountries.includes(c) && countryMatches < 2) {
+          personalBoost += 75;
+          countryMatches++;
+        }
+      });
+      
+      // Followed topic match (+40 each, max 3 counted)
+      let topicMatches = 0;
+      followedTopics.forEach(t => {
+        if (eventTopics.includes(t) && topicMatches < 3) {
+          personalBoost += 40;
+          topicMatches++;
+        }
+      });
+      
+      // Importance base score (1-10 scale → 10-100)
+      // Kept moderate so personalization can outrank it
+      const importanceBase = (event.importance || 5) * 10;
+      
+      // Recency bonus: events updated in last 2 hours get a small boost
+      const hoursSinceUpdate = (Date.now() - new Date(event.last_article_at || event.created_at).getTime()) / (1000 * 60 * 60);
+      const recencyBonus = hoursSinceUpdate <= 2 ? 20 : hoursSinceUpdate <= 6 ? 10 : 0;
+      
+      const totalScore = personalBoost + importanceBase + recencyBonus;
+      
+      return { ...event, _personalScore: totalScore, _personalBoost: personalBoost };
+    });
+    
+    // Sort by total score descending, recency as final tiebreaker
+    scored.sort((a, b) => {
+      if (a._personalScore !== b._personalScore) {
+        return b._personalScore - a._personalScore;
+      }
+      // True tie: most recently updated first
+      const aTime = new Date(a.last_article_at || a.created_at).getTime();
+      const bTime = new Date(b.last_article_at || b.created_at).getTime();
+      return bTime - aTime;
+    });
+    
+    console.log('🎯 Personalized events (swipe order, left→right):', scored.map((e, i) => 
+      `#${i + 1} "${e.name}" (total: ${e._personalScore}, personal: ${e._personalBoost}, importance: ${e.importance})`
+    ).join('\n  '));
+    
+    return scored;
+  };
+
   // Read events tracking: hide events the user already read (until new development)
   // localStorage key: tennews_read_events = { eventId: "last_article_at timestamp" }
   const getReadEvents = () => {
@@ -573,8 +658,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
     if (initialWorldEvents && initialWorldEvents.length > 0) {
       console.log('🌍 Using SSR world events data');
       const filtered = filterReadEvents(initialWorldEvents);
-      console.log('🌍 After read filter:', filtered.length, 'of', initialWorldEvents.length, 'events');
-      setWorldEvents(filtered);
+      const personalized = personalizeEvents(filtered);
+      console.log('🌍 After read filter + personalization:', personalized.length, 'of', initialWorldEvents.length, 'events');
+      setWorldEvents(personalized);
       setEventsLoading(false);
       return;
     }
@@ -597,8 +683,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           
           if (data.events && data.events.length > 0) {
             const filtered = filterReadEvents(data.events);
-            console.log('🌍 Setting', filtered.length, 'of', data.events.length, 'world events (after read filter)');
-            setWorldEvents(filtered);
+            const personalized = personalizeEvents(filtered);
+            console.log('🌍 Setting', personalized.length, 'of', data.events.length, 'world events (after read filter + personalization)');
+            setWorldEvents(personalized);
           } else {
             console.log('🌍 No world events in response');
           }

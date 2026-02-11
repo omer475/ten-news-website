@@ -164,16 +164,18 @@ export default async function handler(req, res) {
       const articleIds = linkedArticleIds.map(a => a.article_id);
       
       // Fetch all articles for live updates
+      // NOTE: Must use 'published_articles' table (not legacy 'articles' table)
+      // because article_world_events stores published_article IDs
       const { data: articles } = await supabase
-        .from('articles')
-        .select('id, title, one_liner, image_url, category, published_at, created_at')
+        .from('published_articles')
+        .select('id, title_news, one_liner, image_url, category, published_at, created_at')
         .in('id', articleIds)
         .order('published_at', { ascending: false });
 
       if (articles) {
         liveUpdates = articles.map(article => ({
           id: article.id,
-          title: article.title,
+          title: article.title_news || article.title,
           summary: article.one_liner,
           image: article.image_url,
           category: article.category,
@@ -186,15 +188,15 @@ export default async function handler(req, res) {
       const latestArticleId = linkedArticleIds[0]?.article_id;
       if (latestArticleId) {
         const { data: latestArticle } = await supabase
-          .from('articles')
-          .select('id, title, one_liner, image_url, category, published_at, graph, details, map, info_boxes')
+          .from('published_articles')
+          .select('id, title_news, one_liner, image_url, category, published_at, graph, details, map, info_boxes')
           .eq('id', latestArticleId)
           .single();
         
         if (latestArticle) {
           latestArticleComponents = {
             articleId: latestArticle.id,
-            title: latestArticle.title,
+            title: latestArticle.title_news || latestArticle.title,
             graph: latestArticle.graph || null,
             details: latestArticle.details || null,
             map: latestArticle.map || null,

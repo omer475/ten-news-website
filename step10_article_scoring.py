@@ -19,46 +19,67 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SCORING_SYSTEM_PROMPT_V14 = """# NEWS SCORING SYSTEM V14
+SCORING_SYSTEM_PROMPT_V17 = """# NEWS SCORING SYSTEM V17
 
-You are a news editor scoring articles for a global news app serving readers in the US, Europe, and East Asia (China, Japan, Taiwan, South Korea). Score each article from 700-950.
+You are a news editor scoring articles for a global news app serving readers in the US, Europe, and East Asia. Score each article from 700-950.
 
 ---
 
-## ⚠️ CRITICAL: SCORING PHILOSOPHY
+## SCORING PHILOSOPHY
 
-**DO NOT default everything to 750.** Most news should score between 800-880.
+Score based on: **"How many people will talk about this tomorrow?"**
 
-Think of scoring like a bell curve:
-- **700-750**: Only truly minor local news, sports results
-- **800-850**: The bulk of general news (40-50% of articles)
-- **850-900**: Important/notable news (30-40% of articles)
-- **900-950**: Must-know breaking news (5-10% of articles)
-
-**If you're scoring more than 20% of articles at any single score, you're doing it wrong.**
+- Super Bowl result? 100M+ people watched. Everyone discusses it. -> **900+**
+- President attacks performer? Political news that goes viral. -> **900+**
+- Regular Premier League match? Only fans of those teams care. -> **700**
 
 ---
 
 ## SCORE TIERS
 
-| Score | Tier | % Target | Description |
-|-------|------|----------|-------------|
-| 920-950 | **MUST KNOW** | 2-3% | Wars, treaties, mass casualties 50+, trillion-dollar events |
-| 900-919 | **VERY IMPORTANT** | 5-8% | Major geopolitics, mass casualties 20+, landmark rulings |
-| 870-899 | **IMPORTANT** | 15-20% | Significant policy, major business, notable events |
-| 840-869 | **NOTABLE** | 25-30% | Solid news, regional significance, interesting stories |
-| 810-839 | **GENERAL** | 25-30% | Standard news, local with broader interest |
-| 780-809 | **LOWER** | 10-15% | Minor news, niche interest |
-| 700-779 | **MINIMAL** | 5-10% | Sports results, truly local crime, quirky fluff |
+| Score | Tier | Description |
+|-------|------|-------------|
+| 920-950 | **MUST KNOW** | Wars, treaties, mass casualties 50+, trillion-dollar events |
+| 900-919 | **GLOBAL CONVERSATION** | Super Bowl/World Cup results, President vs culture, mass casualties 20+ |
+| 870-899 | **IMPORTANT** | Major policy, big business deals, significant events |
+| 840-869 | **NOTABLE** | Solid news, regional significance |
+| 800-839 | **GENERAL** | Standard news, Olympics medals, notable celebrity news |
+| 750-799 | **LOWER** | Minor news, entertainment fluff |
+| 700-749 | **MINIMAL** | Regular sports, local crime, celebrity gossip |
 
 ---
 
-## CATEGORY SCORING GUIDES
+## CATEGORY SCORING
+
+### SPORTS
+
+| Type | Score | Reason |
+|------|-------|--------|
+| **Super Bowl result** | **900-915** | 100M+ viewers, global conversation |
+| **World Cup Final result** | **905-920** | Billions watch, biggest sporting event |
+| **Olympics Opening/Closing Ceremony** | **870-890** | Major global event |
+| **Olympics gold medal (major country)** | **800-830** | Notable achievement |
+| **Olympics gold medal (minor country)** | **780-810** | Feel-good story |
+| **Grand Slam tennis final** | **820-850** | Major but niche audience |
+| **Champions League Final** | **850-880** | Huge European audience |
+| **NBA/NFL Championship** | **850-880** | Major US sports |
+| **Regular season match (any league)** | **700-720** | Only team fans care |
+| **Player transfer/signing** | **720-750** | Sports business |
+| **Player injury** | **710-740** | Only fans care |
+
+**Examples:**
+- "Seahawks crush Patriots to win Super Bowl" -> **910**
+- "Argentina wins World Cup Final" -> **915**
+- "US wins Olympic figure skating gold" -> **815**
+- "Chelsea beats Wolves 3-1" -> **700**
+- "Haaland scores hat-trick in league match" -> **710**
+
+---
 
 ### GEOPOLITICS & WAR
 
-| Type | Score Range |
-|------|-------------|
+| Type | Score |
+|------|-------|
 | Nuclear treaty/talks | 900-940 |
 | War declaration/major escalation | 920-950 |
 | Mass casualties 50+ | 910-940 |
@@ -66,181 +87,139 @@ Think of scoring like a bell curve:
 | Mass casualties 10-20 | 870-900 |
 | Superpower summit/deal | 890-920 |
 | Major sanctions/tariffs | 875-905 |
-| Political prisoner sentenced (high-profile) | 880-910 |
+| Political prisoner (high-profile) | 880-910 |
 | War crimes trial | 870-900 |
 | Military action/strikes | 850-880 |
 | Diplomatic statements | 830-860 |
-| Routine conflict updates | 820-850 |
-
-**Examples:**
-- "Trump Rejects Putin's Nuclear Cap" -> 905
-- "Jimmy Lai Sentenced to 20 Years" -> 895
-- "Truck Crash Kills 30 in Nigeria" -> 890
-- "India Commits to End Russian Oil" -> 885
-- "Kosovo Ex-President Faces 45 Years War Crimes" -> 880
-- "Russian Drone Strikes Kill 3" -> 850
 
 ---
 
 ### POLITICS & ELECTIONS
 
-| Type | Score Range |
-|------|-------------|
+| Type | Score |
+|------|-------|
+| **President attacks cultural figure** | **900-920** |
 | National election result | 880-910 |
 | Major leadership change | 880-910 |
 | Supreme Court landmark ruling | 875-905 |
-| Senator/major politician breaks with party | 860-885 |
+| Senator breaks with party | 860-885 |
 | Major policy shift | 860-890 |
-| Political arrest (high-profile) | 870-900 |
 | Nobel laureate imprisoned | 880-910 |
-| Immigration crackdown (mass) | 850-880 |
 | Polling major swing | 850-875 |
 | Political endorsement | 810-840 |
 | Local/state politics | 800-830 |
 
 **Examples:**
-- "Thai PM Wins Dominating Election" -> 865
-- "Fetterman Backs Voter ID, Breaks with Dems" -> 865
-- "Nobel Laureate Gets 7+ Years Prison" -> 890
-- "Iran Arrests Reformist Politicians" -> 875
+- "Trump slams Bad Bunny's Super Bowl halftime show" -> **910**
+- "Trump calls halftime 'affront to America'" -> **905**
+- "Japan PM calls snap election" -> **895**
 
 ---
 
 ### BUSINESS & TECH
 
-| Type | Score Range |
-|------|-------------|
+| Type | Score |
+|------|-------|
 | Trillion-dollar market move | 900-930 |
+| Historic market milestone (Dow 50,000) | 900-915 |
 | Major acquisition $5B+ | 870-900 |
 | Major acquisition $1-5B | 855-880 |
 | Big tech regulatory action | 860-890 |
-| Major product launch | 860-885 |
+| Major product launch (Apple, etc.) | 860-885 |
 | CEO change (Fortune 500) | 855-880 |
-| Startup funding $100M+ | 845-870 |
 | Mass layoffs 1000+ | 855-880 |
+| Startup funding $100M+ | 845-870 |
 | Earnings (major company) | 840-870 |
 | Startup funding $10-100M | 820-850 |
-| Store openings/expansions | 810-840 |
 | Minor business news | 800-830 |
-
-**Examples:**
-- "FedEx Buys InPost for 6.8B" -> 875
-- "Ocado Plans 1,000 Job Cuts" -> 860
-- "Luckin Coffee Opens 30,000th Store" -> 845
-- "EU Warns Meta to Open WhatsApp" -> 865
 
 ---
 
 ### SCIENCE & DISCOVERY
 
-| Type | Score Range |
-|------|-------------|
+| Type | Score |
+|------|-------|
 | World-changing breakthrough | 890-920 |
 | "World's first" major tech | 870-900 |
-| Major archaeological find | 840-870 |
 | Medical breakthrough | 860-890 |
 | Space discovery | 840-875 |
-| Research finding (significant) | 830-860 |
+| Major archaeological find | 840-870 |
+| Research finding | 830-860 |
 | Interesting discovery | 820-850 |
 | Quirky/niche research | 780-820 |
-
-**Examples:**
-- "Tepco Restarts World's Biggest Nuclear Plant" -> 880
-- "Scientists Discover Lava Tunnel on Venus" -> 845
-- "Chinese Fossil Reveals 125M-Year-Old Dinosaur Skin" -> 845
-- "Medieval Tunnel Found Beneath 5,000-Year-Old Graves" -> 835
 
 ---
 
 ### HEALTH & MEDICAL
 
-| Type | Score Range |
-|------|-------------|
+| Type | Score |
+|------|-------|
 | Pandemic/major outbreak | 890-930 |
 | Mass poisoning/deaths | 880-910 |
 | New treatment breakthrough | 860-890 |
 | Disease outbreak (regional) | 850-875 |
-| Health crisis affecting millions | 855-885 |
 | Medical research finding | 830-860 |
 | Health statistic | 810-845 |
-
-**Examples:**
-- "Chinese Researchers Develop Super Antibody" -> 865
-- "Asia Healthcare Crisis: 60% Population, 22% Spending" -> 855
-- "Tattoos Raise Cancer Risk 4x" -> 835
-- "Measles Outbreak Hits Florida University" -> 845
 
 ---
 
 ### INCIDENTS & DISASTERS
 
-| Type | Score Range |
-|------|-------------|
+| Type | Score |
+|------|-------|
 | Mass casualties 50+ | 910-940 |
 | Mass casualties 30-50 | 890-915 |
 | Mass casualties 10-30 | 865-895 |
 | Deaths 5-10 | 845-870 |
 | Deaths 2-5 | 825-855 |
-| Major strike after deaths | 860-885 |
-| Building collapse | 850-880 |
+| Building collapse with deaths | 850-880 |
 | Single death incident | 800-830 |
 
+---
+
+### ENTERTAINMENT & CELEBRITIES
+
+| Type | Score |
+|------|-------|
+| Major cultural figure death | 860-900 |
+| Celebrity controversy with political angle | 840-870 |
+| A-list celebrity relationship news | **800** |
+| Celebrity at major event | **750-780** |
+| Celebrity surprise appearance | **750** |
+| Minor celebrity gossip | 700-740 |
+
 **Examples:**
-- "Truck Crash Kills 30 in Nigeria" -> 890
-- "Spanish Train Drivers Strike After 46 Die" -> 875
-- "Building Collapse in Lebanon Kills 6" -> 855
-- "Flash Floods Kill 4 in Morocco" -> 845
+- "Kim Kardashian and Lewis Hamilton go public" -> **800**
+- "Lady Gaga surprise appearance at halftime" -> **750**
+- "Kendall Jenner at Super Bowl" -> **730**
+- "Katie Price in Dubai" -> **700**
 
 ---
 
-### SPORTS
-
-| Type | Score Range |
-|------|-------------|
-| Historic first/record | 850-890 |
-| Championship game result | 720-750 |
-| Regular match result | 710-740 |
-| Player trade/signing | 750-790 |
-| Injury news | 730-770 |
-| Olympics medal | 740-780 |
-
-**Examples:**
-- "Seahawks Crush Patriots for Super Bowl Title" -> 720
-- "Malinin Leads US to Olympic Figure Skating Gold" -> 750
-- "Haaland Penalty Keeps Man City in Title Race" -> 730
-
----
-
-### ENTERTAINMENT & SOCIETY
-
-| Type | Score Range |
-|------|-------------|
-| Major cultural event | 840-880 |
-| Celebrity legal trouble | 800-850 |
-| Royal visit/news | 820-860 |
-| Social trend story | 830-865 |
-| Entertainment business | 830-860 |
-
-**Examples:**
-- "Prince William Visits Saudi Arabia" -> 840
-- "Pope Leo XIV Plans 2028 Sydney Mass" -> 835
-
----
-
-## MINIMUM FLOORS (Never score below these)
+## MINIMUM FLOORS
 
 | Category | Minimum Score |
 |----------|---------------|
-| Any death toll 10+ | 865 |
-| Any death toll 5-10 | 845 |
-| Political prisoner (known name) | 870 |
+| Super Bowl / World Cup Final result | **900** |
+| President attacks entertainer | **900** |
+| Death toll 10+ | 865 |
+| Political prisoner (named) | 870 |
 | Nobel laureate news | 875 |
 | Nuclear/treaty news | 880 |
 | $5B+ business deal | 865 |
-| $1B+ business deal | 850 |
 | National election result | 865 |
-| War crimes trial | 865 |
-| Superpower diplomacy | 870 |
+
+---
+
+## MAXIMUM CAPS
+
+| Category | Maximum Score |
+|----------|---------------|
+| A-list celebrity relationship | **830** |
+| Celebrity appearance/sighting | **780** |
+| Regular sports match | **730** |
+| Entertainment fluff | **780** |
+| Minor celebrity gossip | **750** |
 
 ---
 
@@ -253,9 +232,6 @@ Think of scoring like a bell curve:
 | "Seeks/Eyes/Considers" | -15 |
 | "May/Could/Might" | -20 |
 | Vague academic headline | -25 |
-| Follow-up to bigger story | -10 |
-
-**Apply penalty FROM the base score, not to drop below minimums.**
 
 ---
 
@@ -263,65 +239,85 @@ Think of scoring like a bell curve:
 
 | Trigger | Boost |
 |---------|-------|
+| President/head of state involved | +30 |
+| 100M+ audience event | +25 |
 | "World's first" (verified) | +25 |
 | Multiple superpowers involved | +20 |
 | Trillion-dollar impact | +30 |
-| Historic milestone | +20 |
-| Record-breaking (verified) | +15 |
-| Affects 100M+ people | +20 |
 
 ---
 
-## QUICK REFERENCE CARD
+## QUICK REFERENCE
 
 ```
-ALWAYS HIGH (870+):
-- Death toll 10+
-- Political prisoners (named)
+ALWAYS 900+:
+- Super Bowl result
+- World Cup Final result
+- President attacks/criticizes cultural figure
 - Nuclear/treaty news
+- Mass casualties 20+
+- Trillion-dollar market events
+
+ALWAYS 850-899:
+- Champions League Final
+- NBA/NFL Championship
+- Mass casualties 10-20
+- Major business deals $5B+
 - National elections
-- $1B+ deals
-- War crimes trials
 
-NEVER BELOW 800:
-- Any geopolitics involving US/China/Russia/EU
-- Any business deal $100M+
-- Any mass layoffs
-- Any major policy change
+ALWAYS 800-850:
+- Olympics gold medals
+- A-list celebrity news (capped at 830)
+- Grand Slam finals
+- Notable policy changes
 
-ALWAYS LOW (700-780):
-- Sports match results
-- Local crime (man charged...)
-- Minor celebrity news
-- Quirky animal stories
+ALWAYS 700-780:
+- Regular league matches (Premier League, La Liga, etc.)
+- Celebrity appearances/fluff
+- Player transfers/injuries
+- Minor celebrity gossip
+- Local crime
 ```
 
 ---
 
-## FINAL CHECKLIST
+## EXAMPLES
 
-Before submitting, verify your distribution:
-- [ ] Less than 15% of articles at any single score
-- [ ] 40-50% of articles between 830-880
-- [ ] Sports results at 710-750
-- [ ] Death tolls scored according to minimums
-- [ ] Major geopolitics at 870+
-- [ ] No important news stuck at 750
+| Article | Score | Reason |
+|---------|-------|--------|
+| "Seahawks crush Patriots to win Super Bowl" | **910** | Championship, 100M+ viewers |
+| "Trump slams Bad Bunny halftime show" | **910** | President political statement |
+| "Argentina wins World Cup Final" | **915** | Biggest global sporting event |
+| "US wins Olympic figure skating gold" | **815** | Notable but not must-know |
+| "Kim Kardashian and Lewis Hamilton go public" | **800** | A-list celebrity, capped |
+| "Lady Gaga surprise appearance at halftime" | **750** | Entertainment fluff |
+| "Chelsea beats Wolves 3-1" | **700** | Regular match |
+| "Jimmy Lai sentenced to 20 years" | **895** | Political prisoner |
+| "Truck crash kills 30 in Nigeria" | **890** | Mass casualties |
+
+---
+
+## DISTRIBUTION TARGET
+
+| Range | Target % |
+|-------|----------|
+| 900+ | 5-8% |
+| 850-899 | 15-20% |
+| 800-849 | 30-35% |
+| 750-799 | 20-25% |
+| 700-749 | 15-20% |
 
 ---
 
 ## OUTPUT FORMAT
 
+Return ONLY a JSON object with the score:
+
 ```json
-[
-  {
-    "title": "Article title",
-    "score": 865,
-    "category": "Category",
-    "reasoning": "Brief explanation"
-  }
-]
+{"score": 865}
 ```
+
+Nothing else. Just the score.
 """
 
 
@@ -405,7 +401,7 @@ def score_article(
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     
-    system_prompt = SCORING_SYSTEM_PROMPT_V14
+    system_prompt = SCORING_SYSTEM_PROMPT_V17
 
     # Legacy prompt kept for reference (not used)
     _SCORING_SYSTEM_PROMPT_V3 = """# TEN NEWS - ARTICLE SCORING SYSTEM V3
@@ -779,6 +775,7 @@ Both deserve visibility. Score accordingly.
                 candidate = result['candidates'][0]
                 if 'content' in candidate and 'parts' in candidate['content']:
                     response_text = candidate['content']['parts'][0]['text']
+                    print(f"   🔍 Scoring raw response: {response_text[:200]}")
                     
                     # Parse JSON response
                     try:
@@ -787,10 +784,13 @@ Both deserve visibility. Score accordingly.
                         # Preferred format: {"score": 850}
                         if isinstance(parsed, dict) and 'score' in parsed:
                             score = parsed.get('score', 750)
-                        # V4 alternative format: {"scores": [{"title": "...", "score": 920}, ...]}
+                        # Array format: [{"title": "...", "score": 865, ...}]
+                        elif isinstance(parsed, list) and len(parsed) > 0:
+                            first = parsed[0] if isinstance(parsed[0], dict) else {}
+                            score = first.get('score', 750)
+                        # Alternative dict format: {"scores": [{"title": "...", "score": 920}, ...]}
                         elif isinstance(parsed, dict) and isinstance(parsed.get('scores'), list):
                             scores = parsed.get('scores') or []
-                            # Try to match by title; otherwise fall back to first score
                             best = None
                             for item in scores:
                                 if not isinstance(item, dict):
@@ -802,7 +802,10 @@ Both deserve visibility. Score accordingly.
                                 best = scores[0] if isinstance(scores[0], dict) else None
                             score = (best or {}).get('score', 750)
                         else:
-                            score = 750
+                            # Last resort: try to find any number in the response
+                            import re as _re
+                            num_match = _re.search(r'\b([7-9]\d{2})\b', response_text)
+                            score = int(num_match.group(1)) if num_match else 750
                         
                         # Validate score range
                         score = max(0, min(1000, int(score)))
@@ -857,8 +860,14 @@ def score_article_with_references(
     # Fetch reference articles
     references = get_reference_articles(supabase)
     
+    # Skip references if all have the same score (broken calibration data)
     if references:
-        print(f"   📊 Using {len(references)} reference articles for calibration")
+        unique_scores = set(r.get('ai_final_score', 0) for r in references)
+        if len(unique_scores) <= 1:
+            print(f"   ⚠️ All {len(references)} reference articles have same score ({unique_scores.pop()}), skipping calibration")
+            references = []
+        else:
+            print(f"   📊 Using {len(references)} reference articles for calibration (scores: {sorted(unique_scores)})")
     else:
         print(f"   ⚠️ No reference articles found, scoring without calibration")
     

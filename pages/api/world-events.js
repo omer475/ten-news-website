@@ -61,34 +61,84 @@ export default async function handler(req, res) {
 
     console.log('📍 Found', events.length, 'events');
 
-    // OPTIMIZATION: Get article counts in a single batch query with timeout
+    // OPTIMIZATION: Get article counts + countries/topics in batch queries with timeout
     const eventIds = events.map(e => e.id);
     let countMap = {};
+    let eventTagsMap = {}; // { eventId: { countries: [...], topics: [...] } }
     
     try {
-      const countPromise = supabase
+      // Get article IDs linked to these events
+      const linkPromise = supabase
         .from('article_world_events')
-        .select('event_id')
-        .in('event_id', eventIds)
-        .gte('tagged_at', sinceDate.toISOString());
+        .select('event_id, article_id, tagged_at')
+        .in('event_id', eventIds);
 
-      const countTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Count query timeout')), 15000)
+      const linkTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Link query timeout')), 15000)
       );
 
-      const { data: articleCounts, error: countError } = await Promise.race([countPromise, countTimeout]);
+      const { data: articleLinks, error: linkError } = await Promise.race([linkPromise, linkTimeout]);
 
-      if (!countError && articleCounts) {
-        for (const row of articleCounts) {
-          countMap[row.event_id] = (countMap[row.event_id] || 0) + 1;
+      if (!linkError && articleLinks) {
+        // Count articles since sinceDate for update counts
+        for (const row of articleLinks) {
+          if (new Date(row.tagged_at) >= sinceDate) {
+            countMap[row.event_id] = (countMap[row.event_id] || 0) + 1;
+          }
+        }
+
+        // Get unique article IDs to fetch their countries/topics
+        const articleIds = [...new Set(articleLinks.map(l => l.article_id))];
+        
+        if (articleIds.length > 0) {
+          try {
+            const tagsPromise = supabase
+              .from('published_articles')
+              .select('id, countries, topics')
+              .in('id', articleIds.slice(0, 200)); // Limit to prevent too-large queries
+
+            const tagsTimeout = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Tags query timeout')), 10000)
+            );
+
+            const { data: articleTags, error: tagsError } = await Promise.race([tagsPromise, tagsTimeout]);
+
+            if (!tagsError && articleTags) {
+              // Build a map of article_id -> { countries, topics }
+              const articleTagMap = {};
+              for (const art of articleTags) {
+                const countries = typeof art.countries === 'string' ? JSON.parse(art.countries || '[]') : (art.countries || []);
+                const topics = typeof art.topics === 'string' ? JSON.parse(art.topics || '[]') : (art.topics || []);
+                articleTagMap[art.id] = { countries, topics };
+              }
+
+              // Aggregate countries/topics per event
+              for (const link of articleLinks) {
+                if (!eventTagsMap[link.event_id]) {
+                  eventTagsMap[link.event_id] = { countries: {}, topics: {} };
+                }
+                const tags = articleTagMap[link.article_id];
+                if (tags) {
+                  for (const c of tags.countries) {
+                    eventTagsMap[link.event_id].countries[c] = (eventTagsMap[link.event_id].countries[c] || 0) + 1;
+                  }
+                  for (const t of tags.topics) {
+                    eventTagsMap[link.event_id].topics[t] = (eventTagsMap[link.event_id].topics[t] || 0) + 1;
+                  }
+                }
+              }
+            }
+          } catch (tagsErr) {
+            console.log('⚠️ Article tags query failed (non-critical):', tagsErr.message);
+          }
         }
       }
     } catch (countErr) {
-      console.log('⚠️ Article count query failed (non-critical):', countErr.message);
-      // Continue without counts - not critical
+      console.log('⚠️ Article link query failed (non-critical):', countErr.message);
+      // Continue without counts/tags - not critical
     }
 
-    // Add counts to events
+    // Add counts and tags to events
     // Safety: filter out base64 images (must be storage URLs for fast loading)
     const safeImageUrl = (url) => (url && typeof url === 'string' && !url.startsWith('data:')) ? url : null;
     
@@ -96,6 +146,15 @@ export default async function handler(req, res) {
       // For event box cards: prefer cover_image_url (4:5), fallback to image_url (hero)
       const coverUrl = safeImageUrl(event.cover_image_url);
       const heroUrl = safeImageUrl(event.image_url);
+      
+      // Get top countries/topics for this event (sorted by frequency)
+      const eventTags = eventTagsMap[event.id];
+      const countries = eventTags 
+        ? Object.entries(eventTags.countries).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, 5)
+        : [];
+      const topics = eventTags
+        ? Object.entries(eventTags.topics).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, 5)
+        : [];
       
       return {
         id: event.id,
@@ -109,7 +168,9 @@ export default async function handler(req, res) {
         last_article_at: event.last_article_at,
         created_at: event.created_at,
         background: event.background,
-        newUpdates: countMap[event.id] || 0
+        newUpdates: countMap[event.id] || 0,
+        countries,  // For personalization on first page
+        topics      // For personalization on first page
       };
     });
 

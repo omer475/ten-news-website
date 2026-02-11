@@ -25,7 +25,7 @@ from datetime import datetime
 @dataclass
 class SynthesisConfig:
     """Configuration for multi-source synthesis"""
-    model: str = "claude-sonnet-4-20250514"  # Claude for better rate limits than Gemini
+    model: str = "claude-sonnet-4-5-20250929"  # Claude Sonnet 4.5 (updated from deprecated claude-sonnet-4)
     max_tokens: int = 3000  # Enough for content + both bullet versions
     temperature: float = 0.3
     timeout: int = 90
@@ -568,6 +568,14 @@ class MultiSourceSynthesizer:
                     time.sleep(wait_time)
                     continue
                 
+                if response.status_code >= 400:
+                    # Log the actual error body for debugging
+                    try:
+                        error_body = response.json()
+                        print(f"   ⚠️ API error {response.status_code}: {error_body.get('error', {}).get('message', response.text[:200])}")
+                    except:
+                        print(f"   ⚠️ API error {response.status_code}: {response.text[:200]}")
+                
                 response.raise_for_status()
                 response_json = response.json()
                 
@@ -598,7 +606,7 @@ class MultiSourceSynthesizer:
                 if attempt < self.config.retry_attempts - 1:
                     time.sleep(self.config.retry_delay)
             except Exception as e:
-                print(f"   ⚠️  API error: {str(e)[:80]}")
+                print(f"   ⚠️  API error (attempt {attempt + 1}/{self.config.retry_attempts}): {str(e)[:120]}")
                 if attempt < self.config.retry_attempts - 1:
                     time.sleep(self.config.retry_delay)
         

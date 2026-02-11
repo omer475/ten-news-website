@@ -1,5 +1,5 @@
 """
-COMPLETE 10-STEP NEWS WORKFLOW WITH CLUSTERING
+COMPLETE 11-STEP NEWS WORKFLOW WITH CLUSTERING
 ===============================================
 
 Step 0: RSS Feed Collection (287 sources)
@@ -13,6 +13,8 @@ Step 6: Gemini Component Selection (decides which components based on search dat
 Step 7: Claude Component Generation (timeline, details, graph, map)
 Step 8: Fact Verification (catches hallucinations, regenerates if needed)
 Step 9: Publishing to Supabase
+Step 10: Article Scoring (AI importance scoring 700-950)
+Step 11: Article Tagging (countries + topics for personalization)
 """
 
 import time
@@ -40,6 +42,7 @@ from step2_gemini_context_search import search_gemini_context
 from step6_7_claude_component_generation import ClaudeComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
+from step11_article_tagging import tag_article
 from step6_world_event_detection import detect_world_events
 from supabase import create_client
 
@@ -746,10 +749,53 @@ def run_complete_pipeline():
         print("⚠️  No clusters ready - ending cycle")
         return
     
-    # Process each cluster through Steps 2-7
+    # ==========================================
+    # PARALLEL CLUSTER PROCESSING (3 workers)
+    # ==========================================
+    import threading
+    
+    # Gemini rate limiter - allows max 2 concurrent Gemini API calls
+    # This prevents 429 errors without adding any artificial delay.
+    # Workers only wait if 2 other workers are already mid-Gemini-call.
+    gemini_semaphore = threading.Semaphore(2)
+    
+    # Thread-safe counter for published articles
+    published_lock = threading.Lock()
     published_count = 0
     
-    for cluster_id in clusters_to_process:
+    # Duplicate title cache shared across threads (prevents parallel duplicates)
+    title_cache_lock = threading.Lock()
+    published_titles_cache = []  # Populated before parallel processing
+    
+    # Pre-fetch recent titles once (shared across all workers)
+    try:
+        from difflib import SequenceMatcher
+        cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
+        recent_articles_result = supabase.table('published_articles')\
+            .select('id, title_news')\
+            .gte('published_at', cutoff_time)\
+            .execute()
+        
+        def _clean_title(t):
+            if not t:
+                return ''
+            t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
+            t = re.sub(r'[^\w\s]', '', t.lower())
+            return t.strip()
+        
+        for r in (recent_articles_result.data or []):
+            published_titles_cache.append({
+                'id': r['id'],
+                'title_news': r.get('title_news', ''),
+                'clean': _clean_title(r.get('title_news', ''))
+            })
+    except Exception as e:
+        print(f"   ⚠️ Could not pre-fetch recent titles: {e}")
+    
+    def process_single_cluster(cluster_id):
+        """Process a single cluster through Steps 2-11. Thread-safe."""
+        nonlocal published_count
+        
         try:
             print(f"\n{'='*80}")
             print(f"📰 PROCESSING CLUSTER {cluster_id}")
@@ -773,10 +819,10 @@ def run_complete_pipeline():
                 .execute()
             
             cluster_sources = sources.data
-            print(f"   Sources in cluster: {len(cluster_sources)}")
+            print(f"   [Cluster {cluster_id}] Sources in cluster: {len(cluster_sources)}")
             
             # STEP 2: Bright Data Full Article Fetching (all sources)
-            print(f"\n📡 STEP 2: BRIGHT DATA FULL ARTICLE FETCHING")
+            print(f"\n📡 [Cluster {cluster_id}] STEP 2: BRIGHT DATA FULL ARTICLE FETCHING")
             print(f"   Fetching full text for {len(cluster_sources)} sources...")
             
             urls = [s['url'] for s in cluster_sources]
@@ -806,9 +852,9 @@ def run_complete_pipeline():
                     if og_image:
                         source['image_url'] = og_image
                         if has_no_image:
-                            print(f"   📸 Fetched image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
+                            print(f"   📸 [Cluster {cluster_id}] Fetched image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
                         else:
-                            print(f"   📸 Upgraded image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
+                            print(f"   📸 [Cluster {cluster_id}] Upgraded image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
             
             # Track source article status for analytics
             for source in cluster_sources:
@@ -832,28 +878,18 @@ def run_complete_pipeline():
                             failure_reason='blocked' if not content_ok else None)
             
             success_count = len([s for s in cluster_sources if s.get('full_text') and len(s.get('full_text', '')) > 100])
-            print(f"   ✅ Fetched full text: {success_count}/{len(cluster_sources)}")
+            print(f"   ✅ [Cluster {cluster_id}] Fetched full text: {success_count}/{len(cluster_sources)}")
             
             # STRICT: Require actual article content - no description fallback
-            # If Bright Data couldn't fetch content, eliminate this cluster
             if success_count == 0:
-                print(f"   ❌ ELIMINATED: No article content fetched (blocked by site)")
-                print(f"      Reason: Cannot write accurate article without source content")
-                print(f"      Skipping cluster {cluster_id}")
+                print(f"   ❌ [Cluster {cluster_id}] ELIMINATED: No article content fetched")
                 update_cluster_status(cluster_id, 'failed', 'no_content', 
                     f'All {len(cluster_sources)} sources blocked or failed to fetch')
-                continue
+                return False
             
             # STEP 3: Smart Image Selection
-            print(f"\n📸 STEP 3: SMART IMAGE SELECTION")
-            print(f"   Selecting best image from {len(cluster_sources)} sources...")
+            print(f"\n📸 [Cluster {cluster_id}] STEP 3: SMART IMAGE SELECTION")
             
-            # DEBUG: Check if sources have image_url field
-            for i, src in enumerate(cluster_sources[:2], 1):  # Check first 2 sources
-                img_url = src.get('image_url')
-                print(f"   🔍 DEBUG Source {i}: image_url = {img_url[:50] if img_url else 'NONE'}...")
-            
-            # First: Rule-based selection to get all valid candidates ranked
             selector = ImageSelector(debug=True)
             all_candidates = []
             for source in cluster_sources:
@@ -869,7 +905,6 @@ def run_complete_pipeline():
                     'height': source.get('image_height', 0)
                 })
             
-            # Filter and score all candidates
             valid_candidates = []
             for candidate in all_candidates:
                 if selector._is_valid_image(candidate):
@@ -877,153 +912,132 @@ def run_complete_pipeline():
                     valid_candidates.append(candidate)
             
             if not valid_candidates:
-                print(f"   ❌ ELIMINATED: No image found for this article")
-                print(f"      Reason: No valid images in {len(cluster_sources)} sources")
-                print(f"      Skipping cluster {cluster_id}")
+                print(f"   ❌ [Cluster {cluster_id}] ELIMINATED: No image found")
                 update_cluster_status(cluster_id, 'failed', 'no_image',
                     f'No usable image found in {len(cluster_sources)} sources')
-                continue
+                return False
             
             valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
             
             # STEP 3.1: AI Image Quality Check (Gemini 2.0 Flash)
-            print(f"\n🔍 STEP 3.1: AI IMAGE QUALITY CHECK")
-            print(f"   Checking {min(3, len(valid_candidates))} top candidates with Gemini...")
+            print(f"\n🔍 [Cluster {cluster_id}] STEP 3.1: AI IMAGE QUALITY CHECK")
             
             selected_image = None
             try:
-                ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
+                with gemini_semaphore:
+                    ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
                 if ai_approved:
                     selected_image = {
                         'url': ai_approved['url'],
                         'source_name': ai_approved['source_name'],
                         'quality_score': ai_approved['quality_score']
                     }
-                    print(f"   ✅ AI-approved image from {selected_image['source_name']}")
+                    print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
                 else:
-                    print(f"   ⚠️  No images passed AI quality check")
+                    print(f"   ⚠️  [Cluster {cluster_id}] No images passed AI quality check")
             except Exception as e:
-                print(f"   ⚠️  AI quality check failed: {str(e)[:80]}")
-                print(f"   ↩️  Falling back to rule-based selection")
+                print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
             
-            # Fallback: use rule-based best if AI check failed or rejected all
             if not selected_image:
                 selected_image = {
                     'url': valid_candidates[0]['url'],
                     'source_name': valid_candidates[0]['source_name'],
                     'quality_score': valid_candidates[0]['quality_score']
                 }
-                print(f"   ↩️  Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
-            
-            print(f"   ✅ Final selection: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
-            
-            print(f"\n✍️  STEP 4: MULTI-SOURCE SYNTHESIS")
+                print(f"   ↩️  [Cluster {cluster_id}] Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
-                cluster_sources = validate_cluster_sources(
-                    cluster_sources, 
-                    cluster.get('event_name', f'Cluster {cluster_id}')
-                )
+                with gemini_semaphore:
+                    cluster_sources = validate_cluster_sources(
+                        cluster_sources, 
+                        cluster.get('event_name', f'Cluster {cluster_id}')
+                    )
                 
-                # If validation removed all sources, skip
                 if not cluster_sources:
-                    print(f"   ❌ No valid sources after validation - skipping cluster")
+                    print(f"   ❌ [Cluster {cluster_id}] No valid sources after validation")
                     update_cluster_status(cluster_id, 'failed', 'validation_failed',
                         'All sources were unrelated after validation')
-                    continue
+                    return False
             
+            # STEP 4: MULTI-SOURCE SYNTHESIS
+            print(f"\n✍️  [Cluster {cluster_id}] STEP 4: MULTI-SOURCE SYNTHESIS")
             print(f"   Synthesizing article from {len(cluster_sources)} sources...")
             
             synthesized = synthesize_multisource_article(cluster_sources, cluster_id)
             
             if not synthesized:
-                print(f"   ❌ Synthesis failed - skipping cluster")
+                print(f"   ❌ [Cluster {cluster_id}] Synthesis failed")
                 update_cluster_status(cluster_id, 'failed', 'synthesis_failed',
                     'Claude API failed to synthesize article from sources')
-                continue
+                return False
             
-            # Add image data to synthesized article (always has image at this point - eliminated if no image)
             synthesized['image_url'] = selected_image['url']
             synthesized['image_source'] = selected_image['source_name']
             synthesized['image_score'] = selected_image['quality_score']
             
-            print(f"   ✅ Synthesized: {synthesized['title_news'][:60]}...")
+            print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
             
             # ==========================================
-            # STEP 5: GEMINI CONTEXT SEARCH
+            # STEPS 5+6: CONTEXT SEARCH + COMPONENT SELECTION (sequential, both Gemini)
             # ==========================================
-            print(f"\n🔍 STEP 5: GEMINI CONTEXT SEARCH")
-            print(f"   Searching for component data with Google Search grounding...")
+            print(f"\n🔍 [Cluster {cluster_id}] STEP 5: GEMINI CONTEXT SEARCH")
             
             bullets_text = ' '.join(synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])))
             
-            # Get the full article text from sources (use first source with content)
             full_article_text = ""
             for source in cluster_sources:
                 if source.get('full_text') and len(source.get('full_text', '')) > 100:
-                    full_article_text = source['full_text'][:3000]  # Limit to 3000 chars
+                    full_article_text = source['full_text'][:3000]
                     break
             
-            # Get search context with Gemini (uses Google Search grounding)
             gemini_result = None
             search_context_text = ""
             if gemini_key:
                 try:
-                    gemini_result = search_gemini_context(
-                        synthesized['title_news'], 
-                        bullets_text,
-                        full_article_text
-                    )
+                    with gemini_semaphore:
+                        gemini_result = search_gemini_context(
+                            synthesized['title_news'], 
+                            bullets_text,
+                            full_article_text
+                        )
                     search_context_text = gemini_result.get('results', '') if gemini_result else ""
-                    print(f"   ✅ Step 5 Complete: Search context fetched ({len(search_context_text)} chars)")
+                    print(f"   ✅ [Cluster {cluster_id}] Step 5 Complete: ({len(search_context_text)} chars)")
                 except Exception as search_error:
-                    print(f"   ⚠️ Step 5 Failed: {search_error}")
-                    print(f"   📋 Continuing with limited context...")
+                    print(f"   ⚠️ [Cluster {cluster_id}] Step 5 Failed: {search_error}")
                     search_context_text = ""
-            else:
-                print(f"   ⚠️ No Gemini API key - skipping context search")
             
-            # ==========================================
-            # STEP 6: GEMINI COMPONENT SELECTION
-            # ==========================================
-            print(f"\n📋 STEP 6: GEMINI COMPONENT SELECTION")
-            print(f"   Analyzing search data to select appropriate components...")
+            print(f"\n📋 [Cluster {cluster_id}] STEP 6: GEMINI COMPONENT SELECTION")
             
-            # Build article data for component selection
             article_for_selection = {
                 'title': synthesized['title_news'],
                 'text': bullets_text,
                 'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', []))
             }
             
-            # Component selection with robust fallback
             selected = []
             component_result = {}
             try:
-                component_result = component_selector.select_components(article_for_selection, search_context_text)
+                with gemini_semaphore:
+                    component_result = component_selector.select_components(article_for_selection, search_context_text)
                 selected = component_result.get('components', []) if isinstance(component_result, dict) else []
-                print(f"   ✅ Step 6 Complete: Selected [{', '.join(selected) if selected else 'none'}]")
+                print(f"   ✅ [Cluster {cluster_id}] Step 6 Complete: [{', '.join(selected) if selected else 'none'}]")
             except Exception as comp_error:
-                print(f"   ⚠️ Step 6 Failed: {comp_error}")
-                print(f"   📋 Using default components: timeline, details")
-                selected = ['timeline', 'details']  # Default fallback
+                print(f"   ⚠️ [Cluster {cluster_id}] Step 6 Failed: {comp_error}")
+                selected = ['timeline', 'details']
                 component_result = {'components': selected, 'emoji': '📰'}
             
-            # Build context_data for component generation
             context_data = {}
             if selected and gemini_result:
                 for component in selected:
                     context_data[component] = gemini_result
             
             # ==========================================
-            # STEP 7: CLAUDE COMPONENT GENERATION (with retry)
+            # STEP 7: COMPONENT GENERATION (with retry)
             # ==========================================
-            print(f"\n📊 STEP 7: CLAUDE COMPONENT GENERATION")
-            print(f"   Generating content for: {', '.join(selected) if selected else 'none'}")
+            print(f"\n📊 [Cluster {cluster_id}] STEP 7: COMPONENT GENERATION")
             
             components = {}
-            # Get map_locations from component selection result
             map_locations = component_result.get('map_locations', []) if isinstance(component_result, dict) else []
             
             if selected and context_data:
@@ -1035,74 +1049,54 @@ def run_complete_pipeline():
                             'summary_bullets_news': synthesized.get('summary_bullets_news', synthesized.get('summary_bullets', [])),
                             'selected_components': selected,
                             'context_data': context_data,
-                            'map_locations': map_locations  # Pass map locations to component generation
+                            'map_locations': map_locations
                         }
-                        generation_result = component_writer.write_components(article_for_components)
+                        with gemini_semaphore:
+                            generation_result = component_writer.write_components(article_for_components)
 
                         if generation_result:
-                            # Extract individual components from result
                             components = {
                                 'timeline': generation_result.get('timeline'),
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
                                 'map': generation_result.get('map')
                             }
-                            # Remove None values
                             components = {k: v for k, v in components.items() if v is not None}
 
-                            # Check if all selected components were generated
                             missing_components = [c for c in selected if c not in components]
                             if missing_components and comp_attempt < max_component_retries - 1:
-                                print(
-                                    f"   ⚠️ Missing components: {missing_components} - retrying "
-                                    f"({comp_attempt + 2}/{max_component_retries})..."
-                                )
-                                import time
-                                time.sleep(2)  # Brief pause before retry
+                                print(f"   ⚠️ [Cluster {cluster_id}] Missing: {missing_components} - retrying ({comp_attempt + 2}/{max_component_retries})...")
+                                time.sleep(2)
                                 continue
 
-                            print(f"   ✅ Step 7 Complete: Generated [{', '.join(components.keys())}]")
-                            break  # Success, exit retry loop
+                            print(f"   ✅ [Cluster {cluster_id}] Step 7 Complete: [{', '.join(components.keys())}]")
+                            break
 
-                        # No result
                         if comp_attempt < max_component_retries - 1:
-                            print(f"   ⚠️ No components generated - retrying ({comp_attempt + 2}/{max_component_retries})...")
-                            import time
+                            print(f"   ⚠️ [Cluster {cluster_id}] No components - retrying ({comp_attempt + 2}/{max_component_retries})...")
                             time.sleep(2)
                             continue
-                        print(f"   ⚠️ Step 7 Failed: No components generated after {max_component_retries} attempts")
                         components = {}
 
                     except Exception as comp_gen_error:
                         if comp_attempt < max_component_retries - 1:
-                            print(
-                                f"   ⚠️ Component error: {comp_gen_error} - retrying "
-                                f"({comp_attempt + 2}/{max_component_retries})..."
-                            )
-                            import time
+                            print(f"   ⚠️ [Cluster {cluster_id}] Component error: {comp_gen_error} - retrying ({comp_attempt + 2}/{max_component_retries})...")
                             time.sleep(2)
                             continue
-                        print(f"   ⚠️ Step 7 Failed: {comp_gen_error}")
-                        print(f"   📋 Continuing without components")
+                        print(f"   ⚠️ [Cluster {cluster_id}] Step 7 Failed: {comp_gen_error}")
                         components = {}
-            else:
-                print(f"   ⏭️ Skipping - no components selected or no context data")
             
-            # STEP 8: Fact Verification (Hallucination Check)
-            print(f"\n🔍 STEP 8: FACT VERIFICATION")
-            print(f"   Checking for hallucinations in generated content...")
+            # STEP 8: Fact Verification
+            print(f"\n🔍 [Cluster {cluster_id}] STEP 8: FACT VERIFICATION")
             
-            # Try up to 3 times: original + 2 regenerations
             max_verification_attempts = 3
             verification_passed = False
-            verification_feedback = None  # Store feedback for regeneration
+            verification_feedback = None
             
             for attempt in range(max_verification_attempts):
                 if attempt > 0:
-                    print(f"\n   🔄 REGENERATING ARTICLE (Attempt {attempt + 1}/{max_verification_attempts})")
-                    print(f"      Re-synthesizing with verification feedback...")
+                    print(f"\n   🔄 [Cluster {cluster_id}] REGENERATING (Attempt {attempt + 1}/{max_verification_attempts})")
                     
-                    # Pass verification feedback to help Claude fix the specific issues
                     synthesized = synthesize_multisource_article(
                         cluster_sources, 
                         cluster_id,
@@ -1110,134 +1104,138 @@ def run_complete_pipeline():
                     )
                     
                     if not synthesized:
-                        print(f"      ❌ Regeneration failed")
+                        print(f"      ❌ [Cluster {cluster_id}] Regeneration failed")
                         continue
                     
-                    # Re-add image data after regeneration
                     if selected_image:
                         synthesized['image_url'] = selected_image['url']
                         synthesized['image_source'] = selected_image['source_name']
                         synthesized['image_score'] = selected_image['quality_score']
                     
-                    print(f"      ✅ New article: {synthesized.get('title_news', '')[:50]}...")
+                    print(f"      ✅ [Cluster {cluster_id}] New article: {synthesized.get('title_news', '')[:50]}...")
                 
-                # Verify the article
-                verified, discrepancies, verification_summary = fact_verifier.verify_article(
-                    cluster_sources, 
-                    synthesized
-                )
+                with gemini_semaphore:
+                    verified, discrepancies, verification_summary = fact_verifier.verify_article(
+                        cluster_sources, 
+                        synthesized
+                    )
                 
                 if verified:
                     verification_passed = True
-                    print(f"   ✅ Verification PASSED: {verification_summary}")
+                    print(f"   ✅ [Cluster {cluster_id}] Verification PASSED: {verification_summary}")
                     break
                 else:
-                    print(f"   ⚠️  Verification FAILED (Attempt {attempt + 1}/{max_verification_attempts})")
-                    print(f"      Summary: {verification_summary}")
+                    print(f"   ⚠️  [Cluster {cluster_id}] Verification FAILED (Attempt {attempt + 1}/{max_verification_attempts})")
                     if discrepancies:
-                        print(f"      Discrepancies: {len(discrepancies)}")
-                        for i, d in enumerate(discrepancies[:3], 1):  # Show up to 3 issues
+                        for i, d in enumerate(discrepancies[:3], 1):
                             issue = d.get('issue', 'Unknown')
                             print(f"         {i}. {issue[:80]}...")
                     
-                    # Store feedback for next regeneration attempt
                     verification_feedback = {
                         'discrepancies': discrepancies,
                         'summary': verification_summary
                     }
             
             if not verification_passed:
-                print(f"\n   ❌ ELIMINATED: Failed verification after {max_verification_attempts} attempts")
-                print(f"      Cluster {cluster_id} will not be published")
+                print(f"\n   ❌ [Cluster {cluster_id}] ELIMINATED: Failed verification after {max_verification_attempts} attempts")
                 update_cluster_status(cluster_id, 'failed', 'verification_failed',
                     f'Failed fact verification after {max_verification_attempts} attempts')
-                continue
+                return False
             
-            # Re-add image data (in case of regeneration) - always has image at this point
             synthesized['image_url'] = selected_image['url']
             synthesized['image_source'] = selected_image['source_name']
             synthesized['image_score'] = selected_image['quality_score']
             
             # STEP 9: Publishing to Supabase
-            print(f"\n💾 STEP 9: PUBLISHING TO SUPABASE")
+            print(f"\n💾 [Cluster {cluster_id}] STEP 9: PUBLISHING TO SUPABASE")
             
-            # Check if article for this cluster already exists (prevent duplicates)
+            # Check if already published (prevent duplicates)
             existing = supabase.table('published_articles').select('id').eq('cluster_id', cluster_id).execute()
             if existing.data and len(existing.data) > 0:
-                print(f"   ⏭️ Cluster {cluster_id} already published (ID: {existing.data[0]['id']}), skipping...")
-                continue
+                print(f"   ⏭️ [Cluster {cluster_id}] Already published (ID: {existing.data[0]['id']})")
+                return False
             
-            # Get title for duplicate checking
             title = synthesized.get('title', synthesized.get('title_news', ''))
             
-            # CHECK FOR SIMILAR TITLES in recently published articles (last 24 hours)
-            # This catches duplicates that slipped through clustering
+            # CHECK FOR SIMILAR TITLES (thread-safe)
             is_duplicate = False
             skip_reason = None
             try:
-                from difflib import SequenceMatcher
-                import re
+                clean_new_title = _clean_title(title)
                 
-                cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
-                recent_articles = supabase.table('published_articles')\
-                    .select('id, title_news')\
-                    .gte('published_at', cutoff_time)\
-                    .execute()
+                # Check against pre-fetched cache + newly published in this run
+                with title_cache_lock:
+                    all_titles_to_check = list(published_titles_cache)
                 
-                # Clean title for comparison (remove bold markers, lowercase)
-                def clean_title(t):
-                    if not t:
-                        return ''
-                    t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)  # Remove **bold**
-                    t = re.sub(r'[^\w\s]', '', t.lower())  # Remove punctuation
-                    return t.strip()
-                
-                clean_new_title = clean_title(title)
-                
-                # CHECK: Title similarity (65% threshold)
-                # Catches duplicates that slipped through clustering
-                for recent in (recent_articles.data or []):
-                    recent_title = recent.get('title_news', '')
-                    clean_recent_title = clean_title(recent_title)
-                    
-                    if clean_new_title and clean_recent_title:
-                        similarity = SequenceMatcher(None, clean_new_title, clean_recent_title).ratio()
-                        
-                        if similarity >= 0.65:  # 65% similar = likely same news
-                            print(f"   ⏭️ DUPLICATE TITLE DETECTED (similarity: {similarity:.0%})")
+                for recent in all_titles_to_check:
+                    if clean_new_title and recent['clean']:
+                        similarity = SequenceMatcher(None, clean_new_title, recent['clean']).ratio()
+                        if similarity >= 0.65:
+                            print(f"   ⏭️ [Cluster {cluster_id}] DUPLICATE TITLE (similarity: {similarity:.0%})")
                             print(f"      New: {title[:60]}...")
-                            print(f"      Existing (ID {recent['id']}): {recent_title[:60]}...")
+                            print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
                             is_duplicate = True
                             skip_reason = "duplicate_title"
                             break
                             
             except Exception as e:
-                print(f"   ⚠️ Title/entity duplicate check error (continuing anyway): {e}")
+                print(f"   ⚠️ [Cluster {cluster_id}] Duplicate check error: {e}")
             
             if is_duplicate:
-                print(f"      Skipping cluster {cluster_id} (reason: {skip_reason})")
                 update_cluster_status(cluster_id, 'skipped', 'duplicate',
                     f'Duplicate detected: {skip_reason}')
-                continue  # Skip this cluster, move to next
+                return False
             
-            # STEP 10: Score the written article using AI with reference calibration
-            print(f"\n   🎯 STEP 10: SCORING ARTICLE")
+            # STEPS 10+11: SCORING + TAGGING (run in parallel - both use Gemini independently)
+            print(f"\n   🎯 [Cluster {cluster_id}] STEPS 10+11: SCORING + TAGGING (parallel)")
             bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
-            article_score = score_article_with_references(title, bullets, gemini_key, supabase)
-            print(f"   📊 Article score: {article_score}/1000")
+            article_category = synthesized.get('category', 'Other')
             
-            # Generate interest tags for personalization (4-8 keywords)
-            print(f"   🏷️ Generating interest tags...")
-            interest_tags = generate_interest_tags(title, bullets, gemini_key)
-            print(f"   🏷️ Tags: {interest_tags}")
+            article_score = 750  # default
+            interest_tags = []
+            article_countries = []
+            article_topics = []
             
-            # Title already set above for duplicate checking
-            # Bullets already fetched above for scoring
+            # Wrappers that acquire gemini semaphore before calling API
+            def _score_with_sem():
+                with gemini_semaphore:
+                    return score_article_with_references(title, bullets, gemini_key, supabase)
+            def _tags_with_sem():
+                with gemini_semaphore:
+                    return generate_interest_tags(title, bullets, gemini_key)
+            def _tagging_with_sem():
+                with gemini_semaphore:
+                    return tag_article(title, bullets, article_category, gemini_key)
             
-            # Get 5 W's (new format: WHO/WHAT/WHEN/WHERE/WHY)
+            with ThreadPoolExecutor(max_workers=3) as step_executor:
+                # Run scoring, interest tags, and article tagging in parallel (semaphore-throttled)
+                score_future = step_executor.submit(_score_with_sem)
+                tags_future = step_executor.submit(_tags_with_sem)
+                tagging_future = step_executor.submit(_tagging_with_sem)
+                
+                try:
+                    article_score = score_future.result(timeout=30)
+                    print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000")
+                except Exception as e:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Scoring failed: {e}")
+                
+                try:
+                    interest_tags = tags_future.result(timeout=30)
+                    print(f"   🏷️ [Cluster {cluster_id}] Tags: {interest_tags}")
+                except Exception as e:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Interest tags failed: {e}")
+                
+                try:
+                    tags_result = tagging_future.result(timeout=30)
+                    article_countries = tags_result.get('countries', [])
+                    article_topics = tags_result.get('topics', [])
+                    print(f"   🌍 [Cluster {cluster_id}] Countries: {article_countries}")
+                    print(f"   📌 [Cluster {cluster_id}] Topics: {article_topics}")
+                except Exception as e:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
+            
             five_ws = synthesized.get('five_ws', {})
             
-            # Collect original source titles for clustering verification
             source_titles = [
                 {
                     'title': s.get('title', 'Unknown'),
@@ -1246,64 +1244,65 @@ def run_complete_pipeline():
                 for s in cluster_sources
             ]
             
-            # Only include components that were actually generated successfully
-            # This prevents showing "map" in components_order when map data is null
             successful_components = [c for c in selected if components.get(c) is not None]
             
             if len(successful_components) < len(selected):
                 failed_components = [c for c in selected if c not in successful_components]
-                print(f"   ⚠️ Some components failed: {failed_components}")
-                print(f"   ✅ Publishing with: {successful_components}")
+                print(f"   ⚠️ [Cluster {cluster_id}] Some components failed: {failed_components}")
             
             article_data = {
                 'cluster_id': cluster_id,
-                'url': cluster_sources[0]['url'],  # Primary source URL
+                'url': cluster_sources[0]['url'],
                 'source': cluster_sources[0]['source_name'],
                 'category': synthesized.get('category', 'Other'),
-                # Title
                 'title_news': title,
-                # Summary bullets (80-100 chars) - narrative format
                 'summary_bullets_news': bullets,
-                # 5 W's - structured quick-reference (WHO/WHAT/WHEN/WHERE/WHY)
                 'five_ws': five_ws,
                 'timeline': components.get('timeline'),
                 'details': components.get('details'),
                 'graph': components.get('graph'),
-                'map': components.get('map'),  # Map component with location data
-                'components_order': successful_components,  # Only include successfully generated components
+                'map': components.get('map'),
+                'components_order': successful_components,
                 'num_sources': len(cluster_sources),
                 'published_at': datetime.now().isoformat(),
-                'ai_final_score': article_score,  # Importance score for sorting (0-1000)
-                'interest_tags': interest_tags,  # 4-8 keywords for personalization
-                # Image data from Step 3
+                'ai_final_score': article_score,
+                'interest_tags': interest_tags,
+                'countries': article_countries,
+                'topics': article_topics,
                 'image_url': synthesized.get('image_url'),
                 'image_source': synthesized.get('image_source'),
                 'image_score': synthesized.get('image_score'),
-                # Original source titles for clustering verification
                 'source_titles': source_titles
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()
             
             published_article_id = result.data[0]['id']
-            print(f"   ✅ Published article ID: {published_article_id}")
+            print(f"   ✅ [Cluster {cluster_id}] Published article ID: {published_article_id}")
             if len(source_titles) > 1:
-                print(f"   📚 MULTI-SOURCE CLUSTER ({len(source_titles)} articles):")
+                print(f"   📚 [Cluster {cluster_id}] MULTI-SOURCE ({len(source_titles)} articles):")
                 for st in source_titles:
                     print(f"      • [{st['source']}] {st['title'][:70]}...")
-            published_count += 1
+            
+            with published_lock:
+                published_count += 1
+            
+            # Add to title cache for other workers' duplicate detection
+            with title_cache_lock:
+                published_titles_cache.append({
+                    'id': published_article_id,
+                    'title_news': title,
+                    'clean': _clean_title(title)
+                })
             
             # Mark cluster as successfully published
             update_cluster_status(cluster_id, 'published')
             
-            # STEP 10: WORLD EVENT DETECTION
-            # Check if this article relates to a major ongoing world event
+            # WORLD EVENT DETECTION
             try:
                 title = synthesized.get('title', synthesized.get('title_news', ''))
                 content = synthesized.get('bullets', '')
                 
-                # Detect world events for this article
-                # Note: Don't pass timeline - event page has its own timeline
                 detect_world_events([{
                     'id': published_article_id,
                     'title': title,
@@ -1317,12 +1316,37 @@ def run_complete_pipeline():
                     }
                 }])
             except Exception as we_error:
-                print(f"   ⚠️ World event detection skipped: {we_error}")
+                print(f"   ⚠️ [Cluster {cluster_id}] World event detection skipped: {we_error}")
+            
+            return True
             
         except Exception as e:
-            print(f"   ❌ Error processing cluster {cluster_id}: {e}")
+            print(f"   ❌ [Cluster {cluster_id}] Error: {e}")
             update_cluster_status(cluster_id, 'failed', 'api_error', str(e)[:500])
-            continue
+            return False
+    
+    # ==========================================
+    # EXECUTE CLUSTERS IN PARALLEL (3 workers)
+    # ==========================================
+    MAX_PARALLEL_CLUSTERS = 3
+    print(f"\n⚡ Processing {len(clusters_to_process)} clusters with {MAX_PARALLEL_CLUSTERS} parallel workers...")
+    
+    with ThreadPoolExecutor(max_workers=MAX_PARALLEL_CLUSTERS) as cluster_executor:
+        future_to_cluster = {
+            cluster_executor.submit(process_single_cluster, cid): cid 
+            for cid in clusters_to_process
+        }
+        
+        for future in as_completed(future_to_cluster):
+            cid = future_to_cluster[future]
+            try:
+                result = future.result()
+                if result:
+                    print(f"   ✅ Cluster {cid} completed successfully")
+                else:
+                    print(f"   ⏭️ Cluster {cid} skipped or failed")
+            except Exception as e:
+                print(f"   ❌ Cluster {cid} exception: {e}")
     
     # Summary
     print(f"\n{'='*80}")
@@ -1704,7 +1728,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
         try:
             # Build Claude API request
             request_data = {
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-5-20250929",
                 "max_tokens": 2048,
                 "temperature": 0.3,
                 "messages": [

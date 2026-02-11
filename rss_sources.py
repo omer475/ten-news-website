@@ -1,7 +1,9 @@
 # TEN NEWS - CLEANED ELITE RSS FEED LIST
 # Removed: 49 low-quality/specialized sources
-# Total: ~287 Premium Elite Sources (added MIT, Stanford, Harvard, Science Daily)
+# Total: ~346 Premium Elite Sources (~287 existing + 59 new country feeds)
 # Categories: News, Business, Technology, Science, Consumer
+# Countries: India, Turkiye, China, Russia, Ireland, Singapore, Pakistan,
+#            Ukraine, South Korea, Germany, France, Spain, Italy, Japan, Australia, Canada
 
 RSS_FEEDS = [
     
@@ -364,7 +366,7 @@ RSS_FEEDS = [
     },
     {
         'name': 'Deutsche Welle Environment',
-        'url': 'https://rss.dw.com/atom/rss_en_environment',
+        'url': 'https://rss.dw. ,om/atom/rss_en_environment',
         'category': 'science',
         'tier': 'premium'
     },
@@ -468,7 +470,8 @@ RSS_FEEDS = [
         'name': 'El País English',
         'url': 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada',
         'category': 'news',
-        'tier': 'premium'
+        'tier': 'premium',
+        'country': 'Spain'
     },
     {
         'name': 'Buenos Aires Herald',
@@ -710,7 +713,8 @@ RSS_FEEDS = [
         'name': 'China Daily Business',
         'url': 'http://www.chinadaily.com.cn/rss/bizchina_rss.xml',
         'category': 'business',
-        'tier': 'premium'
+        'tier': 'premium',
+        'country': 'China'
     },
     {
         'name': 'Financial Times Asia',
@@ -1663,16 +1667,438 @@ RSS_FEEDS = [
         'category': 'news',
         'tier': 'premium'
     },
+    
+    # ========================================
+    # INDIA (5 feeds)
+    # ========================================
+    {
+        'name': 'Times of India',
+        'url': 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'India'
+    },
+    {
+        'name': 'The Hindu',
+        'url': 'https://www.thehindu.com/news/feeder/default.rss',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'India'
+    },
+    {
+        'name': 'Hindustan Times',
+        'url': 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'India'
+    },
+    {
+        'name': 'NDTV',
+        'url': 'https://feeds.feedburner.com/ndtvnews-top-stories',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'India'
+    },
+    {
+        'name': 'News18',
+        'url': 'https://www.news18.com/commonfeeds/v1/eng/rss/india.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'India'
+    },
+    
+    # ========================================
+    # TURKIYE (4 feeds)
+    # ========================================
+    {
+        'name': 'Daily Sabah',
+        'url': 'https://www.dailysabah.com/rss/turkiye',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Turkiye'
+    },
+    {
+        'name': 'Hürriyet',
+        'url': 'https://www.hurriyet.com.tr/rss/anasayfa',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Turkiye'
+    },
+    {
+        'name': 'Cumhuriyet',
+        'url': 'https://www.cumhuriyet.com.tr/rss/turkiye',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Turkiye'
+    },
+    {
+        'name': 'Sözcü',
+        'url': 'https://www.sozcu.com.tr/feeds-rss-category-gundem',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Turkiye'
+    },
+    
+    # ========================================
+    # CHINA (2 feeds - China Daily Business already exists above)
+    # ========================================
+    {
+        'name': 'Global Times',
+        'url': 'https://www.globaltimes.cn/rss/outbrain.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'China'
+    },
+    {
+        'name': 'China Daily',
+        'url': 'http://www.chinadaily.com.cn/rss/china_rss.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'China'
+    },
+    
+    # ========================================
+    # RUSSIA (4 feeds)
+    # ========================================
+    {
+        'name': 'TASS',
+        'url': 'https://tass.com/rss/v2.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Russia'
+    },
+    {
+        'name': 'RT (Russia Today)',
+        'url': 'https://www.rt.com/rss/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Russia'
+    },
+    {
+        'name': 'RIA Novosti',
+        'url': 'https://ria.ru/export/rss2/index.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Russia'
+    },
+    {
+        'name': 'The Moscow Times',
+        'url': 'https://www.themoscowtimes.com/rss/news',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Russia'
+    },
+    
+    # ========================================
+    # IRELAND (3 feeds)
+    # ========================================
+    {
+        'name': 'The Irish Times',
+        'url': 'https://www.irishtimes.com/cmlink/news-1.1319192',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ireland'
+    },
+    {
+        'name': 'Independent.ie',
+        'url': 'https://www.independent.ie/rss/section/ada62966-6b00-4ead-a0ba-2c179a0730b0',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ireland'
+    },
+    {
+        'name': 'The Journal.ie',
+        'url': 'https://www.thejournal.ie/feed/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ireland'
+    },
+    
+    # ========================================
+    # SINGAPORE (2 feeds)
+    # ========================================
+    {
+        'name': 'The Straits Times Singapore',
+        'url': 'https://www.straitstimes.com/news/singapore/rss.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Singapore'
+    },
+    {
+        'name': 'Channel NewsAsia',
+        'url': 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Singapore'
+    },
+    
+    # ========================================
+    # PAKISTAN (4 feeds)
+    # ========================================
+    {
+        'name': 'Dawn',
+        'url': 'https://www.dawn.com/feeds/home',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Pakistan'
+    },
+    {
+        'name': 'Express Tribune',
+        'url': 'https://tribune.com.pk/feed/home',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Pakistan'
+    },
+    {
+        'name': 'The News International',
+        'url': 'https://www.thenews.com.pk/rss/1/1',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Pakistan'
+    },
+    {
+        'name': 'Geo TV',
+        'url': 'https://www.geo.tv/rss/1/1',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Pakistan'
+    },
+    
+    # ========================================
+    # UKRAINE (2 feeds)
+    # ========================================
+    {
+        'name': 'Ukrainska Pravda',
+        'url': 'https://www.pravda.com.ua/rss/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ukraine'
+    },
+    {
+        'name': 'UNIAN',
+        'url': 'https://rss.unian.net/site/news_eng.rss',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ukraine'
+    },
+    
+    # ========================================
+    # SOUTH KOREA (1 feed)
+    # ========================================
+    {
+        'name': 'Korea Times',
+        'url': 'https://feed.koreatimes.co.kr/k/southkorea.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'South Korea'
+    },
+    
+    # ========================================
+    # GERMANY (4 feeds)
+    # ========================================
+    {
+        'name': 'Der Spiegel International',
+        'url': 'https://www.spiegel.de/international/index.rss',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Germany'
+    },
+    {
+        'name': 'Frankfurter Allgemeine',
+        'url': 'https://www.faz.net/rss/aktuell/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Germany'
+    },
+    {
+        'name': 'Süddeutsche Zeitung',
+        'url': 'https://rss.sueddeutsche.de/rss/Topthemen',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Germany'
+    },
+    {
+        'name': 'Die Welt',
+        'url': 'https://www.welt.de/feeds/latest.rss',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Germany'
+    },
+    
+    # ========================================
+    # FRANCE (4 feeds)
+    # ========================================
+    {
+        'name': 'Le Monde',
+        'url': 'https://www.lemonde.fr/rss/une.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'France'
+    },
+    {
+        'name': 'Le Figaro',
+        'url': 'https://www.lefigaro.fr/rss/figaro_actualites.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'France'
+    },
+    {
+        'name': 'Libération',
+        'url': 'https://www.liberation.fr/arc/outboundfeeds/rss-all/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'France'
+    },
+    {
+        'name': "L'Obs",
+        'url': 'https://www.nouvelobs.com/rss.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'France'
+    },
+    
+    # ========================================
+    # SPAIN (3 feeds - El País English already exists above)
+    # ========================================
+    {
+        'name': 'La Vanguardia',
+        'url': 'https://www.lavanguardia.com/rss/home.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Spain'
+    },
+    {
+        'name': 'El Mundo',
+        'url': 'https://www.elmundo.es/rss/portada.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Spain'
+    },
+    {
+        'name': 'ABC España',
+        'url': 'https://www.abc.es/rss/feeds/abc_EspanaEspana.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Spain'
+    },
+    
+    # ========================================
+    # ITALY (3 feeds)
+    # ========================================
+    {
+        'name': 'ANSA',
+        'url': 'https://www.ansa.it/sito/ansait_rss.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Italy'
+    },
+    {
+        'name': 'Corriere della Sera',
+        'url': 'https://www.corriere.it/rss/homepage.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Italy'
+    },
+    {
+        'name': 'La Repubblica',
+        'url': 'https://www.repubblica.it/rss/homepage/rss2.0.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Italy'
+    },
+    
+    # ========================================
+    # JAPAN (2 feeds)
+    # ========================================
+    {
+        'name': 'Asahi Shimbun',
+        'url': 'https://rss.asahi.com/rss/asahi/newsheadlines.rdf',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Japan'
+    },
+    {
+        'name': 'The Japan News (Yomiuri)',
+        'url': 'https://japannews.yomiuri.co.jp/feed/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Japan'
+    },
+    
+    # ========================================
+    # AUSTRALIA (4 feeds)
+    # ========================================
+    {
+        'name': 'ABC News Australia',
+        'url': 'https://www.abc.net.au/news/feed/2942460/rss.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Australia'
+    },
+    {
+        'name': '9News Australia',
+        'url': 'https://www.9news.com.au/rss',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Australia'
+    },
+    {
+        'name': 'The Age',
+        'url': 'https://www.theage.com.au/rss/feed.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Australia'
+    },
+    {
+        'name': 'News.com.au',
+        'url': 'https://www.news.com.au/content-feeds/latest-news-national/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Australia'
+    },
+    
+    # ========================================
+    # CANADA (3 feeds)
+    # ========================================
+    {
+        'name': 'CBC Canada',
+        'url': 'https://www.cbc.ca/webfeed/rss/rss-canada',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Canada'
+    },
+    {
+        'name': 'Global News',
+        'url': 'https://globalnews.ca/feed/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Canada'
+    },
+    {
+        'name': 'National Post',
+        'url': 'https://nationalpost.com/feed',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Canada'
+    },
 ]
 
-# Total: ~287 Elite Premium RSS Feeds
+# Total: ~346 Elite Premium RSS Feeds (~287 existing + 59 new country feeds)
 # Includes: Politico (7), ABC News (1), CBS News (11), NBC News (1), Fox News (8), The Guardian (5), CBC Canada (2)
+# New Country Feeds: India (5), Turkiye (4), China (2+1), Russia (4), Ireland (3), Singapore (2),
+#                    Pakistan (4), Ukraine (2), South Korea (1), Germany (4), France (4),
+#                    Spain (3+1), Italy (3), Japan (2), Australia (4), Canada (3)
 # Focused on: Elite news, authoritative business, serious science, consumer fascination
 #
 # SPECIAL IMAGE HANDLING NOTES:
 # - ABC News: Use largest image size (width=1600, height=900) - marked with image_size='largest'
 # - CBS News: Fetch images from website via BrightData - marked with fetch_image_from_website=True
 # - The Guardian: Use largest image size (width=700) - marked with image_size='largest'
+#
+# NON-ENGLISH FEEDS NOTE:
+# - Some feeds (Turkiye, Russia, Germany, France, Spain, Italy, Japan, Ukraine) may return
+#   articles in local languages. Gemini and Claude handle multilingual content natively -
+#   they will read in any language and produce English output as instructed by the prompts.
 
 # Legacy compatibility - convert RSS_FEEDS to ALL_SOURCES tuple format
 ALL_SOURCES = [(feed['name'], feed['url']) for feed in RSS_FEEDS]
@@ -1680,6 +2106,7 @@ ALL_SOURCES = [(feed['name'], feed['url']) for feed in RSS_FEEDS]
 # Only print stats when run directly (not when imported)
 if __name__ == "__main__":
     print(f"Total RSS Feeds: {len(RSS_FEEDS)}")
+    
     print(f"\nBreakdown by category:")
     categories = {}
     for feed in RSS_FEEDS:
@@ -1690,4 +2117,14 @@ if __name__ == "__main__":
         count = categories[category]
         pct = count / len(RSS_FEEDS) * 100
         print(f"  {category.capitalize():15s}: {count:3d} feeds ({pct:5.1f}%)")
+    
+    print(f"\nCountry-tagged feeds:")
+    countries = {}
+    for feed in RSS_FEEDS:
+        country = feed.get('country', 'Global/Untagged')
+        countries[country] = countries.get(country, 0) + 1
+    
+    for country in sorted(countries.keys()):
+        count = countries[country]
+        print(f"  {country:25s}: {count:3d} feeds")
 

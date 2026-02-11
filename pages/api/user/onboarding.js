@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { home_country, followed_countries = [], followed_topics, email, user_id } = req.body;
+    const { home_country, followed_countries = [], followed_topics, email, user_id, auth_user_id } = req.body;
 
     // Validate home_country
     if (!home_country || !validCountryCodes.includes(home_country)) {
@@ -80,6 +80,11 @@ export default async function handler(req, res) {
       userData.email = email;
     }
 
+    // If auth_user_id provided (user is logged in), link immediately
+    if (auth_user_id) {
+      userData.auth_user_id = auth_user_id;
+    }
+
     // If user_id provided, update existing user
     if (user_id) {
       const { data, error } = await supabase
@@ -95,6 +100,32 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json({ success: true, user: data });
+    }
+
+    // If auth_user_id provided, check if a profile already exists for this auth user
+    if (auth_user_id) {
+      const { data: existingProfile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', auth_user_id)
+        .single();
+
+      if (existingProfile) {
+        // Update existing linked profile with new preferences
+        const { data, error } = await supabase
+          .from('users')
+          .update(userData)
+          .eq('id', existingProfile.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error updating linked user:', error);
+          return res.status(500).json({ error: 'Failed to update user' });
+        }
+
+        return res.status(200).json({ success: true, user: data });
+      }
     }
 
     // Create new user

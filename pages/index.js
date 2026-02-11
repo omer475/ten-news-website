@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
 import { sortArticlesByScore } from '../utils/sortArticles';
 import { calculateFinalScore } from '../lib/personalization';
+import PreferencesSettings from '../components/PreferencesSettings';
 import { 
   getUserInterests, 
   updateInterests, 
@@ -187,21 +188,58 @@ export default function Home({ initialNews, initialWorldEvents }) {
     // Skip check during SSR
     if (typeof window === 'undefined') return;
     
-    try {
-      const prefs = localStorage.getItem('todayplus_preferences');
-      if (prefs) {
-        const parsed = JSON.parse(prefs);
-        if (parsed.onboarding_completed) {
-          setOnboardingChecked(true);
-          return;
+    const checkOnboarding = async () => {
+      try {
+        // 1. Check localStorage first (fast path)
+        const prefs = localStorage.getItem('todayplus_preferences');
+        if (prefs) {
+          const parsed = JSON.parse(prefs);
+          if (parsed.onboarding_completed) {
+            setOnboardingChecked(true);
+            return;
+          }
         }
+        
+        // 2. No localStorage prefs - check if user is logged in with a linked profile
+        const storedUser = localStorage.getItem('tennews_user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            if (userData?.id) {
+              // Try to fetch personalization from server
+              const response = await fetch(`/api/user/preferences?auth_user_id=${userData.id}`);
+              if (response.ok) {
+                const serverPrefs = await response.json();
+                if (serverPrefs && serverPrefs.onboarding_completed) {
+                  // Restore preferences from server to localStorage
+                  const restoredPrefs = {
+                    home_country: serverPrefs.home_country,
+                    followed_countries: serverPrefs.followed_countries || [],
+                    followed_topics: serverPrefs.followed_topics || [],
+                    onboarding_completed: true,
+                    user_id: serverPrefs.id,
+                  };
+                  localStorage.setItem('todayplus_preferences', JSON.stringify(restoredPrefs));
+                  console.log('📦 Restored personalization from server (logged-in user, new device)');
+                  setOnboardingChecked(true);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Server preferences check failed:', e);
+          }
+        }
+        
+        // 3. No preferences anywhere - redirect to onboarding
+        router.replace('/onboarding');
+      } catch (e) {
+        // If everything fails, let them through
+        setOnboardingChecked(true);
       }
-      // No preferences or onboarding not completed - redirect to onboarding
-      router.replace('/onboarding');
-    } catch (e) {
-      // If localStorage fails, let them through
-      setOnboardingChecked(true);
-    }
+    };
+    
+    checkOnboarding();
   }, [router]);
 
   // Use initial data from SSR if available, otherwise start empty
@@ -1376,6 +1414,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [authError, setAuthError] = useState('');
   const [emailConfirmation, setEmailConfirmation] = useState(null); // { email: string } or null
   const [showResetPassword, setShowResetPassword] = useState(false); // Password reset modal
+  const [showAccountMenu, setShowAccountMenu] = useState(false); // Account dropdown menu
+  const [showPreferences, setShowPreferences] = useState(false); // Preferences panel
 
   // Form data persistence
   const [formData, setFormData] = useState({
@@ -1579,6 +1619,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
       if (event === 'SIGNED_IN') {
         console.log('✅ User signed in');
         setUser(session?.user || null);
+        
+        // Sync personalization with auth account (handles email confirmation callback, OAuth, etc.)
+        if (session?.user?.id) {
+          syncPersonalizationWithAuth(session.user.id);
+        }
       } else if (event === 'SIGNED_OUT') {
         // Only clear session if it was an explicit logout (no session in storage or user clicked logout)
         const storedSession = localStorage.getItem('tennews_session');
@@ -3134,6 +3179,58 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
 
   // Authentication functions
+  // Helper: Link auth account to personalization profile (or fetch from server)
+  const syncPersonalizationWithAuth = async (authUserId) => {
+    try {
+      // Get current personalization user_id from localStorage
+      const prefs = localStorage.getItem('todayplus_preferences');
+      let personalizationUserId = null;
+      if (prefs) {
+        try {
+          const parsed = JSON.parse(prefs);
+          personalizationUserId = parsed.user_id || null;
+        } catch (e) {}
+      }
+
+      const response = await fetch('/api/user/link-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auth_user_id: authUserId,
+          personalization_user_id: personalizationUserId,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (result.user && (result.action === 'fetched' || result.action === 'already_linked')) {
+          // Server has preferences (user logged in on new device or already linked)
+          // Update localStorage with server preferences
+          const serverPrefs = {
+            home_country: result.user.home_country,
+            followed_countries: result.user.followed_countries || [],
+            followed_topics: result.user.followed_topics || [],
+            onboarding_completed: result.user.onboarding_completed,
+            user_id: result.user.id,
+            created_at: result.user.created_at,
+          };
+          localStorage.setItem('todayplus_preferences', JSON.stringify(serverPrefs));
+          console.log('📦 Synced personalization from server');
+        } else if (result.action === 'linked' && result.user) {
+          // Successfully linked local profile to auth account
+          const currentPrefs = JSON.parse(localStorage.getItem('todayplus_preferences') || '{}');
+          currentPrefs.user_id = result.user.id;
+          localStorage.setItem('todayplus_preferences', JSON.stringify(currentPrefs));
+          console.log('🔗 Linked personalization to auth account');
+        }
+        // action === 'no_profile' means user has no personalization yet - they'll be redirected to onboarding
+      }
+    } catch (e) {
+      console.warn('Personalization sync failed (non-fatal):', e);
+    }
+  };
+
   const handleLogin = async (email, password) => {
     setAuthError('');
     try {
@@ -3154,6 +3251,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
         localStorage.setItem('tennews_user', JSON.stringify(data.user));
         if (data.session) {
           localStorage.setItem('tennews_session', JSON.stringify(data.session));
+        }
+        
+        // Sync personalization profile with auth account
+        if (data.user?.id) {
+          syncPersonalizationWithAuth(data.user.id);
         }
       } else {
         setAuthError(data.message || 'Login failed');
@@ -5465,6 +5567,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
           }
         }
 
+        @keyframes accountMenuIn {
+          from {
+            opacity: 0;
+            transform: scale(0.92) translateY(-6px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
         /* Language Switcher - EXACT Copy of Info Switcher */
         .language-switcher {
           --c-glass: #ffffff;
@@ -6195,7 +6308,152 @@ export default function Home({ initialNews, initialWorldEvents }) {
             <div className="header-right">
               <span className="time">{currentTime}</span>
               {user ? (
-                <button className="auth-btn" onClick={handleLogout} onTouchEnd={(e) => { e.preventDefault(); handleLogout(); }}>Log out</button>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    className="account-menu-btn"
+                    onClick={() => setShowAccountMenu(p => !p)}
+                    onTouchEnd={(e) => { e.preventDefault(); setShowAccountMenu(p => !p); }}
+                    style={{
+                      all: 'unset',
+                      cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                      pointerEvents: 'auto',
+                      touchAction: 'auto',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '6px 14px',
+                      borderRadius: 980,
+                      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      letterSpacing: '-0.01em',
+                      color: darkMode ? 'rgba(255,255,255,0.9)' : '#1d1d1f',
+                      background: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Account
+                  </button>
+                  {showAccountMenu && (
+                    <>
+                      {/* Invisible overlay to close menu when tapping outside */}
+                      <div
+                        onClick={() => setShowAccountMenu(false)}
+                        onTouchEnd={(e) => { e.preventDefault(); setShowAccountMenu(false); }}
+                        style={{
+                          position: 'fixed',
+                          inset: 0,
+                          zIndex: 99998,
+                        }}
+                      />
+                      <div
+                        className="account-dropdown"
+                        style={{
+                          position: 'absolute',
+                          top: 'calc(100% + 8px)',
+                          right: 0,
+                          minWidth: 200,
+                          borderRadius: 16,
+                          overflow: 'hidden',
+                          zIndex: 99999,
+                          backgroundColor: darkMode
+                            ? 'rgba(40, 40, 40, 0.92)'
+                            : 'rgba(255, 255, 255, 0.92)',
+                          backdropFilter: 'blur(60px) saturate(200%)',
+                          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
+                          boxShadow: `
+                            inset 0 0 0 0.5px ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.6)'},
+                            inset 0.9px 1.5px 0px -1px ${darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.9)'},
+                            inset -1px -1px 0px -1px ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)'},
+                            inset -0.15px -0.5px 2px 0px rgba(0,0,0,0.08),
+                            0px 1px 4px 0px rgba(0,0,0,0.06),
+                            0px 8px 24px 0px rgba(0,0,0,0.12),
+                            0px 16px 48px 0px rgba(0,0,0,0.08)
+                          `,
+                          animation: 'accountMenuIn 0.2s cubic-bezier(0.32, 0.72, 0, 1)',
+                        }}
+                      >
+                        {/* User email */}
+                        <div style={{
+                          padding: '14px 16px 10px',
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: darkMode ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)',
+                          letterSpacing: '-0.01em',
+                          borderBottom: `0.5px solid ${darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {user?.email || 'Account'}
+                        </div>
+                        {/* Preferences */}
+                        <button
+                          onClick={() => { setShowAccountMenu(false); setShowPreferences(true); }}
+                          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowAccountMenu(false); setShowPreferences(true); }}
+                          style={{
+                            all: 'unset',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            width: '100%',
+                            padding: '13px 16px',
+                            cursor: 'pointer',
+                            fontSize: 15,
+                            fontWeight: 500,
+                            color: darkMode ? 'rgba(255,255,255,0.9)' : '#1d1d1f',
+                            transition: 'background 0.15s',
+                            WebkitTapHighlightColor: 'transparent',
+                            boxSizing: 'border-box',
+                            borderBottom: `0.5px solid ${darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6, flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                          </svg>
+                          Preferences
+                        </button>
+                        {/* Log out */}
+                        <button
+                          onClick={() => { setShowAccountMenu(false); handleLogout(); }}
+                          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowAccountMenu(false); handleLogout(); }}
+                          style={{
+                            all: 'unset',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            width: '100%',
+                            padding: '13px 16px',
+                            cursor: 'pointer',
+                            fontSize: 15,
+                            fontWeight: 500,
+                            color: '#FF3B30',
+                            transition: 'background 0.15s',
+                            WebkitTapHighlightColor: 'transparent',
+                            boxSizing: 'border-box',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = darkMode ? 'rgba(255,59,48,0.08)' : 'rgba(255,59,48,0.04)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8, flexShrink: 0 }}>
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                          </svg>
+                          Log out
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <button className="subscribe-btn" onClick={() => setAuthModal('signup')} onTouchEnd={(e) => { e.preventDefault(); setAuthModal('signup'); }}>Sign up</button>
               )}
@@ -8830,6 +9088,14 @@ export default function Home({ initialNews, initialWorldEvents }) {
           </div>
         )}
       </div>
+
+      {/* Preferences Panel */}
+      {showPreferences && (
+        <PreferencesSettings
+          onClose={() => setShowPreferences(false)}
+          darkMode={darkMode}
+        />
+      )}
 
       {/* Authentication Modal - OUTSIDE main container for touch events */}
       {authModal && (

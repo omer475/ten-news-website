@@ -14,20 +14,26 @@ export default async function handler(req, res) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // GET - Fetch user preferences
+  // GET - Fetch user preferences (by user_id or auth_user_id)
   if (req.method === 'GET') {
-    const { user_id } = req.query;
+    const { user_id, auth_user_id } = req.query;
     
-    if (!user_id) {
-      return res.status(400).json({ error: 'user_id required' });
+    if (!user_id && !auth_user_id) {
+      return res.status(400).json({ error: 'user_id or auth_user_id required' });
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('users')
-        .select('id, home_country, followed_countries, followed_topics, onboarding_completed')
-        .eq('id', user_id)
-        .single();
+        .select('id, home_country, followed_countries, followed_topics, onboarding_completed, auth_user_id');
+
+      if (auth_user_id) {
+        query = query.eq('auth_user_id', auth_user_id);
+      } else {
+        query = query.eq('id', user_id);
+      }
+
+      const { data, error } = await query.single();
 
       if (error || !data) {
         return res.status(404).json({ error: 'User not found' });
