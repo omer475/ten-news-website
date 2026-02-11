@@ -254,10 +254,13 @@ export default function PreferencesSettings({ onClose, darkMode = false }) {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', sans-serif",
       WebkitFontSmoothing: 'antialiased',
       MozOsxFontSmoothing: 'grayscale',
+      touchAction: 'auto',
+      overscrollBehavior: 'contain',
     }}>
       {/* Backdrop */}
       <div
         onClick={handleClose}
+        onTouchEnd={(e) => { if (e.target === e.currentTarget) { e.preventDefault(); handleClose(); } }}
         style={{
           position: 'absolute',
           inset: 0,
@@ -266,26 +269,31 @@ export default function PreferencesSettings({ onClose, darkMode = false }) {
           WebkitBackdropFilter: 'blur(40px) saturate(200%)',
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          touchAction: 'none',
         }}
       />
 
       {/* Panel */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        maxHeight: '92vh',
-        background: bg,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        transform: visible ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
-        boxShadow: '0 -8px 40px rgba(0,0,0,0.15), 0 -2px 10px rgba(0,0,0,0.05)',
-      }}>
+      <div
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          maxHeight: '92vh',
+          background: bg,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          touchAction: 'auto',
+          transform: visible ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.15), 0 -2px 10px rgba(0,0,0,0.05)',
+        }}>
 
         {/* Handle bar */}
         <div style={{
@@ -347,7 +355,10 @@ export default function PreferencesSettings({ onClose, darkMode = false }) {
         <div ref={bodyRef} style={{
           flex: 1,
           overflowY: 'auto',
+          overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
           padding: '0 20px 140px',
         }}>
 
