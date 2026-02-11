@@ -757,7 +757,7 @@ def run_complete_pipeline():
     # Gemini rate limiter - allows max 2 concurrent Gemini API calls
     # This prevents 429 errors without adding any artificial delay.
     # Workers only wait if 2 other workers are already mid-Gemini-call.
-    gemini_semaphore = threading.Semaphore(2)
+    gemini_semaphore = threading.Semaphore(5)
     
     # Thread-safe counter for published articles
     published_lock = threading.Lock()
@@ -1328,7 +1328,7 @@ def run_complete_pipeline():
     # ==========================================
     # EXECUTE CLUSTERS IN PARALLEL (3 workers)
     # ==========================================
-    MAX_PARALLEL_CLUSTERS = 3
+    MAX_PARALLEL_CLUSTERS = 10
     print(f"\n⚡ Processing {len(clusters_to_process)} clusters with {MAX_PARALLEL_CLUSTERS} parallel workers...")
     
     with ThreadPoolExecutor(max_workers=MAX_PARALLEL_CLUSTERS) as cluster_executor:
