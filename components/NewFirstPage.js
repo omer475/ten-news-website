@@ -1197,7 +1197,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-start;
           padding: 0 24px;
           position: relative;
           z-index: 1;
@@ -1214,7 +1214,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           opacity: 1;
           z-index: 2;
           width: 100%;
-          min-height: 140px;
+          max-height: 240px;
+          overflow: hidden;
+          flex-shrink: 0;
           animation: greetingFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
@@ -1270,7 +1272,9 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
           font-size: 19px;
           letter-spacing: -0.3px;
           line-height: 1.5;
-          min-height: 58px;
+          min-height: 30px;
+          max-height: 58px;
+          overflow: hidden;
           margin-top: 10px;
         }
 
@@ -1645,6 +1649,7 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
             padding-right: 20px;
             width: 100%;
             margin: 0;
+            max-height: 220px;
           }
           .greeting-hi {
             font-size: 36px;
