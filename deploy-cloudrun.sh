@@ -158,7 +158,7 @@ gcloud run jobs deploy tennews-workflow \
     --region "$REGION" \
     --memory 2Gi \
     --cpu 2 \
-    --task-timeout 30m \
+    --task-timeout 60m \
     --max-retries 1 \
     --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,BRIGHTDATA_API_KEY=BRIGHTDATA_API_KEY:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest" \
     --quiet

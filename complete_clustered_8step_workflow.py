@@ -568,7 +568,7 @@ def fetch_rss_articles(max_articles_per_source=10):
     def fetch_one_source(source_name, url):
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-            response = requests.get(url, timeout=10, headers=headers, verify=False)
+            response = requests.get(url, timeout=5, headers=headers, verify=False)
             feed = feedparser.parse(response.content)
             
             source_articles = []
@@ -605,7 +605,7 @@ def fetch_rss_articles(max_articles_per_source=10):
             return (source_name, [])
     
     # Parallel fetch from all sources
-    with ThreadPoolExecutor(max_workers=30) as executor:
+    with ThreadPoolExecutor(max_workers=50) as executor:
         futures = [executor.submit(fetch_one_source, name, url) for name, url in ALL_SOURCES]
         for future in as_completed(futures):
             source_name, source_articles = future.result()
@@ -619,9 +619,25 @@ def fetch_rss_articles(max_articles_per_source=10):
     # Use 24-hour window to catch articles when system is offline for extended periods
     new_articles = get_new_articles_only(all_fetched_articles, supabase, time_window=1440)  # 24 hours
     
-    # Mark new articles as processed
-    for article in new_articles:
-        mark_article_as_processed(article, supabase)
+    # Mark new articles as processed (batched for speed)
+    if new_articles:
+        try:
+            batch_records = [{
+                'article_url': a.get('url'),
+                'source': a.get('source', 'Unknown'),
+                'title': a.get('title', 'No title'),
+                'published_date': a.get('published_date')
+            } for a in new_articles]
+            # Batch upsert in chunks of 50
+            for i in range(0, len(batch_records), 50):
+                chunk = batch_records[i:i+50]
+                supabase.table('processed_articles')\
+                    .upsert(chunk, on_conflict='article_url')\
+                    .execute()
+        except Exception as e:
+            print(f"⚠️  Batch dedup insert failed, falling back to sequential: {e}")
+            for article in new_articles:
+                mark_article_as_processed(article, supabase)
     
     # Show which sources had new articles
     new_by_source = {}
@@ -640,15 +656,58 @@ def fetch_rss_articles(max_articles_per_source=10):
 # COMPLETE PIPELINE
 # ==========================================
 
+def check_api_health():
+    """Quick health check on Anthropic API before starting pipeline.
+    Catches credit/billing issues early instead of failing on every cluster."""
+    print("🔑 Checking Anthropic API health...")
+    try:
+        test_response = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": anthropic_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            },
+            json={
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 10,
+                "messages": [{"role": "user", "content": "Hi"}]
+            },
+            timeout=15
+        )
+        if test_response.status_code >= 400:
+            try:
+                error_body = test_response.json()
+                error_msg = error_body.get('error', {}).get('message', test_response.text[:500])
+                error_type = error_body.get('error', {}).get('type', 'unknown')
+            except Exception:
+                error_msg = test_response.text[:500]
+                error_type = 'unknown'
+            print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: [{error_type}] {error_msg}")
+            print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
+            return False
+        print("✅ Anthropic API is healthy")
+        return True
+    except Exception as e:
+        print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: {type(e).__name__}: {str(e)[:300]}")
+        print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
+        return False
+
+
 def run_complete_pipeline():
     """Run the complete 9-step clustered news workflow"""
-    
+
     print("\n" + "="*80)
     print("🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW")
     print("="*80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
-    
+
+    # PRE-CHECK: Verify API keys are working before wasting time
+    if not check_api_health():
+        print("⚠️  Aborting pipeline - Anthropic API not available")
+        return
+
     # STEP 0: RSS Feed Collection
     articles = fetch_rss_articles()
     if not articles:
@@ -1744,8 +1803,20 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 print(f"   ⚠️  Rate limited (attempt {attempt + 1}/5) - waiting {wait_time}s...")
                 time.sleep(wait_time)
                 continue
-            
-            response.raise_for_status()
+
+            if response.status_code >= 400:
+                # Log the actual error body for debugging
+                try:
+                    error_body = response.json()
+                    error_msg = error_body.get('error', {}).get('message', response.text[:500])
+                    error_type = error_body.get('error', {}).get('type', 'unknown')
+                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): [{error_type}] {error_msg}")
+                except Exception:
+                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): HTTP {response.status_code} - {response.text[:500]}")
+                if attempt < 4:
+                    time.sleep(3)
+                continue
+
             response_json = response.json()
             
             # Check if response has expected structure

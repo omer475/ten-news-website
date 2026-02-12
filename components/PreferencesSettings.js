@@ -96,7 +96,7 @@ const GLASS_SHADOW = `
 // ============================================
 // MAIN COMPONENT
 // ============================================
-export default function PreferencesSettings({ onClose, darkMode = false }) {
+export default function PreferencesSettings({ onClose, onSave, darkMode = false }) {
   const [homeCountry, setHomeCountry] = useState(null);
   const [followCountries, setFollowCountries] = useState([]);
   const [selectedTopics, setSelectedTopics] = useState([]);
@@ -105,6 +105,7 @@ export default function PreferencesSettings({ onClose, darkMode = false }) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [visible, setVisible] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [authUserId, setAuthUserId] = useState(null);
 
   // Picker states
   const [showHomePicker, setShowHomePicker] = useState(false);
@@ -123,6 +124,14 @@ export default function PreferencesSettings({ onClose, darkMode = false }) {
         if (parsed.followed_countries) setFollowCountries(parsed.followed_countries);
         if (parsed.followed_topics) setSelectedTopics(parsed.followed_topics);
         if (parsed.user_id) setUserId(parsed.user_id);
+      }
+      // Also get auth_user_id from auth session (fallback for server save)
+      const storedUser = localStorage.getItem('tennews_user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          if (userData?.id) setAuthUserId(userData.id);
+        } catch (e) {}
       }
     } catch (e) {
       console.warn('Failed to load preferences:', e);
@@ -199,19 +208,23 @@ export default function PreferencesSettings({ onClose, darkMode = false }) {
       };
       localStorage.setItem('todayplus_preferences', JSON.stringify(prefs));
 
-      // Save to server if we have a user_id
-      if (userId) {
+      // Save to server if we have a user_id or auth_user_id
+      if (userId || authUserId) {
         await fetch('/api/user/preferences', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: userId,
+            user_id: userId || undefined,
+            auth_user_id: !userId ? authUserId : undefined,
             home_country: homeCountry,
             followed_countries: followCountries,
             followed_topics: selectedTopics,
           }),
         });
       }
+
+      // Notify parent to re-sort feed with new preferences
+      if (onSave) onSave();
 
       setDirty(false);
       setSaveSuccess(true);

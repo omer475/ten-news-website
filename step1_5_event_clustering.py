@@ -953,7 +953,7 @@ Nothing else."""
         return results
         
     except Exception as e:
-        print(f"  ❌ AI similarity check error: {e}")
+        print(f"  ❌ AI similarity check error: {type(e).__name__}: {str(e)[:300]}")
         print(f"  ℹ️  Falling back to legacy string-based matching for all clusters")
         # Return None for all clusters to signal "use fallback" (not "AI said no match")
         # This ensures the legacy keyword/entity matching is used when AI is unavailable
@@ -1066,7 +1066,7 @@ Reply ONLY the matches."""
         return results
         
     except Exception as e:
-        print(f"  ❌ Batch AI similarity check error: {e}")
+        print(f"  ❌ Batch AI similarity check error: {type(e).__name__}: {str(e)[:300]}")
         # Return None for all to signal "use fallback"
         results = {}
         for article_idx, _ in articles_with_titles:

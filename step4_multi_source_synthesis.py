@@ -567,16 +567,20 @@ class MultiSourceSynthesizer:
                     print(f"   ⚠️ Rate limited (attempt {attempt + 1}/{self.config.retry_attempts}), waiting {wait_time}s...")
                     time.sleep(wait_time)
                     continue
-                
+
                 if response.status_code >= 400:
                     # Log the actual error body for debugging
                     try:
                         error_body = response.json()
-                        print(f"   ⚠️ API error {response.status_code}: {error_body.get('error', {}).get('message', response.text[:200])}")
-                    except:
-                        print(f"   ⚠️ API error {response.status_code}: {response.text[:200]}")
-                
-                response.raise_for_status()
+                        error_msg = error_body.get('error', {}).get('message', response.text[:500])
+                        error_type = error_body.get('error', {}).get('type', 'unknown')
+                        print(f"   ⚠️  API error (attempt {attempt + 1}/{self.config.retry_attempts}): [{error_type}] {error_msg}")
+                    except Exception:
+                        print(f"   ⚠️  API error (attempt {attempt + 1}/{self.config.retry_attempts}): HTTP {response.status_code} - {response.text[:500]}")
+                    if attempt < self.config.retry_attempts - 1:
+                        time.sleep(self.config.retry_delay)
+                    continue
+
                 response_json = response.json()
                 
                 # Extract response text from Claude format
@@ -606,10 +610,11 @@ class MultiSourceSynthesizer:
                 if attempt < self.config.retry_attempts - 1:
                     time.sleep(self.config.retry_delay)
             except Exception as e:
-                print(f"   ⚠️  API error (attempt {attempt + 1}/{self.config.retry_attempts}): {str(e)[:120]}")
+                print(f"   ⚠️  Unexpected error (attempt {attempt + 1}/{self.config.retry_attempts}): {type(e).__name__}: {str(e)[:300]}")
                 if attempt < self.config.retry_attempts - 1:
                     time.sleep(self.config.retry_delay)
-        
+
+        print(f"   ❌ Failed after {self.config.retry_attempts} attempts")
         return None  # Failed after all retries
     
     def _normalize_output(self, result: Dict) -> Dict:

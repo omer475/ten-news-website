@@ -49,10 +49,10 @@ export default async function handler(req, res) {
 
   // PATCH - Update user preferences
   if (req.method === 'PATCH') {
-    const { user_id, home_country, followed_countries, followed_topics } = req.body;
+    const { user_id, auth_user_id, home_country, followed_countries, followed_topics } = req.body;
 
-    if (!user_id) {
-      return res.status(400).json({ error: 'user_id required' });
+    if (!user_id && !auth_user_id) {
+      return res.status(400).json({ error: 'user_id or auth_user_id required' });
     }
 
     try {
@@ -107,12 +107,14 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'No valid fields to update' });
       }
 
-      const { data, error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', user_id)
-        .select()
-        .single();
+      // Update by user_id or auth_user_id (fallback for logged-in users without stored user_id)
+      let query = supabase.from('users').update(updateData);
+      if (user_id) {
+        query = query.eq('id', user_id);
+      } else {
+        query = query.eq('auth_user_id', auth_user_id);
+      }
+      const { data, error } = await query.select().single();
 
       if (error) {
         console.error('Error updating preferences:', error);
