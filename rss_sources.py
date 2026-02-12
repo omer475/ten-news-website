@@ -1,9 +1,8 @@
 # TEN NEWS - CLEANED ELITE RSS FEED LIST
-# Removed: 49 low-quality/specialized sources
-# Total: ~346 Premium Elite Sources (~287 existing + 59 new country feeds)
+# Total: ~340 Premium Elite Sources
 # Categories: News, Business, Technology, Science, Consumer
-# Countries: India, Turkiye, China, Russia, Ireland, Singapore, Pakistan,
-#            Ukraine, South Korea, Germany, France, Spain, Italy, Japan, Australia, Canada
+# Countries (15): USA, UK, Canada, Australia, India, Germany, France, Spain,
+#                 Italy, Ukraine, Russia, Turkiye, China, Japan, Israel
 
 RSS_FEEDS = [
     
@@ -474,12 +473,6 @@ RSS_FEEDS = [
         'country': 'Spain'
     },
     {
-        'name': 'Buenos Aires Herald',
-        'url': 'https://buenosairesherald.com/feed',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
         'name': 'The Times of Israel',
         'url': 'https://www.timesofisrael.com/feed/',
         'category': 'news',
@@ -494,12 +487,6 @@ RSS_FEEDS = [
     {
         'name': 'UN News',
         'url': 'https://news.un.org/feed/subscribe/en/news/all/rss.xml',
-        'category': 'news',
-        'tier': 'premium'
-    },
-    {
-        'name': 'The East African',
-        'url': 'https://www.theeastafrican.co.ke/tea/rss',
         'category': 'news',
         'tier': 'premium'
     },
@@ -1708,7 +1695,7 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # TURKIYE (4 feeds)
+    # TURKIYE (6 feeds)
     # ========================================
     {
         'name': 'Daily Sabah',
@@ -1738,9 +1725,23 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Turkiye'
     },
+    {
+        'name': 'TRT World',
+        'url': 'https://www.trtworld.com/feed/rss.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Turkiye'
+    },
+    {
+        'name': 'Anadolu Agency English',
+        'url': 'https://www.aa.com.tr/en/rss/default?cat=guncel',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Turkiye'
+    },
     
     # ========================================
-    # CHINA (2 feeds - China Daily Business already exists above)
+    # CHINA (4 feeds - China Daily Business already exists above)
     # ========================================
     {
         'name': 'Global Times',
@@ -1756,9 +1757,23 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'China'
     },
+    {
+        'name': 'Sixth Tone',
+        'url': 'https://www.sixthtone.com/rss',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'China'
+    },
+    {
+        'name': 'Caixin Global',
+        'url': 'https://gateway.caixin.com/api/data/global/feedlyRss.xml',
+        'category': 'business',
+        'tier': 'premium',
+        'country': 'China'
+    },
     
     # ========================================
-    # RUSSIA (4 feeds)
+    # RUSSIA (6 feeds)
     # ========================================
     {
         'name': 'TASS',
@@ -1788,88 +1803,27 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Russia'
     },
-    
-    # ========================================
-    # IRELAND (3 feeds)
-    # ========================================
     {
-        'name': 'The Irish Times',
-        'url': 'https://www.irishtimes.com/cmlink/news-1.1319192',
+        'name': 'Meduza English',
+        'url': 'https://meduza.io/rss/en/all',
         'category': 'news',
         'tier': 'premium',
-        'country': 'Ireland'
+        'country': 'Russia'
     },
     {
-        'name': 'Independent.ie',
-        'url': 'https://www.independent.ie/rss/section/ada62966-6b00-4ead-a0ba-2c179a0730b0',
+        'name': 'Russia in Global Affairs',
+        'url': 'https://eng.globalaffairs.ru/feed',
         'category': 'news',
         'tier': 'premium',
-        'country': 'Ireland'
-    },
-    {
-        'name': 'The Journal.ie',
-        'url': 'https://www.thejournal.ie/feed/',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Ireland'
+        'country': 'Russia'
     },
     
     # ========================================
-    # SINGAPORE (2 feeds)
+    # UKRAINE (5 feeds)
     # ========================================
     {
-        'name': 'The Straits Times Singapore',
-        'url': 'https://www.straitstimes.com/news/singapore/rss.xml',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Singapore'
-    },
-    {
-        'name': 'Channel NewsAsia',
-        'url': 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Singapore'
-    },
-    
-    # ========================================
-    # PAKISTAN (4 feeds)
-    # ========================================
-    {
-        'name': 'Dawn',
-        'url': 'https://www.dawn.com/feeds/home',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Pakistan'
-    },
-    {
-        'name': 'Express Tribune',
-        'url': 'https://tribune.com.pk/feed/home',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Pakistan'
-    },
-    {
-        'name': 'The News International',
-        'url': 'https://www.thenews.com.pk/rss/1/1',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Pakistan'
-    },
-    {
-        'name': 'Geo TV',
-        'url': 'https://www.geo.tv/rss/1/1',
-        'category': 'news',
-        'tier': 'premium',
-        'country': 'Pakistan'
-    },
-    
-    # ========================================
-    # UKRAINE (2 feeds)
-    # ========================================
-    {
-        'name': 'Ukrainska Pravda',
-        'url': 'https://www.pravda.com.ua/rss/',
+        'name': 'Ukrainska Pravda (English)',
+        'url': 'https://www.pravda.com.ua/eng/rss/',
         'category': 'news',
         'tier': 'premium',
         'country': 'Ukraine'
@@ -1881,16 +1835,26 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Ukraine'
     },
-    
-    # ========================================
-    # SOUTH KOREA (1 feed)
-    # ========================================
     {
-        'name': 'Korea Times',
-        'url': 'https://feed.koreatimes.co.kr/k/southkorea.xml',
+        'name': 'The Kyiv Independent',
+        'url': 'https://kyivindependent.com/feed/news/',
         'category': 'news',
         'tier': 'premium',
-        'country': 'South Korea'
+        'country': 'Ukraine'
+    },
+    {
+        'name': 'NV.ua English',
+        'url': 'https://english.nv.ua/rss/all.xml',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ukraine'
+    },
+    {
+        'name': 'Kyiv Post',
+        'url': 'https://www.kyivpost.com/feed',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Ukraine'
     },
     
     # ========================================
@@ -2008,7 +1972,7 @@ RSS_FEEDS = [
     },
     
     # ========================================
-    # JAPAN (2 feeds)
+    # JAPAN (5 feeds)
     # ========================================
     {
         'name': 'Asahi Shimbun',
@@ -2020,6 +1984,27 @@ RSS_FEEDS = [
     {
         'name': 'The Japan News (Yomiuri)',
         'url': 'https://japannews.yomiuri.co.jp/feed/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Japan'
+    },
+    {
+        'name': 'Japan Today',
+        'url': 'https://www.japantoday.com/feed',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Japan'
+    },
+    {
+        'name': 'nippon.com',
+        'url': 'https://www.nippon.com/en/feed/',
+        'category': 'news',
+        'tier': 'premium',
+        'country': 'Japan'
+    },
+    {
+        'name': 'NHK News',
+        'url': 'https://www3.nhk.or.jp/rss/news/cat0.xml',
         'category': 'news',
         'tier': 'premium',
         'country': 'Japan'
@@ -2083,11 +2068,11 @@ RSS_FEEDS = [
     },
 ]
 
-# Total: ~346 Elite Premium RSS Feeds (~287 existing + 59 new country feeds)
+# Total: ~340 Elite Premium RSS Feeds
 # Includes: Politico (7), ABC News (1), CBS News (11), NBC News (1), Fox News (8), The Guardian (5), CBC Canada (2)
-# New Country Feeds: India (5), Turkiye (4), China (2+1), Russia (4), Ireland (3), Singapore (2),
-#                    Pakistan (4), Ukraine (2), South Korea (1), Germany (4), France (4),
-#                    Spain (3+1), Italy (3), Japan (2), Australia (4), Canada (3)
+# Country Feeds: India (5), Turkiye (6), China (4+1), Russia (6), Ukraine (5),
+#                Germany (4), France (4), Spain (3+1), Italy (3), Japan (5),
+#                Australia (4), Canada (3)
 # Focused on: Elite news, authoritative business, serious science, consumer fascination
 #
 # SPECIAL IMAGE HANDLING NOTES:
@@ -2096,7 +2081,7 @@ RSS_FEEDS = [
 # - The Guardian: Use largest image size (width=700) - marked with image_size='largest'
 #
 # NON-ENGLISH FEEDS NOTE:
-# - Some feeds (Turkiye, Russia, Germany, France, Spain, Italy, Japan, Ukraine) may return
+# - Some feeds (Turkiye, Russia, Germany, France, Spain, Italy, Japan) may return
 #   articles in local languages. Gemini and Claude handle multilingual content natively -
 #   they will read in any language and produce English output as instructed by the prompts.
 
