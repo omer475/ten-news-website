@@ -8,7 +8,6 @@ const COUNTRY_GROUPS = [
   { continent: "Americas", countries: [
     { code: "usa", flag: "\u{1F1FA}\u{1F1F8}", name: "United States" },
     { code: "canada", flag: "\u{1F1E8}\u{1F1E6}", name: "Canada" },
-    { code: "brazil", flag: "\u{1F1E7}\u{1F1F7}", name: "Brazil" },
   ]},
   { continent: "Europe", countries: [
     { code: "uk", flag: "\u{1F1EC}\u{1F1E7}", name: "United Kingdom" },
@@ -19,33 +18,27 @@ const COUNTRY_GROUPS = [
     { code: "ukraine", flag: "\u{1F1FA}\u{1F1E6}", name: "Ukraine" },
     { code: "russia", flag: "\u{1F1F7}\u{1F1FA}", name: "Russia" },
     { code: "turkiye", flag: "\u{1F1F9}\u{1F1F7}", name: "T\u00FCrkiye" },
-    { code: "ireland", flag: "\u{1F1EE}\u{1F1EA}", name: "Ireland" },
   ]},
   { continent: "Asia & Pacific", countries: [
     { code: "china", flag: "\u{1F1E8}\u{1F1F3}", name: "China" },
     { code: "india", flag: "\u{1F1EE}\u{1F1F3}", name: "India" },
     { code: "japan", flag: "\u{1F1EF}\u{1F1F5}", name: "Japan" },
-    { code: "south_korea", flag: "\u{1F1F0}\u{1F1F7}", name: "South Korea" },
-    { code: "pakistan", flag: "\u{1F1F5}\u{1F1F0}", name: "Pakistan" },
-    { code: "singapore", flag: "\u{1F1F8}\u{1F1EC}", name: "Singapore" },
     { code: "australia", flag: "\u{1F1E6}\u{1F1FA}", name: "Australia" },
   ]},
-  { continent: "Middle East & Africa", countries: [
+  { continent: "Middle East", countries: [
     { code: "israel", flag: "\u{1F1EE}\u{1F1F1}", name: "Israel" },
-    { code: "nigeria", flag: "\u{1F1F3}\u{1F1EC}", name: "Nigeria" },
-    { code: "south_africa", flag: "\u{1F1FF}\u{1F1E6}", name: "South Africa" },
   ]},
 ];
 const ALL_COUNTRIES = COUNTRY_GROUPS.flatMap(g => g.countries);
 
 // Map ISO 3166-1 alpha-2 codes (from IP geolocation) to our internal codes
 const ISO_TO_CODE = {
-  US: "usa", CA: "canada", BR: "brazil",
+  US: "usa", CA: "canada",
   GB: "uk", DE: "germany", FR: "france", ES: "spain", IT: "italy",
-  UA: "ukraine", RU: "russia", TR: "turkiye", IE: "ireland",
-  CN: "china", IN: "india", JP: "japan", KR: "south_korea",
-  PK: "pakistan", SG: "singapore", AU: "australia",
-  IL: "israel", NG: "nigeria", ZA: "south_africa",
+  UA: "ukraine", RU: "russia", TR: "turkiye",
+  CN: "china", IN: "india", JP: "japan",
+  AU: "australia",
+  IL: "israel",
 };
 
 const TOPIC_CATEGORIES = [
