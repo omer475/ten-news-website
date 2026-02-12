@@ -2631,25 +2631,28 @@ export default function Home({ initialNews, initialWorldEvents }) {
                     newsArticles = newsArticles.map(article => {
                       const articleCountries = article.countries || [];
                       const articleTopics = article.topics || [];
-                      
+
                       // Skip if article has no country/topic data
                       if (articleCountries.length === 0 && articleTopics.length === 0) {
                         return article;
                       }
-                      
+
+                      // Use stored base_score if available (prevents double-boosting on re-personalization)
+                      const baseScore = article.base_score || article.final_score;
                       const scored = calculateFinalScore(
-                        { ...article, base_score: article.final_score, countries: articleCountries, topics: articleTopics },
+                        { ...article, base_score: baseScore, countries: articleCountries, topics: articleTopics },
                         userPrefs
                       );
-                      
-                      const boost = scored.final_score - article.final_score;
+
+                      const boost = scored.final_score - baseScore;
                       if (boost > 0) {
                         boostedCount++;
                         console.log(`  📈 +${boost} boost for "${article.title?.substring(0, 50)}..." [${scored.match_reasons.join(', ')}]`);
                       }
-                      
+
                       return {
                         ...article,
+                        base_score: baseScore,  // Preserve original score for re-personalization
                         final_score: scored.final_score,
                         match_reasons: scored.match_reasons,
                       };
@@ -3177,6 +3180,65 @@ export default function Home({ initialNews, initialWorldEvents }) {
   };
 
 
+
+  // Re-apply personalization after user changes preferences in the settings panel
+  const onPreferencesSaved = () => {
+    try {
+      const prefsRaw = localStorage.getItem('todayplus_preferences');
+      if (!prefsRaw) return;
+      const prefs = JSON.parse(prefsRaw);
+      if (!prefs.onboarding_completed || !prefs.home_country) return;
+
+      const userPrefs = {
+        home_country: prefs.home_country,
+        followed_countries: prefs.followed_countries || [],
+        followed_topics: prefs.followed_topics || [],
+      };
+
+      console.log('🔄 [Personalization] Re-applying preferences after save:', userPrefs);
+
+      setStories(prevStories => {
+        if (prevStories.length <= 1) return prevStories;
+
+        const openingStory = prevStories[0];
+        let newsArticles = prevStories.slice(1);
+
+        // Re-score with new preferences (using base_score to avoid double-boosting)
+        newsArticles = newsArticles.map(article => {
+          const articleCountries = article.countries || [];
+          const articleTopics = article.topics || [];
+          if (articleCountries.length === 0 && articleTopics.length === 0) return article;
+
+          const baseScore = article.base_score || article.final_score;
+          const scored = calculateFinalScore(
+            { ...article, base_score: baseScore, countries: articleCountries, topics: articleTopics },
+            userPrefs
+          );
+
+          return {
+            ...article,
+            base_score: baseScore,
+            final_score: scored.final_score,
+            match_reasons: scored.match_reasons,
+          };
+        });
+
+        // Re-sort by boosted score
+        const sortedNews = sortArticlesByScore(newsArticles);
+
+        // Re-apply interest-based ranking if available
+        const userInterests = getUserInterests();
+        const finalNews = Object.keys(userInterests).length > 0
+          ? rankArticles(sortedNews, 0.7)
+          : sortedNews;
+
+        console.log(`🔄 [Personalization] Feed re-sorted with new preferences`);
+        return [openingStory, ...finalNews];
+      });
+    } catch (e) {
+      console.warn('⚠️ Error re-applying preferences:', e);
+    }
+  };
 
   // Authentication functions
   // Helper: Link auth account to personalization profile (or fetch from server)
@@ -9093,6 +9155,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
       {showPreferences && (
         <PreferencesSettings
           onClose={() => setShowPreferences(false)}
+          onSave={onPreferencesSaved}
           darkMode={darkMode}
         />
       )}
