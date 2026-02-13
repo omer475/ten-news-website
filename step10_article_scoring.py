@@ -249,15 +249,33 @@ You will receive previously scored articles as anchors. Use them to maintain con
 
 ---
 
+## PERSONALIZATION RELEVANCE
+
+In addition to the global score, output relevance scores for any matching topics and countries from the lists below. Only include topics/countries that are ACTUALLY relevant to the article. Score each from 0-100:
+- **90-100**: Core subject (an F1 race result → f1: 95)
+- **60-89**: Strongly related (a startup acquisition → startups: 75)
+- **30-59**: Somewhat related (a tech company mentioned → tech_industry: 40)
+- **0-29**: Barely related — don't include these, omit them
+
+**Available topics:** economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, entertainment, music, gaming, travel
+
+**Available countries:** usa, uk, china, russia, germany, france, spain, italy, ukraine, turkiye, india, japan, israel, canada, australia
+
+Only output topics/countries with relevance >= 30. Most articles will match 1-4 topics and 0-2 countries.
+
+---
+
 ## OUTPUT FORMAT
 
-Return ONLY a JSON object with the score:
+Return ONLY a JSON object with the score and relevance:
 
 ```json
-{"score": 850}
+{"score": 850, "topic_relevance": {"f1": 95, "startups": 0}, "country_relevance": {"turkiye": 85}}
 ```
 
-Nothing else. Just the score.
+- `topic_relevance`: only include topics with relevance >= 30
+- `country_relevance`: only include countries with relevance >= 30
+- If no topics/countries are relevant, use empty objects: `{}`
 """
 
 
@@ -324,9 +342,10 @@ def score_article(
     api_key: str,
     reference_articles: Optional[List[Dict]] = None,
     max_retries: int = 3
-) -> int:
+) -> Dict:
     """
     Score a written article from 0-1000 using Gemini V18 scoring with reference calibration.
+    Also returns topic and country relevance scores for personalization.
 
     Args:
         title: Article title
@@ -336,7 +355,7 @@ def score_article(
         max_retries: Maximum retry attempts
 
     Returns:
-        Score from 0-1000 (all scored articles are published)
+        Dict with 'score' (0-1000), 'topic_relevance' (dict), 'country_relevance' (dict)
     """
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
@@ -671,7 +690,7 @@ Both deserve visibility. Score accordingly.
     for bullet in bullets:
         article_text += f"- {bullet}\n"
     
-    article_text += '\nReturn JSON: {"score": XXX}'
+    article_text += '\nReturn JSON: {"score": XXX, "topic_relevance": {...}, "country_relevance": {...}}'
     
     # Prepare request
     request_data = {
@@ -693,11 +712,13 @@ Both deserve visibility. Score accordingly.
         }
     }
     
+    default_result = {'score': 500, 'topic_relevance': {}, 'country_relevance': {}}
+
     # Retry logic
     for attempt in range(max_retries):
         try:
             response = requests.post(url, json=request_data, timeout=60)
-            
+
             if response.status_code == 429:
                 wait_time = (2 ** attempt) * 15
                 if attempt < max_retries - 1:
@@ -706,28 +727,36 @@ Both deserve visibility. Score accordingly.
                     continue
                 else:
                     print(f"  ❌ Rate limit exceeded")
-                    return 500  # Default score on failure
-            
+                    return default_result
+
             response.raise_for_status()
             result = response.json()
-            
+
             if 'candidates' in result and len(result['candidates']) > 0:
                 candidate = result['candidates'][0]
                 if 'content' in candidate and 'parts' in candidate['content']:
                     response_text = candidate['content']['parts'][0]['text']
-                    print(f"   🔍 Scoring raw response: {response_text[:200]}")
-                    
+                    print(f"   🔍 Scoring raw response: {response_text[:300]}")
+
                     # Parse JSON response
                     try:
                         parsed = json.loads(response_text)
 
-                        # Preferred format: {"score": 850}
+                        # Extract relevance data from parsed response
+                        topic_relevance = {}
+                        country_relevance = {}
+
+                        # Preferred format: {"score": 850, "topic_relevance": {...}, "country_relevance": {...}}
                         if isinstance(parsed, dict) and 'score' in parsed:
                             score = parsed.get('score', 500)
+                            topic_relevance = parsed.get('topic_relevance', {})
+                            country_relevance = parsed.get('country_relevance', {})
                         # Array format: [{"title": "...", "score": 865, ...}]
                         elif isinstance(parsed, list) and len(parsed) > 0:
                             first = parsed[0] if isinstance(parsed[0], dict) else {}
                             score = first.get('score', 500)
+                            topic_relevance = first.get('topic_relevance', {})
+                            country_relevance = first.get('country_relevance', {})
                         # Alternative dict format: {"scores": [{"title": "...", "score": 920}, ...]}
                         elif isinstance(parsed, dict) and isinstance(parsed.get('scores'), list):
                             scores = parsed.get('scores') or []
@@ -741,26 +770,39 @@ Both deserve visibility. Score accordingly.
                             if best is None and scores:
                                 best = scores[0] if isinstance(scores[0], dict) else None
                             score = (best or {}).get('score', 500)
+                            topic_relevance = (best or {}).get('topic_relevance', {})
+                            country_relevance = (best or {}).get('country_relevance', {})
                         else:
                             # Last resort: try to find any number in the response
                             import re as _re
                             num_match = _re.search(r'\b(\d{1,4})\b', response_text)
                             score = int(num_match.group(1)) if num_match else 500
-                        
+
                         # Validate score range
                         score = max(0, min(1000, int(score)))
-                        return score
-                        
+
+                        # Clean relevance dicts: only keep valid entries with int values >= 30
+                        if isinstance(topic_relevance, dict):
+                            topic_relevance = {k: int(v) for k, v in topic_relevance.items() if isinstance(v, (int, float)) and int(v) >= 30}
+                        else:
+                            topic_relevance = {}
+                        if isinstance(country_relevance, dict):
+                            country_relevance = {k: int(v) for k, v in country_relevance.items() if isinstance(v, (int, float)) and int(v) >= 30}
+                        else:
+                            country_relevance = {}
+
+                        return {'score': score, 'topic_relevance': topic_relevance, 'country_relevance': country_relevance}
+
                     except json.JSONDecodeError:
                         # Try to extract score from text
                         import re
                         match = re.search(r'"score"\s*:\s*(\d+)', response_text)
                         if match:
-                            return max(0, min(1000, int(match.group(1))))
-                        return 500  # Default
-            
-            return 500  # Default on parsing failure
-            
+                            return {'score': max(0, min(1000, int(match.group(1)))), 'topic_relevance': {}, 'country_relevance': {}}
+                        return default_result
+
+            return default_result  # Default on parsing failure
+
         except requests.exceptions.RequestException as e:
             if attempt < max_retries - 1:
                 wait_time = (2 ** attempt) * 5
@@ -768,12 +810,12 @@ Both deserve visibility. Score accordingly.
                 time.sleep(wait_time)
                 continue
             print(f"  ❌ Scoring failed: {e}")
-            return 500  # Default score on failure
+            return default_result
         except Exception as e:
             print(f"  ❌ Unexpected error in scoring: {e}")
-            return 500  # Default score on failure
-    
-    return 500  # Default if all retries fail
+            return default_result
+
+    return default_result  # Default if all retries fail
 
 
 def score_article_with_references(
@@ -781,18 +823,18 @@ def score_article_with_references(
     bullets: List[str],
     api_key: str,
     supabase: Optional[Client] = None
-) -> int:
+) -> Dict:
     """
     Score an article with automatic reference fetching from Supabase.
-    
+
     Args:
         title: Article title
         bullets: Summary bullets
         api_key: Google AI API key
         supabase: Supabase client (optional, will create if not provided)
-    
+
     Returns:
-        Score from 0-1000
+        Dict with 'score' (0-1000), 'topic_relevance' (dict), 'country_relevance' (dict)
     """
     if supabase is None:
         supabase = get_supabase_client()

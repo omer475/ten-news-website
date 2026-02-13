@@ -2273,6 +2273,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
               interest_tags: article.interest_tags || [],  // For personalization
               countries: article.countries || [],  // For country/topic personalization
               topics: article.topics || [],  // For country/topic personalization
+              topic_relevance: article.topic_relevance || {},  // AI relevance scores
+              country_relevance: article.country_relevance || {},  // AI relevance scores
               world_event: article.world_event || null  // Event link if part of a world event
             };
           });
@@ -2570,9 +2572,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 interest_tags: article.interest_tags || [],  // For personalization
                 countries: article.countries || [],  // For country/topic personalization
                 topics: article.topics || [],  // For country/topic personalization
+                topic_relevance: article.topic_relevance || {},  // AI relevance scores
+                country_relevance: article.country_relevance || {},  // AI relevance scores
                 world_event: article.world_event || null  // Event link if part of a world event
               };
-               
+
                processedStories.push(storyData);
              });
             
@@ -9906,6 +9910,10 @@ export async function getServerSideProps({ req, res }) {
               components,
               final_score: article.final_score || 0,
               interest_tags: article.interest_tags || [],
+              countries: article.countries || [],
+              topics: article.topics || [],
+              topic_relevance: article.topic_relevance || {},
+              country_relevance: article.country_relevance || {},
               publishedAt: article.publishedAt || article.published_at || article.created_at,
               world_event: article.world_event || null
             };

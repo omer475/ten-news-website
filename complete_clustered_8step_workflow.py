@@ -1254,6 +1254,8 @@ def run_complete_pipeline():
             interest_tags = []
             article_countries = []
             article_topics = []
+            topic_relevance = {}
+            country_relevance = {}
             
             # Wrappers that acquire gemini semaphore before calling API
             def _score_with_sem():
@@ -1273,8 +1275,20 @@ def run_complete_pipeline():
                 tagging_future = step_executor.submit(_tagging_with_sem)
                 
                 try:
-                    article_score = score_future.result(timeout=30)
+                    score_result = score_future.result(timeout=30)
+                    # score_article now returns a dict with score, topic_relevance, country_relevance
+                    if isinstance(score_result, dict):
+                        article_score = score_result.get('score', 750)
+                        topic_relevance = score_result.get('topic_relevance', {})
+                        country_relevance = score_result.get('country_relevance', {})
+                    else:
+                        # Backwards compatibility: if it returns an int
+                        article_score = int(score_result) if score_result else 750
                     print(f"   📊 [Cluster {cluster_id}] Score: {article_score}/1000")
+                    if topic_relevance:
+                        print(f"   🎯 [Cluster {cluster_id}] Topic relevance: {topic_relevance}")
+                    if country_relevance:
+                        print(f"   🌍 [Cluster {cluster_id}] Country relevance: {country_relevance}")
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Scoring failed: {e}")
                 
@@ -1328,6 +1342,8 @@ def run_complete_pipeline():
                 'interest_tags': interest_tags,
                 'countries': article_countries,
                 'topics': article_topics,
+                'topic_relevance': topic_relevance,
+                'country_relevance': country_relevance,
                 'image_url': synthesized.get('image_url'),
                 'image_source': synthesized.get('image_source'),
                 'image_score': synthesized.get('image_score'),
