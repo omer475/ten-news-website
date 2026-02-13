@@ -110,7 +110,9 @@ const formatArticle = (article) => {
     views: article.view_count || 0,
     interest_tags: safeJsonParse(article.interest_tags, []),
     countries: safeJsonParse(article.countries, []),
-    topics: safeJsonParse(article.topics, [])
+    topics: safeJsonParse(article.topics, []),
+    topic_relevance: safeJsonParse(article.topic_relevance, {}),
+    country_relevance: safeJsonParse(article.country_relevance, {})
   };
 };
 
