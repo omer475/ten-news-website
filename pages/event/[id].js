@@ -1,7 +1,14 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import TodayPlusLoader from '../../components/TodayPlusLoader';
+
+// Dynamic import for map component (uses D3.js, heavy)
+const GeographicImpactSection = dynamic(
+  () => import('../../components/events/GeographicImpactSection'),
+  { ssr: false }
+);
 
 // ============================================
 // UTILITIES (DO NOT MODIFY)
@@ -1684,65 +1691,35 @@ function HistoricalSection({ data, accentColor }) {
 }
 
 // ============================================
-// LIVE UPDATES SECTION
+// MAP SECTION (Geographic Impact)
 // ============================================
 
-function LiveUpdatesSection({ updates, totalArticles, accentColor }) {
+function MapSection({ data, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
-  
-  if (!updates || updates.length === 0) return null;
-  
+
+  if (!data || !data.countries || data.countries.length === 0) return null;
+
   const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
   const headerY = remap(p, 0.14, 0.26, 16, 0);
-  
+  const mapOpacity = remap(p, 0.2, 0.35, 0, 1);
+  const mapY = remap(p, 0.2, 0.35, 20, 0);
+
   return (
     <section ref={ref} className="full-section">
       <div className="section-inner">
-        <SectionHead 
-          title="Live Updates" 
-          subtitle={`${totalArticles || updates.length} articles`}
+        <SectionHead
+          title="Affected Countries"
+          subtitle={`${data.total_countries_affected || data.countries.length} countries`}
           accentColor={accentColor}
           style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
         />
-        
-        <div className="live-feed">
-          {updates.slice(0, 10).map((update, i) => {
-            const itemStart = 0.2 + i * 0.035;
-            const itemOpacity = remap(p, itemStart, itemStart + 0.06, 0, 1);
-            const itemX = remap(p, itemStart, itemStart + 0.06, -16, 0);
-            
-            return (
-              <div 
-                key={update.id || i}
-                className="live-item"
-                style={{ opacity: itemOpacity, transform: `translateX(${itemX}px)` }}
-              >
-                {update.image && (
-                  <img className="live-img" src={update.image} alt="" loading="lazy" />
-                )}
-                <div className="live-content">
-                  <span className="live-title">{update.title}</span>
-                  <div className="live-meta">
-                    {update.category && (
-                      <>
-                        <span className="live-category" style={{ color: accentColor }}>{update.category}</span>
-                        <span className="live-sep">·</span>
-                      </>
-                    )}
-                    <span className="live-time">{update.time}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+
+        <div style={{ opacity: mapOpacity, transform: `translateY(${mapY}px)`, willChange: 'opacity, transform' }}>
+          <GeographicImpactSection data={data} accentColor={accentColor} />
         </div>
-        
-        {totalArticles > 10 && (
-          <p className="live-footer">Showing latest of {totalArticles} articles</p>
-        )}
       </div>
-      
+
       <style jsx>{`
         .full-section {
           border-top: 1px solid rgba(0,0,0,0.05);
@@ -1752,72 +1729,7 @@ function LiveUpdatesSection({ updates, totalArticles, accentColor }) {
           max-width: 680px;
           margin: 0 auto;
         }
-        .live-feed {
-          display: flex;
-          flex-direction: column;
-        }
-        .live-item {
-          display: flex;
-          gap: 14px;
-          padding: 16px 0;
-          border-bottom: 1px solid rgba(0,0,0,0.05);
-          will-change: opacity, transform;
-        }
-        .live-item:first-child {
-          padding-top: 0;
-        }
-        .live-item:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
-        }
-        .live-img {
-          width: 68px;
-          height: 68px;
-          border-radius: 12px;
-          object-fit: cover;
-          flex-shrink: 0;
-          background: #f5f5f7;
-        }
-        .live-content {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 6px;
-        }
-        .live-title {
-          font-size: 15px;
-          font-weight: 600;
-          color: #1d1d1f;
-          line-height: 1.35;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .live-meta {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-        }
-        .live-category {
-          font-weight: 600;
-        }
-        .live-sep {
-          color: #c4c4c6;
-        }
-        .live-time {
-          color: #86868b;
-        }
-        .live-footer {
-          text-align: center;
-          font-size: 12px;
-          color: #9ca3af;
-          margin: 20px 0 0 0;
-        }
-        
+
         @media (max-width: 480px) {
           .section-inner {
             padding: 28px 20px;
@@ -2337,19 +2249,21 @@ export default function EventPage() {
           </div>
         )}
 
-        {/* Scroll-Animated Sections - Mandatory sections first, then optional */}
-        {/* MANDATORY: Latest Development */}
+        {/* Scroll-Animated Sections */}
+        {/* 1. MANDATORY: Latest Development (with key stats) */}
         <LatestSection latest={event.latestDevelopment} accentColor={event.accentColor} />
-        {/* MANDATORY: Background */}
-        <BackgroundSection text={event.background} accentColor={event.accentColor} />
-        {/* MANDATORY: Timeline (This Week from live articles + Historical) */}
-        <TimelineSection entries={event.timeline} liveUpdates={event.liveUpdates} accentColor={event.accentColor} />
-        {/* OPTIONAL: Based on event relevance */}
+        {/* 2. OPTIONAL: What to Watch */}
         <WatchSection items={event.components?.what_to_watch} accentColor={event.accentColor} />
+        {/* 3. MANDATORY: Timeline (This Week from live articles + Historical) */}
+        <TimelineSection entries={event.timeline} liveUpdates={event.liveUpdates} accentColor={event.accentColor} />
+        {/* 4. OPTIONAL: Map (Affected Countries) */}
+        <MapSection data={event.components?.geographic_impact} accentColor={event.accentColor} />
+        {/* 5. OPTIONAL: Perspectives */}
         <PerspectivesSection perspectives={event.components?.perspectives} accentColor={event.accentColor} />
+        {/* 6. OPTIONAL: Historical Context */}
         <HistoricalSection data={event.components?.historical_comparison} accentColor={event.accentColor} />
-        {/* ALL ARTICLES: Full list of linked articles */}
-        <LiveUpdatesSection updates={event.liveUpdates} totalArticles={event.totalArticles} accentColor={event.accentColor} />
+        {/* 7. MANDATORY: Background (context) */}
+        <BackgroundSection text={event.background} accentColor={event.accentColor} />
         <Footer />
       </div>
     </>
