@@ -148,26 +148,26 @@ export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThre
   // Separate must-know articles from regular articles
   // Must-know has TWO paths:
   //   1. Globally important: base_score >= 900 (important for everyone, e.g. China president news)
-  //   2. Important for THIS user: final_score >= 900 AND base_score >= 650
-  //      (decent article + user preferences boosted it high, e.g. F1 crash for an F1 fan)
-  // The base_score >= 650 guard prevents low-quality articles (base 400-500) from becoming
-  // must-know just because they got a big preference boost
-  const PERSONAL_MUST_KNOW_MIN_BASE = 650;
+  //   2. Important for THIS user: final_score >= 950 AND base_score >= 850
+  //      (top-tier article + user preferences push it over, e.g. F1 crash for F1 fan)
+  // High thresholds ensure only the best preference-matched articles make it to must-know
+  const PERSONAL_MUST_KNOW_FINAL_MIN = 950;
+  const PERSONAL_MUST_KNOW_MIN_BASE = 850;
 
   const isMustKnow = (a) => {
     const base = a.base_score || a.final_score || a.ai_final_score || 0;
     const final = a.final_score || a.ai_final_score || 0;
     // Path 1: Globally important (high base score)
     if (base >= mustKnowThreshold) return true;
-    // Path 2: Important for this user (boosted high + decent base)
-    if (final >= mustKnowThreshold && base >= PERSONAL_MUST_KNOW_MIN_BASE) return true;
+    // Path 2: Important for this user (top article + preference boost)
+    if (final >= PERSONAL_MUST_KNOW_FINAL_MIN && base >= PERSONAL_MUST_KNOW_MIN_BASE) return true;
     return false;
   };
 
   const mustKnowArticles = articles.filter(isMustKnow);
   const regularArticles = articles.filter(a => !isMustKnow(a));
 
-  console.log(`[interests] ✅ ${mustKnowArticles.length} MUST-KNOW (base>=900 OR final>=900+base>=650)`);
+  console.log(`[interests] ✅ ${mustKnowArticles.length} MUST-KNOW (base>=900 OR final>=950+base>=850)`);
   console.log(`[interests] 📰 ${regularArticles.length} REGULAR`);
   
   // Must-know articles: Keep original base score order (no personalization)
