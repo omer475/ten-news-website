@@ -33,6 +33,22 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
   loading: () => <div style={{ width: '100%', height: '100%', background: 'rgba(245,245,245,0.95)', borderRadius: '8px' }} />
   });
 
+// Must-know classification helper
+// Two paths to must-know:
+//   1. Globally important: base_score >= 900 (important for everyone)
+//   2. Important for THIS user: final_score >= 900 AND base_score >= 650
+//      (decent article boosted high by user's preferences)
+const MUST_KNOW_THRESHOLD = 900;
+const PERSONAL_MUST_KNOW_MIN_BASE = 650;
+function isArticleMustKnow(article) {
+  if (!article) return false;
+  const base = article.base_score || article.final_score || 0;
+  const final = article.final_score || 0;
+  if (base >= MUST_KNOW_THRESHOLD) return true;
+  if (final >= MUST_KNOW_THRESHOLD && base >= PERSONAL_MUST_KNOW_MIN_BASE) return true;
+  return article.isImportant || false;
+}
+
 // "You're all caught up" page shown after Must Know articles
 function MustKnowCompletePage({ isVisible }) {
   const [typed, setTyped] = useState("");
@@ -330,7 +346,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Update safe area color when current article changes
   useEffect(() => {
     const currentStory = stories[currentIndex];
-    const isImportant = (currentStory?.base_score || currentStory?.final_score) >= 900 || currentStory?.isImportant || false;
+    const isImportant = isArticleMustKnow(currentStory);
     const newColor = '#ffffff'; // Always white - important news only has red accent lines
     
     // Update state
@@ -2329,7 +2345,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // Reinsert must-know-complete at the right position (use base_score, not boosted score)
               if (mustKnowComplete) {
                 const lastImportantIdx = newsStories.reduce((lastIdx, article, idx) => {
-                  return ((article.base_score || article.final_score) >= 900 || article.isImportant) ? idx : lastIdx;
+                  return isArticleMustKnow(article) ? idx : lastIdx;
                 }, -1);
                 if (lastImportantIdx >= 0 && lastImportantIdx < newsStories.length - 1) {
                   newsStories.splice(lastImportantIdx + 1, 0, mustKnowComplete);
@@ -2745,11 +2761,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 }
               }
               
-              // Log articles that qualify as important (base_score >= 900, ignoring preference boosts)
-              // Must-know = globally important, not just matching preferences
-              const importantArticles = sortedNews.filter(a => (a.base_score || a.final_score) >= 900);
+              // Log articles that qualify as important
+              // Must-know = globally important (base>=900) OR important for this user (final>=900 + base>=650)
+              const importantArticles = sortedNews.filter(a => isArticleMustKnow(a));
               if (importantArticles.length > 0) {
-                console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (base_score >= 900):`,
+                console.log(`🚨 ${importantArticles.length} article(s) marked as MUST-KNOW:`,
                   importantArticles.map(a => `${a.title?.substring(0, 30)}... (base:${a.base_score || a.final_score}, final:${a.final_score})`));
               }
 
@@ -2757,7 +2773,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
               // so users see a divider between must-know and regular news
               if (importantArticles.length > 0 && sortedNews.length > importantArticles.length) {
                 const lastImportantIdx = sortedNews.reduce((lastIdx, article, idx) => {
-                  return ((article.base_score || article.final_score) >= 900 || article.isImportant) ? idx : lastIdx;
+                  return isArticleMustKnow(article) ? idx : lastIdx;
                 }, -1);
                 
                 if (lastImportantIdx >= 0 && lastImportantIdx < sortedNews.length - 1) {
@@ -4188,7 +4204,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
   // Compute if current article is important (for inline usage)
   const currentStoryData = stories[currentIndex];
-  const isCurrentArticleImportant = (currentStoryData?.base_score || currentStoryData?.final_score) >= 900 || currentStoryData?.isImportant || false;
+  const isCurrentArticleImportant = isArticleMustKnow(currentStoryData);
 
   return (
     <>
@@ -6541,8 +6557,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
             return <div key={index} style={{ display: 'none' }} />;
           }
           
-          // Check if this is an important article (base_score >= 900, ignoring preference boosts)
-          const isImportantArticle = (story.base_score || story.final_score) >= 900 || story.isImportant;
+          // Check if this is a must-know article (globally important OR important for this user)
+          const isImportantArticle = isArticleMustKnow(story);
           
           return (
           <div
