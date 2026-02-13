@@ -140,28 +140,31 @@ export function rankArticles(articles, personalizationWeight = 0.7, mustKnowThre
   // DEBUG: Log all article scores to diagnose the issue
   console.log('[interests] 📊 ALL ARTICLE SCORES BEFORE RANKING:');
   articles.slice(0, 10).forEach((a, i) => {
-    const score = a.final_score || a.ai_final_score || 0;
-    console.log(`  ${i+1}. Score: ${score} | "${a.title?.substring(0, 40)}..."`);
+    const base = a.base_score || a.final_score || a.ai_final_score || 0;
+    const final = a.final_score || a.ai_final_score || 0;
+    console.log(`  ${i+1}. Base: ${base} | Final: ${final} | "${a.title?.substring(0, 40)}..."`);
   });
   
   // Separate must-know articles from regular articles
+  // IMPORTANT: Use base_score (original AI score) NOT final_score (which includes preference boosts)
+  // This prevents preference-boosted articles from being falsely classified as must-know
   const mustKnowArticles = articles.filter(a => {
-    const score = a.final_score || a.ai_final_score || 0;
+    const score = a.base_score || a.final_score || a.ai_final_score || 0;
     return score >= mustKnowThreshold;
   });
-  
+
   const regularArticles = articles.filter(a => {
-    const score = a.final_score || a.ai_final_score || 0;
+    const score = a.base_score || a.final_score || a.ai_final_score || 0;
     return score < mustKnowThreshold;
   });
   
-  console.log(`[interests] ✅ ${mustKnowArticles.length} MUST-KNOW (score >= ${mustKnowThreshold})`);
-  console.log(`[interests] 📰 ${regularArticles.length} REGULAR (score < ${mustKnowThreshold})`);
+  console.log(`[interests] ✅ ${mustKnowArticles.length} MUST-KNOW (base_score >= ${mustKnowThreshold})`);
+  console.log(`[interests] 📰 ${regularArticles.length} REGULAR (base_score < ${mustKnowThreshold})`);
   
-  // Must-know articles: Keep original score order (no personalization)
+  // Must-know articles: Keep original base score order (no personalization)
   mustKnowArticles.sort((a, b) => {
-    const scoreA = a.final_score || a.ai_final_score || 0;
-    const scoreB = b.final_score || b.ai_final_score || 0;
+    const scoreA = a.base_score || a.final_score || a.ai_final_score || 0;
+    const scoreB = b.base_score || b.final_score || b.ai_final_score || 0;
     return scoreB - scoreA;
   });
   
