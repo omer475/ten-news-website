@@ -330,7 +330,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
   // Update safe area color when current article changes
   useEffect(() => {
     const currentStory = stories[currentIndex];
-    const isImportant = currentStory?.final_score >= 900 || currentStory?.isImportant || false;
+    const isImportant = (currentStory?.base_score || currentStory?.final_score) >= 900 || currentStory?.isImportant || false;
     const newColor = '#ffffff'; // Always white - important news only has red accent lines
     
     // Update state
@@ -2324,10 +2324,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
               const mustKnowComplete = updated.find(s => s.type === 'must-know-complete');
               const newsStories = updated.filter(s => s.type === 'news').slice(0, MAX_ARTICLES_IN_MEMORY);
               
-              // Reinsert must-know-complete at the right position
+              // Reinsert must-know-complete at the right position (use base_score, not boosted score)
               if (mustKnowComplete) {
                 const lastImportantIdx = newsStories.reduce((lastIdx, article, idx) => {
-                  return (article.final_score >= 900 || article.isImportant) ? idx : lastIdx;
+                  return ((article.base_score || article.final_score) >= 900 || article.isImportant) ? idx : lastIdx;
                 }, -1);
                 if (lastImportantIdx >= 0 && lastImportantIdx < newsStories.length - 1) {
                   newsStories.splice(lastImportantIdx + 1, 0, mustKnowComplete);
@@ -2741,18 +2741,19 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 }
               }
               
-              // Log articles that qualify as important (score >= 900)
-              const importantArticles = sortedNews.filter(a => a.final_score >= 900);
+              // Log articles that qualify as important (base_score >= 900, ignoring preference boosts)
+              // Must-know = globally important, not just matching preferences
+              const importantArticles = sortedNews.filter(a => (a.base_score || a.final_score) >= 900);
               if (importantArticles.length > 0) {
-                console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (score >= 900):`, 
-                  importantArticles.map(a => `${a.title?.substring(0, 30)}... (${a.final_score})`));
+                console.log(`🚨 ${importantArticles.length} article(s) marked as IMPORTANT (base_score >= 900):`,
+                  importantArticles.map(a => `${a.title?.substring(0, 30)}... (base:${a.base_score || a.final_score}, final:${a.final_score})`));
               }
-              
+
               // Insert "Must Know Complete" page after the last important article
               // so users see a divider between must-know and regular news
               if (importantArticles.length > 0 && sortedNews.length > importantArticles.length) {
                 const lastImportantIdx = sortedNews.reduce((lastIdx, article, idx) => {
-                  return (article.final_score >= 900 || article.isImportant) ? idx : lastIdx;
+                  return ((article.base_score || article.final_score) >= 900 || article.isImportant) ? idx : lastIdx;
                 }, -1);
                 
                 if (lastImportantIdx >= 0 && lastImportantIdx < sortedNews.length - 1) {
@@ -4183,7 +4184,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
 
   // Compute if current article is important (for inline usage)
   const currentStoryData = stories[currentIndex];
-  const isCurrentArticleImportant = currentStoryData?.final_score >= 900 || currentStoryData?.isImportant || false;
+  const isCurrentArticleImportant = (currentStoryData?.base_score || currentStoryData?.final_score) >= 900 || currentStoryData?.isImportant || false;
 
   return (
     <>
@@ -6536,8 +6537,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
             return <div key={index} style={{ display: 'none' }} />;
           }
           
-          // Check if this is an important article (score >= 900)
-          const isImportantArticle = story.final_score >= 900 || story.isImportant;
+          // Check if this is an important article (base_score >= 900, ignoring preference boosts)
+          const isImportantArticle = (story.base_score || story.final_score) >= 900 || story.isImportant;
           
           return (
           <div
