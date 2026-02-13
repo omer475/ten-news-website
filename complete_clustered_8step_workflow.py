@@ -375,27 +375,27 @@ SOURCES_NEEDING_OG_IMAGE_SCRAPE = [
     'straitstimes.com', # The Straits Times - needs og:image scraping
 ]
 
-def extract_image_url(entry, source_url: str = None) -> Optional[str]:
+def extract_image_url(entry, source_url: str = None) -> tuple:
     """
     Extract the best image URL from an RSS feed entry.
-    
+
     Special handling:
     - Guardian: Select width=700 from media:content (highest quality available)
     - BBC/DW: Returns low-quality RSS image; will be replaced with og:image in Step 2
-    
+
     Priority order:
     1. media:content - choose largest image by WIDTH (for Guardian) or AREA
     2. media:thumbnail - first URL
     3. enclosures - only image/* types
     4. links - image/* types or rel="enclosure"
     5. HTML fallback - <img> tags in content/summary/description
-    
+
     Args:
         entry: A feedparser entry object
         source_url: The RSS feed URL (to detect source type)
-        
+
     Returns:
-        Image URL string or None if no image found
+        Tuple of (image_url, width, height) — width/height are 0 if unknown
     """
     
     # Check if this is Guardian - they provide multiple sizes, select width=700
@@ -408,7 +408,8 @@ def extract_image_url(entry, source_url: str = None) -> Optional[str]:
     if media_content:
         best = None
         best_score = 0
-        
+        best_w, best_h = 0, 0
+
         for m in media_content:
             url = m.get('url')
             if not url:
@@ -424,7 +425,7 @@ def extract_image_url(entry, source_url: str = None) -> Optional[str]:
                 h = int(m.get('height') or 0)
             except (ValueError, TypeError):
                 w, h = 0, 0
-            
+
             # For Guardian: score by width (prefer 700px)
             # For others: score by area
             if is_guardian:
@@ -436,17 +437,23 @@ def extract_image_url(entry, source_url: str = None) -> Optional[str]:
             if score > best_score or (best is None and score == 0):
                 best_score = score
                 best = url
+                best_w, best_h = w, h
 
         if best:
-            return best
+            return best, best_w, best_h
 
-    # 2) media:thumbnail - take first URL
+    # 2) media:thumbnail - take first URL (dimensions usually unknown)
     media_thumb = getattr(entry, 'media_thumbnail', None)
     if media_thumb:
         for t in media_thumb:
             url = t.get('url')
             if url:
-                return url
+                try:
+                    w = int(t.get('width') or 0)
+                    h = int(t.get('height') or 0)
+                except (ValueError, TypeError):
+                    w, h = 0, 0
+                return url, w, h
 
     # 3) enclosures with image/* type
     enclosures = getattr(entry, 'enclosures', None)
@@ -456,7 +463,7 @@ def extract_image_url(entry, source_url: str = None) -> Optional[str]:
             if mtype.startswith('image/'):
                 url = enc.get('href') or enc.get('url')
                 if url:
-                    return url
+                    return url, 0, 0
 
     # 4) links with image/* type or rel="enclosure"
     links = getattr(entry, 'links', None)
@@ -466,7 +473,7 @@ def extract_image_url(entry, source_url: str = None) -> Optional[str]:
             if ltype.startswith('image/') or link.get('rel') == 'enclosure':
                 url = link.get('href')
                 if url:
-                    return url
+                    return url, 0, 0
 
     # 5) HTML fallback: <img src="..."> in content/summary/description
     html_candidates = []
@@ -495,10 +502,10 @@ def extract_image_url(entry, source_url: str = None) -> Optional[str]:
             # Handle protocol-relative URLs
             if img_url.startswith('//'):
                 img_url = 'https:' + img_url
-            return img_url
+            return img_url, 0, 0
 
     # 6) Nothing found
-    return None
+    return None, 0, 0
 
 
 def needs_og_image_scrape(source_url: str) -> bool:
@@ -582,13 +589,13 @@ def fetch_rss_articles(max_articles_per_source=10):
                 if published_date == '':
                     published_date = None
                 
-                # Extract image URL from RSS entry using improved extraction
+                # Extract image URL + dimensions from RSS entry
                 # Pass source URL for source-specific handling (e.g., Guardian width selection)
-                image_url = extract_image_url(entry, source_url=url)
-                
+                image_url, image_width, image_height = extract_image_url(entry, source_url=url)
+
                 # Check if this source needs og:image scraping (BBC, DW)
                 needs_scrape = needs_og_image_scrape(url)
-                
+
                 source_articles.append({
                     'url': article_url,
                     'title': entry.get('title', ''),
@@ -596,6 +603,8 @@ def fetch_rss_articles(max_articles_per_source=10):
                     'source': source_name,
                     'published_date': published_date,
                     'image_url': image_url,
+                    'image_width': image_width,
+                    'image_height': image_height,
                     'needs_og_scrape': needs_scrape,  # Flag for BBC/DW og:image extraction
                     'source_feed_url': url  # Original RSS feed URL
                 })
@@ -891,25 +900,40 @@ def run_complete_pipeline():
             url_to_text = {a['url']: a.get('text', '') for a in full_articles if a.get('text')}
             url_to_og_image = {a['url']: a.get('og_image') for a in full_articles if a.get('og_image')}
             
-            # Add full text and fetch/upgrade images for ALL sources without images
+            # Minimum image dimensions — below this, use BrightData og:image instead
+            MIN_IMAGE_WIDTH = 720
+            MIN_IMAGE_HEIGHT = 400
+
+            # Add full text and fetch/upgrade images for ALL sources
             for source in cluster_sources:
                 source['full_text'] = url_to_text.get(source['url'], source.get('content', ''))
-                
+
                 # Check if source has no image or needs upgrade (fetch og:image from Bright Data)
                 current_image = source.get('image_url')
                 has_no_image = not current_image or not current_image.strip()
-                
-                # Sources that need og:image upgrade (low-quality RSS images)
+
+                # Sources that always need og:image upgrade (known low-quality RSS images)
                 source_url = source.get('url', '').lower()
-                source_name = source.get('source_name', source.get('source', '')).lower()
-                needs_upgrade = any(domain in source_url or domain in source_name 
+                src_name = source.get('source_name', source.get('source', '')).lower()
+                needs_upgrade = any(domain in source_url or domain in src_name
                                    for domain in ['bbc.co.uk', 'bbc.com', 'dw.com', 'deutsche welle', 'cbc.ca', 'lemonde.fr', 'venturebeat.com', 'venturebeat'])
-                
+
+                # NEW: Also upgrade if RSS image dimensions are too small
+                img_w = source.get('image_width', 0)
+                img_h = source.get('image_height', 0)
+                if img_w > 0 and img_h > 0 and (img_w < MIN_IMAGE_WIDTH or img_h < MIN_IMAGE_HEIGHT):
+                    needs_upgrade = True
+                    print(f"   📐 [Cluster {cluster_id}] Image too small ({img_w}x{img_h}) for {src_name}, upgrading...")
+
                 # Use og:image from scraped page if source has no image OR needs upgrade
                 if (has_no_image or needs_upgrade) and source['url'] in url_to_og_image:
                     og_image = url_to_og_image[source['url']]
                     if og_image:
+                        old_image = source.get('image_url', 'none')
                         source['image_url'] = og_image
+                        # Clear old dimensions since og:image dimensions are unknown (likely high quality)
+                        source['image_width'] = 0
+                        source['image_height'] = 0
                         if has_no_image:
                             print(f"   📸 [Cluster {cluster_id}] Fetched image for {source.get('source_name', source.get('source', 'Unknown'))}: {og_image[:60]}...")
                         else:

@@ -159,11 +159,11 @@ class ImageSelector:
         width = candidate.get('width', 0)
         height = candidate.get('height', 0)
         
-        # If we have dimensions, enforce minimum size
+        # If we have dimensions, enforce minimum size (720x400 for good quality)
         if width > 0 and height > 0:
-            if width < 400 or height < 300:
+            if width < 720 or height < 400:
                 if self.debug:
-                    print(f"      ❌ Filtered (too small): {width}x{height}px")
+                    print(f"      ❌ Filtered (too small): {width}x{height}px (min: 720x400)")
                 return False
             
             # Check aspect ratio (avoid extreme ratios)
