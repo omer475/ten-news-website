@@ -12,6 +12,7 @@ import requests
 import json
 import time
 import re
+from datetime import datetime, timezone
 from typing import List, Dict
 
 def _fix_truncated_json(json_text: str) -> Dict:
@@ -296,6 +297,13 @@ Examples to ELIMINATE from non-covered countries:
 
 ---
 
+## DATE AWARENESS
+
+You will be told today's date in the user message. Use it to:
+- ELIMINATE articles about events that clearly happened months or years ago (stale news)
+- ELIMINATE articles with future dates that have already passed (e.g., "targets 2024 launch" when we're in 2026)
+- Articles should describe RECENT events (within the last 48 hours ideally)
+
 ## ALWAYS ELIMINATE (regardless of country/topic):
 
 | Type | Examples |
@@ -356,7 +364,8 @@ If no → ELIMINATE.
 """
     
     # Prepare articles for filtering
-    articles_text = "Filter these news articles. Return JSON with results array.\n\nArticles to filter:\n"
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+    articles_text = f"TODAY'S DATE: {today}\n\nFilter these news articles. Return JSON with results array.\n\nArticles to filter:\n"
     
     for idx, article in enumerate(articles):
         articles_text += f'\n[Article {idx + 1}]\n'

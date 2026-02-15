@@ -2,6 +2,7 @@ import anthropic
 import json
 import re
 import os
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 
 def claude_write_title_summary(article: Dict[str, str]) -> Dict[str, str]:
@@ -195,7 +196,10 @@ OUTPUT REQUIREMENTS:
 - Use double quotes for strings
 - No line breaks within string values"""
 
-    user_prompt = f"""Write TWO VERSIONS of all content (professional news + B2 English) for this article.
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+    user_prompt = f"""TODAY'S DATE: {today}
+
+Write TWO VERSIONS of all content (professional news + B2 English) for this article.
 
 ORIGINAL ARTICLE:
 Title: {article['title']}

@@ -11,6 +11,7 @@
 import requests
 import json
 import time
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
@@ -37,6 +38,7 @@ class ComponentWriterConfig:
 
 COMPONENT_PROMPT = """Generate components for this news article.
 
+TODAY'S DATE: {today}
 ARTICLE TITLE: {title}
 BULLET SUMMARY: {bullets}
 SELECTED COMPONENTS: {components}
@@ -94,8 +96,9 @@ EACH EVENT MUST:
 ✓ Be 15-25 words long
 ✓ Explain WHAT happened AND WHY it matters
 ✓ Help the reader understand the CONTEXT of today's news
-✓ Be from recent past (usually last 1-5 years)
+✓ Be from recent past (usually last 1-5 years) — use TODAY'S DATE above as reference
 ✓ Be directly relevant to this specific story
+✓ All dates must make sense relative to today's date (no future dates unless they are upcoming events)
 
 THE TIMELINE SHOULD TELL A STORY:
 - First event: "This is how it all started..."
@@ -602,7 +605,9 @@ class ClaudeComponentWriter:
 
         # Format the prompt template with article data using replace (not .format()
         # because the prompt contains JSON examples with braces)
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
         formatted_prompt = COMPONENT_PROMPT
+        formatted_prompt = formatted_prompt.replace('{today}', today)
         formatted_prompt = formatted_prompt.replace('{title}', title)
         formatted_prompt = formatted_prompt.replace('{bullets}', bullets_text)
         formatted_prompt = formatted_prompt.replace('{components}', ', '.join(components))

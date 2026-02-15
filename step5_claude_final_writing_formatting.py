@@ -13,6 +13,7 @@ import anthropic
 import json
 import time
 import re
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
@@ -325,7 +326,10 @@ class ClaudeFinalWriter:
         article_description = article.get('description', '')
         
         # Build simple prompt focused on the scraped article
-        prompt = f"""Generate dual-language news content (Advanced + B2 English) based on this scraped article:
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+        prompt = f"""TODAY'S DATE: {today}
+
+Generate dual-language news content (Advanced + B2 English) based on this scraped article:
 
 ORIGINAL ARTICLE:
 Title: {article_title}
