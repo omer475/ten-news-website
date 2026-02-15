@@ -11,6 +11,7 @@
 import requests
 import json
 import time
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
@@ -43,7 +44,10 @@ class SearchPrompts:
     @staticmethod
     def timeline_search(title: str, text_preview: str) -> str:
         """Prompt for finding timeline events"""
-        return f"""Find 3-4 historical events that provide context for this news article: "{title}"
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+        return f"""TODAY'S DATE: {today}
+
+Find 3-4 historical events that provide context for this news article: "{title}"
 
 Article context: {text_preview[:300]}
 
@@ -72,7 +76,10 @@ Return ONLY valid JSON."""
     @staticmethod
     def details_search(title: str, text_preview: str) -> str:
         """Prompt for finding key data points with numbers"""
-        return f"""Find key NUMERICAL data that provides context for this news: "{title}"
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+        return f"""TODAY'S DATE: {today}
+
+Find key NUMERICAL data that provides context for this news: "{title}"
 
 Article context: {text_preview[:300]}
 
@@ -114,7 +121,10 @@ Return ONLY valid JSON with numerical data."""
     @staticmethod
     def graph_search(title: str, graph_data_needed: str, graph_type: str) -> str:
         """Prompt for finding time-series graph data"""
-        return f"""Find time-series data for visualizing: "{graph_data_needed}" related to "{title}"
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+        return f"""TODAY'S DATE: {today}
+
+Find time-series data for visualizing: "{graph_data_needed}" related to "{title}"
 
 Graph type: {graph_type}
 
@@ -153,9 +163,12 @@ Return ONLY valid JSON."""
     @staticmethod
     def map_search(title: str, text_preview: str, map_locations: List[str]) -> str:
         """Prompt for finding geographic coordinates"""
+        today = datetime.now(timezone.utc).strftime('%B %d, %Y')
         locations_str = ", ".join(map_locations) if map_locations else "mentioned locations"
-        
-        return f"""Find geographic coordinates and location data for this news: "{title}"
+
+        return f"""TODAY'S DATE: {today}
+
+Find geographic coordinates and location data for this news: "{title}"
 
 Article context: {text_preview[:300]}
 Locations mentioned: {locations_str}
@@ -315,7 +328,7 @@ class PerplexityContextSearcher:
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are a news research assistant. Find accurate, factual information from reliable sources. Always return valid JSON."
+                    "content": f"You are a news research assistant. Today's date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}. Find accurate, factual information from reliable sources. Always return valid JSON."
                 },
                 {
                     "role": "user",
