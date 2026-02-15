@@ -79,14 +79,16 @@ export default async function handler(req, res) {
 
     // Calculate personalized scores
     const scoredArticles = (articles || []).map(article => {
+      const countries = safeJsonParse(article.countries, []);
+      const topics = safeJsonParse(article.topics, []);
       const topicRelevance = safeJsonParse(article.topic_relevance, {});
       const countryRelevance = safeJsonParse(article.country_relevance, {});
       const scored = calculateFinalScore(
         {
           ...article,
           base_score: article.ai_final_score,
-          countries: safeJsonParse(article.countries, []),
-          topics: safeJsonParse(article.topics, []),
+          countries,
+          topics,
           topic_relevance: topicRelevance,
           country_relevance: countryRelevance,
         },
@@ -100,8 +102,8 @@ export default async function handler(req, res) {
         category: article.category,
         base_score: article.ai_final_score,
         final_score: scored.final_score,
-        countries: safeJsonParse(article.countries, []),
-        topics: safeJsonParse(article.topics, []),
+        countries,
+        topics,
         topic_relevance: topicRelevance,
         country_relevance: countryRelevance,
         image_url: article.image_url,
