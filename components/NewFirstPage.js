@@ -1435,12 +1435,12 @@ export default function NewFirstPage({ onContinue, user, userProfile, stories: i
 
         .event-image {
           position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 150%;
+          top: -8%;
+          left: -4%;
+          width: 108%;
+          height: 158%;
           object-fit: cover;
-          object-position: top center;
+          object-position: center 25%;
           opacity: 0.8;
         }
 

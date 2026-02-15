@@ -453,6 +453,8 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
   const [showHistorical, setShowHistorical] = useState(false);
+  const [showAllRecent, setShowAllRecent] = useState(false);
+  const RECENT_COLLAPSE_LIMIT = 20;
   
   // Build "This Week" from liveUpdates + current-week timeline entries
   // Build "Historical" from world_event_timeline entries older than 7 days
@@ -505,8 +507,8 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
       });
     }
 
-    // Sort: newest first for recent, oldest first for historical
-    recent.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Sort: oldest first for both (latest entry at the bottom)
+    recent.sort((a, b) => new Date(a.date) - new Date(b.date));
     historical.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     return { recentEntries: recent, historicalEntries: historical };
@@ -607,38 +609,64 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
         )}
         
         {/* Recent Timeline (Always Visible) */}
-        {recentEntries.length > 0 ? (
-          <div className="timeline-track recent">
-            <div className="timeline-bg-line recent" />
-            <div className="timeline-fill-line" style={{ height: `${recentLineHeight}%` }} />
-            
-            {recentEntries.map((entry, i) => {
-              const entryStart = 0.2 + (i / Math.max(recentEntries.length, 1)) * 0.28;
-              const entryOpacity = remap(p, entryStart, entryStart + 0.05, 0, 1);
-              const entryX = remap(p, entryStart, entryStart + 0.06, -16, 0);
-              const isLast = i === recentEntries.length - 1;
-              
-              return (
-                <div 
-                  key={entry.id || `recent-${i}`} 
-                  className="timeline-entry"
-                  style={{ opacity: entryOpacity, transform: `translateX(${entryX}px)` }}
-                >
-                  <div 
-                    className={`timeline-dot recent ${isLast ? 'last' : ''}`}
-                    style={{ borderColor: accentColor, ...(isLast ? { background: accentColor } : {}) }}
-                  />
-                  <div className="timeline-entry-content">
-                    <span className="timeline-date" style={{ color: accentColor }}>
-                      {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
-                    <span className="timeline-headline">{entry.headline}</span>
+        {recentEntries.length > 0 ? (() => {
+          const needsCollapse = recentEntries.length > RECENT_COLLAPSE_LIMIT;
+          const visibleRecent = needsCollapse && !showAllRecent
+            ? recentEntries.slice(recentEntries.length - RECENT_COLLAPSE_LIMIT)
+            : recentEntries;
+          const hiddenCount = recentEntries.length - visibleRecent.length;
+
+          return (
+            <div className="timeline-track recent">
+              <div className="timeline-bg-line recent" />
+              <div className="timeline-fill-line" style={{ height: `${recentLineHeight}%` }} />
+
+              {/* Show earlier entries button */}
+              {needsCollapse && !showAllRecent && (
+                <button className="show-more-btn" onClick={() => setShowAllRecent(true)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="18 15 12 9 6 15"/>
+                  </svg>
+                  Show {hiddenCount} earlier update{hiddenCount > 1 ? 's' : ''}
+                </button>
+              )}
+              {needsCollapse && showAllRecent && (
+                <button className="show-more-btn" onClick={() => setShowAllRecent(false)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                  Show less
+                </button>
+              )}
+
+              {visibleRecent.map((entry, i) => {
+                const entryStart = 0.2 + (i / Math.max(visibleRecent.length, 1)) * 0.28;
+                const entryOpacity = remap(p, entryStart, entryStart + 0.05, 0, 1);
+                const entryX = remap(p, entryStart, entryStart + 0.06, -16, 0);
+                const isLast = i === visibleRecent.length - 1;
+
+                return (
+                  <div
+                    key={entry.id || `recent-${i}`}
+                    className="timeline-entry"
+                    style={{ opacity: entryOpacity, transform: `translateX(${entryX}px)` }}
+                  >
+                    <div
+                      className={`timeline-dot recent ${isLast ? 'last' : ''}`}
+                      style={{ borderColor: accentColor, ...(isLast ? { background: accentColor } : {}) }}
+                    />
+                    <div className="timeline-entry-content">
+                      <span className="timeline-date" style={{ color: accentColor }}>
+                        {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                      <span className="timeline-headline">{entry.headline}</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
+                );
+              })}
+            </div>
+          );
+        })() : (
           <div className="no-recent">No updates this week</div>
         )}
       </div>
@@ -991,7 +1019,32 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
           font-size: 13px;
           color: #9ca3af;
         }
-        
+
+        /* Show more/less button for long timelines */
+        .show-more-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          width: 100%;
+          padding: 10px 16px;
+          margin-bottom: 14px;
+          background: #f3f3f5;
+          border: 1px solid rgba(0,0,0,0.04);
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #48484a;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .show-more-btn:hover {
+          background: #eaeaec;
+        }
+        .show-more-btn:active {
+          transform: scale(0.98);
+        }
+
         @media (max-width: 480px) {
           .section-inner {
             padding: 28px 20px;
