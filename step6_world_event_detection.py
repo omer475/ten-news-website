@@ -52,11 +52,16 @@ EXISTING WORLD EVENTS:
 TASK 1: Does this article match any EXISTING world event?
 ═══════════════════════════════════════════════════════════════
 
-Check if this article is about any of the existing events listed above.
-Consider topic similarity, key figures, locations, and context.
+Check if this article DIRECTLY advances the core story of any existing event.
+The article must be a genuine new development of that specific event.
 
-If it's similar to an existing event but slightly different topic, 
-it should MERGE into the most consonant existing event.
+STRICT MATCHING RULES:
+- The article must be about THE SAME specific story/conflict/situation
+- Sharing a broad topic is NOT enough (e.g. "AI regulation in EU" does NOT match "US-China AI rivalry")
+- Same country is NOT enough (e.g. "Turkey earthquake" does NOT match "Turkey NATO drills")
+- Same industry is NOT enough (e.g. "Tesla stock drops" does NOT match "US-China Trade War")
+
+DO NOT MATCH if the article is only tangentially related or covers a different angle of the same broad topic.
 
 ═══════════════════════════════════════════════════════════════
 TASK 2: Is this a NEW major world event?
@@ -118,7 +123,8 @@ RESPONSE FORMAT (JSON):
   "matches_existing": true/false,
   "existing_event_id": "uuid or null",
   "existing_event_name": "name or null",
-  
+  "match_confidence": 0-100,
+
   "is_new_world_event": true/false,
   "new_event": {{
     "name": "G20 Summit",
@@ -511,14 +517,20 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
             event = result.data[0]
             print(f"✅ Created new world event: {event['name']}")
             
-            # Create initial timeline entry
-            if event_data.get('timeline_entry'):
+            # Create initial timeline entry (always, with fallback if Gemini omits timeline_entry)
+            try:
+                tl = event_data.get('timeline_entry') or {}
+                tl_headline = tl.get('headline') or event_data['name']
+                tl_summary = tl.get('summary') or event_data.get('background', '')[:500]
                 supabase.table('world_event_timeline').insert({
                     'event_id': event['id'],
                     'date': datetime.utcnow().date().isoformat(),
-                    'headline': event_data['timeline_entry']['headline'],
-                    'summary': event_data['timeline_entry'].get('summary', '')
+                    'headline': tl_headline,
+                    'summary': tl_summary
                 }).execute()
+                print(f"  ✅ Created initial timeline entry: {tl_headline[:60]}")
+            except Exception as tl_err:
+                print(f"  ⚠️ Failed to create initial timeline entry: {tl_err}")
             
             # Create initial latest development entry
             initial_summary = event_data.get('background', '')
@@ -615,9 +627,9 @@ def search_historical_articles_for_event(event: Dict, event_data: Dict):
     
     for keyword in keywords[:5]:  # Use top 5 keywords for efficiency
         try:
-            result = supabase.table('articles').select(
-                'id, title, one_liner, published_at, created_at'
-            ).ilike('title', f'%{keyword}%').gte(
+            result = supabase.table('published_articles').select(
+                'id, title_news, one_liner, published_at, created_at'
+            ).ilike('title_news', f'%{keyword}%').gte(
                 'created_at', three_months_ago
             ).limit(20).execute()
             
@@ -643,7 +655,7 @@ def search_historical_articles_for_event(event: Dict, event_data: Dict):
     articles_to_check = matched_articles[:30]
     
     article_list = "\n".join([
-        f"- ID: {a['id']}, Title: {a['title'][:100]}"
+        f"- ID: {a['id']}, Title: {(a.get('title_news') or a.get('title', ''))[:100]}"
         for a in articles_to_check
     ])
     
@@ -698,9 +710,8 @@ Respond with valid JSON only."""
                         supabase.table('world_event_timeline').insert({
                             'event_id': event['id'],
                             'date': date_obj.date().isoformat(),
-                            'headline': article['title'][:200],
-                            'summary': article.get('one_liner', '')[:500] if article.get('one_liner') else '',
-                            'source_article_id': article_id
+                            'headline': (article.get('title_news') or article.get('title', ''))[:200],
+                            'summary': article.get('one_liner', '')[:500] if article.get('one_liner') else ''
                         }).execute()
                         tagged_count += 1
                     except Exception as e:
@@ -752,15 +763,21 @@ def update_latest_development(event_id: str, event_name: str, article: Dict, art
             'published_at': datetime.utcnow().isoformat()
         }, on_conflict='event_id').execute()
         
-        # Add timeline entry
-        if data.get('timeline_entry'):
+        # Add timeline entry (always, with fallback if Gemini omits timeline_entry)
+        try:
+            tl = data.get('timeline_entry') or {}
+            tl_headline = tl.get('headline') or data.get('title', event_name)
+            tl_summary = tl.get('summary') or data.get('summary', '')[:500]
             supabase.table('world_event_timeline').insert({
                 'event_id': event_id,
                 'date': datetime.utcnow().date().isoformat(),
-                'headline': data['timeline_entry']['headline'],
-                'summary': data['timeline_entry'].get('summary', '')
+                'headline': tl_headline,
+                'summary': tl_summary
             }).execute()
-        
+            print(f"  ✅ Added timeline entry: {tl_headline[:60]}")
+        except Exception as tl_err:
+            print(f"  ⚠️ Failed to add timeline entry: {tl_err}")
+
         print(f"  ✅ Updated latest development for {event_name}")
         
     except Exception as e:
@@ -830,16 +847,20 @@ def detect_world_events(articles: List[Dict]) -> List[Dict]:
             
             # Handle result
             if result.get('matches_existing') and result.get('existing_event_id'):
-                # Tag to existing event
+                # Check confidence threshold — skip weak matches
+                confidence = result.get('match_confidence', 50)
                 event_id = result['existing_event_id']
                 event_name = result.get('existing_event_name', 'Unknown')
-                
-                tag_article_to_event(article_id, event_id)
-                update_latest_development(event_id, event_name, article, article_id)
-                
-                article['world_event_id'] = event_id
-                articles_tagged += 1
-                print(f"  → Matched existing event: {event_name}")
+
+                if confidence < 70:
+                    print(f"  → Skipped weak match to '{event_name}' (confidence: {confidence}%)")
+                else:
+                    tag_article_to_event(article_id, event_id)
+                    update_latest_development(event_id, event_name, article, article_id)
+
+                    article['world_event_id'] = event_id
+                    articles_tagged += 1
+                    print(f"  → Matched existing event: {event_name} (confidence: {confidence}%)")
                 
             elif result.get('is_new_world_event') and result.get('new_event'):
                 # Create new event
