@@ -1,6 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { calculateFinalScore } from '../../../lib/personalization';
 
+const safeJsonParse = (value, fallback = null) => {
+  if (!value) return fallback;
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return fallback; }
+};
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -61,7 +67,7 @@ export default async function handler(req, res) {
 
     const { data: articles, error } = await supabase
       .from('published_articles')
-      .select('id, title_news, url, source, category, ai_final_score, countries, topics, image_url, image_source, published_at, created_at, summary_bullets_news, five_ws')
+      .select('id, title_news, url, source, category, ai_final_score, countries, topics, topic_relevance, country_relevance, image_url, image_source, published_at, created_at, summary_bullets_news, five_ws')
       .gte('created_at', twoDaysAgo)
       .order('ai_final_score', { ascending: false })
       .limit(200); // Fetch more, then sort by personalized score
@@ -73,12 +79,16 @@ export default async function handler(req, res) {
 
     // Calculate personalized scores
     const scoredArticles = (articles || []).map(article => {
+      const topicRelevance = safeJsonParse(article.topic_relevance, {});
+      const countryRelevance = safeJsonParse(article.country_relevance, {});
       const scored = calculateFinalScore(
         {
           ...article,
           base_score: article.ai_final_score,
-          countries: article.countries || [],
-          topics: article.topics || [],
+          countries: safeJsonParse(article.countries, []),
+          topics: safeJsonParse(article.topics, []),
+          topic_relevance: topicRelevance,
+          country_relevance: countryRelevance,
         },
         userPrefs
       );
@@ -90,8 +100,10 @@ export default async function handler(req, res) {
         category: article.category,
         base_score: article.ai_final_score,
         final_score: scored.final_score,
-        countries: article.countries || [],
-        topics: article.topics || [],
+        countries: safeJsonParse(article.countries, []),
+        topics: safeJsonParse(article.topics, []),
+        topic_relevance: topicRelevance,
+        country_relevance: countryRelevance,
         image_url: article.image_url,
         image_source: article.image_source,
         published_at: article.published_at,
