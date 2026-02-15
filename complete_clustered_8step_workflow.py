@@ -1111,9 +1111,20 @@ def run_complete_pipeline():
                 component_result = {'components': selected, 'emoji': '📰'}
             
             context_data = {}
-            if selected and gemini_result:
-                for component in selected:
-                    context_data[component] = gemini_result
+            if selected:
+                if gemini_result:
+                    for component in selected:
+                        context_data[component] = gemini_result
+                else:
+                    # Fallback: use article's own content as context so component
+                    # generation still runs even when Gemini search failed/unavailable
+                    fallback_context = {
+                        'results': bullets_text or full_article_text[:3000],
+                        'title': synthesized['title_news']
+                    }
+                    for component in selected:
+                        context_data[component] = fallback_context
+                    print(f"   ℹ️ [Cluster {cluster_id}] Using article content as fallback context (no search results)")
             
             # ==========================================
             # STEP 7: COMPONENT GENERATION (with retry)
