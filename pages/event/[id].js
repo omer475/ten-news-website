@@ -454,12 +454,12 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
   const p = useScrollProgress(ref);
   const [showHistorical, setShowHistorical] = useState(false);
   
-  // Build "This Week" from liveUpdates (all articles linked to event from last 7 days)
+  // Build "This Week" from liveUpdates + current-week timeline entries
   // Build "Historical" from world_event_timeline entries older than 7 days
   const { recentEntries, historicalEntries } = useMemo(() => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
-    // "This Week" = all linked articles from the last 7 days (from liveUpdates)
+
+    // "This Week" = linked articles from last 7 days (from liveUpdates)
     const recent = (liveUpdates || [])
       .filter(update => {
         const pubDate = new Date(update.publishedAt);
@@ -473,11 +473,29 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
         image: update.image,
         isArticle: true
       }));
-    
-    // "Historical" = timeline entries older than 7 days + any old articles
+
+    // Also merge current-week timeline entries into "This Week"
+    const recentHeadlines = new Set(recent.map(r => r.headline?.toLowerCase()));
+    if (entries && entries.length > 0) {
+      entries.forEach(entry => {
+        const entryDate = new Date(entry.date);
+        if (entryDate >= sevenDaysAgo) {
+          // De-duplicate: skip if we already have an article with the same headline
+          if (!recentHeadlines.has(entry.headline?.toLowerCase())) {
+            recent.push({
+              id: entry.id || `tl-${entry.date}`,
+              date: entry.date,
+              headline: entry.headline,
+              summary: entry.summary,
+              isArticle: false
+            });
+          }
+        }
+      });
+    }
+
+    // "Historical" = timeline entries older than 7 days
     const historical = [];
-    
-    // Add timeline entries (from world_event_timeline table)
     if (entries && entries.length > 0) {
       entries.forEach(entry => {
         const entryDate = new Date(entry.date);
@@ -486,11 +504,11 @@ function TimelineSection({ entries, liveUpdates, accentColor }) {
         }
       });
     }
-    
+
     // Sort: newest first for recent, oldest first for historical
     recent.sort((a, b) => new Date(b.date) - new Date(a.date));
     historical.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
+
     return { recentEntries: recent, historicalEntries: historical };
   }, [entries, liveUpdates]);
   
@@ -1886,7 +1904,7 @@ export default function EventPage() {
                 id: t.id,
                 date: t.date || t.rawDate,
                 headline: t.headline,
-                source_article_id: t.source_article_id || t.articleId
+                summary: t.summary || ''
               })) || [],
               background: apiEvent.background,
               keyFacts: apiEvent.keyFacts || apiEvent.key_facts || [],

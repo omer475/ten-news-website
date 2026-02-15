@@ -54,7 +54,7 @@ export default async function handler(req, res) {
           id,
           date,
           headline,
-          source_article_id
+          summary
         ),
         latest:world_event_latest(
           title,
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
       `)
       .eq('slug', slug)
       .single();
-    
+
     if (fullQuery.error && fullQuery.error.code === 'PGRST204') {
       // Column doesn't exist, try with base schema only
       const baseQuery = await supabase
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
             id,
             date,
             headline,
-            source_article_id
+            summary
           ),
           latest:world_event_latest(
             title,
@@ -302,7 +302,7 @@ export default async function handler(req, res) {
           id: t.id,
           date: t.date,
           headline: t.headline,
-          source_article_id: t.source_article_id
+          summary: t.summary || ''
         })) : [],
         totalArticles: totalArticles || 0,
         liveUpdates: liveUpdates,
