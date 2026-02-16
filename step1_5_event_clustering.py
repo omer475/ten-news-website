@@ -441,7 +441,7 @@ def validate_cluster_assignment(new_article_title: str, cluster_sources: List[Di
             for s in cluster_sources[:5]  # Limit to top 5 for prompt size
         ])
         
-        prompt = f"""You are validating a news clustering decision. Verify the new article is about the EXACT SAME event.
+        prompt = f"""You are validating a news clustering decision. Check if the new article is about the same story.
 
 CLUSTER: {cluster_name}
 
@@ -451,26 +451,27 @@ EXISTING ARTICLES IN CLUSTER:
 NEW ARTICLE BEING ADDED:
   • {new_article_title}
 
-QUESTION: Is the new article about the EXACT SAME specific event/incident as the existing articles?
+QUESTION: Is the new article about the same news story as the existing articles?
 
-VALID (same specific event):
+VALID (same story — group together):
 - Same news event from different sources ("Fire kills 50" and "Fire death toll rises to 52")
 - Direct updates/reactions to the same event ("Trump threatens tariffs" and "EU responds to tariff threat")
+- Different countries' reactions to the same event ("China condemns US tariffs" and "EU warns of retaliation to US tariffs")
+- Consequences or follow-ups of the same event ("Earthquake hits Turkey" and "Turkey earthquake rescue efforts underway")
+- New details about an ongoing story ("Sydney shooting: 3 dead" and "Sydney shooter identified as former employee")
 
-INVALID (different event - even if related):
+INVALID (genuinely different events):
 - Same country but different stories ("India AI deal" vs "India student exchange program")
 - Same person but different events ("Trump threatens Greenland" vs "Trump signs tax bill")
-- Same topic but different incidents ("Ukraine drone attack Monday" vs "Ukraine drone attack Friday")
 - Same company but different news ("Apple iPhone launch" vs "Apple faces lawsuit")
 - Same first name but different people ("Jasmine Paolini tennis" vs "Jasmine Harrison rowing")
-- Same broad category but different events ("Liverpool vs Chelsea match" vs "Premier League transfers")
-- Related themes but separate stories ("Spain drone school" vs "US drone policy debate")
+- Same type of event in different places ("Fire at Delhi hospital" vs "Fire at Mumbai factory")
 
-Be STRICT: If there's any doubt whether they are the EXACT SAME event, respond INVALID.
+Use your best judgment: if clearly about the same story, mark VALID.
 
 RESPOND WITH ONLY ONE WORD:
-- VALID (exact same event, just different coverage)
-- INVALID (different event, even if somewhat related)
+- VALID (same story, just different coverage or angle)
+- INVALID (genuinely different event)
 
 Your response:"""
 
@@ -1829,7 +1830,7 @@ class EventClusteringEngine:
             # Try to find a valid cluster, with up to 3 rejections before creating new
             # ================================================================
             rejected_cluster_ids = set()  # Track clusters that rejected this article
-            MAX_REJECTION_ATTEMPTS = 3
+            MAX_REJECTION_ATTEMPTS = 5
             successfully_added = False
             
             while len(rejected_cluster_ids) < MAX_REJECTION_ATTEMPTS and not successfully_added:

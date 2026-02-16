@@ -572,23 +572,23 @@ def fetch_rss_articles(max_articles_per_source=10):
     all_fetched_articles = []
     source_counts = {}
     
-    def fetch_one_source(source_name, url):
+    def fetch_one_source(source_name, url, source_country=''):
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
             response = requests.get(url, timeout=5, headers=headers, verify=False)
             feed = feedparser.parse(response.content)
-            
+
             source_articles = []
             for entry in feed.entries[:max_articles_per_source]:
                 article_url = entry.get('link', '')
                 if not article_url:
                     continue
-                
+
                 # Handle published date properly
                 published_date = entry.get('published', None)
                 if published_date == '':
                     published_date = None
-                
+
                 # Extract image URL + dimensions from RSS entry
                 # Pass source URL for source-specific handling (e.g., Guardian width selection)
                 image_url, image_width, image_height = extract_image_url(entry, source_url=url)
@@ -606,16 +606,24 @@ def fetch_rss_articles(max_articles_per_source=10):
                     'image_width': image_width,
                     'image_height': image_height,
                     'needs_og_scrape': needs_scrape,  # Flag for BBC/DW og:image extraction
-                    'source_feed_url': url  # Original RSS feed URL
+                    'source_feed_url': url,  # Original RSS feed URL
+                    'source_country': source_country  # Country of the RSS source
                 })
-            
+
             return (source_name, source_articles)
         except Exception as e:
             return (source_name, [])
     
     # Parallel fetch from all sources
     with ThreadPoolExecutor(max_workers=50) as executor:
-        futures = [executor.submit(fetch_one_source, name, url) for name, url in ALL_SOURCES]
+        futures = []
+        for source_tuple in ALL_SOURCES:
+            if len(source_tuple) >= 3:
+                name, url, country = source_tuple[0], source_tuple[1], source_tuple[2]
+            else:
+                name, url = source_tuple[0], source_tuple[1]
+                country = ''
+            futures.append(executor.submit(fetch_one_source, name, url, country))
         for future in as_completed(futures):
             source_name, source_articles = future.result()
             if source_articles:
@@ -735,7 +743,31 @@ def run_complete_pipeline():
     filtered_count = len(filtered_articles)
 
     print(f"\n✅ Step 1 Complete: {len(approved_articles)} approved, {filtered_count} filtered")
-    
+
+    # INTEREST SCORE FILTERING: Remove low-interest articles before expensive pipeline
+    MIN_INTEREST_SCORE = int(os.getenv('MIN_INTEREST_SCORE', '5'))
+    interest_filtered = []
+    interest_kept = []
+    for article in approved_articles:
+        interest = article.get('interest_score', 5)
+        if interest < MIN_INTEREST_SCORE:
+            interest_filtered.append(article)
+        else:
+            interest_kept.append(article)
+
+    if interest_filtered:
+        print(f"   🔽 Interest filter: removed {len(interest_filtered)} low-interest articles (score < {MIN_INTEREST_SCORE}):")
+        for a in interest_filtered:
+            print(f"      • [{a.get('interest_score', '?')}] {a.get('title', 'Unknown')[:70]}")
+        # Add interest-filtered articles to the filtered list for Supabase storage
+        for a in interest_filtered:
+            a['status'] = 'ELIMINATED'
+            a['disqualifier'] = f'low_interest_{a.get("interest_score", 0)}'
+            a['path'] = 'DISQUALIFIED'
+        filtered_articles.extend(interest_filtered)
+        approved_articles = interest_kept
+        print(f"   ✅ {len(approved_articles)} articles remain after interest filtering")
+
     # SAVE FILTERED ARTICLES TO SUPABASE (for analysis)
     if filtered_articles:
         try:
@@ -840,7 +872,7 @@ def run_complete_pipeline():
         from difflib import SequenceMatcher
         cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
         recent_articles_result = supabase.table('published_articles')\
-            .select('id, title_news')\
+            .select('id, title_news, summary_bullets_news')\
             .gte('published_at', cutoff_time)\
             .execute()
         
@@ -852,10 +884,18 @@ def run_complete_pipeline():
             return t.strip()
         
         for r in (recent_articles_result.data or []):
+            raw_bullets = r.get('summary_bullets_news', [])
+            if isinstance(raw_bullets, list):
+                bullets_text = ' '.join(raw_bullets)
+            elif isinstance(raw_bullets, str):
+                bullets_text = raw_bullets
+            else:
+                bullets_text = ''
             published_titles_cache.append({
                 'id': r['id'],
                 'title_news': r.get('title_news', ''),
-                'clean': _clean_title(r.get('title_news', ''))
+                'clean': _clean_title(r.get('title_news', '')),
+                'bullets_text': _clean_title(bullets_text)
             })
     except Exception as e:
         print(f"   ⚠️ Could not pre-fetch recent titles: {e}")
@@ -1261,6 +1301,15 @@ def run_complete_pipeline():
                 with title_cache_lock:
                     all_titles_to_check = list(published_titles_cache)
                 
+                # Get bullets for the new article for semantic dedup
+                new_bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
+                if isinstance(new_bullets, list):
+                    clean_new_bullets = _clean_title(' '.join(new_bullets))
+                elif isinstance(new_bullets, str):
+                    clean_new_bullets = _clean_title(new_bullets)
+                else:
+                    clean_new_bullets = ''
+
                 for recent in all_titles_to_check:
                     if clean_new_title and recent['clean']:
                         similarity = SequenceMatcher(None, clean_new_title, recent['clean']).ratio()
@@ -1271,6 +1320,16 @@ def run_complete_pipeline():
                             is_duplicate = True
                             skip_reason = "duplicate_title"
                             break
+                        # Secondary check: moderate title similarity + bullet similarity
+                        if similarity >= 0.35 and clean_new_bullets and recent.get('bullets_text'):
+                            bullet_sim = SequenceMatcher(None, clean_new_bullets, recent['bullets_text']).ratio()
+                            if bullet_sim >= 0.40:
+                                print(f"   ⏭️ [Cluster {cluster_id}] SEMANTIC DUPLICATE (title: {similarity:.0%}, bullets: {bullet_sim:.0%})")
+                                print(f"      New: {title[:60]}...")
+                                print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
+                                is_duplicate = True
+                                skip_reason = "semantic_duplicate"
+                                break
                             
             except Exception as e:
                 print(f"   ⚠️ [Cluster {cluster_id}] Duplicate check error: {e}")
@@ -1399,10 +1458,18 @@ def run_complete_pipeline():
             
             # Add to title cache for other workers' duplicate detection
             with title_cache_lock:
+                pub_bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
+                if isinstance(pub_bullets, list):
+                    pub_bullets_text = _clean_title(' '.join(pub_bullets))
+                elif isinstance(pub_bullets, str):
+                    pub_bullets_text = _clean_title(pub_bullets)
+                else:
+                    pub_bullets_text = ''
                 published_titles_cache.append({
                     'id': published_article_id,
                     'title_news': title,
-                    'clean': _clean_title(title)
+                    'clean': _clean_title(title),
+                    'bullets_text': pub_bullets_text
                 })
             
             # Mark cluster as successfully published

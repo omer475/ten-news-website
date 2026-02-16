@@ -168,18 +168,41 @@ We serve users from **15 countries** with personalized interests. Approve real n
 
 ---
 
+## INTEREST SCORING (1-10)
+
+For each APPROVED article, also output an **interest score from 1-10**. Score interest from the perspective of users who follow the article's country/topic.
+
+| Score | Level | Description |
+|-------|-------|-------------|
+| 9-10 | Must-Know for EVERYONE | Wars, mass casualties 20+, world-changing events |
+| 7-8 | Major for a COVERED COUNTRY or globally | Elections, policy shifts, $1B+ deals |
+| 5-6 | Notable for a COVERED COUNTRY | Domestic politics, economic updates, notable incidents |
+| 3-4 | Minor even for the relevant country | Routine appointment, niche local issue; OR from non-covered country with no global significance |
+| 1-2 | Filler | Barely newsworthy to anyone |
+
+**Key instruction:** Turkish domestic news is a 7 if Türkiye followers would care, even with no global impact. Only score low (1-4) for non-covered countries with no global significance, or truly routine filler.
+
+---
+
 ## COUNTRY-AWARE RULES
 
 ### News from our 15 countries — MORE LENIENT
-Approve national-level news, political developments, economic policy, notable incidents, significant business, and sports from major domestic leagues.
+Approve national-level news, political developments, economic policy, notable incidents, significant business, and sports from major domestic leagues. **If a reader who selected that country would find it interesting, APPROVE it.**
 
 Examples to APPROVE:
-- "Türkiye Central Bank raises rates to 45%" → Approve
+- "Türkiye Central Bank raises rates to 45%" → Approve (major economic policy)
 - "German coalition talks collapse" → Approve
 - "India launches new space mission" → Approve
 - "Australian wildfires force evacuations" → Approve
 - "Japan PM calls snap election" → Approve
 - "Italian PM announces major reform" → Approve
+- "Istanbul metro expansion opens new line" → Approve (notable Türkiye infrastructure)
+- "Erdogan meets Saudi Crown Prince in Ankara" → Approve (Türkiye diplomacy)
+- "Turkish lira hits new low against dollar" → Approve (Türkiye economy)
+- "Major earthquake hits eastern Türkiye" → Approve (significant incident)
+- "Türkiye arrests opposition journalist" → Approve (human rights, political)
+
+**Important:** Articles from non-English sources (Turkish, Russian, German, etc.) about our 15 countries should still be evaluated and approved if newsworthy. The language of the source does not matter — only the content.
 
 ### News from OTHER countries — STRICT
 Only approve if it has genuine global significance:
@@ -342,12 +365,14 @@ When approving, assign one category:
 ```json
 {
   "results": [
-    {"id": 1, "decision": "APPROVED", "category": "Sports"},
+    {"id": 1, "decision": "APPROVED", "category": "Sports", "interest": 8},
     {"id": 2, "decision": "ELIMINATED"},
-    {"id": 3, "decision": "APPROVED", "category": "Tech"}
+    {"id": 3, "decision": "APPROVED", "category": "Tech", "interest": 6}
   ]
 }
 ```
+
+For APPROVED articles, include `"interest"` (1-10 score). Omit for ELIMINATED articles.
 
 ---
 
@@ -372,10 +397,12 @@ If no → ELIMINATE.
         articles_text += f'ID: {idx + 1}\n'
         articles_text += f'Title: {article["title"]}\n'
         articles_text += f'Source: {article["source"]}\n'
+        if article.get("source_country"):
+            articles_text += f'Source Country: {article["source_country"]}\n'
         if article.get("text"):
             articles_text += f'Description: {article.get("text", "")[:300]}\n'
     
-    articles_text += '\n\nReturn JSON object with "results" array. Each result needs: id, decision (APPROVED/ELIMINATED), and category (only for APPROVED).'
+    articles_text += '\n\nReturn JSON object with "results" array. Each result needs: id, decision (APPROVED/ELIMINATED), category (only for APPROVED), and interest score 1-10 (only for APPROVED).'
     
     # Prepare request
     request_data = {
@@ -487,6 +514,7 @@ If no → ELIMINATE.
                         original_article['category'] = result_item.get('category', 'Other')
                         original_article['score'] = 750  # Default score, will be updated after writing
                         original_article['path'] = 'A'  # Default path
+                        original_article['interest_score'] = result_item.get('interest', 5)
                         
                         # Validate category
                         valid_categories = ['World', 'Politics', 'Business', 'Tech', 'Science', 

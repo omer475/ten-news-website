@@ -229,6 +229,31 @@ You will receive previously scored articles as anchors. Use them to maintain con
 
 ---
 
+## IMPORTANT: INDEPENDENT SCORING
+
+**WARNING:** Reference articles from the database may be biased high (most clustering around 850-930). Do NOT let them pull your scores upward. Score each article INDEPENDENTLY using the tier criteria above, then cross-check with references for consistency. If all references score 860+, that means previous scoring was too compressed — YOU should fix this by using the full range.
+
+---
+
+## SCORE ANCHORS (FIXED REFERENCE POINTS)
+
+These anchors are ABSOLUTE — they take precedence over any database references:
+
+| Article Type | Anchor Score |
+|-------------|-------------|
+| Major country declares war on another | **960** |
+| Super Bowl / World Cup Final result | **910** |
+| Prime Minister calls snap election | **870** |
+| Major tech acquisition ($5B+) | **820** |
+| Startup raises $50M in Series B | **620** |
+| Regular season Premier League match (mid-table) | **520** |
+| Celebrity spotted at fashion event | **380** |
+| Local council approves parking regulations | **150** |
+
+Use these anchors as your PRIMARY baseline. Ask: "Is this article more or less important than each anchor?" and score accordingly.
+
+---
+
 ## EXAMPLES
 
 | Article | Score | Why |
@@ -286,7 +311,7 @@ def get_supabase_client() -> Client:
     return create_client(url, key)
 
 
-def get_reference_articles(supabase: Client, limit: int = 20) -> List[Dict]:
+def get_reference_articles(supabase: Client, limit: int = 100) -> List[Dict]:
     """
     Fetch recently scored articles from Supabase to use as calibration references.
     Returns a diverse set of articles across different score ranges.
@@ -329,7 +354,7 @@ def get_reference_articles(supabase: Client, limit: int = 20) -> List[Dict]:
         # Sort by score descending for clear presentation
         references.sort(key=lambda x: x.get('ai_final_score', 0), reverse=True)
         
-        return references[:8]  # Return max 8 references
+        return references[:10]  # Return max 10 references for wider diversity
         
     except Exception as e:
         print(f"⚠️ Could not fetch reference articles: {e}")
@@ -672,16 +697,16 @@ Both deserve visibility. Score accordingly.
 """
     
     # Build the article text
-    article_text = "Score this article. Return JSON with score only.\n\n"
-    
+    article_text = "Score this article INDEPENDENTLY using the tier criteria and score anchors as your primary baseline. Return JSON with score only.\n\n"
+
     # Add reference articles if available
     if reference_articles:
-        article_text += "**REFERENCE ARTICLES (for calibration):**\n"
+        article_text += "**REFERENCE ARTICLES (may skew high — use score anchors as primary baseline):**\n"
         for ref in reference_articles:
             score = ref.get('ai_final_score', 0)
             title_ref = ref.get('title_news', 'Unknown')[:80]
             article_text += f'"{title_ref}" | {score}\n'
-        article_text += "\n"
+        article_text += "\nREMINDER: Use the SCORE ANCHORS from the system prompt as your primary reference, not the articles above.\n\n"
     
     # Add the article to score
     article_text += "**ARTICLE TO SCORE:**\n"

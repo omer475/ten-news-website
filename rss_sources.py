@@ -2085,8 +2085,8 @@ RSS_FEEDS = [
 #   articles in local languages. Gemini and Claude handle multilingual content natively -
 #   they will read in any language and produce English output as instructed by the prompts.
 
-# Legacy compatibility - convert RSS_FEEDS to ALL_SOURCES tuple format
-ALL_SOURCES = [(feed['name'], feed['url']) for feed in RSS_FEEDS]
+# Legacy compatibility - convert RSS_FEEDS to ALL_SOURCES tuple format (name, url, country)
+ALL_SOURCES = [(feed['name'], feed['url'], feed.get('country', '')) for feed in RSS_FEEDS]
 
 # Only print stats when run directly (not when imported)
 if __name__ == "__main__":
