@@ -51,6 +51,14 @@ You must write DUAL-LANGUAGE CONTENT (Advanced + B2 English):
 
 NOTE: Timeline, details, and graph components will be generated separately in Step 6 using web search context.
 
+=== DATE ACCURACY (CRITICAL) ===
+The user prompt will include TODAY'S DATE. You MUST use it to ensure all dates in your output are correct:
+- NEVER write dates that are in the past as if they are in the future (e.g., do NOT write "summer 2024" if today is in 2026)
+- If the source article contains outdated future references (like "expected by 2024" but today is 2026), UPDATE them to reflect reality — the event either already happened or the timeline changed
+- When the source article mentions a date/year that has already passed, rewrite it appropriately (e.g., "was expected by summer 2024" instead of "could take effect as early as summer 2024")
+- Always cross-check: if a year in your output is BEFORE the year in TODAY'S DATE, make sure you are using past tense for that reference
+- When in doubt about whether something happened, use hedging language rather than stating outdated predictions as future facts
+
 === DUAL-LANGUAGE REQUIREMENTS ===
 
 Generate TWO versions of title, article, and bullets:

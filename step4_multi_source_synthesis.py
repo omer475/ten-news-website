@@ -15,7 +15,7 @@ import time
 import os
 from typing import List, Dict, Optional
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # ==========================================
@@ -340,9 +340,19 @@ Content: {content}
 
 """
     
-    prompt = f"""You are writing a news article by synthesizing information from {len(sorted_sources)} sources about the same event.
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+
+    prompt = f"""TODAY'S DATE: {today}
+
+You are writing a news article by synthesizing information from {len(sorted_sources)} sources about the same event.
 
 {sources_text}
+
+📅 DATE ACCURACY (CRITICAL):
+- Today is {today}. All dates in your output MUST be correct relative to today.
+- NEVER write past dates as future events (e.g., do NOT write "expected by summer 2024" if today is in {datetime.now(timezone.utc).year})
+- If source articles contain outdated predictions or future references that have already passed, rewrite them using past tense or update to reflect current reality
+- Always verify: any year before {datetime.now(timezone.utc).year} in your output should use past tense
 
 🎯 CRITICAL: Look at each SOURCE TITLE above. The title tells you what angle to write about.
 - If source title is about "reactions" or "celebrates" → Write about REACTIONS, not the original event
@@ -438,7 +448,13 @@ Content: {content}
 
 """
     
-    prompt = f"""You are UPDATING a news article with new information from {len(new_sources)} additional sources.
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+
+    prompt = f"""TODAY'S DATE: {today}
+
+You are UPDATING a news article with new information from {len(new_sources)} additional sources.
+
+📅 DATE ACCURACY: Today is {today}. Never write past dates as future events. If sources contain outdated predictions, update them.
 
 EVENT: {cluster.get('event_name', 'Unknown Event')}
 

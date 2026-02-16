@@ -81,6 +81,12 @@ title_b2: "**Indian Parliament** passes new citizenship law despite controversy"
 
 PROHIBITED (both versions): Questions, clickbait phrases, exclamation marks, ALL CAPS, editorial opinions, vague geographic references
 
+DATE ACCURACY (CRITICAL):
+- The user prompt includes TODAY'S DATE. All dates in your output MUST be accurate relative to today.
+- NEVER write past dates as future events (e.g., do NOT write "expected by summer 2024" if today is in 2026)
+- If the source article has outdated predictions or future references that have already passed, rewrite using past tense or note what actually happened
+- Always check: is the year in my output before TODAY'S year? If so, use past tense for that event.
+
 BULLET POINTS RULES - TWO VERSIONS REQUIRED (4 bullets each, 10-15 words per bullet):
 
 1. SUMMARY_BULLETS_NEWS (Professional Language):

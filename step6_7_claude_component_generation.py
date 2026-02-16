@@ -97,6 +97,7 @@ EACH EVENT MUST:
 ✓ Explain WHAT happened AND WHY it matters
 ✓ Help the reader understand the CONTEXT of today's news
 ✓ Be from recent past (usually last 1-5 years) — use TODAY'S DATE above as reference
+✓ NEVER write a past date as if it is in the future. If a date is before TODAY'S DATE, use past tense
 ✓ Be directly relevant to this specific story
 ✓ All dates must make sense relative to today's date (no future dates unless they are upcoming events)
 

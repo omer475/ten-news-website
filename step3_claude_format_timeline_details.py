@@ -2,6 +2,7 @@ import anthropic
 import json
 import re
 import os
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 
 def claude_format_timeline_details(claude_title: str, claude_summary: str, perplexity_results: str) -> Dict[str, str]:
@@ -129,7 +130,13 @@ OUTPUT REQUIREMENTS:
 - No line breaks within string values
 - Ensure arrays are properly formatted"""
 
-    user_prompt = f"""Format the contextual search results into timeline and details sections.
+    today = datetime.now(timezone.utc).strftime('%B %d, %Y')
+
+    user_prompt = f"""TODAY'S DATE: {today}
+
+Format the contextual search results into timeline and details sections.
+
+IMPORTANT: Use TODAY'S DATE above as your reference. All dates in the timeline must be accurate — do NOT write past dates as if they are in the future. If an event's date has already passed, use past tense.
 
 ARTICLE TITLE & SUMMARY (for reference - DO NOT repeat this information):
 Title: {claude_title}
