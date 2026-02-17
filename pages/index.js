@@ -36,21 +36,37 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
 // Must-know classification helper
 // Two paths to must-know:
 //   1. Globally important: base_score >= 900 (important for everyone)
-//   2. Important for THIS user: final_score >= 900 AND base_score >= 550
-//      Country/topic boosts can push locally important news into must-know,
-//      but base >= 550 ensures tabloid trash (individual crime scores 200-400) never qualifies
+//   2. Locally critical for THIS user: base >= 600 AND home_country_relevance >= 80
+//      AND final >= 950. Only nationally critical stories (relevance 80+) from the
+//      user's home country can break through. Capped at 5 local articles.
 const MUST_KNOW_THRESHOLD = 900;
-const PERSONAL_MUST_KNOW_FINAL_MIN = 900;
-const PERSONAL_MUST_KNOW_MIN_BASE = 550;
+const LOCAL_MUST_KNOW_FINAL_MIN = 950;
+const LOCAL_MUST_KNOW_MIN_BASE = 600;
+const LOCAL_MUST_KNOW_MIN_RELEVANCE = 80;
+const LOCAL_MUST_KNOW_MAX = 5;
 function isArticleMustKnow(article) {
   if (!article) return false;
   const base = article.base_score || article.final_score || 0;
-  const final = article.final_score || 0;
   // Path 1: Globally important (high AI score alone)
   if (base >= MUST_KNOW_THRESHOLD) return true;
-  // Path 2: Important for this user (preferences boost nationally important local news)
-  if (final >= PERSONAL_MUST_KNOW_FINAL_MIN && base >= PERSONAL_MUST_KNOW_MIN_BASE) return true;
-  return article.isImportant || false;
+  // Path 2 is checked via markLocalMustKnow() after sorting — not here
+  return article.isLocalMustKnow || false;
+}
+// Mark top local must-know articles (called after personalization + sorting)
+function markLocalMustKnow(articles) {
+  let localCount = 0;
+  for (const article of articles) {
+    if (localCount >= LOCAL_MUST_KNOW_MAX) break;
+    if (article.type) continue; // skip non-article items
+    const base = article.base_score || article.final_score || 0;
+    const final = article.final_score || 0;
+    const homeRel = article.home_country_relevance || 0;
+    if (base >= LOCAL_MUST_KNOW_MIN_BASE && final >= LOCAL_MUST_KNOW_FINAL_MIN && homeRel >= LOCAL_MUST_KNOW_MIN_RELEVANCE) {
+      article.isLocalMustKnow = true;
+      localCount++;
+    }
+  }
+  return localCount;
 }
 
 // "You're all caught up" page shown after Must Know articles
@@ -2765,8 +2781,10 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 }
               }
               
+              // Mark local must-know articles (capped at 5, requires home_country_relevance >= 80)
+              const localMustKnowCount = markLocalMustKnow(sortedNews);
+
               // Log articles that qualify as important
-              // Must-know = globally important (base>=900) OR important for this user (final>=900 + base>=650)
               const importantArticles = sortedNews.filter(a => isArticleMustKnow(a));
               if (importantArticles.length > 0) {
                 console.log(`🚨 ${importantArticles.length} article(s) marked as MUST-KNOW:`,
