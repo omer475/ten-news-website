@@ -1,0 +1,200 @@
+openapi: 3.1.0
+info:
+  title: Today+ News API
+  description: Access Today+ curated, AI-scored, and multi-source verified news articles. Returns articles with importance scores, topic/country relevance, and rich visual components (details with statistics, graph data, map locations).
+  version: 1.0.0
+servers:
+  - url: https://todayplus.news
+paths:
+  /api/chatgpt/articles:
+    get:
+      operationId: getArticles
+      summary: Get a list of news articles with optional filters
+      description: Returns curated news articles sorted by importance score. Filter by topic, country, date, time window, or minimum score. Default returns last 24 hours, top 30 articles.
+      parameters:
+        - name: topic
+          in: query
+          description: >
+            Filter by topic code. Available: economics, stock_markets, banking, startups,
+            ai, tech_industry, consumer_tech, cybersecurity, space,
+            science, climate, health, biotech,
+            politics, geopolitics, conflicts, human_rights,
+            football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics,
+            entertainment, music, gaming, travel
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: >
+            Filter by country code. Available: usa, uk, china, russia, germany, france,
+            spain, italy, ukraine, turkiye, india, japan, israel, canada, australia
+          schema:
+            type: string
+        - name: min_score
+          in: query
+          description: "Minimum importance score (0-1000). 900+ = globally critical, 700-899 = very important, 500-699 = notable, below 500 = minor"
+          schema:
+            type: integer
+        - name: hours
+          in: query
+          description: "Time window in hours (default 24). Use 6 for latest news, 48 for last 2 days, 168 for last week."
+          schema:
+            type: integer
+        - name: date
+          in: query
+          description: "Specific date in YYYY-MM-DD format. Overrides the hours parameter."
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: "Maximum number of articles to return (default 30, max 50)"
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of articles with count and applied filters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  articles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title_news:
+                          type: string
+                        emoji:
+                          type: string
+                        ai_final_score:
+                          type: integer
+                          description: "Importance score 0-1000"
+                        countries:
+                          type: array
+                          items:
+                            type: string
+                        topics:
+                          type: array
+                          items:
+                            type: string
+                        country_relevance:
+                          type: object
+                          description: "country_code: national_importance_score (0-100)"
+                        topic_relevance:
+                          type: object
+                          description: "topic_code: relevance_score (0-100)"
+                        category:
+                          type: string
+                        summary_bullets_news:
+                          type: array
+                          items:
+                            type: string
+                          description: "3-5 bullet point summary"
+                        published_at:
+                          type: string
+                          format: date-time
+                        num_sources:
+                          type: integer
+                        image_url:
+                          type: string
+                  count:
+                    type: integer
+                  filters_applied:
+                    type: object
+
+  /api/chatgpt/article/{id}:
+    get:
+      operationId: getArticleDetail
+      summary: Get full details of a specific article including visual components
+      description: Returns complete article with content, five W's, details (statistics), graph data (for charts), map data (for maps), and source information. Call this when the user wants to know more about a specific article.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The article ID
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full article detail with all components
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title_news:
+                    type: string
+                  emoji:
+                    type: string
+                  ai_final_score:
+                    type: integer
+                  summary_bullets_news:
+                    type: array
+                    items:
+                      type: string
+                    description: "3-5 bullet point summary of the article"
+                  five_ws:
+                    type: object
+                    description: "Structured Who, What, When, Where, Why"
+                  details:
+                    type: array
+                    description: "Key statistics and details with numbers. ALWAYS display these prominently."
+                    items:
+                      type: object
+                  graph:
+                    type: object
+                    description: "Chart/graph data. When present, ALWAYS render as a visual chart using code interpreter."
+                  map:
+                    type: object
+                    description: "Map location data with coordinates. When present, ALWAYS render on a visual map using code interpreter."
+                  countries:
+                    type: array
+                    items:
+                      type: string
+                  topics:
+                    type: array
+                    items:
+                      type: string
+                  country_relevance:
+                    type: object
+                  topic_relevance:
+                    type: object
+                  category:
+                    type: string
+                  published_at:
+                    type: string
+                    format: date-time
+                  num_sources:
+                    type: integer
+                  source_titles:
+                    type: array
+                    description: "Original source titles and outlet names"
+                  image_url:
+                    type: string
+                  url:
+                    type: string
+                    description: "Primary source URL"
+
+  /api/chatgpt/health:
+    get:
+      operationId: healthCheck
+      summary: Check if the Today+ API is operational
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  version:
+                    type: string
