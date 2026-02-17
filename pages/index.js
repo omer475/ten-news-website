@@ -36,18 +36,19 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
 // Must-know classification helper
 // Two paths to must-know:
 //   1. Globally important: base_score >= 900 (important for everyone)
-//   2. Important for THIS user: final_score >= 950 AND base_score >= 850
-//      (top article + user preferences push it over — only the best make it)
+//   2. Important for THIS user: final_score >= 900 AND base_score >= 550
+//      Country/topic boosts can push locally important news into must-know,
+//      but base >= 550 ensures tabloid trash (individual crime scores 200-400) never qualifies
 const MUST_KNOW_THRESHOLD = 900;
-const PERSONAL_MUST_KNOW_FINAL_MIN = 950;
-const PERSONAL_MUST_KNOW_MIN_BASE = 850;
+const PERSONAL_MUST_KNOW_FINAL_MIN = 900;
+const PERSONAL_MUST_KNOW_MIN_BASE = 550;
 function isArticleMustKnow(article) {
   if (!article) return false;
   const base = article.base_score || article.final_score || 0;
   const final = article.final_score || 0;
   // Path 1: Globally important (high AI score alone)
   if (base >= MUST_KNOW_THRESHOLD) return true;
-  // Path 2: Important for this user (top-tier article + preferences boost it further)
+  // Path 2: Important for this user (preferences boost nationally important local news)
   if (final >= PERSONAL_MUST_KNOW_FINAL_MIN && base >= PERSONAL_MUST_KNOW_MIN_BASE) return true;
   return article.isImportant || false;
 }

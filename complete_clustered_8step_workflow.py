@@ -1176,6 +1176,7 @@ def run_complete_pipeline():
             
             if selected and context_data:
                 max_component_retries = 3
+                best_components = {}  # Track best partial result across retries
                 for comp_attempt in range(max_component_retries):
                     try:
                         article_for_components = {
@@ -1189,28 +1190,32 @@ def run_complete_pipeline():
                             generation_result = component_writer.write_components(article_for_components)
 
                         if generation_result:
-                            components = {
+                            new_components = {
                                 'timeline': generation_result.get('timeline'),
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
                                 'map': generation_result.get('map')
                             }
-                            components = {k: v for k, v in components.items() if v is not None}
+                            new_components = {k: v for k, v in new_components.items() if v is not None}
 
-                            missing_components = [c for c in selected if c not in components]
+                            # Merge: keep the best result from each retry (accumulate components)
+                            for k, v in new_components.items():
+                                if k not in best_components:
+                                    best_components[k] = v
+
+                            missing_components = [c for c in selected if c not in best_components]
                             if missing_components and comp_attempt < max_component_retries - 1:
-                                print(f"   ⚠️ [Cluster {cluster_id}] Missing: {missing_components} - retrying ({comp_attempt + 2}/{max_component_retries})...")
+                                print(f"   ⚠️ [Cluster {cluster_id}] Got [{', '.join(best_components.keys())}], missing: {missing_components} - retrying ({comp_attempt + 2}/{max_component_retries})...")
                                 time.sleep(2)
                                 continue
 
-                            print(f"   ✅ [Cluster {cluster_id}] Step 7 Complete: [{', '.join(components.keys())}]")
+                            print(f"   ✅ [Cluster {cluster_id}] Step 7 Complete: [{', '.join(best_components.keys())}]")
                             break
 
                         if comp_attempt < max_component_retries - 1:
                             print(f"   ⚠️ [Cluster {cluster_id}] No components - retrying ({comp_attempt + 2}/{max_component_retries})...")
                             time.sleep(2)
                             continue
-                        components = {}
 
                     except Exception as comp_gen_error:
                         if comp_attempt < max_component_retries - 1:
@@ -1218,7 +1223,13 @@ def run_complete_pipeline():
                             time.sleep(2)
                             continue
                         print(f"   ⚠️ [Cluster {cluster_id}] Step 7 Failed: {comp_gen_error}")
-                        components = {}
+
+                # Use whatever we accumulated across retries
+                components = best_components
+                if components:
+                    print(f"   📦 [Cluster {cluster_id}] Final components: [{', '.join(components.keys())}]")
+                else:
+                    print(f"   ⚠️ [Cluster {cluster_id}] No components generated after {max_component_retries} attempts")
             
             # STEP 8: Fact Verification
             print(f"\n🔍 [Cluster {cluster_id}] STEP 8: FACT VERIFICATION")
@@ -1417,6 +1428,8 @@ def run_complete_pipeline():
                 failed_components = [c for c in selected if c not in successful_components]
                 print(f"   ⚠️ [Cluster {cluster_id}] Some components failed: {failed_components}")
             
+            emoji = component_result.get('emoji', '📰') if isinstance(component_result, dict) else '📰'
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -1425,6 +1438,7 @@ def run_complete_pipeline():
                 'title_news': title,
                 'summary_bullets_news': bullets,
                 'five_ws': five_ws,
+                'emoji': emoji,
                 'timeline': components.get('timeline'),
                 'details': components.get('details'),
                 'graph': components.get('graph'),

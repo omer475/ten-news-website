@@ -150,10 +150,14 @@ Score based on four factors:
 | Mass casualties 30-50 | 880-930 |
 | Mass casualties 10-30 | 830-890 |
 | Deaths 5-10 | 750-830 |
-| Major infrastructure failure | 750-840 |
-| Deaths 2-5 | 600-750 |
-| Single notable death incident | 500-680 |
-| Minor incidents | 300-500 |
+| Major infrastructure failure (bridges, rail, power grid) | 750-840 |
+| Deaths 2-5 (systemic cause: factory, mine, transport) | 600-750 |
+| Deaths 2-5 (individual crime: murder, stabbing, shooting) | 300-500 |
+| Single death in fire / accident / crime | 250-450 |
+| Individual crime (assault, robbery, domestic violence) | 200-400 |
+| Minor local incidents | 200-400 |
+
+**CRITICAL: Individual crime is NOT important news.** "Man stabs wife", "Son kills father", "Person arrested for murder" — these are tragic but affect NO ONE beyond the people involved. They belong in the 200-400 range, NOT 600+. Only systemic/institutional violence (terrorism, mass shootings, police brutality patterns) scores higher.
 
 ### ENTERTAINMENT & CELEBRITIES
 
@@ -186,6 +190,9 @@ Score based on four factors:
 
 | Trigger | Penalty |
 |---------|---------|
+| Individual crime (murder, stabbing, domestic violence) | -200 |
+| Single person accident (house fire, car crash, drowning) | -150 |
+| Local celebrity/sports scandal (drugs, arrest) | -100 |
 | "Warns" / "Faces" without concrete action | -30 |
 | "Seeks / Eyes / Considers" (speculation) | -30 |
 | "May / Could / Might" without event | -40 |
@@ -248,6 +255,9 @@ These anchors are ABSOLUTE — they take precedence over any database references
 | Startup raises $50M in Series B | **620** |
 | Regular season Premier League match (mid-table) | **520** |
 | Celebrity spotted at fashion event | **380** |
+| Man arrested for stabbing family member | **300** |
+| Person dies in house fire in small town | **280** |
+| Local coach arrested for crime | **250** |
 | Local council approves parking regulations | **150** |
 
 Use these anchors as your PRIMARY baseline. Ask: "Is this article more or less important than each anchor?" and score accordingly.
@@ -276,7 +286,8 @@ Use these anchors as your PRIMARY baseline. Ask: "Is this article more or less i
 
 ## PERSONALIZATION RELEVANCE
 
-In addition to the global score, output relevance scores for any matching topics and countries from the lists below. Only include topics/countries that are ACTUALLY relevant to the article. Score each from 0-100:
+### Topic Relevance (0-100)
+Score how relevant this article is to each topic:
 - **90-100**: Core subject (an F1 race result → f1: 95)
 - **60-89**: Strongly related (a startup acquisition → startups: 75)
 - **30-59**: Somewhat related (a tech company mentioned → tech_industry: 40)
@@ -284,9 +295,25 @@ In addition to the global score, output relevance scores for any matching topics
 
 **Available topics:** economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, entertainment, music, gaming, travel
 
+### Country Relevance (0-100) — NATIONAL IMPORTANCE, not geographic location
+Score how important this article is FOR CITIZENS of each country. This is NOT about where it happened — it is about whether citizens of that country NEED to know this.
+
+- **90-100**: NATIONALLY CRITICAL — Affects the entire nation (elections, national policy, constitutional crisis, major infrastructure failure, national disaster)
+- **70-89**: REGIONALLY SIGNIFICANT — Affects a large region or major sector (regional elections, major strikes, significant economic policy, regional disasters affecting thousands)
+- **40-69**: NOTABLE — Worth knowing but limited national impact (city-level events, court cases with public interest, notable cultural events)
+- **20-39**: MINOR — Individual incidents with no broader impact (local crime, minor accidents, celebrity drama, routine sports results)
+- **0-19**: IRRELEVANT — omit
+
+EXAMPLES:
+- "Spain reopens Madrid-Sevilla rail after crash" → spain: 85 (national infrastructure, millions affected)
+- "PM Sanchez backs candidate in regional election" → spain: 80 (national politics)
+- "Man stabs family member in small Spanish town" → spain: 15 (individual crime, omit)
+- "House fire kills one person in Avila" → spain: 10 (individual tragedy, omit)
+- "Turkish celebrity tests positive in drug probe" → turkiye: 30 (minor celebrity scandal)
+
 **Available countries:** usa, uk, china, russia, germany, france, spain, italy, ukraine, turkiye, india, japan, israel, canada, australia
 
-Only output topics/countries with relevance >= 30. Most articles will match 1-4 topics and 0-2 countries.
+Only output topics with relevance >= 30. Only output countries with relevance >= 20.
 
 ---
 
@@ -299,7 +326,7 @@ Return ONLY a JSON object with the score and relevance:
 ```
 
 - `topic_relevance`: only include topics with relevance >= 30
-- `country_relevance`: only include countries with relevance >= 30
+- `country_relevance`: only include countries with relevance >= 20 (national importance, NOT geographic)
 - If no topics/countries are relevant, use empty objects: `{}`
 """
 
@@ -806,13 +833,14 @@ Both deserve visibility. Score accordingly.
                         # Validate score range
                         score = max(0, min(1000, int(score)))
 
-                        # Clean relevance dicts: only keep valid entries with int values >= 30
+                        # Clean relevance dicts: only keep valid entries
                         if isinstance(topic_relevance, dict):
                             topic_relevance = {k: int(v) for k, v in topic_relevance.items() if isinstance(v, (int, float)) and int(v) >= 30}
                         else:
                             topic_relevance = {}
                         if isinstance(country_relevance, dict):
-                            country_relevance = {k: int(v) for k, v in country_relevance.items() if isinstance(v, (int, float)) and int(v) >= 30}
+                            # Country relevance threshold is 20 (national importance, not geographic)
+                            country_relevance = {k: int(v) for k, v in country_relevance.items() if isinstance(v, (int, float)) and int(v) >= 20}
                         else:
                             country_relevance = {}
 

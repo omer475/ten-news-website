@@ -618,86 +618,123 @@ class ClaudeComponentWriter:
     
     def _validate_output(self, result: Dict, selected_components: List[str]) -> tuple[bool, List[str]]:
         """
-        Validate component output
-        
+        Validate component output PER-COMPONENT.
+        Invalid components are removed from result but valid ones are kept.
+
         Returns:
-            (is_valid, errors)
+            (is_valid, errors) - is_valid is True if at least one component survived
         """
         errors = []
-        
+
+        # --- TIMELINE validation ---
         if 'timeline' in selected_components:
             if 'timeline' not in result:
                 errors.append("Timeline selected but not in output")
-            elif len(result['timeline']) < 2 or len(result['timeline']) > 4:
-                errors.append(f"Timeline event count: {len(result['timeline'])} (need 2-4)")
-        
+            elif not isinstance(result['timeline'], list):
+                errors.append("Timeline is not a list")
+                del result['timeline']
+            elif len(result['timeline']) < 2:
+                errors.append(f"Timeline event count: {len(result['timeline'])} (need at least 2)")
+                del result['timeline']
+            elif len(result['timeline']) > 4:
+                # Too many events - just trim to 4 instead of failing
+                result['timeline'] = result['timeline'][:4]
+
+        # --- DETAILS validation (relaxed: keep details with or without numbers) ---
         if 'details' in selected_components:
             if 'details' not in result:
                 errors.append("Details selected but not in output")
             else:
-                # Filter to only details that have numbers, then keep best 3
                 valid_details = []
+                details_with_numbers = []
                 for detail in result['details']:
-                    if isinstance(detail, dict):
+                    if isinstance(detail, dict) and detail.get('label') and detail.get('value'):
+                        valid_details.append(detail)
                         value = str(detail.get('value', ''))
                         if any(char.isdigit() for char in value):
-                            valid_details.append(detail)
-                    elif isinstance(detail, str):
+                            details_with_numbers.append(detail)
+                    elif isinstance(detail, str) and len(detail) > 3:
+                        valid_details.append(detail)
                         if any(char.isdigit() for char in detail):
-                            valid_details.append(detail)
-                
-                if len(valid_details) >= 3:
-                    # Keep only the first 3 valid details (with numbers)
+                            details_with_numbers.append(detail)
+
+                # Prefer details with numbers, but accept without if that's all we have
+                if len(details_with_numbers) >= 3:
+                    result['details'] = details_with_numbers[:3]
+                elif len(valid_details) >= 2:
+                    # Use whatever valid details we have (at least 2)
                     result['details'] = valid_details[:3]
+                    errors.append(f"Only {len(details_with_numbers)} details have numbers, using {len(result['details'])} valid details")
                 else:
-                    errors.append(f"Only {len(valid_details)} details have numbers (need at least 3)")
-        
+                    errors.append(f"Only {len(valid_details)} valid details (need at least 2)")
+                    del result['details']
+
+        # --- GRAPH validation ---
         if 'graph' in selected_components:
             if 'graph' not in result:
                 errors.append("Graph selected but not in output")
-        
+            elif isinstance(result['graph'], dict):
+                if not result['graph'].get('data') or len(result['graph'].get('data', [])) < 3:
+                    errors.append("Graph has fewer than 3 data points")
+                    del result['graph']
+
+        # --- MAP validation (relaxed: allow cities, just block countries/continents/space) ---
         if 'map' in selected_components:
             if 'map' not in result:
                 errors.append("Map selected but not in output")
             elif not isinstance(result['map'], list) or len(result['map']) < 1:
                 errors.append("Map must have at least 1 location")
+                if 'map' in result:
+                    del result['map']
             else:
-                # Validate each location has required fields and is precise (not just country/city)
-                vague_locations = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states', 
-                                   'middle east', 'europe', 'asia', 'australia', 'sydney', 'moscow', 'gaza city',
-                                   'baltimore', 'new york', 'london', 'paris', 'tokyo', 'beijing', 'california',
-                                   'new south wales', 'eastern europe', 'downtown', 'city center', 'suburbs',
-                                   'kyiv', 'kiev', 'tehran', 'gaza', 'west bank', 'crimea']
-                # Space locations that are NOT on Earth
+                # Only block truly vague locations (countries/continents) and space
+                too_vague = ['ukraine', 'russia', 'israel', 'palestine', 'china', 'usa', 'united states',
+                             'middle east', 'europe', 'asia', 'africa', 'south america', 'north america',
+                             'eastern europe', 'downtown', 'city center', 'suburbs']
                 space_locations = ['moon', 'mars', 'jupiter', 'saturn', 'venus', 'mercury', 'neptune', 'uranus',
                                    'pluto', 'asteroid', 'comet', 'space station', 'international space station',
                                    'iss', 'lunar', 'orbit', 'outer space', 'milky way', 'galaxy', 'sun', 'solar']
-                # Famous buildings everyone knows
-                famous_buildings = ['kremlin', 'white house', 'capitol', 'capitol building', '10 downing street',
-                                    'downing street', 'elysee palace', 'buckingham palace', 'pentagon']
                 valid_types = ['venue', 'building', 'landmark', 'infrastructure', 'military', 'transport', 'street']
+
+                valid_locations = []
                 for i, loc in enumerate(result['map']):
                     if not isinstance(loc, dict):
                         errors.append(f"Map location {i+1} is not a dict")
-                    elif 'name' not in loc or 'coordinates' not in loc:
+                        continue
+                    if 'name' not in loc or 'coordinates' not in loc:
                         errors.append(f"Map location {i+1} missing name or coordinates")
+                        continue
+
+                    loc_name_lower = loc.get('name', '').lower().strip()
+
+                    if loc_name_lower in too_vague:
+                        errors.append(f"Map location '{loc.get('name')}' too vague (country/region)")
+                        continue
+                    if any(space in loc_name_lower for space in space_locations):
+                        errors.append(f"Map location '{loc.get('name')}' not on Earth")
+                        continue
+
+                    # Validate coordinates
+                    coords = loc.get('coordinates', {})
+                    if isinstance(coords, dict) and 'lat' in coords and 'lng' in coords:
+                        # Fix type if present but invalid
+                        if 'type' in loc and loc['type'] not in valid_types:
+                            loc['type'] = 'landmark'
+                        valid_locations.append(loc)
                     else:
-                        loc_name_lower = loc.get('name', '').lower()
-                        if loc_name_lower in vague_locations:
-                            errors.append(f"Map location {i+1} is too vague: '{loc.get('name')}' (need specific venue/building/landmark)")
-                        elif any(space in loc_name_lower for space in space_locations):
-                            errors.append(f"Map location {i+1} is not on Earth: '{loc.get('name')}' (must be on planet Earth)")
-                        elif loc_name_lower in famous_buildings or any(fb in loc_name_lower for fb in famous_buildings):
-                            errors.append(f"Map location {i+1} is too well-known: '{loc.get('name')}' (everyone knows where this is)")
-                    # Validate type field if present
-                    if isinstance(loc, dict) and 'type' in loc and loc['type'] not in valid_types:
-                        errors.append(f"Map location {i+1} has invalid type: '{loc.get('type')}'")
-                    # Validate coordinates format
-                    if isinstance(loc, dict) and 'coordinates' in loc and isinstance(loc['coordinates'], dict):
-                        if 'lat' not in loc['coordinates'] or 'lng' not in loc['coordinates']:
-                            errors.append(f"Map location {i+1} coordinates missing lat or lng")
-        
-        return len(errors) == 0, errors
+                        errors.append(f"Map location '{loc.get('name')}' has invalid coordinates")
+
+                if valid_locations:
+                    result['map'] = valid_locations
+                else:
+                    errors.append("No valid map locations survived validation")
+                    del result['map']
+
+        # Check if at least one component survived
+        surviving = [c for c in selected_components if c in result]
+        has_any_component = len(surviving) > 0
+
+        return has_any_component, errors
     
     def write_all_articles(self, articles: List[Dict]) -> List[Dict]:
         """
