@@ -37,10 +37,10 @@ const MapboxMap = dynamic(() => import('../components/MapboxMap'), {
 // Two paths to must-know:
 //   1. Globally important: base_score >= 900 (important for everyone)
 //   2. Locally critical for THIS user: base >= 600 AND home_country_relevance >= 80
-//      AND final >= 950. Only nationally critical stories (relevance 80+) from the
+//      AND final >= 900. Only nationally critical stories (relevance 80+) from the
 //      user's home country can break through. Capped at 5 local articles.
 const MUST_KNOW_THRESHOLD = 900;
-const LOCAL_MUST_KNOW_FINAL_MIN = 950;
+const LOCAL_MUST_KNOW_FINAL_MIN = 900;
 const LOCAL_MUST_KNOW_MIN_BASE = 600;
 const LOCAL_MUST_KNOW_MIN_RELEVANCE = 80;
 const LOCAL_MUST_KNOW_MAX = 5;
