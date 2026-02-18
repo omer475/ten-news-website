@@ -67,7 +67,7 @@ science, climate, health, biotech
 politics, geopolitics, conflicts, human_rights
 
 **Sports:**
-football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics
+football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming
 
 **Lifestyle:**
 entertainment, music, gaming, travel
@@ -102,6 +102,13 @@ entertainment, music, gaming, travel
 | "F1 Monaco Grand Prix results" | (none) | f1 |
 | "NBA Finals: Lakers beat Celtics" | usa | basketball |
 | "Premier League: Chelsea 3-1 Wolves" | uk | football |
+| "Tiger Woods wins PGA Championship" | usa | golf |
+| "Figure skating: Olympic champion crowned" | (none) | winter_sports, olympics |
+| "NHL Stanley Cup Final: Oilers beat Panthers" | canada | ice_hockey |
+| "Alpine skiing World Cup results" | (none) | winter_sports |
+| "Olympic bobsled: Germany sweeps medals" | germany | winter_sports, olympics |
+| "Six Nations: France beats England" | france, uk | rugby |
+| "Olympic swimming: world record broken" | (none) | swimming, olympics |
 
 ---
 
@@ -124,6 +131,12 @@ entertainment, music, gaming, travel
 - "World Cup Final" -> Tag the competing countries, football
 - "Wimbledon Final" -> uk, tennis
 - "Super Bowl" -> usa, american_football
+- "Masters Golf Tournament" -> usa, golf
+- "Ryder Cup" -> Tag competing countries, golf
+- "Figure skating / speed skating / bobsled / skiing / biathlon" -> winter_sports (+ olympics if at Olympics)
+- "NHL / ice hockey" -> ice_hockey
+- "Six Nations / Rugby World Cup" -> rugby
+- "Olympic swimming" -> swimming, olympics
 
 ### Wars/Conflicts
 - Always tag BOTH countries involved if applicable
@@ -162,8 +175,8 @@ Return valid JSON (no markdown, no code blocks):
 **Countries (22):**
 usa, uk, china, russia, germany, france, spain, italy, ukraine, turkiye, ireland, india, japan, south_korea, pakistan, singapore, israel, canada, brazil, nigeria, south_africa, australia
 
-**Topics (29):**
-economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, entertainment, music, gaming, travel
+**Topics (34):**
+economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming, entertainment, music, gaming, travel
 """
 
 # Valid country codes
@@ -182,7 +195,8 @@ VALID_TOPICS = [
     'science', 'climate', 'health', 'biotech',
     'politics', 'geopolitics', 'conflicts', 'human_rights',
     'football', 'american_football', 'basketball', 'tennis', 'f1',
-    'cricket', 'combat_sports', 'olympics',
+    'cricket', 'combat_sports', 'olympics', 'golf', 'winter_sports',
+    'ice_hockey', 'rugby', 'swimming',
     'entertainment', 'music', 'gaming', 'travel'
 ]
 
@@ -317,7 +331,7 @@ def _fallback_topic_from_category(category: str) -> List[str]:
         'science': ['science'],
         'health': ['health'],
         'finance': ['economics'],
-        'sports': ['football'],
+        'sports': ['olympics'],
         'entertainment': ['entertainment'],
         'other': ['politics'],
     }

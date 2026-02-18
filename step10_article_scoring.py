@@ -293,7 +293,7 @@ Score how relevant this article is to each topic:
 - **30-59**: Somewhat related (a tech company mentioned → tech_industry: 40)
 - **0-29**: Barely related — don't include these, omit them
 
-**Available topics:** economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, entertainment, music, gaming, travel
+**Available topics:** economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming, entertainment, music, gaming, travel
 
 ### Country Relevance (0-100) — NATIONAL IMPORTANCE, not geographic location
 Score how important this article is FOR CITIZENS of each country. This is NOT about where it happened — it is about whether citizens of that country NEED to know this.

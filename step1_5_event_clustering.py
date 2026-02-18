@@ -1357,29 +1357,91 @@ class EventClusteringEngine:
         
         return None
     
+    def close_expired_clusters(self) -> int:
+        """
+        Close clusters that have exceeded their lifetime limits.
+
+        Closes clusters where EITHER:
+        1. Inactive for 7+ days (last_updated_at > CLUSTER_INACTIVITY_HOURS ago)
+        2. Created 14+ days ago regardless of activity (created_at > CLUSTER_MAX_LIFETIME_HOURS ago)
+
+        Returns:
+            Number of clusters closed
+        """
+        try:
+            now = datetime.utcnow()
+            inactivity_cutoff = (now - timedelta(hours=self.config.CLUSTER_INACTIVITY_HOURS)).isoformat()
+            max_lifetime_cutoff = (now - timedelta(hours=self.config.CLUSTER_MAX_LIFETIME_HOURS)).isoformat()
+
+            # Get all active clusters
+            result = self.supabase.table('clusters').select(
+                'id, created_at, last_updated_at, event_name'
+            ).eq('status', 'active').execute()
+
+            if not result.data:
+                return 0
+
+            clusters_to_close = []
+            for cluster in result.data:
+                last_updated = cluster.get('last_updated_at', '')
+                created_at = cluster.get('created_at', '')
+                reason = None
+
+                # Check max lifetime (14 days from creation)
+                if created_at and created_at < max_lifetime_cutoff:
+                    reason = f"max_lifetime ({self.config.CLUSTER_MAX_LIFETIME_HOURS}h)"
+                # Check inactivity (7 days without updates)
+                elif last_updated and last_updated < inactivity_cutoff:
+                    reason = f"inactive ({self.config.CLUSTER_INACTIVITY_HOURS}h)"
+
+                if reason:
+                    clusters_to_close.append((cluster['id'], cluster.get('event_name', ''), reason))
+
+            # Close expired clusters
+            closed_count = 0
+            for cluster_id, event_name, reason in clusters_to_close:
+                try:
+                    self.supabase.table('clusters').update({
+                        'status': 'closed',
+                        'closed_at': now.isoformat()
+                    }).eq('id', cluster_id).execute()
+                    closed_count += 1
+                    print(f"   🔒 Closed cluster {cluster_id} ({event_name[:50]}): {reason}")
+                except Exception as e:
+                    print(f"   ⚠️ Failed to close cluster {cluster_id}: {e}")
+
+            if closed_count > 0:
+                print(f"   🔒 Closed {closed_count} expired clusters")
+
+            return closed_count
+
+        except Exception as e:
+            print(f"❌ Error closing expired clusters: {e}")
+            return 0
+
     def get_active_clusters(self) -> List[Dict]:
         """
-        Get all active clusters (not closed, updated within 24 hours).
-        
+        Get all active clusters (status='active', within max age window).
+        Automatically closes expired clusters first.
+
         Returns:
             List of cluster dicts
         """
         try:
-            # Get clusters updated in last 24 hours
-            cutoff_time = datetime.utcnow() - timedelta(hours=self.config.MAX_CLUSTER_AGE_HOURS)
-            
+            # Close expired clusters before fetching active ones
+            self.close_expired_clusters()
+
+            # Now get remaining active clusters
             result = self.supabase.table('clusters').select('*').eq(
                 'status', 'active'
-            ).gte(
-                'last_updated_at', cutoff_time.isoformat()
             ).order('last_updated_at', desc=True).execute()
-            
+
             return result.data if result.data else []
-            
+
         except Exception as e:
             print(f"❌ Error getting active clusters: {e}")
             return []
-    
+
     def get_cluster_sources(self, cluster_id: int) -> List[Dict]:
         """
         Get all source articles for a cluster.

@@ -863,18 +863,35 @@ def run_complete_pipeline():
     published_lock = threading.Lock()
     published_count = 0
     
-    # Duplicate title cache shared across threads (prevents parallel duplicates)
-    title_cache_lock = threading.Lock()
+    # Duplicate title cache + publish gate lock
+    # publish_gate_lock protects the entire dedup-check → DB insert → cache update
+    # critical section, preventing race conditions where two threads both pass dedup
+    # and then both publish similar articles.
+    publish_gate_lock = threading.Lock()
     published_titles_cache = []  # Populated before parallel processing
     
-    # Pre-fetch recent titles once (shared across all workers)
+    # Pre-fetch titles from all active clusters (shared across all workers)
+    # This ensures dedup covers every article from every currently active cluster
     try:
         from difflib import SequenceMatcher
-        cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
-        recent_articles_result = supabase.table('published_articles')\
-            .select('id, title_news, summary_bullets_news')\
-            .gte('published_at', cutoff_time)\
+        # Get all active cluster IDs
+        active_clusters_result = supabase.table('clusters')\
+            .select('id')\
+            .eq('status', 'active')\
             .execute()
+        active_cluster_ids_for_dedup = [c['id'] for c in (active_clusters_result.data or [])]
+
+        # Get published articles from active clusters
+        if active_cluster_ids_for_dedup:
+            recent_articles_result = supabase.table('published_articles')\
+                .select('id, title_news, summary_bullets_news')\
+                .in_('cluster_id', active_cluster_ids_for_dedup)\
+                .execute()
+        else:
+            recent_articles_result = type('obj', (object,), {'data': []})()
+
+        print(f"   📋 Dedup cache: {len(active_cluster_ids_for_dedup)} active clusters, "
+              f"{len(recent_articles_result.data or [])} published articles to check against")
         
         def _clean_title(t):
             if not t:
@@ -1291,66 +1308,10 @@ def run_complete_pipeline():
             synthesized['image_source'] = selected_image['source_name']
             synthesized['image_score'] = selected_image['quality_score']
             
-            # STEP 9: Publishing to Supabase
-            print(f"\n💾 [Cluster {cluster_id}] STEP 9: PUBLISHING TO SUPABASE")
-            
-            # Check if already published (prevent duplicates)
-            existing = supabase.table('published_articles').select('id').eq('cluster_id', cluster_id).execute()
-            if existing.data and len(existing.data) > 0:
-                print(f"   ⏭️ [Cluster {cluster_id}] Already published (ID: {existing.data[0]['id']})")
-                return False
-            
             title = synthesized.get('title', synthesized.get('title_news', ''))
-            
-            # CHECK FOR SIMILAR TITLES (thread-safe)
-            is_duplicate = False
-            skip_reason = None
-            try:
-                clean_new_title = _clean_title(title)
-                
-                # Check against pre-fetched cache + newly published in this run
-                with title_cache_lock:
-                    all_titles_to_check = list(published_titles_cache)
-                
-                # Get bullets for the new article for semantic dedup
-                new_bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
-                if isinstance(new_bullets, list):
-                    clean_new_bullets = _clean_title(' '.join(new_bullets))
-                elif isinstance(new_bullets, str):
-                    clean_new_bullets = _clean_title(new_bullets)
-                else:
-                    clean_new_bullets = ''
 
-                for recent in all_titles_to_check:
-                    if clean_new_title and recent['clean']:
-                        similarity = SequenceMatcher(None, clean_new_title, recent['clean']).ratio()
-                        if similarity >= 0.65:
-                            print(f"   ⏭️ [Cluster {cluster_id}] DUPLICATE TITLE (similarity: {similarity:.0%})")
-                            print(f"      New: {title[:60]}...")
-                            print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
-                            is_duplicate = True
-                            skip_reason = "duplicate_title"
-                            break
-                        # Secondary check: moderate title similarity + bullet similarity
-                        if similarity >= 0.35 and clean_new_bullets and recent.get('bullets_text'):
-                            bullet_sim = SequenceMatcher(None, clean_new_bullets, recent['bullets_text']).ratio()
-                            if bullet_sim >= 0.40:
-                                print(f"   ⏭️ [Cluster {cluster_id}] SEMANTIC DUPLICATE (title: {similarity:.0%}, bullets: {bullet_sim:.0%})")
-                                print(f"      New: {title[:60]}...")
-                                print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
-                                is_duplicate = True
-                                skip_reason = "semantic_duplicate"
-                                break
-                            
-            except Exception as e:
-                print(f"   ⚠️ [Cluster {cluster_id}] Duplicate check error: {e}")
-            
-            if is_duplicate:
-                update_cluster_status(cluster_id, 'skipped', 'duplicate',
-                    f'Duplicate detected: {skip_reason}')
-                return False
-            
             # STEPS 10+11: SCORING + TAGGING (run in parallel - both use Gemini independently)
+            # Done BEFORE the publish gate so scoring runs in parallel across workers.
             print(f"\n   🎯 [Cluster {cluster_id}] STEPS 10+11: SCORING + TAGGING (parallel)")
             bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
             article_category = synthesized.get('category', 'Other')
@@ -1430,48 +1391,92 @@ def run_complete_pipeline():
             
             emoji = component_result.get('emoji', '📰') if isinstance(component_result, dict) else '📰'
 
-            article_data = {
-                'cluster_id': cluster_id,
-                'url': cluster_sources[0]['url'],
-                'source': cluster_sources[0]['source_name'],
-                'category': synthesized.get('category', 'Other'),
-                'title_news': title,
-                'summary_bullets_news': bullets,
-                'five_ws': five_ws,
-                'emoji': emoji,
-                'timeline': components.get('timeline'),
-                'details': components.get('details'),
-                'graph': components.get('graph'),
-                'map': components.get('map'),
-                'components_order': successful_components,
-                'num_sources': len(cluster_sources),
-                'published_at': datetime.now().isoformat(),
-                'ai_final_score': article_score,
-                'interest_tags': interest_tags,
-                'countries': article_countries,
-                'topics': article_topics,
-                'topic_relevance': topic_relevance,
-                'country_relevance': country_relevance,
-                'image_url': synthesized.get('image_url'),
-                'image_source': synthesized.get('image_source'),
-                'image_score': synthesized.get('image_score'),
-                'source_titles': source_titles
-            }
-            
-            result = supabase.table('published_articles').insert(article_data).execute()
-            
-            published_article_id = result.data[0]['id']
-            print(f"   ✅ [Cluster {cluster_id}] Published article ID: {published_article_id}")
-            if len(source_titles) > 1:
-                print(f"   📚 [Cluster {cluster_id}] MULTI-SOURCE ({len(source_titles)} articles):")
-                for st in source_titles:
-                    print(f"      • [{st['source']}] {st['title'][:70]}...")
-            
-            with published_lock:
-                published_count += 1
-            
-            # Add to title cache for other workers' duplicate detection
-            with title_cache_lock:
+            # STEP 9: PUBLISH GATE
+            # Acquire publish_gate_lock to make dedup check + DB insert + cache update atomic.
+            # This prevents two threads from both passing dedup and publishing similar articles.
+            print(f"\n💾 [Cluster {cluster_id}] STEP 9: PUBLISHING TO SUPABASE")
+
+            with publish_gate_lock:
+                # Re-check if already published (another thread may have published it)
+                existing = supabase.table('published_articles').select('id').eq('cluster_id', cluster_id).execute()
+                if existing.data and len(existing.data) > 0:
+                    print(f"   ⏭️ [Cluster {cluster_id}] Already published (ID: {existing.data[0]['id']})")
+                    return False
+
+                # DEDUP CHECK against current cache (no stale snapshots - we hold the lock)
+                is_duplicate = False
+                skip_reason = None
+                try:
+                    clean_new_title = _clean_title(title)
+                    new_bullets_text = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
+                    if isinstance(new_bullets_text, list):
+                        clean_new_bullets = _clean_title(' '.join(new_bullets_text))
+                    elif isinstance(new_bullets_text, str):
+                        clean_new_bullets = _clean_title(new_bullets_text)
+                    else:
+                        clean_new_bullets = ''
+
+                    for recent in published_titles_cache:
+                        if clean_new_title and recent['clean']:
+                            similarity = SequenceMatcher(None, clean_new_title, recent['clean']).ratio()
+                            if similarity >= 0.50:
+                                print(f"   ⏭️ [Cluster {cluster_id}] DUPLICATE TITLE (similarity: {similarity:.0%})")
+                                print(f"      New: {title[:60]}...")
+                                print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
+                                is_duplicate = True
+                                skip_reason = "duplicate_title"
+                                break
+                            if similarity >= 0.25 and clean_new_bullets and recent.get('bullets_text'):
+                                bullet_sim = SequenceMatcher(None, clean_new_bullets, recent['bullets_text']).ratio()
+                                if bullet_sim >= 0.35:
+                                    print(f"   ⏭️ [Cluster {cluster_id}] SEMANTIC DUPLICATE (title: {similarity:.0%}, bullets: {bullet_sim:.0%})")
+                                    print(f"      New: {title[:60]}...")
+                                    print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
+                                    is_duplicate = True
+                                    skip_reason = "semantic_duplicate"
+                                    break
+                except Exception as e:
+                    print(f"   ⚠️ [Cluster {cluster_id}] Duplicate check error: {e}")
+
+                if is_duplicate:
+                    update_cluster_status(cluster_id, 'skipped', 'duplicate',
+                        f'Duplicate detected: {skip_reason}')
+                    return False
+
+                # Build article data and insert (still inside lock)
+                article_data = {
+                    'cluster_id': cluster_id,
+                    'url': cluster_sources[0]['url'],
+                    'source': cluster_sources[0]['source_name'],
+                    'category': synthesized.get('category', 'Other'),
+                    'title_news': title,
+                    'summary_bullets_news': bullets,
+                    'five_ws': five_ws,
+                    'emoji': emoji,
+                    'timeline': components.get('timeline'),
+                    'details': components.get('details'),
+                    'graph': components.get('graph'),
+                    'map': components.get('map'),
+                    'components_order': successful_components,
+                    'num_sources': len(cluster_sources),
+                    'published_at': datetime.now().isoformat(),
+                    'ai_final_score': article_score,
+                    'interest_tags': interest_tags,
+                    'countries': article_countries,
+                    'topics': article_topics,
+                    'topic_relevance': topic_relevance,
+                    'country_relevance': country_relevance,
+                    'image_url': synthesized.get('image_url'),
+                    'image_source': synthesized.get('image_source'),
+                    'image_score': synthesized.get('image_score'),
+                    'source_titles': source_titles
+                }
+
+                result = supabase.table('published_articles').insert(article_data).execute()
+
+                published_article_id = result.data[0]['id']
+
+                # Update cache immediately (still inside lock - next thread will see it)
                 pub_bullets = synthesized.get('summary_bullets', synthesized.get('summary_bullets_news', []))
                 if isinstance(pub_bullets, list):
                     pub_bullets_text = _clean_title(' '.join(pub_bullets))
@@ -1485,7 +1490,17 @@ def run_complete_pipeline():
                     'clean': _clean_title(title),
                     'bullets_text': pub_bullets_text
                 })
-            
+
+            # Outside the lock - these don't need atomicity
+            print(f"   ✅ [Cluster {cluster_id}] Published article ID: {published_article_id}")
+            if len(source_titles) > 1:
+                print(f"   📚 [Cluster {cluster_id}] MULTI-SOURCE ({len(source_titles)} articles):")
+                for st in source_titles:
+                    print(f"      • [{st['source']}] {st['title'][:70]}...")
+
+            with published_lock:
+                published_count += 1
+
             # Mark cluster as successfully published
             update_cluster_status(cluster_id, 'published')
             

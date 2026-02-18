@@ -288,7 +288,16 @@ class OptimizedRSSFetcher:
             for entry in feed.entries:
                 article_url = entry.get('link', '')
                 article_guid = entry.get('id', '')
-                
+
+                # Normalize relative URLs to absolute
+                if article_url and not article_url.startswith(('http://', 'https://')):
+                    if article_url.startswith('//'):
+                        article_url = 'https:' + article_url
+                    elif article_url.startswith('/'):
+                        article_url = urljoin(feed_url, article_url)
+                    else:
+                        article_url = urljoin(feed_url, article_url)
+
                 if not article_url:
                     continue
                 
@@ -320,7 +329,7 @@ class OptimizedRSSFetcher:
                     continue  # Already have this article
                 
                 # NEW ARTICLE - Extract and insert
-                article_data = self._extract_article_data(entry, source_name)
+                article_data = self._extract_article_data(entry, source_name, feed_url)
                 if self._insert_article(article_data, conn):
                     result['new_articles'] += 1
                     
@@ -412,12 +421,21 @@ class OptimizedRSSFetcher:
                 pass
         return None
     
-    def _extract_article_data(self, entry, source_name):
+    def _extract_article_data(self, entry, source_name, feed_url=''):
         """Extract all article data from RSS entry"""
-        
+
         # Basic fields
         url = entry.get('link', '')
         guid = entry.get('id', '')
+
+        # Normalize relative URLs to absolute using the feed URL as base
+        if url and not url.startswith(('http://', 'https://')):
+            if url.startswith('//'):
+                url = 'https:' + url
+            elif url.startswith('/') and feed_url:
+                url = urljoin(feed_url, url)
+            elif feed_url:
+                url = urljoin(feed_url, url)
         title = entry.get('title', '')
         description = entry.get('description', '') or entry.get('summary', '')
         author = entry.get('author', '')
