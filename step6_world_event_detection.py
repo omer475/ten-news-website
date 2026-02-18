@@ -628,7 +628,7 @@ def search_historical_articles_for_event(event: Dict, event_data: Dict):
     for keyword in keywords[:5]:  # Use top 5 keywords for efficiency
         try:
             result = supabase.table('published_articles').select(
-                'id, title_news, one_liner, published_at, created_at'
+                'id, title_news, summary_bullets_news, published_at, created_at'
             ).ilike('title_news', f'%{keyword}%').gte(
                 'created_at', three_months_ago
             ).limit(20).execute()
@@ -711,7 +711,7 @@ Respond with valid JSON only."""
                             'event_id': event['id'],
                             'date': date_obj.date().isoformat(),
                             'headline': (article.get('title_news') or article.get('title', ''))[:200],
-                            'summary': article.get('one_liner', '')[:500] if article.get('one_liner') else ''
+                            'summary': (article.get('summary_bullets_news', [''])[0][:500] if isinstance(article.get('summary_bullets_news'), list) and article.get('summary_bullets_news') else '')
                         }).execute()
                         tagged_count += 1
                     except Exception as e:
