@@ -125,19 +125,29 @@ class ImageSelector:
             'quality_score': best['quality_score']
         }
     
+    # URL path patterns that indicate logos, icons, branding, or placeholder images
+    LOGO_URL_PATTERNS = [
+        'logo', 'brand', 'favicon', 'icon', 'avatar', 'placeholder',
+        'default-image', 'default_image', 'fallback', 'site-image',
+        'og-default', 'og_default', 'share-image', 'share_image',
+        'masthead', 'banner-logo', 'header-logo', 'site-logo',
+        'publisher-logo', 'source-logo', 'news-logo', 'channel-logo',
+    ]
+
     def _is_valid_image(self, candidate: Dict) -> bool:
         """
         Filter out invalid/low-quality images
         """
         url = candidate['url']
-        
+
         # Check URL exists
         if not url or len(url) < 10:
             return False
-        
+
         # Check blacklisted domains
         try:
-            domain = urlparse(url).netloc.lower()
+            parsed = urlparse(url)
+            domain = parsed.netloc.lower()
             for blacklisted in BLACKLISTED_DOMAINS:
                 if blacklisted in domain:
                     if self.debug:
@@ -145,9 +155,17 @@ class ImageSelector:
                     return False
         except:
             return False
-        
-        # Check file extension
+
         url_lower = url.lower()
+
+        # Check URL path for logo/brand/placeholder patterns
+        for pattern in self.LOGO_URL_PATTERNS:
+            if pattern in url_lower:
+                if self.debug:
+                    print(f"      ❌ Filtered (logo/brand URL pattern '{pattern}'): {url[:80]}")
+                return False
+
+        # Check file extension
         extension = url_lower.split('.')[-1].split('?')[0]  # Handle query params
         
         if extension in EXCLUDED_FORMATS:

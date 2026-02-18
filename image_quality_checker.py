@@ -48,6 +48,8 @@ REJECT if the image contains ANY of these:
 - News broadcasters or anchors sitting at news desks or standing in TV studios
 - Generic shots of reporters with microphones in front of cameras (people COVERING the story, not IN the story)
 - Large watermarks or news company logos that dominate the image (CNN, BBC, Fox News, etc.)
+- NEWS SOURCE LOGOS or branding images — images that are just the logo/brand of a news outlet (e.g. a Reuters logo, BBC logo, Al Jazeera logo, TRT World logo, or any other media company logo/emblem as the main subject)
+- Generic placeholder or default images used by news sites when no real photo is available
 - Screenshots of TV news programs or broadcasts
 - Very low quality, blurry, or heavily pixelated images
 - Social media screenshots or meme-style images
