@@ -23,124 +23,109 @@ export default async function handler(req, res) {
 
     // Validate home_country
     if (!home_country || !validCountryCodes.includes(home_country)) {
-      return res.status(400).json({ 
-        error: `Invalid home_country. Must be one of: ${validCountryCodes.join(', ')}` 
+      return res.status(400).json({
+        error: `Invalid home_country. Must be one of: ${validCountryCodes.join(', ')}`
       });
     }
 
     // Validate followed_countries
     if (followed_countries.length > PERSONALIZATION_CONFIG.MAX_FOLLOWED_COUNTRIES) {
-      return res.status(400).json({ 
-        error: `Maximum ${PERSONALIZATION_CONFIG.MAX_FOLLOWED_COUNTRIES} followed countries allowed` 
+      return res.status(400).json({
+        error: `Maximum ${PERSONALIZATION_CONFIG.MAX_FOLLOWED_COUNTRIES} followed countries allowed`
       });
     }
-    
+
     const invalidCountries = followed_countries.filter(c => !validCountryCodes.includes(c));
     if (invalidCountries.length > 0) {
-      return res.status(400).json({ 
-        error: `Invalid followed countries: ${invalidCountries.join(', ')}` 
+      return res.status(400).json({
+        error: `Invalid followed countries: ${invalidCountries.join(', ')}`
       });
     }
 
     if (followed_countries.includes(home_country)) {
-      return res.status(400).json({ 
-        error: 'followed_countries should not include home_country' 
+      return res.status(400).json({
+        error: 'followed_countries should not include home_country'
       });
     }
 
     // Validate followed_topics
     if (!followed_topics || followed_topics.length < PERSONALIZATION_CONFIG.MIN_TOPICS_REQUIRED) {
-      return res.status(400).json({ 
-        error: `At least ${PERSONALIZATION_CONFIG.MIN_TOPICS_REQUIRED} topics required` 
+      return res.status(400).json({
+        error: `At least ${PERSONALIZATION_CONFIG.MIN_TOPICS_REQUIRED} topics required`
       });
     }
 
     if (followed_topics.length > PERSONALIZATION_CONFIG.MAX_TOPICS_ALLOWED) {
-      return res.status(400).json({ 
-        error: `Maximum ${PERSONALIZATION_CONFIG.MAX_TOPICS_ALLOWED} topics allowed` 
+      return res.status(400).json({
+        error: `Maximum ${PERSONALIZATION_CONFIG.MAX_TOPICS_ALLOWED} topics allowed`
       });
     }
 
     const invalidTopics = followed_topics.filter(t => !validTopicCodes.includes(t));
     if (invalidTopics.length > 0) {
-      return res.status(400).json({ 
-        error: `Invalid topics: ${invalidTopics.join(', ')}` 
+      return res.status(400).json({
+        error: `Invalid topics: ${invalidTopics.join(', ')}`
       });
     }
 
-    // Build user data
-    const userData = {
+    // Build personalization data
+    const personalizationData = {
       home_country,
       followed_countries,
       followed_topics,
       onboarding_completed: true,
     };
 
-    if (email) {
-      userData.email = email;
+    // Anonymous user (no auth_user_id): don't write to DB, return success for localStorage
+    if (!auth_user_id && !user_id) {
+      return res.status(200).json({
+        success: true,
+        user: { ...personalizationData, id: null }
+      });
     }
 
-    // If auth_user_id provided (user is logged in), link immediately
-    if (auth_user_id) {
-      userData.auth_user_id = auth_user_id;
-    }
-
-    // If user_id provided, update existing user
+    // If user_id provided, update existing profile
     if (user_id) {
       const { data, error } = await supabase
-        .from('users')
-        .update(userData)
+        .from('profiles')
+        .update(personalizationData)
         .eq('id', user_id)
         .select()
         .single();
 
       if (error) {
-        console.error('Error updating user:', error);
-        return res.status(500).json({ error: 'Failed to update user' });
+        // user_id doesn't match a profiles row — likely a localStorage-only user
+        console.error('Error updating profile:', error);
+        return res.status(200).json({
+          success: true,
+          user: { ...personalizationData, id: user_id }
+        });
       }
 
       return res.status(200).json({ success: true, user: data });
     }
 
-    // If auth_user_id provided, check if a profile already exists for this auth user
+    // Authenticated user: upsert into profiles using auth_user_id as the id
     if (auth_user_id) {
-      const { data: existingProfile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_user_id', auth_user_id)
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(personalizationData)
+        .eq('id', auth_user_id)
+        .select()
         .single();
 
-      if (existingProfile) {
-        // Update existing linked profile with new preferences
-        const { data, error } = await supabase
-          .from('users')
-          .update(userData)
-          .eq('id', existingProfile.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error updating linked user:', error);
-          return res.status(500).json({ error: 'Failed to update user' });
-        }
-
-        return res.status(200).json({ success: true, user: data });
+      if (error) {
+        console.error('Error updating profile for auth user:', error);
+        return res.status(500).json({ error: 'Failed to update profile' });
       }
+
+      return res.status(200).json({ success: true, user: data });
     }
 
-    // Create new user
-    const { data, error } = await supabase
-      .from('users')
-      .insert(userData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating user:', error);
-      return res.status(500).json({ error: 'Failed to create user' });
-    }
-
-    return res.status(201).json({ success: true, user: data });
+    return res.status(200).json({
+      success: true,
+      user: { ...personalizationData, id: null }
+    });
 
   } catch (error) {
     console.error('Onboarding error:', error);

@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     // Try to get from database if user_id provided
     if (user_id) {
       const { data: userData, error: userError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('home_country, followed_countries, followed_topics')
         .eq('id', user_id)
         .single();

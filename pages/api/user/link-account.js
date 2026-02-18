@@ -14,67 +14,46 @@ export default async function handler(req, res) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { auth_user_id, personalization_user_id } = req.body;
+    const { auth_user_id, personalization_user_id, home_country, followed_countries, followed_topics, onboarding_completed } = req.body;
 
     if (!auth_user_id) {
       return res.status(400).json({ error: 'auth_user_id is required' });
     }
 
-    // CASE 1: User has a personalization profile from onboarding (link it to auth)
-    if (personalization_user_id) {
-      // Check if this auth user is already linked to a different personalization profile
-      const { data: existingLink } = await supabase
-        .from('users')
-        .select('id, auth_user_id')
-        .eq('auth_user_id', auth_user_id)
+    // CASE 1: User has personalization data to link (from localStorage after onboarding)
+    if (personalization_user_id || home_country) {
+      // Check if this auth user already has personalization in profiles
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id, home_country, followed_countries, followed_topics, onboarding_completed')
+        .eq('id', auth_user_id)
         .single();
 
-      if (existingLink && existingLink.id !== personalization_user_id) {
-        // Auth user already linked to a different profile - use the existing linked one
-        // (This happens if user did onboarding on device A, linked on device A, 
-        //  then did onboarding again on device B before logging in)
-        const { data: linkedProfile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', existingLink.id)
-          .single();
-
-        if (linkedProfile) {
-          return res.status(200).json({ 
-            success: true, 
-            action: 'already_linked',
-            user: linkedProfile
-          });
-        }
+      if (existingProfile && existingProfile.onboarding_completed) {
+        // Already has personalization — return existing
+        return res.status(200).json({
+          success: true,
+          action: 'already_linked',
+          user: existingProfile
+        });
       }
 
-      if (!existingLink) {
-        // Link the personalization profile to the auth user
+      // Write personalization fields directly to profiles
+      const personalizationData = {};
+      if (home_country) personalizationData.home_country = home_country;
+      if (followed_countries) personalizationData.followed_countries = followed_countries;
+      if (followed_topics) personalizationData.followed_topics = followed_topics;
+      if (onboarding_completed !== undefined) personalizationData.onboarding_completed = onboarding_completed;
+
+      if (Object.keys(personalizationData).length > 0) {
         const { data, error } = await supabase
-          .from('users')
-          .update({ auth_user_id: auth_user_id })
-          .eq('id', personalization_user_id)
-          .is('auth_user_id', null)  // Only if not already linked
+          .from('profiles')
+          .update(personalizationData)
+          .eq('id', auth_user_id)
           .select()
           .single();
 
         if (error) {
-          // Might fail if auth_user_id already exists (unique constraint)
-          // Try to fetch the existing linked profile instead
-          const { data: existing } = await supabase
-            .from('users')
-            .select('*')
-            .eq('auth_user_id', auth_user_id)
-            .single();
-
-          if (existing) {
-            return res.status(200).json({
-              success: true,
-              action: 'already_linked',
-              user: existing
-            });
-          }
-
           console.error('Link error:', error);
           return res.status(500).json({ error: 'Failed to link account' });
         }
@@ -86,31 +65,30 @@ export default async function handler(req, res) {
         });
       }
 
-      // Already linked to the same profile
       return res.status(200).json({
         success: true,
-        action: 'already_linked',
-        user: existingLink
+        action: 'linked',
+        user: existingProfile
       });
     }
 
-    // CASE 2: User logged in on new device (no personalization_user_id)
-    // Try to fetch their linked personalization profile
-    const { data: linkedProfile } = await supabase
-      .from('users')
-      .select('*')
-      .eq('auth_user_id', auth_user_id)
+    // CASE 2: User logged in on new device (no personalization data)
+    // Fetch their personalization from profiles
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, home_country, followed_countries, followed_topics, onboarding_completed')
+      .eq('id', auth_user_id)
       .single();
 
-    if (linkedProfile) {
+    if (profile && profile.onboarding_completed) {
       return res.status(200).json({
         success: true,
         action: 'fetched',
-        user: linkedProfile
+        user: profile
       });
     }
 
-    // No linked profile found - user needs to do onboarding
+    // No personalization found — user needs to do onboarding
     return res.status(200).json({
       success: true,
       action: 'no_profile',
