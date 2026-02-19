@@ -39,8 +39,9 @@ COMPONENT_PROMPT = """You are generating supplementary components for a news art
 
 You will receive:
 1. Article title (for context)
-2. Selected components to generate (timeline, details, and/or graph)
-3. Perplexity search context data for each selected component
+2. Bullet summary (to avoid duplicating data)
+3. Selected components to generate (timeline, details, and/or graph)
+4. Perplexity search context data for each selected component
 
 Generate ONLY the selected components based on the provided context data.
 
@@ -70,13 +71,20 @@ Format:
 - Total per detail: under 8 words
 - EVERY detail MUST contain a NUMBER
 
-CRITICAL: Each detail must include:
+CRITICAL RULE: No duplicates from bullet summary.
+
+Before writing each detail:
+1. Check if the fact/number already appears in the BULLET SUMMARY
+2. If YES → Do NOT include it, find a DIFFERENT fact
+3. If NO → Include it
+
+Each detail must include a number such as:
 - Percentage: 4.25%, 5.3%
 - Amount/Count: 340M, $2.8T, 10 consecutive
 - Date: 2023, Mar 2024, Since 2001
 - Rate/Ratio: 6.4%, 0.1%
 
-Use context data from Perplexity. DO NOT repeat data from title/summary.
+Use context data from Perplexity. DO NOT repeat data from title/summary/bullets.
 
 Examples:
 ✓ "Previous rate: 4.25%"
@@ -85,6 +93,7 @@ Examples:
 
 ❌ "Platform: Social media" - no number
 ❌ "Status: Ongoing" - no number
+❌ Any number already in the bullet summary
 
 === GRAPH ===
 Format graph data from Perplexity context:
@@ -217,13 +226,23 @@ class ClaudeComponentWriter:
     
     def _build_prompt(self, article: Dict, components: List[str]) -> str:
         """Build user prompt for component generation"""
-        
+
         title = article.get('title_news', article.get('title', 'Unknown'))
         context_data = article.get('context_data', {})
-        
+
+        # Get bullet summary to avoid duplication in details
+        bullets = article.get('summary_bullets_news', article.get('summary_bullets', []))
+        if isinstance(bullets, list):
+            bullets_text = '\n'.join([f"• {b}" for b in bullets])
+        else:
+            bullets_text = str(bullets)
+
         prompt = f"""Generate components for this news article:
 
 TITLE: {title}
+
+BULLET SUMMARY:
+{bullets_text}
 
 SELECTED COMPONENTS: {', '.join(components)}
 

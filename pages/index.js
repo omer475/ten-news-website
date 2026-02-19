@@ -1538,13 +1538,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
         if (newsData.articles && newsData.articles.length > 0) {
           // Convert new articles to story format
           const newStories = newsData.articles.map((article, index) => {
-            const sampleDetails = article.details && article.details.length > 0 ? article.details : [
-              'Impact Score: 8.5/10 High significance',
-              'Read Time: 4 min Estimated reading duration',
-              'Source Credibility: Verified from trusted sources'
-            ];
-            
-            const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0) 
+            const sampleDetails = article.details && article.details.length > 0 ? article.details : [];
+
+            const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0)
               ? article.timeline 
               : [
                   {"date": "3 days ago", "event": "Initial reports emerge"},
@@ -1754,13 +1750,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
              // Convert articles to story format
              recentArticles.forEach((article, index) => {
                // Sample preview data
-               const sampleDetails = article.details && article.details.length > 0 ? article.details : [
-                 'Impact Score: 8.5/10 High significance',
-                 'Read Time: 4 min Estimated reading duration',
-                 'Source Credibility: Verified from trusted sources'
-               ];
-               
-               const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0) 
+               const sampleDetails = article.details && article.details.length > 0 ? article.details : [];
+
+               const sampleTimeline = (article.timeline && Array.isArray(article.timeline) && article.timeline.length > 0)
                  ? article.timeline 
                  : (article.timeline && typeof article.timeline === 'string' && article.timeline.trim() !== '')
                    ? (() => {
@@ -8421,7 +8413,7 @@ export async function getServerSideProps({ req, res }) {
         };
         
         // Format articles as stories with defaults for information boxes
-        const defaultDetails = ['Impact Score: High significance', 'Read Time: 3-4 min', 'Source Credibility: Verified'];
+        const defaultDetails = [];
         const defaultTimeline = [
           { date: 'Recently', event: 'Initial reports emerge' },
           { date: 'Yesterday', event: 'Key developments unfold' },
