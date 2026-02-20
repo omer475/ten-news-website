@@ -153,7 +153,7 @@ class ImageSelector:
                     if self.debug:
                         print(f"      ❌ Filtered (blacklisted domain): {domain}")
                     return False
-        except:
+        except Exception:
             return False
 
         url_lower = url.lower()

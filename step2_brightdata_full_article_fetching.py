@@ -114,7 +114,7 @@ class BrightDataArticleFetcher:
         try:
             result = urlparse(url)
             return all([result.scheme, result.netloc])
-        except:
+        except Exception:
             return False
     
     def extract_og_image(self, html: str, url: str) -> Optional[str]:
@@ -178,7 +178,7 @@ class BrightDataArticleFetcher:
                             try:
                                 if int(width) < 300:
                                     continue
-                            except:
+                            except Exception:
                                 pass
                         if src.startswith('//'):
                             src = 'https:' + src

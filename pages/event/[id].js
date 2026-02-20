@@ -4,9 +4,9 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import TodayPlusLoader from '../../components/TodayPlusLoader';
 
-// Dynamic import for map component (uses D3.js, heavy)
-const GeographicImpactSection = dynamic(
-  () => import('../../components/events/GeographicImpactSection'),
+// Dynamic import for data analytics (uses Recharts)
+const DataAnalyticsSection = dynamic(
+  () => import('../../components/events/DataAnalyticsSection'),
   { ssr: false }
 );
 
@@ -233,19 +233,6 @@ function SectionHead({ title, subtitle, accentColor, style }) {
     </div>
   );
 }
-
-// ============================================
-// STANCE CONFIG FOR PERSPECTIVES
-// ============================================
-
-const stanceCfg = {
-  supportive: { color: '#10b981', bg: '#10b98112', label: 'Supports' },
-  opposed: { color: '#ef4444', bg: '#ef444412', label: 'Opposes' },
-  concerned: { color: '#f59e0b', bg: '#f59e0b12', label: 'Concerned' },
-  neutral: { color: '#6b7280', bg: '#6b728012', label: 'Neutral' },
-  defensive: { color: '#3b82f6', bg: '#3b82f612', label: 'Defending' },
-  divided: { color: '#8b5cf6', bg: '#8b5cf612', label: 'Divided' }
-};
 
 // ============================================
 // LATEST DEVELOPMENT SECTION
@@ -1303,491 +1290,32 @@ function WatchSection({ items, accentColor }) {
 }
 
 // ============================================
-// PERSPECTIVES SECTION
+// DATA ANALYTICS SECTION
 // ============================================
 
-function PerspectivesSection({ perspectives, accentColor }) {
-  const ref = useRef(null);
-  const p = useScrollProgress(ref);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [userInteracted, setUserInteracted] = useState(false);
-  const intervalRef = useRef(null);
-  
-  useEffect(() => {
-    if (!perspectives || perspectives.length <= 1 || userInteracted) return;
-    intervalRef.current = setInterval(() => {
-      setActiveIdx(prev => (prev + 1) % perspectives.length);
-    }, 5000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [perspectives, userInteracted]);
-  
-  const handleSelect = (idx) => {
-    setUserInteracted(true);
-    setActiveIdx(idx);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
-  
-  if (!perspectives || perspectives.length === 0) return null;
-  
-  const active = perspectives[activeIdx];
-  const cfg = stanceCfg[active?.stance] || stanceCfg.neutral;
-  
-  const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
-  const headerY = remap(p, 0.14, 0.26, 16, 0);
-  const pillsOpacity = remap(p, 0.22, 0.3, 0, 1);
-  const cardOpacity = remap(p, 0.26, 0.34, 0, 1);
-  const cardScale = remap(p, 0.26, 0.36, 0.94, 1);
-  
-  return (
-    <section ref={ref} className="full-section">
-      <div className="section-inner">
-        <SectionHead 
-          title="Perspectives" 
-          subtitle={`${perspectives.length} viewpoints`}
-          accentColor={accentColor}
-          style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
-        />
-        
-        {/* Pills */}
-        <div className="persp-pills" style={{ opacity: pillsOpacity }}>
-          {perspectives.map((persp, i) => {
-            const pCfg = stanceCfg[persp.stance] || stanceCfg.neutral;
-            const isActive = i === activeIdx;
-            return (
-              <button 
-                key={i}
-                className={`persp-pill ${isActive ? 'active' : ''}`}
-                onClick={() => handleSelect(i)}
-              >
-                <span className="persp-pill-dot" style={{ background: isActive ? '#fff' : pCfg.color }} />
-                {persp.entity?.split(' ').slice(0, 2).join(' ')}
-              </button>
-            );
-          })}
-        </div>
-        
-        {/* Card */}
-        <div 
-          className="persp-card"
-          style={{ opacity: cardOpacity, transform: `scale(${cardScale})` }}
-          key={activeIdx}
-        >
-          <div className="persp-card-header">
-            <span className="persp-entity">{active.entity}</span>
-            <span className="persp-stance" style={{ color: cfg.color, background: cfg.bg }}>
-              {cfg.label}
-            </span>
-          </div>
-          <p className="persp-quote">"{active.position}"</p>
-        </div>
-        
-        {/* Nav dots */}
-        {perspectives.length > 1 && (
-          <div className="persp-dots">
-            {perspectives.map((_, i) => (
-              <button 
-                key={i}
-                className={`persp-dot ${i === activeIdx ? 'active' : ''}`}
-                onClick={() => handleSelect(i)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-      
-      <style jsx>{`
-        .full-section {
-          border-top: 1px solid rgba(0,0,0,0.05);
-        }
-        .section-inner {
-          padding: 36px 28px;
-          max-width: 680px;
-          margin: 0 auto;
-        }
-        .persp-pills {
-          display: flex;
-          gap: 8px;
-          overflow-x: auto;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          margin-bottom: 16px;
-          will-change: opacity;
-        }
-        .persp-pills::-webkit-scrollbar { display: none; }
-        .persp-pill {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          padding: 10px 16px;
-          border: none;
-          border-radius: 12px;
-          background: #f3f3f5;
-          font-size: 13px;
-          font-weight: 600;
-          color: #48484a;
-          cursor: pointer;
-          white-space: nowrap;
-          flex-shrink: 0;
-          transition: all 0.2s ease;
-        }
-        .persp-pill.active {
-          background: #1d1d1f;
-          color: #fff;
-        }
-        .persp-pill-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-        }
-        .persp-card {
-          background: #fff;
-          border: 1px solid rgba(0,0,0,0.06);
-          border-radius: 20px;
-          padding: 20px 22px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 6px 24px rgba(0,0,0,0.06);
-          animation: si 0.4s cubic-bezier(0.22,1,0.36,1);
-          will-change: opacity, transform;
-        }
-        .persp-card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 14px;
-        }
-        .persp-entity {
-          font-size: 18px;
-          font-weight: 700;
-          color: #1d1d1f;
-        }
-        .persp-stance {
-          font-size: 10px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          padding: 5px 12px;
-          border-radius: 20px;
-        }
-        .persp-quote {
-          font-size: 14px;
-          font-style: italic;
-          color: #48484a;
-          line-height: 1.7;
-          margin: 0;
-        }
-        .persp-dots {
-          display: flex;
-          justify-content: center;
-          gap: 6px;
-          margin-top: 18px;
-        }
-        .persp-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #d1d5db;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .persp-dot.active {
-          width: 20px;
-          border-radius: 3px;
-          background: #1d1d1f;
-        }
-        
-        @keyframes si {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        @media (max-width: 480px) {
-          .section-inner {
-            padding: 28px 20px;
-          }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-// ============================================
-// HISTORICAL CONTEXT SECTION
-// ============================================
-
-function HistoricalSection({ data, accentColor }) {
-  const ref = useRef(null);
-  const p = useScrollProgress(ref);
-  const [expandedIdx, setExpandedIdx] = useState(-1);
-  
-  if (!data || !data.comparisons || data.comparisons.length === 0) return null;
-  
-  const { comparisons, timeline_insight, context_note } = data;
-  
-  const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
-  const headerY = remap(p, 0.14, 0.26, 16, 0);
-  const insightOpacity = remap(p, 0.2, 0.3, 0, 1);
-  
-  return (
-    <section ref={ref} className="full-section">
-      <div className="section-inner">
-        <SectionHead 
-          title="Historical Context" 
-          subtitle={`${comparisons.length} precedent${comparisons.length > 1 ? 's' : ''}`}
-          accentColor={accentColor}
-          style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
-        />
-        
-        {timeline_insight && (
-          <p className="hist-insight" style={{ opacity: insightOpacity }}>{timeline_insight}</p>
-        )}
-        
-        <div className="hist-panels">
-          {comparisons.map((comp, i) => {
-            const panelStart = 0.26 + i * 0.055;
-            const panelOpacity = remap(p, panelStart, panelStart + 0.08, 0, 1);
-            const panelY = remap(p, panelStart, panelStart + 0.08, 20, 0);
-            const isOpen = expandedIdx === i;
-            
-            return (
-              <div 
-                key={i}
-                className={`hist-panel ${isOpen ? 'expanded' : ''}`}
-                style={{ opacity: panelOpacity, transform: `translateY(${panelY}px)` }}
-              >
-                <button className="hist-panel-header" onClick={() => setExpandedIdx(isOpen ? -1 : i)}>
-                  <div className="hist-header-content">
-                    <span className="hist-event-name">{comp.event_name}</span>
-                    <span className="hist-years">{comp.years}</span>
-                  </div>
-                  <span className={`hist-chevron ${isOpen ? 'open' : ''}`}>▾</span>
-                </button>
-                
-                {isOpen && (
-                  <div className="hist-panel-content">
-                    <p className="hist-summary">{comp.summary}</p>
-                    
-                    <div className="hist-grid">
-                      <div className="hist-box similar">
-                        <span className="hist-box-label">Similarities</span>
-                        <ul className="hist-box-list">
-                          {comp.similarities?.slice(0, 3).map((s, si) => (
-                            <li key={si}>{s}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="hist-box different">
-                        <span className="hist-box-label">Differences</span>
-                        <ul className="hist-box-list">
-                          {comp.differences?.slice(0, 3).map((d, di) => (
-                            <li key={di}>{d}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        {context_note && (
-          <p className="hist-context-note">{context_note}</p>
-        )}
-      </div>
-      
-      <style jsx>{`
-        .full-section {
-          border-top: 1px solid rgba(0,0,0,0.05);
-        }
-        .section-inner {
-          padding: 36px 28px;
-          max-width: 680px;
-          margin: 0 auto;
-        }
-        .hist-insight {
-          font-size: 15px;
-          color: #48484a;
-          line-height: 1.65;
-          margin: 0 0 20px 0;
-          will-change: opacity;
-        }
-        .hist-panels {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .hist-panel {
-          background: #f9f9fb;
-          border: 1px solid rgba(0,0,0,0.04);
-          border-radius: 16px;
-          overflow: hidden;
-          transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
-          will-change: opacity, transform, background, box-shadow;
-        }
-        .hist-panel.expanded {
-          background: #fff;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        }
-        .hist-panel-header {
-          width: 100%;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 16px 20px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          text-align: left;
-        }
-        .hist-header-content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .hist-event-name {
-          font-size: 15px;
-          font-weight: 600;
-          color: #1d1d1f;
-          line-height: 1.4;
-        }
-        .hist-years {
-          display: inline-block;
-          width: fit-content;
-          font-size: 11px;
-          color: #6b7280;
-          background: rgba(0,0,0,0.04);
-          padding: 4px 10px;
-          border-radius: 6px;
-        }
-        .hist-chevron {
-          font-size: 14px;
-          color: #9ca3af;
-          transition: transform 0.25s ease;
-          margin-top: 2px;
-          flex-shrink: 0;
-        }
-        .hist-chevron.open {
-          transform: rotate(180deg);
-          color: #1d1d1f;
-        }
-        .hist-panel-content {
-          padding: 0 20px 20px;
-          animation: ru 0.25s ease;
-        }
-        .hist-summary {
-          font-size: 14px;
-          color: #48484a;
-          line-height: 1.6;
-          margin: 0 0 16px 0;
-        }
-        .hist-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .hist-box {
-          padding: 14px 16px;
-          border-radius: 12px;
-        }
-        .hist-box.similar {
-          background: rgba(16, 185, 129, 0.06);
-        }
-        .hist-box.different {
-          background: rgba(239, 68, 68, 0.06);
-        }
-        .hist-box-label {
-          display: block;
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 8px;
-        }
-        .hist-box.similar .hist-box-label {
-          color: #059669;
-        }
-        .hist-box.different .hist-box-label {
-          color: #dc2626;
-        }
-        .hist-box-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .hist-box-list li {
-          font-size: 12px;
-          color: #48484a;
-          line-height: 1.5;
-          padding-left: 12px;
-          position: relative;
-          margin-bottom: 6px;
-        }
-        .hist-box-list li:last-child {
-          margin-bottom: 0;
-        }
-        .hist-box-list li::before {
-          content: '·';
-          position: absolute;
-          left: 0;
-          color: #9ca3af;
-          font-weight: 700;
-        }
-        .hist-context-note {
-          font-size: 11px;
-          font-style: italic;
-          color: #9ca3af;
-          line-height: 1.5;
-          margin: 16px 0 0 0;
-        }
-        
-        @keyframes ru {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @media (max-width: 480px) {
-          .section-inner {
-            padding: 28px 20px;
-          }
-          .hist-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-// ============================================
-// MAP SECTION (Geographic Impact)
-// ============================================
-
-function MapSection({ data, accentColor }) {
+function AnalyticsSection({ data, dataSources, accentColor }) {
   const ref = useRef(null);
   const p = useScrollProgress(ref);
 
-  if (!data || !data.countries || data.countries.length === 0) return null;
+  if (!data || !data.charts || data.charts.length === 0) return null;
 
   const headerOpacity = remap(p, 0.14, 0.24, 0, 1);
   const headerY = remap(p, 0.14, 0.26, 16, 0);
-  const mapOpacity = remap(p, 0.2, 0.35, 0, 1);
-  const mapY = remap(p, 0.2, 0.35, 20, 0);
+  const contentOpacity = remap(p, 0.2, 0.35, 0, 1);
+  const contentY = remap(p, 0.2, 0.35, 20, 0);
 
   return (
     <section ref={ref} className="full-section">
       <div className="section-inner">
         <SectionHead
-          title="Affected Countries"
-          subtitle={`${data.total_countries_affected || data.countries.length} countries`}
+          title="Data Analytics"
+          subtitle={`${data.charts.length} chart${data.charts.length > 1 ? 's' : ''}`}
           accentColor={accentColor}
           style={{ opacity: headerOpacity, transform: `translateY(${headerY}px)` }}
         />
 
-        <div style={{ opacity: mapOpacity, transform: `translateY(${mapY}px)`, willChange: 'opacity, transform' }}>
-          <GeographicImpactSection data={data} accentColor={accentColor} />
+        <div style={{ opacity: contentOpacity, transform: `translateY(${contentY}px)`, willChange: 'opacity, transform' }}>
+          <DataAnalyticsSection data={data} dataSources={dataSources} />
         </div>
       </div>
 
@@ -1969,6 +1497,8 @@ export default function EventPage() {
               show_day_counter: apiEvent.showDayCounter || apiEvent.show_day_counter || false,
               dayCounter: apiEvent.dayCounter || null,
               components: apiEvent.components || components || null,
+              dataAnalytics: apiEvent.dataAnalytics || apiEvent.components?.data_analytics || null,
+              dataSources: apiEvent.dataSources || [],
               lastArticleAt: apiEvent.lastArticleAt || null
             });
             if (apiEvent.blur_color && !colorExtractedRef.current) {
@@ -2327,12 +1857,8 @@ export default function EventPage() {
         <WatchSection items={event.components?.what_to_watch} accentColor={event.accentColor} />
         {/* 3. MANDATORY: Timeline (This Week from live articles + Historical) */}
         <TimelineSection entries={event.timeline} liveUpdates={event.liveUpdates} accentColor={event.accentColor} />
-        {/* 4. OPTIONAL: Map (Affected Countries) */}
-        <MapSection data={event.components?.geographic_impact} accentColor={event.accentColor} />
-        {/* 5. OPTIONAL: Perspectives */}
-        <PerspectivesSection perspectives={event.components?.perspectives} accentColor={event.accentColor} />
-        {/* 6. OPTIONAL: Historical Context */}
-        <HistoricalSection data={event.components?.historical_comparison} accentColor={event.accentColor} />
+        {/* 4. OPTIONAL: Data Analytics */}
+        <AnalyticsSection data={event.dataAnalytics || event.components?.data_analytics} dataSources={event.dataSources} accentColor={event.accentColor} />
         {/* 7. MANDATORY: Background (context) */}
         <BackgroundSection text={event.background} accentColor={event.accentColor} />
         <Footer />

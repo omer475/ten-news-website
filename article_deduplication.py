@@ -105,7 +105,7 @@ def filter_by_published_date(articles: List[Dict], minutes: int = 15) -> List[Di
                 # Try ISO format
                 try:
                     pub_dt = datetime.fromisoformat(published_date.replace('Z', '+00:00'))
-                except:
+                except Exception:
                     # Try other common formats
                     try:
                         from dateutil import parser

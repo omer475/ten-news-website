@@ -11,34 +11,34 @@ import dynamic from 'next/dynamic';
 // Dynamic imports to reduce initial bundle size
 const LatestDevelopment = dynamic(() => import('./LatestDevelopment'), { ssr: true });
 const EventTimeline = dynamic(() => import('./EventTimeline'), { ssr: true });
-const PerspectivesSection = dynamic(() => import('./PerspectivesSection'), { ssr: true });
 const WhatToWatchSection = dynamic(() => import('./WhatToWatchSection'), { ssr: true });
-const GeographicImpactSection = dynamic(() => import('./GeographicImpactSection'), { ssr: true });
-const HistoricalComparison = dynamic(() => import('./HistoricalComparison'), { ssr: true });
+const DataAnalyticsSection = dynamic(() => import('./DataAnalyticsSection'), { ssr: false });
 
 export default function EventComponents({ event }) {
   if (!event) return null;
   
-  const { 
-    components, 
-    timeline, 
+  const {
+    components,
+    dataAnalytics,
+    dataSources,
+    timeline,
     latestDevelopment,
     accentColor
   } = event;
-  
+
   // Get metadata flags (with fallbacks for missing metadata)
   const metadata = components?.components_metadata || {};
-  
+
   // Check what data is actually available
   const hasTimeline = timeline && timeline.length > 0;
   const hasLatest = latestDevelopment && (latestDevelopment.title || latestDevelopment.summary);
-  
-  // Smart event components (perspectives, what_to_watch, etc.) from world_events.components
-  const hasPerspectives = components?.perspectives?.length > 0;
+
+  // Smart event components from world_events.components
+  // Prefer dedicated dataAnalytics column, fall back to components.data_analytics
   const hasWhatToWatch = components?.what_to_watch?.length > 0;
-  const hasGeographicImpact = components?.geographic_impact?.countries?.length > 0;
-  const hasHistoricalComparison = components?.historical_comparison?.comparisons?.length > 0;
-  
+  const analyticsData = dataAnalytics || components?.data_analytics;
+  const hasDataAnalytics = analyticsData?.charts?.length > 0;
+
   return (
     <>
       <style jsx>{`
@@ -61,67 +61,41 @@ export default function EventComponents({ event }) {
       <div className="event-components">
         {/* Latest Development (highlighted box with details inside) */}
         {hasLatest && (
-          <LatestDevelopment 
-            latest={latestDevelopment} 
+          <LatestDevelopment
+            latest={latestDevelopment}
             accentColor={accentColor}
           />
         )}
-        
+
         {/* What to Watch - Upcoming Dates */}
         {hasWhatToWatch && (
           <>
-            <WhatToWatchSection 
-              items={components.what_to_watch} 
+            <WhatToWatchSection
+              items={components.what_to_watch}
               accentColor={accentColor}
             />
             <div className="components-divider" />
           </>
         )}
-        
+
         {/* Timeline - Chronological Facts (simplified) */}
         {hasTimeline && (
           <>
-            <EventTimeline 
-              entries={timeline} 
+            <EventTimeline
+              entries={timeline}
               accentColor={accentColor}
             />
-            {(hasGeographicImpact || hasPerspectives || hasHistoricalComparison) && (
+            {hasDataAnalytics && (
               <div className="components-divider" />
             )}
           </>
         )}
-        
-        {/* Geographic Impact */}
-        {hasGeographicImpact && (
-          <>
-            <GeographicImpactSection 
-              data={components.geographic_impact} 
-              accentColor={accentColor}
-            />
-            {(hasPerspectives || hasHistoricalComparison) && (
-              <div className="components-divider" />
-            )}
-          </>
-        )}
-        
-        {/* Multiple Perspectives */}
-        {hasPerspectives && (
-          <>
-            <PerspectivesSection 
-              perspectives={components.perspectives} 
-              accentColor={accentColor}
-            />
-            {hasHistoricalComparison && (
-              <div className="components-divider" />
-            )}
-          </>
-        )}
-        
-        {/* Historical Comparison */}
-        {hasHistoricalComparison && (
-          <HistoricalComparison 
-            data={components.historical_comparison} 
-            accentColor={accentColor}
+
+        {/* Data Analytics Charts */}
+        {hasDataAnalytics && (
+          <DataAnalyticsSection
+            data={analyticsData}
+            dataSources={dataSources || []}
           />
         )}
       </div>

@@ -27,7 +27,6 @@ COPY step1_5_event_clustering.py .
 COPY step2_brightdata_full_article_fetching.py .
 COPY step3_image_selection.py .
 COPY image_quality_checker.py .
-COPY step4_multi_source_synthesis.py .
 COPY step5_gemini_component_selection.py .
 COPY step2_gemini_context_search.py .
 COPY step6_7_claude_component_generation.py .

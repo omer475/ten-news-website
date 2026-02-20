@@ -53,7 +53,7 @@ def _fix_truncated_json(json_text: str) -> Dict:
                 results_str = '[' + results_match.group(1) + ']'
                 results = json.loads(results_str)
                 return {"results": results}
-            except:
+            except Exception:
                 pass
         raise ValueError(f"Could not parse JSON: {e}")
 

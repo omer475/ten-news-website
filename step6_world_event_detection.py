@@ -304,13 +304,13 @@ def upload_image_to_storage(base64_data: str, filename: str, mime_type: str = 'i
                 id='images',
                 options={'public': True}
             )
-        except:
+        except Exception:
             pass  # Bucket likely already exists
-        
+
         # Remove existing file first (for upsert behavior)
         try:
             supabase.storage.from_('images').remove([storage_path])
-        except:
+        except Exception:
             pass
         
         # Upload the file
@@ -549,7 +549,7 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
             # Search historical articles and add to timeline
             search_historical_articles_for_event(event, event_data)
             
-            # Generate smart components (perspectives, what_to_watch, etc.)
+            # Generate smart components (what_to_watch, data_analytics)
             try:
                 components = generate_event_components(
                     event_data['name'],
@@ -956,7 +956,7 @@ def refresh_stale_event_components(max_per_run: int = 3):
                     days_old = (now - gen_date).days
                     if days_old >= 7:
                         needs_refresh.append((event, f'{days_old}d old'))
-                except:
+                except Exception:
                     needs_refresh.append((event, 'bad date'))
             else:
                 needs_refresh.append((event, 'no timestamp'))

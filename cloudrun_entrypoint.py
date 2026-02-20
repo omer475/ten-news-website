@@ -9,7 +9,7 @@ Includes run lock to prevent overlapping executions.
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -24,7 +24,7 @@ def acquire_run_lock(supabase):
     Returns True if lock acquired, False if another run is active.
     """
     try:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         cutoff = (now - timedelta(minutes=RUN_LOCK_TIMEOUT_MINUTES)).isoformat()
         
         # Check for active lock (started recently enough to still be valid)
@@ -67,7 +67,7 @@ def acquire_run_lock(supabase):
 def release_run_lock(supabase):
     """Release the run lock."""
     try:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         supabase.table('pipeline_run_lock').update({
             'is_running': False,
             'finished_at': now.isoformat()
@@ -135,7 +135,7 @@ def run_news_workflow():
         try:
             from complete_clustered_8step_workflow import supabase
             release_run_lock(supabase)
-        except:
+        except Exception:
             pass
         
         return False, error_msg, stats

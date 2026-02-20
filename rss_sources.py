@@ -365,7 +365,7 @@ RSS_FEEDS = [
     },
     {
         'name': 'Deutsche Welle Environment',
-        'url': 'https://rss.dw. ,om/atom/rss_en_environment',
+        'url': 'https://rss.dw.com/atom/rss_en_environment',
         'category': 'science',
         'tier': 'premium'
     },

@@ -72,46 +72,6 @@ WEAK_KEYWORDS = {
 }
 
 
-def extract_keywords(text: str) -> Set[str]:
-    """
-    Extract meaningful keywords from article title for cluster matching.
-    Returns lowercase keywords for comparison. ALWAYS returns a set.
-    """
-    try:
-        if not text:
-            return set()
-        
-        # Common stop words to ignore
-        stop_words = {
-            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-            'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
-            'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-            'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need',
-            'it', 'its', 'this', 'that', 'these', 'those', 'he', 'she', 'they',
-            'his', 'her', 'their', 'my', 'your', 'our', 'after', 'before', 'over',
-            'under', 'new', 'says', 'said', 'amid', 'into', 'about', 'than', 'more',
-            'first', 'last', 'just', 'also', 'up', 'down', 'out', 'off', 'all',
-            'warns', 'faces', 'launches', 'reveals', 'seeks', 'hits', 'plans'
-        }
-        
-        # Clean text - remove markdown bold markers
-        clean_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', str(text))
-        
-        # Extract words (at least 3 chars)
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', clean_text.lower())
-        
-        # Filter out stop words - build set explicitly
-        result = set()
-        for word in words:
-            if word not in stop_words:
-                result.add(word)
-        
-        return result
-    except Exception as e:
-        print(f"      ⚠️ Keyword extraction error: {e}")
-        return set()
-
-
 def score_cluster_by_keywords(cluster_name: str, article_keywords) -> int:
     """
     Score a cluster based on how many keywords match the article.
@@ -1342,7 +1302,7 @@ class EventClusteringEngine:
                             existing_article = result.data[0]
                             already_clustered = existing_article.get('cluster_id') is not None
                             return (existing_article['id'], already_clustered)
-                    except:
+                    except Exception:
                         pass
                     return None  # Could not fetch, but not a critical error
                 

@@ -7,10 +7,10 @@ Step 1: Gemini V8.2 Scoring & Filtering (score ≥70)
 Step 1.5: Event Clustering (clusters similar articles)
 Step 2: Bright Data Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
-Step 4: Multi-Source Synthesis with Claude (generates article from all sources)
+Step 4: Multi-Source Synthesis with Gemini (generates article from all sources)
 Step 5: Gemini Context Search (Google Search grounding for component data)
 Step 6: Gemini Component Selection (decides which components based on search data)
-Step 7: Claude Component Generation (timeline, details, graph, map)
+Step 7: Gemini Component Generation (timeline, details, graph, map)
 Step 8: Fact Verification (catches hallucinations, regenerates if needed)
 Step 9: Publishing to Supabase
 Step 10: Article Scoring (AI importance scoring 700-950)
@@ -34,14 +34,13 @@ from rss_sources import ALL_SOURCES
 from step1_gemini_news_scoring_filtering import score_news_articles_step1
 from step1_5_event_clustering import EventClusteringEngine
 from step2_brightdata_full_article_fetching import BrightDataArticleFetcher, fetch_articles_parallel
-from step3_image_selection import select_best_image_for_cluster, ImageSelector
-from image_quality_checker import ImageQualityChecker, check_and_select_best_image
-from step4_multi_source_synthesis import MultiSourceSynthesizer
+from step3_image_selection import ImageSelector
+from image_quality_checker import check_and_select_best_image
 from step5_gemini_component_selection import GeminiComponentSelector
 from step2_gemini_context_search import search_gemini_context
-from step6_7_claude_component_generation import ClaudeComponentWriter
+from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
-from step10_article_scoring import score_article_with_references, get_reference_articles, generate_interest_tags
+from step10_article_scoring import score_article_with_references, generate_interest_tags
 from step11_article_tagging import tag_article
 from step6_world_event_detection import detect_world_events
 from supabase import create_client
@@ -58,9 +57,11 @@ load_dotenv()
 # ============================================================================
 
 def get_supabase_client():
-    """Get Supabase client for status updates"""
+    """Get Supabase client for database operations"""
     url = os.getenv('NEXT_PUBLIC_SUPABASE_URL') or os.getenv('SUPABASE_URL')
     key = os.getenv('SUPABASE_SERVICE_KEY') or os.getenv('SUPABASE_KEY')
+    if not url or not key:
+        raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set")
     return create_client(url, key)
 
 def update_cluster_status(cluster_id: int, status: str, failure_reason: str = None, 
@@ -222,7 +223,7 @@ def extract_domain(url: str) -> str:
         if domain.startswith('www.'):
             domain = domain[4:]
         return domain
-    except:
+    except Exception:
         return 'unknown'
 
 # ============================================================================
@@ -515,30 +516,19 @@ def needs_og_image_scrape(source_url: str) -> bool:
     return any(domain in source_url.lower() for domain in SOURCES_NEEDING_OG_IMAGE_SCRAPE)
 
 # Initialize clients
-def get_supabase_client():
-    url = os.getenv('SUPABASE_URL')
-    key = os.getenv('SUPABASE_SERVICE_KEY')
-    if not url or not key:
-        raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set")
-    return create_client(url, key)
-
 supabase = get_supabase_client()
 clustering_engine = EventClusteringEngine()
 
 # Get API keys
 gemini_key = os.getenv('GEMINI_API_KEY')
-anthropic_key = os.getenv('ANTHROPIC_API_KEY')
 brightdata_key = os.getenv('BRIGHTDATA_API_KEY')
 
-if not all([gemini_key, anthropic_key, brightdata_key]):
-    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, ANTHROPIC_API_KEY, BRIGHTDATA_API_KEY)")
-
-# Initialize Bright Data fetcher
-brightdata_fetcher = BrightDataArticleFetcher(api_key=brightdata_key)
+if not all([gemini_key, brightdata_key]):
+    raise ValueError("Missing required API keys in .env file (GEMINI_API_KEY, BRIGHTDATA_API_KEY)")
 
 component_selector = GeminiComponentSelector(api_key=gemini_key)
-component_writer = ClaudeComponentWriter(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
-fact_verifier = FactVerifier(api_key=gemini_key)  # Using Gemini (Claude API limit reached)
+component_writer = GeminiComponentWriter(api_key=gemini_key)  # Uses Gemini despite class name
+fact_verifier = FactVerifier(api_key=gemini_key)  # Uses Gemini
 
 
 # ==========================================
@@ -680,21 +670,17 @@ def fetch_rss_articles(max_articles_per_source=10):
 # ==========================================
 
 def check_api_health():
-    """Quick health check on Anthropic API before starting pipeline.
-    Catches credit/billing issues early instead of failing on every cluster."""
-    print("🔑 Checking Anthropic API health...")
+    """Quick health check on Gemini API before starting pipeline.
+    Catches quota/billing issues early instead of failing on every cluster."""
+    print("🔑 Checking Gemini API health...")
     try:
+        test_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
         test_response = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": anthropic_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json"
-            },
+            test_url,
+            headers={"content-type": "application/json"},
             json={
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 10,
-                "messages": [{"role": "user", "content": "Hi"}]
+                "contents": [{"parts": [{"text": "Hi"}]}],
+                "generationConfig": {"maxOutputTokens": 10}
             },
             timeout=15
         )
@@ -702,33 +688,33 @@ def check_api_health():
             try:
                 error_body = test_response.json()
                 error_msg = error_body.get('error', {}).get('message', test_response.text[:500])
-                error_type = error_body.get('error', {}).get('type', 'unknown')
+                error_status = error_body.get('error', {}).get('status', 'unknown')
             except Exception:
                 error_msg = test_response.text[:500]
-                error_type = 'unknown'
-            print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: [{error_type}] {error_msg}")
+                error_status = 'unknown'
+            print(f"🚨 GEMINI API HEALTH CHECK FAILED: [{error_status}] {error_msg}")
             print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
             return False
-        print("✅ Anthropic API is healthy")
+        print("✅ Gemini API is healthy")
         return True
     except Exception as e:
-        print(f"🚨 ANTHROPIC API HEALTH CHECK FAILED: {type(e).__name__}: {str(e)[:300]}")
+        print(f"🚨 GEMINI API HEALTH CHECK FAILED: {type(e).__name__}: {str(e)[:300]}")
         print(f"🚨 Pipeline will NOT be able to synthesize articles. Skipping this run.")
         return False
 
 
 def run_complete_pipeline():
-    """Run the complete 9-step clustered news workflow"""
+    """Run the complete 11-step clustered news workflow"""
 
     print("\n" + "="*80)
-    print("🚀 COMPLETE 10-STEP CLUSTERED NEWS WORKFLOW")
+    print("🚀 COMPLETE 11-STEP CLUSTERED NEWS WORKFLOW")
     print("="*80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*80)
 
-    # PRE-CHECK: Verify API keys are working before wasting time
+    # PRE-CHECK: Verify Gemini API is working before wasting time
     if not check_api_health():
-        print("⚠️  Aborting pipeline - Anthropic API not available")
+        print("⚠️  Aborting pipeline - Gemini API not available")
         return
 
     # STEP 0: RSS Feed Collection
@@ -1115,7 +1101,7 @@ def run_complete_pipeline():
             if not synthesized:
                 print(f"   ❌ [Cluster {cluster_id}] Synthesis failed")
                 update_cluster_status(cluster_id, 'failed', 'synthesis_failed',
-                    'Claude API failed to synthesize article from sources')
+                    'Gemini API failed to synthesize article from sources')
                 return False
             
             synthesized['image_url'] = selected_image['url']
@@ -1577,8 +1563,8 @@ def run_complete_pipeline():
 
 def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verification_feedback: Optional[Dict] = None) -> Optional[Dict]:
     """
-    Synthesize one article from multiple sources using Claude (better rate limits than Gemini)
-    
+    Synthesize one article from multiple sources using Gemini Flash.
+
     Args:
         sources: List of source articles
         cluster_id: Cluster ID
@@ -1587,14 +1573,9 @@ def synthesize_multisource_article(sources: List[Dict], cluster_id: int, verific
     import requests
     import json
     import time
-    
-    # Use Claude API (better rate limits than Gemini)
-    claude_url = "https://api.anthropic.com/v1/messages"
-    claude_headers = {
-        "x-api-key": anthropic_key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
+
+    # Use Gemini API
+    gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}"
     
     # Limit sources to avoid token limits
     limited_sources = sources[:10]  # Max 10 sources
@@ -1938,18 +1919,20 @@ Return ONLY valid JSON, no markdown, no explanations."""
     # Try up to 5 times with exponential backoff
     for attempt in range(5):
         try:
-            # Build Claude API request
+            # Build Gemini API request
             request_data = {
-                "model": "claude-sonnet-4-5-20250929",
-                "max_tokens": 2048,
-                "temperature": 0.3,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
+                "contents": [
+                    {"parts": [{"text": prompt}]}
+                ],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 2048,
+                    "responseMimeType": "application/json"
+                }
             }
-            
-            response = requests.post(claude_url, headers=claude_headers, json=request_data, timeout=60)
-            
+
+            response = requests.post(gemini_url, json=request_data, timeout=60)
+
             # Handle rate limiting with exponential backoff
             if response.status_code == 429:
                 wait_time = (2 ** attempt) * 10  # 10s, 20s, 40s, 80s, 160s
@@ -1958,12 +1941,10 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 continue
 
             if response.status_code >= 400:
-                # Log the actual error body for debugging
                 try:
                     error_body = response.json()
                     error_msg = error_body.get('error', {}).get('message', response.text[:500])
-                    error_type = error_body.get('error', {}).get('type', 'unknown')
-                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): [{error_type}] {error_msg}")
+                    print(f"   ⚠️  API error (attempt {attempt + 1}/5): {error_msg}")
                 except Exception:
                     print(f"   ⚠️  API error (attempt {attempt + 1}/5): HTTP {response.status_code} - {response.text[:500]}")
                 if attempt < 4:
@@ -1971,50 +1952,47 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 continue
 
             response_json = response.json()
-            
-            # Check if response has expected structure
-            if 'content' not in response_json or not response_json['content']:
-                print(f"   ⚠️  No content in Claude response (attempt {attempt + 1}/5)")
-                print(f"      Response: {str(response_json)[:200]}")
+
+            # Extract text from Gemini response format
+            candidates = response_json.get('candidates', [])
+            if not candidates:
+                print(f"   ⚠️  No candidates in Gemini response (attempt {attempt + 1}/5)")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
-            # Get response text from Claude format
-            response_text = response_json['content'][0].get('text', '')
-            
+
+            response_text = candidates[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+
             if not response_text:
-                print(f"   ⚠️  Empty response from Claude (attempt {attempt + 1}/5)")
+                print(f"   ⚠️  Empty response from Gemini (attempt {attempt + 1}/5)")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
+
             # Clean response (remove markdown if present)
             response_text = response_text.replace('```json', '').replace('```', '').strip()
-            
-            # Debug: Check if response is empty after cleaning
+
             if not response_text:
                 print(f"   ⚠️  Response empty after cleaning (attempt {attempt + 1}/5)")
-                print(f"      Original length: {len(response_json['content'][0].get('text', ''))}")
                 if attempt < 4:
                     time.sleep(5)
                     continue
                 return None
-            
-            # Check if Claude returned commentary instead of JSON
+
+            # Check if model returned commentary instead of JSON
             if response_text.startswith('Looking') or response_text.startswith('I ') or not response_text.startswith('{'):
-                print(f"   ⚠️  Claude returned text instead of JSON (attempt {attempt + 1}/5)")
+                print(f"   ⚠️  Gemini returned text instead of JSON (attempt {attempt + 1}/5)")
                 print(f"      Preview: {response_text[:100]}...")
                 if attempt < 4:
                     time.sleep(3)
                     continue
                 return None
-            
+
             # Parse JSON
             result = json.loads(response_text)
-            
+
             # Validate required fields (new format with 5W's - no content field)
             required = ['title', 'summary_bullets', 'five_ws', 'category']
             if all(k in result for k in required):
@@ -2029,7 +2007,7 @@ Return ONLY valid JSON, no markdown, no explanations."""
                     time.sleep(3)
                     continue
                 return None
-            
+
         except json.JSONDecodeError as e:
             print(f"   ⚠️  JSON parse error (attempt {attempt + 1}/5): {str(e)[:100]}")
             print(f"      Response preview: {response_text[:200] if response_text else 'EMPTY'}...")
@@ -2037,21 +2015,21 @@ Return ONLY valid JSON, no markdown, no explanations."""
                 time.sleep(3)
                 continue
             return None
-            
+
         except requests.exceptions.RequestException as e:
             error_msg = str(e)
             print(f"   ⚠️  API error (attempt {attempt + 1}/5): {error_msg[:100]}")
             if attempt < 4:
                 time.sleep(3)
             continue
-            
+
         except Exception as e:
             print(f"   ⚠️  Synthesis error (attempt {attempt + 1}/5): {str(e)[:100]}")
             if attempt < 4:
                 time.sleep(3)
                 continue
             return None
-    
+
     print(f"   ❌ Failed after 5 attempts")
     return None
 
@@ -2103,7 +2081,7 @@ def main():
     print("  ✍️  Synthesize multi-source articles")
     print("  🔍 Step 5: Search for context (Gemini)")
     print("  📋 Step 6: Select components (Gemini)")
-    print("  📊 Step 7: Generate components (Claude)")
+    print("  📊 Step 7: Generate components (Gemini)")
     print("  🔬 Verify facts (catch hallucinations)")
     print("  💾 Publish to Supabase")
     print("\nPress Ctrl+C to stop")

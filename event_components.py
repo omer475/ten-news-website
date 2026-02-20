@@ -2,17 +2,15 @@
 Event Components Generator
 
 Generates contextual components for world events:
-- Multiple Perspectives (positions from different sides)
 - What to Watch (upcoming important dates)
-- Geographic Impact (affected countries/regions)
-- Historical Comparison (similar past events)
+- Data Analytics (Power BI-style charts with real data)
 
 Components are only generated when relevant to the event type.
 """
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional, List
 
 import google.generativeai as genai
@@ -42,25 +40,9 @@ Type indicators: {event_type}
 AVAILABLE COMPONENTS - DECIDE WHICH TO ENABLE
 ═══════════════════════════════════════════════════════════════
 
-1. MULTIPLE PERSPECTIVES
-   Shows positions/stances from different sides (countries, organizations, parties)
-   
-   ✓ ENABLE for:
-     - Trade disputes (multiple countries with different interests)
-     - Wars/conflicts (opposing sides + international observers)
-     - Political conflicts (different parties/factions)
-     - International negotiations (participating parties)
-     - Controversial policies (supporters vs opponents)
-   
-   ✗ DISABLE for:
-     - Natural disasters (no "sides" to show)
-     - Single-actor events (one country's internal decision)
-     - Scientific discoveries (no opposing positions)
-     - Accidents/incidents (no stakeholder positions)
-
-2. WHAT TO WATCH
+1. WHAT TO WATCH
    Shows upcoming dates/events that readers should know about
-   
+
    ✓ ENABLE for (most world events have relevant dates):
      - Wars/conflicts (invasion anniversaries, scheduled UN sessions, peace talks)
      - Trade wars (tariff implementation dates, WTO rulings)
@@ -70,47 +52,31 @@ AVAILABLE COMPONENTS - DECIDE WHICH TO ENABLE
      - Court cases (ruling dates, hearings)
      - Economic events (central bank meetings, earnings)
      - Anniversaries of significant dates (1 year, 100 days, etc.)
-   
+
    ✗ DISABLE only for:
      - One-time completed events with no ongoing relevance
      - Very localized incidents with no future developments
      - Events that are fully resolved
-   
-   RULE: MOST events should have What to Watch enabled. Include anniversaries, scheduled diplomatic events, and expected developments.
 
-3. GEOGRAPHIC IMPACT MAP
-   Shows countries/regions affected with their involvement type
-   
-   ✓ ENABLE for:
-     - International conflicts (multiple countries involved)
-     - Trade wars (countries imposing/receiving tariffs)
-     - Pandemics/health emergencies (spread across regions)
-     - Climate events (affecting multiple nations)
-     - Multinational agreements/disputes
-     - Refugee/migration crises
-   
-   ✗ DISABLE for:
-     - Single-country domestic issues
-     - Individual-focused events (celebrity, single politician)
-     - Abstract/conceptual events (policy debates without geographic element)
-     - Events affecting only one specific location
+   RULE: MOST events should have What to Watch enabled.
 
-4. HISTORICAL COMPARISON
-   Compares to similar past events for context
-   
+2. DATA ANALYTICS
+   Shows 2-4 data-driven charts (line, bar, area, pie) with real quantitative data
+
    ✓ ENABLE for:
-     - Trade wars (previous trade disputes exist)
-     - Military conflicts (similar past wars)
-     - Economic crises (past recessions, crashes)
-     - Political crises (impeachments, coups with precedents)
-     - Recurring patterns (elections, negotiations)
-     - Events with clear historical parallels
-   
+     - Trade wars (trade volumes, tariff rates, GDP impact)
+     - Economic events (stock prices, employment, inflation)
+     - Wars/conflicts (casualty data, refugee numbers, military spending)
+     - Climate events (temperature data, emission trends)
+     - Health crises (case counts, vaccination rates)
+     - Political events (polling data, approval ratings)
+     - Any event with quantifiable aspects
+
    ✗ DISABLE for:
-     - Truly unprecedented events (first of its kind)
-     - Very recent phenomena (no historical comparison exists)
-     - Unique technological events (new tech, no parallel)
-     - Events where comparison would be misleading/forced
+     - Events with no meaningful quantitative dimension
+     - Very recent breaking news with no data yet
+
+   RULE: MOST events benefit from data analytics. Enable whenever real data exists.
 
 ═══════════════════════════════════════════════════════════════
 DECISION CRITERIA
@@ -122,39 +88,21 @@ For each component, ask:
 3. Would it look NATURAL for this event type (not awkward)?
 4. Can the information be ACCURATELY generated?
 
-BE RELEVANT - Enable all components that genuinely fit, disable those that don't:
-- Events CAN have all 4 components if all 4 are relevant
-- Historical Comparison: enable if there is a CLEAR historical parallel. Do NOT force vague or misleading comparisons.
-- Perspectives: enable if there are genuine OPPOSING positions from identifiable parties. One-sided events (natural disasters, accidents) don't need this.
-- Geographic Impact: enable if multiple countries are meaningfully involved
-- What to Watch: enable for most events (this is the most universally useful component)
-- The key rule: every enabled component must ADD REAL VALUE. Don't force it, but don't skip it if it fits.
-
 ═══════════════════════════════════════════════════════════════
 RESPONSE FORMAT
 ═══════════════════════════════════════════════════════════════
 
 {{
   "components": {{
-    "perspectives": {{
-      "enabled": true/false,
-      "reason": "1 sentence explaining why this fits or doesn't fit",
-      "potential_sides": ["Side 1", "Side 2", "Side 3"]
-    }},
     "what_to_watch": {{
       "enabled": true/false,
       "reason": "1 sentence explaining why",
       "has_known_dates": true/false
     }},
-    "geographic_impact": {{
+    "data_analytics": {{
       "enabled": true/false,
       "reason": "1 sentence explaining why",
-      "affected_regions": ["Country/Region 1", "Country/Region 2"]
-    }},
-    "historical_comparison": {{
-      "enabled": true/false,
-      "reason": "1 sentence explaining why",
-      "potential_comparisons": ["Historical Event 1", "Historical Event 2"]
+      "suggested_charts": ["Chart idea 1", "Chart idea 2"]
     }}
   }},
   "summary": "1 sentence: This event will have X, Y components because..."
@@ -162,63 +110,6 @@ RESPONSE FORMAT
 
 Respond with valid JSON only."""
 
-
-PERSPECTIVES_PROMPT = """Generate a Multiple Perspectives section for this world event.
-
-═══════════════════════════════════════════════════════════════
-EVENT
-═══════════════════════════════════════════════════════════════
-Name: {event_name}
-Background: {background}
-Key sides to cover: {potential_sides}
-
-═══════════════════════════════════════════════════════════════
-TASK
-═══════════════════════════════════════════════════════════════
-
-Create 2-4 perspective entries showing different positions on this event.
-
-REQUIREMENTS:
-1. Each perspective represents a DISTINCT stakeholder (country, organization, political group, international body)
-2. Include a real or accurately paraphrased quote/position that captures their stance
-3. Keep positions concise (1-2 sentences max)
-4. Be NEUTRAL - present each side fairly without editorializing or taking sides
-5. Use appropriate flag emoji for countries, or relevant symbol for organizations
-6. Ensure positions are CURRENT and ACCURATE based on public statements
-
-STAKEHOLDER TYPES TO CONSIDER:
-- Countries directly involved (use flag emoji: 🇺🇸 🇨🇳 🇬🇧 🇪🇺 🇷🇺 🇺🇦 🇮🇱 🇵🇸 etc.)
-- International organizations (🇺🇳 UN, 🏛️ NATO, 🌍 African Union, etc.)
-- Political parties or factions (use relevant symbol)
-- Industry/business groups (🏢)
-- Civil society/NGOs (relevant symbol)
-
-STANCE CATEGORIES:
-- "supportive" - Actively supports/promotes
-- "opposed" - Actively opposes/condemns  
-- "concerned" - Worried but not taking strong action
-- "neutral" - Officially neutral or mediating
-- "defensive" - Defending their own position/actions
-- "divided" - Internal disagreement
-
-═══════════════════════════════════════════════════════════════
-RESPONSE FORMAT
-═══════════════════════════════════════════════════════════════
-
-{{
-  "perspectives": [
-    {{
-      "entity": "Name of country/organization",
-      "icon": "Flag emoji or relevant symbol",
-      "position": "1-2 sentence quote or paraphrased official position",
-      "stance": "supportive/opposed/concerned/neutral/defensive/divided",
-      "source_context": "Who/what this position comes from (e.g., 'Government officials', 'Ministry statement')"
-    }}
-  ]
-}}
-
-Include 2-4 perspectives, ordered by relevance/importance to the event.
-Respond with valid JSON only."""
 
 
 WHAT_TO_WATCH_PROMPT = """Generate a "What to Watch" section for this world event.
@@ -385,144 +276,148 @@ IMPORTANT:
 Respond with valid JSON only."""
 
 
-GEOGRAPHIC_IMPACT_PROMPT = """Generate geographic impact data for this world event.
+DATA_ANALYTICS_PROMPT = """Generate data analytics for this world event using REAL quantitative data.
 
 ═══════════════════════════════════════════════════════════════
 EVENT
 ═══════════════════════════════════════════════════════════════
 Name: {event_name}
 Background: {background}
-Known affected regions: {affected_regions}
+Chart suggestions from relevance analysis: {suggested_charts}
 
 ═══════════════════════════════════════════════════════════════
 TASK
 ═══════════════════════════════════════════════════════════════
 
-Identify all countries/regions significantly affected by this event and categorize their involvement.
+Research this event and produce:
+1. **2-4 KEY FACTS** — headline-worthy single data points (cost, count, percentage, record)
+2. **2-4 CHARTS** — data-driven visualizations with real numbers
 
-REQUIREMENTS:
-1. Use ISO 3166-1 alpha-2 country codes (US, CN, GB, DE, FR, JP, etc.)
-2. Categorize each country's involvement level
-3. Include brief description of HOW each is affected
-4. Order by significance (primary actors first)
-5. Be comprehensive but focused (4-10 countries typically)
+KEY FACTS GUIDANCE:
+Think about what single numbers tell the biggest story:
+- Cost of this event to an economy (e.g. "$2.4T cumulative impact")
+- Number of people/jobs/companies affected
+- Percentage change year-over-year
+- Record high/low comparisons
+- Market cap lost/gained
+- Trade volume changes
+- Casualty or displacement figures
+- Budget or spending amounts
 
-INVOLVEMENT LEVELS:
-- "primary": Directly causing or central to the event (main actors)
-- "major": Significantly affected or key player in response
-- "moderate": Notable impact or meaningful involvement
-- "minor": Peripheral involvement, indirect effects, or observer status
+Each key fact should be a single, impactful data point with its source.
 
-DESCRIPTION GUIDELINES:
-- 1 short sentence per country
-- Focus on HOW they're involved, not just THAT they're involved
-- Be specific (e.g., "Targeted with 25% tariffs on auto exports" not "Affected by tariffs")
+SOURCE QUALITY REQUIREMENTS:
+Sources MUST be from: government agencies (CBO, BLS, Census Bureau, Eurostat), international organizations (World Bank, IMF, UN, WHO, WTO), official statistics offices, central banks, or major research institutions. No blogs, opinions, or unverified estimates.
 
-═══════════════════════════════════════════════════════════════
-COMMON COUNTRY CODES REFERENCE
-═══════════════════════════════════════════════════════════════
-US - United States       CN - China              RU - Russia
-GB - United Kingdom      DE - Germany            FR - France
-JP - Japan               KR - South Korea        IN - India
-BR - Brazil              MX - Mexico             CA - Canada
-AU - Australia           IT - Italy              ES - Spain
-NL - Netherlands         SA - Saudi Arabia       AE - UAE
-IL - Israel              PS - Palestine          UA - Ukraine
-TR - Turkey              EG - Egypt              ZA - South Africa
-ID - Indonesia           NG - Nigeria            PK - Pakistan
-IR - Iran                IQ - Iraq               SY - Syria
+CHART REQUIREMENTS:
+1. Use REAL data from credible sources
+2. Each chart must tell a meaningful story about the event
+3. Data points should be accurate and verifiable
+4. Include source citations for each chart
+5. Choose the chart type that best represents the data
+6. You MUST generate at least 2 charts — this is mandatory
+
+CHART TYPES AVAILABLE:
+- "line" — Time series, trends over time (best for showing change)
+- "bar" — Comparing categories or discrete values
+- "stacked_bar" — Showing composition/breakdown of totals
+- "area" — Like line but emphasizing volume/magnitude
+- "horizontal_bar" — Ranking/comparison (best when labels are long)
+- "pie" — Showing parts of a whole (use sparingly, max 6 slices)
+- "donut" — Same as pie but with center hole (cleaner look)
+
+DATA FORMAT RULES:
+- Each chart has 1+ series (for multi-line, grouped bars, etc.)
+- Each series has: name, color (hex), and data array of {{x, y}} points
+- x values are strings (years, categories, labels)
+- y values are numbers (the actual data)
+- For pie/donut: use a single series where x = slice label, y = value
+
+COLOR PALETTE (use these for consistency):
+- Primary: #3b82f6 (blue), #ef4444 (red), #10b981 (green), #f59e0b (amber)
+- Secondary: #8b5cf6 (purple), #06b6d4 (cyan), #ec4899 (pink), #6366f1 (indigo)
+
+Y-AXIS FORMAT OPTIONS:
+- "number" — Plain numbers (1000, 2500)
+- "percent" — Percentage (45%)
+- "currency_b" — Billions USD ($120B)
+- "currency_m" — Millions USD ($450M)
+- "compact" — Auto-compact (1.2K, 3.4M, 5.6B)
 
 ═══════════════════════════════════════════════════════════════
 RESPONSE FORMAT
 ═══════════════════════════════════════════════════════════════
 
 {{
-  "geographic_impact": {{
-    "primary_region": "Main geographic area or theme (e.g., 'Middle East', 'Global Trade')",
-    "total_countries_affected": <number>,
-    "countries": [
+  "data_analytics": {{
+    "summary": "2-3 sentence insight paragraph summarizing what the data reveals about this event. Be specific with numbers.",
+    "key_facts": [
       {{
-        "code": "XX",
-        "name": "Full Country Name",
-        "involvement": "primary/major/moderate/minor",
-        "role": "initiator/target/combatant/mediator/ally/affected/observer/beneficiary",
-        "description": "1 sentence on how this country is involved"
+        "label": "Cost to US Economy",
+        "value": "$2.4T",
+        "context": "Cumulative impact since tariffs began in 2018",
+        "source": "Congressional Budget Office"
+      }},
+      {{
+        "label": "Jobs Affected",
+        "value": "2.1M",
+        "context": "Manufacturing and agriculture sectors",
+        "source": "Bureau of Labor Statistics"
       }}
     ],
-    "regions_summary": [
-      {{"region": "Region name", "status": "Brief status"}}
+    "charts": [
+      {{
+        "id": "chart_1",
+        "title": "Short chart title (e.g., 'US-China Trade Balance 2018-2025')",
+        "description": "1 sentence: what this chart reveals about the event",
+        "chart_type": "line|bar|stacked_bar|area|horizontal_bar|pie|donut",
+        "x_label": "X axis label (e.g., 'Year', 'Country')",
+        "y_label": "Y axis label (e.g., 'Billion USD', 'Percent')",
+        "y_format": "number|percent|currency_b|currency_m|compact",
+        "series": [
+          {{
+            "name": "Series name (e.g., 'Exports')",
+            "color": "#3b82f6",
+            "data": [
+              {{"x": "2020", "y": 120}},
+              {{"x": "2021", "y": 135}},
+              {{"x": "2022", "y": 150}}
+            ]
+          }}
+        ],
+        "source": "Data source (e.g., 'US Census Bureau, World Bank')"
+      }}
     ]
   }}
 }}
 
-Include 4-10 countries. Respond with valid JSON only."""
+QUALITY RULES:
+- Generate 2-4 key facts (headline single-stat data points)
+- Generate 2-4 charts (MINIMUM 2 — this is mandatory, not more than 4)
+- Each chart must have at least 3 data points
+- Mix chart types for visual variety (don't use all line charts)
+- Data must be REAL — do not fabricate numbers
+- Round numbers appropriately (don't fake precision)
+- Use the most recent available data
+- Charts should complement each other, not repeat the same data
+- Every key fact and chart MUST have a source from a credible institution
+
+Respond with valid JSON only."""
 
 
-HISTORICAL_COMPARISON_PROMPT = """Find meaningful historical parallels for this world event.
+DATA_ANALYTICS_RETRY_PROMPT = """Your previous attempt only generated {chart_count} chart(s). You MUST generate at least 2 charts.
 
-═══════════════════════════════════════════════════════════════
-EVENT
-═══════════════════════════════════════════════════════════════
-Name: {event_name}
+Event: {event_name}
 Background: {background}
-Potential comparisons to explore: {potential_comparisons}
 
-═══════════════════════════════════════════════════════════════
-TASK
-═══════════════════════════════════════════════════════════════
+Generate a complete data analytics response with:
+- 2-4 key_facts (single headline data points with source)
+- AT LEAST 2 charts (this is the minimum, aim for 2-4)
 
-Find 1-2 historical events that provide MEANINGFUL context for understanding this event.
+Use the exact same JSON format as before. Sources must be from credible institutions (government agencies, World Bank, IMF, UN, official statistics).
 
-REQUIREMENTS:
-1. Comparisons must be GENUINELY USEFUL (similar causes, dynamics, stakes, or actors)
-2. Include what happened AND how it resolved
-3. Explicitly state both SIMILARITIES and DIFFERENCES
-4. Be honest about limitations of the comparison
-5. Focus on what readers can LEARN from the comparison
+Respond with valid JSON only."""
 
-GOOD COMPARISONS HELP READERS UNDERSTAND:
-- How similar situations played out historically
-- What factors led to resolution, escalation, or stalemate
-- Rough timelines to expect
-- Potential outcomes based on precedent
-
-COMPARISON QUALITY CRITERIA:
-✓ Similar underlying dynamics (not just surface similarity)
-✓ Comparable stakes or scale
-✓ Relevant to understanding current situation
-✓ Historical event is well-documented and concluded
-
-✗ Avoid forced comparisons (stretching to find parallels)
-✗ Avoid misleading comparisons (different in crucial ways)
-✗ Avoid comparisons that are too obvious/unhelpful
-✗ Avoid ongoing events (no resolution to learn from)
-
-═══════════════════════════════════════════════════════════════
-RESPONSE FORMAT
-═══════════════════════════════════════════════════════════════
-
-{{
-  "historical_comparison": {{
-    "headline": "Short headline for this section (e.g., 'How previous trade wars played out')",
-    "comparisons": [
-      {{
-        "event_name": "Name of historical event",
-        "years": "Year or range (e.g., '2018-2020', '1962')",
-        "duration_months": <number or null if ongoing/unclear>,
-        "summary": "2-3 sentence description of what happened",
-        "resolution": "How it ended (1-2 sentences)",
-        "outcome_type": "resolution/partial_resolution/escalation/ceasefire_no_resolution/ongoing",
-        "similarities": ["Similarity 1", "Similarity 2", "Similarity 3"],
-        "differences": ["Difference 1", "Difference 2", "Difference 3"],
-        "key_lessons": "What we can learn from this comparison (2-3 sentences)"
-      }}
-    ],
-    "context_note": "Brief caveat about comparison limitations (1-2 sentences)",
-    "timeline_insight": "What the historical precedent suggests about timeline/duration (1 sentence)"
-  }}
-}}
-
-Include 1-2 comparisons (quality over quantity). Respond with valid JSON only."""
 
 
 # ==========================================
@@ -588,21 +483,6 @@ def determine_relevant_components(event_name: str, topic_prompt: str, background
         return {"components": {}}
 
 
-def generate_perspectives(event_name: str, background: str, potential_sides: List[str], model) -> Optional[Dict]:
-    """Generate multiple perspectives section."""
-    prompt = PERSPECTIVES_PROMPT.format(
-        event_name=event_name,
-        background=background,
-        potential_sides=', '.join(potential_sides) if potential_sides else 'Key stakeholders involved'
-    )
-    
-    try:
-        response = model.generate_content(prompt)
-        return _parse_json_response(response.text)
-    except Exception as e:
-        print(f"    ❌ Failed to generate perspectives: {e}")
-        return None
-
 
 def generate_what_to_watch(event_name: str, background: str, model) -> Optional[Dict]:
     """
@@ -610,7 +490,7 @@ def generate_what_to_watch(event_name: str, background: str, model) -> Optional[
     Includes both confirmed and potential/expected events.
     Returns None if not relevant or no valid items exist.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     prompt = WHAT_TO_WATCH_PROMPT.format(
         event_name=event_name,
         background=background,
@@ -672,12 +552,13 @@ def generate_what_to_watch(event_name: str, background: str, model) -> Optional[
             
             # Ensure year is in date_display
             date_display = item.get('date_display', '')
-            if date_display and not any(str(y) in date_display for y in range(2024, 2035)):
+            current_year = datetime.now(timezone.utc).year
+            if date_display and not any(str(y) in date_display for y in range(2020, current_year + 5)):
                 # Year missing from display - add it from the date field
                 try:
                     year = item_date[:4]
                     item['date_display'] = f"{date_display}, {year}" if date_display else date_display
-                except:
+                except Exception:
                     pass
             
             # Source is nice to have but not required for anniversaries/known dates
@@ -701,35 +582,99 @@ def generate_what_to_watch(event_name: str, background: str, model) -> Optional[
         return None
 
 
-def generate_geographic_impact(event_name: str, background: str, affected_regions: List[str], model) -> Optional[Dict]:
-    """Generate geographic impact section with country data."""
-    prompt = GEOGRAPHIC_IMPACT_PROMPT.format(
-        event_name=event_name,
-        background=background,
-        affected_regions=', '.join(affected_regions) if affected_regions else 'To be determined by analysis'
-    )
-    
-    try:
-        response = model.generate_content(prompt)
-        return _parse_json_response(response.text)
-    except Exception as e:
-        print(f"    ❌ Failed to generate geographic impact: {e}")
-        return None
+VALID_CHART_TYPES = {'line', 'bar', 'stacked_bar', 'area', 'horizontal_bar', 'pie', 'donut'}
 
 
-def generate_historical_comparison(event_name: str, background: str, potential_comparisons: List[str], model) -> Optional[Dict]:
-    """Generate historical comparison section."""
-    prompt = HISTORICAL_COMPARISON_PROMPT.format(
+def _validate_analytics_charts(charts: List[Dict]) -> List[Dict]:
+    """Validate and filter analytics charts. Returns list of valid charts (max 4)."""
+    valid_charts = []
+    for chart in charts:
+        chart_type = chart.get('chart_type', '')
+        series = chart.get('series', [])
+
+        # Must have valid chart type
+        if chart_type not in VALID_CHART_TYPES:
+            print(f"    ⚠️ Skipping chart with invalid type: {chart_type}")
+            continue
+
+        # Must have at least one series with data
+        has_data = any(len(s.get('data', [])) >= 2 for s in series)
+        if not has_data:
+            print(f"    ⚠️ Skipping chart with insufficient data: {chart.get('title', 'untitled')}")
+            continue
+
+        valid_charts.append(chart)
+
+    return valid_charts[:4]
+
+
+def _validate_key_facts(key_facts: List[Dict]) -> List[Dict]:
+    """Validate key facts — each must have label and value."""
+    valid = []
+    for fact in key_facts:
+        if fact.get('label') and fact.get('value'):
+            valid.append(fact)
+    return valid[:4]
+
+
+def generate_data_analytics(event_name: str, background: str, suggested_charts: List[str], model) -> Optional[Dict]:
+    """Generate data analytics (key facts + charts) with real quantitative data.
+    Enforces minimum 2 charts with one retry if needed."""
+    prompt = DATA_ANALYTICS_PROMPT.format(
         event_name=event_name,
         background=background,
-        potential_comparisons=', '.join(potential_comparisons) if potential_comparisons else 'Relevant historical precedents'
+        suggested_charts=', '.join(suggested_charts) if suggested_charts else 'Relevant data visualizations'
     )
-    
+
     try:
         response = model.generate_content(prompt)
-        return _parse_json_response(response.text)
+        data = _parse_json_response(response.text)
+
+        if not data or not data.get('data_analytics'):
+            return None
+
+        analytics = data['data_analytics']
+        valid_charts = _validate_analytics_charts(analytics.get('charts', []))
+        valid_key_facts = _validate_key_facts(analytics.get('key_facts', []))
+
+        # Enforce minimum 2 charts — retry once if needed
+        if len(valid_charts) < 2:
+            print(f"    ⚠️ Only {len(valid_charts)} valid chart(s), retrying for minimum 2...")
+            retry_prompt = DATA_ANALYTICS_RETRY_PROMPT.format(
+                chart_count=len(valid_charts),
+                event_name=event_name,
+                background=background
+            )
+            try:
+                retry_response = model.generate_content(retry_prompt)
+                retry_data = _parse_json_response(retry_response.text)
+                if retry_data and retry_data.get('data_analytics'):
+                    retry_analytics = retry_data['data_analytics']
+                    retry_charts = _validate_analytics_charts(retry_analytics.get('charts', []))
+                    if len(retry_charts) >= 2:
+                        valid_charts = retry_charts
+                        print(f"    ✅ Retry succeeded: {len(valid_charts)} charts")
+                    # Also pick up key_facts from retry if we didn't get any
+                    if not valid_key_facts:
+                        valid_key_facts = _validate_key_facts(retry_analytics.get('key_facts', []))
+            except Exception as retry_e:
+                print(f"    ⚠️ Retry failed: {retry_e}")
+
+        if not valid_charts:
+            print(f"    ℹ️ No valid charts generated")
+            return None
+
+        print(f"    📊 Generated {len(valid_charts)} analytics charts + {len(valid_key_facts)} key facts")
+        return {
+            'data_analytics': {
+                'summary': analytics.get('summary', ''),
+                'key_facts': valid_key_facts,
+                'charts': valid_charts
+            }
+        }
+
     except Exception as e:
-        print(f"    ❌ Failed to generate historical comparison: {e}")
+        print(f"    ❌ Failed to generate data analytics: {e}")
         return None
 
 
@@ -763,45 +708,20 @@ def generate_event_components(event_name: str, topic_prompt: str, background: st
     # Initialize result with metadata
     result = {
         'components_metadata': {
-            'has_perspectives': False,
             'has_what_to_watch': False,
-            'has_geographic_impact': False,
-            'has_historical_comparison': False,
-            'generated_at': datetime.utcnow().isoformat(),
+            'has_data_analytics': False,
+            'generated_at': datetime.now(timezone.utc).isoformat(),
             'relevance_reasoning': relevance_result.get('summary', '')
         }
     }
-    
-    # Check if any components are enabled
-    any_enabled = any([
-        components_config.get('perspectives', {}).get('enabled', False),
-        components_config.get('what_to_watch', {}).get('enabled', False),
-        components_config.get('geographic_impact', {}).get('enabled', False),
-        components_config.get('historical_comparison', {}).get('enabled', False)
-    ])
-    
-    if not any_enabled:
-        print(f"    ℹ️ No components enabled for this event type")
-        return result
-    
+
     # Configure model once for all generations
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
     model = genai.GenerativeModel('gemini-2.0-flash')
-    
-    # Step 2: Generate each enabled component
-    
-    # PERSPECTIVES
-    perspectives_config = components_config.get('perspectives', {})
-    if perspectives_config.get('enabled'):
-        print(f"    Generating perspectives...")
-        potential_sides = perspectives_config.get('potential_sides', [])
-        perspectives_data = generate_perspectives(event_name, background, potential_sides, model)
-        if perspectives_data and perspectives_data.get('perspectives'):
-            result['perspectives'] = perspectives_data['perspectives']
-            result['components_metadata']['has_perspectives'] = True
-            print(f"    ✅ Added {len(result['perspectives'])} perspectives")
-    
-    # WHAT TO WATCH
+
+    # Step 2: Generate components
+
+    # WHAT TO WATCH — conditional based on relevance
     watch_config = components_config.get('what_to_watch', {})
     if watch_config.get('enabled'):
         print(f"    Generating what to watch...")
@@ -810,37 +730,22 @@ def generate_event_components(event_name: str, topic_prompt: str, background: st
             result['what_to_watch'] = watch_data['what_to_watch']
             result['components_metadata']['has_what_to_watch'] = True
             print(f"    ✅ Added {len(result['what_to_watch'])} upcoming dates")
-    
-    # GEOGRAPHIC IMPACT
-    geo_config = components_config.get('geographic_impact', {})
-    if geo_config.get('enabled'):
-        print(f"    Generating geographic impact...")
-        affected_regions = geo_config.get('affected_regions', [])
-        geo_data = generate_geographic_impact(event_name, background, affected_regions, model)
-        if geo_data and geo_data.get('geographic_impact'):
-            result['geographic_impact'] = geo_data['geographic_impact']
-            result['components_metadata']['has_geographic_impact'] = True
-            countries_count = len(result['geographic_impact'].get('countries', []))
-            print(f"    ✅ Added geographic impact for {countries_count} countries")
-    
-    # HISTORICAL COMPARISON
-    comparison_config = components_config.get('historical_comparison', {})
-    if comparison_config.get('enabled'):
-        print(f"    Generating historical comparison...")
-        potential_comparisons = comparison_config.get('potential_comparisons', [])
-        comparison_data = generate_historical_comparison(event_name, background, potential_comparisons, model)
-        if comparison_data and comparison_data.get('historical_comparison'):
-            result['historical_comparison'] = comparison_data['historical_comparison']
-            result['components_metadata']['has_historical_comparison'] = True
-            comparisons_count = len(result['historical_comparison'].get('comparisons', []))
-            print(f"    ✅ Added {comparisons_count} historical comparisons")
-    
+
+    # DATA ANALYTICS — always generated for every event (mandatory)
+    print(f"    Generating data analytics...")
+    suggested_charts = components_config.get('data_analytics', {}).get('suggested_charts', [])
+    analytics_data = generate_data_analytics(event_name, background, suggested_charts, model)
+    if analytics_data and analytics_data.get('data_analytics'):
+        result['data_analytics'] = analytics_data['data_analytics']
+        result['components_metadata']['has_data_analytics'] = True
+        charts_count = len(result['data_analytics'].get('charts', []))
+        facts_count = len(result['data_analytics'].get('key_facts', []))
+        print(f"    ✅ Added {charts_count} analytics charts + {facts_count} key facts")
+
     # Summary
     enabled_count = sum([
-        result['components_metadata']['has_perspectives'],
         result['components_metadata']['has_what_to_watch'],
-        result['components_metadata']['has_geographic_impact'],
-        result['components_metadata']['has_historical_comparison']
+        result['components_metadata']['has_data_analytics']
     ])
     print(f"  ✅ Generated {enabled_count} components for {event_name}")
     
@@ -884,12 +789,26 @@ def update_event_components(event_id: str) -> bool:
         # Extract what_to_watch for dedicated columns
         what_to_watch = components.get('what_to_watch', [])
         has_what_to_watch = len(what_to_watch) > 0
-        
-        # Update event with new components AND dedicated what_to_watch columns
+
+        # Extract data_analytics and deduplicated sources for dedicated columns
+        data_analytics = components.get('data_analytics')
+        data_sources = []
+        if data_analytics:
+            for fact in data_analytics.get('key_facts', []):
+                if fact.get('source'):
+                    data_sources.append(fact['source'])
+            for chart in data_analytics.get('charts', []):
+                if chart.get('source'):
+                    data_sources.append(chart['source'])
+            data_sources = list(dict.fromkeys(data_sources))  # dedupe preserving order
+
+        # Update event with new components AND dedicated columns
         supabase.table('world_events').update({
             'components': components,
             'has_what_to_watch': has_what_to_watch,
-            'what_to_watch': what_to_watch
+            'what_to_watch': what_to_watch,
+            'data_analytics': data_analytics,
+            'data_sources': data_sources
         }).eq('id', event_id).execute()
         
         print(f"  ✅ Updated components for event: {event['name']}")

@@ -3,34 +3,34 @@ import json
 import os
 from typing import Dict, Tuple
 
-def search_gemini_context(claude_title: str, claude_summary: str, full_text: str = "") -> Dict[str, str]:
+def search_gemini_context(title: str, summary: str, full_text: str = "") -> Dict[str, str]:
     """
     Search Gemini for contextual facts using Google Search grounding
-    
+
     Args:
-        claude_title: str, title written by Claude in Step 1
-        claude_summary: str, summary written by Claude in Step 1
+        title: str, article title from Step 4 synthesis
+        summary: str, bullet summary from Step 4 synthesis
         full_text: str, full article text (optional)
-    
+
     Returns:
         dict with 'results' and 'citations'
     """
-    
+
     # Get API key from environment
     api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable not set")
-    
+
     # Use Gemini 2.0 Flash with Google Search grounding
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-    
+
     # Use full_text if provided, otherwise use summary
-    article_text = full_text if full_text else claude_summary
-    
+    article_text = full_text if full_text else summary
+
     prompt = f"""You are gathering data for news article components.
 
-ARTICLE TITLE: {claude_title}
-BULLET SUMMARY: {claude_summary}
+ARTICLE TITLE: {title}
+BULLET SUMMARY: {summary}
 FULL ARTICLE TEXT: {article_text[:3000]}
 
 Gather information for these FOUR categories:

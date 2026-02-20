@@ -1,10 +1,10 @@
-# STEP 6: COMPONENT GENERATION (Timeline, Details, Graph)
+# STEP 7: COMPONENT GENERATION (Timeline, Details, Graph)
 # ================================================================
-# Purpose: Generate supplementary components using Perplexity search context
-# Model: Gemini 2.0 Flash (switched from Claude due to API limits)
-# Input: Articles with dual-language content from Step 5 + Perplexity context from Step 4
+# Purpose: Generate supplementary components using Gemini context search data
+# Model: Gemini 2.0 Flash
+# Input: Articles with components selected in Step 6 + context from Step 5
 # Output: Timeline, Details, Graph based on web search results
-# Writes: timeline, details, graph (as selected by Gemini in Step 3)
+# Writes: timeline, details, graph (as selected by Gemini in Step 6)
 # Cost: ~$0.10 per 100 articles
 # Time: ~2-3 minutes for 100 articles
 
@@ -434,7 +434,7 @@ CHECKLIST BEFORE SUBMITTING
 # CLAUDE COMPONENT WRITER CLASS
 # ==========================================
 
-class ClaudeComponentWriter:
+class GeminiComponentWriter:
     """
     Generates article components using Gemini 2.0 Flash
     Components: Timeline, Details, Graph
@@ -809,7 +809,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     
     load_dotenv()
-    api_key = os.getenv('ANTHROPIC_API_KEY')
+    api_key = os.getenv('GEMINI_API_KEY')
     
     # Test with a sample article
     test_article = {
@@ -821,7 +821,7 @@ if __name__ == "__main__":
         }
     }
     
-    writer = ClaudeComponentWriter(api_key)
+    writer = GeminiComponentWriter(api_key)
     components = writer.write_components(test_article)
     
     print("\n✅ Generated components:")
