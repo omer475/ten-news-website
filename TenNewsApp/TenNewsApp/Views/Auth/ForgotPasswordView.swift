@@ -22,10 +22,9 @@ struct ForgotPasswordView: View {
                 TextField("Email", text: $viewModel.email)
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
-                    .autocapitalization(.none)
-                    .padding()
-                    .background(Theme.Colors.backgroundSecondary)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
+                    .textInputAutocapitalization(.never)
+                    .padding(14)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
 
                 if let error = viewModel.errorMessage {
                     Text(error)

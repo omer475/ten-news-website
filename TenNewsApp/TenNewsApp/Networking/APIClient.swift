@@ -63,6 +63,7 @@ actor APIClient {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
+            print("‼️ Decoding error for \(T.self): \(error)")
             throw APIError.decodingError(error)
         }
     }

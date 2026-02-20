@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Login form with email/password fields and submit button
+/// Login form with Material-backed text fields.
 struct LoginView: View {
     @State private var viewModel = AuthViewModel()
     @Environment(\.dismiss) private var dismiss
@@ -13,12 +13,10 @@ struct LoginView: View {
         VStack(spacing: Theme.Spacing.lg) {
             Spacer()
 
-            // Header
             VStack(spacing: 8) {
                 Text("Welcome back")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.bold())
                     .foregroundStyle(Theme.Colors.primaryText)
-
                 Text("Sign in to your account")
                     .font(Theme.Fonts.body())
                     .foregroundStyle(Theme.Colors.secondaryText)
@@ -26,14 +24,11 @@ struct LoginView: View {
 
             Spacer()
 
-            // Form fields
             VStack(spacing: Theme.Spacing.md) {
-                // Email field
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Email")
                         .font(Theme.Fonts.captionMedium())
                         .foregroundStyle(Theme.Colors.secondaryText)
-
                     TextField("you@example.com", text: $viewModel.email)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
@@ -43,19 +38,16 @@ struct LoginView: View {
                         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
                 }
 
-                // Password field
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Password")
                         .font(Theme.Fonts.captionMedium())
                         .foregroundStyle(Theme.Colors.secondaryText)
-
                     SecureField("Password", text: $viewModel.password)
                         .textContentType(.password)
                         .padding(14)
                         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
                 }
 
-                // Forgot password link
                 HStack {
                     Spacer()
                     Button("Forgot password?") {
@@ -66,7 +58,6 @@ struct LoginView: View {
                 }
             }
 
-            // Error message
             if let error = viewModel.errorMessage {
                 Text(error)
                     .font(Theme.Fonts.caption())
@@ -74,7 +65,6 @@ struct LoginView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // Login button
             GlassCTAButton(
                 title: "Sign In",
                 action: {
@@ -88,12 +78,10 @@ struct LoginView: View {
                 isDisabled: !viewModel.canLogin
             )
 
-            // Sign up link
             HStack(spacing: 4) {
                 Text("Don't have an account?")
                     .font(Theme.Fonts.caption())
                     .foregroundStyle(Theme.Colors.secondaryText)
-
                 Button("Sign Up") {
                     onShowSignup?()
                 }

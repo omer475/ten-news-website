@@ -5,7 +5,7 @@ import MapKit
 struct ArticleMapView: View {
     let mapData: MapData
 
-    private var locations: [MapLocation] { mapData.locations ?? [] }
+    private var locations: [MapLocation] { mapData.allLocations }
 
     private var region: MKCoordinateRegion {
         guard !locations.isEmpty else {
@@ -53,7 +53,7 @@ struct ArticleMapView: View {
                                     .foregroundStyle(Theme.Colors.primaryText)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(.regularMaterial, in: Capsule())
+                                    .glassEffect(.regular, in: Capsule())
                             }
                         }
                     }
@@ -98,9 +98,17 @@ struct ArticleMapView: View {
             MapLocation(name: "New York", lat: 40.7128, lng: -74.0060, lon: nil, description: "UN Headquarters"),
             MapLocation(name: "Geneva", lat: 46.2044, lng: 6.1432, lon: nil, description: "Preliminary talks"),
         ],
-        regions: nil
+        regions: nil,
+        center: nil,
+        markers: nil,
+        name: nil,
+        location: nil,
+        city: nil,
+        country: nil,
+        region: nil,
+        description: nil
     )
-    return ScrollView {
+    ScrollView {
         ArticleMapView(mapData: mapData)
             .padding()
     }

@@ -1,100 +1,142 @@
 import SwiftUI
 
-/// "What to Watch" items with title, timeframe, description, likelihood badge
+/// "What to Watch" — elegant vertical timeline with muted tones.
+/// Monochromatic design using accent color only, no multi-color noise.
 struct EventWhatToWatchView: View {
-    let data: WhatToWatchData
+    let items: [WhatToWatchItem]
+    var accentColor: Color = Color(hex: "#0057B7")
 
-    private var items: [WhatToWatchItem] { data.items ?? [] }
+    @State private var expandedIndex: Int? = nil
+
+    /// Sort items by date (nearest first)
+    private var sortedItems: [WhatToWatchItem] {
+        items.sorted { a, b in
+            (a.date ?? "9999") < (b.date ?? "9999")
+        }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(data.title?.uppercased() ?? "WHAT TO WATCH")
-                .font(Theme.Fonts.sectionLabel())
-                .foregroundStyle(Theme.Colors.secondaryText)
-                .tracking(1)
-
-            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                watchItemCard(item)
+        VStack(spacing: 0) {
+            ForEach(Array(sortedItems.enumerated()), id: \.offset) { index, item in
+                watchRow(item, index: index, isLast: index == sortedItems.count - 1)
             }
         }
     }
 
-    private func watchItemCard(_ item: WhatToWatchItem) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Header row
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
+    private func watchRow(_ item: WhatToWatchItem, index: Int, isLast: Bool) -> some View {
+        let isExpanded = expandedIndex == index
+        let isConfirmed = item.confirmed == true
+        let countdown = daysUntil(item.date)
+
+        return Button {
+            withAnimation(.spring(duration: 0.3, bounce: 0.15)) {
+                expandedIndex = isExpanded ? nil : index
+                HapticManager.light()
+            }
+        } label: {
+            HStack(alignment: .top, spacing: 0) {
+                // Timeline rail
+                VStack(spacing: 0) {
+                    // Line above node
+                    Rectangle()
+                        .fill(index == 0 ? .clear : .secondary.opacity(0.12))
+                        .frame(width: 1.5, height: 14)
+
+                    // Node
+                    ZStack {
+                        Circle()
+                            .fill(accentColor.opacity(0.1))
+                            .frame(width: 18, height: 18)
+                        Circle()
+                            .fill(isConfirmed ? accentColor : accentColor.opacity(0.4))
+                            .frame(width: 7, height: 7)
+                    }
+
+                    // Line below node
+                    Rectangle()
+                        .fill(isLast ? .clear : .secondary.opacity(0.12))
+                        .frame(width: 1.5)
+                        .frame(maxHeight: .infinity)
+                }
+                .frame(width: 18)
+
+                // Content
+                VStack(alignment: .leading, spacing: 6) {
+                    // Type + countdown
+                    HStack(spacing: 0) {
+                        Text((item.type ?? "event").uppercased())
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.5)
+
+                        Spacer()
+
+                        if let days = countdown {
+                            if days == 0 {
+                                Text("Today")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(accentColor)
+                            } else if days > 0 {
+                                Text("In \(days) \(days == 1 ? "day" : "days")")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
+                    // Title
                     if let title = item.title {
                         Text(title)
-                            .font(Theme.Fonts.cardTitle())
-                            .foregroundStyle(Theme.Colors.primaryText)
-                            .lineLimit(2)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(isExpanded ? nil : 2)
+                            .multilineTextAlignment(.leading)
                     }
 
-                    // Timeframe
-                    if let date = item.date {
-                        HStack(spacing: 4) {
-                            Image(systemName: "calendar")
-                                .font(.system(size: 11))
-                            Text(date)
-                                .font(Theme.Fonts.footnote())
+                    // Date + status
+                    HStack(spacing: 8) {
+                        if let dateDisplay = item.dateDisplay ?? item.date {
+                            Text(dateDisplay)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.tertiary)
                         }
-                        .foregroundStyle(Theme.Colors.secondaryText)
+
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+
+                        Text(isConfirmed ? "Confirmed" : "Expected")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(isConfirmed ? accentColor : accentColor.opacity(0.35))
+                    }
+
+                    // Expanded description
+                    if isExpanded, let desc = item.description, !desc.isEmpty {
+                        Text(desc)
+                            .font(.system(size: 14))
+                            .foregroundStyle(.primary.opacity(0.6))
+                            .lineSpacing(4)
+                            .padding(.top, 4)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
-
-                Spacer()
-
-                // Importance/likelihood badge
-                if let importance = item.importance {
-                    Text(importance.capitalized)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(importanceColor(importance))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(importanceColor(importance).opacity(0.12))
-                        )
-                }
-            }
-
-            // Description
-            if let description = item.description, !description.isEmpty {
-                Text(description)
-                    .font(Theme.Fonts.body())
-                    .foregroundStyle(Theme.Colors.bodyText)
-                    .lineSpacing(4)
+                .padding(.leading, 14)
+                .padding(.bottom, 22)
+                .padding(.top, 8)
             }
         }
-        .padding(Theme.Spacing.md)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.large))
+        .buttonStyle(.plain)
     }
 
-    private func importanceColor(_ importance: String) -> Color {
-        switch importance.lowercased() {
-        case "high", "critical", "likely":
-            return Color(hex: "#FF3B30")
-        case "medium", "moderate", "possible":
-            return Color(hex: "#FF9500")
-        case "low", "unlikely":
-            return Color(hex: "#34C759")
-        default:
-            return Theme.Colors.accent
-        }
-    }
-}
+    // MARK: - Helpers
 
-#Preview {
-    let data = WhatToWatchData(
-        title: "What to Watch",
-        items: [
-            WhatToWatchItem(id: "1", title: "Implementation Summit", description: "Follow-up meeting to establish enforcement mechanisms for carbon targets.", date: "March 2025", importance: "high"),
-            WhatToWatchItem(id: "2", title: "Green Energy Fund Launch", description: "Initial disbursement of the $500B fund to qualifying nations.", date: "June 2025", importance: "medium"),
-        ]
-    )
-    return ScrollView {
-        EventWhatToWatchView(data: data)
-            .padding()
+    private func daysUntil(_ dateStr: String?) -> Int? {
+        guard let dateStr = dateStr else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let targetDate = formatter.date(from: dateStr) else { return nil }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let target = calendar.startOfDay(for: targetDate)
+        return calendar.dateComponents([.day], from: today, to: target).day
     }
 }

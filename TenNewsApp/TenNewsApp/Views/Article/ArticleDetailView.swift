@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Full article detail page
+/// Full article detail page with NavigationStack toolbar and ShareLink.
 struct ArticleDetailView: View {
     let articleId: FlexibleID
     let initialArticle: Article?
@@ -11,7 +11,7 @@ struct ArticleDetailView: View {
     private var article: Article? { viewModel.article ?? initialArticle }
 
     var body: some View {
-        ZStack {
+        Group {
             if let article {
                 articleContent(article)
             } else if viewModel.isLoading {
@@ -19,14 +19,28 @@ struct ArticleDetailView: View {
             } else if let error = viewModel.errorMessage {
                 errorView(error)
             }
+        }
+        .navigationTitle(article?.source ?? "Article")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.regularMaterial, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 12) {
+                    Button {
+                        viewModel.toggleBookmark()
+                    } label: {
+                        Image(systemName: viewModel.isBookmarked ? "bookmark.fill" : "bookmark")
+                    }
 
-            // Floating navigation bar
-            VStack {
-                floatingNavBar
-                Spacer()
+                    if let article, let urlString = article.url, let url = URL(string: urlString) {
+                        ShareLink(item: url) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                }
             }
         }
-        .ignoresSafeArea()
         .task {
             if let initialArticle {
                 viewModel.article = initialArticle
@@ -36,48 +50,25 @@ struct ArticleDetailView: View {
         }
     }
 
-    // MARK: - Floating Navigation Bar
-
-    private var floatingNavBar: some View {
-        HStack {
-            GlassIconButton(icon: "chevron.left") {
-                dismiss()
-            }
-
-            Spacer()
-
-            HStack(spacing: 10) {
-                GlassIconButton(icon: viewModel.isBookmarked ? "bookmark.fill" : "bookmark") {
-                    viewModel.toggleBookmark()
-                }
-
-                GlassIconButton(icon: "arrowshape.turn.up.right.fill") {
-                    shareArticle()
-                }
-            }
-        }
-        .padding(.horizontal, Theme.Spacing.md)
-        .padding(.top, 54)
-    }
-
     // MARK: - Article Content
 
     @ViewBuilder
     private func articleContent(_ article: Article) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Hero image
-                heroImage(article)
+                if let imageUrl = article.displayImage {
+                    AsyncCachedImage(url: imageUrl)
+                        .frame(height: 260)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                }
 
-                // Content
                 VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-                    // Title
                     Text(article.plainTitle)
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.title2.bold())
                         .foregroundStyle(Theme.Colors.primaryText)
                         .lineSpacing(2)
 
-                    // Source and time
                     HStack(spacing: 8) {
                         if let source = article.source {
                             Text(source)
@@ -91,27 +82,13 @@ struct ArticleDetailView: View {
                         }
                     }
 
-                    // Component switcher
                     componentSwitcher(article)
-
-                    // Selected component content
                     componentContent(article)
                 }
                 .padding(.horizontal, Theme.Spacing.md)
                 .padding(.top, Theme.Spacing.lg)
-                .padding(.bottom, 100)
+                .padding(.bottom, 60)
             }
-        }
-    }
-
-    // MARK: - Hero Image
-
-    @ViewBuilder
-    private func heroImage(_ article: Article) -> some View {
-        if let imageUrl = article.displayImage {
-            AsyncCachedImage(url: imageUrl)
-                .frame(height: 300)
-                .clipped()
         }
     }
 
@@ -127,10 +104,8 @@ struct ArticleDetailView: View {
                         viewModel.selectComponent(type)
                     } label: {
                         HStack(spacing: 6) {
-                            componentSystemImage(for: type)
-                                .font(.system(size: 12))
-                            Text(componentLabel(for: type))
-                                .font(.system(size: 12, weight: .medium))
+                            componentSystemImage(for: type).font(.caption)
+                            Text(componentLabel(for: type)).font(.caption.weight(.medium))
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -214,11 +189,12 @@ struct ArticleDetailView: View {
 
     private var loadingView: some View {
         VStack(spacing: 16) {
-            LoadingDotsView()
+            ProgressView().controlSize(.large)
             Text("Loading article...")
                 .font(Theme.Fonts.body())
                 .foregroundStyle(Theme.Colors.secondaryText)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func errorView(_ message: String) -> some View {
@@ -236,23 +212,15 @@ struct ArticleDetailView: View {
             .buttonStyle(.bordered)
         }
         .padding()
-    }
-
-    // MARK: - Share
-
-    private func shareArticle() {
-        guard let article, let urlString = article.url, let url = URL(string: urlString) else { return }
-        let activity = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = windowScene.windows.first?.rootViewController {
-            root.present(activity, animated: true)
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
 #Preview {
-    ArticleDetailView(
-        articleId: FlexibleID("99901"),
-        initialArticle: PreviewData.sampleArticle
-    )
+    NavigationStack {
+        ArticleDetailView(
+            articleId: FlexibleID("99901"),
+            initialArticle: PreviewData.sampleArticle
+        )
+    }
 }

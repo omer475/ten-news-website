@@ -1,49 +1,28 @@
 import SwiftUI
 
-/// Event card with image, name overlay, blur color background, update counter badge
+/// Event card with image, name overlay, and glass bottom bar.
 struct EventCardView: View {
     let event: WorldEvent
-    @State private var showDetail = false
-
-    private var blurColor: Color {
-        if let hex = event.blurColor {
-            return Color(hex: hex)
-        }
-        return Color(hex: "#1a1a2e")
-    }
 
     var body: some View {
-        Button {
-            showDetail = true
-            HapticManager.light()
-        } label: {
+        NavigationLink(value: event) {
             ZStack(alignment: .bottomLeading) {
-                // Background image or color
                 if let imageUrl = event.displayImage {
                     AsyncCachedImage(url: imageUrl)
-                        .frame(width: 200, height: 130)
+                        .frame(width: 220, height: 150)
                         .clipped()
                 } else {
                     Rectangle()
-                        .fill(blurColor.gradient)
-                        .frame(width: 200, height: 130)
+                        .fill(Color(hex: event.blurColor ?? "#1a1a2e").gradient)
+                        .frame(width: 220, height: 150)
                 }
 
-                // Gradient overlay
-                LinearGradient(
-                    colors: [.clear, blurColor.opacity(0.8), blurColor],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-
-                // Name overlay with glass effect
                 VStack(alignment: .leading, spacing: 4) {
                     Spacer()
 
-                    // Update counter badge
                     if let updates = event.newUpdates, updates > 0 {
                         Text("\(updates) new")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.caption2.weight(.bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -51,32 +30,31 @@ struct EventCardView: View {
                     }
 
                     Text(event.name)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.primary)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .glassEffect(.regular, in: UnevenRoundedRectangle(
+                .glassEffect(.regular.interactive(), in: UnevenRoundedRectangle(
                     bottomLeadingRadius: Theme.CornerRadius.medium,
                     bottomTrailingRadius: Theme.CornerRadius.medium
                 ))
             }
-            .frame(width: 200, height: 130)
+            .frame(width: 220, height: 150)
             .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
         }
         .buttonStyle(.plain)
-        .fullScreenCover(isPresented: $showDetail) {
-            EventDetailView(event: event)
-        }
     }
 }
 
 #Preview {
-    HStack(spacing: 12) {
-        EventCardView(event: PreviewData.sampleEvent)
-        EventCardView(event: PreviewData.sampleEvents[1])
+    NavigationStack {
+        HStack(spacing: 12) {
+            EventCardView(event: PreviewData.sampleEvent)
+            EventCardView(event: PreviewData.sampleEvents[1])
+        }
+        .padding()
     }
-    .padding()
 }

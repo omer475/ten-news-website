@@ -11,7 +11,6 @@ struct ArticleDetailResponse: Codable {
 
 struct WorldEventDetailResponse: Codable {
     let event: WorldEventFull
-    let articles: [Article]?
 }
 
 // MARK: - Auth Response

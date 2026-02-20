@@ -47,7 +47,7 @@ struct WorldEventsListView: View {
                 ForEach(0..<3, id: \.self) { _ in
                     RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
                         .fill(Color(hex: "#e5e5ea").opacity(0.3))
-                        .frame(width: 200, height: 130)
+                        .frame(width: 220, height: 150)
                         .overlay {
                             LoadingDotsView()
                         }

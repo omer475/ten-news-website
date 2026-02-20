@@ -41,19 +41,21 @@ struct GlassCTAButton: View {
             HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(.primary)
                         .scaleEffect(0.8)
                 } else {
                     Text(title)
                         .font(.system(size: 17, weight: .semibold))
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
             .frame(maxWidth: .infinity)
             .frame(height: 50)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                    .fill(isDisabled ? Color.gray : Theme.Colors.accent)
+            .glassEffect(
+                isDisabled
+                    ? .regular.tint(.gray).interactive()
+                    : .regular.tint(.blue).interactive(),
+                in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
             )
         }
         .buttonStyle(.plain)

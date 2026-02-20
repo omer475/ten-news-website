@@ -236,6 +236,43 @@ struct MapData: Codable, Hashable {
     let title: String?
     let locations: [MapLocation]?
     let regions: [MapRegion]?
+
+    // API fields: single-location format
+    let center: MapCenter?
+    let markers: [MapMarker]?
+    let name: String?
+    let location: String?
+    let city: String?
+    let country: String?
+    let region: String?
+    let description: String?
+
+    /// Builds a unified locations array from either `locations` or `center` + `markers`
+    var allLocations: [MapLocation] {
+        if let locs = locations, !locs.isEmpty { return locs }
+        var result: [MapLocation] = []
+        if let c = center {
+            result.append(MapLocation(name: name, lat: c.lat, lng: nil, lon: c.lon, description: description))
+        }
+        if let marks = markers {
+            for m in marks {
+                result.append(MapLocation(name: nil, lat: m.lat, lng: nil, lon: m.lon, description: nil))
+            }
+        }
+        return result
+    }
+
+    var hasMapContent: Bool { !allLocations.isEmpty }
+}
+
+struct MapCenter: Codable, Hashable {
+    let lat: Double
+    let lon: Double
+}
+
+struct MapMarker: Codable, Hashable {
+    let lat: Double
+    let lon: Double
 }
 
 struct MapLocation: Codable, Hashable {

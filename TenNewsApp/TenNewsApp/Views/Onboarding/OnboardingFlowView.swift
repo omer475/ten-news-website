@@ -1,22 +1,15 @@
 import SwiftUI
 
 /// Onboarding flow that guides users through country and topic selection.
-/// Uses OnboardingViewModel to manage multi-step progression.
 struct OnboardingFlowView: View {
     @Environment(AppViewModel.self) private var appViewModel
     @State private var viewModel = OnboardingViewModel()
 
     var body: some View {
-        ZStack {
-            // Background
-            Theme.Colors.backgroundPrimary
-                .ignoresSafeArea()
-
+        NavigationStack {
             VStack(spacing: 0) {
-                // Progress bar
                 progressBar
 
-                // Step content
                 TabView(selection: $viewModel.currentStep) {
                     welcomeStep.tag(OnboardingViewModel.Step.welcome)
                     countryStep.tag(OnboardingViewModel.Step.country)
@@ -26,9 +19,12 @@ struct OnboardingFlowView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(AppAnimations.pageTransition, value: viewModel.currentStep)
 
-                // Bottom buttons
                 bottomButtons
             }
+            .background(Theme.Colors.backgroundPrimary)
+            .navigationTitle("Welcome")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.regularMaterial, for: .navigationBar)
         }
     }
 
@@ -40,7 +36,6 @@ struct OnboardingFlowView: View {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(Theme.Colors.separator)
                     .frame(height: 4)
-
                 RoundedRectangle(cornerRadius: 2)
                     .fill(Theme.Colors.accent)
                     .frame(width: geo.size.width * viewModel.progress, height: 4)
@@ -60,8 +55,8 @@ struct OnboardingFlowView: View {
             Image(systemName: "newspaper.fill")
                 .font(.system(size: 72))
                 .foregroundStyle(Theme.Colors.accent)
-            Text("Welcome to Ten News")
-                .font(Theme.Fonts.headline())
+            Text("Welcome to Today+")
+                .font(.title.bold())
             Text("Your personalized news feed, curated daily.")
                 .font(Theme.Fonts.body())
                 .foregroundStyle(Theme.Colors.secondaryText)
@@ -74,53 +69,46 @@ struct OnboardingFlowView: View {
     private var countryStep: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             Text("Where are you from?")
-                .font(Theme.Fonts.headline())
+                .font(.title2.bold())
                 .padding(.horizontal, Theme.Spacing.lg)
 
-            ScrollView {
-                LazyVStack(spacing: Theme.Spacing.sm) {
-                    ForEach(viewModel.availableCountries) { country in
-                        Button {
-                            viewModel.selectCountry(country.id)
-                        } label: {
-                            HStack {
-                                Text(country.flag)
-                                    .font(.title2)
-                                Text(country.name)
-                                    .font(Theme.Fonts.bodyMedium())
-                                    .foregroundStyle(Theme.Colors.primaryText)
-                                Spacer()
-                                if viewModel.selectedCountry == country.id {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(Theme.Colors.accent)
-                                }
-                            }
-                            .padding(Theme.Spacing.md)
-                            .background(
-                                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                                    .fill(viewModel.selectedCountry == country.id
-                                          ? Theme.Colors.accent.opacity(0.1)
-                                          : Theme.Colors.cardBackground)
-                            )
+            List(viewModel.availableCountries) { country in
+                Button {
+                    viewModel.selectCountry(country.id)
+                } label: {
+                    HStack {
+                        Text(country.flag).font(.title2)
+                        Text(country.name)
+                            .font(Theme.Fonts.bodyMedium())
+                            .foregroundStyle(Theme.Colors.primaryText)
+                        Spacer()
+                        if viewModel.selectedCountry == country.id {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(Theme.Colors.accent)
+                                .fontWeight(.semibold)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, Theme.Spacing.lg)
+                .listRowBackground(
+                    viewModel.selectedCountry == country.id
+                        ? Theme.Colors.accent.opacity(0.1)
+                        : Color.clear
+                )
             }
+            .listStyle(.insetGrouped)
         }
     }
 
     private var countriesStep: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-            Text("Follow Countries")
-                .font(Theme.Fonts.headline())
-                .padding(.horizontal, Theme.Spacing.lg)
-
-            Text("Select countries you want news from")
-                .font(Theme.Fonts.body())
-                .foregroundStyle(Theme.Colors.secondaryText)
-                .padding(.horizontal, Theme.Spacing.lg)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Follow Countries")
+                    .font(.title2.bold())
+                Text("Select countries you want news from")
+                    .font(Theme.Fonts.body())
+                    .foregroundStyle(Theme.Colors.secondaryText)
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
 
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: Theme.Spacing.sm) {
@@ -139,13 +127,16 @@ struct OnboardingFlowView: View {
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
                             .background(
-                                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                                    .fill(viewModel.selectedCountries.contains(country.id)
-                                          ? Theme.Colors.accent.opacity(0.15)
-                                          : Theme.Colors.cardBackground)
-                                    .stroke(viewModel.selectedCountries.contains(country.id)
-                                            ? Theme.Colors.accent
-                                            : Theme.Colors.separator, lineWidth: 1)
+                                viewModel.selectedCountries.contains(country.id)
+                                    ? AnyShapeStyle(Theme.Colors.accent.opacity(0.15))
+                                    : AnyShapeStyle(Theme.Colors.cardBackground),
+                                in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                            )
+                            .glassEffect(
+                                viewModel.selectedCountries.contains(country.id)
+                                    ? .regular.tint(.blue).interactive()
+                                    : .regular.interactive(),
+                                in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
                             )
                         }
                         .buttonStyle(.plain)
@@ -158,14 +149,14 @@ struct OnboardingFlowView: View {
 
     private var topicsStep: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-            Text("Pick Your Topics")
-                .font(Theme.Fonts.headline())
-                .padding(.horizontal, Theme.Spacing.lg)
-
-            Text("Choose at least 3 topics (\(viewModel.selectedTopics.count) selected)")
-                .font(Theme.Fonts.body())
-                .foregroundStyle(Theme.Colors.secondaryText)
-                .padding(.horizontal, Theme.Spacing.lg)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Pick Your Topics")
+                    .font(.title2.bold())
+                Text("Choose at least 3 topics (\(viewModel.selectedTopics.count) selected)")
+                    .font(Theme.Fonts.body())
+                    .foregroundStyle(Theme.Colors.secondaryText)
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
 
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Theme.Spacing.sm) {
@@ -174,23 +165,23 @@ struct OnboardingFlowView: View {
                             viewModel.toggleTopic(topic.id)
                         } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: topic.icon)
-                                    .font(.system(size: 14))
+                                Image(systemName: topic.icon).font(.caption)
                                 Text(topic.name)
                                     .font(Theme.Fonts.captionMedium())
                                     .lineLimit(1)
                             }
-                            .foregroundStyle(viewModel.selectedTopics.contains(topic.id)
-                                             ? .white
-                                             : Theme.Colors.primaryText)
+                            .foregroundStyle(
+                                viewModel.selectedTopics.contains(topic.id)
+                                    ? .white : Theme.Colors.primaryText
+                            )
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
                             .background(
-                                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
-                                    .fill(viewModel.selectedTopics.contains(topic.id)
-                                          ? Theme.Colors.accent
-                                          : Theme.Colors.cardBackground)
+                                viewModel.selectedTopics.contains(topic.id)
+                                    ? AnyShapeStyle(Theme.Colors.accent)
+                                    : AnyShapeStyle(Theme.Colors.cardBackground),
+                                in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
                             )
                         }
                         .buttonStyle(.plain)
@@ -215,15 +206,24 @@ struct OnboardingFlowView: View {
 
             Spacer()
 
-            GlassCTAButton(title: viewModel.isLastStep ? "Get Started" : "Continue") {
+            Button {
                 if viewModel.isLastStep {
                     let prefs = viewModel.buildPreferences()
                     appViewModel.completeOnboarding(with: prefs)
                 } else {
                     viewModel.nextStep()
                 }
+            } label: {
+                Text(viewModel.isLastStep ? "Get Started" : "Continue")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .glassEffect(
+                        .regular.tint(.blue).interactive(),
+                        in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                    )
             }
-            .frame(width: 160)
             .opacity(viewModel.canProceed ? 1.0 : 0.5)
             .disabled(!viewModel.canProceed)
         }

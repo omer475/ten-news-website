@@ -3,7 +3,6 @@ import SwiftUI
 @MainActor @Observable
 final class EventDetailViewModel {
     var eventDetail: WorldEventFull?
-    var relatedArticles: [Article] = []
     var isLoading = false
     var errorMessage: String?
 
@@ -15,9 +14,8 @@ final class EventDetailViewModel {
         do {
             let response = try await service.fetchEventDetail(slug: slug)
             eventDetail = response.event
-            relatedArticles = response.articles ?? []
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "\(error)"
         }
         isLoading = false
     }

@@ -11,10 +11,7 @@ struct CategoryBadge: View {
             .foregroundStyle(categoryColor)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(
-                Capsule()
-                    .fill(categoryColor.opacity(0.12))
-            )
+            .glassEffect(.regular.tint(categoryColor), in: Capsule())
     }
 
     private var categoryColor: Color {

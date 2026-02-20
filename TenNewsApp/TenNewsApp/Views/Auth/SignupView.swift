@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Signup form with name/email/password fields
+/// Signup form with Material-backed text fields.
 struct SignupView: View {
     @State private var viewModel = AuthViewModel()
     @Environment(\.dismiss) private var dismiss
@@ -12,12 +12,10 @@ struct SignupView: View {
         VStack(spacing: Theme.Spacing.lg) {
             Spacer()
 
-            // Header
             VStack(spacing: 8) {
                 Text("Create account")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.bold())
                     .foregroundStyle(Theme.Colors.primaryText)
-
                 Text("Join Today+ for personalized news")
                     .font(Theme.Fonts.body())
                     .foregroundStyle(Theme.Colors.secondaryText)
@@ -25,14 +23,11 @@ struct SignupView: View {
 
             Spacer()
 
-            // Form fields
             VStack(spacing: Theme.Spacing.md) {
-                // Name field
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Full Name")
                         .font(Theme.Fonts.captionMedium())
                         .foregroundStyle(Theme.Colors.secondaryText)
-
                     TextField("Your name", text: $viewModel.fullName)
                         .textContentType(.name)
                         .autocorrectionDisabled()
@@ -40,12 +35,10 @@ struct SignupView: View {
                         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
                 }
 
-                // Email field
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Email")
                         .font(Theme.Fonts.captionMedium())
                         .foregroundStyle(Theme.Colors.secondaryText)
-
                     TextField("you@example.com", text: $viewModel.email)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
@@ -55,7 +48,6 @@ struct SignupView: View {
                         .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.medium))
                 }
 
-                // Password field
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("Password")
@@ -66,7 +58,6 @@ struct SignupView: View {
                             .font(Theme.Fonts.footnote())
                             .foregroundStyle(Theme.Colors.tertiaryText)
                     }
-
                     SecureField("Password", text: $viewModel.password)
                         .textContentType(.newPassword)
                         .padding(14)
@@ -74,7 +65,6 @@ struct SignupView: View {
                 }
             }
 
-            // Error message
             if let error = viewModel.errorMessage {
                 Text(error)
                     .font(Theme.Fonts.caption())
@@ -82,7 +72,6 @@ struct SignupView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // Signup button
             GlassCTAButton(
                 title: "Create Account",
                 action: {
@@ -96,12 +85,10 @@ struct SignupView: View {
                 isDisabled: !viewModel.canSignup
             )
 
-            // Login link
             HStack(spacing: 4) {
                 Text("Already have an account?")
                     .font(Theme.Fonts.caption())
                     .foregroundStyle(Theme.Colors.secondaryText)
-
                 Button("Sign In") {
                     onShowLogin?()
                 }

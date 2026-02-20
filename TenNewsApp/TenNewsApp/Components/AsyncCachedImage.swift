@@ -4,6 +4,7 @@ import SwiftUI
 struct AsyncCachedImage: View {
     let url: URL?
     var aspectRatio: CGFloat?
+    var contentMode: ContentMode = .fill
 
     @State private var image: UIImage?
     @State private var isLoading = true
@@ -16,10 +17,10 @@ struct AsyncCachedImage: View {
                 Image(uiImage: image)
                     .resizable()
                     .if(aspectRatio != nil) { view in
-                        view.aspectRatio(aspectRatio, contentMode: .fill)
+                        view.aspectRatio(aspectRatio, contentMode: contentMode)
                     }
                     .if(aspectRatio == nil) { view in
-                        view.scaledToFill()
+                        view.aspectRatio(contentMode: contentMode)
                     }
             } else if isLoading {
                 Rectangle()
