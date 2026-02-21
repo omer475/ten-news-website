@@ -1233,39 +1233,38 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     valid_candidates.append(candidate)
             
             if not valid_candidates:
-                print(f"   ❌ [Cluster {cluster_id}] ELIMINATED: No image found")
-                update_cluster_status(cluster_id, 'failed', 'no_image',
-                    f'No usable image found in {len(cluster_sources)} sources')
-                return False
+                print(f"   ⚠️ [Cluster {cluster_id}] No image found — will publish without image")
+                selected_image = None
             
-            valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
-            
-            # STEP 3.1: AI Image Quality Check (Gemini 2.0 Flash)
-            print(f"\n🔍 [Cluster {cluster_id}] STEP 3.1: AI IMAGE QUALITY CHECK")
-            
-            selected_image = None
-            try:
-                with gemini_semaphore:
-                    ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
-                if ai_approved:
+            if valid_candidates:
+                valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
+
+                # STEP 3.1: AI Image Quality Check (Gemini 2.0 Flash)
+                print(f"\n🔍 [Cluster {cluster_id}] STEP 3.1: AI IMAGE QUALITY CHECK")
+
+                selected_image = None
+                try:
+                    with gemini_semaphore:
+                        ai_approved = check_and_select_best_image(valid_candidates, min_confidence=70)
+                    if ai_approved:
+                        selected_image = {
+                            'url': ai_approved['url'],
+                            'source_name': ai_approved['source_name'],
+                            'quality_score': ai_approved['quality_score']
+                        }
+                        print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
+                    else:
+                        print(f"   ⚠️  [Cluster {cluster_id}] No images passed AI quality check")
+                except Exception as e:
+                    print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
+
+                if not selected_image:
                     selected_image = {
-                        'url': ai_approved['url'],
-                        'source_name': ai_approved['source_name'],
-                        'quality_score': ai_approved['quality_score']
+                        'url': valid_candidates[0]['url'],
+                        'source_name': valid_candidates[0]['source_name'],
+                        'quality_score': valid_candidates[0]['quality_score']
                     }
-                    print(f"   ✅ [Cluster {cluster_id}] AI-approved image from {selected_image['source_name']}")
-                else:
-                    print(f"   ⚠️  [Cluster {cluster_id}] No images passed AI quality check")
-            except Exception as e:
-                print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
-            
-            if not selected_image:
-                selected_image = {
-                    'url': valid_candidates[0]['url'],
-                    'source_name': valid_candidates[0]['source_name'],
-                    'quality_score': valid_candidates[0]['quality_score']
-                }
-                print(f"   ↩️  [Cluster {cluster_id}] Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+                    print(f"   ↩️  [Cluster {cluster_id}] Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
@@ -1286,17 +1285,28 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
             print(f"   Synthesizing article from {len(cluster_sources)} sources...")
             
             synthesized = synthesize_multisource_article(cluster_sources, cluster_id)
-            
+
             if not synthesized:
-                print(f"   ❌ [Cluster {cluster_id}] Synthesis failed")
+                # Retry once after a short pause (handles transient API errors)
+                print(f"   ⚠️ [Cluster {cluster_id}] Synthesis failed — retrying in 5s...")
+                time.sleep(5)
+                synthesized = synthesize_multisource_article(cluster_sources, cluster_id)
+
+            if not synthesized:
+                print(f"   ❌ [Cluster {cluster_id}] Synthesis failed after retry")
                 update_cluster_status(cluster_id, 'failed', 'synthesis_failed',
-                    'Gemini API failed to synthesize article from sources')
+                    'Gemini API failed to synthesize article from sources (after retry)')
                 return False
             
-            synthesized['image_url'] = selected_image['url']
-            synthesized['image_source'] = selected_image['source_name']
-            synthesized['image_score'] = selected_image['quality_score']
-            
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
+            else:
+                synthesized['image_url'] = None
+                synthesized['image_source'] = None
+                synthesized['image_score'] = 0
+
             print(f"   ✅ [Cluster {cluster_id}] Synthesized: {synthesized['title_news'][:60]}...")
             
             # ==========================================
@@ -1485,9 +1495,10 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     f'Failed fact verification after {max_verification_attempts} attempts')
                 return False
             
-            synthesized['image_url'] = selected_image['url']
-            synthesized['image_source'] = selected_image['source_name']
-            synthesized['image_score'] = selected_image['quality_score']
+            if selected_image:
+                synthesized['image_url'] = selected_image['url']
+                synthesized['image_source'] = selected_image['source_name']
+                synthesized['image_score'] = selected_image['quality_score']
             
             title = synthesized.get('title', synthesized.get('title_news', ''))
 
