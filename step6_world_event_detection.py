@@ -557,10 +557,25 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
                     event_data.get('background', '')
                 )
                 if components:
+                    # Extract dedicated column values
+                    what_to_watch = components.get('what_to_watch', [])
+                    has_what_to_watch = len(what_to_watch) > 0
+                    data_analytics = components.get('data_analytics')
+                    data_sources = []
+                    if data_analytics:
+                        for chart in data_analytics.get('charts', []):
+                            if chart.get('source'):
+                                data_sources.append(chart['source'])
+                        data_sources = list(dict.fromkeys(data_sources))
+
                     supabase.table('world_events').update({
-                        'components': components
+                        'components': components,
+                        'has_what_to_watch': has_what_to_watch,
+                        'what_to_watch': what_to_watch,
+                        'data_analytics': data_analytics,
+                        'data_sources': data_sources
                     }).eq('id', event['id']).execute()
-                    print(f"  ✅ Generated event components")
+                    print(f"  ✅ Generated event components (charts={len((data_analytics or {}).get('charts', []))})")
             except Exception as comp_err:
                 print(f"  ⚠️ Component generation failed (non-critical): {comp_err}")
             
@@ -568,6 +583,38 @@ def create_world_event(event_data: Dict, article_id: str) -> Optional[Dict]:
     except Exception as e:
         print(f"❌ Failed to create world event: {e}")
     return None
+
+
+def find_duplicate_event(new_name: str, existing_events: List[Dict]) -> Optional[Dict]:
+    """
+    Check if a proposed new event name is too similar to an existing event.
+    Returns the matching existing event if duplicate found, None otherwise.
+
+    Uses word overlap to catch cases like "Ukraine War" vs "Russia-Ukraine War".
+    """
+    STOP_WORDS = {'the', 'of', 'in', 'and', 'a', 'to', 'for', 'on', 'at', 'by', 'with', 'from', 'new'}
+
+    new_words = set(new_name.lower().replace('-', ' ').replace("'", '').split()) - STOP_WORDS
+
+    best_match = None
+    best_overlap = 0
+
+    for event in existing_events:
+        existing_words = set(event['name'].lower().replace('-', ' ').replace("'", '').split()) - STOP_WORDS
+        overlap = new_words & existing_words
+
+        # If 2+ significant words overlap, it's likely a duplicate
+        if len(overlap) >= 2 and len(overlap) > best_overlap:
+            best_overlap = len(overlap)
+            best_match = event
+
+        # Also check if one name is a substring of the other
+        new_lower = new_name.lower().replace("'", '')
+        existing_lower = event['name'].lower().replace("'", '')
+        if (new_lower in existing_lower or existing_lower in new_lower) and len(new_lower) > 5:
+            return event
+
+    return best_match
 
 
 def tag_article_to_event(article_id, event_id: str):
@@ -863,25 +910,37 @@ def detect_world_events(articles: List[Dict]) -> List[Dict]:
                     print(f"  → Matched existing event: {event_name} (confidence: {confidence}%)")
                 
             elif result.get('is_new_world_event') and result.get('new_event'):
-                # Create new event
-                new_event = create_world_event(result['new_event'], article_id)
-                
-                if new_event:
-                    tag_article_to_event(article_id, new_event['id'])
-                    article['world_event_id'] = new_event['id']
-                    
-                    # Add to existing events for subsequent articles
-                    existing_events.append({
-                        'id': new_event['id'],
-                        'name': new_event['name'],
-                        'slug': new_event['slug'],
-                        'topic_prompt': new_event['topic_prompt']
-                    })
-                    existing_events_text = format_existing_events(existing_events)
-                    
-                    new_events_created += 1
+                # DEDUP GUARD: Check if proposed event is too similar to an existing one
+                proposed_name = result['new_event'].get('name', '')
+                duplicate = find_duplicate_event(proposed_name, existing_events)
+
+                if duplicate:
+                    # Match to existing event instead of creating a duplicate
+                    print(f"  → DEDUP: \"{proposed_name}\" matches existing \"{duplicate['name']}\" — tagging instead of creating")
+                    tag_article_to_event(article_id, duplicate['id'])
+                    update_latest_development(duplicate['id'], duplicate['name'], article, article_id)
+                    article['world_event_id'] = duplicate['id']
                     articles_tagged += 1
-                    print(f"  → Created NEW world event: {new_event['name']}")
+                else:
+                    # Create new event
+                    new_event = create_world_event(result['new_event'], article_id)
+
+                    if new_event:
+                        tag_article_to_event(article_id, new_event['id'])
+                        article['world_event_id'] = new_event['id']
+
+                        # Add to existing events for subsequent articles
+                        existing_events.append({
+                            'id': new_event['id'],
+                            'name': new_event['name'],
+                            'slug': new_event['slug'],
+                            'topic_prompt': new_event['topic_prompt']
+                        })
+                        existing_events_text = format_existing_events(existing_events)
+
+                        new_events_created += 1
+                        articles_tagged += 1
+                        print(f"  → Created NEW world event: {new_event['name']}")
             else:
                 print(f"  → Not a world event (regular news)")
             

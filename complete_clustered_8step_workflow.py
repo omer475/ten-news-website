@@ -4,7 +4,7 @@ COMPLETE 11-STEP NEWS WORKFLOW WITH CLUSTERING
 
 Step 0: RSS Feed Collection (287 sources)
 Step 1: Gemini V8.2 Scoring & Filtering (score ≥70)
-Step 1.5: Event Clustering (clusters similar articles)
+Step 1.5: Cluster Dedup & Assignment (title-match against existing clusters, skip published duplicates)
 Step 2: Bright Data Full Article Fetching (all sources in cluster)
 Step 3: Smart Image Selection (selects best image from sources)
 Step 4: Multi-Source Synthesis with Gemini (generates article from all sources)
@@ -32,7 +32,7 @@ import urllib3
 # Import all pipeline components
 from rss_sources import ALL_SOURCES
 from step1_gemini_news_scoring_filtering import score_news_articles_step1
-from step1_5_event_clustering import EventClusteringEngine
+# step1_5_event_clustering no longer used — replaced by title-based cluster matching in Step 1.5
 from step2_brightdata_full_article_fetching import BrightDataArticleFetcher, fetch_articles_parallel
 from step3_image_selection import ImageSelector
 from image_quality_checker import check_and_select_best_image
@@ -517,7 +517,7 @@ def needs_og_image_scrape(source_url: str) -> bool:
 
 # Initialize clients
 supabase = get_supabase_client()
-clustering_engine = EventClusteringEngine()
+# clustering_engine removed — Step 1.5 now uses direct title matching
 
 # Get API keys
 gemini_key = os.getenv('GEMINI_API_KEY')
@@ -789,125 +789,314 @@ def run_complete_pipeline():
         print("⚠️  No articles approved - ending cycle")
         return
     
-    # STEP 1.5: Event Clustering
+    # ==========================================
+    # STEP 1.5: TITLE-BASED DEDUP AGAINST ACTIVE CLUSTERS
+    # ==========================================
+    # For each approved article, check its title against existing active clusters.
+    # - If it matches a cluster that's already published → SKIP (duplicate)
+    # - If it matches an unpublished cluster → ADD as source (multi-source synthesis)
+    # - If no match → CREATE new cluster
+    # This prevents duplicate articles from entering expensive Steps 2-8.
     print(f"\n{'='*80}")
-    print(f"🔗 STEP 1.5: EVENT CLUSTERING (NEW)")
+    print(f"🔗 STEP 1.5: CLUSTER DEDUP & ASSIGNMENT")
     print(f"{'='*80}")
-    print(f"Clustering {len(approved_articles)} articles...")
-    
-    clustering_result = clustering_engine.cluster_articles(approved_articles)
-    
+    print(f"Checking {len(approved_articles)} articles against existing clusters...")
+
+    from difflib import SequenceMatcher
+    from urllib.parse import urlparse, parse_qs
+    import threading
+
+    title_cache_lock = threading.Lock()
+
+    def _clean_title(t):
+        if not t:
+            return ''
+        t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
+        t = re.sub(r'[^\w\s]', '', t.lower())
+        return t.strip()
+
+    def _extract_key_words(t):
+        """Extract significant words (3+ chars, no stopwords) for entity-overlap dedup."""
+        if not t:
+            return set()
+        stop = {'the','and','for','are','but','not','you','all','can','her','was','one',
+                 'our','out','has','had','how','its','may','new','now','old','see','way',
+                 'who','did','get','let','say','she','too','use','with','from','that',
+                 'this','will','been','have','into','just','than','them','then','they',
+                 'what','when','more','after','also','back','only','over','such','take',
+                 'very','about','could','every','first','would','says','amid','sparks'}
+        words = set(re.sub(r'[^\w\s]', '', t.lower()).split())
+        return {w for w in words if len(w) >= 3 and w not in stop}
+
+    def _normalize_url(url):
+        """Normalize URL by removing tracking params and www."""
+        try:
+            parsed = urlparse(url)
+            domain = parsed.netloc.replace('www.', '')
+            tracking = {'utm_source','utm_medium','utm_campaign','utm_content','utm_term',
+                        'ref','source','fbclid','gclid','ocid','sr_share'}
+            params = parse_qs(parsed.query)
+            clean = {k: v for k, v in params.items() if k not in tracking}
+            qs = '&'.join(f'{k}={v[0]}' for k, v in sorted(clean.items())) if clean else ''
+            path = parsed.path.rstrip('/')
+            return f"{parsed.scheme}://{domain}{path}{'?' + qs if qs else ''}"
+        except Exception:
+            return url
+
+    def _find_matching_cluster(article_title, cluster_cache):
+        """Check article title against cluster titles. Returns (cluster_id, match_reason) or (None, None)."""
+        clean_new = _clean_title(article_title)
+        new_kw = _extract_key_words(article_title)
+        best_candidate = None
+
+        for c in cluster_cache:
+            if not clean_new or not c['clean']:
+                continue
+            similarity = SequenceMatcher(None, clean_new, c['clean']).ratio()
+
+            # HIGH CONFIDENCE match at 0.65+
+            if similarity >= 0.65:
+                return c['id'], f"title_sim={similarity:.0%}"
+
+            # BORDERLINE: track for AI check
+            if similarity >= 0.45:
+                if not best_candidate or similarity > best_candidate['sim']:
+                    best_candidate = {'cluster': c, 'sim': similarity, 'reason': 'title_similarity'}
+
+            # Key-word overlap: 3+ shared words + sim >= 0.35
+            c_kw = c.get('key_words', set())
+            if new_kw and c_kw:
+                overlap = new_kw & c_kw
+                if len(overlap) >= 3 and similarity >= 0.35:
+                    if not best_candidate or len(overlap) > best_candidate.get('overlap_count', 0):
+                        best_candidate = {'cluster': c, 'sim': similarity, 'reason': 'entity_overlap',
+                                         'overlap': overlap, 'overlap_count': len(overlap)}
+
+        # AI VERIFICATION for borderline cases
+        if best_candidate:
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=gemini_key)
+                ai_prompt = f"""Are these two news headlines about the SAME specific event/story?
+Not just the same topic — the same specific news development.
+
+Headline A: {article_title}
+Headline B: {best_candidate['cluster']['main_title']}
+
+Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
+                ai_resp = genai.GenerativeModel('gemini-2.0-flash').generate_content(ai_prompt)
+                ai_verdict = ai_resp.text.strip().upper()
+
+                if 'SAME' in ai_verdict and 'DIFFERENT' not in ai_verdict:
+                    return best_candidate['cluster']['id'], f"ai_confirmed_{best_candidate['reason']}(sim={best_candidate['sim']:.0%})"
+            except Exception as ai_err:
+                print(f"   ⚠️ AI cluster-match check failed: {ai_err}")
+
+        return None, None
+
+    # Fetch ALL active clusters (including ones published — we need to know if published for dedup)
+    all_clusters_result = supabase.table('clusters')\
+        .select('id, main_title, event_name, status, publish_status')\
+        .eq('status', 'active')\
+        .execute()
+
+    cluster_cache = []
+    for c in (all_clusters_result.data or []):
+        title = c.get('main_title', '') or c.get('event_name', '')
+        cluster_cache.append({
+            'id': c['id'],
+            'main_title': title,
+            'clean': _clean_title(title),
+            'key_words': _extract_key_words(title),
+            'publish_status': c.get('publish_status', 'pending')
+        })
+    print(f"   📋 Loaded {len(cluster_cache)} active clusters for matching")
+
+    # Track which clusters are affected this cycle
+    affected_cluster_ids = set()
+    new_clusters_created = 0
+    matched_to_existing = 0
+    dedup_skipped = 0
+
+    for article in approved_articles:
+        article_title = article.get('title', '')
+        article_url = article.get('url', '')
+        if not article_title or not article_url:
+            continue
+
+        # Check if source_article already exists (by normalized URL)
+        norm_url = _normalize_url(article_url)
+        existing_source = supabase.table('source_articles')\
+            .select('id, cluster_id')\
+            .eq('normalized_url', norm_url)\
+            .execute()
+
+        source_article_id = None
+        if existing_source.data:
+            source_article_id = existing_source.data[0]['id']
+            existing_cluster = existing_source.data[0].get('cluster_id')
+            if existing_cluster:
+                # Already assigned to a cluster — just track it
+                affected_cluster_ids.add(existing_cluster)
+                continue
+        else:
+            # Create source_article
+            try:
+                sa_data = {
+                    'url': article_url,
+                    'normalized_url': norm_url,
+                    'title': article_title,
+                    'description': article.get('description', ''),
+                    'content': article.get('content', article.get('text', '')),
+                    'source_name': article.get('source', 'Unknown'),
+                    'source_url': article_url,
+                    'published_at': article.get('published_date', article.get('published_at')),
+                    'score': article.get('score', 0),
+                    'category': article.get('category', article.get('ai_category', 'World News')),
+                    'image_url': article.get('image_url'),
+                    'image_width': article.get('image_width', 0),
+                    'image_height': article.get('image_height', 0),
+                }
+                result = supabase.table('source_articles').insert(sa_data).execute()
+                if result.data:
+                    source_article_id = result.data[0]['id']
+            except Exception as e:
+                err_str = str(e)
+                if '23505' in err_str or 'duplicate' in err_str.lower():
+                    # Already exists — fetch it
+                    existing_source = supabase.table('source_articles')\
+                        .select('id, cluster_id')\
+                        .eq('normalized_url', norm_url)\
+                        .execute()
+                    if existing_source.data:
+                        source_article_id = existing_source.data[0]['id']
+                        existing_cluster = existing_source.data[0].get('cluster_id')
+                        if existing_cluster:
+                            affected_cluster_ids.add(existing_cluster)
+                            continue
+                else:
+                    print(f"   ⚠️ Failed to create source_article for: {article_title[:50]}... — {e}")
+                    continue
+
+        if not source_article_id:
+            continue
+
+        # Check article title against existing clusters
+        matched_cluster_id, match_reason = _find_matching_cluster(article_title, cluster_cache)
+
+        if matched_cluster_id:
+            # Check if that cluster was already published → skip (dedup)
+            cluster_info = next((c for c in cluster_cache if c['id'] == matched_cluster_id), None)
+            if cluster_info and cluster_info['publish_status'] == 'published':
+                print(f"   ⏭️ DEDUP SKIP: \"{article_title[:55]}...\" → already published cluster {matched_cluster_id} ({match_reason})")
+                dedup_skipped += 1
+                # Still assign source to cluster for record-keeping
+                try:
+                    supabase.table('source_articles').update({'cluster_id': matched_cluster_id}).eq('id', source_article_id).execute()
+                except Exception:
+                    pass
+                continue
+
+            # Match to unpublished cluster → add as source for multi-source synthesis
+            print(f"   🔗 MATCH: \"{article_title[:55]}...\" → cluster {matched_cluster_id} ({match_reason})")
+            try:
+                supabase.table('source_articles').update({'cluster_id': matched_cluster_id}).eq('id', source_article_id).execute()
+                supabase.table('clusters').update({'last_updated_at': datetime.now().isoformat()}).eq('id', matched_cluster_id).execute()
+            except Exception as e:
+                print(f"   ⚠️ Failed to assign to cluster {matched_cluster_id}: {e}")
+            affected_cluster_ids.add(matched_cluster_id)
+            matched_to_existing += 1
+        else:
+            # No match → create new cluster with FULL title as event_name
+            try:
+                cluster_data = {
+                    'event_name': article_title,
+                    'main_title': article_title,
+                    'status': 'active',
+                    'source_count': 1,
+                    'importance_score': article.get('score', 0),
+                }
+                result = supabase.table('clusters').insert(cluster_data).execute()
+                if result.data:
+                    new_cluster_id = result.data[0]['id']
+                    # Assign source article to new cluster
+                    supabase.table('source_articles').update({'cluster_id': new_cluster_id}).eq('id', source_article_id).execute()
+                    affected_cluster_ids.add(new_cluster_id)
+                    new_clusters_created += 1
+                    # Add to cache so subsequent articles in this batch can match it
+                    cluster_cache.append({
+                        'id': new_cluster_id,
+                        'main_title': article_title,
+                        'clean': _clean_title(article_title),
+                        'key_words': _extract_key_words(article_title),
+                        'publish_status': 'pending'
+                    })
+                    print(f"   ✨ NEW CLUSTER {new_cluster_id}: \"{article_title[:60]}...\"")
+            except Exception as e:
+                print(f"   ⚠️ Failed to create cluster for: {article_title[:50]}... — {e}")
+
     print(f"\n✅ Step 1.5 Complete:")
-    print(f"   📊 New clusters: {clustering_result['new_clusters_created']}")
-    print(f"   🔗 Matched existing: {clustering_result['matched_to_existing']}")
-    if clustering_result.get('failed', 0) > 0:
-        print(f"   ⚠️  Failed: {clustering_result['failed']}")
-    
-    # ONLY process NEW/UPDATED clusters from THIS cycle (not old ones)
+    print(f"   📊 New clusters: {new_clusters_created}")
+    print(f"   🔗 Matched existing: {matched_to_existing}")
+    print(f"   🚫 Dedup skipped: {dedup_skipped}")
+
+    # Build clusters_to_process: only unpublished clusters with sources
     clusters_to_process = []
-    
-    # Get cluster IDs that were created or updated in Step 1.5
-    affected_cluster_ids = clustering_result.get('cluster_ids', [])
-    
-    if not affected_cluster_ids:
-        print(f"   🎯 No clusters to process this cycle")
-        print("⚠️  No new clusters created - ending cycle")
-        return
-    
-    # For each affected cluster, check if it's ready (not yet published)
     for cluster_id in affected_cluster_ids:
-        # Check if already published
+        # Skip already-published clusters
         existing = supabase.table('published_articles')\
             .select('id')\
             .eq('cluster_id', cluster_id)\
             .execute()
-        
         if existing.data:
-            continue  # Already published
-        
-        # Get source count
+            continue
+
+        # Check source count
         sources = supabase.table('source_articles')\
             .select('id')\
             .eq('cluster_id', cluster_id)\
             .execute()
-        
-        # Process clusters with 1+ sources (single-source articles are now allowed)
-        if len(sources.data) >= 1:
+        if sources.data and len(sources.data) >= 1:
             clusters_to_process.append(cluster_id)
-    
-    print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)} (NEW this cycle)")
-    
+
+    print(f"   🎯 Clusters ready for processing: {len(clusters_to_process)}")
+
     if not clusters_to_process:
         print("⚠️  No clusters ready - ending cycle")
         return
-    
+
     # ==========================================
     # PARALLEL CLUSTER PROCESSING (3 workers)
     # ==========================================
-    import threading
-    
-    # Gemini rate limiter - allows max 2 concurrent Gemini API calls
-    # This prevents 429 errors without adding any artificial delay.
-    # Workers only wait if 2 other workers are already mid-Gemini-call.
+
+    # Gemini rate limiter - allows max 5 concurrent Gemini API calls
     gemini_semaphore = threading.Semaphore(5)
-    
+
     # Thread-safe counter for published articles
     published_lock = threading.Lock()
     published_count = 0
-    
-    # Duplicate title cache + publish gate lock
-    # publish_gate_lock protects the entire dedup-check → DB insert → cache update
-    # critical section, preventing race conditions where two threads both pass dedup
-    # and then both publish similar articles.
+
+    # Publish gate lock: makes dedup-check → DB insert → cache update atomic
+    # Prevents race conditions where two threads both pass dedup and publish similar articles
     publish_gate_lock = threading.Lock()
-    published_titles_cache = []  # Populated before parallel processing
-    
-    # Pre-fetch titles from all active clusters (shared across all workers)
-    # This ensures dedup covers every article from every currently active cluster
+
+    # Published titles cache for Step 9 safety-net dedup
+    published_titles_cache = []
     try:
-        from difflib import SequenceMatcher
-        # Get all active cluster IDs
-        active_clusters_result = supabase.table('clusters')\
-            .select('id')\
-            .eq('status', 'active')\
+        cutoff_time = (datetime.now() - timedelta(hours=24)).isoformat()
+        recent_articles_result = supabase.table('published_articles')\
+            .select('id, title_news, summary_bullets_news')\
+            .gte('published_at', cutoff_time)\
             .execute()
-        active_cluster_ids_for_dedup = [c['id'] for c in (active_clusters_result.data or [])]
-
-        # Get published articles from active clusters
-        if active_cluster_ids_for_dedup:
-            recent_articles_result = supabase.table('published_articles')\
-                .select('id, title_news, summary_bullets_news')\
-                .in_('cluster_id', active_cluster_ids_for_dedup)\
-                .execute()
-        else:
-            recent_articles_result = type('obj', (object,), {'data': []})()
-
-        print(f"   📋 Dedup cache: {len(active_cluster_ids_for_dedup)} active clusters, "
-              f"{len(recent_articles_result.data or [])} published articles to check against")
-        
-        def _clean_title(t):
-            if not t:
-                return ''
-            t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
-            t = re.sub(r'[^\w\s]', '', t.lower())
-            return t.strip()
-        
         for r in (recent_articles_result.data or []):
-            raw_bullets = r.get('summary_bullets_news', [])
-            if isinstance(raw_bullets, list):
-                bullets_text = ' '.join(raw_bullets)
-            elif isinstance(raw_bullets, str):
-                bullets_text = raw_bullets
-            else:
-                bullets_text = ''
             published_titles_cache.append({
                 'id': r['id'],
                 'title_news': r.get('title_news', ''),
                 'clean': _clean_title(r.get('title_news', '')),
-                'bullets_text': _clean_title(bullets_text)
+                'key_words': _extract_key_words(r.get('title_news', '')),
             })
-    except Exception as e:
-        print(f"   ⚠️ Could not pre-fetch recent titles: {e}")
+    except Exception:
+        pass
     
     def process_single_cluster(cluster_id):
         """Process a single cluster through Steps 2-11. Thread-safe."""
@@ -1302,6 +1491,7 @@ def run_complete_pipeline():
             
             title = synthesized.get('title', synthesized.get('title_news', ''))
 
+
             # STEPS 10+11: SCORING + TAGGING (run in parallel - both use Gemini independently)
             # Done BEFORE the publish gate so scoring runs in parallel across workers.
             print(f"\n   🎯 [Cluster {cluster_id}] STEPS 10+11: SCORING + TAGGING (parallel)")
@@ -1480,6 +1670,7 @@ def run_complete_pipeline():
                     'id': published_article_id,
                     'title_news': title,
                     'clean': _clean_title(title),
+                    'key_words': _extract_key_words(title),
                     'bullets_text': pub_bullets_text
                 })
 

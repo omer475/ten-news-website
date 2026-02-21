@@ -276,7 +276,9 @@ IMPORTANT:
 Respond with valid JSON only."""
 
 
-DATA_ANALYTICS_PROMPT = """Generate data analytics for this world event using REAL quantitative data.
+DATA_ANALYTICS_PROMPT = """Generate data analytics charts for this world event using REAL quantitative data.
+
+TODAY'S DATE: February 2026
 
 ═══════════════════════════════════════════════════════════════
 EVENT
@@ -289,33 +291,33 @@ Chart suggestions from relevance analysis: {suggested_charts}
 TASK
 ═══════════════════════════════════════════════════════════════
 
-Research this event and produce:
-1. **2-4 KEY FACTS** — headline-worthy single data points (cost, count, percentage, record)
-2. **2-4 CHARTS** — data-driven visualizations with real numbers
+Generate **2-4 data charts** with real, recent data for this event. This is MANDATORY — you MUST always produce charts.
 
-KEY FACTS GUIDANCE:
-Think about what single numbers tell the biggest story:
-- Cost of this event to an economy (e.g. "$2.4T cumulative impact")
-- Number of people/jobs/companies affected
-- Percentage change year-over-year
-- Record high/low comparisons
-- Market cap lost/gained
-- Trade volume changes
-- Casualty or displacement figures
-- Budget or spending amounts
-
-Each key fact should be a single, impactful data point with its source.
+FLEXIBILITY RULE — CRITICAL:
+If exact data about this specific event is hard to find, use RELATED or CONTEXTUAL data that helps the reader understand the event better. For example:
+- For "Robot Vacuum Hack" → chart IoT device vulnerabilities over time, smart home market growth
+- For "Epstein Scandal" → chart human trafficking statistics, federal prosecution rates
+- For "Pacific Boat Attack" → chart maritime incidents, naval activity in the region
+- For "Al-Hol Camp Crisis" → chart refugee camp populations, humanitarian aid flows
+- For "ECB Leadership Dispute" → chart ECB interest rate decisions, Eurozone inflation
+The charts should give CONTEXT to help the reader understand the broader picture around the event.
 
 SOURCE QUALITY REQUIREMENTS:
 Sources MUST be from: government agencies (CBO, BLS, Census Bureau, Eurostat), international organizations (World Bank, IMF, UN, WHO, WTO), official statistics offices, central banks, or major research institutions. No blogs, opinions, or unverified estimates.
 
+RECENCY REQUIREMENTS — CRITICAL:
+- Data MUST be recent. Prefer 2025-2026 data. At minimum include 2024-2025.
+- For time series: end at 2025 or 2026, go back 3-5 years max.
+- Do NOT generate charts with data that stops at 2022 or earlier.
+- If recent data isn't available for a topic, pick a different chart that HAS recent data.
+
 CHART REQUIREMENTS:
-1. Use REAL data from credible sources
-2. Each chart must tell a meaningful story about the event
+1. Use REAL data from credible sources (or well-sourced related data)
+2. Each chart must help the reader understand the event or its context
 3. Data points should be accurate and verifiable
 4. Include source citations for each chart
 5. Choose the chart type that best represents the data
-6. You MUST generate at least 2 charts — this is mandatory
+6. You MUST generate 2-4 charts — NO EXCEPTIONS
 
 CHART TYPES AVAILABLE:
 - "line" — Time series, trends over time (best for showing change)
@@ -332,6 +334,7 @@ DATA FORMAT RULES:
 - x values are strings (years, categories, labels)
 - y values are numbers (the actual data)
 - For pie/donut: use a single series where x = slice label, y = value
+- EVERY series MUST have at least 3 data points — this is mandatory
 
 COLOR PALETTE (use these for consistency):
 - Primary: #3b82f6 (blue), #ef4444 (red), #10b981 (green), #f59e0b (amber)
@@ -351,24 +354,10 @@ RESPONSE FORMAT
 {{
   "data_analytics": {{
     "summary": "2-3 sentence insight paragraph summarizing what the data reveals about this event. Be specific with numbers.",
-    "key_facts": [
-      {{
-        "label": "Cost to US Economy",
-        "value": "$2.4T",
-        "context": "Cumulative impact since tariffs began in 2018",
-        "source": "Congressional Budget Office"
-      }},
-      {{
-        "label": "Jobs Affected",
-        "value": "2.1M",
-        "context": "Manufacturing and agriculture sectors",
-        "source": "Bureau of Labor Statistics"
-      }}
-    ],
     "charts": [
       {{
         "id": "chart_1",
-        "title": "Short chart title (e.g., 'US-China Trade Balance 2018-2025')",
+        "title": "Short chart title (e.g., 'US-China Trade Balance 2022-2026')",
         "description": "1 sentence: what this chart reveals about the event",
         "chart_type": "line|bar|stacked_bar|area|horizontal_bar|pie|donut",
         "x_label": "X axis label (e.g., 'Year', 'Country')",
@@ -379,9 +368,10 @@ RESPONSE FORMAT
             "name": "Series name (e.g., 'Exports')",
             "color": "#3b82f6",
             "data": [
-              {{"x": "2020", "y": 120}},
-              {{"x": "2021", "y": 135}},
-              {{"x": "2022", "y": 150}}
+              {{"x": "2022", "y": 120}},
+              {{"x": "2023", "y": 135}},
+              {{"x": "2024", "y": 150}},
+              {{"x": "2025", "y": 162}}
             ]
           }}
         ],
@@ -392,27 +382,29 @@ RESPONSE FORMAT
 }}
 
 QUALITY RULES:
-- Generate 2-4 key facts (headline single-stat data points)
 - Generate 2-4 charts (MINIMUM 2 — this is mandatory, not more than 4)
-- Each chart must have at least 3 data points
+- Each chart MUST have at least 3 data points per series
 - Mix chart types for visual variety (don't use all line charts)
 - Data must be REAL — do not fabricate numbers
 - Round numbers appropriately (don't fake precision)
-- Use the most recent available data
+- Data must be RECENT (2024-2026 preferred, 2022+ minimum)
 - Charts should complement each other, not repeat the same data
-- Every key fact and chart MUST have a source from a credible institution
+- Every chart MUST have a source from a credible institution
 
 Respond with valid JSON only."""
 
 
 DATA_ANALYTICS_RETRY_PROMPT = """Your previous attempt only generated {chart_count} chart(s). You MUST generate at least 2 charts.
 
+TODAY'S DATE: February 2026
+
 Event: {event_name}
 Background: {background}
 
 Generate a complete data analytics response with:
-- 2-4 key_facts (single headline data points with source)
-- AT LEAST 2 charts (this is the minimum, aim for 2-4)
+- 2-4 charts with REAL, RECENT data (2024-2026 preferred)
+- Each chart MUST have at least 3 data points per series
+- Do NOT include key_facts — only charts
 
 Use the exact same JSON format as before. Sources must be from credible institutions (government agencies, World Bank, IMF, UN, official statistics).
 
@@ -635,7 +627,6 @@ def generate_data_analytics(event_name: str, background: str, suggested_charts: 
 
         analytics = data['data_analytics']
         valid_charts = _validate_analytics_charts(analytics.get('charts', []))
-        valid_key_facts = _validate_key_facts(analytics.get('key_facts', []))
 
         # Enforce minimum 2 charts — retry once if needed
         if len(valid_charts) < 2:
@@ -654,9 +645,6 @@ def generate_data_analytics(event_name: str, background: str, suggested_charts: 
                     if len(retry_charts) >= 2:
                         valid_charts = retry_charts
                         print(f"    ✅ Retry succeeded: {len(valid_charts)} charts")
-                    # Also pick up key_facts from retry if we didn't get any
-                    if not valid_key_facts:
-                        valid_key_facts = _validate_key_facts(retry_analytics.get('key_facts', []))
             except Exception as retry_e:
                 print(f"    ⚠️ Retry failed: {retry_e}")
 
@@ -664,11 +652,10 @@ def generate_data_analytics(event_name: str, background: str, suggested_charts: 
             print(f"    ℹ️ No valid charts generated")
             return None
 
-        print(f"    📊 Generated {len(valid_charts)} analytics charts + {len(valid_key_facts)} key facts")
+        print(f"    📊 Generated {len(valid_charts)} analytics charts")
         return {
             'data_analytics': {
                 'summary': analytics.get('summary', ''),
-                'key_facts': valid_key_facts,
                 'charts': valid_charts
             }
         }
@@ -739,8 +726,7 @@ def generate_event_components(event_name: str, topic_prompt: str, background: st
         result['data_analytics'] = analytics_data['data_analytics']
         result['components_metadata']['has_data_analytics'] = True
         charts_count = len(result['data_analytics'].get('charts', []))
-        facts_count = len(result['data_analytics'].get('key_facts', []))
-        print(f"    ✅ Added {charts_count} analytics charts + {facts_count} key facts")
+        print(f"    ✅ Added {charts_count} analytics charts")
 
     # Summary
     enabled_count = sum([
@@ -794,9 +780,6 @@ def update_event_components(event_id: str) -> bool:
         data_analytics = components.get('data_analytics')
         data_sources = []
         if data_analytics:
-            for fact in data_analytics.get('key_facts', []):
-                if fact.get('source'):
-                    data_sources.append(fact['source'])
             for chart in data_analytics.get('charts', []):
                 if chart.get('source'):
                     data_sources.append(chart['source'])
