@@ -99,8 +99,7 @@ def run_news_workflow():
         # Import the workflow components
         from complete_clustered_8step_workflow import (
             run_single_cycle,
-            supabase,
-            clustering_engine
+            supabase
         )
         
         # Check run lock - skip if another run is active
