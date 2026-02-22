@@ -954,8 +954,6 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     'score': article.get('score', 0),
                     'category': article.get('category', article.get('ai_category', 'World News')),
                     'image_url': article.get('image_url'),
-                    'image_width': article.get('image_width', 0),
-                    'image_height': article.get('image_height', 0),
                 }
                 result = supabase.table('source_articles').insert(sa_data).execute()
                 if result.data:
