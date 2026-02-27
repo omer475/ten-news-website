@@ -233,6 +233,7 @@ export default async function handler(req, res) {
           .gte('created_at', twentyFourHoursAgo)
           .order('ai_final_score', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
           .range(batchOffset, batchEnd);
 
         if (result.error) { error = result.error; break; }

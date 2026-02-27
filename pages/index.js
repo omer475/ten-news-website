@@ -6,7 +6,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import NewFirstPage from '../components/NewFirstPage';
 import TodayPlusLoader from '../components/TodayPlusLoader';
 import MustKnowCompletePage from '../components/MustKnowCompletePage';
-import { LoginForm, SignupForm, EmailConfirmation, ResetPasswordModal } from '../components/AuthForms';
+import { LoginForm, SignupForm, EmailConfirmation, ResetPasswordModal, OAuthButtons } from '../components/AuthForms';
 import dynamic from 'next/dynamic';
 import ReadArticleTracker from '../utils/ReadArticleTracker';
 import { sortArticlesByScore } from '../utils/sortArticles';
@@ -2641,6 +2641,22 @@ export default function Home({ initialNews, initialWorldEvents }) {
     }
   };
 
+  const handleOAuthLogin = async (provider) => {
+    const supabase = createClient();
+    if (!supabase) return;
+    setAuthError('');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        ...(provider === 'google' && {
+          queryParams: { access_type: 'offline', prompt: 'consent' }
+        })
+      }
+    });
+    if (error) setAuthError(error.message);
+  };
+
   const handleSignup = async (email, password, fullName) => {
     setAuthError('');
     try {
@@ -4287,6 +4303,72 @@ export default function Home({ initialNews, initialWorldEvents }) {
           cursor: not-allowed;
         }
 
+        .oauth-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+          padding: 12px 16px;
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          letter-spacing: -0.1px;
+          pointer-events: auto !important;
+        }
+
+        .oauth-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .oauth-google {
+          background: #fff;
+          color: #3c4043;
+          border: 1px solid ${darkMode ? 'rgba(255,255,255,0.15)' : '#dadce0'};
+          margin-bottom: 10px;
+        }
+
+        .oauth-google:hover:not(:disabled) {
+          background: ${darkMode ? 'rgba(255,255,255,0.05)' : '#f8f9fa'};
+          border-color: ${darkMode ? 'rgba(255,255,255,0.25)' : '#c0c0c0'};
+        }
+
+        .oauth-apple {
+          background: #000;
+          color: #fff;
+          border: 1px solid ${darkMode ? 'rgba(255,255,255,0.15)' : '#000'};
+          margin-bottom: 0;
+        }
+
+        .oauth-apple:hover:not(:disabled) {
+          background: #1a1a1a;
+        }
+
+        .oauth-divider {
+          display: flex;
+          align-items: center;
+          margin: 18px 0 14px;
+          gap: 12px;
+        }
+
+        .oauth-divider::before,
+        .oauth-divider::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
+        }
+
+        .oauth-divider span {
+          font-size: 13px;
+          color: ${darkMode ? 'rgba(255,255,255,0.4)' : '#9ca3af'};
+          font-weight: 500;
+          text-transform: lowercase;
+        }
+
         .auth-modal-footer {
           margin-top: 20px;
           padding-top: 16px;
@@ -5713,7 +5795,7 @@ export default function Home({ initialNews, initialWorldEvents }) {
                   {authError && (
                     <div className="auth-error" style={{ marginBottom: '16px' }}>{authError}</div>
                   )}
-                  <SignupForm onSubmit={handleSignup} />
+                  <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} />
                   <div className="paywall-footer" style={{ touchAction: 'auto', pointerEvents: 'auto' }}>
                     <p>Already have an account? <button className="auth-switch" onClick={() => setAuthModal('login')} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setAuthModal('login'); }} style={{ touchAction: 'auto', pointerEvents: 'auto' }}>Login</button></p>
                   </div>
@@ -8322,9 +8404,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
                 )}
 
                 {authModal === 'login' ? (
-                  <LoginForm onSubmit={handleLogin} onForgotPassword={handleForgotPassword} formData={formData} setFormData={setFormData} />
+                  <LoginForm onSubmit={handleLogin} onForgotPassword={handleForgotPassword} onOAuthLogin={handleOAuthLogin} formData={formData} setFormData={setFormData} />
                 ) : (
-                  <SignupForm onSubmit={handleSignup} formData={formData} setFormData={setFormData} />
+                  <SignupForm onSubmit={handleSignup} onOAuthLogin={handleOAuthLogin} formData={formData} setFormData={setFormData} />
                 )}
 
                 <div className="auth-modal-footer">

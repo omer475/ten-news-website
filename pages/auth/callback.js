@@ -107,17 +107,45 @@ export default function AuthCallback() {
       const code = urlParams.get('code')
       
       if (code) {
+        let session = null
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-        
+
         if (error) {
-          setError(`Verification failed: ${error.message}`)
-          return
+          // The Supabase client may have already exchanged the code automatically
+          const { data: existing } = await supabase.auth.getSession()
+          if (existing?.session) {
+            session = existing.session
+          } else {
+            setError(`Verification failed: ${error.message}`)
+            return
+          }
+        } else {
+          session = data?.session
         }
-        
-        if (data?.session && !isRecovery) {
-          localStorage.setItem('tennews_session', JSON.stringify(data.session))
-          localStorage.setItem('tennews_user', JSON.stringify(data.session.user))
-          setStatus('Email verified successfully!')
+
+        if (session && !isRecovery) {
+          localStorage.setItem('tennews_session', JSON.stringify(session))
+          localStorage.setItem('tennews_user', JSON.stringify(session.user))
+
+          const provider = session.user.app_metadata?.provider
+          if (provider && provider !== 'email') {
+            // OAuth user — ensure a profiles row exists
+            try {
+              const meta = session.user.user_metadata || {}
+              const fullName = meta.full_name || meta.name || ''
+              await supabase.from('profiles').upsert({
+                id: session.user.id,
+                email: session.user.email,
+                full_name: fullName,
+              }, { onConflict: 'id' })
+            } catch (e) {
+              console.warn('Profile upsert failed (non-fatal):', e)
+            }
+            setStatus('Signed in successfully!')
+          } else {
+            setStatus('Email verified successfully!')
+          }
+
           setTimeout(() => router.push('/?verified=true'), 1500)
         }
       }
