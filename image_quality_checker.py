@@ -43,27 +43,28 @@ class ImageQualityChecker:
         
         self.prompt = """Analyze this news article image and determine if it's suitable for publication on a professional news website.
 
-REJECT if the image contains ANY of these:
-- TV broadcast graphics (channel logos, chyrons, "BREAKING NEWS" banners, lower thirds with text overlays)
-- News broadcasters or anchors sitting at news desks or standing in TV studios
-- Generic shots of reporters with microphones in front of cameras (people COVERING the story, not IN the story)
-- Large watermarks or news company logos that dominate the image (CNN, BBC, Fox News, etc.)
-- NEWS SOURCE LOGOS or branding images — images that are just the logo/brand of a news outlet (e.g. a Reuters logo, BBC logo, Al Jazeera logo, TRT World logo, or any other media company logo/emblem as the main subject)
-- Generic placeholder or default images used by news sites when no real photo is available
-- Screenshots of TV news programs or broadcasts
-- Very low quality, blurry, or heavily pixelated images
-- Social media screenshots or meme-style images
-- Generic stock photos with visible watermarks
-- Just headshots of news personalities with no relevance to the story
+IMPORTANT: Be LENIENT. A real photograph with a small watermark or corner logo is MUCH better than no image at all. Only reject truly unsuitable images.
 
-ACCEPT if the image shows:
-- Clear, high-quality photographs of actual news events, locations, or scenes
-- Real people directly involved in the story (politicians, witnesses, subjects - NOT reporters covering it)
-- Professional news photography of the actual subject matter
-- Event photos, location photos, or action shots related to the news
-- Minimal or subtle branding that doesn't dominate the image
+REJECT ONLY if the image is one of these (strict list):
+- The image is JUST a logo/brand with no real photo content (e.g. the entire image is the Reuters logo, BBC logo, etc.)
+- TV broadcast screenshot with chyrons, "BREAKING NEWS" banners, lower thirds, and news desk visible
+- News anchors/presenters sitting at news desks in TV studios
+- Dark/black placeholder images with just a category word (e.g. "Science", "Business")
+- Solid color background with only text — not a photograph at all
+- Very low quality, extremely blurry, or heavily pixelated images that are unrecognizable
+- The image is primarily text/typography with no photographic content
 
-Key distinction: A photo OF a politician speaking = ACCEPT. A photo of a news anchor TALKING ABOUT the politician = REJECT.
+ACCEPT all of these (be generous):
+- Real photographs even if they have a small logo watermark in a corner — this is NORMAL for news photos, accept them
+- Photos with a news agency credit line or small watermark (AP, Reuters, AFP, RIA Novosti, France24, CBC etc.) — ACCEPT, this is standard
+- Company logos/products that are THE SUBJECT of the news story (e.g. Microsoft logo for a Microsoft news story) — ACCEPT
+- Professional news photography of any quality above "extremely blurry"
+- Photos of real people, places, events, objects related to the news
+- Stock photos without watermarks
+- Charts, graphs, infographics — ACCEPT, these are informative
+- Photos with minor text overlays if the underlying photo is real and visible
+
+KEY RULE: If the image contains a REAL PHOTOGRAPH underneath, even with logos/watermarks/overlays, mark it as SUITABLE. Only reject if there is NO real photograph (pure logos, pure text, pure solid colors, TV studio screenshots).
 
 Respond ONLY with valid JSON format (no markdown, no code blocks):
 {
@@ -120,7 +121,57 @@ Respond ONLY with valid JSON format (no markdown, no code blocks):
                             "reason": f"Image too small ({img.size[0]}x{img.size[1]}px) - likely an icon or logo",
                             "error": False
                         }
-                    
+
+                    # Quick pixel analysis to catch dark/monotone placeholder images
+                    try:
+                        # Sample pixels from a resized thumbnail for speed
+                        thumb = img.copy()
+                        thumb.thumbnail((50, 50))
+                        pixels = list(thumb.getdata())
+                        if pixels:
+                            # Check if image is predominantly very dark
+                            dark_count = sum(1 for r, g, b in pixels if r < 40 and g < 40 and b < 40)
+                            dark_ratio = dark_count / len(pixels)
+                            if dark_ratio > 0.70:
+                                # Check color variance — real dark photos have more variance
+                                avg_r = sum(p[0] for p in pixels) / len(pixels)
+                                avg_g = sum(p[1] for p in pixels) / len(pixels)
+                                avg_b = sum(p[2] for p in pixels) / len(pixels)
+                                variance = sum(
+                                    (p[0] - avg_r)**2 + (p[1] - avg_g)**2 + (p[2] - avg_b)**2
+                                    for p in pixels
+                                ) / len(pixels)
+                                if variance < 2000:
+                                    print(f"      ❌ Dark/monotone placeholder detected ({dark_ratio:.0%} dark, variance: {variance:.0f})")
+                                    return {
+                                        "suitable": False,
+                                        "confidence": 92,
+                                        "issues": ["dark_placeholder"],
+                                        "reason": f"Dark/monotone image ({dark_ratio:.0%} dark pixels) - likely a placeholder or category header",
+                                        "error": False
+                                    }
+
+                            # Check if image is predominantly a single solid color
+                            avg_color = (int(avg_r) if 'avg_r' in dir() else sum(p[0] for p in pixels) // len(pixels),
+                                        int(avg_g) if 'avg_g' in dir() else sum(p[1] for p in pixels) // len(pixels),
+                                        int(avg_b) if 'avg_b' in dir() else sum(p[2] for p in pixels) // len(pixels))
+                            near_avg = sum(1 for p in pixels
+                                         if abs(p[0] - avg_color[0]) < 25
+                                         and abs(p[1] - avg_color[1]) < 25
+                                         and abs(p[2] - avg_color[2]) < 25)
+                            solid_ratio = near_avg / len(pixels)
+                            if solid_ratio > 0.85:
+                                print(f"      ❌ Solid color image detected ({solid_ratio:.0%} uniform)")
+                                return {
+                                    "suitable": False,
+                                    "confidence": 90,
+                                    "issues": ["solid_color_placeholder"],
+                                    "reason": f"Solid/uniform color image ({solid_ratio:.0%} same color) - likely a placeholder",
+                                    "error": False
+                                }
+                    except Exception as e:
+                        print(f"      ⚠️  Pixel analysis skipped: {str(e)[:60]}")
+
                     # Send to Gemini with PIL image
                     result = self.model.generate_content([self.prompt, img])
                 else:

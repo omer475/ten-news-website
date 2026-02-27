@@ -117,52 +117,67 @@ class BrightDataArticleFetcher:
         except Exception:
             return False
     
+    # Known default/logo og:image URLs that should be skipped
+    DEFAULT_OG_IMAGES = [
+        'tass.com/img/blocks/common/',
+        'thehindu.com/theme/images/og-image',
+        '/default-og', '/og-default', '/share-image', '/default-share',
+        '/site-image', '/social-share', '/fallback-image',
+    ]
+
+    def _is_default_og_image(self, img_url: str) -> bool:
+        """Check if an og:image URL is a known default/logo sharing image."""
+        img_lower = img_url.lower()
+        for pattern in self.DEFAULT_OG_IMAGES:
+            if pattern in img_lower:
+                return True
+        # Also reject if URL path contains 'logo' or 'brand'
+        if any(word in img_lower for word in ['/logo', '/brand', '/favicon', 'logo_share', 'logo-share']):
+            return True
+        return False
+
     def extract_og_image(self, html: str, url: str) -> Optional[str]:
         """
         Extract the best quality image from article page HTML.
         Used for sources like BBC/DW where RSS images are low quality.
-        
+
         Priority order:
-        1. og:image meta tag
-        2. twitter:image meta tag  
-        3. og:image:secure_url meta tag
+        1. og:image meta tag (if not a known default/logo)
+        2. twitter:image meta tag (if not a known default/logo)
+        3. og:image:secure_url meta tag (if not a known default/logo)
         4. First large image in article body
-        
+
         Args:
             html: Full HTML content of the page
             url: Article URL (for debugging)
-            
+
         Returns:
             Best image URL or None if not found
         """
         try:
             soup = BeautifulSoup(html, 'html.parser')
-            
-            # Priority 1: og:image
-            og_image = soup.find('meta', property='og:image')
-            if og_image and og_image.get('content'):
-                img_url = og_image['content']
-                if img_url.startswith('//'):
-                    img_url = 'https:' + img_url
-                return img_url
-            
-            # Priority 2: twitter:image
-            twitter_image = soup.find('meta', attrs={'name': 'twitter:image'})
-            if twitter_image and twitter_image.get('content'):
-                img_url = twitter_image['content']
-                if img_url.startswith('//'):
-                    img_url = 'https:' + img_url
-                return img_url
-            
-            # Priority 3: og:image:secure_url
-            og_secure = soup.find('meta', property='og:image:secure_url')
-            if og_secure and og_secure.get('content'):
-                img_url = og_secure['content']
-                if img_url.startswith('//'):
-                    img_url = 'https:' + img_url
-                return img_url
-            
-            # Priority 4: First large image in article body
+
+            # Try meta tags first, but skip known default/logo images
+            for meta_tag, meta_attr in [
+                ('meta', {'property': 'og:image'}),
+                ('meta', {'attrs': {'name': 'twitter:image'}}),
+                ('meta', {'property': 'og:image:secure_url'}),
+            ]:
+                if 'property' in meta_attr:
+                    tag = soup.find(meta_tag, property=meta_attr['property'])
+                else:
+                    tag = soup.find(meta_tag, **meta_attr)
+
+                if tag and tag.get('content'):
+                    img_url = tag['content']
+                    if img_url.startswith('//'):
+                        img_url = 'https:' + img_url
+                    if not self._is_default_og_image(img_url):
+                        return img_url
+                    else:
+                        print(f"   ⚠️ Skipping default og:image: {img_url[:80]}")
+
+            # Fallback: First large image in article body
             article = soup.find('article') or soup.find('main') or soup.find('div', class_=re.compile(r'article|content|story', re.I))
             if article:
                 for img in article.find_all('img', limit=10):
@@ -183,14 +198,13 @@ class BrightDataArticleFetcher:
                         if src.startswith('//'):
                             src = 'https:' + src
                         elif src.startswith('/'):
-                            # Make absolute URL
                             from urllib.parse import urlparse
                             parsed = urlparse(url)
                             src = f"{parsed.scheme}://{parsed.netloc}{src}"
                         return src
-            
+
             return None
-            
+
         except Exception as e:
             print(f"   ⚠️ Error extracting og:image: {e}")
             return None
@@ -382,7 +396,7 @@ class BrightDataArticleFetcher:
 
 class JinaFallbackFetcher:
     """Fallback to Jina Reader if Bright Data fails"""
-    
+
     def __init__(self, timeout: int = 15):
         self.base_url = "https://r.jina.ai/"
         self.timeout = timeout
@@ -391,13 +405,54 @@ class JinaFallbackFetcher:
             "X-With-Links-Summary": "false",
             "X-With-Images-Summary": "false",
         }
-    
+
+    # Same default og:image patterns as BrightDataArticleFetcher
+    DEFAULT_OG_PATTERNS = [
+        'tass.com/img/blocks/common/', 'thehindu.com/theme/images/og-image',
+        '/default-og', '/og-default', '/share-image', '/default-share',
+        '/site-image', '/social-share', '/fallback-image',
+        '/logo', '/brand', '/favicon', 'logo_share', 'logo-share',
+    ]
+
+    def _fetch_og_image_direct(self, url: str) -> Optional[str]:
+        """Quick direct fetch to extract og:image from HTML head (no proxy needed)."""
+        try:
+            resp = requests.get(url, timeout=10, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }, stream=True)
+            # Only read the first 50KB to find meta tags (they're in <head>)
+            content = b''
+            for chunk in resp.iter_content(chunk_size=8192):
+                content += chunk
+                if len(content) > 50000:
+                    break
+            html = content.decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(html, 'html.parser')
+
+            for tag_finder in [
+                lambda: soup.find('meta', property='og:image'),
+                lambda: soup.find('meta', attrs={'name': 'twitter:image'}),
+            ]:
+                tag = tag_finder()
+                if tag and tag.get('content'):
+                    img_url = tag['content']
+                    if img_url.startswith('//'):
+                        img_url = 'https:' + img_url
+                    # Skip known default/logo images
+                    img_lower = img_url.lower()
+                    if any(p in img_lower for p in self.DEFAULT_OG_PATTERNS):
+                        continue
+                    return img_url
+        except Exception:
+            pass
+        return None
+
     def fetch_article(self, url: str) -> Optional[Dict]:
-        """Fetch using Jina Reader API"""
+        """Fetch using Jina Reader API + direct og:image extraction"""
         try:
             jina_url = f"{self.base_url}{url}"
             response = requests.get(jina_url, headers=self.headers, timeout=self.timeout)
-            
+
             if response.status_code == 200:
                 content = response.text
                 # Parse Jina response
@@ -405,7 +460,7 @@ class JinaFallbackFetcher:
                 title = ""
                 text_lines = []
                 in_content = False
-                
+
                 for line in lines:
                     if line.startswith("Title: "):
                         title = line.replace("Title: ", "").strip()
@@ -413,13 +468,18 @@ class JinaFallbackFetcher:
                         in_content = True
                     elif in_content:
                         text_lines.append(line)
-                
+
                 text = '\n'.join(text_lines).strip()
-                
+
                 if len(text) > 200:
-                    print(f"✅ Jina fallback: {url[:50]}... ({len(text)} chars)")
-                    return {'url': url, 'title': title, 'text': text[:15000], 'published_time': ''}
-            
+                    # Also try to get og:image via direct fetch
+                    og_image = self._fetch_og_image_direct(url)
+                    if og_image:
+                        print(f"✅ Jina fallback + og:image: {url[:50]}... ({len(text)} chars)")
+                    else:
+                        print(f"✅ Jina fallback: {url[:50]}... ({len(text)} chars)")
+                    return {'url': url, 'title': title, 'text': text[:15000], 'published_time': '', 'og_image': og_image}
+
             return None
         except Exception as e:
             return None

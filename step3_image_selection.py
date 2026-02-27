@@ -36,10 +36,13 @@ MAJOR_SOURCES = {
 
 # Domains to exclude (ads, tracking pixels, logos)
 BLACKLISTED_DOMAINS = {
-    'doubleclick.net', 'googlesyndication.com', 'ads.', 'adserver',
+    'doubleclick.net', 'googlesyndication.com', 'adserver',
     'pixel.', 'tracker.', 'analytics.', 'facebook.com/tr',
-    'twitter.com/i/jot', 'logo.', 'icon.'
+    'twitter.com/i/jot'
 }
+
+# Substrings that must appear at the START of the domain (not anywhere in it)
+BLACKLISTED_DOMAIN_PREFIXES = {'ads.', 'logo.', 'icon.'}
 
 # Image formats
 PREFERRED_FORMATS = {'jpg', 'jpeg', 'webp', 'png'}
@@ -132,6 +135,9 @@ class ImageSelector:
         'og-default', 'og_default', 'share-image', 'share_image',
         'masthead', 'banner-logo', 'header-logo', 'site-logo',
         'publisher-logo', 'source-logo', 'news-logo', 'channel-logo',
+        'no-image', 'no_image', 'noimage', 'missing-image', 'generic-image',
+        'category-image', 'section-image', 'topic-image', 'default-thumb',
+        'default_thumbnail', 'blank.', 'empty.', '1x1.', 'spacer.',
     ]
 
     def _is_valid_image(self, candidate: Dict) -> bool:
@@ -152,6 +158,11 @@ class ImageSelector:
                 if blacklisted in domain:
                     if self.debug:
                         print(f"      ❌ Filtered (blacklisted domain): {domain}")
+                    return False
+            for prefix in BLACKLISTED_DOMAIN_PREFIXES:
+                if domain.startswith(prefix):
+                    if self.debug:
+                        print(f"      ❌ Filtered (blacklisted domain prefix): {domain}")
                     return False
         except Exception:
             return False

@@ -373,99 +373,142 @@ def _generate_gemini_image(api_key: str, prompt: str, aspect_ratio: str, timeout
 
 def get_event_images(topic_prompt: str, event_slug: str = None) -> dict:
     """
-    Generate BOTH images for a world event:
-      - hero image (21:9) for the event detail page
-      - cover image (4:5) for the event box card on the homepage
-    
-    Uploads both to Supabase Storage.
-    Returns dict with: image_url, cover_image_url, blur_color (any can be None)
+    Generate a single 1:1 editorial illustration for a world event.
+    Used for both event boxes and event detail pages.
+
+    Uploads to Supabase Storage.
+    Returns dict with: image_url, cover_image_url (same URL), blur_color
     """
+    import random
+
     api_key = os.environ.get('GEMINI_API_KEY')
     result = {'image_url': None, 'cover_image_url': None, 'blur_color': None}
-    
+
     if not api_key:
         print("  ❌ GEMINI_API_KEY not set, image generation skipped")
         return result
-    
+
     import uuid
     base_filename = event_slug if event_slug else f"event-{uuid.uuid4().hex[:12]}"
-    
-    # ── HERO IMAGE (21:9) for event detail page ──
-    hero_prompt = f"""Create a newspaper-cover-style editorial illustration about {topic_prompt}.
 
-The image should feel like a lead illustration from TIME magazine, The Economist, or The New York Times: intelligent, concept-driven, visually clever.
+    # Pick a random accent color from the palette
+    ACCENT_PALETTE = ['#BFFF00', '#FF6B35', '#7B68EE', '#FF4757', '#00D2FF']
+    accent_color = random.choice(ACCENT_PALETTE)
 
-STYLE:
-– detailed, expressive editorial illustration
-– recognisable public figures allowed if relevant
-– slightly exaggerated features for wit and character
-– not photorealistic, not cartoonish
-– sophisticated, modern newspaper illustration aesthetic
+    prompt = f"""Create a conceptual editorial illustration about {topic_prompt}.
 
-BACKGROUND: pure white (#ffffff), no gradients, no texture
-LAYOUT: illustration in the top two-thirds, bottom third is pure white
-COMPOSITION: strong balanced composition, cover-ready framing
-OUTPUT: high resolution, no text, no headlines, no captions"""
+STYLE (CRITICAL — follow exactly):
+– Loose, energetic, hand-drawn black ink illustration with raw expressive energy
+– Lines should feel fast, confident, and alive — like an illustrator sketching rapidly with a thick brush pen or marker
+– Varying line weight: bold sweeping strokes mixed with quick scratchy marks and flicks
+– Lines should have natural wobble, drips, and imperfections — NOT clean, NOT digital, NOT vector-like
+– Visible drawing energy: speed lines, motion marks, splatter dots, quick hatching for emphasis
+– The overall feel should be like a brilliant illustrator's spontaneous editorial sketch — raw and alive
+– Playful, witty, punchy, slightly provocative tone — NOT corporate, NOT polished, NOT stiff
+– Think: Ralph Steadman meets Christoph Niemann meets modern political cartoon sketchbook
+– Exactly ONE accent color: {accent_color} (e.g. #BFFF00, #FF6B35, #7B68EE, #FF4757, #00D2FF)
+– The accent color is splashed on boldly — slightly messy edges, bleeding outside the lines, raw and loose
+– NO other colors besides black ink, the single accent color, and the background
 
-    print(f"  🎨 Generating hero image (21:9)...")
-    hero_b64, hero_mime = _generate_gemini_image(api_key, hero_prompt, '21:9')
-    
-    if hero_b64:
-        result['blur_color'] = extract_blur_color_from_base64(hero_b64)
-        hero_url = upload_image_to_storage(hero_b64, f"{base_filename}-hero", hero_mime)
-        if hero_url:
-            result['image_url'] = hero_url
-            print(f"  ✅ Hero image uploaded: {base_filename}-hero")
+FIGURES — FACE STYLE (ABSOLUTE RULE — NO EXCEPTIONS):
+– Faces MUST be extremely simple: oval head, two tiny dot/dash eyes, small line mouth
+– Think: emoticon-level simplicity — :( drawn on an egg shape
+– NEVER draw realistic noses, ears, jawlines, eyebrows, or hair
+– NEVER distinguish gender through facial features or hairstyles
+– ALL figures must have the same abstract face style — no exceptions
+– If a figure needs to be distinguished (e.g. two opposing sides), use clothing/props NOT facial features
+– Reference: the absolute simplest face that still conveys basic emotion
+
+FIGURES — BODY STYLE:
+– Exaggerated, dynamic, full-of-life human characters
+– Elongated/oval heads with personality — NOT perfect circles, NOT realistic
+– EXTREME body language — leaning hard, pulling, pushing, falling, reaching, struggling
+– Poses should feel like frozen mid-action — maximum kinetic energy
+– Bodies drawn with fast continuous flowing black strokes — gestural and loose
+– Limbs can be exaggerated in length for dramatic effect
+– Some areas use solid black fills (suits, shoes) for punchy contrast
+– Figures should feel ALIVE — like they could leap off the page
+– Maximum 2-4 figures per illustration
+
+ENERGY AND MOVEMENT (CRITICAL):
+– Every illustration must feel like it has MOTION and TENSION
+– Add speed lines, action marks, small impact bursts, or motion trails
+– Objects can be tilting, cracking, exploding, colliding, or breaking apart
+– The scene should feel like a frozen moment of dramatic action
+– Small detail marks: tiny lines radiating from impact points, small dots for dust/debris, quick zigzag lines for electricity/tension
+
+BACKGROUND (CRITICAL):
+– The background must be a visible, colored tint inspired by the accent color
+– It should be OBVIOUSLY colored — the viewer should immediately notice it is NOT grey
+– Examples based on accent color:
+  - If accent is #BFFF00 (lime): background = soft yellow-green (#D8D8B0)
+  - If accent is #FF6B35 (orange): background = soft warm peach (#E8CDB8)
+  - If accent is #7B68EE (purple): background = soft lavender (#D0C4E8)
+  - If accent is #FF4757 (red): background = soft warm salmon (#E8C8B8)
+  - If accent is #00D2FF (blue): background = soft sky blue (#B8D4E8)
+  - If accent is #FFD700 (gold): background = soft warm cream (#E8DDB8)
+  - If accent is #FF1493 (pink): background = soft rose (#E8C0D0)
+  - If accent is #32CD32 (green): background = soft mint (#B8E0C0)
+  - If accent is #FF8C00 (dark orange): background = soft apricot (#E8D0B0)
+  - If accent is #6A5ACD (slate blue): background = soft periwinkle (#C8C0E0)
+  - If accent is #DC143C (crimson): background = soft blush (#E0C0B8)
+  - If accent is #20B2AA (teal): background = soft seafoam (#B8D8D4)
+  - If accent is #FF69B4 (hot pink): background = soft pink (#E8C8D8)
+  - If accent is #4169E1 (royal blue): background = soft powder blue (#B8C8E0)
+  - If accent is #8B4513 (brown): background = soft tan (#DDD0C0)
+– The tint should be clearly obvious — approximately 50-60% grey, 40-50% color
+– For any accent color not listed: derive a light, desaturated, pastel version at ~40% saturation and ~85% lightness
+– NO gradients, NO textures, NO patterns, NO noise
+– The entire background must be uniform
+
+COLOR RULES (CRITICAL):
+– Only 3 elements: black ink lines/fills, ONE accent color, tinted background
+– The accent color MUST appear — used boldly on 1-3 key elements for visual punch
+– Accent color fills should feel loose and energetic, not perfectly precise
+– Solid black fills allowed for clothing and contrast
+– NO shadows, NO gradients — flat color only
+– NO additional colors — strict 3-element palette
+– If the topic involves multiple sides, use shapes/symbols NOT multiple colors
+
+CREATIVITY AND CONCEPT (CRITICAL):
+– The concept must be ORIGINAL and UNEXPECTED — avoid obvious literal depictions
+– Use surprising visual metaphors: e.g. a melting chess king for political downfall, a puppet with cut strings for independence, a cracked hourglass for a deadline crisis
+– Combine two unrelated objects to create a new meaning — this is the heart of great editorial illustration
+– Avoid cliché metaphors: no generic handshakes, no simple tug-of-war unless reimagined in a fresh way
+– The illustration should make someone stop scrolling — it needs to be visually surprising and intellectually clever
+– Think like a top editorial illustrator pitching a cover concept — what image would make an editor say "that's brilliant"
+– Each illustration should feel like it could only belong to THIS specific story — not a generic template
+
+COMPOSITION (CRITICAL):
+– All illustration elements in the TOP TWO-THIRDS of the image
+– BOTTOM ONE-THIRD completely empty — only the tinted background color
+– No objects, figures, ground lines, or any elements in the bottom third
+– Centered composition within the top two-thirds
+– Balanced left-right weight
+– Allow slight asymmetry for dynamic tension
+
+OUTPUT:
+– Square format (1:1 aspect ratio)
+– High resolution
+– Text and symbols (e.g. $, €, compass directions) are allowed when they serve the concept
+– No captions, no watermarks, no logos"""
+
+    print(f"  🎨 Generating event image (1:1) with accent {accent_color}...")
+    img_b64, img_mime = _generate_gemini_image(api_key, prompt, '1:1')
+
+    if img_b64:
+        result['blur_color'] = extract_blur_color_from_base64(img_b64)
+        img_url = upload_image_to_storage(img_b64, base_filename, img_mime)
+        if img_url:
+            # Set both columns to the same URL (single image for everything)
+            result['image_url'] = img_url
+            result['cover_image_url'] = img_url
+            print(f"  ✅ Event image uploaded: {base_filename}")
         else:
-            print(f"  ⚠️ Hero storage upload failed")
-    
-    # ── COVER IMAGE (4:5) for event box card on homepage ──
-    cover_prompt = f"""Create a single FULL-BLEED editorial newspaper illustration in a classic engraved / woodcut illustration style with fine linework, cross-hatching, and stippling.
+            print(f"  ⚠️ Storage upload failed")
+    else:
+        print(f"  ❌ No image generated for event")
 
-CRITICAL - FULL COVERAGE REQUIREMENT:
-- The illustration MUST fill 100% of the canvas - every single pixel
-- NO empty space on ANY side (left, right, top, bottom)
-- NO margins, NO padding, NO borders, NO blank areas
-- The subject and background must extend ALL THE WAY to every edge
-
-EVENT TO ILLUSTRATE: {topic_prompt}
-
-COLOR RULE:
-Use bold, saturated, high-contrast colors. Avoid sepia, beige, parchment, pastel, or muted tones.
-Flat colors + engraving shading only. No gradients.
-
-EVENT LOGIC:
-- If the event is about a specific person, include that person as the main subject
-- If NOT about a person, use a dominant symbolic object or structure instead
-
-COMPOSITION:
-- One dominant central subject (person or symbolic object)
-- Background scene MUST extend to ALL edges
-- Subject should be large enough to dominate the frame
-- Straight-on editorial perspective
-- No frames, borders, overlays, or graphic effects
-
-FORBIDDEN:
-Photography, photorealism, 3D rendering, gradients, pastel colors, sepia tones, paper textures, frames, borders, margins, empty space, text, logos, captions, watermarks.
-
-OUTPUT: One single full-bleed image with NO empty space anywhere."""
-
-    print(f"  🎨 Generating cover image (4:5)...")
-    cover_b64, cover_mime = _generate_gemini_image(api_key, cover_prompt, '4:5')
-    
-    if cover_b64:
-        if not result['blur_color']:
-            result['blur_color'] = extract_blur_color_from_base64(cover_b64)
-        cover_url = upload_image_to_storage(cover_b64, f"{base_filename}-cover", cover_mime)
-        if cover_url:
-            result['cover_image_url'] = cover_url
-            print(f"  ✅ Cover image uploaded: {base_filename}-cover")
-        else:
-            print(f"  ⚠️ Cover storage upload failed")
-    
-    if not result['image_url'] and not result['cover_image_url']:
-        print(f"  ❌ No images generated for event")
-    
     return result
 
 
@@ -1103,103 +1146,73 @@ def backfill_missing_event_images(max_per_run: int = 3):
     Runs automatically at the end of each world event detection cycle.
     Processes up to max_per_run events per cycle to avoid timeout.
     """
+    import random
+
     if not supabase:
         return
-    
+
     try:
-        # Find ongoing events missing BOTH image_url and cover_image_url
+        # Find ongoing events missing image_url
         result = supabase.table('world_events').select(
             'id, name, slug, topic_prompt, image_url, cover_image_url'
         ).eq('status', 'ongoing').order('last_article_at', desc=True).execute()
-        
+
         if not result.data:
             return
-        
-        # Find events that need images
+
+        # Find events that need images (missing either column or have base64 leftovers)
         needs_images = []
         for event in result.data:
-            has_hero = event.get('image_url') and not str(event['image_url']).startswith('data:')
+            has_img = event.get('image_url') and not str(event['image_url']).startswith('data:')
             has_cover = event.get('cover_image_url') and not str(event['cover_image_url']).startswith('data:')
-            
-            if not has_hero or not has_cover:
-                needs_images.append({
-                    'event': event,
-                    'needs_hero': not has_hero,
-                    'needs_cover': not has_cover
-                })
-        
+            if not has_img or not has_cover:
+                needs_images.append(event)
+
         if not needs_images:
             print(f"\n  ✅ All {len(result.data)} events have images")
             return
-        
+
         print(f"\n  🖼️ IMAGE BACKFILL: {len(needs_images)} events need images (processing up to {max_per_run})")
-        
+
         api_key = os.environ.get('GEMINI_API_KEY')
         if not api_key:
             print(f"    ❌ GEMINI_API_KEY not set, skipping backfill")
             return
-        
+
         import uuid
         generated = 0
-        
-        for item in needs_images[:max_per_run]:
-            event = item['event']
+        ACCENT_PALETTE = ['#BFFF00', '#FF6B35', '#7B68EE', '#FF4757', '#00D2FF']
+
+        for event in needs_images[:max_per_run]:
             topic = event.get('topic_prompt') or event.get('name', '')
             slug = event.get('slug') or f"event-{uuid.uuid4().hex[:12]}"
-            
+            accent_color = random.choice(ACCENT_PALETTE)
+
             print(f"    [{generated+1}/{min(max_per_run, len(needs_images))}] {event['name']}")
-            
+
+            images = get_event_images(topic, slug)
+
             update_data = {}
-            
-            # Generate hero if missing
-            if item['needs_hero']:
-                hero_prompt = f"""Create a newspaper-cover-style editorial illustration about {topic}.
-STYLE: detailed editorial illustration, not photorealistic, not cartoonish, sophisticated newspaper aesthetic.
-BACKGROUND: pure white (#ffffff), no gradients.
-LAYOUT: illustration in top two-thirds, bottom third pure white.
-OUTPUT: high resolution, no text, no captions."""
-                
-                print(f"      🎨 Generating hero (21:9)...")
-                b64, mime = _generate_gemini_image(api_key, hero_prompt, '21:9')
-                if b64:
-                    url = upload_image_to_storage(b64, f"{slug}-hero", mime)
-                    if url:
-                        update_data['image_url'] = url
-                        if not event.get('blur_color') or event['blur_color'] == '#1a365d':
-                            update_data['blur_color'] = extract_blur_color_from_base64(b64)
-                        print(f"      ✅ Hero uploaded")
-            
-            # Generate cover if missing
-            if item['needs_cover']:
-                cover_prompt = f"""Create a single FULL-BLEED editorial newspaper illustration in a classic engraved / woodcut style about {topic}.
-The illustration MUST fill 100% of the canvas. NO empty space on ANY side.
-Use bold, saturated colors. Flat colors + engraving shading. No gradients.
-One dominant central subject. Background extends to ALL edges.
-FORBIDDEN: photography, photorealism, 3D, gradients, pastels, text, logos, frames, borders, empty space."""
-                
-                print(f"      🎨 Generating cover (4:5)...")
-                b64, mime = _generate_gemini_image(api_key, cover_prompt, '4:5')
-                if b64:
-                    url = upload_image_to_storage(b64, f"{slug}-cover", mime)
-                    if url:
-                        update_data['cover_image_url'] = url
-                        print(f"      ✅ Cover uploaded")
-            
-            # Update event in database
+            if images['image_url']:
+                update_data['image_url'] = images['image_url']
+                update_data['cover_image_url'] = images['image_url']
+            if images['blur_color']:
+                update_data['blur_color'] = images['blur_color']
+
             if update_data:
                 try:
                     supabase.table('world_events').update(update_data).eq('id', event['id']).execute()
                     generated += 1
-                    print(f"      ✅ Event updated with {len(update_data)} new image(s)")
+                    print(f"      ✅ Event updated with new image")
                 except Exception as e:
                     print(f"      ❌ DB update error: {e}")
-            
+
             time.sleep(1)  # Rate limiting between events
-        
+
         print(f"  ✅ Backfill complete: {generated}/{min(max_per_run, len(needs_images))} events updated")
         if len(needs_images) > max_per_run:
             print(f"     ({len(needs_images) - max_per_run} remaining, will process in next run)")
-    
+
     except Exception as e:
         print(f"  ❌ Backfill error: {e}")
 

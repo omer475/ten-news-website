@@ -42,7 +42,7 @@ from step6_7_claude_component_generation import GeminiComponentWriter
 from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, generate_interest_tags
 from step11_article_tagging import tag_article
-from step6_world_event_detection import detect_world_events
+from step6_world_event_detection import detect_world_events, _generate_gemini_image, upload_image_to_storage
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -858,16 +858,17 @@ def run_complete_pipeline():
             if similarity >= 0.65:
                 return c['id'], f"title_sim={similarity:.0%}"
 
-            # BORDERLINE: track for AI check
-            if similarity >= 0.45:
+            # BORDERLINE: track for AI check at lower threshold
+            if similarity >= 0.35:
                 if not best_candidate or similarity > best_candidate['sim']:
-                    best_candidate = {'cluster': c, 'sim': similarity, 'reason': 'title_similarity'}
+                    best_candidate = {'cluster': c, 'sim': similarity, 'reason': 'title_similarity',
+                                     'overlap_count': 0}
 
-            # Key-word overlap: 3+ shared words + sim >= 0.35
+            # Key-word overlap: 2+ shared words triggers AI check
             c_kw = c.get('key_words', set())
             if new_kw and c_kw:
                 overlap = new_kw & c_kw
-                if len(overlap) >= 3 and similarity >= 0.35:
+                if len(overlap) >= 2 and similarity >= 0.25:
                     if not best_candidate or len(overlap) > best_candidate.get('overlap_count', 0):
                         best_candidate = {'cluster': c, 'sim': similarity, 'reason': 'entity_overlap',
                                          'overlap': overlap, 'overlap_count': len(overlap)}
@@ -877,8 +878,8 @@ def run_complete_pipeline():
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=gemini_key)
-                ai_prompt = f"""Are these two news headlines about the SAME specific event/story?
-Not just the same topic — the same specific news development.
+                ai_prompt = f"""Are these two news headlines about the SAME specific event or news story?
+Not just the same broad topic — the same specific development, incident, or announcement.
 
 Headline A: {article_title}
 Headline B: {best_candidate['cluster']['main_title']}
@@ -1142,7 +1143,7 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
 
             # Add full text and fetch/upgrade images for ALL sources
             for source in cluster_sources:
-                source['full_text'] = url_to_text.get(source['url'], source.get('content', ''))
+                source['full_text'] = url_to_text.get(source['url'], source.get('content', '') or source.get('description', ''))
 
                 # Check if source has no image or needs upgrade (fetch og:image from Bright Data)
                 current_image = source.get('image_url')
@@ -1196,15 +1197,19 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                         update_source_reliability(domain, success=content_ok, 
                             failure_reason='blocked' if not content_ok else None)
             
-            success_count = len([s for s in cluster_sources if s.get('full_text') and len(s.get('full_text', '')) > 100])
-            print(f"   ✅ [Cluster {cluster_id}] Fetched full text: {success_count}/{len(cluster_sources)}")
-            
-            # STRICT: Require actual article content - no description fallback
-            if success_count == 0:
-                print(f"   ❌ [Cluster {cluster_id}] ELIMINATED: No article content fetched")
-                update_cluster_status(cluster_id, 'failed', 'no_content', 
+            full_text_count = len([s for s in cluster_sources if s.get('full_text') and len(s.get('full_text', '')) > 100])
+            desc_only_count = len([s for s in cluster_sources if s.get('full_text') and 20 < len(s.get('full_text', '')) <= 100])
+            any_content_count = full_text_count + desc_only_count
+            print(f"   ✅ [Cluster {cluster_id}] Content: {full_text_count} full text, {desc_only_count} RSS description only")
+
+            if any_content_count == 0:
+                print(f"   ❌ [Cluster {cluster_id}] ELIMINATED: No article content or descriptions available")
+                update_cluster_status(cluster_id, 'failed', 'no_content',
                     f'All {len(cluster_sources)} sources blocked or failed to fetch')
                 return False
+
+            if full_text_count == 0:
+                print(f"   ⚠️ [Cluster {cluster_id}] Using RSS descriptions only (BrightData failed for all sources)")
             
             # STEP 3: Smart Image Selection
             print(f"\n📸 [Cluster {cluster_id}] STEP 3: SMART IMAGE SELECTION")
@@ -1230,10 +1235,11 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     candidate['quality_score'] = selector._calculate_image_score(candidate)
                     valid_candidates.append(candidate)
             
+            ai_rejected_image = False
             if not valid_candidates:
                 print(f"   ⚠️ [Cluster {cluster_id}] No image found — will publish without image")
                 selected_image = None
-            
+
             if valid_candidates:
                 valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
 
@@ -1257,12 +1263,8 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     print(f"   ⚠️  [Cluster {cluster_id}] AI quality check failed: {str(e)[:80]}")
 
                 if not selected_image:
-                    selected_image = {
-                        'url': valid_candidates[0]['url'],
-                        'source_name': valid_candidates[0]['source_name'],
-                        'quality_score': valid_candidates[0]['quality_score']
-                    }
-                    print(f"   ↩️  [Cluster {cluster_id}] Using rule-based best: {selected_image['source_name']} (score: {selected_image['quality_score']:.1f})")
+                    ai_rejected_image = True
+                    print(f"   🚫 [Cluster {cluster_id}] AI rejected all images — decision deferred to scoring")
             
             # STEP 3.5: VALIDATE CLUSTER SOURCES (removes unrelated articles)
             if len(cluster_sources) > 2:
@@ -1564,8 +1566,48 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
+            # STEP 10.5: IMAGE DECISION (score-based)
+            # If AI rejected all candidate images, use score to decide:
+            #   score >= 820 → generate AI editorial illustration
+            #   score < 820  → eliminate article entirely
+            if ai_rejected_image:
+                if article_score >= 820:
+                    print(f"\n🎨 [Cluster {cluster_id}] STEP 10.5: GENERATING AI IMAGE (score {article_score} >= 820)")
+                    try:
+                        art_prompt = f"""Create a conceptual editorial illustration for this news headline: {title}
+
+STYLE: Clean, modern editorial illustration. Minimalist, professional news graphic.
+Simple shapes, bold composition, muted color palette.
+NO text, NO words, NO letters in the image.
+NO realistic human faces — use simple abstract figures if people are needed.
+The image should work as a thumbnail for a news article."""
+
+                        with gemini_semaphore:
+                            base64_data, mime_type = _generate_gemini_image(gemini_key, art_prompt, '16:9')
+
+                        if base64_data:
+                            import uuid
+                            filename = f"article-{cluster_id}-{uuid.uuid4().hex[:8]}"
+                            ai_image_url = upload_image_to_storage(base64_data, filename, mime_type)
+                            if ai_image_url:
+                                synthesized['image_url'] = ai_image_url
+                                synthesized['image_source'] = 'AI Generated'
+                                synthesized['image_score'] = 100
+                                print(f"   ✅ [Cluster {cluster_id}] AI image generated and uploaded")
+                            else:
+                                print(f"   ⚠️ [Cluster {cluster_id}] AI image upload failed — publishing without image")
+                        else:
+                            print(f"   ⚠️ [Cluster {cluster_id}] AI image generation failed — publishing without image")
+                    except Exception as e:
+                        print(f"   ⚠️ [Cluster {cluster_id}] AI image generation error: {e} — publishing without image")
+                else:
+                    print(f"\n🚫 [Cluster {cluster_id}] ELIMINATED — AI rejected image and score {article_score} < 820")
+                    update_cluster_status(cluster_id, 'skipped', 'low_score_no_image',
+                        f'Score {article_score} < 820 and no suitable image')
+                    return False
+
             five_ws = synthesized.get('five_ws', {})
-            
+
             source_titles = [
                 {
                     'title': s.get('title', 'Unknown'),
@@ -1610,7 +1652,7 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     for recent in published_titles_cache:
                         if clean_new_title and recent['clean']:
                             similarity = SequenceMatcher(None, clean_new_title, recent['clean']).ratio()
-                            if similarity >= 0.50:
+                            if similarity >= 0.65:
                                 print(f"   ⏭️ [Cluster {cluster_id}] DUPLICATE TITLE (similarity: {similarity:.0%})")
                                 print(f"      New: {title[:60]}...")
                                 print(f"      Existing (ID {recent['id']}): {recent['title_news'][:60]}...")
