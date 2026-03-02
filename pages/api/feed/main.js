@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { calculateFinalScore, calculateEmbeddingScore } from '../../../lib/personalization';
-import { cosineSimilarity } from '../../../lib/embeddings';
+import { calculateFinalScore } from '../../../lib/personalization';
 
 const safeJsonParse = (value, fallback = null) => {
   if (!value) return fallback;
@@ -124,17 +123,16 @@ export default async function handler(req, res) {
     } = req.query;
 
     // -------------------------------------------------------
-    // 1. Resolve user preferences + taste vector
+    // 1. Resolve user preferences
     // -------------------------------------------------------
     let userPrefs = null;
-    let tasteVector = null;
 
-    // Try database lookup first (gets prefs + taste vector for embedding scoring)
+    // Try database lookup first if user_id provided
     if (user_id) {
       try {
         const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('home_country, followed_countries, followed_topics, taste_vector')
+          .select('home_country, followed_countries, followed_topics')
           .eq('id', user_id)
           .single();
 
@@ -152,7 +150,6 @@ export default async function handler(req, res) {
             followed_countries: dbCountries,
             followed_topics: dbTopics,
           };
-          tasteVector = userData.taste_vector;
         }
       } catch (profileError) {
         console.error('Profile lookup failed:', profileError.message);
@@ -181,15 +178,13 @@ export default async function handler(req, res) {
     // -------------------------------------------------------
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const useEmbeddings = tasteVector && Array.isArray(tasteVector) && tasteVector.length > 0;
-
     const { data: allArticles, error: fetchError } = await supabase
       .from('published_articles')
       .select('*')
       .gte('created_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsFirst: false })
       .order('id', { ascending: false })
-      .limit(500);
+      .limit(200);
 
     if (fetchError) {
       console.error('Main feed query error:', fetchError);
@@ -215,58 +210,35 @@ export default async function handler(req, res) {
     });
 
     // -------------------------------------------------------
-    // 4. Score each article (embedding or tag-based)
+    // 4. Score each article (tag-based personalization)
     // -------------------------------------------------------
     const scored = filtered.map(article => {
+      if (!userPrefs) {
+        return { ...article, _final_score: article.ai_final_score || 0, _match_reasons: [], _scoring_method: 'raw' };
+      }
+
       const countries = safeJsonParse(article.countries, []);
       const topics = safeJsonParse(article.topics, []);
       const topicRelevance = safeJsonParse(article.topic_relevance, {});
       const countryRelevance = safeJsonParse(article.country_relevance, {});
-      const articleEmbedding = article.embedding;
 
-      let finalScore;
-      let matchReasons = [];
-      let scoringMethod = 'raw';
-
-      if (!userPrefs) {
-        // No preferences — use raw editorial score
-        finalScore = article.ai_final_score || 0;
-      } else if (useEmbeddings && articleEmbedding && Array.isArray(articleEmbedding) && articleEmbedding.length > 0) {
-        // Tier 1: Embedding-based scoring (user has taste vector + article has embedding)
-        const embScore = calculateEmbeddingScore(
-          { ...article, embedding: articleEmbedding },
-          tasteVector,
-          cosineSimilarity
-        );
-        // Scale to comparable range with tag-based scores (0-1 → 0-1500)
-        finalScore = embScore.final_score * 1500;
-        matchReasons.push(
-          `Embedding: relevance=${embScore.content_relevance.toFixed(2)}, editorial=${embScore.editorial_importance.toFixed(2)}, recency=${embScore.recency.toFixed(2)}`
-        );
-        scoringMethod = 'embedding';
-      } else {
-        // Tier 2: Tag-based scoring (country/topic boosts)
-        const result = calculateFinalScore(
-          {
-            ...article,
-            base_score: article.ai_final_score,
-            countries,
-            topics,
-            topic_relevance: topicRelevance,
-            country_relevance: countryRelevance,
-          },
-          userPrefs
-        );
-        finalScore = result.final_score;
-        matchReasons = result.match_reasons;
-        scoringMethod = 'tag';
-      }
+      const result = calculateFinalScore(
+        {
+          ...article,
+          base_score: article.ai_final_score,
+          countries,
+          topics,
+          topic_relevance: topicRelevance,
+          country_relevance: countryRelevance,
+        },
+        userPrefs
+      );
 
       return {
         ...article,
-        _final_score: finalScore,
-        _match_reasons: matchReasons,
-        _scoring_method: scoringMethod,
+        _final_score: result.final_score,
+        _match_reasons: result.match_reasons,
+        _scoring_method: 'tag',
       };
     });
 
