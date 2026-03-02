@@ -183,10 +183,9 @@ export default async function handler(req, res) {
 
     const useEmbeddings = tasteVector && Array.isArray(tasteVector) && tasteVector.length > 0;
 
-    // Only pull the big embedding column when we actually need it
-    const selectColumns = useEmbeddings ? '*' : '*';
-    // Note: using '*' for both because formatArticle needs all columns (map, timeline, etc.)
-    // The embedding column is only present on articles that have been backfilled
+    // List all columns formatArticle needs — only add huge embedding column when needed
+    const baseColumns = 'id, title, title_news, url, source, category, emoji, ai_final_score, created_at, published_at, published_date, image_url, image_source, description, content, content_news, article, summary, num_sources, summary_bullets_news, summary_bullets, five_ws, timeline, graph, map, components, components_order, details, details_section, countries, topics, topic_relevance, country_relevance';
+    const selectColumns = baseColumns + (useEmbeddings ? ', embedding' : '');
 
     const { data: allArticles, error: fetchError } = await supabase
       .from('published_articles')
