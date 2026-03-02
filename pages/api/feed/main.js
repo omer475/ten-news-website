@@ -131,19 +131,32 @@ export default async function handler(req, res) {
 
     // Try database lookup first (gets prefs + taste vector for embedding scoring)
     if (user_id) {
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('home_country, followed_countries, followed_topics, taste_vector')
-        .eq('id', user_id)
-        .single();
+      try {
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('home_country, followed_countries, followed_topics, taste_vector')
+          .eq('id', user_id)
+          .single();
 
-      if (!userError && userData) {
-        userPrefs = {
-          home_country: userData.home_country,
-          followed_countries: userData.followed_countries || [],
-          followed_topics: userData.followed_topics || [],
-        };
-        tasteVector = userData.taste_vector;
+        if (!userError && userData) {
+          // DB columns may be arrays or JSON strings — normalize
+          const dbCountries = Array.isArray(userData.followed_countries)
+            ? userData.followed_countries
+            : safeJsonParse(userData.followed_countries, []);
+          const dbTopics = Array.isArray(userData.followed_topics)
+            ? userData.followed_topics
+            : safeJsonParse(userData.followed_topics, []);
+
+          userPrefs = {
+            home_country: userData.home_country,
+            followed_countries: dbCountries,
+            followed_topics: dbTopics,
+          };
+          tasteVector = userData.taste_vector;
+        }
+      } catch (profileError) {
+        console.error('Profile lookup failed:', profileError.message);
+        // Continue — fall back to query params below
       }
     }
 
