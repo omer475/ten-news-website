@@ -120,13 +120,13 @@ export default async function handler(req, res) {
     // Evolve taste vector based on signal strength
     let learningRate = null
     if (event_type === 'article_saved' && article_id) {
-      learningRate = 0.15
+      learningRate = 0.25
     } else if (event_type === 'article_engaged' && article_id) {
-      learningRate = 0.10
+      learningRate = 0.15
     } else if (event_type === 'article_exit' && article_id && view_seconds) {
-      if (view_seconds >= 30) learningRate = 0.12
-      else if (view_seconds >= 15) learningRate = 0.07
-      else if (view_seconds >= 5) learningRate = 0.03
+      if (view_seconds >= 30) learningRate = 0.20
+      else if (view_seconds >= 15) learningRate = 0.12
+      else if (view_seconds >= 5) learningRate = 0.05
     }
 
     if (learningRate !== null) {
