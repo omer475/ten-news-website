@@ -20,8 +20,9 @@ const ISO_TO_API_COUNTRY = {
 
 const normalizeCountry = (code) => ISO_TO_API_COUNTRY[code] || code.toLowerCase();
 
-// Lightweight columns for scoring (no heavy text blobs, no embedding by default)
-const SCORING_COLUMNS = 'id, ai_final_score, created_at, published_at, url, title_news, title, source, countries, topics, topic_relevance, country_relevance';
+// Lightweight columns for scoring — only columns confirmed to exist (from for-you.js)
+// No heavy text blobs, no embedding by default
+const SCORING_COLUMNS = 'id, ai_final_score, created_at, published_at, url, title_news, source, category, countries, topics, topic_relevance, country_relevance, image_url';
 
 const formatArticle = (article) => {
   const summaryBulletsNews = safeJsonParse(article.summary_bullets_news, []);
@@ -209,10 +210,10 @@ export default async function handler(req, res) {
 
     const filtered = (allArticles || []).filter(a => {
       const url = a?.url || '';
-      const title = a?.title_news || a?.title || '';
+      const title = a?.title_news || '';
       const source = a?.source || '';
       if (/test/i.test(url) || /test/i.test(title) || /test/i.test(source)) return false;
-      const articleDate = a.created_at || a.added_at || a.published_date || a.published_at;
+      const articleDate = a.created_at || a.published_at;
       if (!articleDate) return false;
       const articleTime = new Date(articleDate).getTime();
       if (isNaN(articleTime)) return false;
