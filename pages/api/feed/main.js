@@ -199,7 +199,7 @@ export default async function handler(req, res) {
 
     if (fetchError) {
       console.error('Main feed query error:', fetchError);
-      return res.status(500).json({ error: 'Failed to fetch articles', debug: fetchError.message, code: fetchError.code, columns: selectColumns });
+      return res.status(500).json({ error: 'Failed to fetch articles' });
     }
 
     // -------------------------------------------------------
@@ -386,6 +386,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Main feed error:', error);
-    return res.status(500).json({ error: 'Internal server error', debug: error.message, stack: error.stack?.split('\n').slice(0, 3) });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
