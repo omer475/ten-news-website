@@ -175,6 +175,28 @@ export default async function handler(req, res) {
 
     const useEmbeddings = tasteVector && Array.isArray(tasteVector) && tasteVector.length > 0;
 
+    // -------------------------------------------------------
+    // 1b. Fetch recently seen article IDs to exclude from feed
+    // -------------------------------------------------------
+    let seenArticleIds = new Set();
+    if (user_id) {
+      try {
+        const { data: seenEvents } = await supabase
+          .from('user_article_events')
+          .select('article_id')
+          .eq('user_id', user_id)
+          .in('event_type', ['article_view', 'article_engaged', 'article_exit'])
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .not('article_id', 'is', null);
+        if (seenEvents) {
+          seenArticleIds = new Set(seenEvents.map(e => e.article_id));
+          console.log(`[feed/main] Excluding ${seenArticleIds.size} seen articles for user ${user_id.substring(0, 8)}`);
+        }
+      } catch (e) {
+        // Non-critical — continue without exclusion
+      }
+    }
+
     // Personalized = private cache, unpersonalized = shared cache
     if (userPrefs) {
       res.setHeader('Cache-Control', 'private, max-age=120');
@@ -272,9 +294,13 @@ export default async function handler(req, res) {
     });
 
     // -------------------------------------------------------
-    // 5. Sort by personalized score DESC, then id DESC
+    // 5. Exclude seen articles, then sort by score DESC
     // -------------------------------------------------------
-    scored.sort((a, b) => {
+    const unseen = seenArticleIds.size > 0
+      ? scored.filter(a => !seenArticleIds.has(a.id))
+      : scored;
+
+    unseen.sort((a, b) => {
       if (b._final_score !== a._final_score) return b._final_score - a._final_score;
       return b.id - a.id;
     });
@@ -283,7 +309,7 @@ export default async function handler(req, res) {
     // 6. Parse cursor and paginate
     // -------------------------------------------------------
     // Cursor format: "score_id" e.g. "1050.5_36200"
-    let cursorFiltered = scored;
+    let cursorFiltered = unseen;
 
     if (cursor) {
       const underscoreIdx = cursor.indexOf('_');
@@ -296,7 +322,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid cursor format. Expected "score_id".' });
       }
 
-      cursorFiltered = scored.filter(a => {
+      cursorFiltered = unseen.filter(a => {
         if (a._final_score < cursorScore) return true;
         if (a._final_score === cursorScore && a.id < cursorId) return true;
         return false;
@@ -381,7 +407,7 @@ export default async function handler(req, res) {
       articles: formattedArticles,
       next_cursor: nextCursor,
       has_more: hasMore,
-      total: scored.length,
+      total: unseen.length,
     });
 
   } catch (error) {
