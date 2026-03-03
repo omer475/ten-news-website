@@ -737,7 +737,7 @@ def run_complete_pipeline():
     print(f"\n✅ Step 1 Complete: {len(approved_articles)} approved, {filtered_count} filtered")
 
     # INTEREST SCORE FILTERING: Remove low-interest articles before expensive pipeline
-    MIN_INTEREST_SCORE = int(os.getenv('MIN_INTEREST_SCORE', '5'))
+    MIN_INTEREST_SCORE = int(os.getenv('MIN_INTEREST_SCORE', '4'))
     interest_filtered = []
     interest_kept = []
     for article in approved_articles:
