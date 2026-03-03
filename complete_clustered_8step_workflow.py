@@ -1237,8 +1237,10 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
             
             ai_rejected_image = False
             if not valid_candidates:
-                print(f"   ⚠️ [Cluster {cluster_id}] No image found — will publish without image")
-                selected_image = None
+                print(f"   🚫 [Cluster {cluster_id}] ELIMINATED — no valid image candidates")
+                update_cluster_status(cluster_id, 'skipped', 'no_images_available',
+                    'No valid image candidates found')
+                return False
 
             if valid_candidates:
                 valid_candidates.sort(key=lambda x: x['quality_score'], reverse=True)
@@ -1566,45 +1568,13 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                 except Exception as e:
                     print(f"   ⚠️ [Cluster {cluster_id}] Tagging failed: {e}")
             
-            # STEP 10.5: IMAGE DECISION (score-based)
-            # If AI rejected all candidate images, use score to decide:
-            #   score >= 820 → generate AI editorial illustration
-            #   score < 820  → eliminate article entirely
+            # STEP 10.5: IMAGE DECISION
+            # If AI rejected all candidate images, eliminate the article
             if ai_rejected_image:
-                if article_score >= 820:
-                    print(f"\n🎨 [Cluster {cluster_id}] STEP 10.5: GENERATING AI IMAGE (score {article_score} >= 820)")
-                    try:
-                        art_prompt = f"""Create a conceptual editorial illustration for this news headline: {title}
-
-STYLE: Clean, modern editorial illustration. Minimalist, professional news graphic.
-Simple shapes, bold composition, muted color palette.
-NO text, NO words, NO letters in the image.
-NO realistic human faces — use simple abstract figures if people are needed.
-The image should work as a thumbnail for a news article."""
-
-                        with gemini_semaphore:
-                            base64_data, mime_type = _generate_gemini_image(gemini_key, art_prompt, '16:9')
-
-                        if base64_data:
-                            import uuid
-                            filename = f"article-{cluster_id}-{uuid.uuid4().hex[:8]}"
-                            ai_image_url = upload_image_to_storage(base64_data, filename, mime_type)
-                            if ai_image_url:
-                                synthesized['image_url'] = ai_image_url
-                                synthesized['image_source'] = 'AI Generated'
-                                synthesized['image_score'] = 100
-                                print(f"   ✅ [Cluster {cluster_id}] AI image generated and uploaded")
-                            else:
-                                print(f"   ⚠️ [Cluster {cluster_id}] AI image upload failed — publishing without image")
-                        else:
-                            print(f"   ⚠️ [Cluster {cluster_id}] AI image generation failed — publishing without image")
-                    except Exception as e:
-                        print(f"   ⚠️ [Cluster {cluster_id}] AI image generation error: {e} — publishing without image")
-                else:
-                    print(f"\n🚫 [Cluster {cluster_id}] ELIMINATED — AI rejected image and score {article_score} < 820")
-                    update_cluster_status(cluster_id, 'skipped', 'low_score_no_image',
-                        f'Score {article_score} < 820 and no suitable image')
-                    return False
+                print(f"\n🚫 [Cluster {cluster_id}] ELIMINATED — AI rejected all candidate images (no suitable image)")
+                update_cluster_status(cluster_id, 'skipped', 'no_suitable_image',
+                    'AI quality check rejected all candidate images')
+                return False
 
             five_ws = synthesized.get('five_ws', {})
 
