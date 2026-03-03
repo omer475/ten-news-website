@@ -199,7 +199,7 @@ export default async function handler(req, res) {
 
     if (fetchError) {
       console.error('Main feed query error:', fetchError);
-      return res.status(500).json({ error: 'Failed to fetch articles' });
+      return res.status(500).json({ error: 'Failed to fetch articles', debug: fetchError.message, code: fetchError.code, columns: selectColumns });
     }
 
     // -------------------------------------------------------
