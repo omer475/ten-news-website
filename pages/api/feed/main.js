@@ -20,6 +20,32 @@ const ISO_TO_API_COUNTRY = {
 
 const normalizeCountry = (code) => ISO_TO_API_COUNTRY[code] || code.toLowerCase();
 
+// Map generic topic IDs (from iOS onboarding) to article topic codes
+// Each key can expand to multiple codes so a single preference covers related articles
+const TOPIC_EXPANSIONS = {
+  'technology': ['tech_industry', 'ai', 'consumer_tech', 'cybersecurity'],
+  'economy': ['economics', 'stock_markets', 'banking'],
+  'business': ['economics', 'stock_markets', 'banking', 'startups'],
+  'conflict': ['conflicts', 'geopolitics'],
+  'diplomacy': ['geopolitics', 'politics'],
+  'sports': ['football', 'american_football', 'basketball', 'tennis', 'f1', 'cricket', 'combat_sports', 'olympics', 'golf', 'winter_sports', 'ice_hockey', 'rugby', 'swimming'],
+  'entertainment': ['entertainment', 'music', 'gaming'],
+  'crypto': ['crypto', 'cryptocurrency'],
+  'finance': ['stock_markets', 'banking', 'startups'],
+  'transportation': ['travel'],
+};
+
+/** Expand user topic IDs into the set of article topic codes they should match */
+const expandTopics = (topics) => {
+  const expanded = new Set();
+  for (const t of topics) {
+    const mapped = TOPIC_EXPANSIONS[t];
+    if (mapped) mapped.forEach(code => expanded.add(code));
+    expanded.add(t); // keep original too in case it's already a valid code
+  }
+  return [...expanded];
+};
+
 // Lightweight columns for scoring — only columns confirmed to exist (from for-you.js)
 // No heavy text blobs, no embedding by default
 const SCORING_COLUMNS = 'id, ai_final_score, created_at, published_at, url, title_news, source, category, countries, topics, topic_relevance, country_relevance, image_url';
@@ -154,7 +180,7 @@ export default async function handler(req, res) {
           userPrefs = {
             home_country: userData.home_country,
             followed_countries: dbCountries,
-            followed_topics: dbTopics,
+            followed_topics: expandTopics(dbTopics),
           };
           tasteVector = userData.taste_vector;
         }
@@ -169,7 +195,7 @@ export default async function handler(req, res) {
       userPrefs = {
         home_country: home_country ? normalizeCountry(home_country) : null,
         followed_countries: followed_countries ? followed_countries.split(',').map(normalizeCountry) : [],
-        followed_topics: followed_topics ? followed_topics.split(',') : [],
+        followed_topics: followed_topics ? expandTopics(followed_topics.split(',')) : [],
       };
     }
 
