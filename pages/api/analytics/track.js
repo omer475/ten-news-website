@@ -1,5 +1,6 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { evolveTasteVector } from '../../../lib/embeddings'
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
@@ -115,10 +116,81 @@ export default async function handler(req, res) {
     }
 
     console.log('[analytics] Event stored successfully:', event_type)
+
+    // Evolve taste vector based on signal strength
+    let learningRate = null
+    if (event_type === 'article_saved' && article_id) {
+      learningRate = 0.15
+    } else if (event_type === 'article_engaged' && article_id) {
+      learningRate = 0.10
+    } else if (event_type === 'article_exit' && article_id && view_seconds) {
+      if (view_seconds >= 30) learningRate = 0.12
+      else if (view_seconds >= 15) learningRate = 0.07
+      else if (view_seconds >= 5) learningRate = 0.03
+    }
+
+    if (learningRate !== null) {
+      try {
+        await evolveTasteVectorAsync(admin, user.id, article_id, learningRate)
+        console.log(`[analytics] Taste vector evolution triggered: ${event_type}, lr=${learningRate}, seconds=${view_seconds || 'n/a'}`)
+      } catch (err) {
+        console.error('[analytics] Taste vector evolution error (non-fatal):', err.message)
+      }
+    }
+
     return res.status(200).json({ ok: true })
   } catch (e) {
     console.error('Analytics track error:', e)
     return res.status(500).json({ error: 'Internal server error' })
   }
+}
+
+/**
+ * Evolve the user's taste vector toward the engaged article's embedding.
+ * Runs async (fire-and-forget) so it doesn't slow down the analytics response.
+ */
+async function evolveTasteVectorAsync(admin, userId, articleId, learningRate = 0.1) {
+  // Fetch user's current taste vector
+  const { data: profile, error: profileError } = await admin
+    .from('profiles')
+    .select('taste_vector, taste_vector_version')
+    .eq('id', userId)
+    .single()
+
+  if (profileError || !profile?.taste_vector) {
+    return // No taste vector to evolve
+  }
+
+  // Fetch article embedding
+  const { data: article, error: articleError } = await admin
+    .from('published_articles')
+    .select('embedding')
+    .eq('id', articleId)
+    .single()
+
+  if (articleError || !article?.embedding) {
+    return // No article embedding available
+  }
+
+  const currentVector = profile.taste_vector
+  const articleVector = article.embedding
+
+  if (!Array.isArray(currentVector) || !Array.isArray(articleVector) || currentVector.length !== articleVector.length) {
+    return
+  }
+
+  const newVector = evolveTasteVector(currentVector, articleVector, learningRate)
+  const newVersion = Math.max(2, (profile.taste_vector_version || 1) + 1)
+
+  await admin
+    .from('profiles')
+    .update({
+      taste_vector: newVector,
+      taste_vector_version: newVersion,
+      taste_vector_updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+
+  console.log(`[analytics] Taste vector evolved for user ${userId.substring(0, 8)}, version: ${newVersion}, lr: ${learningRate}`)
 }
 
