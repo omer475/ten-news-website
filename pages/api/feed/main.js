@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { calculateFinalScore } from '../../../lib/personalization';
+import { calculateFinalScore, calculateEmbeddingScore } from '../../../lib/personalization';
+import { cosineSimilarity } from '../../../lib/embeddings';
 
 const safeJsonParse = (value, fallback = null) => {
   if (!value) return fallback;
@@ -18,6 +19,9 @@ const ISO_TO_API_COUNTRY = {
 };
 
 const normalizeCountry = (code) => ISO_TO_API_COUNTRY[code] || code.toLowerCase();
+
+// Lightweight columns for scoring (no heavy text blobs, no embedding by default)
+const SCORING_COLUMNS = 'id, ai_final_score, created_at, published_at, url, title_news, title, source, countries, topics, topic_relevance, country_relevance';
 
 const formatArticle = (article) => {
   const summaryBulletsNews = safeJsonParse(article.summary_bullets_news, []);
@@ -123,16 +127,17 @@ export default async function handler(req, res) {
     } = req.query;
 
     // -------------------------------------------------------
-    // 1. Resolve user preferences
+    // 1. Resolve user preferences + taste vector
     // -------------------------------------------------------
     let userPrefs = null;
+    let tasteVector = null;
 
     // Try database lookup first if user_id provided
     if (user_id) {
       try {
         const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('home_country, followed_countries, followed_topics')
+          .select('home_country, followed_countries, followed_topics, taste_vector')
           .eq('id', user_id)
           .single();
 
@@ -150,6 +155,7 @@ export default async function handler(req, res) {
             followed_countries: dbCountries,
             followed_topics: dbTopics,
           };
+          tasteVector = userData.taste_vector;
         }
       } catch (profileError) {
         console.error('Profile lookup failed:', profileError.message);
@@ -166,6 +172,8 @@ export default async function handler(req, res) {
       };
     }
 
+    const useEmbeddings = tasteVector && Array.isArray(tasteVector) && tasteVector.length > 0;
+
     // Personalized = private cache, unpersonalized = shared cache
     if (userPrefs) {
       res.setHeader('Cache-Control', 'private, max-age=120');
@@ -174,13 +182,15 @@ export default async function handler(req, res) {
     }
 
     // -------------------------------------------------------
-    // 2. Fetch all articles from last 24 hours
+    // 2. Lightweight scoring query (small columns only, no text blobs)
+    //    Embedding added only when user has a taste vector
     // -------------------------------------------------------
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const selectColumns = SCORING_COLUMNS + (useEmbeddings ? ', embedding' : '');
 
     const { data: allArticles, error: fetchError } = await supabase
       .from('published_articles')
-      .select('*')
+      .select(selectColumns)
       .gte('created_at', twentyFourHoursAgo)
       .order('ai_final_score', { ascending: false, nullsFirst: false })
       .order('id', { ascending: false })
@@ -210,18 +220,36 @@ export default async function handler(req, res) {
     });
 
     // -------------------------------------------------------
-    // 4. Score each article (tag-based personalization)
+    // 4. Score each article (embedding-based or tag-based)
     // -------------------------------------------------------
     const scored = filtered.map(article => {
       if (!userPrefs) {
-        return { ...article, _final_score: article.ai_final_score || 0, _match_reasons: [], _scoring_method: 'raw' };
+        return { id: article.id, _final_score: article.ai_final_score || 0, _match_reasons: [], _scoring_method: 'raw' };
       }
 
       const countries = safeJsonParse(article.countries, []);
       const topics = safeJsonParse(article.topics, []);
       const topicRelevance = safeJsonParse(article.topic_relevance, {});
       const countryRelevance = safeJsonParse(article.country_relevance, {});
+      const articleEmbedding = article.embedding;
 
+      // Embedding scoring if both user and article have vectors
+      if (useEmbeddings && articleEmbedding && Array.isArray(articleEmbedding) && articleEmbedding.length > 0) {
+        const embScore = calculateEmbeddingScore(
+          { ...article, embedding: articleEmbedding },
+          tasteVector,
+          cosineSimilarity
+        );
+        // Scale 0-1 → 0-1500 to be comparable with tag-based scores
+        return {
+          id: article.id,
+          _final_score: embScore.final_score * 1500,
+          _match_reasons: [`Embedding: relevance=${embScore.content_relevance.toFixed(2)}, editorial=${embScore.editorial_importance.toFixed(2)}, recency=${embScore.recency.toFixed(2)}`],
+          _scoring_method: 'embedding',
+        };
+      }
+
+      // Fallback: tag-based scoring
       const result = calculateFinalScore(
         {
           ...article,
@@ -235,7 +263,7 @@ export default async function handler(req, res) {
       );
 
       return {
-        ...article,
+        id: article.id,
         _final_score: result.final_score,
         _match_reasons: result.match_reasons,
         _scoring_method: 'tag',
@@ -285,18 +313,33 @@ export default async function handler(req, res) {
     }
 
     // -------------------------------------------------------
-    // 7. Fetch world event associations
+    // 7. Full article data for this page only (20 rows max — safe even with all columns)
     // -------------------------------------------------------
-    const articleIds = pageArticles.map(a => a.id);
+    const pageIds = pageArticles.map(a => a.id);
+    let fullArticleMap = {};
     let eventMap = {};
-    if (articleIds.length > 0) {
-      try {
-        const { data: articleEvents } = await supabase
+
+    if (pageIds.length > 0) {
+      // Fetch full article data + world events in parallel
+      const [fullDataResult, articleEventsResult] = await Promise.all([
+        supabase
+          .from('published_articles')
+          .select('*')
+          .in('id', pageIds),
+        supabase
           .from('article_world_events')
           .select('article_id, event_id')
-          .in('article_id', articleIds);
+          .in('article_id', pageIds),
+      ]);
 
-        if (articleEvents && articleEvents.length > 0) {
+      if (fullDataResult.data) {
+        fullDataResult.data.forEach(a => { fullArticleMap[a.id] = a; });
+      }
+
+      // Resolve world events
+      const articleEvents = articleEventsResult.data;
+      if (articleEvents && articleEvents.length > 0) {
+        try {
           const eventIds = [...new Set(articleEvents.map(ae => ae.event_id))];
           const { data: events } = await supabase
             .from('world_events')
@@ -312,22 +355,23 @@ export default async function handler(req, res) {
               }
             });
           }
+        } catch (e) {
+          // Non-critical
         }
-      } catch (e) {
-        // Non-critical
       }
     }
 
     // -------------------------------------------------------
-    // 8. Format response
+    // 8. Format response using full article data
     // -------------------------------------------------------
-    const formattedArticles = pageArticles.map(article => {
-      const formatted = formatArticle(article);
-      formatted.final_score = article._final_score;
-      formatted.match_reasons = article._match_reasons;
-      formatted.scoring_method = article._scoring_method;
-      if (eventMap[article.id]) {
-        formatted.world_event = eventMap[article.id];
+    const formattedArticles = pageArticles.map(scoredArticle => {
+      const fullArticle = fullArticleMap[scoredArticle.id] || scoredArticle;
+      const formatted = formatArticle(fullArticle);
+      formatted.final_score = scoredArticle._final_score;
+      formatted.match_reasons = scoredArticle._match_reasons;
+      formatted.scoring_method = scoredArticle._scoring_method;
+      if (eventMap[scoredArticle.id]) {
+        formatted.world_event = eventMap[scoredArticle.id];
       }
       return formatted;
     });
