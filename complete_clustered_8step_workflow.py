@@ -1404,7 +1404,9 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                                 'timeline': generation_result.get('timeline'),
                                 'details': generation_result.get('details'),
                                 'graph': generation_result.get('graph'),
-                                'map': generation_result.get('map')
+                                'map': generation_result.get('map'),
+                                'scorecard': generation_result.get('scorecard'),
+                                'recipe': generation_result.get('recipe')
                             }
                             new_components = {k: v for k, v in new_components.items() if v is not None}
 
@@ -1578,6 +1580,11 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
 
             five_ws = synthesized.get('five_ws', {})
 
+            # Suppress five_ws for recipe articles (not relevant)
+            article_type = component_result.get('article_type', 'standard') if isinstance(component_result, dict) else 'standard'
+            if article_type == 'recipe':
+                five_ws = None
+
             source_titles = [
                 {
                     'title': s.get('title', 'Unknown'),
@@ -1660,6 +1667,9 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     'details': components.get('details'),
                     'graph': components.get('graph'),
                     'map': components.get('map'),
+                    'scorecard': components.get('scorecard'),
+                    'recipe': components.get('recipe'),
+                    'article_type': article_type,
                     'components_order': successful_components,
                     'num_sources': len(cluster_sources),
                     'published_at': datetime.now().isoformat(),
@@ -2065,7 +2075,7 @@ HIGHLIGHT COUNTS:
     "where": "Location(s), 20-50 chars, **1-2 highlights**",
     "why": "Cause/reason, 30-60 chars, **1-2 highlights**"
   }},
-  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World"
+  "category": "Tech|Business|Science|Politics|Finance|Crypto|Health|Entertainment|Sports|World|Gaming|Food"
 }}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -386,6 +386,69 @@ BAD GRAPH DATA:
 ✗ Made-up projections
 
 ═══════════════════════════════════════════════════════════════
+🏆 SCORE CARD
+═══════════════════════════════════════════════════════════════
+
+Generate match result data for a completed sports match.
+
+REQUIREMENTS:
+✓ Both team names
+✓ Both final scores (integers)
+✓ Scorers with team, player name, and minute
+✓ Competition name
+✓ Key match stats (possession, shots, etc.)
+✓ Standing impact if available
+
+OUTPUT FORMAT:
+{
+  "home_team": "Arsenal",
+  "away_team": "Chelsea",
+  "home_score": 3,
+  "away_score": 1,
+  "scorers": [
+    {"team": "home", "player": "Saka", "minute": "23'"},
+    {"team": "home", "player": "Havertz", "minute": "55'"},
+    {"team": "home", "player": "Trossard", "minute": "78'"},
+    {"team": "away", "player": "Palmer", "minute": "41'"}
+  ],
+  "stats": {"possession": ["58%", "42%"], "shots": ["14(7)", "9(3)"]},
+  "competition": "Premier League",
+  "standing_impact": "1st (+3 pts)"
+}
+
+BAD SCORE CARD:
+✗ Missing team names or scores
+✗ Made-up scorer names not in the article
+✗ No competition name
+
+═══════════════════════════════════════════════════════════════
+🍳 RECIPE CARD
+═══════════════════════════════════════════════════════════════
+
+Generate recipe summary data.
+
+REQUIREMENTS:
+✓ Ingredients list (at least 2 ingredients)
+✓ Cook time
+✓ Difficulty level (Easy/Medium/Hard)
+✓ Number of servings
+✓ Approximate calories per serving (if available, otherwise estimate)
+
+OUTPUT FORMAT:
+{
+  "ingredients": ["200g pasta", "2 cloves garlic", "150ml cream", "50g parmesan"],
+  "cook_time": "30 min",
+  "difficulty": "Easy",
+  "serves": 4,
+  "calories": 480
+}
+
+BAD RECIPE CARD:
+✗ Fewer than 2 ingredients
+✗ Missing cook time
+✗ No servings count
+
+═══════════════════════════════════════════════════════════════
 FINAL OUTPUT
 ═══════════════════════════════════════════════════════════════
 
@@ -395,7 +458,9 @@ Return ONLY valid JSON with selected components:
   "map": [...],
   "timeline": [...],
   "details": [...],
-  "graph": {...}
+  "graph": {...},
+  "scorecard": {...},
+  "recipe": {...}
 }
 
 Include ONLY components that were selected.
@@ -729,6 +794,35 @@ class GeminiComponentWriter:
                 else:
                     errors.append("No valid map locations survived validation")
                     del result['map']
+
+        # --- SCORECARD validation ---
+        if 'scorecard' in selected_components:
+            if 'scorecard' not in result:
+                errors.append("Scorecard selected but not in output")
+            elif not isinstance(result['scorecard'], dict):
+                errors.append("Scorecard is not a dict")
+                del result['scorecard']
+            else:
+                sc = result['scorecard']
+                if not sc.get('home_team') or not sc.get('away_team'):
+                    errors.append("Scorecard missing team names")
+                    del result['scorecard']
+                elif sc.get('home_score') is None or sc.get('away_score') is None:
+                    errors.append("Scorecard missing scores")
+                    del result['scorecard']
+
+        # --- RECIPE validation ---
+        if 'recipe' in selected_components:
+            if 'recipe' not in result:
+                errors.append("Recipe selected but not in output")
+            elif not isinstance(result['recipe'], dict):
+                errors.append("Recipe is not a dict")
+                del result['recipe']
+            else:
+                ingredients = result['recipe'].get('ingredients', [])
+                if not isinstance(ingredients, list) or len(ingredients) < 2:
+                    errors.append(f"Recipe has {len(ingredients) if isinstance(ingredients, list) else 0} ingredients (need at least 2)")
+                    del result['recipe']
 
         # Check if at least one component survived
         surviving = [c for c in selected_components if c in result]

@@ -123,6 +123,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
   const [showDetails, setShowDetails] = useState({});
   const [showMap, setShowMap] = useState({});
   const [showGraph, setShowGraph] = useState({});
+  const [showScorecard, setShowScorecard] = useState({});
+  const [showRecipe, setShowRecipe] = useState({});
   const [darkMode, setDarkMode] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('morning'); // Default to avoid hydration mismatch
@@ -411,6 +413,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
     if (story.timeline && story.timeline.length > 0) count++;
     if (story.map) count++;
     if (story.graph) count++;
+    if (story.scorecard) count++;
+    if (story.recipe) count++;
     return count;
   };
 
@@ -429,14 +433,20 @@ export default function Home({ initialNews, initialWorldEvents }) {
             return story.map;
           case 'graph':
             return story.graph;
+          case 'scorecard':
+            return story.scorecard;
+          case 'recipe':
+            return story.recipe;
           default:
         return false;
         }
       });
     }
-    
+
     // Fallback: check which components exist (old behavior)
     const types = [];
+    if (story.scorecard) types.push('scorecard');
+    if (story.recipe) types.push('recipe');
     if (story.details && story.details.length > 0) types.push('details');
     if (story.timeline && story.timeline.length > 0) types.push('timeline');
     if (story.map) types.push('map');
@@ -450,7 +460,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
     if (showDetails[index]) return 'details';
     if (showMap[index]) return 'map';
     if (showGraph[index]) return 'graph';
-    
+    if (showScorecard[index]) return 'scorecard';
+    if (showRecipe[index]) return 'recipe';
+
     // If no state is set, default to the first component from the components array
     const availableTypes = getAvailableInformationTypes(story);
     return availableTypes.length > 0 ? availableTypes[0] : 'details';
@@ -474,7 +486,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
     setShowDetails(prev => ({ ...prev, [index]: false }));
     setShowMap(prev => ({ ...prev, [index]: false }));
     setShowGraph(prev => ({ ...prev, [index]: false }));
-    
+    setShowScorecard(prev => ({ ...prev, [index]: false }));
+    setShowRecipe(prev => ({ ...prev, [index]: false }));
+
     // Reset expanded states - components should start collapsed
     setExpandedTimeline(prev => ({ ...prev, [index]: false }));
     setExpandedGraph(prev => ({ ...prev, [index]: false }));
@@ -493,6 +507,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
         break;
       case 'graph':
         setShowGraph(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'scorecard':
+        setShowScorecard(prev => ({ ...prev, [index]: true }));
+        break;
+      case 'recipe':
+        setShowRecipe(prev => ({ ...prev, [index]: true }));
         break;
     }
   };
@@ -6856,9 +6876,9 @@ export default function Home({ initialNews, initialWorldEvents }) {
                           gap: 'var(--gap-size, 8px)',
                           flex: '0 0 auto'
                         }}>
-                          {/* Language Icon Button with Working Switcher Dropdown */}
-                          <div 
-                            style={{ 
+                          {/* Language Icon Button with Working Switcher Dropdown - hidden for recipe articles */}
+                          {story.article_type !== 'recipe' && <div
+                            style={{
                               position: 'relative',
                               flex: '0 0 auto',
                               zIndex: 10010
@@ -6902,8 +6922,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                 );
                               })()}
                                 </button>
-                                
-                        </div>
+
+                        </div>}
 
                         {/* Dynamic Information Switch - Always show - Right Side */}
                         {getAvailableComponentsCount(story) >= 1 && (
@@ -6935,6 +6955,8 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                     setShowDetails(prev => ({ ...prev, [index]: false }));
                                     setShowMap(prev => ({ ...prev, [index]: false }));
                                     setShowGraph(prev => ({ ...prev, [index]: false }));
+                                    setShowScorecard(prev => ({ ...prev, [index]: false }));
+                                    setShowRecipe(prev => ({ ...prev, [index]: false }));
 
                                     // Set the selected state
                                     switch (infoType) {
@@ -6949,6 +6971,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                         break;
                                       case 'graph':
                                         setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'scorecard':
+                                        setShowScorecard(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'recipe':
+                                        setShowRecipe(prev => ({ ...prev, [index]: true }));
                                         break;
                                     }
                                   }}
@@ -6956,15 +6984,17 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     console.log(`${infoType} option touched for story`, index);
-                                    
+
                                     // Disable auto-rotation for this article when user manually interacts
                                     setAutoRotationEnabled(prev => ({ ...prev, [index]: false }));
-                                    
+
                                     // Reset all states
                                     setShowTimeline(prev => ({ ...prev, [index]: false }));
                                     setShowDetails(prev => ({ ...prev, [index]: false }));
                                     setShowMap(prev => ({ ...prev, [index]: false }));
                                     setShowGraph(prev => ({ ...prev, [index]: false }));
+                                    setShowScorecard(prev => ({ ...prev, [index]: false }));
+                                    setShowRecipe(prev => ({ ...prev, [index]: false }));
 
                                     // Set the selected state
                                     switch (infoType) {
@@ -6979,6 +7009,12 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                         break;
                                       case 'graph':
                                         setShowGraph(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'scorecard':
+                                        setShowScorecard(prev => ({ ...prev, [index]: true }));
+                                        break;
+                                      case 'recipe':
+                                        setShowRecipe(prev => ({ ...prev, [index]: true }));
                                         break;
                                     }
                                   }}
@@ -7076,6 +7112,37 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                             borderRadius: '1px'
                                           }}></div>
                                         </div>
+                                      </div>
+                                    )}
+                                    {infoType === 'scorecard' && (
+                                      <div style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '12px'
+                                      }}>
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill={darkMode ? '#ffffff' : '#000000'}>
+                                          <rect x="1" y="3" width="18" height="14" rx="2" fill="none" stroke={darkMode ? '#ffffff' : '#000000'} strokeWidth="1.5"/>
+                                          <line x1="10" y1="3" x2="10" y2="17" stroke={darkMode ? '#ffffff' : '#000000'} strokeWidth="1.5"/>
+                                          <line x1="1" y1="10" x2="19" y2="10" stroke={darkMode ? '#ffffff' : '#000000'} strokeWidth="1"/>
+                                        </svg>
+                                      </div>
+                                    )}
+                                    {infoType === 'recipe' && (
+                                      <div style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '12px'
+                                      }}>
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill={darkMode ? '#ffffff' : '#000000'}>
+                                          <circle cx="10" cy="12" r="7" fill="none" stroke={darkMode ? '#ffffff' : '#000000'} strokeWidth="1.5"/>
+                                          <path d="M7 5 Q10 1 13 5" fill="none" stroke={darkMode ? '#ffffff' : '#000000'} strokeWidth="1.5"/>
+                                        </svg>
                                       </div>
                                     )}
                                   </div>
@@ -7468,11 +7535,11 @@ export default function Home({ initialNews, initialWorldEvents }) {
                         {/* Default to first component from components array */}
                         {(() => {
                           // If no state is set, default to first component in the components array
-                          if (!showDetails[index] && !showTimeline[index] && !showMap[index] && !showGraph[index]) {
+                          if (!showDetails[index] && !showTimeline[index] && !showMap[index] && !showGraph[index] && !showScorecard[index] && !showRecipe[index]) {
                             const availableTypes = getAvailableInformationTypes(story);
                             if (availableTypes.length > 0) {
                               const firstType = availableTypes[0];
-                              
+
                               switch (firstType) {
                                 case 'details':
                                   setShowDetails(prev => {
@@ -7500,6 +7567,22 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                   break;
                                 case 'graph':
                                   setShowGraph(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'scorecard':
+                                  setShowScorecard(prev => {
+                                    if (!prev[index]) {
+                                      return { ...prev, [index]: true };
+                                    }
+                                    return prev;
+                                  });
+                                  break;
+                                case 'recipe':
+                                  setShowRecipe(prev => {
                                     if (!prev[index]) {
                                       return { ...prev, [index]: true };
                                     }
@@ -8086,6 +8169,214 @@ export default function Home({ initialNews, initialWorldEvents }) {
                                       </div>
                                     );
                                   })}
+                                </div>
+                              </div>
+                            );
+                          } else if (showScorecard[index]) {
+                            // Show Score Card
+                            return story.scorecard && (
+                              <div
+                                className="glass-container details-container-desktop details-container-animated"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: '85px',
+                                  maxHeight: '85px',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflow: 'hidden',
+                                  display: 'flex'
+                                }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
+                                <div className="glass-content" style={{
+                                  height: '100%',
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  padding: '8px 16px',
+                                  gap: '4px'
+                                }}>
+                                  {/* Score line: Home Score VS Score Away */}
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '12px',
+                                    width: '100%'
+                                  }}>
+                                    <span style={{
+                                      fontSize: '10px',
+                                      fontWeight: '700',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px',
+                                      color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                                      maxWidth: '80px',
+                                      textAlign: 'right',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}>{story.scorecard.home_team}</span>
+                                    <span style={{
+                                      fontSize: '28px',
+                                      fontWeight: '800',
+                                      color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
+                                      lineHeight: '1'
+                                    }}>{story.scorecard.home_score}</span>
+                                    <span style={{
+                                      fontSize: '10px',
+                                      fontWeight: '600',
+                                      color: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+                                      letterSpacing: '1px'
+                                    }}>VS</span>
+                                    <span style={{
+                                      fontSize: '28px',
+                                      fontWeight: '800',
+                                      color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
+                                      lineHeight: '1'
+                                    }}>{story.scorecard.away_score}</span>
+                                    <span style={{
+                                      fontSize: '10px',
+                                      fontWeight: '700',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px',
+                                      color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+                                      maxWidth: '80px',
+                                      textAlign: 'left',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}>{story.scorecard.away_team}</span>
+                                  </div>
+                                  {/* Competition name */}
+                                  {story.scorecard.competition && (
+                                    <div style={{
+                                      fontSize: '9px',
+                                      fontWeight: '600',
+                                      color: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.8px'
+                                    }}>{story.scorecard.competition}</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          } else if (showRecipe[index]) {
+                            // Show Recipe Card
+                            return story.recipe && (
+                              <div
+                                className="glass-container details-container-desktop details-container-animated"
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '0',
+                                  left: '0',
+                                  right: '0',
+                                  height: '85px',
+                                  maxHeight: '85px',
+                                  minHeight: '85px',
+                                  zIndex: '10',
+                                  overflow: 'hidden',
+                                  display: 'flex'
+                                }}>
+                                <div className="glass-filter"></div>
+                                <div className="glass-overlay"></div>
+                                <div className="glass-specular"></div>
+                                <div className="glass-content" style={{
+                                  height: '100%',
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-around',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '10px 16px'
+                                }}>
+                                  {/* Cook Time */}
+                                  <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    flex: 1,
+                                    color: darkMode ? '#ffffff' : '#000000'
+                                  }}>
+                                    <div style={{
+                                      color: darkMode ? 'rgba(255,255,255,0.7)' : '#000000',
+                                      fontSize: 'var(--info-label-size, 9px)',
+                                      fontWeight: '700',
+                                      marginBottom: '3px',
+                                      textAlign: 'center',
+                                      opacity: 0.7,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px'
+                                    }}>TIME</div>
+                                    <div style={{
+                                      color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
+                                      fontSize: 'var(--info-value-size, 18px)',
+                                      fontWeight: '800',
+                                      textAlign: 'center',
+                                      lineHeight: '1.1'
+                                    }}>{story.recipe.cook_time || '—'}</div>
+                                  </div>
+                                  {/* Difficulty */}
+                                  <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    flex: 1,
+                                    color: darkMode ? '#ffffff' : '#000000'
+                                  }}>
+                                    <div style={{
+                                      color: darkMode ? 'rgba(255,255,255,0.7)' : '#000000',
+                                      fontSize: 'var(--info-label-size, 9px)',
+                                      fontWeight: '700',
+                                      marginBottom: '3px',
+                                      textAlign: 'center',
+                                      opacity: 0.7,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px'
+                                    }}>DIFFICULTY</div>
+                                    <div style={{
+                                      color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
+                                      fontSize: 'var(--info-value-size, 18px)',
+                                      fontWeight: '800',
+                                      textAlign: 'center',
+                                      lineHeight: '1.1'
+                                    }}>{story.recipe.difficulty || '—'}</div>
+                                  </div>
+                                  {/* Serves */}
+                                  <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    flex: 1,
+                                    color: darkMode ? '#ffffff' : '#000000'
+                                  }}>
+                                    <div style={{
+                                      color: darkMode ? 'rgba(255,255,255,0.7)' : '#000000',
+                                      fontSize: 'var(--info-label-size, 9px)',
+                                      fontWeight: '700',
+                                      marginBottom: '3px',
+                                      textAlign: 'center',
+                                      opacity: 0.7,
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.5px'
+                                    }}>SERVES</div>
+                                    <div style={{
+                                      color: imageDominantColors[index]?.infoBox || imageDominantColors[index]?.blurColor || '#3A4A5E',
+                                      fontSize: 'var(--info-value-size, 18px)',
+                                      fontWeight: '800',
+                                      textAlign: 'center',
+                                      lineHeight: '1.1'
+                                    }}>{story.recipe.serves || '—'}</div>
+                                  </div>
                                 </div>
                               </div>
                             );

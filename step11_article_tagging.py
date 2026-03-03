@@ -70,7 +70,7 @@ politics, geopolitics, conflicts, human_rights
 football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming
 
 **Lifestyle:**
-entertainment, music, gaming, travel
+entertainment, music, gaming, travel, cooking, food_industry
 
 ---
 
@@ -175,8 +175,8 @@ Return valid JSON (no markdown, no code blocks):
 **Countries (22):**
 usa, uk, china, russia, germany, france, spain, italy, ukraine, turkiye, ireland, india, japan, south_korea, pakistan, singapore, israel, canada, brazil, nigeria, south_africa, australia
 
-**Topics (34):**
-economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming, entertainment, music, gaming, travel
+**Topics (36):**
+economics, stock_markets, banking, startups, ai, tech_industry, consumer_tech, cybersecurity, space, science, climate, health, biotech, politics, geopolitics, conflicts, human_rights, football, american_football, basketball, tennis, f1, cricket, combat_sports, olympics, golf, winter_sports, ice_hockey, rugby, swimming, entertainment, music, gaming, travel, cooking, food_industry
 """
 
 # Valid country codes
@@ -197,7 +197,8 @@ VALID_TOPICS = [
     'football', 'american_football', 'basketball', 'tennis', 'f1',
     'cricket', 'combat_sports', 'olympics', 'golf', 'winter_sports',
     'ice_hockey', 'rugby', 'swimming',
-    'entertainment', 'music', 'gaming', 'travel'
+    'entertainment', 'music', 'gaming', 'travel',
+    'cooking', 'food_industry'
 ]
 
 
@@ -333,6 +334,8 @@ def _fallback_topic_from_category(category: str) -> List[str]:
         'finance': ['economics'],
         'sports': ['olympics'],
         'entertainment': ['entertainment'],
+        'gaming': ['gaming'],
+        'food': ['cooking'],
         'other': ['politics'],
     }
     

@@ -2066,6 +2066,264 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Canada'
     },
+
+    # ========================================
+    # SPORTS (24 feeds)
+    # ========================================
+
+    # ESPN
+    {
+        'name': 'ESPN Top Headlines',
+        'url': 'https://www.espn.com/espn/rss/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Soccer',
+        'url': 'https://www.espn.com/espn/rss/soccer/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN NBA',
+        'url': 'https://www.espn.com/espn/rss/nba/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN NFL',
+        'url': 'https://www.espn.com/espn/rss/nfl/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Tennis',
+        'url': 'https://www.espn.com/espn/rss/tennis/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN MMA',
+        'url': 'https://www.espn.com/espn/rss/mma/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Boxing',
+        'url': 'https://www.espn.com/espn/rss/boxing/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Golf',
+        'url': 'https://www.espn.com/espn/rss/golf/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN NHL',
+        'url': 'https://www.espn.com/espn/rss/nhl/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN MLB',
+        'url': 'https://www.espn.com/espn/rss/mlb/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+
+    # BBC Sport
+    {
+        'name': 'BBC Sport',
+        'url': 'https://feeds.bbci.co.uk/sport/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport Football',
+        'url': 'https://feeds.bbci.co.uk/sport/football/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport F1',
+        'url': 'https://feeds.bbci.co.uk/sport/formula1/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport Tennis',
+        'url': 'https://feeds.bbci.co.uk/sport/tennis/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport American Football',
+        'url': 'https://feeds.bbci.co.uk/sport/american-football/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport Rugby Union',
+        'url': 'https://feeds.bbci.co.uk/sport/rugby-union/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport Rugby League',
+        'url': 'https://feeds.bbci.co.uk/sport/rugby-league/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport Athletics',
+        'url': 'https://feeds.bbci.co.uk/sport/athletics/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'BBC Sport Golf',
+        'url': 'https://feeds.bbci.co.uk/sport/golf/rss.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+
+    # Other Sports
+    {
+        'name': 'F1 Official',
+        'url': 'https://www.formula1.com/content/fom-website/en/latest/all.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Motorsport.com F1',
+        'url': 'https://www.motorsport.com/rss/f1/news/',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'CBS Sports NBA',
+        'url': 'https://www.cbssports.com/rss/headlines/nba/',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'MMA Fighting',
+        'url': 'https://www.mmafighting.com/rss/current',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPNcricinfo',
+        'url': 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # GAMING (9 feeds)
+    # ========================================
+    {
+        'name': 'IGN',
+        'url': 'https://feeds.feedburner.com/ign/all',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Polygon',
+        'url': 'https://www.polygon.com/rss/index.xml',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Kotaku',
+        'url': 'https://kotaku.com/rss',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'PC Gamer',
+        'url': 'https://www.pcgamer.com/rss/',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'GameSpot',
+        'url': 'https://www.gamespot.com/feeds/mashup/',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'GameSpot News',
+        'url': 'https://www.gamespot.com/feeds/news/',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Eurogamer',
+        'url': 'https://www.eurogamer.net/feed',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Rock Paper Shotgun',
+        'url': 'https://www.rockpapershotgun.com/feed',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Nintendo Life',
+        'url': 'https://www.nintendolife.com/feeds/latest',
+        'category': 'gaming',
+        'tier': 'premium'
+    },
+
+    # ========================================
+    # FOOD & RECIPES (7 feeds)
+    # ========================================
+    {
+        'name': 'Serious Eats',
+        'url': 'https://www.seriouseats.com/feed',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Bon Appetit',
+        'url': 'https://www.bonappetit.com/feed/rss',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'The Kitchn',
+        'url': 'https://www.thekitchn.com/rss',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Taste of Home',
+        'url': 'https://www.tasteofhome.com/feed/',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Food52',
+        'url': 'https://food52.com/blog.rss',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Epicurious',
+        'url': 'https://www.epicurious.com/feed/rss',
+        'category': 'food',
+        'tier': 'premium'
+    },
+    {
+        'name': 'Delish',
+        'url': 'https://www.delish.com/feed/',
+        'category': 'food',
+        'tier': 'premium'
+    },
 ]
 
 # Total: ~340 Elite Premium RSS Feeds
