@@ -9,7 +9,7 @@ struct AsyncCachedImage: View {
     @State private var image: UIImage?
     @State private var isLoading = true
 
-    private static let cache = NSCache<NSURL, UIImage>()
+    nonisolated(unsafe) static let cache = NSCache<NSURL, UIImage>()
 
     var body: some View {
         Group {

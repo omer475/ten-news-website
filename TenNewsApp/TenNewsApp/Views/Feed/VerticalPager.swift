@@ -1,63 +1,52 @@
 import SwiftUI
 
-/// Custom vertical pager using DragGesture for TikTok-style swiping.
-/// Implements snap-to-page with smooth spring animation.
+/// Vertical pager using ScrollView with paging behavior.
+/// Uses native scroll so system features (tab bar minimize) work automatically.
 struct VerticalPager<Item: Identifiable, Content: View>: View {
     @Binding var currentIndex: Int
     let pages: [Item]
     @ViewBuilder let content: (Item) -> Content
 
-    @State private var dragOffset: CGFloat = 0
+    @State private var scrolledID: Item.ID?
+    @State private var lastHapticIndex: Int = 0
 
     var body: some View {
         GeometryReader { geo in
-            let height = geo.size.height
-
-            ZStack {
-                ForEach(Array(visibleRange.enumerated()), id: \.element) { _, index in
-                    if index >= 0 && index < pages.count {
-                        content(pages[index])
-                            .frame(width: geo.size.width, height: height)
-                            .offset(y: CGFloat(index - currentIndex) * height + dragOffset)
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    ForEach(pages) { page in
+                        content(page)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $scrolledID)
+            .onChange(of: scrolledID) { _, newID in
+                guard let newID,
+                      let index = pages.firstIndex(where: { $0.id == newID }) else { return }
+                if index != lastHapticIndex {
+                    HapticManager.light()
+                    lastHapticIndex = index
+                }
+                currentIndex = index
+            }
+            .onChange(of: currentIndex) { _, newIndex in
+                if newIndex < pages.count {
+                    let targetID = pages[newIndex].id
+                    if scrolledID != targetID {
+                        scrolledID = targetID
                     }
                 }
             }
-            .gesture(
-                DragGesture(minimumDistance: 20)
-                    .onChanged { value in
-                        // Rubber-band effect at boundaries
-                        let translation = value.translation.height
-                        if (currentIndex == 0 && translation > 0) ||
-                           (currentIndex == pages.count - 1 && translation < 0) {
-                            dragOffset = translation * 0.3
-                        } else {
-                            dragOffset = translation
-                        }
-                    }
-                    .onEnded { value in
-                        let threshold = height * 0.2
-                        let predicted = value.predictedEndTranslation.height
-
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            if predicted < -threshold && currentIndex < pages.count - 1 {
-                                currentIndex += 1
-                                HapticManager.light()
-                            } else if predicted > threshold && currentIndex > 0 {
-                                currentIndex -= 1
-                                HapticManager.light()
-                            }
-                            dragOffset = 0
-                        }
-                    }
-            )
+            .onAppear {
+                if currentIndex < pages.count {
+                    scrolledID = pages[currentIndex].id
+                    lastHapticIndex = currentIndex
+                }
+            }
         }
-    }
-
-    /// Only render nearby items for performance (current +/- 1)
-    private var visibleRange: Range<Int> {
-        let start = max(0, currentIndex - 1)
-        let end = min(pages.count, currentIndex + 2)
-        return start..<end
     }
 }
 

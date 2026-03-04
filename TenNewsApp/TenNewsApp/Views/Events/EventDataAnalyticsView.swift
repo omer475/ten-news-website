@@ -1,106 +1,110 @@
 import Charts
 import SwiftUI
 
-/// Data Analytics section — renders Power BI-style charts with Swift Charts.
+/// Data Analytics section — renders charts with Swift Charts in white cards.
 struct EventDataAnalyticsView: View {
     let data: DataAnalyticsData
     var accentColor: Color = Color(hex: "#0057B7")
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Summary
-            if let summary = data.summary, !summary.isEmpty {
-                Text(summary)
-                    .font(.system(size: 15))
-                    .foregroundStyle(.primary.opacity(0.8))
-                    .lineSpacing(5)
-            }
-
-            // Charts
+        VStack(alignment: .leading, spacing: 16) {
             if let charts = data.charts {
                 ForEach(Array(charts.enumerated()), id: \.offset) { _, chart in
-                    chartCard(chart)
+                    AnimatedChartCard(chart: chart, accentColor: accentColor)
                 }
             }
         }
     }
+}
 
-    // MARK: - Chart Card
+// MARK: - Animated Chart Card
 
-    private func chartCard(_ chart: AnalyticsChart) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Title
-            if let title = chart.title {
-                Text(title)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.primary)
+private struct AnimatedChartCard: View {
+    let chart: AnalyticsChart
+    var accentColor: Color
+
+    @State private var animationProgress: CGFloat = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // White card
+            VStack(alignment: .leading, spacing: 0) {
+                // Title header
+                if let title = chart.title {
+                    HStack {
+                        Text(title)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+                    .padding(.bottom, 6)
+                }
+
+                // Chart area
+                chartView(for: chart)
+                    .frame(height: chartHeight(for: chart))
+                    .padding(.horizontal, 14)
+                    .padding(.top, 6)
+                    .padding(.bottom, 16)
             }
+            .background(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.black.opacity(0.06), lineWidth: 0.5))
 
-            // Description
-            if let desc = chart.description, !desc.isEmpty {
-                Text(desc)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .lineSpacing(3)
-            }
-
-            // Chart
-            chartView(for: chart)
-                .frame(height: chartHeight(for: chart))
-
-            // Source
+            // Source outside card
             if let source = chart.source, !source.isEmpty {
                 HStack(spacing: 4) {
                     Image(systemName: "info.circle")
                         .font(.system(size: 10))
                     Text(source)
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                 }
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.primary.opacity(0.18))
+                .padding(.top, 8)
+                .padding(.leading, 4)
             }
         }
-        .padding(16)
-        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 18))
+        .scrollProgress($animationProgress)
     }
-
-    // MARK: - Chart Routing
 
     @ViewBuilder
     private func chartView(for chart: AnalyticsChart) -> some View {
         switch chart.chartType?.lowercased() {
-        case "line":
-            lineChart(chart)
-        case "area":
-            areaChart(chart)
-        case "bar":
-            barChart(chart)
-        case "stacked_bar":
-            stackedBarChart(chart)
-        case "horizontal_bar":
-            horizontalBarChart(chart)
-        case "pie", "donut":
-            pieChart(chart, isDonut: chart.chartType?.lowercased() == "donut")
-        default:
-            barChart(chart)
+        case "line": lineChart(chart)
+        case "area": areaChart(chart)
+        case "bar": barChart(chart)
+        case "stacked_bar": stackedBarChart(chart)
+        case "horizontal_bar": horizontalBarChart(chart)
+        case "pie", "donut": pieChart(chart, isDonut: chart.chartType?.lowercased() == "donut")
+        default: barChart(chart)
         }
     }
 
     private func chartHeight(for chart: AnalyticsChart) -> CGFloat {
         switch chart.chartType?.lowercased() {
-        case "pie", "donut": return 220
+        case "pie", "donut": return 200
         case "horizontal_bar": return CGFloat(max(150, (chart.series?.first?.data?.count ?? 3) * 36))
-        default: return 200
+        default: return 180
         }
     }
 
     // MARK: - Line Chart
 
     private func lineChart(_ chart: AnalyticsChart) -> some View {
-        Chart {
-            ForEach(chartEntries(chart), id: \.id) { entry in
+        let entries = chartEntries(chart)
+        let maxY = entries.map(\.y).max() ?? 1
+        let minY = entries.map(\.y).min() ?? 0
+        let yLower = minY < 0 ? minY * 1.15 : 0.0
+        let yUpper = maxY * 1.15
+
+        return Chart {
+            ForEach(entries, id: \.id) { entry in
                 LineMark(
                     x: .value(chart.xLabel ?? "X", entry.x),
-                    y: .value(chart.yLabel ?? "Y", entry.y)
+                    y: .value(chart.yLabel ?? "Y", entry.y * animationProgress)
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
                 .interpolationMethod(.catmullRom)
@@ -108,56 +112,42 @@ struct EventDataAnalyticsView: View {
 
                 PointMark(
                     x: .value(chart.xLabel ?? "X", entry.x),
-                    y: .value(chart.yLabel ?? "Y", entry.y)
+                    y: .value(chart.yLabel ?? "Y", entry.y * animationProgress)
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
                 .symbolSize(20)
+                .opacity(Double(animationProgress))
             }
         }
         .chartForegroundStyleScale(seriesColorMapping(chart))
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(.secondary.opacity(0.3))
-                AxisValueLabel {
-                    if let v = value.as(Double.self) {
-                        Text(formatValue(v, format: chart.yFormat))
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let v = value.as(String.self) {
-                        Text(v)
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
+        .chartYScale(domain: yLower...yUpper)
+        .chartPlotStyle { $0.clipped() }
+        .standardAxes(chart: chart, formatValue: formatValue)
         .chartLegend(position: .bottom, alignment: .leading)
     }
 
     // MARK: - Area Chart
 
     private func areaChart(_ chart: AnalyticsChart) -> some View {
-        Chart {
-            ForEach(chartEntries(chart), id: \.id) { entry in
+        let entries = chartEntries(chart)
+        let maxY = entries.map(\.y).max() ?? 1
+        let minY = entries.map(\.y).min() ?? 0
+        let yLower = minY < 0 ? minY * 1.15 : 0.0
+        let yUpper = maxY * 1.15
+
+        return Chart {
+            ForEach(entries, id: \.id) { entry in
                 AreaMark(
                     x: .value(chart.xLabel ?? "X", entry.x),
-                    y: .value(chart.yLabel ?? "Y", entry.y)
+                    y: .value(chart.yLabel ?? "Y", entry.y * animationProgress)
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
                 .interpolationMethod(.catmullRom)
-                .opacity(0.3)
+                .opacity(0.3 * Double(animationProgress))
 
                 LineMark(
                     x: .value(chart.xLabel ?? "X", entry.x),
-                    y: .value(chart.yLabel ?? "Y", entry.y)
+                    y: .value(chart.yLabel ?? "Y", entry.y * animationProgress)
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
                 .interpolationMethod(.catmullRom)
@@ -165,71 +155,35 @@ struct EventDataAnalyticsView: View {
             }
         }
         .chartForegroundStyleScale(seriesColorMapping(chart))
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(.secondary.opacity(0.3))
-                AxisValueLabel {
-                    if let v = value.as(Double.self) {
-                        Text(formatValue(v, format: chart.yFormat))
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let v = value.as(String.self) {
-                        Text(v)
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
+        .chartYScale(domain: yLower...yUpper)
+        .chartPlotStyle { $0.clipped() }
+        .standardAxes(chart: chart, formatValue: formatValue)
         .chartLegend(position: .bottom, alignment: .leading)
     }
 
     // MARK: - Bar Chart
 
     private func barChart(_ chart: AnalyticsChart) -> some View {
-        Chart {
-            ForEach(chartEntries(chart), id: \.id) { entry in
+        let entries = chartEntries(chart)
+        let maxY = entries.map(\.y).max() ?? 1
+        let minY = entries.map(\.y).min() ?? 0
+        let yLower = minY < 0 ? minY * 1.15 : 0.0
+        let yUpper = maxY * 1.15
+
+        return Chart {
+            ForEach(entries, id: \.id) { entry in
                 BarMark(
                     x: .value(chart.xLabel ?? "X", entry.x),
-                    y: .value(chart.yLabel ?? "Y", entry.y)
+                    y: .value(chart.yLabel ?? "Y", entry.y * animationProgress)
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
                 .cornerRadius(4)
             }
         }
         .chartForegroundStyleScale(seriesColorMapping(chart))
-        .chartYAxis {
-            AxisMarks { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(.secondary.opacity(0.3))
-                AxisValueLabel {
-                    if let v = value.as(Double.self) {
-                        Text(formatValue(v, format: chart.yFormat))
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let v = value.as(String.self) {
-                        Text(v)
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
+        .chartYScale(domain: yLower...yUpper)
+        .chartPlotStyle { $0.clipped() }
+        .standardAxes(chart: chart, formatValue: formatValue)
         .chartLegend(position: .bottom, alignment: .leading)
     }
 
@@ -240,23 +194,24 @@ struct EventDataAnalyticsView: View {
             ForEach(chartEntries(chart), id: \.id) { entry in
                 BarMark(
                     x: .value(chart.xLabel ?? "X", entry.x),
-                    y: .value(chart.yLabel ?? "Y", entry.y),
+                    y: .value(chart.yLabel ?? "Y", entry.y * animationProgress),
                     stacking: .standard
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
-                .cornerRadius(3)
+                .cornerRadius(4)
             }
         }
         .chartForegroundStyleScale(seriesColorMapping(chart))
+        .chartPlotStyle { $0.clipped() }
         .chartYAxis {
             AxisMarks { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(.secondary.opacity(0.3))
+                    .foregroundStyle(.black.opacity(0.08))
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
                         Text(formatValue(v, format: chart.yFormat))
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(.primary.opacity(0.7))
                     }
                 }
             }
@@ -270,7 +225,7 @@ struct EventDataAnalyticsView: View {
         Chart {
             ForEach(chartEntries(chart), id: \.id) { entry in
                 BarMark(
-                    x: .value(chart.yLabel ?? "Value", entry.y),
+                    x: .value(chart.yLabel ?? "Value", entry.y * animationProgress),
                     y: .value(chart.xLabel ?? "Category", entry.x)
                 )
                 .foregroundStyle(by: .value("Series", entry.series))
@@ -278,15 +233,16 @@ struct EventDataAnalyticsView: View {
             }
         }
         .chartForegroundStyleScale(seriesColorMapping(chart))
+        .chartPlotStyle { $0.clipped() }
         .chartXAxis {
             AxisMarks { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
-                    .foregroundStyle(.secondary.opacity(0.3))
+                    .foregroundStyle(.black.opacity(0.08))
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
                         Text(formatValue(v, format: chart.yFormat))
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(.primary.opacity(0.7))
                     }
                 }
             }
@@ -302,7 +258,7 @@ struct EventDataAnalyticsView: View {
         return Chart {
             ForEach(entries, id: \.id) { entry in
                 SectorMark(
-                    angle: .value("Value", entry.y),
+                    angle: .value("Value", entry.y * animationProgress),
                     innerRadius: isDonut ? .ratio(0.55) : .ratio(0),
                     angularInset: 1.5
                 )
@@ -341,25 +297,19 @@ struct EventDataAnalyticsView: View {
 
     private func pieEntries(_ chart: AnalyticsChart) -> [ChartEntry] {
         var entries: [ChartEntry] = []
-        // For pie charts, use the first series' data points as categories
         if let firstSeries = chart.series?.first {
             for (idx, point) in (firstSeries.data ?? []).enumerated() {
                 entries.append(ChartEntry(
-                    id: "pie_\(idx)",
-                    x: point.x ?? "",
-                    y: point.y?.value ?? 0,
-                    series: point.x ?? ""
+                    id: "pie_\(idx)", x: point.x ?? "",
+                    y: point.y?.value ?? 0, series: point.x ?? ""
                 ))
             }
         } else {
-            // Multiple series with single data point each
             for (idx, series) in (chart.series ?? []).enumerated() {
                 let val = series.data?.first?.y?.value ?? 0
                 entries.append(ChartEntry(
-                    id: "pie_\(idx)",
-                    x: series.name ?? "",
-                    y: val,
-                    series: series.name ?? ""
+                    id: "pie_\(idx)", x: series.name ?? "",
+                    y: val, series: series.name ?? ""
                 ))
             }
         }
@@ -367,52 +317,24 @@ struct EventDataAnalyticsView: View {
     }
 
     private func seriesColorMapping(_ chart: AnalyticsChart) -> KeyValuePairs<String, Color> {
-        let pairs = (chart.series ?? []).map { series in
-            let name = series.name ?? "Data"
-            let color = series.color.map { Color(hex: $0) } ?? accentColor
-            return (name, color)
-        }
-        // KeyValuePairs doesn't support dynamic init, use switch for common counts
+        let pairs = (chart.series ?? []).map { s in (s.name ?? "Data", s.color.map { Color(hex: $0) } ?? accentColor) }
         switch pairs.count {
-        case 1:
-            return [pairs[0].0: pairs[0].1]
-        case 2:
-            return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1]
-        case 3:
-            return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1]
-        case 4:
-            return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1, pairs[3].0: pairs[3].1]
-        default:
-            return ["Data": accentColor]
+        case 1: return [pairs[0].0: pairs[0].1]
+        case 2: return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1]
+        case 3: return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1]
+        case 4: return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1, pairs[3].0: pairs[3].1]
+        default: return ["Data": accentColor]
         }
     }
 
     private func pieColorMapping(_ chart: AnalyticsChart) -> KeyValuePairs<String, Color> {
         let entries = pieEntries(chart)
-        let defaultColors: [Color] = [
-            accentColor,
-            Color(hex: "#ef4444"),
-            Color(hex: "#f59e0b"),
-            Color(hex: "#10b981"),
-            Color(hex: "#8b5cf6"),
-            Color(hex: "#06b6d4"),
-            Color(hex: "#ec4899"),
-            Color(hex: "#6366f1"),
-        ]
-
-        // Try to use series colors if available
-        if let firstSeries = chart.series?.first, firstSeries.data?.count == entries.count {
-            // Single series with multiple data points — use default palette
-        } else if let series = chart.series, series.count == entries.count {
-            let pairs = entries.enumerated().map { idx, entry in
-                (entry.x, series[idx].color.map { Color(hex: $0) } ?? defaultColors[idx % defaultColors.count])
-            }
+        let c: [Color] = [accentColor, Color(hex: "#ef4444"), Color(hex: "#f59e0b"), Color(hex: "#10b981"), Color(hex: "#8b5cf6"), Color(hex: "#06b6d4"), Color(hex: "#ec4899"), Color(hex: "#6366f1")]
+        if let series = chart.series, series.count == entries.count, chart.series?.first?.data?.count != entries.count {
+            let pairs = entries.enumerated().map { i, e in (e.x, series[i].color.map { Color(hex: $0) } ?? c[i % c.count]) }
             return buildKVP(pairs)
         }
-
-        let pairs = entries.enumerated().map { idx, entry in
-            (entry.x, defaultColors[idx % defaultColors.count])
-        }
+        let pairs = entries.enumerated().map { i, e in (e.x, c[i % c.count]) }
         return buildKVP(pairs)
     }
 
@@ -426,43 +348,57 @@ struct EventDataAnalyticsView: View {
         case 6: return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1, pairs[3].0: pairs[3].1, pairs[4].0: pairs[4].1, pairs[5].0: pairs[5].1]
         case 7: return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1, pairs[3].0: pairs[3].1, pairs[4].0: pairs[4].1, pairs[5].0: pairs[5].1, pairs[6].0: pairs[6].1]
         default:
-            if pairs.count >= 8 {
-                return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1, pairs[3].0: pairs[3].1, pairs[4].0: pairs[4].1, pairs[5].0: pairs[5].1, pairs[6].0: pairs[6].1, pairs[7].0: pairs[7].1]
-            }
+            if pairs.count >= 8 { return [pairs[0].0: pairs[0].1, pairs[1].0: pairs[1].1, pairs[2].0: pairs[2].1, pairs[3].0: pairs[3].1, pairs[4].0: pairs[4].1, pairs[5].0: pairs[5].1, pairs[6].0: pairs[6].1, pairs[7].0: pairs[7].1] }
             return ["Data": accentColor]
         }
     }
 
-    // MARK: - Value Formatting
-
     private func formatValue(_ value: Double, format: String?) -> String {
         switch format?.lowercased() {
-        case "percent":
-            return "\(Int(value))%"
+        case "percent": return "\(Int(value))%"
         case "currency_b":
-            if value >= 1000 {
-                return "$\(String(format: "%.1f", value / 1000))T"
-            }
-            return "$\(String(format: value == value.rounded() ? "%.0f" : "%.1f", value))B"
+            return value >= 1000 ? "$\(String(format: "%.1f", value / 1000))T" : "$\(String(format: value == value.rounded() ? "%.0f" : "%.1f", value))B"
         case "currency_m":
-            if value >= 1000 {
-                return "$\(String(format: "%.1f", value / 1000))B"
-            }
-            return "$\(String(format: value == value.rounded() ? "%.0f" : "%.1f", value))M"
+            return value >= 1000 ? "$\(String(format: "%.1f", value / 1000))B" : "$\(String(format: value == value.rounded() ? "%.0f" : "%.1f", value))M"
         case "compact":
-            if value >= 1_000_000_000 {
-                return "\(String(format: "%.1f", value / 1_000_000_000))B"
-            } else if value >= 1_000_000 {
-                return "\(String(format: "%.1f", value / 1_000_000))M"
-            } else if value >= 1_000 {
-                return "\(String(format: "%.0f", value / 1_000))K"
-            }
+            if value >= 1_000_000_000 { return "\(String(format: "%.1f", value / 1_000_000_000))B" }
+            else if value >= 1_000_000 { return "\(String(format: "%.1f", value / 1_000_000))M" }
+            else if value >= 1_000 { return "\(String(format: "%.0f", value / 1_000))K" }
             return "\(Int(value))"
         default:
-            if value == value.rounded() {
-                return "\(Int(value))"
-            }
-            return String(format: "%.1f", value)
+            return value == value.rounded() ? "\(Int(value))" : String(format: "%.1f", value)
         }
+    }
+}
+
+// MARK: - Chart Axis Helper
+
+private extension View {
+    func standardAxes(chart: AnalyticsChart, formatValue: @escaping (Double, String?) -> String) -> some View {
+        self
+            .chartYAxis {
+                AxisMarks { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                        .foregroundStyle(.black.opacity(0.08))
+                    AxisValueLabel {
+                        if let v = value.as(Double.self) {
+                            Text(formatValue(v, chart.yFormat))
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundStyle(.primary.opacity(0.7))
+                        }
+                    }
+                }
+            }
+            .chartXAxis {
+                AxisMarks { value in
+                    AxisValueLabel {
+                        if let v = value.as(String.self) {
+                            Text(v)
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundStyle(.primary.opacity(0.7))
+                        }
+                    }
+                }
+            }
     }
 }

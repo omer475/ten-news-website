@@ -6,10 +6,11 @@ final class ArticleDetailViewModel {
     var isLoading = false
     var errorMessage: String?
     var selectedComponent: String = "details"
-    var isBookmarked = false
-
     private let articleService = ArticleService()
     private let analytics = AnalyticsService()
+
+    private var engagementTimer: Task<Void, Never>?
+    private var viewStartTime: Date?
 
     var availableComponents: [String] { article?.availableComponents ?? ["details"] }
 
@@ -25,7 +26,7 @@ final class ArticleDetailViewModel {
             Task {
                 try? await analytics.track(
                     event: "article_detail_view",
-                    properties: ["article_id": id]
+                    articleId: Int(id)
                 )
             }
         } catch {
@@ -42,7 +43,47 @@ final class ArticleDetailViewModel {
     }
 
     func toggleBookmark() {
-        isBookmarked.toggle()
+        guard let article else { return }
+        BookmarkManager.shared.toggle(article)
         HapticManager.light()
+    }
+
+    func isBookmarked(_ articleId: FlexibleID) -> Bool {
+        BookmarkManager.shared.isBookmarked(articleId)
+    }
+
+    // MARK: - Engagement Tracking
+
+    func startEngagementTracking(articleId: Int) {
+        viewStartTime = Date()
+        engagementTimer = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            guard !Task.isCancelled else { return }
+            try? await AnalyticsService().track(
+                event: "article_engaged",
+                articleId: articleId,
+                metadata: ["engaged_seconds": "10"]
+            )
+            _ = self // prevent premature dealloc
+        }
+    }
+
+    func stopEngagementTracking(articleId: Int) {
+        engagementTimer?.cancel()
+        engagementTimer = nil
+
+        if let start = viewStartTime {
+            let seconds = Int(Date().timeIntervalSince(start))
+            if seconds >= 10 {
+                Task {
+                    try? await analytics.track(
+                        event: "article_exit",
+                        articleId: articleId,
+                        metadata: ["total_active_seconds": String(seconds)]
+                    )
+                }
+            }
+        }
+        viewStartTime = nil
     }
 }

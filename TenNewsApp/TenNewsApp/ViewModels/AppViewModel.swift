@@ -35,8 +35,11 @@ final class AppViewModel {
     func logout() {
         currentUser = nil
         isAuthenticated = false
+        isOnboardingComplete = false
+        preferences = .empty
         keychain.accessToken = nil
         keychain.refreshToken = nil
+        defaults.clearAll()
     }
 
     func updatePreferences(_ prefs: UserPreferences) {

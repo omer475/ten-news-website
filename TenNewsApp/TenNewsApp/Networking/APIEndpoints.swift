@@ -3,10 +3,11 @@ import Foundation
 enum APIEndpoints {
     // MARK: - News Feed
     static let newsFeed = "/api/news"
+    static let mainFeed = "/api/feed/main"
     static let forYouFeed = "/api/feed/for-you"
 
     // MARK: - World Events
-    static let worldEvents = "/api/world-events"
+    static let worldEvents = "/api/world-events?limit=100"
     static func eventDetail(slug: String) -> String { "/api/world-events/\(slug)" }
 
     // MARK: - Article

@@ -2,31 +2,66 @@ import SwiftUI
 
 @MainActor @Observable
 final class FeedViewModel {
-    var articles: [Article] = []
+    var allArticles: [Article] = []
     var worldEvents: [WorldEvent] = []
     var currentIndex: Int = 0
     var isLoading = false
     var errorMessage: String?
     var hasMore = true
-    private var currentPage = 1
+    private var nextCursor: String? = nil
+    private var currentPreferences: UserPreferences?
+    private var currentUserId: String?
 
     private let feedService = FeedService()
     private let eventService = WorldEventService()
     private let analytics = AnalyticsService()
 
-    func loadInitialData() async {
+    /// Articles in server-provided order (embedding-scored or tag-scored),
+    /// filtered to exclude those belonging to followed events.
+    /// Server handles all personalization via taste vector embeddings.
+    func articles(for preferences: UserPreferences = .empty) -> [Article] {
+        let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
+        guard !followedSlugs.isEmpty else { return allArticles }
+        return allArticles.filter { article in
+            guard let slug = article.worldEvent?.slug else { return true }
+            return !followedSlugs.contains(slug)
+        }
+    }
+
+    /// Legacy accessor for views that don't pass preferences
+    var articles: [Article] {
+        let followedSlugs = Set(UserDefaults.standard.stringArray(forKey: "followed_event_slugs") ?? [])
+        guard !followedSlugs.isEmpty else { return allArticles }
+        return allArticles.filter { article in
+            guard let slug = article.worldEvent?.slug else { return true }
+            return !followedSlugs.contains(slug)
+        }
+    }
+
+    func loadInitialData(preferences: UserPreferences? = nil, userId: String? = nil) async {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
+        currentPreferences = preferences
+        currentUserId = userId
         do {
-            async let feedTask = feedService.fetchTodayFeed(page: 1, pageSize: 15)
-            async let eventsTask = eventService.fetchWorldEvents()
-            let (feedResponse, eventsResponse) = try await (feedTask, eventsTask)
-            articles = feedResponse.articles
-            worldEvents = eventsResponse.events
-            currentPage = 1
+            let feedResponse = try await feedService.fetchMainFeed(
+                preferences: preferences,
+                userId: userId
+            )
+            allArticles = feedResponse.articles
+            nextCursor = feedResponse.nextCursor
+            hasMore = feedResponse.hasMore
             isLoading = false
+
+            // Load world events in background — don't block the feed
+            Task {
+                if let eventsResponse = try? await eventService.fetchWorldEvents() {
+                    worldEvents = eventsResponse.events
+                }
+            }
         } catch {
+            print("❌ FeedViewModel loadInitialData error: \(error)")
             errorMessage = error.localizedDescription
             isLoading = false
         }
@@ -35,11 +70,15 @@ final class FeedViewModel {
     func loadMoreIfNeeded() async {
         guard hasMore, !isLoading else { return }
         isLoading = true
-        currentPage += 1
         do {
-            let response = try await feedService.fetchTodayFeed(page: currentPage, pageSize: 15)
-            articles.append(contentsOf: response.articles)
-            hasMore = !response.articles.isEmpty
+            let response = try await feedService.fetchMainFeed(
+                cursor: nextCursor,
+                preferences: currentPreferences,
+                userId: currentUserId
+            )
+            allArticles.append(contentsOf: response.articles)
+            nextCursor = response.nextCursor
+            hasMore = response.hasMore
             isLoading = false
         } catch {
             isLoading = false
@@ -49,13 +88,12 @@ final class FeedViewModel {
     func trackArticleView(at index: Int) {
         guard index < articles.count else { return }
         let article = articles[index]
+        ReadingHistoryManager.shared.recordView(of: article)
         Task {
             try? await analytics.track(
                 event: "article_view",
-                properties: [
-                    "article_id": article.id.stringValue,
-                    "index": String(index)
-                ]
+                articleId: Int(article.id.stringValue),
+                metadata: ["index": String(index)]
             )
         }
     }
@@ -71,4 +109,5 @@ final class FeedViewModel {
         let hex = categoryColors[article.category ?? ""] ?? "#3366CC"
         return Color(hex: hex)
     }
+
 }

@@ -8,14 +8,8 @@ final class OnboardingViewModel {
         case countries = 2
         case topics = 3
 
-        var title: String {
-            switch self {
-            case .welcome: return "Welcome to Ten News"
-            case .country: return "Where are you from?"
-            case .countries: return "Follow Countries"
-            case .topics: return "Pick Your Topics"
-            }
-        }
+        var stepNumber: Int { rawValue }
+        var totalSelectionSteps: Int { 3 }
     }
 
     var currentStep: Step = .welcome
@@ -23,11 +17,9 @@ final class OnboardingViewModel {
     var selectedCountries: Set<String> = []
     var selectedTopics: Set<String> = []
 
-    /// Available data
     var availableCountries: [Country] { Countries.all }
     var availableTopics: [Topic] { Topics.all }
 
-    /// Validation
     var canProceed: Bool {
         switch currentStep {
         case .welcome:
@@ -43,8 +35,9 @@ final class OnboardingViewModel {
 
     var isLastStep: Bool { currentStep == .topics }
 
-    var progress: Double {
-        Double(currentStep.rawValue + 1) / Double(Step.allCases.count)
+    var selectionProgress: Double {
+        guard currentStep != .welcome else { return 0 }
+        return Double(currentStep.rawValue) / 3.0
     }
 
     // MARK: - Actions
@@ -52,7 +45,7 @@ final class OnboardingViewModel {
     func nextStep() {
         guard canProceed else { return }
         if let next = Step(rawValue: currentStep.rawValue + 1) {
-            withAnimation(AppAnimations.pageTransition) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                 currentStep = next
             }
             HapticManager.selection()
@@ -61,7 +54,7 @@ final class OnboardingViewModel {
 
     func previousStep() {
         if let prev = Step(rawValue: currentStep.rawValue - 1) {
-            withAnimation(AppAnimations.pageTransition) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                 currentStep = prev
             }
         }
@@ -69,14 +62,12 @@ final class OnboardingViewModel {
 
     func selectCountry(_ countryId: String) {
         selectedCountry = countryId
-        // Auto-add home country to followed countries
         selectedCountries.insert(countryId)
         HapticManager.selection()
     }
 
     func toggleCountry(_ countryId: String) {
         if selectedCountries.contains(countryId) {
-            // Don't allow removing home country
             guard countryId != selectedCountry else { return }
             selectedCountries.remove(countryId)
         } else {
@@ -94,7 +85,16 @@ final class OnboardingViewModel {
         HapticManager.light()
     }
 
-    /// Build UserPreferences from onboarding selections
+    /// Debug: jump to a specific step with mock data
+    func debugJumpTo(_ step: Step) {
+        selectedCountry = "US"
+        selectedCountries = ["US", "GB", "JP"]
+        selectedTopics = ["technology", "ai", "science", "space", "politics"]
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            currentStep = step
+        }
+    }
+
     func buildPreferences() -> UserPreferences {
         UserPreferences(
             homeCountry: selectedCountry,

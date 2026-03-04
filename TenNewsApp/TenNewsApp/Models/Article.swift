@@ -100,6 +100,8 @@ struct Article: Codable, Identifiable, Hashable {
     let worldEvent: ArticleWorldEvent?
     let countries: [String]?
     let topics: [String]?
+    let countryRelevance: [String: Int]?
+    let topicRelevance: [String: Int]?
     let matchReasons: [String]?
 
     enum CodingKeys: String, CodingKey {
@@ -129,6 +131,8 @@ struct Article: Codable, Identifiable, Hashable {
         case baseScore = "base_score"
         case worldEvent = "world_event"
         case countries, topics
+        case countryRelevance = "country_relevance"
+        case topicRelevance = "topic_relevance"
         case matchReasons = "match_reasons"
     }
 

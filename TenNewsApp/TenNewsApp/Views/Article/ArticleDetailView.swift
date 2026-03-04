@@ -6,6 +6,7 @@ struct ArticleDetailView: View {
     let initialArticle: Article?
 
     @State private var viewModel = ArticleDetailViewModel()
+    @State private var showSafari = false
     @Environment(\.dismiss) private var dismiss
 
     private var article: Article? { viewModel.article ?? initialArticle }
@@ -30,7 +31,7 @@ struct ArticleDetailView: View {
                     Button {
                         viewModel.toggleBookmark()
                     } label: {
-                        Image(systemName: viewModel.isBookmarked ? "bookmark.fill" : "bookmark")
+                        Image(systemName: viewModel.isBookmarked(articleId) ? "bookmark.fill" : "bookmark")
                     }
 
                     if let article, let urlString = article.url, let url = URL(string: urlString) {
@@ -46,6 +47,22 @@ struct ArticleDetailView: View {
                 viewModel.article = initialArticle
             } else {
                 await viewModel.loadArticle(id: articleId.stringValue)
+            }
+        }
+        .onAppear {
+            if let intId = Int(articleId.stringValue) {
+                viewModel.startEngagementTracking(articleId: intId)
+            }
+        }
+        .onDisappear {
+            if let intId = Int(articleId.stringValue) {
+                viewModel.stopEngagementTracking(articleId: intId)
+            }
+        }
+        .sheet(isPresented: $showSafari) {
+            if let article, let urlString = article.url, let url = URL(string: urlString) {
+                SafariView(url: url)
+                    .ignoresSafeArea()
             }
         }
     }
@@ -71,9 +88,16 @@ struct ArticleDetailView: View {
 
                     HStack(spacing: 8) {
                         if let source = article.source {
-                            Text(source)
-                                .font(Theme.Fonts.captionMedium())
-                                .foregroundStyle(Theme.Colors.accent)
+                            Button {
+                                if article.url != nil {
+                                    showSafari = true
+                                }
+                            } label: {
+                                Text(source)
+                                    .font(Theme.Fonts.captionMedium())
+                                    .foregroundStyle(Theme.Colors.accent)
+                            }
+                            .buttonStyle(.plain)
                         }
                         TimeAgoText(article.publishedAt)
                         Spacer()

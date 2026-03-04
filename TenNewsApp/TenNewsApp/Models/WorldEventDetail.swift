@@ -46,6 +46,11 @@ struct WorldEventFull: Codable, Identifiable, Hashable {
         return URL(string: urlString)
     }
 
+    var coverImage: URL? {
+        guard let urlString = coverImageUrl, !urlString.isEmpty else { return nil }
+        return URL(string: urlString)
+    }
+
     var importanceLevel: Double { importance?.value ?? 0 }
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
@@ -174,7 +179,7 @@ struct HistoricalComparison: Codable, Hashable {
     let differences: [String]?
     let keyLessons: String?
     let outcomeType: String?
-    let durationMonths: Int?
+    let durationMonths: FlexibleDouble?
 
     enum CodingKeys: String, CodingKey {
         case years, summary, similarity, description, resolution, similarities, differences

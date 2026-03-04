@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Color Hex Init
 
@@ -91,6 +92,45 @@ extension String {
         }
 
         return result
+    }
+
+    /// Builds a concatenated `Text` where **bold** segments get `highlightColor`
+    /// and normal segments get `baseColor`.
+    func coloredTitle(
+        size: CGFloat,
+        weight: Font.Weight = .bold,
+        baseColor: Color = .white,
+        highlightColor: Color
+    ) -> Text {
+        let parts = self.components(separatedBy: "**")
+        var combined = Text("")
+        for (i, part) in parts.enumerated() {
+            if part.isEmpty { continue }
+            if i % 2 == 1 {
+                combined = combined + Text(part)
+                    .font(.system(size: size, weight: weight))
+                    .foregroundColor(highlightColor)
+            } else {
+                combined = combined + Text(part)
+                    .font(.system(size: size, weight: weight))
+                    .foregroundColor(baseColor)
+            }
+        }
+        return combined
+    }
+}
+
+// MARK: - Color Adjustments
+
+extension Color {
+    /// Returns a vivid, bright version of this color — high saturation, high brightness
+    func vivid() -> Color {
+        let uiColor = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return Color(hue: Double(h),
+                     saturation: Double(max(s, 0.6)),
+                     brightness: Double(max(b, 0.85)))
     }
 }
 

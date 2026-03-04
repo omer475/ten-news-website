@@ -5,14 +5,18 @@ struct AnalyticsService {
 
     func track(
         event: String,
-        properties: [String: String]? = nil,
-        userId: String? = nil
+        articleId: Int? = nil,
+        category: String? = nil,
+        source: String? = nil,
+        metadata: [String: String]? = nil
     ) async throws {
         let body = AnalyticsEvent(
-            event: event,
-            properties: properties,
-            userId: userId,
-            timestamp: ISO8601DateFormatter().string(from: Date())
+            eventType: event,
+            articleId: articleId,
+            sessionId: nil,
+            category: category,
+            source: source,
+            metadata: metadata
         )
         let _: MessageResponse = try await client.post(APIEndpoints.analyticsTrack, body: body)
     }

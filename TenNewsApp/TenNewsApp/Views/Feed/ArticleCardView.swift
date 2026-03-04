@@ -13,12 +13,28 @@ struct ArticleCardView: View {
     @State private var contentMode: ContentMode = .bullets
     @State private var infoMode: InfoMode = .details
     @State private var mapExpanded = false
+    @State private var timelineExpanded = false
+    @State private var graphExpanded = false
+    @State private var graphAnimated = false
+    @State private var imageIsLight = false
+    @State private var showSafari = false
+
+    // Engagement tracking
+    @State private var engagementTimer: Task<Void, Never>?
+    @State private var viewStartTime: Date?
+    private let analytics = AnalyticsService()
 
     private var effectiveColor: Color { dominantColor ?? accentColor }
+    private var overlayIconColor: Color { imageIsLight ? Color(white: 0.15) : .white }
     private var effectiveBlurColor: Color { dominantBlurColor ?? accentColor.opacity(0.9) }
 
     private let padding: CGFloat = 20
     private let imageRatio: CGFloat = 0.42
+
+    /// Device screen corner radius (read via private key, fallback 55)
+    private var screenCornerRadius: CGFloat {
+        (UIScreen.main.value(forKey: "_displayCornerRadius") as? CGFloat) ?? 55
+    }
 
     enum ContentMode: String, CaseIterable { case bullets, fiveW }
     enum InfoMode: String, CaseIterable, Hashable {
@@ -66,19 +82,43 @@ struct ArticleCardView: View {
                 // 5) Info box pinned to bottom
                 VStack {
                     Spacer()
-                    infoBox(maxExpandedHeight: h - imgH - 34 - 36 - 50)
+                    infoBox(maxExpandedHeight: h - imgH - 34 - 36 - 80)
                         .environment(\.colorScheme, .dark)
                         .padding(.horizontal, padding)
-                        .padding(.bottom, 50)
+                        .padding(.bottom, 80)
                 }
 
                 // 6) Floating badges on image
                 floatingOverlays
             }
         }
+        .overlay {
+            if article.isImportant {
+                // Match the device's screen corner radius
+                RoundedRectangle(cornerRadius: screenCornerRadius)
+                    .stroke(effectiveColor.opacity(0.7), lineWidth: 1.5)
+                    .padding(4)
+            }
+        }
         .ignoresSafeArea()
+        .onAppear {
+            // Set initial info mode to first component from API order
+            if let first = article.availableInfoModes.first {
+                infoMode = first
+            }
+            startEngagementTracking()
+        }
+        .onDisappear {
+            stopEngagementTracking()
+        }
         .fullScreenCover(isPresented: $showDetail) {
             ArticleDetailView(articleId: article.id, initialArticle: article)
+        }
+        .sheet(isPresented: $showSafari) {
+            if let urlString = article.url, let url = URL(string: urlString) {
+                SafariView(url: url)
+                    .ignoresSafeArea()
+            }
         }
         .fullScreenCover(isPresented: $showEventDetail) {
             if let event = article.worldEvent {
@@ -88,6 +128,7 @@ struct ArticleCardView: View {
                         name: event.name,
                         slug: event.slug,
                         imageUrl: nil,
+                        coverImageUrl: nil,
                         blurColor: nil,
                         importance: nil,
                         status: "active",
@@ -118,17 +159,34 @@ struct ArticleCardView: View {
                 .clipped()
                 .onAppear { extractDominantColor(from: imageUrl) }
         } else {
-            categoryGradient
+            // No image — dark editorial gradient
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            accentColor.opacity(0.4),
+                            accentColor.opacity(0.15),
+                            Color(white: 0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .frame(width: width, height: height)
-                .overlay {
-                    VStack(spacing: 10) {
-                        Text(article.emoji ?? "\u{1F4F0}")
-                            .font(.system(size: 48))
-                        Text((article.category ?? "News").uppercased())
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.8))
-                            .tracking(2)
-                    }
+                .overlay(alignment: .topLeading) {
+                    // Subtle category label
+                    Text((article.category ?? "News").uppercased())
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.25))
+                        .tracking(3)
+                        .padding(.top, height * 0.45)
+                        .padding(.leading, 20)
+                }
+                .onAppear {
+                    // Set dark tones for no-image cards
+                    dominantColor = accentColor
+                    dominantBlurColor = Color(white: 0.08)
+                    imageIsLight = false
                 }
         }
     }
@@ -173,35 +231,22 @@ struct ArticleCardView: View {
     }
 
     private func highlightedTitle(_ text: String) -> some View {
-        let parts = text.components(separatedBy: "**")
-        var views: [Text] = []
-        for (i, part) in parts.enumerated() {
-            if part.isEmpty { continue }
-            if i % 2 == 1 {
-                views.append(
-                    Text(part)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                )
-            } else {
-                views.append(
-                    Text(part)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                )
-            }
-        }
-        return views.reduce(Text("")) { $0 + $1 }
-            .lineSpacing(2)
-            .tracking(-0.8)
-            .shadow(color: .black.opacity(0.35), radius: 8, y: 2)
+        text.coloredTitle(
+            size: 28,
+            weight: .bold,
+            baseColor: .white,
+            highlightColor: effectiveBlurColor.vivid()
+        )
+        .lineSpacing(2)
+        .tracking(-0.8)
+        .shadow(color: .black.opacity(0.35), radius: 8, y: 2)
     }
 
     // MARK: - Content Area (below image — clean background)
 
     private func contentArea(width: CGFloat, height: CGFloat, imageHeight: CGFloat) -> some View {
         let contentTop = imageHeight + 34
-        let infoBoxBottom: CGFloat = 50 + 85 // padding + info box height
+        let infoBoxBottom: CGFloat = 80 + 85 // padding + info box height
         let availableForBullets = height - contentTop - 36 - 8 - infoBoxBottom - 8
 
         return VStack(alignment: .leading, spacing: 0) {
@@ -236,24 +281,31 @@ struct ArticleCardView: View {
     private var controlBar: some View {
         GlassEffectContainer {
             HStack(spacing: 0) {
-                // Source logo + name + time
-                HStack(spacing: 8) {
-                    if let source = article.source {
-                        Text(String(source.prefix(1)).uppercased())
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 18, height: 18)
-                            .background(effectiveColor.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 5))
-
-                        Text(source)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
+                // Source logo + name + time — tappable to open article
+                Button {
+                    if article.url != nil {
+                        showSafari = true
                     }
+                } label: {
+                    HStack(spacing: 8) {
+                        if let source = article.source {
+                            Text(String(source.prefix(1)).uppercased())
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 18, height: 18)
+                                .background(effectiveColor.opacity(0.8))
+                                .clipShape(RoundedRectangle(cornerRadius: 5))
 
-                    TimeAgoText(article.publishedAt)
+                            Text(source)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                        }
+
+                        TimeAgoText(article.publishedAt, color: .white)
+                    }
                 }
+                .buttonStyle(.plain)
 
                 Spacer(minLength: 8)
 
@@ -295,7 +347,7 @@ struct ArticleCardView: View {
                 .foregroundStyle(.white.opacity(0.9))
                 .contentTransition(.numericText())
                 .frame(width: 46, height: 22)
-                .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 7))
+                .glassEffect(.regular.tint(effectiveColor.opacity(0.03)).interactive(), in: RoundedRectangle(cornerRadius: 7))
         }
         .buttonStyle(.plain)
     }
@@ -309,6 +361,8 @@ struct ArticleCardView: View {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.72)) {
                         infoMode = mode
                         if mode != .map { mapExpanded = false }
+                        if mode != .timeline { timelineExpanded = false }
+                        if mode != .graph { graphExpanded = false; graphAnimated = false }
                     }
                     HapticManager.selection()
                 } label: {
@@ -322,27 +376,24 @@ struct ArticleCardView: View {
         }
         .padding(3)
         .background {
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.06))
-                GeometryReader { geo in
-                    let pad: CGFloat = 3
-                    let count = CGFloat(available.count)
-                    let segW = (geo.size.width - pad * 2) / count
-                    let idx = available.firstIndex(of: infoMode) ?? 0
-                    let thumbW = segW - 2
-                    let thumbH = geo.size.height - pad * 2 - 2
-                    let thumbX = pad + CGFloat(idx) * segW + 1
-                    let thumbY = pad + 1
-                    RoundedRectangle(cornerRadius: 7)
-                        .fill(.clear)
-                        .frame(width: thumbW, height: thumbH)
-                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 7))
-                        .offset(x: thumbX, y: thumbY)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.72), value: infoMode)
-                }
+            GeometryReader { geo in
+                let pad: CGFloat = 3
+                let count = CGFloat(available.count)
+                let segW = (geo.size.width - pad * 2) / count
+                let idx = available.firstIndex(of: infoMode) ?? 0
+                let thumbW = segW - 2
+                let thumbH = geo.size.height - pad * 2 - 2
+                let thumbX = pad + CGFloat(idx) * segW + 1
+                let thumbY = pad + 1
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(.clear)
+                    .frame(width: thumbW, height: thumbH)
+                    .glassEffect(.regular.tint(effectiveColor.opacity(0.03)).interactive(), in: RoundedRectangle(cornerRadius: 7))
+                    .offset(x: thumbX, y: thumbY)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.72), value: infoMode)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .glassEffect(.regular.tint(effectiveColor.opacity(0.03)).interactive(), in: RoundedRectangle(cornerRadius: 10))
     }
 
     private func togglePill(_ label: String, isActive: Bool, id: String, action: @escaping () -> Void) -> some View {
@@ -443,10 +494,54 @@ struct ArticleCardView: View {
         let items = buildFiveWItems()
 
         if !items.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(items) { item in
-                    fiveWRow(item)
+            HStack(alignment: .top, spacing: 0) {
+                // Left: timeline spine
+                VStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
+                        VStack(spacing: 0) {
+                            // Icon circle
+                            ZStack {
+                                Circle()
+                                    .fill(effectiveColor.opacity(idx == 0 ? 0.2 : 0.1))
+                                    .frame(width: 30, height: 30)
+
+                                Image(systemName: item.icon)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(effectiveColor.opacity(idx == 0 ? 1.0 : 0.6))
+                            }
+
+                            // Connecting line
+                            if idx < items.count - 1 {
+                                Rectangle()
+                                    .fill(effectiveColor.opacity(0.12))
+                                    .frame(width: 1.5)
+                                    .frame(maxHeight: .infinity)
+                            }
+                        }
                         .frame(maxHeight: .infinity)
+                    }
+                }
+                .frame(width: 30)
+                .padding(.trailing, 14)
+
+                // Right: content
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { _, item in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(item.label)
+                                .font(.system(size: 9, weight: .heavy))
+                                .foregroundStyle(effectiveColor.opacity(0.7))
+                                .tracking(1.5)
+
+                            highlightedFiveW(item.value)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(.white.opacity(0.85))
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, 4)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                    }
                 }
             }
             .frame(height: availableHeight)
@@ -459,28 +554,6 @@ struct ArticleCardView: View {
                 Spacer()
             }
             .frame(height: availableHeight)
-        }
-    }
-
-    private func fiveWRow(_ item: FiveWItem) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: item.icon)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(effectiveColor.opacity(0.7))
-                .frame(width: 16)
-                .padding(.top, 2)
-
-            HStack(alignment: .top, spacing: 0) {
-                Text(item.label + ": ")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(effectiveColor.opacity(0.6))
-
-                highlightedFiveW(item.value)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(.white.opacity(0.80))
-                    .lineLimit(2)
-                    .lineSpacing(3)
-            }
         }
     }
 
@@ -507,11 +580,11 @@ struct ArticleCardView: View {
             if let details = article.details, !details.isEmpty {
                 detailsInfoBox(details)
             } else if let graph = article.graph ?? article.graphData, let points = graph.data, !points.isEmpty {
-                compactStats(points: points)
+                compactGraph(points: points, graph: graph, expandedHeight: maxExpandedHeight)
             }
         case .graph:
             if let graph = article.graph ?? article.graphData, let points = graph.data, !points.isEmpty {
-                compactStats(points: points)
+                compactGraph(points: points, graph: graph, expandedHeight: maxExpandedHeight)
             }
         case .map:
             if let mapData = article.map ?? article.mapData, mapData.hasMapContent {
@@ -519,7 +592,7 @@ struct ArticleCardView: View {
             }
         case .timeline:
             if let timeline = article.timeline, !timeline.isEmpty {
-                compactTimeline(entries: timeline)
+                compactTimeline(entries: timeline, expandedHeight: maxExpandedHeight)
             }
         }
     }
@@ -585,42 +658,131 @@ struct ArticleCardView: View {
             }
             .padding(.horizontal, 14)
             .frame(height: 85)
-            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
         }
     }
 
-    private func compactStats(points: [GraphPoint]) -> some View {
-        let displayPoints = Array(points.prefix(3))
+    private func compactGraph(points: [GraphPoint], graph: GraphData, expandedHeight: CGFloat) -> some View {
+        let maxVal = points.map(\.displayValue).max() ?? 1
+
         return GlassEffectContainer {
-            HStack(spacing: 0) {
-                ForEach(Array(displayPoints.enumerated()), id: \.offset) { idx, point in
-                    VStack(spacing: 4) {
-                        Text(point.displayLabel.uppercased())
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .tracking(0.5)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+            VStack(spacing: 0) {
+                if graphExpanded {
+                    // Expanded: full glass bar chart
+                    VStack(alignment: .leading, spacing: 0) {
+                        if let title = graph.title, !title.isEmpty {
+                            Text(title.uppercased())
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.4))
+                                .tracking(0.8)
+                                .padding(.top, 14)
+                                .padding(.horizontal, 16)
+                        }
 
-                        Text(formatStatValue(point.displayValue))
-                            .font(.system(size: 22, weight: .heavy))
-                            .foregroundStyle(effectiveColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
+                        // Bar chart area
+                        HStack(alignment: .bottom, spacing: points.count > 8 ? 3 : 6) {
+                            ForEach(Array(points.enumerated()), id: \.offset) { _, point in
+                                let ratio = maxVal > 0 ? CGFloat(point.displayValue / maxVal) : 0
 
-                    if idx < displayPoints.count - 1 {
-                        Rectangle()
-                            .fill(.white.opacity(0.12))
-                            .frame(width: 1, height: 40)
+                                VStack(spacing: 5) {
+                                    Spacer(minLength: 0)
+
+                                    Text(formatStatValue(point.displayValue))
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(.white.opacity(0.7))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.5)
+
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .fill(.clear)
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: graphAnimated ? max(ratio * (max(expandedHeight, 200) - 90), 6) : 6)
+                                        .glassEffect(
+                                            .regular.tint(effectiveColor.opacity(0.4 + ratio * 0.3)).interactive(),
+                                            in: RoundedRectangle(cornerRadius: 5)
+                                        )
+
+                                    Text(point.displayLabel)
+                                        .font(.system(size: 8, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.45))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.5)
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
+                        .padding(.bottom, 14)
                     }
+                    .frame(height: max(expandedHeight, 200))
+                } else {
+                    // Collapsed: mini glass bar chart preview with title
+                    VStack(alignment: .leading, spacing: 0) {
+                        if let title = graph.title, !title.isEmpty {
+                            Text(title.uppercased())
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.4))
+                                .tracking(0.8)
+                                .padding(.top, 10)
+                                .padding(.leading, 14)
+                        }
+
+                        HStack(alignment: .bottom, spacing: points.count > 8 ? 2 : 4) {
+                            ForEach(Array(points.enumerated()), id: \.offset) { _, point in
+                                let ratio = maxVal > 0 ? CGFloat(point.displayValue / maxVal) : 0
+
+                                VStack(spacing: 3) {
+                                    Spacer(minLength: 0)
+
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(.clear)
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: max(ratio * 38, 5))
+                                        .glassEffect(
+                                            .regular.tint(effectiveColor.opacity(0.3 + ratio * 0.35)).interactive(),
+                                            in: RoundedRectangle(cornerRadius: 4)
+                                        )
+
+                                    Text(point.displayLabel)
+                                        .font(.system(size: 7, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.35))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.4)
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.bottom, 8)
+                    }
+                    .frame(height: 85)
                 }
             }
-            .padding(.horizontal, 14)
-            .frame(height: 85)
-            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        graphExpanded.toggle()
+                    }
+                    if graphExpanded {
+                        withAnimation(.easeOut(duration: 0.6).delay(0.15)) {
+                            graphAnimated = true
+                        }
+                    } else {
+                        graphAnimated = false
+                    }
+                    HapticManager.light()
+                } label: {
+                    Image(systemName: graphExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: Circle())
+                }
+                .padding(8)
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: graphExpanded)
         }
     }
 
@@ -652,7 +814,7 @@ struct ArticleCardView: View {
         return Map(initialPosition: .region(region), interactionModes: mapExpanded ? [.zoom, .pan] : []) {
             ForEach(Array(locations.enumerated()), id: \.offset) { _, location in
                 Annotation(
-                    location.name ?? "",
+                    "",
                     coordinate: CLLocationCoordinate2D(
                         latitude: location.latitude,
                         longitude: location.longitude
@@ -667,7 +829,7 @@ struct ArticleCardView: View {
                                     .stroke(.white, lineWidth: 2)
                             )
                             .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
-                        if mapExpanded, let name = location.name, !name.isEmpty {
+                        if let name = location.name, !name.isEmpty {
                             Text(name)
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.white)
@@ -718,42 +880,120 @@ struct ArticleCardView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: mapExpanded)
     }
 
-    private func compactTimeline(entries: [TimelineEntry]) -> some View {
-        let displayEntries = Array(entries.prefix(3))
+    private func compactTimeline(entries: [TimelineEntry], expandedHeight: CGFloat) -> some View {
+        let maxH = max(expandedHeight, 200)
+        // Calculate height based on content: ~80pt per entry + 28pt padding, capped at max
+        let contentHeight = min(CGFloat(entries.count) * 80 + 28, maxH)
+
         return GlassEffectContainer {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(displayEntries.enumerated()), id: \.offset) { idx, entry in
-                    HStack(alignment: .center, spacing: 10) {
-                        Circle()
-                            .fill(effectiveColor)
-                            .frame(width: 6, height: 6)
+            VStack(spacing: 0) {
+                if timelineExpanded {
+                    // Expanded: sized to content height
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(entries.enumerated()), id: \.offset) { idx, entry in
+                                HStack(alignment: .top, spacing: 12) {
+                                    VStack(spacing: 0) {
+                                        Circle()
+                                            .fill(idx == 0 ? effectiveColor : effectiveColor.opacity(0.5))
+                                            .frame(width: 8, height: 8)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(effectiveColor.opacity(0.3), lineWidth: idx == 0 ? 3 : 0)
+                                                    .frame(width: 14, height: 14)
+                                            )
+                                        if idx < entries.count - 1 {
+                                            Rectangle()
+                                                .fill(effectiveColor.opacity(0.15))
+                                                .frame(width: 1.5)
+                                                .frame(minHeight: 28)
+                                        }
+                                    }
+                                    .padding(.top, 2)
 
-                        if let date = entry.date {
-                            Text(date)
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(effectiveColor)
-                                .frame(width: 65, alignment: .leading)
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        if let date = entry.date, !date.isEmpty {
+                                            Text(date)
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundStyle(effectiveColor)
+                                                .tracking(0.3)
+                                        }
+                                        Text(entry.displayText)
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundStyle(.white.opacity(0.8))
+                                            .lineSpacing(2)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    .padding(.bottom, idx < entries.count - 1 ? 8 : 0)
+                                }
+                            }
                         }
-
-                        Text(entry.displayText)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.6))
-                            .lineLimit(1)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(maxHeight: .infinity)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(height: contentHeight)
+                } else {
+                    // Collapsed: compact 3-entry view — fixed 85px
+                    let displayEntries = Array(entries.prefix(3))
+                    HStack(alignment: .top, spacing: 0) {
+                        VStack(spacing: 0) {
+                            ForEach(Array(displayEntries.enumerated()), id: \.offset) { idx, _ in
+                                Circle()
+                                    .fill(idx == 0 ? effectiveColor : effectiveColor.opacity(0.35))
+                                    .frame(width: 5, height: 5)
+                                if idx < displayEntries.count - 1 {
+                                    Rectangle()
+                                        .fill(effectiveColor.opacity(0.15))
+                                        .frame(width: 1)
+                                        .frame(maxHeight: .infinity)
+                                }
+                            }
+                        }
+                        .padding(.leading, 14)
+                        .padding(.vertical, 16)
 
-                    if idx < displayEntries.count - 1 {
-                        Rectangle()
-                            .fill(.white.opacity(0.08))
-                            .frame(height: 1)
-                            .padding(.leading, 16)
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(displayEntries.enumerated()), id: \.offset) { _, entry in
+                                HStack(spacing: 6) {
+                                    if let date = entry.date {
+                                        Text(date)
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(effectiveColor)
+                                            .frame(width: 58, alignment: .leading)
+                                    }
+                                    Text(entry.displayText)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.8))
+                                        .lineLimit(1)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(maxHeight: .infinity)
+                            }
+                        }
+                        .padding(.leading, 10)
+                        .padding(.trailing, 40)
                     }
+                    .frame(height: 85)
                 }
             }
-            .padding(.horizontal, 14)
-            .frame(height: 85)
-            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: RoundedRectangle(cornerRadius: 22))
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        timelineExpanded.toggle()
+                    }
+                    HapticManager.light()
+                } label: {
+                    Image(systemName: timelineExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .glassEffect(.regular.tint(.black.opacity(0.15)).interactive(), in: Circle())
+                }
+                .padding(8)
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: timelineExpanded)
         }
     }
 
@@ -762,10 +1002,6 @@ struct ArticleCardView: View {
     private var floatingOverlays: some View {
         VStack {
             HStack(alignment: .top) {
-                if article.isImportant {
-                    mustKnowBadge
-                }
-
                 Spacer()
 
                 HStack(alignment: .top, spacing: 10) {
@@ -783,20 +1019,6 @@ struct ArticleCardView: View {
 
             Spacer()
         }
-    }
-
-    private var mustKnowBadge: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 12))
-            Text("MUST KNOW")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(0.5)
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 12)
-        .frame(height: 34)
-        .glassEffect(.regular.tint(effectiveColor.opacity(0.5)).interactive(), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func eventBadge(_ event: ArticleWorldEvent) -> some View {
@@ -822,33 +1044,33 @@ struct ArticleCardView: View {
         } label: {
             Image(systemName: "arrowshape.turn.up.right.fill")
                 .font(.system(size: 14))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(.white)
                 .frame(width: 34, height: 34)
-                .glassEffect(.regular.tint(effectiveColor.opacity(0.03)).interactive(), in: RoundedRectangle(cornerRadius: 12))
+                .background(.black.opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
-
-    @State private var isSaved = false
 
     private var saveButton: some View {
         Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                isSaved.toggle()
+                BookmarkManager.shared.toggle(article)
             }
             HapticManager.light()
         } label: {
-            Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+            Image(systemName: BookmarkManager.shared.isBookmarked(article.id) ? "bookmark.fill" : "bookmark")
                 .font(.system(size: 14))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(.white)
                 .frame(width: 34, height: 34)
-                .glassEffect(.regular.tint(effectiveColor.opacity(0.03)).interactive(), in: RoundedRectangle(cornerRadius: 12))
+                .background(.black.opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
     // MARK: - Dominant Color Extraction (website-matching algorithm)
 
     /// RGB → HSL conversion (0-360, 0-100, 0-100)
-    nonisolated private static func rgbToHSL(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat) -> (h: CGFloat, s: CGFloat, l: CGFloat) {
+    nonisolated static func rgbToHSL(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat) -> (h: CGFloat, s: CGFloat, l: CGFloat) {
         let maxC = max(r, g, b)
         let minC = min(r, g, b)
         var h: CGFloat = 0
@@ -870,7 +1092,7 @@ struct ArticleCardView: View {
     }
 
     /// HSL → SwiftUI Color (converts HSL to HSB for Color init)
-    nonisolated private static func colorFromHSL(h: CGFloat, s: CGFloat, l: CGFloat) -> Color {
+    nonisolated static func colorFromHSL(h: CGFloat, s: CGFloat, l: CGFloat) -> Color {
         let hNorm = h / 360.0
         let sNorm = s / 100.0
         let lNorm = l / 100.0
@@ -880,12 +1102,35 @@ struct ArticleCardView: View {
         return Color(hue: Double(hNorm), saturation: Double(sB), brightness: Double(v))
     }
 
+    /// Cache for extracted colors so we don't recompute on every appear
+    nonisolated(unsafe) private static let colorCache = NSCache<NSURL, UIColor>()
+    nonisolated(unsafe) private static let blurColorCache = NSCache<NSURL, UIColor>()
+    nonisolated(unsafe) private static let lightnessCache = NSCache<NSURL, NSNumber>()
+
     private func extractDominantColor(from url: URL) {
+        // Check color cache first
+        if let cachedAccent = Self.colorCache.object(forKey: url as NSURL),
+           let cachedBlur = Self.blurColorCache.object(forKey: url as NSURL),
+           let cachedLight = Self.lightnessCache.object(forKey: url as NSURL) {
+            dominantColor = Color(cachedAccent)
+            dominantBlurColor = Color(cachedBlur)
+            imageIsLight = cachedLight.boolValue
+            return
+        }
+
         Task.detached(priority: .background) {
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                guard let uiImage = UIImage(data: data),
-                      let cgImage = uiImage.cgImage else { return }
+            // Use cached UIImage if available, otherwise download
+            let uiImage: UIImage
+            if let cached = AsyncCachedImage.cache.object(forKey: url as NSURL) {
+                uiImage = cached
+            } else {
+                do {
+                    let (data, _) = try await URLSession.shared.data(from: url)
+                    guard let downloaded = UIImage(data: data) else { return }
+                    uiImage = downloaded
+                } catch { return }
+            }
+            guard let cgImage = uiImage.cgImage else { return }
 
                 let sampleW = min(cgImage.width, 80)
                 let sampleH = min(cgImage.height, 80)
@@ -998,6 +1243,11 @@ struct ArticleCardView: View {
                         score *= 0.85
                     }
 
+                    // Penalize brown/olive (hue 15-50, sat < 65) — too common in news photos
+                    if candidates[i].h >= 15 && candidates[i].h <= 50 && candidates[i].s < 65 {
+                        score *= 0.7
+                    }
+
                     candidates[i].score = score
                 }
 
@@ -1030,13 +1280,37 @@ struct ArticleCardView: View {
                     l: max(55.0, min(75.0, accentL))
                 )
 
+                // Compute average brightness of top-right region (where icons sit)
+                let isLight: Bool = {
+                    var totalLum: CGFloat = 0
+                    var count: CGFloat = 0
+                    let startX = sampleW / 2
+                    let endY = sampleH / 3
+                    for y in 0..<endY {
+                        for x in startX..<sampleW {
+                            let i = (y * sampleW + x) * 4
+                            let r = CGFloat(rawData[i]) / 255.0
+                            let g = CGFloat(rawData[i + 1]) / 255.0
+                            let b = CGFloat(rawData[i + 2]) / 255.0
+                            totalLum += 0.299 * r + 0.587 * g + 0.114 * b
+                            count += 1
+                        }
+                    }
+                    return count > 0 && (totalLum / count) > 0.55
+                }()
+
+                // Cache the results
+                ArticleCardView.colorCache.setObject(UIColor(accentCol), forKey: url as NSURL)
+                ArticleCardView.blurColorCache.setObject(UIColor(blurCol), forKey: url as NSURL)
+                ArticleCardView.lightnessCache.setObject(NSNumber(value: isLight), forKey: url as NSURL)
+
                 await MainActor.run {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         dominantColor = accentCol
                         dominantBlurColor = blurCol
+                        imageIsLight = isLight
                     }
                 }
-            } catch {}
         }
     }
 
@@ -1072,17 +1346,63 @@ struct ArticleCardView: View {
             return String(format: "%.1f", value)
         }
     }
+
+    // MARK: - Engagement Tracking
+
+    private func startEngagementTracking() {
+        viewStartTime = Date()
+        guard let articleId = Int(article.id.stringValue) else { return }
+        engagementTimer = Task {
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            guard !Task.isCancelled else { return }
+            try? await analytics.track(
+                event: "article_engaged",
+                articleId: articleId,
+                metadata: ["engaged_seconds": "10"]
+            )
+        }
+    }
+
+    private func stopEngagementTracking() {
+        engagementTimer?.cancel()
+        engagementTimer = nil
+        if let start = viewStartTime, let articleId = Int(article.id.stringValue) {
+            let seconds = Int(Date().timeIntervalSince(start))
+            if seconds >= 3 {
+                Task {
+                    try? await analytics.track(
+                        event: "article_exit",
+                        articleId: articleId,
+                        metadata: ["total_active_seconds": String(seconds)]
+                    )
+                }
+            }
+        }
+        viewStartTime = nil
+    }
 }
 
 // MARK: - Article Info Modes
 
 private extension Article {
     var availableInfoModes: [ArticleCardView.InfoMode] {
+        // Use API components order, only include modes that have data
+        let order = availableComponents
         var modes: [ArticleCardView.InfoMode] = []
-        if let d = details, !d.isEmpty { modes.append(.details) }
-        if let g = graph ?? graphData, let pts = g.data, !pts.isEmpty { modes.append(.graph) }
-        if let m = map ?? mapData, m.hasMapContent { modes.append(.map) }
-        if let t = timeline, !t.isEmpty { modes.append(.timeline) }
+        for component in order {
+            switch component {
+            case "details":
+                if let d = details, !d.isEmpty { modes.append(.details) }
+            case "graph":
+                if let g = graph ?? graphData, let pts = g.data, !pts.isEmpty { modes.append(.graph) }
+            case "map":
+                if let m = map ?? mapData, m.hasMapContent { modes.append(.map) }
+            case "timeline":
+                if let t = timeline, !t.isEmpty { modes.append(.timeline) }
+            default:
+                break
+            }
+        }
         if modes.isEmpty { modes.append(.details) }
         return modes
     }

@@ -274,7 +274,7 @@ def ai_check_cluster_match(new_article_title: str, existing_clusters: List[Dict]
             source_count = cluster.get('source_count', 0)
             clusters_text += f"{i+1}. [ID:{cluster['id']}] {cluster['event_name']} ({source_count} sources)\n"
         
-        prompt = f"""You are clustering news articles. Only add to an existing cluster if the article is about the EXACT SAME specific event or story.
+        prompt = f"""You are clustering news articles about ONGOING STORIES. Add to an existing cluster if the article covers the SAME developing story, conflict, crisis, or situation.
 
 EXISTING CLUSTERS:
 {clusters_text}
@@ -282,39 +282,38 @@ EXISTING CLUSTERS:
 NEW ARTICLE: {new_article_title}
 
 ════════════════════════════════════════════════════════════════════════════════
-CRITICAL RULE: Articles must be about the SAME SPECIFIC EVENT to cluster together.
-Sharing a country, topic, person, or keyword is NOT enough.
+CORE PRINCIPLE: A "cluster" represents an ongoing story/situation, NOT a single headline.
+Different developments, angles, and reactions within the same story belong TOGETHER.
 ════════════════════════════════════════════════════════════════════════════════
 
-✅ ADD_TO_CLUSTER - SAME specific event reported by different sources:
-• "Mall fire in Lagos kills 50" → "Lagos mall fire death toll rises to 60" ✅ (same fire)
-• "Trump threatens Greenland purchase" → "Denmark reacts to Trump Greenland threat" ✅ (same threat)
-• "Train crash in Berlin kills 5" → "Berlin train crash investigation begins" ✅ (same crash)
+✅ ADD_TO_CLUSTER - Same ongoing story/situation/conflict:
+• "US strikes Iran targets" + "Iran fires missiles back at Israel" ✅ (same conflict)
+• "Markets crash amid Iran war" + "Oil prices surge on Middle East conflict" ✅ (same crisis, economic angle)
+• "Trump threatens Spain with trade embargo" + "Spain's Sanchez defies Trump on Iran" ✅ (same diplomatic standoff)
+• "Khamenei killed in airstrike" + "Mojtaba Khamenei named as successor" ✅ (same succession story)
+• "Train crash in Berlin kills 5" + "Berlin train crash investigation begins" ✅ (same incident)
+• "Trump threatens Greenland purchase" + "Denmark reacts to Trump Greenland threat" ✅ (same story)
+• "Russia attacks Kyiv" + "Russia attacks Odesa" ✅ (same ongoing military campaign)
 
-❌ NEW_CLUSTER - DIFFERENT events, even if they share keywords/topics/people/countries:
-• "India signs AI defence deal with Japan" vs "India-Japan student talent exchange" ❌ (both India+Japan but different events)
-• "Spain opens drone pilot school" vs "US political drone debate" ❌ (both mention drones but unrelated)
-• "Trump threatens Greenland" vs "Trump signs infrastructure bill" ❌ (same person, different events)
-• "Ukraine drone attack on Moscow" vs "Ukraine peace talks in Geneva" ❌ (same country, different stories)
-• "Liverpool beats Chelsea 2-1" vs "Premier League transfer window opens" ❌ (both football but different stories)
-• "Earthquake in Turkey kills 50" vs "Turkey election results announced" ❌ (same country, different events)
-• "Apple launches new iPhone" vs "Apple faces EU antitrust fine" ❌ (same company, different events)
-• "Jasmine Paolini wins tennis final" vs "Jasmine Harrison sets rowing record" ❌ (same first name, different people!)
-• "Fire at Delhi hospital" vs "Fire at Mumbai factory" ❌ (same type of event but different locations!)
-• "Russia attacks Kyiv" vs "Russia attacks Odesa" ❌ (different specific attacks, even if same conflict)
+❌ NEW_CLUSTER - Genuinely UNRELATED stories (different topic entirely):
+• "India signs AI defence deal with Japan" vs "India-Japan student talent exchange" ❌ (different initiatives)
+• "Trump threatens Greenland" vs "Trump signs infrastructure bill" ❌ (same person, unrelated topics)
+• "Liverpool beats Chelsea 2-1" vs "Premier League transfer window opens" ❌ (different football stories)
+• "Earthquake in Turkey kills 50" vs "Turkey election results announced" ❌ (same country, unrelated events)
+• "Apple launches new iPhone" vs "Apple faces EU antitrust fine" ❌ (same company, unrelated stories)
+• "Fire at Delhi hospital" vs "Fire at Mumbai factory" ❌ (similar event type but different incidents)
+• "Texas Senate primary results" vs "Iran war casualties" ❌ (completely different topics)
 
 ════════════════════════════════════════════════════════════════════════════════
-⚠️ KEY CHECKS before adding to a cluster:
-   1. Is it the EXACT SAME incident/announcement/event? (not just same topic)
-   2. Would a reader consider these the same news story? (not just related)
-   3. Do they share specific details (same location, same date, same people doing the same thing)?
-   If ANY answer is NO → create a NEW_CLUSTER
+⚠️ KEY CHECK: Is this article part of the SAME ongoing story or situation?
+   - Different angles on the same conflict/crisis → ADD_TO_CLUSTER
+   - Reactions/consequences of the same event → ADD_TO_CLUSTER
+   - Genuinely separate topic or unrelated incident → NEW_CLUSTER
+   WHEN IN DOUBT for an ongoing story: ADD_TO_CLUSTER
 ════════════════════════════════════════════════════════════════════════════════
-
-WHEN IN DOUBT: NEW_CLUSTER (it's better to have separate coverage than to merge unrelated stories)
 
 RESPONSE FORMAT (one line only):
-→ ADD_TO_CLUSTER | CLUSTER_ID: [full ID number as shown] | REASON: same event - [brief]
+→ ADD_TO_CLUSTER | CLUSTER_ID: [full ID number as shown] | REASON: same story - [brief]
 → NEW_CLUSTER_DIFFERENT_TOPIC | REASON: different - [brief]
 
 YOUR RESPONSE:"""
@@ -441,7 +440,7 @@ def validate_cluster_assignment(new_article_title: str, cluster_sources: List[Di
             for s in cluster_sources[:5]  # Limit to top 5 for prompt size
         ])
         
-        prompt = f"""You are validating a news clustering decision. Verify the new article is about the EXACT SAME event.
+        prompt = f"""You are validating a news clustering decision. Verify the new article belongs to the SAME ongoing story or situation.
 
 CLUSTER: {cluster_name}
 
@@ -451,26 +450,25 @@ EXISTING ARTICLES IN CLUSTER:
 NEW ARTICLE BEING ADDED:
   • {new_article_title}
 
-QUESTION: Is the new article about the EXACT SAME specific event/incident as the existing articles?
+QUESTION: Is the new article part of the SAME ongoing story/conflict/crisis/situation as the existing articles?
 
-VALID (same specific event):
-- Same news event from different sources ("Fire kills 50" and "Fire death toll rises to 52")
-- Direct updates/reactions to the same event ("Trump threatens tariffs" and "EU responds to tariff threat")
+VALID (same developing story — different angles, updates, reactions all count):
+- Same event from different sources ("Fire kills 50" and "Fire death toll rises to 52")
+- Updates/reactions to the same story ("Trump threatens tariffs" and "EU responds to tariff threat")
+- Different developments in same conflict ("US strikes Iran" and "Iran fires missiles back")
+- Economic/political fallout of the same crisis ("Iran war escalates" and "Oil prices surge on conflict")
+- Same diplomatic standoff from different sides ("Trump threatens Spain" and "Spain defies Trump")
 
-INVALID (different event - even if related):
-- Same country but different stories ("India AI deal" vs "India student exchange program")
-- Same person but different events ("Trump threatens Greenland" vs "Trump signs tax bill")
-- Same topic but different incidents ("Ukraine drone attack Monday" vs "Ukraine drone attack Friday")
+INVALID (genuinely different/unrelated story):
+- Same country but completely different topic ("India AI deal" vs "India student exchange")
+- Same person but unrelated events ("Trump threatens Greenland" vs "Trump signs tax bill")
 - Same company but different news ("Apple iPhone launch" vs "Apple faces lawsuit")
-- Same first name but different people ("Jasmine Paolini tennis" vs "Jasmine Harrison rowing")
-- Same broad category but different events ("Liverpool vs Chelsea match" vs "Premier League transfers")
-- Related themes but separate stories ("Spain drone school" vs "US drone policy debate")
-
-Be STRICT: If there's any doubt whether they are the EXACT SAME event, respond INVALID.
+- Different people with same name ("Jasmine Paolini tennis" vs "Jasmine Harrison rowing")
+- Completely unrelated topics ("Texas primary election" vs "Iran war casualties")
 
 RESPOND WITH ONLY ONE WORD:
-- VALID (exact same event, just different coverage)
-- INVALID (different event, even if somewhat related)
+- VALID (same ongoing story, even if different angle/development)
+- INVALID (genuinely different, unrelated story)
 
 Your response:"""
 
@@ -670,12 +668,13 @@ class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
     # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.82  # Cosine similarity threshold - BALANCED for accuracy
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.68  # Cosine similarity threshold - AGGRESSIVE for consolidation
+    # Embeddings group broadly, AI validation catches bad merges
     # 0.90+ = Almost identical titles
     # 0.85-0.90 = Same event, different wording (HIGH CONFIDENCE)
-    # 0.82-0.85 = Same event, different wording (GOOD CONFIDENCE) 
-    # 0.75-0.82 = Related topics, might be different events (TOO RISKY - causes bad clustering)
-    # <0.75 = Definitely different events
+    # 0.78-0.85 = Same event, different wording (GOOD CONFIDENCE)
+    # 0.68-0.78 = Same developing story, different angles (GOOD - AI validates)
+    # <0.68 = Likely different events
     
     # FALLBACK: String-based matching (if embeddings fail)
     TITLE_SIMILARITY_THRESHOLD = 0.80  # 80% title similarity = same event (INCREASED)

@@ -2066,6 +2066,76 @@ RSS_FEEDS = [
         'tier': 'premium',
         'country': 'Canada'
     },
+
+    # ========================================
+    # ESPN SPORTS
+    # ========================================
+    {
+        'name': 'ESPN Top Headlines',
+        'url': 'https://www.espn.com/espn/rss/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN NFL',
+        'url': 'https://www.espn.com/espn/rss/nfl/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN NBA',
+        'url': 'https://www.espn.com/espn/rss/nba/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN MLB',
+        'url': 'https://www.espn.com/espn/rss/mlb/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN NHL',
+        'url': 'https://www.espn.com/espn/rss/nhl/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Golf',
+        'url': 'https://www.espn.com/espn/rss/golf/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Tennis',
+        'url': 'https://www.espn.com/espn/rss/tennis/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Boxing',
+        'url': 'https://www.espn.com/espn/rss/boxing/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Soccer',
+        'url': 'https://www.espn.com/espn/rss/soccer/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Olympics',
+        'url': 'https://www.espn.com/espn/rss/oly/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Horse Racing',
+        'url': 'https://www.espn.com/espn/rss/horse/news',
+        'category': 'consumer',
+        'tier': 'premium'
+    },
 ]
 
 # Total: ~340 Elite Premium RSS Feeds

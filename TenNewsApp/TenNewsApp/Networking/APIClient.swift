@@ -4,7 +4,7 @@ actor APIClient {
     static let shared = APIClient()
 
     private let session: URLSession
-    private let baseURL = "https://tennews.ai"
+    private let baseURL = "https://www.tennews.ai"
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .useDefaultKeys

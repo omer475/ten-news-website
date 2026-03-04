@@ -26,7 +26,7 @@ struct EventCardView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Theme.Colors.accent, in: Capsule())
+                            .glassEffect(.regular.tint(.red).interactive(), in: Capsule())
                     }
 
                     Text(event.name)

@@ -39,4 +39,14 @@ enum Animations {
     static func staggered(index: Int, baseDelay: Double = 0.05) -> Animation {
         cardSpring.delay(Double(index) * baseDelay)
     }
+
+    /// Spring for scroll-driven section reveals
+    static let scrollRevealSpring = Animation.spring(
+        response: 0.5,
+        dampingFraction: 0.8,
+        blendDuration: 0
+    )
+
+    /// Smooth count-up animation for stats
+    static let countUpAnimation = Animation.easeOut(duration: 0.8)
 }

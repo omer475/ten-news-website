@@ -28,6 +28,7 @@ struct EventPerspectivesView: View {
         VStack(spacing: 10) {
             ForEach(Array(perspectives.enumerated()), id: \.offset) { index, p in
                 perspectiveCard(p, index: index)
+                    .scrollReveal(offset: 20)
             }
         }
     }

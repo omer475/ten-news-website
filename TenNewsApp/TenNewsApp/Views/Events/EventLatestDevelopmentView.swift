@@ -1,159 +1,177 @@
 import Charts
 import SwiftUI
 
-/// Breaking-news style latest development card with Liquid Glass, pulse animation,
-/// integrated key facts, and expandable graph.
+/// Latest development card — white card with red accent bar, stats row with borders, mini chart.
 struct EventLatestDevelopmentView: View {
     let development: LatestDevelopment
-    var keyFacts: [KeyFact] = []
-    var accentColor: Color = Color(hex: "#0057B7")
+    var accentColor: Color = Color(hex: "#0A84FF")
 
     @State private var isPulsing = false
     @State private var graphExpanded = false
+    @State private var graphProgress: CGFloat = 0
+    @State private var statsProgress: CGFloat = 0
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header: pulsing live badge + time
-            HStack(spacing: 10) {
-                HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 0) {
+            // 3px red gradient accent bar at top
+            LinearGradient(
+                colors: [Color(hex: "#FF3B30"), Color(hex: "#FF3B30").opacity(0.3)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(height: 3)
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Live dot + label + time
+                HStack(spacing: 8) {
                     Circle()
-                        .fill(Color(hex: "#ef4444"))
-                        .frame(width: 8, height: 8)
-                        .scaleEffect(isPulsing ? 1.4 : 1.0)
-                        .opacity(isPulsing ? 0.5 : 1.0)
+                        .fill(Color(hex: "#FF3B30"))
+                        .frame(width: 7, height: 7)
+                        .scaleEffect(isPulsing ? 1.3 : 1.0)
+                        .opacity(isPulsing ? 0.4 : 1.0)
                         .animation(
-                            .easeInOut(duration: 1.2).repeatForever(autoreverses: true),
+                            .easeInOut(duration: 2.0).repeatForever(autoreverses: true),
                             value: isPulsing
                         )
 
-                    Text("BREAKING")
-                        .font(.system(size: 11, weight: .heavy))
-                        .tracking(0.8)
-                        .foregroundStyle(Color(hex: "#ef4444"))
+                    Text("Live")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(hex: "#FF3B30"))
+                        .tracking(0.3)
+
+                    Spacer()
+
+                    if let time = development.time {
+                        Text(time)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.primary.opacity(0.3))
+                    }
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .glassEffect(
-                    .regular.tint(Color(hex: "#ef4444").opacity(0.15)).interactive(),
-                    in: Capsule()
-                )
+                .padding(.bottom, 14)
 
-                Spacer()
-
-                if let time = development.time {
-                    Text(time)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // Main content card
-            VStack(alignment: .leading, spacing: 14) {
+                // Title
                 if let title = development.title {
                     Text(title)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 21, weight: .heavy))
                         .foregroundStyle(.primary)
-                        .tracking(-0.3)
+                        .tracking(-0.4)
                         .lineSpacing(3)
+                        .padding(.bottom, 12)
                 }
 
+                // Summary
                 if let summary = development.summary, !summary.isEmpty {
                     Text(summary)
-                        .font(.system(size: 16))
-                        .foregroundStyle(.primary.opacity(0.8))
+                        .font(.system(size: 14))
+                        .foregroundStyle(.primary.opacity(0.55))
                         .lineSpacing(6)
+                        .padding(.bottom, 18)
                 }
 
-                // Stats row from info_box
+                // Stats row — separated by border lines (not individual cards)
                 if let infoItems = development.components?.infoBox, !infoItems.isEmpty {
-                    HStack(spacing: 8) {
-                        ForEach(Array(infoItems.prefix(3).enumerated()), id: \.offset) { _, item in
-                            VStack(spacing: 4) {
-                                Text(item.displayValue)
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                                    .foregroundStyle(accentColor)
+                    VStack(spacing: 0) {
+                        Rectangle()
+                            .fill(.black.opacity(0.06))
+                            .frame(height: 1)
+
+                        HStack(spacing: 0) {
+                            ForEach(Array(infoItems.prefix(3).enumerated()), id: \.offset) { idx, item in
+                                VStack(spacing: 4) {
+                                    CountUpText(
+                                        fullText: item.displayValue,
+                                        progress: statsProgress
+                                    )
+                                    .font(.system(size: 22, weight: .black, design: .rounded))
+                                    .foregroundStyle(.primary)
+                                    .tracking(-0.5)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.5)
-                                Text(item.displayLabel.uppercased())
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(.secondary)
-                                    .tracking(0.3)
-                                    .lineLimit(1)
+
+                                    Text(item.displayLabel.uppercased())
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(.primary.opacity(0.3))
+                                        .tracking(0.5)
+                                        .lineLimit(1)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+
+                                if idx < min(infoItems.count, 3) - 1 {
+                                    Rectangle()
+                                        .fill(.black.opacity(0.06))
+                                        .frame(width: 1, height: 40)
+                                }
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 12))
                         }
                     }
-                    .padding(.top, 4)
+                    .onScrollVisibilityChange(threshold: 0.3) { visible in
+                        guard visible, statsProgress < 1 else { return }
+                        withAnimation(AppAnimations.countUpAnimation) {
+                            statsProgress = 1
+                        }
+                    }
                 }
 
-                // Graph — expandable
+                // Mini chart in gray container
                 if let graph = development.components?.graph,
                    let points = graph.data, !points.isEmpty {
                     graphSection(graph: graph, points: points)
-                }
-
-                // Key Facts — article-style details layout
-                if !keyFacts.isEmpty {
-                    keyFactsDetailSection
+                        .padding(.top, 16)
                 }
             }
             .padding(20)
-            .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 22))
         }
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(.black.opacity(0.06), lineWidth: 0.5))
         .onAppear { isPulsing = true }
     }
 
-    // MARK: - Graph (expandable like map)
+    // MARK: - Graph (expandable)
 
     private func graphSection(graph: GraphData, points: [GraphPoint]) -> some View {
-        let graphHeight: CGFloat = graphExpanded ? 240 : 90
+        let graphHeight: CGFloat = graphExpanded ? 200 : 80
 
         return VStack(alignment: .leading, spacing: 0) {
-            if let title = graph.title, !title.isEmpty, graphExpanded {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .padding(.bottom, 8)
-                    .transition(.opacity)
+            // Header: title + badge
+            HStack {
+                if let title = graph.title, !title.isEmpty {
+                    Text(title)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.primary.opacity(0.55))
+                }
+                Spacer()
             }
+            .padding(.bottom, 10)
 
             Chart {
                 ForEach(Array(points.enumerated()), id: \.offset) { _, point in
-                    let chartType = graph.type?.lowercased() ?? "bar"
+                    let chartType = graph.type?.lowercased() ?? "line"
 
-                    if chartType == "line" || chartType == "area" {
+                    if chartType == "bar" {
+                        BarMark(
+                            x: .value(graph.xLabel ?? "X", point.displayLabel),
+                            y: .value(graph.yLabel ?? "Y", point.displayValue * graphProgress)
+                        )
+                        .foregroundStyle(accentColor.gradient)
+                        .cornerRadius(3)
+                    } else {
                         LineMark(
                             x: .value(graph.xLabel ?? "X", point.displayLabel),
-                            y: .value(graph.yLabel ?? "Y", point.displayValue)
+                            y: .value(graph.yLabel ?? "Y", point.displayValue * graphProgress)
                         )
                         .foregroundStyle(accentColor)
                         .interpolationMethod(.catmullRom)
-                        .lineStyle(StrokeStyle(lineWidth: 2.5))
+                        .lineStyle(StrokeStyle(lineWidth: 2))
 
-                        if chartType == "area" {
-                            AreaMark(
-                                x: .value(graph.xLabel ?? "X", point.displayLabel),
-                                y: .value(graph.yLabel ?? "Y", point.displayValue)
-                            )
-                            .foregroundStyle(accentColor.opacity(0.15))
-                            .interpolationMethod(.catmullRom)
-                        }
-
-                        PointMark(
+                        AreaMark(
                             x: .value(graph.xLabel ?? "X", point.displayLabel),
-                            y: .value(graph.yLabel ?? "Y", point.displayValue)
+                            y: .value(graph.yLabel ?? "Y", point.displayValue * graphProgress)
                         )
-                        .foregroundStyle(accentColor)
-                        .symbolSize(graphExpanded ? 25 : 15)
-                    } else {
-                        BarMark(
-                            x: .value(graph.xLabel ?? "X", point.displayLabel),
-                            y: .value(graph.yLabel ?? "Y", point.displayValue)
-                        )
-                        .foregroundStyle(accentColor.gradient)
-                        .cornerRadius(4)
+                        .foregroundStyle(accentColor.opacity(0.12 * graphProgress))
+                        .interpolationMethod(.catmullRom)
                     }
                 }
             }
@@ -170,65 +188,58 @@ struct EventLatestDevelopmentView: View {
                 }
             }
             .frame(height: graphHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .padding(12)
-        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 16))
+        .padding(14)
+        .background(Color(hex: "#F2F2F7"))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .scrollProgress($graphProgress)
         .overlay(alignment: .topTrailing) {
-            expandButton(expanded: $graphExpanded)
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    graphExpanded.toggle()
+                }
+                HapticManager.light()
+            } label: {
+                Image(systemName: graphExpanded
+                    ? "arrow.down.right.and.arrow.up.left"
+                    : "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .glassEffect(.regular.interactive(), in: Circle())
+            }
+            .padding(8)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: graphExpanded)
+        .animation(.easeInOut(duration: 0.25), value: graphExpanded)
+    }
+}
+
+// MARK: - Count-Up Text
+
+/// Animates numeric portions of a string from 0 to their final value.
+private struct CountUpText: View, Animatable {
+    let fullText: String
+    var progress: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
     }
 
-    // MARK: - Expand Button (reusable)
-
-    private func expandButton(expanded: Binding<Bool>) -> some View {
-        Button {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                expanded.wrappedValue.toggle()
-            }
-            HapticManager.light()
-        } label: {
-            Image(systemName: expanded.wrappedValue
-                ? "arrow.down.right.and.arrow.up.left"
-                : "arrow.up.left.and.arrow.down.right")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 28, height: 28)
-                .glassEffect(.regular.interactive(), in: Circle())
+    var body: some View {
+        // Try to find a number in the text (e.g. "$1.2T", "340M", "89%")
+        if let match = fullText.firstMatch(of: /^([^0-9]*)([0-9]+\.?[0-9]*)(.*)$/),
+           let num = Double(match.2) {
+            let pre = String(match.1)
+            let suf = String(match.3)
+            let current = num * progress
+            let formatted = num == num.rounded()
+                ? "\(pre)\(Int(current))\(suf)"
+                : "\(pre)\(String(format: "%.1f", current))\(suf)"
+            Text(formatted)
+        } else {
+            Text(progress > 0.5 ? fullText : " ")
         }
-        .padding(8)
-    }
-
-    // MARK: - Key Facts (article-style label/value pairs)
-
-    private var keyFactsDetailSection: some View {
-        let validFacts = keyFacts.filter {
-            ($0.label != nil && !$0.label!.isEmpty) &&
-            ($0.value != nil && !$0.value!.isEmpty)
-        }
-
-        return VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(validFacts.enumerated()), id: \.offset) { idx, fact in
-                HStack(alignment: .top, spacing: 12) {
-                    Text(fact.label!)
-                        .font(Theme.Fonts.captionMedium())
-                        .foregroundStyle(Theme.Colors.secondaryText)
-                        .frame(width: 90, alignment: .leading)
-
-                    Text(fact.value!)
-                        .font(Theme.Fonts.body())
-                        .foregroundStyle(Theme.Colors.primaryText)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding(.vertical, 8)
-
-                if idx < validFacts.count - 1 {
-                    Divider()
-                }
-            }
-        }
-        .padding(Theme.Spacing.md)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: Theme.CornerRadius.large))
     }
 }

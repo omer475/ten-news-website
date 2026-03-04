@@ -4,11 +4,16 @@ struct RootView: View {
     @Environment(AppViewModel.self) private var appViewModel
 
     var body: some View {
-        if appViewModel.isOnboardingComplete {
-            ContentView()
-        } else {
-            OnboardingFlowView()
+        Group {
+            if appViewModel.isOnboardingComplete {
+                ContentView()
+                    .transition(.opacity)
+            } else {
+                OnboardingFlowView()
+                    .transition(.opacity)
+            }
         }
+        .animation(.smooth(duration: 0.4), value: appViewModel.isOnboardingComplete)
     }
 }
 

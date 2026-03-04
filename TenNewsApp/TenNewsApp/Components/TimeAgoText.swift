@@ -3,15 +3,17 @@ import SwiftUI
 /// Shows relative time from ISO date string in compact format: "2h", "15m", "3d"
 struct TimeAgoText: View {
     let dateString: String?
+    let color: Color?
 
-    init(_ dateString: String?) {
+    init(_ dateString: String?, color: Color? = nil) {
         self.dateString = dateString
+        self.color = color
     }
 
     var body: some View {
         Text(relativeTime)
             .font(Theme.Fonts.footnote())
-            .foregroundStyle(Theme.Colors.secondaryText)
+            .foregroundStyle(color ?? Theme.Colors.secondaryText)
     }
 
     private var relativeTime: String {

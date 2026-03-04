@@ -8,9 +8,11 @@ struct ArticleDetailResponse: Codable {
 
 // MARK: - World Event Detail Response
 /// Response for /api/world-events/:slug endpoint
+/// API may return {"error": "Event not found"} for deleted/missing events
 
 struct WorldEventDetailResponse: Codable {
-    let event: WorldEventFull
+    let event: WorldEventFull?
+    let error: String?
 }
 
 // MARK: - Auth Response
@@ -76,13 +78,17 @@ struct UpdatePreferencesRequest: Encodable {
 // MARK: - Analytics Event
 
 struct AnalyticsEvent: Encodable {
-    let event: String
-    let properties: [String: String]?
-    let userId: String?
-    let timestamp: String?
+    let eventType: String
+    let articleId: Int?
+    let sessionId: String?
+    let category: String?
+    let source: String?
+    let metadata: [String: String]?
 
     enum CodingKeys: String, CodingKey {
-        case event, properties, timestamp
-        case userId = "user_id"
+        case eventType = "event_type"
+        case articleId = "article_id"
+        case sessionId = "session_id"
+        case category, source, metadata
     }
 }

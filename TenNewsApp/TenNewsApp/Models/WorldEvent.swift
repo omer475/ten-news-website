@@ -7,6 +7,7 @@ struct WorldEvent: Codable, Identifiable, Hashable {
     let name: String
     let slug: String
     let imageUrl: String?
+    let coverImageUrl: String?
     let blurColor: String?
     let importance: FlexibleDouble?
     let status: String
@@ -20,6 +21,7 @@ struct WorldEvent: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, name, slug, importance, status, background, countries, topics
         case imageUrl = "image_url"
+        case coverImageUrl = "cover_image_url"
         case blurColor = "blur_color"
         case lastArticleAt = "last_article_at"
         case createdAt = "created_at"
@@ -29,6 +31,13 @@ struct WorldEvent: Codable, Identifiable, Hashable {
     var displayImage: URL? {
         guard let urlString = imageUrl, !urlString.isEmpty else { return nil }
         return URL(string: urlString)
+    }
+
+    var coverDisplayImage: URL? {
+        if let urlString = coverImageUrl, !urlString.isEmpty, let url = URL(string: urlString) {
+            return url
+        }
+        return displayImage
     }
 
     var importanceLevel: Double { importance?.value ?? 0 }

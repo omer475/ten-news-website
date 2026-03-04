@@ -19,11 +19,13 @@ struct EventGlobalImpactView: View {
             // Map
             if !countries.isEmpty {
                 mapSection
+                    .scrollReveal(offset: 20)
             }
 
             // Country pills
             if !countries.isEmpty {
                 countryPillsSection
+                    .scrollReveal(offset: 20)
             }
 
             // Selected country detail
@@ -34,11 +36,13 @@ struct EventGlobalImpactView: View {
             // Perspectives
             if !perspectives.isEmpty {
                 perspectivesSection
+                    .scrollReveal(offset: 20)
             }
 
             // Region summaries
             if let regionsSummary = geoData?.regionsSummary, !regionsSummary.isEmpty {
                 regionSummariesSection(regionsSummary)
+                    .scrollReveal(offset: 20)
             }
         }
     }

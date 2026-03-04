@@ -46,6 +46,15 @@ enum TimeOfDay {
         }
     }
 
+    var shortLabel: String {
+        switch self {
+        case .morning: return "AM"
+        case .afternoon: return "PM"
+        case .evening: return "EVE"
+        case .night: return "NIT"
+        }
+    }
+
     var accentColor: Color {
         switch self {
         case .morning:

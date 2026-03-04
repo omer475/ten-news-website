@@ -55,6 +55,15 @@ enum Countries {
         Country(id: "UA", name: "Ukraine", flag: "🇺🇦", region: "Europe"),
         Country(id: "CN", name: "China", flag: "🇨🇳", region: "Asia"),
         Country(id: "RU", name: "Russia", flag: "🇷🇺", region: "Europe"),
+        Country(id: "PK", name: "Pakistan", flag: "🇵🇰", region: "Asia"),
+        Country(id: "IR", name: "Iran", flag: "🇮🇷", region: "Middle East"),
+        Country(id: "SA", name: "Saudi Arabia", flag: "🇸🇦", region: "Middle East"),
+        Country(id: "AE", name: "UAE", flag: "🇦🇪", region: "Middle East"),
+        Country(id: "ES", name: "Spain", flag: "🇪🇸", region: "Europe"),
+        Country(id: "IT", name: "Italy", flag: "🇮🇹", region: "Europe"),
+        Country(id: "MX", name: "Mexico", flag: "🇲🇽", region: "North America"),
+        Country(id: "AF", name: "Afghanistan", flag: "🇦🇫", region: "Asia"),
+        Country(id: "IQ", name: "Iraq", flag: "🇮🇶", region: "Middle East"),
     ]
 
     static func find(byId id: String) -> Country? {
