@@ -243,46 +243,53 @@ export default async function handler(req, res) {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     let allArticles, fetchError;
+    const selectColumns = SCORING_COLUMNS + (useEmbeddings ? ', embedding' : '');
+
     if (useEmbeddings) {
-      // Two-query strategy to get category-diverse articles while staying
-      // under Supabase response size limits (embeddings are ~24KB each).
-      // 1. Top 150 by editorial score (with embeddings) — covers breaking news
-      // 2. Top 100 from non-dominant categories — covers niche/interest articles
-      const selectColumns = SCORING_COLUMNS + ', embedding';
-      const [mainResult, diverseResult] = await Promise.all([
+      // Two-step strategy for category diversity:
+      // 1. Top 200 by editorial score (includes embeddings) — proven to work
+      // 2. Lightweight ID-only query for non-World articles, then fetch their embeddings
+      const [mainResult, diverseIdsResult] = await Promise.all([
         supabase
           .from('published_articles')
           .select(selectColumns)
           .gte('created_at', twentyFourHoursAgo)
-          .not('embedding', 'is', null)
           .order('ai_final_score', { ascending: false, nullsFirst: false })
-          .limit(150),
+          .order('id', { ascending: false })
+          .limit(200),
         supabase
           .from('published_articles')
-          .select(selectColumns)
+          .select('id')
           .gte('created_at', twentyFourHoursAgo)
-          .not('embedding', 'is', null)
-          .not('category', 'eq', 'World')
+          .neq('category', 'World')
           .order('ai_final_score', { ascending: false, nullsFirst: false })
           .limit(100),
       ]);
 
-      fetchError = mainResult.error || diverseResult.error;
+      fetchError = mainResult.error || diverseIdsResult.error;
       if (!fetchError) {
-        // Merge and deduplicate
-        const seenIds = new Set();
-        allArticles = [];
-        for (const a of [...(mainResult.data || []), ...(diverseResult.data || [])]) {
-          if (!seenIds.has(a.id)) {
-            seenIds.add(a.id);
-            allArticles.push(a);
+        const mainIds = new Set((mainResult.data || []).map(a => a.id));
+        const extraIds = (diverseIdsResult.data || [])
+          .filter(a => !mainIds.has(a.id))
+          .map(a => a.id);
+
+        allArticles = [...(mainResult.data || [])];
+
+        // Fetch full data + embeddings for extra diverse articles (max ~50 rows)
+        if (extraIds.length > 0) {
+          const { data: extraArticles } = await supabase
+            .from('published_articles')
+            .select(selectColumns)
+            .in('id', extraIds);
+          if (extraArticles) {
+            allArticles.push(...extraArticles);
           }
         }
       }
     } else {
       const result = await supabase
         .from('published_articles')
-        .select(SCORING_COLUMNS)
+        .select(selectColumns)
         .gte('created_at', twentyFourHoursAgo)
         .order('ai_final_score', { ascending: false, nullsFirst: false })
         .order('id', { ascending: false })
