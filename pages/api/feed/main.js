@@ -261,7 +261,7 @@ export default async function handler(req, res) {
           .from('published_articles')
           .select('id')
           .gte('created_at', twentyFourHoursAgo)
-          .neq('category', 'World')
+          .in('category', ['Sports', 'Tech', 'Science', 'Health', 'Entertainment', 'Gaming', 'Food'])
           .order('ai_final_score', { ascending: false, nullsFirst: false })
           .limit(100),
       ]);
