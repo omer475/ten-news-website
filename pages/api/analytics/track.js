@@ -157,8 +157,8 @@ async function evolveTasteVectorAsync(admin, userId, articleId, learningRate = 0
     .eq('id', userId)
     .single()
 
-  if (profileError || !profile?.taste_vector) {
-    return // No taste vector to evolve
+  if (profileError) {
+    return // Can't access profile
   }
 
   // Fetch article embedding
@@ -168,14 +168,29 @@ async function evolveTasteVectorAsync(admin, userId, articleId, learningRate = 0
     .eq('id', articleId)
     .single()
 
-  if (articleError || !article?.embedding) {
+  if (articleError || !article?.embedding || !Array.isArray(article.embedding) || article.embedding.length === 0) {
     return // No article embedding available
   }
 
-  const currentVector = profile.taste_vector
   const articleVector = article.embedding
 
-  if (!Array.isArray(currentVector) || !Array.isArray(articleVector) || currentVector.length !== articleVector.length) {
+  // If user has no taste vector yet, seed it from this article's embedding
+  if (!profile?.taste_vector || !Array.isArray(profile.taste_vector) || profile.taste_vector.length === 0) {
+    await admin
+      .from('profiles')
+      .update({
+        taste_vector: articleVector,
+        taste_vector_version: 1,
+        taste_vector_updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+    console.log(`[analytics] Taste vector SEEDED for user ${userId.substring(0, 8)} from article ${articleId}`)
+    return
+  }
+
+  const currentVector = profile.taste_vector
+
+  if (currentVector.length !== articleVector.length) {
     return
   }
 
