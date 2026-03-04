@@ -2068,7 +2068,7 @@ RSS_FEEDS = [
     },
 
     # ========================================
-    # SPORTS (24 feeds)
+    # SPORTS (26 feeds)
     # ========================================
 
     # ESPN
@@ -2129,6 +2129,18 @@ RSS_FEEDS = [
     {
         'name': 'ESPN MLB',
         'url': 'https://www.espn.com/espn/rss/mlb/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Olympics',
+        'url': 'https://www.espn.com/espn/rss/oly/news',
+        'category': 'sports',
+        'tier': 'premium'
+    },
+    {
+        'name': 'ESPN Horse Racing',
+        'url': 'https://www.espn.com/espn/rss/horse/news',
         'category': 'sports',
         'tier': 'premium'
     },

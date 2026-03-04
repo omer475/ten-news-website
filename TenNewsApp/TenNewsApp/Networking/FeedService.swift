@@ -1,0 +1,52 @@
+import Foundation
+
+struct FeedService {
+    private let client = APIClient.shared
+
+    func fetchTodayFeed(page: Int = 1, pageSize: Int = 15) async throws -> NewsFeedResponse {
+        try await client.get("\(APIEndpoints.newsFeed)?page=\(page)&pageSize=\(pageSize)")
+    }
+
+    func fetchMainFeed(cursor: String? = nil, limit: Int = 20, preferences: UserPreferences? = nil, userId: String? = nil) async throws -> MainFeedResponse {
+        var params = "?limit=\(limit)"
+        if let cursor { params += "&cursor=\(cursor)" }
+        // Send user_id first — backend uses it to load taste vector for embedding scoring
+        // Falls back to query-param prefs for tag-based scoring if no user_id
+        if let uid = userId {
+            params += "&user_id=\(uid)"
+        }
+        if let prefs = preferences {
+            if let home = prefs.homeCountry {
+                params += "&home_country=\(home)"
+            }
+            if !prefs.followedCountries.isEmpty {
+                params += "&followed_countries=\(prefs.followedCountries.joined(separator: ","))"
+            }
+            if !prefs.followedTopics.isEmpty {
+                params += "&followed_topics=\(prefs.followedTopics.joined(separator: ","))"
+            }
+        }
+        return try await client.get("\(APIEndpoints.mainFeed)\(params)")
+    }
+
+    func fetchForYouFeed(
+        homeCountry: String,
+        followedCountries: [String],
+        followedTopics: [String],
+        userId: String?,
+        limit: Int = 20,
+        offset: Int = 0
+    ) async throws -> ForYouFeedResponse {
+        var params = "?home_country=\(homeCountry)&limit=\(limit)&offset=\(offset)"
+        if !followedCountries.isEmpty {
+            params += "&followed_countries=\(followedCountries.joined(separator: ","))"
+        }
+        if !followedTopics.isEmpty {
+            params += "&followed_topics=\(followedTopics.joined(separator: ","))"
+        }
+        if let uid = userId {
+            params += "&user_id=\(uid)"
+        }
+        return try await client.get("\(APIEndpoints.forYouFeed)\(params)")
+    }
+}

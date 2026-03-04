@@ -1,0 +1,21 @@
+name: TenNewsApp
+options:
+  bundleIdPrefix: com.tennews
+  deploymentTarget:
+    iOS: "26.0"
+  xcodeVersion: "16.0"
+targets:
+  TenNewsApp:
+    type: application
+    platform: iOS
+    sources:
+      - TenNewsApp
+    settings:
+      base:
+        PRODUCT_NAME: "Today+"
+        INFOPLIST_FILE: TenNewsApp/Info.plist
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: ""
