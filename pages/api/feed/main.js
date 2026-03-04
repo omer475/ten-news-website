@@ -244,16 +244,41 @@ export default async function handler(req, res) {
 
     let allArticles, fetchError;
     if (useEmbeddings) {
+      // Two-query strategy to get category-diverse articles while staying
+      // under Supabase response size limits (embeddings are ~24KB each).
+      // 1. Top 150 by editorial score (with embeddings) — covers breaking news
+      // 2. Top 100 from non-dominant categories — covers niche/interest articles
       const selectColumns = SCORING_COLUMNS + ', embedding';
-      const result = await supabase
-        .from('published_articles')
-        .select(selectColumns)
-        .gte('created_at', twentyFourHoursAgo)
-        .not('embedding', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1000);
-      allArticles = result.data;
-      fetchError = result.error;
+      const [mainResult, diverseResult] = await Promise.all([
+        supabase
+          .from('published_articles')
+          .select(selectColumns)
+          .gte('created_at', twentyFourHoursAgo)
+          .not('embedding', 'is', null)
+          .order('ai_final_score', { ascending: false, nullsFirst: false })
+          .limit(150),
+        supabase
+          .from('published_articles')
+          .select(selectColumns)
+          .gte('created_at', twentyFourHoursAgo)
+          .not('embedding', 'is', null)
+          .not('category', 'eq', 'World')
+          .order('ai_final_score', { ascending: false, nullsFirst: false })
+          .limit(100),
+      ]);
+
+      fetchError = mainResult.error || diverseResult.error;
+      if (!fetchError) {
+        // Merge and deduplicate
+        const seenIds = new Set();
+        allArticles = [];
+        for (const a of [...(mainResult.data || []), ...(diverseResult.data || [])]) {
+          if (!seenIds.has(a.id)) {
+            seenIds.add(a.id);
+            allArticles.push(a);
+          }
+        }
+      }
     } else {
       const result = await supabase
         .from('published_articles')
