@@ -292,6 +292,22 @@ export default async function handler(req, res) {
     // -------------------------------------------------------
     // 4. Score each article (embedding-based or tag-based)
     // -------------------------------------------------------
+
+    // When using embeddings, compute mean similarity across pool to normalize.
+    // Gemini embeddings have high base similarity (~0.80) for all news text,
+    // so we need to amplify the differential signal (what's above/below mean).
+    let meanSimilarity = 0;
+    if (useEmbeddings) {
+      let totalSim = 0, simCount = 0;
+      for (const a of filtered) {
+        if (a.embedding && Array.isArray(a.embedding) && a.embedding.length > 0) {
+          totalSim += cosineSimilarity(a.embedding, tasteVector);
+          simCount++;
+        }
+      }
+      meanSimilarity = simCount > 0 ? totalSim / simCount : 0.78;
+    }
+
     const scored = filtered.map(article => {
       if (!userPrefs) {
         return { id: article.id, _final_score: article.ai_final_score || 0, _match_reasons: [], _scoring_method: 'raw' };
@@ -305,16 +321,30 @@ export default async function handler(req, res) {
 
       // Embedding scoring if both user and article have vectors
       if (useEmbeddings && articleEmbedding && Array.isArray(articleEmbedding) && articleEmbedding.length > 0) {
-        const embScore = calculateEmbeddingScore(
-          { ...article, embedding: articleEmbedding },
-          tasteVector,
-          cosineSimilarity
-        );
-        // Scale 0-1 → 0-1500 to be comparable with tag-based scores
+        const rawSim = cosineSimilarity(articleEmbedding, tasteVector);
+
+        // Normalize: subtract mean to isolate the differential signal,
+        // then scale aggressively so small differences become meaningful.
+        // A delta of +0.05 → 1.0, delta of -0.05 → 0.0, delta of 0 → 0.5
+        const delta = rawSim - meanSimilarity;
+        const normalizedRelevance = Math.max(0, Math.min(1, 0.5 + delta * 10));
+
+        // Editorial importance (capped at 1.0)
+        const aiScore = article.ai_final_score || 0;
+        const editorialImportance = Math.max(0, Math.min(1, aiScore / 1000));
+
+        // Recency: exponential decay
+        const createdAt = new Date(article.created_at || article.published_at);
+        const hoursOld = Math.max(0, (Date.now() - createdAt.getTime()) / (1000 * 60 * 60));
+        const recency = Math.exp(-0.025 * hoursOld);
+
+        // Weighted combination — content relevance dominates when user has taste vector
+        const finalScore = normalizedRelevance * 0.65 + editorialImportance * 0.15 + recency * 0.20;
+
         return {
           id: article.id,
-          _final_score: embScore.final_score * 1500,
-          _match_reasons: [`Embedding: relevance=${embScore.content_relevance.toFixed(2)}, editorial=${embScore.editorial_importance.toFixed(2)}, recency=${embScore.recency.toFixed(2)}`],
+          _final_score: finalScore * 1500,
+          _match_reasons: [`Embedding: rawSim=${rawSim.toFixed(3)}, norm=${normalizedRelevance.toFixed(2)}, edit=${editorialImportance.toFixed(2)}, rec=${recency.toFixed(2)}, mean=${meanSimilarity.toFixed(3)}`],
           _scoring_method: 'embedding',
         };
       }
