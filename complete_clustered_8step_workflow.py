@@ -43,6 +43,7 @@ from step8_fact_verification import FactVerifier
 from step10_article_scoring import score_article_with_references, generate_interest_tags
 from step11_article_tagging import tag_article
 from step6_world_event_detection import detect_world_events, _generate_gemini_image, upload_image_to_storage
+from sports_espn_poller import run_sports_poller
 from supabase import create_client
 
 # Suppress SSL warnings
@@ -2277,8 +2278,16 @@ def run_single_cycle():
     
     try:
         run_complete_pipeline()
-        # Note: run_complete_pipeline doesn't return stats currently
-        # You can enhance it later to return detailed stats
+
+        # Run sports poller after main pipeline
+        try:
+            sports_stats = run_sports_poller()
+            if sports_stats and sports_stats.get('total_published', 0) > 0:
+                print(f"🏟️ Sports poller published {sports_stats['total_published']} article(s)")
+                stats['sports_published'] = sports_stats['total_published']
+        except Exception as e:
+            print(f"⚠️ Sports poller error (non-fatal): {e}")
+
         return stats
     except Exception as e:
         stats['errors'].append(str(e))
@@ -2319,7 +2328,15 @@ def main():
             print(f"{'#'*80}")
             
             run_complete_pipeline()
-            
+
+            # Run Tier 3 sports poller (F1, ATP, WTA, UFC, Golf PGA)
+            try:
+                sports_stats = run_sports_poller()
+                if sports_stats['total_published'] > 0:
+                    print(f"🏟️ Sports poller published {sports_stats['total_published']} article(s)")
+            except Exception as e:
+                print(f"⚠️ Sports poller error (non-fatal): {e}")
+
             print(f"\n😴 Sleeping 5 minutes until next cycle...")
             time.sleep(300)  # 5 minutes = 300 seconds
             
