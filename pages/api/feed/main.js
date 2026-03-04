@@ -235,18 +235,36 @@ export default async function handler(req, res) {
 
     // -------------------------------------------------------
     // 2. Lightweight scoring query (small columns only, no text blobs)
-    //    Embedding added only when user has a taste vector
+    //    When using embeddings, fetch ALL articles with embeddings from
+    //    last 24h — the embedding scoring will rank them properly
+    //    regardless of editorial score.
+    //    Without embeddings, use top 200 by editorial score.
     // -------------------------------------------------------
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const selectColumns = SCORING_COLUMNS + (useEmbeddings ? ', embedding' : '');
 
-    const { data: allArticles, error: fetchError } = await supabase
-      .from('published_articles')
-      .select(selectColumns)
-      .gte('created_at', twentyFourHoursAgo)
-      .order('ai_final_score', { ascending: false, nullsFirst: false })
-      .order('id', { ascending: false })
-      .limit(200);
+    let allArticles, fetchError;
+    if (useEmbeddings) {
+      const selectColumns = SCORING_COLUMNS + ', embedding';
+      const result = await supabase
+        .from('published_articles')
+        .select(selectColumns)
+        .gte('created_at', twentyFourHoursAgo)
+        .not('embedding', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1000);
+      allArticles = result.data;
+      fetchError = result.error;
+    } else {
+      const result = await supabase
+        .from('published_articles')
+        .select(SCORING_COLUMNS)
+        .gte('created_at', twentyFourHoursAgo)
+        .order('ai_final_score', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: false })
+        .limit(200);
+      allArticles = result.data;
+      fetchError = result.error;
+    }
 
     if (fetchError) {
       console.error('Main feed query error:', fetchError);
