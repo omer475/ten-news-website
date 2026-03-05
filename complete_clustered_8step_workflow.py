@@ -1309,6 +1309,17 @@ def run_complete_pipeline():
                 failed_components = [c for c in selected if c not in successful_components]
                 print(f"   ⚠️ [Cluster {cluster_id}] Some components failed: {failed_components}")
             
+            # Generate embedding for feed personalization (pgvector similarity search)
+            article_embedding = None
+            try:
+                from step1_5_event_clustering import get_embedding
+                embed_text = f"{title} {synthesized.get('category', '')} {' '.join(article_topics or [])} {' '.join(article_countries or [])}"
+                article_embedding = get_embedding(embed_text)
+                if article_embedding:
+                    print(f"   🧬 [Cluster {cluster_id}] Embedding generated ({len(article_embedding)} dims)")
+            except Exception as e:
+                print(f"   ⚠️ [Cluster {cluster_id}] Embedding generation failed: {e}")
+
             article_data = {
                 'cluster_id': cluster_id,
                 'url': cluster_sources[0]['url'],
@@ -1331,7 +1342,8 @@ def run_complete_pipeline():
                 'image_url': synthesized.get('image_url'),
                 'image_source': synthesized.get('image_source'),
                 'image_score': synthesized.get('image_score'),
-                'source_titles': source_titles
+                'source_titles': source_titles,
+                'embedding': article_embedding,
             }
             
             result = supabase.table('published_articles').insert(article_data).execute()

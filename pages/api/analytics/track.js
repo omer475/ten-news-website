@@ -115,6 +115,39 @@ export default async function handler(req, res) {
     }
 
     console.log('[analytics] Event stored successfully:', event_type)
+
+    // Update taste vector via EMA on engagement events (non-blocking)
+    // This feeds the pgvector personalization system
+    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view']
+    if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
+      // Look up the user's personalization user_id (users table, linked via auth_user_id)
+      try {
+        const { data: persUser } = await admin
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single()
+
+        if (persUser) {
+          // Fire-and-forget: update taste vector via DB function
+          admin.rpc('update_taste_vector_ema', {
+            p_user_id: persUser.id,
+            p_article_id: article_id,
+            p_event_type: event_type,
+          }).then(({ error: emaError }) => {
+            if (emaError) {
+              console.log('[analytics] Taste vector EMA update failed:', emaError.message)
+            } else {
+              console.log('[analytics] Taste vector updated for user:', persUser.id?.substring(0, 8))
+            }
+          })
+        }
+      } catch (e) {
+        // Non-critical — taste vector update is best-effort
+        console.log('[analytics] Taste vector lookup failed:', e.message)
+      }
+    }
+
     return res.status(200).json({ ok: true })
   } catch (e) {
     console.error('Analytics track error:', e)
