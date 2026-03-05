@@ -72,6 +72,46 @@ WEAK_KEYWORDS = {
 }
 
 
+def extract_keywords(text: str) -> Set[str]:
+    """
+    Extract meaningful keywords from article title for cluster matching.
+    Returns lowercase keywords for comparison. ALWAYS returns a set.
+    """
+    try:
+        if not text:
+            return set()
+        
+        # Common stop words to ignore
+        stop_words = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+            'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
+            'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+            'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need',
+            'it', 'its', 'this', 'that', 'these', 'those', 'he', 'she', 'they',
+            'his', 'her', 'their', 'my', 'your', 'our', 'after', 'before', 'over',
+            'under', 'new', 'says', 'said', 'amid', 'into', 'about', 'than', 'more',
+            'first', 'last', 'just', 'also', 'up', 'down', 'out', 'off', 'all',
+            'warns', 'faces', 'launches', 'reveals', 'seeks', 'hits', 'plans'
+        }
+        
+        # Clean text - remove markdown bold markers
+        clean_text = re.sub(r'\*\*([^*]+)\*\*', r'\1', str(text))
+        
+        # Extract words (at least 3 chars)
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', clean_text.lower())
+        
+        # Filter out stop words - build set explicitly
+        result = set()
+        for word in words:
+            if word not in stop_words:
+                result.add(word)
+        
+        return result
+    except Exception as e:
+        print(f"      ⚠️ Keyword extraction error: {e}")
+        return set()
+
+
 def score_cluster_by_keywords(cluster_name: str, article_keywords) -> int:
     """
     Score a cluster based on how many keywords match the article.
@@ -415,19 +455,15 @@ QUESTION: Is the new article part of the SAME ongoing story/conflict/crisis/situ
 VALID (same developing story — different angles, updates, reactions all count):
 - Same event from different sources ("Fire kills 50" and "Fire death toll rises to 52")
 - Updates/reactions to the same story ("Trump threatens tariffs" and "EU responds to tariff threat")
-- Different countries' reactions to the same event ("China condemns US tariffs" and "EU warns of retaliation to US tariffs")
 - Different developments in same conflict ("US strikes Iran" and "Iran fires missiles back")
 - Economic/political fallout of the same crisis ("Iran war escalates" and "Oil prices surge on conflict")
 - Same diplomatic standoff from different sides ("Trump threatens Spain" and "Spain defies Trump")
-- Consequences or follow-ups of the same event ("Earthquake hits Turkey" and "Turkey earthquake rescue efforts underway")
-- New details about an ongoing story ("Sydney shooting: 3 dead" and "Sydney shooter identified as former employee")
 
 INVALID (genuinely different/unrelated story):
 - Same country but completely different topic ("India AI deal" vs "India student exchange")
 - Same person but unrelated events ("Trump threatens Greenland" vs "Trump signs tax bill")
 - Same company but different news ("Apple iPhone launch" vs "Apple faces lawsuit")
 - Different people with same name ("Jasmine Paolini tennis" vs "Jasmine Harrison rowing")
-- Same type of event in different places ("Fire at Delhi hospital" vs "Fire at Mumbai factory")
 - Completely unrelated topics ("Texas primary election" vs "Iran war casualties")
 
 RESPOND WITH ONLY ONE WORD:
@@ -631,20 +667,14 @@ def get_anthropic_client():
 class ClusteringConfig:
     """Configuration for clustering algorithm"""
     
-    # EMBEDDING-BASED MATCHING (PRIMARY METHOD - v2.0)
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.68  # Cosine similarity threshold - AGGRESSIVE for consolidation
-    # Embeddings group broadly, AI validation catches bad merges
-    # 0.90+ = Almost identical titles
-    # 0.85-0.90 = Same event, different wording (HIGH CONFIDENCE)
-    # 0.78-0.85 = Same event, different wording (GOOD CONFIDENCE)
-    # 0.68-0.78 = Same developing story, different angles (GOOD - AI validates)
-    # <0.68 = Likely different events
-    
-    # FALLBACK: String-based matching (if embeddings fail)
-    TITLE_SIMILARITY_THRESHOLD = 0.80  # 80% title similarity = same event (INCREASED)
-    MIN_TITLE_SIMILARITY = 0.60  # Minimum 60% for keyword match (INCREASED)
-    KEYWORD_MATCH_THRESHOLD = 5  # 5+ shared keywords = same event
-    ENTITY_MATCH_THRESHOLD = 2  # 2+ shared entities adds confidence
+    # CENTROID-BASED MATCHING (v3.0)
+    # Each cluster stores a centroid (average of all article embeddings).
+    # New articles match if cosine similarity to centroid >= threshold.
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.91  # Fixed threshold, no dynamic adjustment
+    # 0.95+ = Nearly identical articles
+    # 0.91-0.95 = Same event, different wording (MATCH)
+    # 0.85-0.91 = Related but possibly different events (NO MATCH)
+    # <0.85 = Different events
     
     # Time windows
     MAX_CLUSTER_AGE_HOURS = 336  # Only match with clusters updated in last 336h (14 days)
@@ -1304,7 +1334,7 @@ class EventClusteringEngine:
                             existing_article = result.data[0]
                             already_clustered = existing_article.get('cluster_id') is not None
                             return (existing_article['id'], already_clustered)
-                    except Exception:
+                    except:
                         pass
                     return None  # Could not fetch, but not a critical error
                 
@@ -1319,91 +1349,29 @@ class EventClusteringEngine:
         
         return None
     
-    def close_expired_clusters(self) -> int:
-        """
-        Close clusters that have exceeded their lifetime limits.
-
-        Closes clusters where EITHER:
-        1. Inactive for 7+ days (last_updated_at > CLUSTER_INACTIVITY_HOURS ago)
-        2. Created 14+ days ago regardless of activity (created_at > CLUSTER_MAX_LIFETIME_HOURS ago)
-
-        Returns:
-            Number of clusters closed
-        """
-        try:
-            now = datetime.utcnow()
-            inactivity_cutoff = (now - timedelta(hours=self.config.CLUSTER_INACTIVITY_HOURS)).isoformat()
-            max_lifetime_cutoff = (now - timedelta(hours=self.config.CLUSTER_MAX_LIFETIME_HOURS)).isoformat()
-
-            # Get all active clusters
-            result = self.supabase.table('clusters').select(
-                'id, created_at, last_updated_at, event_name'
-            ).eq('status', 'active').execute()
-
-            if not result.data:
-                return 0
-
-            clusters_to_close = []
-            for cluster in result.data:
-                last_updated = cluster.get('last_updated_at', '')
-                created_at = cluster.get('created_at', '')
-                reason = None
-
-                # Check max lifetime (14 days from creation)
-                if created_at and created_at < max_lifetime_cutoff:
-                    reason = f"max_lifetime ({self.config.CLUSTER_MAX_LIFETIME_HOURS}h)"
-                # Check inactivity (7 days without updates)
-                elif last_updated and last_updated < inactivity_cutoff:
-                    reason = f"inactive ({self.config.CLUSTER_INACTIVITY_HOURS}h)"
-
-                if reason:
-                    clusters_to_close.append((cluster['id'], cluster.get('event_name', ''), reason))
-
-            # Close expired clusters
-            closed_count = 0
-            for cluster_id, event_name, reason in clusters_to_close:
-                try:
-                    self.supabase.table('clusters').update({
-                        'status': 'closed',
-                        'closed_at': now.isoformat()
-                    }).eq('id', cluster_id).execute()
-                    closed_count += 1
-                    print(f"   🔒 Closed cluster {cluster_id} ({event_name[:50]}): {reason}")
-                except Exception as e:
-                    print(f"   ⚠️ Failed to close cluster {cluster_id}: {e}")
-
-            if closed_count > 0:
-                print(f"   🔒 Closed {closed_count} expired clusters")
-
-            return closed_count
-
-        except Exception as e:
-            print(f"❌ Error closing expired clusters: {e}")
-            return 0
-
     def get_active_clusters(self) -> List[Dict]:
         """
-        Get all active clusters (status='active', within max age window).
-        Automatically closes expired clusters first.
-
+        Get all active clusters (not closed, updated within 24 hours).
+        
         Returns:
             List of cluster dicts
         """
         try:
-            # Close expired clusters before fetching active ones
-            self.close_expired_clusters()
-
-            # Now get remaining active clusters
+            # Get clusters updated in last 24 hours
+            cutoff_time = datetime.utcnow() - timedelta(hours=self.config.MAX_CLUSTER_AGE_HOURS)
+            
             result = self.supabase.table('clusters').select('*').eq(
                 'status', 'active'
+            ).gte(
+                'last_updated_at', cutoff_time.isoformat()
             ).order('last_updated_at', desc=True).execute()
-
+            
             return result.data if result.data else []
-
+            
         except Exception as e:
             print(f"❌ Error getting active clusters: {e}")
             return []
-
+    
     def get_cluster_sources(self, cluster_id: int) -> List[Dict]:
         """
         Get all source articles for a cluster.
@@ -1534,14 +1502,16 @@ class EventClusteringEngine:
             print(f"❌ Error creating cluster: {e}")
             return None
     
-    def add_to_cluster(self, cluster_id: int, source_article_id: int) -> bool:
+    def add_to_cluster(self, cluster_id: int, source_article_id: int,
+                       new_centroid=None) -> bool:
         """
-        Add a source article to an existing cluster.
-        
+        Add a source article to an existing cluster and update centroid.
+
         Args:
             cluster_id: Cluster ID
             source_article_id: Source article ID
-            
+            new_centroid: Updated centroid numpy array (caller computes the average)
+
         Returns:
             True if successful
         """
@@ -1550,14 +1520,19 @@ class EventClusteringEngine:
             self.supabase.table('source_articles').update({
                 'cluster_id': cluster_id
             }).eq('id', source_article_id).execute()
-            
-            # Update cluster's last_updated_at (trigger will handle source_count and importance_score)
-            self.supabase.table('clusters').update({
+
+            # Update cluster's last_updated_at and centroid
+            update_data = {
                 'last_updated_at': datetime.utcnow().isoformat()
-            }).eq('id', cluster_id).execute()
-            
+            }
+            if new_centroid is not None:
+                centroid_list = new_centroid.tolist() if hasattr(new_centroid, 'tolist') else list(new_centroid)
+                update_data['embedding'] = centroid_list
+
+            self.supabase.table('clusters').update(update_data).eq('id', cluster_id).execute()
+
             return True
-            
+
         except Exception as e:
             print(f"❌ Error adding to cluster: {e}")
             return False
@@ -1775,275 +1750,169 @@ class EventClusteringEngine:
             print(f"   📁 All {cached_count} cluster embeddings loaded from cache!")
         
         print(f"✅ Embeddings ready ({cached_count} cached, {need_gen_count} generated)\n")
-        
-        # PHASE 3: Process results and assign to clusters (EMBEDDING-BASED v2.0)
+
+        # PHASE 3: Centroid-based cluster assignment (v3.0)
         print(f"\n{'='*80}")
-        print(f"📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (EMBEDDING-BASED)")
+        print(f"📊 PHASE 3: ASSIGNING ARTICLES TO CLUSTERS (CENTROID-BASED v3.0)")
         print(f"{'='*80}")
-        print(f"   Similarity threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
-        
-        # Track NEW clusters created in THIS batch
-        new_batch_clusters = []  # List of (cluster_id, title, embedding) tuples
-        original_cluster_count = len(active_clusters)  # Clusters before this batch
-        
+        print(f"   Cosine similarity threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
+
+        # Initialize centroid state: cluster_id -> numpy centroid array
+        cluster_centroids = {}
+        cluster_counts = {}  # cluster_id -> number of articles contributing to centroid
+
+        for cluster in active_clusters:
+            cid = cluster['id']
+            emb = cluster_embeddings.get(cid)
+            if emb is not None:
+                cluster_centroids[cid] = np.array(emb, dtype=np.float64)
+            cluster_counts[cid] = max(cluster.get('source_count', 1), 1)
+
+        threshold = self.config.EMBEDDING_SIMILARITY_THRESHOLD
+
         for i, article in enumerate(articles):
             if i not in article_source_ids:
-                continue  # Article wasn't saved successfully
-            
+                continue
+
             source_id = article_source_ids[i]
             full_title = article.get('title', 'Unknown')
             article_emb = article_embeddings.get(i)
-            
-            matched = False
-            matched_cluster = None
-            best_similarity = 0.0
-            
-            # STEP 1: Check against EXISTING clusters using embeddings
-            for cluster in active_clusters[:original_cluster_count]:
-                cluster_id = cluster['id']
-                cluster_emb = cluster_embeddings.get(cluster_id)
-                
-                # Check time proximity
-                if not check_time_proximity(article, cluster):
-                    continue
-                
-                # Calculate embedding similarity
-                if article_emb is not None and cluster_emb is not None:
-                    similarity = cosine_similarity(article_emb, cluster_emb)
-                    
-                    # MEGA-CLUSTER PROTECTION: Require higher similarity for large clusters
-                    cluster_source_count = cluster.get('source_count', 0)
-                    effective_threshold = self.config.EMBEDDING_SIMILARITY_THRESHOLD
-                    if cluster_source_count >= 10:
-                        effective_threshold = min(0.92, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.05)
-                    elif cluster_source_count >= 6:
-                        effective_threshold = min(0.88, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.03)
-                    
-                    if similarity >= effective_threshold and similarity > best_similarity:
-                        best_similarity = similarity
-                        matched_cluster = cluster
-                        matched = True
+
+            # No embedding — cannot do centroid matching, create new cluster
+            if article_emb is None:
+                print(f"\n   ⚠️ NO EMBEDDING [{i+1}/{len(articles)}]: {full_title[:70]}")
+                cluster_id = self.create_cluster(article, source_id, embedding=None)
+                if cluster_id:
+                    print(f"      ✨ NEW CLUSTER (no embedding): {cluster_id}")
+                    with stats_lock:
+                        stats['new_clusters_created'] += 1
+                        stats['cluster_ids'].append(cluster_id)
+                    new_cluster = {
+                        'id': cluster_id,
+                        'event_name': self._generate_event_name(full_title),
+                        'main_title': full_title,
+                        'created_at': datetime.utcnow().isoformat(),
+                        'last_updated_at': datetime.utcnow().isoformat(),
+                        'source_count': 1,
+                        'status': 'active'
+                    }
+                    active_clusters.append(new_cluster)
+                    cluster_counts[cluster_id] = 1
                 else:
-                    # Fallback: string matching if embeddings not available
-                    cluster_sources = cluster_sources_cache.get(cluster_id, [])
-                    match_result = is_same_event(article, cluster, cluster_sources, debug=False)
-                    if match_result['match']:
-                        matched_cluster = cluster
-                        matched = True
-                        break
-            
-            # STEP 2: If no match with existing, check against NEW clusters from THIS batch
-            if not matched and new_batch_clusters:
-                for new_cluster_id, new_cluster_title, new_cluster_emb in new_batch_clusters:
-                    if article_emb is not None and new_cluster_emb is not None:
-                        similarity = cosine_similarity(article_emb, new_cluster_emb)
-                        
-                        if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD:
-                            # Find the cluster object
-                            for cluster in active_clusters[original_cluster_count:]:
-                                if cluster['id'] == new_cluster_id:
-                                    matched_cluster = cluster
-                                    matched = True
-                                    best_similarity = similarity
-                                    break
-                            if matched:
-                                break
-            
-            # ================================================================
-            # POST-CLUSTERING VALIDATION LOOP
-            # Try to find a valid cluster, with up to 3 rejections before creating new
-            # ================================================================
-            rejected_cluster_ids = set()  # Track clusters that rejected this article
-            MAX_REJECTION_ATTEMPTS = 5
-            successfully_added = False
-            
-            while len(rejected_cluster_ids) < MAX_REJECTION_ATTEMPTS and not successfully_added:
-                # Find best matching cluster (excluding rejected ones)
-                matched = False
-                matched_cluster = None
-                best_similarity = 0.0
-                
-                # Check existing clusters (excluding rejected ones)
-                for cluster in active_clusters[:original_cluster_count]:
-                    if cluster['id'] in rejected_cluster_ids:
-                        continue  # Skip clusters that already rejected this article
-                    
-                    cluster_id = cluster['id']
-                    cluster_emb = cluster_embeddings.get(cluster_id)
-                    
-                    if not check_time_proximity(article, cluster):
-                        continue
-                    
-                    if article_emb is not None and cluster_emb is not None:
-                        similarity = cosine_similarity(article_emb, cluster_emb)
-                        
-                        # MEGA-CLUSTER PROTECTION: Require higher similarity for large clusters
-                        # This prevents broad clusters from absorbing loosely related articles
-                        cluster_source_count = cluster.get('source_count', 0)
-                        effective_threshold = self.config.EMBEDDING_SIMILARITY_THRESHOLD
-                        if cluster_source_count >= 10:
-                            effective_threshold = min(0.92, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.05)
-                        elif cluster_source_count >= 6:
-                            effective_threshold = min(0.88, self.config.EMBEDDING_SIMILARITY_THRESHOLD + 0.03)
-                        
-                        if similarity >= effective_threshold and similarity > best_similarity:
-                            best_similarity = similarity
-                            matched_cluster = cluster
-                            matched = True
-                
-                # Also check new clusters from this batch (excluding rejected)
-                if not matched and new_batch_clusters:
-                    for new_cluster_id, new_cluster_title, new_cluster_emb in new_batch_clusters:
-                        if new_cluster_id in rejected_cluster_ids:
-                            continue
-                        if article_emb is not None and new_cluster_emb is not None:
-                            similarity = cosine_similarity(article_emb, new_cluster_emb)
-                            if similarity >= self.config.EMBEDDING_SIMILARITY_THRESHOLD:
-                                for cluster in active_clusters[original_cluster_count:]:
-                                    if cluster['id'] == new_cluster_id:
-                                        matched_cluster = cluster
-                                        matched = True
-                                        best_similarity = similarity
-                                        break
-                                if matched:
-                                    break
-                
-                # If no embedding match, try AI matching (excluding rejected + mega-clusters)
-                if not matched:
-                    MAX_CLUSTER_SIZE_FOR_AI = 15  # Don't let AI add to very large clusters
-                    available_clusters = [
-                        c for c in active_clusters 
-                        if c['id'] not in rejected_cluster_ids 
-                        and c.get('source_count', 0) < MAX_CLUSTER_SIZE_FOR_AI
-                    ]
-                    if available_clusters:
-                        ai_result = ai_check_cluster_match(
-                            new_article_title=full_title,
-                            existing_clusters=available_clusters
-                        )
-                        if ai_result['action'] == 'add_to_cluster' and ai_result['cluster_id']:
-                            for c in active_clusters:
-                                if c['id'] == ai_result['cluster_id']:
-                                    matched_cluster = c
-                                    matched = True
-                                    break
-                
-                # No cluster found at all - break to create new
-                if not matched or not matched_cluster:
-                    break
-                
-                # Found a potential match - now VALIDATE before adding
-                sim_display = f" (similarity: {best_similarity:.3f})" if best_similarity > 0 else ""
-                print(f"\n   🔍 VALIDATING CLUSTER MATCH [{i+1}/{len(articles)}]{sim_display}")
-                print(f"      📰 Article: {full_title}")
-                print(f"      📁 Checking cluster: {matched_cluster['event_name']}")
-                
-                # Get existing sources in the cluster for validation
-                cluster_sources_for_validation = cluster_sources_cache.get(matched_cluster['id'], [])
-                
-                # Validate the assignment
-                validation_result = validate_cluster_assignment(
-                    new_article_title=full_title,
-                    cluster_sources=cluster_sources_for_validation,
-                    cluster_name=matched_cluster.get('event_name', '')
-                )
-                
-                if validation_result['valid']:
-                    # VALID - Add to cluster
-                    if self.add_to_cluster(matched_cluster['id'], source_id):
-                        print(f"      ✅ VALIDATED & ADDED to cluster: {matched_cluster['id']}")
-                        successfully_added = True
-                        with stats_lock:
-                            stats['matched_to_existing'] += 1
-                            if matched_cluster['id'] not in stats['cluster_ids']:
-                                stats['cluster_ids'].append(matched_cluster['id'])
-                        
-                        # Update cache with new source
-                        if matched_cluster['id'] not in cluster_sources_cache:
-                            cluster_sources_cache[matched_cluster['id']] = []
-                        cluster_sources_cache[matched_cluster['id']].append({
-                            'title': full_title,
-                            'score': article.get('score', 0)
-                        })
-                else:
-                    # INVALID - Reject this cluster and try another
-                    rejected_cluster_ids.add(matched_cluster['id'])
-                    print(f"      ❌ REJECTED by cluster (attempt {len(rejected_cluster_ids)}/{MAX_REJECTION_ATTEMPTS})")
-                    print(f"         Reason: {validation_result['reason']}")
-                    print(f"         Trying to find another cluster...")
-            
-            # If we successfully added, continue to next article
-            if successfully_added:
+                    with stats_lock:
+                        stats['failed'] += 1
                 continue
-            
-            # No valid cluster found (either no match or rejected 3+ times)
-            if rejected_cluster_ids:
-                print(f"\n   ⚠️ ARTICLE REJECTED BY {len(rejected_cluster_ids)} CLUSTERS [{i+1}/{len(articles)}]")
-                print(f"      📰 Article: {full_title}")
-                print(f"      Creating new cluster (no valid match found)")
-            else:
-                print(f"\n   🆕 NO MATCHING CLUSTER [{i+1}/{len(articles)}]")
-                print(f"      📰 Article: {full_title}")
-            
-            # Check if similar to published article before creating new cluster
+
+            article_emb_np = np.array(article_emb, dtype=np.float64)
+
+            # Find best matching cluster by cosine similarity to centroid
+            best_cluster_id = None
+            best_similarity = 0.0
+
+            for cid, centroid in cluster_centroids.items():
+                # Time proximity check
+                cluster_obj = next((c for c in active_clusters if c['id'] == cid), None)
+                if cluster_obj and not check_time_proximity(article, cluster_obj):
+                    continue
+
+                # Cosine similarity
+                dot = np.dot(article_emb_np, centroid)
+                norm_a = np.linalg.norm(article_emb_np)
+                norm_b = np.linalg.norm(centroid)
+                if norm_a == 0 or norm_b == 0:
+                    continue
+                sim = dot / (norm_a * norm_b)
+
+                if sim >= threshold and sim > best_similarity:
+                    best_similarity = sim
+                    best_cluster_id = cid
+
+            if best_cluster_id is not None:
+                # Match found — update centroid and add to cluster
+                old_count = cluster_counts[best_cluster_id]
+                new_centroid = (cluster_centroids[best_cluster_id] * old_count + article_emb_np) / (old_count + 1)
+
+                if self.add_to_cluster(best_cluster_id, source_id, new_centroid=new_centroid):
+                    cluster_centroids[best_cluster_id] = new_centroid
+                    cluster_counts[best_cluster_id] = old_count + 1
+
+                    cluster_name = next((c.get('event_name', '') for c in active_clusters if c['id'] == best_cluster_id), '')
+                    print(f"\n   ✅ MATCHED [{i+1}/{len(articles)}] (sim: {best_similarity:.3f})")
+                    print(f"      📰 {full_title[:70]}")
+                    print(f"      📁 → Cluster {best_cluster_id}: {cluster_name}")
+
+                    with stats_lock:
+                        stats['matched_to_existing'] += 1
+                        if best_cluster_id not in stats['cluster_ids']:
+                            stats['cluster_ids'].append(best_cluster_id)
+
+                    # Update source cache
+                    if best_cluster_id not in cluster_sources_cache:
+                        cluster_sources_cache[best_cluster_id] = []
+                    cluster_sources_cache[best_cluster_id].append({
+                        'title': full_title,
+                        'score': article.get('score', 0)
+                    })
+                else:
+                    with stats_lock:
+                        stats['failed'] += 1
+                continue
+
+            # No centroid match — check published articles before creating new cluster
+            print(f"\n   🆕 NO MATCHING CLUSTER [{i+1}/{len(articles)}]")
+            print(f"      📰 {full_title[:70]}")
+
             skip_article = False
             try:
-                from difflib import SequenceMatcher
-                import re
-                
+                from difflib import SequenceMatcher as SM
                 cutoff_time = (datetime.utcnow() - timedelta(hours=24)).isoformat()
                 recent_published = self.supabase.table('published_articles')\
                     .select('id, title_news')\
                     .gte('published_at', cutoff_time)\
                     .execute()
-                
-                def clean_title(t):
+
+                def _clean(t):
                     if not t:
                         return ''
                     t = re.sub(r'\*\*([^*]+)\*\*', r'\1', t)
                     t = re.sub(r'[^\w\s]', '', t.lower())
                     return t.strip()
-                
-                clean_new_title = clean_title(full_title)
-                
+
+                clean_new = _clean(full_title)
                 for pub in (recent_published.data or []):
-                    pub_title = pub.get('title_news', '')
-                    clean_pub_title = clean_title(pub_title)
-                    
-                    if clean_new_title and clean_pub_title:
-                        similarity = SequenceMatcher(None, clean_new_title, clean_pub_title).ratio()
-                        
-                        if similarity >= 0.65:  # 65% = likely same story
-                            print(f"      ⏭️ SKIPPING - Similar to published article (similarity: {similarity:.0%})")
-                            print(f"         Published (ID {pub['id']}): {pub_title[:60]}...")
-                            skip_article = True
-                            break
+                    clean_pub = _clean(pub.get('title_news', ''))
+                    if clean_new and clean_pub and SM(None, clean_new, clean_pub).ratio() >= 0.65:
+                        print(f"      ⏭️ SKIPPING - Similar to published article")
+                        print(f"         Published (ID {pub['id']}): {pub.get('title_news', '')[:60]}...")
+                        skip_article = True
+                        break
             except Exception as e:
                 print(f"      ⚠️ Published article check error: {e}")
-            
+
             if skip_article:
                 with stats_lock:
                     stats['failed'] += 1
                 continue
-            
-            # Create new cluster (article was rejected by existing clusters or no match found)
+
+            # Create new cluster with this article's embedding as initial centroid
             cluster_id = self.create_cluster(article, source_id, embedding=article_emb)
             if cluster_id:
-                event_name = self._generate_event_name(article.get('title', ''))
-                if rejected_cluster_ids:
-                    print(f"      ✨ NEW CLUSTER (REJECTED BY {len(rejected_cluster_ids)} CLUSTERS): {cluster_id}")
-                else:
-                    print(f"      ✨ NEW CLUSTER (NO MATCH FOUND): {cluster_id}")
-                print(f"         📁 Cluster name: {event_name}")
+                event_name = self._generate_event_name(full_title)
+                print(f"      ✨ NEW CLUSTER: {cluster_id}")
+                print(f"         📁 {event_name}")
+
                 with stats_lock:
                     stats['new_clusters_created'] += 1
                     stats['cluster_ids'].append(cluster_id)
-                
-                # Add to active clusters and caches for subsequent matching
+
+                # Register in memory for subsequent articles in this batch
+                cluster_centroids[cluster_id] = article_emb_np
+                cluster_counts[cluster_id] = 1
+
                 new_cluster = {
                     'id': cluster_id,
                     'event_name': event_name,
-                    'main_title': article.get('title', ''),
+                    'main_title': full_title,
                     'created_at': datetime.utcnow().isoformat(),
                     'last_updated_at': datetime.utcnow().isoformat(),
                     'source_count': 1,
@@ -2052,24 +1921,17 @@ class EventClusteringEngine:
                 }
                 active_clusters.append(new_cluster)
                 cluster_sources_cache[cluster_id] = [{
-                    'title': article.get('title', ''),
+                    'title': full_title,
                     'score': article.get('score', 0)
                 }]
-                cluster_titles_cache.append((cluster_id, article.get('title', '')))
-                cluster_embeddings[cluster_id] = article_emb  # Store embedding for new cluster
-                
-                # Track this new cluster for embedding matching with subsequent articles
-                new_batch_clusters.append((cluster_id, article.get('title', ''), article_emb))
             else:
-                print(f"\n   ❌ FAILED [{i+1}/{len(articles)}]")
-                print(f"      📰 Article: {full_title}")
-                print(f"      ⚠️  Could not create cluster")
+                print(f"      ❌ Could not create cluster")
                 with stats_lock:
                     stats['failed'] += 1
-        
+
         # Print summary
         print(f"\n{'='*60}")
-        print(f"CLUSTERING COMPLETE (EMBEDDING-BASED v2.0)")
+        print(f"CLUSTERING COMPLETE (CENTROID-BASED v3.0)")
         print(f"{'='*60}")
         print(f"✓ Articles saved: {stats['saved_articles']}/{stats['total_articles']}")
         print(f"✓ Matched to existing clusters: {stats['matched_to_existing']}")
@@ -2077,10 +1939,10 @@ class EventClusteringEngine:
         if stats['already_clustered'] > 0:
             print(f"⏭️ Already in clusters (skipped): {stats['already_clustered']}")
         print(f"✓ Total active clusters: {len(active_clusters)}")
-        print(f"✓ Embedding threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
+        print(f"✓ Centroid threshold: {self.config.EMBEDDING_SIMILARITY_THRESHOLD}")
         if stats['failed'] > 0:
             print(f"⚠ Failed: {stats['failed']}")
-        
+
         return stats
     
     def get_clusters_for_processing(self) -> List[Dict]:
