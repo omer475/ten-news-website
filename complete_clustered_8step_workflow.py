@@ -532,6 +532,44 @@ component_writer = GeminiComponentWriter(api_key=gemini_key)  # Uses Gemini desp
 fact_verifier = FactVerifier(api_key=gemini_key)  # Uses Gemini
 
 
+def get_article_embedding(title: str, bullets, max_retries: int = 3) -> Optional[list]:
+    """Generate a 3072-dim Gemini embedding for an article at publish time."""
+    # Build text from title + bullets (matches backfill_embeddings.js logic)
+    text = title or ''
+    if bullets:
+        if isinstance(bullets, list):
+            text += '. ' + '. '.join(str(b) for b in bullets)
+        elif isinstance(bullets, str):
+            text += '. ' + bullets
+    text = text[:8000]  # Gemini embedding limit
+
+    if not text.strip():
+        return None
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={gemini_key}"
+    payload = {
+        "model": "models/gemini-embedding-001",
+        "content": {"parts": [{"text": text}]},
+        "taskType": "RETRIEVAL_DOCUMENT"
+    }
+
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(url, json=payload, timeout=30)
+            if resp.status_code == 429 and attempt < max_retries - 1:
+                time.sleep((attempt + 1) * 2)
+                continue
+            resp.raise_for_status()
+            return resp.json().get('embedding', {}).get('values')
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
+            print(f"   ⚠️ Embedding failed: {e}")
+            return None
+    return None
+
+
 # ==========================================
 # STEP 0: RSS FEED COLLECTION
 # ==========================================
@@ -1685,6 +1723,14 @@ Reply with ONLY "SAME" or "DIFFERENT". Nothing else."""
                     'image_score': synthesized.get('image_score'),
                     'source_titles': source_titles
                 }
+
+                # Generate embedding for personalization (non-blocking)
+                try:
+                    embedding = get_article_embedding(title, bullets)
+                    if embedding:
+                        article_data['embedding'] = embedding
+                except Exception:
+                    pass  # Never block publishing for embedding failure
 
                 result = supabase.table('published_articles').insert(article_data).execute()
 

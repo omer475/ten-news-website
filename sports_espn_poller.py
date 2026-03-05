@@ -252,6 +252,42 @@ def get_gemini_key():
     return key
 
 
+def get_article_embedding(title: str, bullets, max_retries: int = 3):
+    """Generate a 3072-dim Gemini embedding for a sports article."""
+    text = title or ''
+    if bullets:
+        if isinstance(bullets, list):
+            text += '. ' + '. '.join(str(b) for b in bullets)
+        elif isinstance(bullets, str):
+            text += '. ' + bullets
+    text = text[:8000]
+    if not text.strip():
+        return None
+
+    api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
+    payload = {
+        "model": "models/gemini-embedding-001",
+        "content": {"parts": [{"text": text}]},
+        "taskType": "RETRIEVAL_DOCUMENT"
+    }
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(url, json=payload, timeout=30)
+            if resp.status_code == 429 and attempt < max_retries - 1:
+                time.sleep((attempt + 1) * 2)
+                continue
+            resp.raise_for_status()
+            return resp.json().get('embedding', {}).get('values')
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
+            print(f"      ⚠️ Embedding failed: {e}")
+            return None
+    return None
+
+
 # ==========================================
 # TABLE CREATION (idempotent)
 # ==========================================
@@ -1068,6 +1104,14 @@ def publish_sports_article(supabase, league_config: Dict, event: Dict,
         'country_relevance': country_relevance,
         'num_sources': 1,
     }
+
+    # Generate embedding for personalization (non-blocking)
+    try:
+        embedding = get_article_embedding(generated['title'], generated['bullets'])
+        if embedding:
+            article_data['embedding'] = embedding
+    except Exception:
+        pass
 
     try:
         result = supabase.table('published_articles').insert(article_data).execute()
