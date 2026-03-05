@@ -1,6 +1,5 @@
 import { createClient as createAuthedClient } from '../../../lib/supabase-server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { evolveTasteVector } from '../../../lib/embeddings'
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
@@ -117,24 +116,35 @@ export default async function handler(req, res) {
 
     console.log('[analytics] Event stored successfully:', event_type)
 
-    // Evolve taste vector based on signal strength
-    let learningRate = null
-    if (event_type === 'article_saved' && article_id) {
-      learningRate = 0.25
-    } else if (event_type === 'article_engaged' && article_id) {
-      learningRate = 0.15
-    } else if (event_type === 'article_exit' && article_id && view_seconds) {
-      if (view_seconds >= 30) learningRate = 0.20
-      else if (view_seconds >= 15) learningRate = 0.12
-      else if (view_seconds >= 5) learningRate = 0.05
-    }
-
-    if (learningRate !== null) {
+    // Update taste vector via EMA on engagement events (non-blocking)
+    // This feeds the pgvector personalization system
+    const TASTE_UPDATE_EVENTS = ['article_engaged', 'article_saved', 'article_detail_view']
+    if (TASTE_UPDATE_EVENTS.includes(event_type) && article_id) {
+      // Look up the user's personalization user_id (users table, linked via auth_user_id)
       try {
-        await evolveTasteVectorAsync(admin, user.id, article_id, learningRate)
-        console.log(`[analytics] Taste vector evolution triggered: ${event_type}, lr=${learningRate}, seconds=${view_seconds || 'n/a'}`)
-      } catch (err) {
-        console.error('[analytics] Taste vector evolution error (non-fatal):', err.message)
+        const { data: persUser } = await admin
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single()
+
+        if (persUser) {
+          // Fire-and-forget: update taste vector via DB function
+          admin.rpc('update_taste_vector_ema', {
+            p_user_id: persUser.id,
+            p_article_id: article_id,
+            p_event_type: event_type,
+          }).then(({ error: emaError }) => {
+            if (emaError) {
+              console.log('[analytics] Taste vector EMA update failed:', emaError.message)
+            } else {
+              console.log('[analytics] Taste vector updated for user:', persUser.id?.substring(0, 8))
+            }
+          })
+        }
+      } catch (e) {
+        // Non-critical — taste vector update is best-effort
+        console.log('[analytics] Taste vector lookup failed:', e.message)
       }
     }
 
@@ -143,69 +153,5 @@ export default async function handler(req, res) {
     console.error('Analytics track error:', e)
     return res.status(500).json({ error: 'Internal server error' })
   }
-}
-
-/**
- * Evolve the user's taste vector toward the engaged article's embedding.
- * Runs async (fire-and-forget) so it doesn't slow down the analytics response.
- */
-async function evolveTasteVectorAsync(admin, userId, articleId, learningRate = 0.1) {
-  // Fetch user's current taste vector
-  const { data: profile, error: profileError } = await admin
-    .from('profiles')
-    .select('taste_vector, taste_vector_version')
-    .eq('id', userId)
-    .single()
-
-  if (profileError) {
-    return // Can't access profile
-  }
-
-  // Fetch article embedding
-  const { data: article, error: articleError } = await admin
-    .from('published_articles')
-    .select('embedding')
-    .eq('id', articleId)
-    .single()
-
-  if (articleError || !article?.embedding || !Array.isArray(article.embedding) || article.embedding.length === 0) {
-    return // No article embedding available
-  }
-
-  const articleVector = article.embedding
-
-  // If user has no taste vector yet, seed it from this article's embedding
-  if (!profile?.taste_vector || !Array.isArray(profile.taste_vector) || profile.taste_vector.length === 0) {
-    await admin
-      .from('profiles')
-      .update({
-        taste_vector: articleVector,
-        taste_vector_version: 1,
-        taste_vector_updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-    console.log(`[analytics] Taste vector SEEDED for user ${userId.substring(0, 8)} from article ${articleId}`)
-    return
-  }
-
-  const currentVector = profile.taste_vector
-
-  if (currentVector.length !== articleVector.length) {
-    return
-  }
-
-  const newVector = evolveTasteVector(currentVector, articleVector, learningRate)
-  const newVersion = Math.max(2, (profile.taste_vector_version || 1) + 1)
-
-  await admin
-    .from('profiles')
-    .update({
-      taste_vector: newVector,
-      taste_vector_version: newVersion,
-      taste_vector_updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId)
-
-  console.log(`[analytics] Taste vector evolved for user ${userId.substring(0, 8)}, version: ${newVersion}, lr: ${learningRate}`)
 }
 
