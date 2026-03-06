@@ -670,10 +670,10 @@ class ClusteringConfig:
     # CENTROID-BASED MATCHING (v3.0)
     # Each cluster stores a centroid (average of all article embeddings).
     # New articles match if cosine similarity to centroid >= threshold.
-    EMBEDDING_SIMILARITY_THRESHOLD = 0.91  # Fixed threshold, no dynamic adjustment
+    EMBEDDING_SIMILARITY_THRESHOLD = 0.90  # Fixed threshold, no dynamic adjustment
     # 0.95+ = Nearly identical articles
-    # 0.91-0.95 = Same event, different wording (MATCH)
-    # 0.85-0.91 = Related but possibly different events (NO MATCH)
+    # 0.90-0.95 = Same event, different wording (MATCH)
+    # 0.85-0.90 = Related but possibly different events (NO MATCH)
     # <0.85 = Different events
     
     # Time windows
