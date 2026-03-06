@@ -16,19 +16,10 @@ const safeJsonParse = (value, fallback = null) => {
 
 function formatArticle(article, eventMap = {}) {
   const summaryBulletsNews = safeJsonParse(article.summary_bullets_news, []);
-  const summaryBullets = safeJsonParse(article.summary_bullets, []);
-  const summaryBulletsDetailed = safeJsonParse(article.summary_bullets_detailed, []);
   const fiveWs = safeJsonParse(article.five_ws, null);
   const timeline = safeJsonParse(article.timeline, null);
   const graph = safeJsonParse(article.graph, null);
-  const details = article.details_section
-    ? article.details_section.split('\n').map(line => {
-        const parts = line.split(':');
-        return parts.length >= 2
-          ? { label: parts[0].trim(), value: parts.slice(1).join(':').trim() }
-          : { label: line.trim(), value: '' };
-      })
-    : safeJsonParse(article.details, []);
+  const details = safeJsonParse(article.details, []);
   const components = article.components_order || safeJsonParse(article.components, null);
   const countries = safeJsonParse(article.countries, []);
   const topics = safeJsonParse(article.topics, []);
@@ -78,7 +69,7 @@ function formatArticle(article, eventMap = {}) {
 
   const formatted = {
     id: article.id,
-    title: article.title_news || article.title,
+    title: article.title_news,
     title_news: article.title_news || null,
     url: article.url,
     source: article.source || 'Ten News',
@@ -87,16 +78,16 @@ function formatArticle(article, eventMap = {}) {
     image_url: imageUrl,
     urlToImage: imageUrl,
     image_source: article.image_source || null,
-    publishedAt: article.published_date || article.published_at,
+    publishedAt: article.published_at,
     created_at: article.created_at,
     ai_final_score: article.ai_final_score || 0,
     final_score: article.ai_final_score || 0,
     base_score: article.ai_final_score || 0,
     summary_bullets_news: summaryBulletsNews,
-    summary_bullets: summaryBullets.length > 0 ? summaryBullets : summaryBulletsNews,
-    summary_bullets_detailed: summaryBulletsDetailed,
-    content_news: article.content_news || null,
-    detailed_text: article.content_news || article.article || article.summary || article.description || '',
+    summary_bullets: summaryBulletsNews,
+    summary_bullets_detailed: summaryBulletsNews,
+    content_news: null,
+    detailed_text: '',
     five_ws: fiveWs,
     timeline,
     graph,
@@ -223,11 +214,10 @@ function calculateTagScore(article, userPrefs) {
 // ==========================================
 
 const ARTICLE_COLUMNS = [
-  'id', 'title', 'title_news', 'url', 'source', 'category', 'emoji',
-  'image_url', 'image_source', 'published_date', 'published_at', 'created_at',
-  'ai_final_score', 'summary_bullets_news', 'summary_bullets',
-  'summary_bullets_detailed', 'content_news', 'article', 'summary', 'description',
-  'five_ws', 'timeline', 'graph', 'map', 'details', 'details_section',
+  'id', 'title_news', 'url', 'source', 'category', 'emoji',
+  'image_url', 'image_source', 'published_at', 'created_at',
+  'ai_final_score', 'summary_bullets_news',
+  'five_ws', 'timeline', 'graph', 'map', 'details',
   'components_order', 'components', 'countries', 'topics',
   'country_relevance', 'topic_relevance', 'interest_tags',
   'num_sources', 'cluster_id', 'version_number', 'view_count',
